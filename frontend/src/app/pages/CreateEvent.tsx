@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, FileText, Tag, Image as ImageIcon, Plus } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, FileText, Tag, Image as ImageIcon, Plus, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ErrorAlert } from '@/app/components/ErrorMessage';
+import { eventsService } from '@/api/services/events.service';
+import { EventCategory } from '@/api/types';
 
 interface EventData {
   name: string;
@@ -26,6 +29,33 @@ const eventCategories = [
   'Other'
 ];
 
+const categoryToApiMap: Record<string, EventCategory> = {
+  music: EventCategory.Concert,
+  sports: EventCategory.Sports,
+  theater: EventCategory.Theater,
+  comedy: EventCategory.Comedy,
+  arts: EventCategory.Other,
+  family: EventCategory.Other,
+  festival: EventCategory.Festival,
+  conference: EventCategory.Conference,
+  other: EventCategory.Other,
+};
+
+function mapCategoryToApi(category: string): EventCategory {
+  const normalized = category.trim().toLowerCase();
+  return categoryToApiMap[normalized] ?? EventCategory.Other;
+}
+
+function mapLocationToAddress(location: string): { line1: string; city: string; countryCode: string } {
+  const normalized = location.trim();
+  const city = normalized.split(',')[0]?.trim() || 'Unknown';
+  return {
+    line1: normalized,
+    city,
+    countryCode: 'US',
+  };
+}
+
 export function CreateEvent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -45,40 +75,67 @@ export function CreateEvent() {
 
   const [customCategory, setCustomCategory] = useState('');
   const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (!formData.name || !formData.date || !formData.time || !formData.venue || !formData.location) {
-      alert(t('createEvent.pleaseCompleteRequiredFields'));
+      setError(t('createEvent.pleaseCompleteRequiredFields'));
       return;
     }
 
-    // Create event object
-    const newEvent = {
-      id: `event-${Date.now()}`,
-      ...formData,
-      createdAt: new Date().toISOString()
-    };
+    const eventDateTime = new Date(`${formData.date}T${formData.time}:00`);
+    if (Number.isNaN(eventDateTime.getTime())) {
+      setError(t('createEvent.invalidDateTime'));
+      return;
+    }
 
-    console.log('Event created:', newEvent);
-    alert(t('createEvent.eventCreatedSuccess'));
+    try {
+      setIsSubmitting(true);
 
-    // If coming from sell ticket page, redirect back with the event info
-    if (fromSellTicket) {
-      navigate('/sell-ticket', { 
-        state: { 
-          newEvent: {
-            id: newEvent.id,
-            name: newEvent.name,
-            date: `${newEvent.date} at ${newEvent.time}`,
-            venue: newEvent.venue,
-            location: newEvent.location
-          }
-        }
+      const createdEvent = await eventsService.createEvent({
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        category: mapCategoryToApi(formData.category),
+        venue: formData.venue.trim(),
+        location: mapLocationToAddress(formData.location),
       });
-    } else {
-      navigate('/');
+
+      await eventsService.addEventDate(createdEvent.id, {
+        date: eventDateTime,
+        startTime: eventDateTime,
+      });
+
+      alert(t('createEvent.eventCreatedSuccess'));
+
+      // If coming from sell ticket page, redirect back with the event info
+      if (fromSellTicket) {
+        navigate('/sell-ticket', {
+          state: {
+            newEvent: {
+              id: createdEvent.id,
+              name: createdEvent.name,
+              date: `${formData.date} at ${formData.time}`,
+              venue: createdEvent.venue,
+              location: formData.location,
+            },
+          },
+        });
+      } else {
+        navigate('/');
+      }
+    } catch (submitError) {
+      console.error('Failed to create event:', submitError);
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : t('createEvent.createFailed')
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -119,6 +176,10 @@ export function CreateEvent() {
           <p className="text-gray-600 mb-8">
             {t('createEvent.subtitle')}
           </p>
+
+          {error && (
+            <ErrorAlert message={error} className="mb-6" />
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Event Name */}
@@ -358,10 +419,15 @@ export function CreateEvent() {
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus className="w-5 h-5" />
-                {t('createEvent.createEvent')}
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Plus className="w-5 h-5" />
+                )}
+                {isSubmitting ? t('common.saving') : t('createEvent.createEvent')}
               </button>
             </div>
           </form>

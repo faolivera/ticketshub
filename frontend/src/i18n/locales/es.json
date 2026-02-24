@@ -72,7 +72,8 @@
     "cvv": "CVV",
     "cvvPlaceholder": "123",
     "completePurchase": "Completar Compra",
-    "securePayment": "Tu información de pago es segura y está encriptada"
+    "securePayment": "Tu información de pago es segura y está encriptada",
+    "description": "Revisa los detalles de tu entrada y completa la compra de forma segura."
   },
   "boughtTickets": {
     "title": "Mis Entradas",
@@ -115,7 +116,11 @@
     "listedTicketsWillAppear": "Tus entradas publicadas aparecerán aquí",
     "views": "vistas",
     "editListing": "Editar Publicación",
-    "startSelling": "Empezar a Vender"
+    "startSelling": "Empezar a Vender",
+    "available": "disponibles"
+  },
+  "ditListing": {
+    "description": "Descripción"
   },
   "editListing": {
     "title": "Editar Publicación",
@@ -125,6 +130,11 @@
     "changesDisclaimer": "Los cambios solo tendrán efecto para las entradas vendidas nuevamente. Las entradas ya reservadas o vendidas mantendrán sus detalles originales.",
     "ticketType": "Tipo de Entrada",
     "eventDateTime": "Fecha y Hora del Evento",
+    "venue": "Recinto",
+    "quantity": "Cantidad",
+    "row": "Fila",
+    "seats": "Asientos",
+    "description": "Descripción",
     "listedSince": "Publicado Desde",
     "totalViews": "Vistas Totales",
     "editableFields": "Campos Editables",
@@ -159,7 +169,10 @@
     "totalYear": "Total {{year}}",
     "howPaymentsWork": "Cómo funcionan los pagos",
     "paymentsInfo": "Los fondos se retienen durante 7 días después de completar la venta de entradas para garantizar la satisfacción del comprador. Después del período de retención, el dinero se transfiere automáticamente a tu cuenta.",
+    "paymentExplanation": "Los fondos se retienen después de la venta y se liberan tras el período de retención.",
     "transactionHistory": "Historial de Transacciones",
+    "noTransactions": "Sin transacciones",
+    "transactionHistoryEmpty": "Tu historial de transacciones está vacío.",
     "pending": "Pendiente ({{count}})",
     "event": "Evento",
     "buyer": "Comprador",
@@ -172,7 +185,12 @@
     "noTransactionsYet": "Aún no hay transacciones",
     "transactionHistoryWillAppear": "Tu historial de transacciones aparecerá aquí",
     "noPendingTransactions": "No tienes transacciones pendientes",
-    "showingLast10": "Mostrando las últimas 10 transacciones"
+    "showingLast10": "Mostrando las últimas 10 transacciones",
+    "readyToWithdraw": "Listo para retirar",
+    "inEscrow": "En depósito",
+    "availablePlusPending": "Disponible + Pendiente",
+    "pendingBalance": "Saldo pendiente",
+    "totalBalance": "Saldo total"
   },
   "userProfile": {
     "title": "Mi Perfil",
@@ -489,6 +507,8 @@
     "venueLocation": "Recinto y Ubicación",
     "createEvent": "Crear Evento",
     "pleaseCompleteRequiredFields": "Por favor completa todos los campos requeridos",
+    "invalidDateTime": "Por favor ingresa una fecha y hora validas",
+    "createFailed": "No se pudo crear el evento. Intentalo de nuevo.",
     "eventCreatedSuccess": "¡Evento creado exitosamente!",
     "categories": {
       "music": "Música",
@@ -505,6 +525,8 @@
   "sellTicket": {
     "title": "Vender Entradas",
     "subtitle": "Publica tus entradas a la venta en nuestro mercado seguro",
+    "description": "Completa los detalles del anuncio para comenzar a vender tus entradas.",
+    "descriptionPlaceholder": "Agrega detalles que los compradores deban saber sobre estas entradas.",
     "backToTickets": "Volver a Mis Entradas",
     "eventName": "Nombre del Evento",
     "typeToSearchEvent": "Escribe para buscar un evento...",
@@ -519,6 +541,8 @@
     "at": "a las",
     "addDate": "Agregar Fecha",
     "ticketType": "Tipo de Entrada",
+    "row": "Fila",
+    "seats": "Asientos",
     "typeToSearchTicketType": "Escribe para buscar o crear un tipo de entrada...",
     "noTicketTypesFound": "No se encontraron tipos coincidentes. Presiona Enter para crear un nuevo tipo.",
     "creatingNewType": "Creando nuevo tipo de entrada",

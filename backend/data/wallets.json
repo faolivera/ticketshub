@@ -1,0 +1,13 @@
+{
+  "undefined": {
+    "balance": {
+      "amount": 0,
+      "currency": "EUR"
+    },
+    "pendingBalance": {
+      "amount": 0,
+      "currency": "EUR"
+    },
+    "updatedAt": "2026-02-24T17:17:37.874Z"
+  }
+}

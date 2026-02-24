@@ -1,0 +1,82 @@
+{
+  "1": {
+    "id": "1",
+    "country": "Germany",
+    "currency": "EUR",
+    "email": "admin@ticketshub.local",
+    "password": "admin123",
+    "firstName": "Admin",
+    "lastName": "User",
+    "publicName": "TicketsHub Admin",
+    "role": "Admin",
+    "level": "Basic",
+    "profiles": [
+      "Customer"
+    ],
+    "lastUsedProfile": "Customer",
+    "imageId": "img_seed_admin",
+    "emailVerified": true,
+    "phoneVerified": true,
+    "createdAt": "2026-02-05T13:23:52.515Z",
+    "updatedAt": "2026-02-05T13:23:52.515Z"
+  },
+  "2": {
+    "id": "2",
+    "country": "Germany",
+    "currency": "EUR",
+    "email": "seller@ticketshub.local",
+    "password": "seller123",
+    "firstName": "Venito",
+    "lastName": "Vendi",
+    "publicName": "Venito V.",
+    "role": "User",
+    "level": "VerifiedSeller",
+    "profiles": [
+      "Provider",
+      "Customer"
+    ],
+    "lastUsedProfile": "Provider",
+    "imageId": "img_seed_seller",
+    "emailVerified": true,
+    "phoneVerified": true,
+    "identityVerification": {
+      "status": "approved",
+      "documentUrls": [
+        "https://example.com/document.png"
+      ],
+      "submittedAt": "2026-02-05T13:23:52.516Z",
+      "reviewedAt": "2026-02-05T13:23:52.516Z",
+      "reviewedBy": "1"
+    },
+    "bankAccount": {
+      "holderName": "Verified Seller",
+      "iban": "DE89370400440532013000",
+      "bic": "COBADEFFXXX",
+      "verified": true,
+      "verifiedAt": "2026-02-05T13:23:52.516Z"
+    },
+    "createdAt": "2026-02-05T13:23:52.516Z",
+    "updatedAt": "2026-02-05T13:23:52.516Z"
+  },
+  "3": {
+    "id": "3",
+    "country": "Germany",
+    "currency": "EUR",
+    "email": "buyer@ticketshub.local",
+    "password": "buyer123",
+    "firstName": "Buyer",
+    "lastName": "User",
+    "publicName": "Buyer",
+    "role": "User",
+    "level": "Buyer",
+    "profiles": [
+      "Customer"
+    ],
+    "lastUsedProfile": "Customer",
+    "imageId": "img_seed_buyer",
+    "emailVerified": true,
+    "phoneVerified": false,
+    "createdAt": "2026-02-05T13:23:52.516Z",
+    "updatedAt": "2026-02-05T13:23:52.516Z"
+  }
+}

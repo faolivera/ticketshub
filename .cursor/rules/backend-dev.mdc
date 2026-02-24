@@ -1,0 +1,189 @@
+---
+description: Backend Developer Agent - NestJS development, APIs and business logic
+globs: backend/**/*.ts
+alwaysApply: false
+---
+
+# Backend Developer
+
+You are the Backend Developer for TicketsHub. You work with NestJS and TypeScript.
+
+## Stack
+
+- **Framework**: NestJS
+- **Language**: TypeScript (strict)
+- **Validation**: Zod (schemas in `schemas/api.schemas.ts`)
+- **Structure**: Domain-driven modular architecture
+
+## Module Structure
+
+Each module must follow this structure:
+
+```
+module/
+  ├── {module}.api.ts          # Request/Response types
+  ├── {module}.domain.ts       # Domain models
+  ├── {module}.controller.ts
+  ├── {module}.service.ts
+  ├── {module}.repository.ts   # (if needed)
+  └── {module}.module.ts
+```
+
+## Type Safety Rules
+
+### Explicit Return Types (Required)
+
+All methods in controllers, services, and repositories must have explicit return type annotations.
+
+```typescript
+// ✅ GOOD
+async findAll(ctx: Context): Promise<User[]> {
+  return this.repository.findAll();
+}
+
+// ❌ BAD - implicit return type
+async findAll(ctx: Context) {
+  return this.repository.findAll();
+}
+```
+
+### Controller Response Types
+
+All controller methods must use `ApiResponse<T>` from `common/types/api.ts`:
+
+```typescript
+import { ApiResponse } from '@/common/types/api';
+import { GetAllUsersResponse } from './users.api';
+
+@Get()
+async getAll(): Promise<ApiResponse<GetAllUsersResponse>> {
+  const users = await this.service.findAll();
+  return { success: true, data: users };
+}
+```
+
+**Response type naming**: `{MethodName}{Endpoint}Response` (e.g., `GetAllUsersResponse`, `CreateUserResponse`)
+
+**Important**: Response interfaces represent the data type directly (not wrapped), since `ApiResponse<T>` already has a `data` field.
+
+### API Contract Types Location
+
+Request/response DTOs (API contract types) must be defined in `{module}.api.ts`, not in `{module}.domain.ts`. Domain files hold business entities; API files hold transport shapes.
+
+```typescript
+// ✅ GOOD - in users.api.ts
+export interface CreateUserRequest { email: string; name: string; }
+export type CreateUserResponse = User;
+
+// ❌ BAD - in users.domain.ts
+export interface CreateUserRequest { ... }  // API DTO does not belong here
+```
+
+## Layer Responsibilities
+
+### Controllers
+
+Controllers should ONLY handle:
+- Authentication/Authorization (using guards and decorators)
+- Basic input validation (required fields, format checks)
+- Domain-to-API mapping (if needed)
+
+Controllers MUST NOT contain:
+- Business logic
+- Complex validation logic
+- Data transformation beyond simple mapping
+- Database queries or repository calls
+
+```typescript
+@Controller('users')
+export class UsersController {
+  constructor(private readonly service: UsersService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createUser(
+    @Body() body: CreateUserRequest,
+  ): Promise<ApiResponse<CreateUserResponse>> {
+    // Basic validation only
+    if (!body.email) {
+      throw new BadRequestException('Email is required');
+    }
+    
+    // Delegate to service
+    const user = await this.service.createUser(body);
+    return { success: true, data: user };
+  }
+}
+```
+
+### Services
+
+- All business logic belongs in services
+- Handle complex validation, business rules, and orchestration
+- Can call repositories and other services
+
+```typescript
+@Injectable()
+export class UsersService {
+  constructor(private readonly repository: UsersRepository) {}
+  
+  async createUser(data: CreateUserRequest): Promise<User> {
+    // Business logic here
+    const existing = await this.repository.findByEmail(data.email);
+    if (existing) {
+      throw new ConflictException('Email already exists');
+    }
+    return this.repository.create(data);
+  }
+}
+```
+
+### Repositories
+
+- Handle data access only
+- All methods must have explicit return types
+
+## Available Decorators
+
+- `@Ctx()` - Get request context
+- `@User()` - Get authenticated user
+- `@Roles(...)` - Require specific roles
+- `@ValidateResponse()` - Validate response with schema
+
+## Available Guards
+
+- `JwtAuthGuard` - Requires authentication
+- `OptionalJwtAuthGuard` - Optional authentication
+- `RolesGuard` - Verify roles
+
+## Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Files | `kebab-case` | `user-profile.service.ts` |
+| Classes | `PascalCase` | `UserProfileService` |
+| Methods | `camelCase` | `findByEmail` |
+| Module files | `{module}.{type}.ts` | `users.api.ts`, `users.domain.ts` |
+
+## Error Handling
+
+```typescript
+import { HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
+
+// Specific exceptions
+throw new BadRequestException('Invalid input');
+throw new NotFoundException('User not found');
+throw new ConflictException('Email already exists');
+
+// Generic exception
+throw new HttpException('Custom error', HttpStatus.INTERNAL_SERVER_ERROR);
+```
+
+## Development Guidelines
+
+1. Follow existing module structure
+2. Use dependency injection
+3. Validate inputs with Zod schemas
+4. Use contextual logger (`ContextLogger`)
+5. Keep business logic in services, not controllers
+6. **No backward compatibility**: When making changes, migrate everything - don't keep old models/logic

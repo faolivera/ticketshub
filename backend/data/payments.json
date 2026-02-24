@@ -1,0 +1,20 @@
+{
+  "pi_1771976265914_5906342f": {
+    "id": "pi_1771976265914_5906342f",
+    "transactionId": "txn_1771976265910_d5aba2c7",
+    "amount": {
+      "amount": 16500,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1771976265914_19fd15ab",
+    "metadata": {
+      "sellerId": "2",
+      "listingId": "tkt_1770297832518_24bf2e7b",
+      "eventName": "BAD BUNNY",
+      "ticketDescription": "Seed listing 1 - Bad Bunny"
+    },
+    "createdAt": "2026-02-24T23:37:45.914Z",
+    "updatedAt": "2026-02-24T23:37:45.914Z"
+  }
+}

@@ -1,98 +1,126 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Ticket, DollarSign, Save, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Calendar, Ticket, DollarSign, Save, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
-
-interface ListedTicket {
-  id: string;
-  eventName: string;
-  eventImage: string;
-  ticketType: string;
-  eventDate: string;
-  eventTime: string;
-  listPrice: number;
-  isActive: boolean;
-  views: number;
-  listedDate: string;
-}
-
-// Mock data - in a real app this would come from an API/database
-const mockListedTickets: Record<string, ListedTicket> = {
-  '5': {
-    id: '5',
-    eventName: 'Football Championship',
-    eventImage: 'https://images.unsplash.com/photo-1764050359179-517599dab87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcG9ydHMlMjBzdGFkaXVtJTIwZXZlbnR8ZW58MXx8fHwxNzY5MzU4NzI2fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'VIP Box',
-    eventDate: 'June 10, 2026',
-    eventTime: '3:00 PM',
-    listPrice: 300,
-    isActive: true,
-    views: 42,
-    listedDate: 'January 10, 2026'
-  },
-  '6': {
-    id: '6',
-    eventName: 'Theater Spectacular',
-    eventImage: 'https://images.unsplash.com/photo-1764936394584-c4a66ac31e00?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0aGVhdGVyJTIwcGVyZm9ybWFuY2UlMjBzdGFnZXxlbnwxfHx8fDE3NjkzNTUyOTd8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'Orchestra',
-    eventDate: 'May 22, 2026',
-    eventTime: '7:30 PM',
-    listPrice: 180,
-    isActive: true,
-    views: 28,
-    listedDate: 'January 12, 2026'
-  },
-  '7': {
-    id: '7',
-    eventName: 'Rock Night',
-    eventImage: 'https://images.unsplash.com/photo-1723902701334-08b0fe53ff4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyb2NrJTIwY29uY2VydCUyMHN0YWdlfGVufDF8fHx8MTc2OTM1MzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'VIP',
-    eventDate: 'August 20, 2026',
-    eventTime: '8:00 PM',
-    listPrice: 200,
-    isActive: false,
-    views: 15,
-    listedDate: 'January 19, 2026'
-  }
-};
+import { ticketsService } from '../../api/services/tickets.service';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
+import type { TicketListingWithEvent } from '../../api/types';
+import { TicketUnitStatus } from '../../api/types';
 
 export function EditListing() {
   const { t } = useTranslation();
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
 
-  const listing = listingId ? mockListedTickets[listingId] : null;
-
-  const [price, setPrice] = useState(listing?.listPrice.toString() || '');
-  const [isActive, setIsActive] = useState(listing?.isActive ?? true);
+  const [listing, setListing] = useState<TicketListingWithEvent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
-  if (!listing) {
+  // Fetch listing data
+  useEffect(() => {
+    async function fetchListing() {
+      if (!listingId) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const data = await ticketsService.getListing(listingId);
+        setListing(data);
+        setPrice((data.pricePerTicket.amount / 100).toString());
+        setDescription(data.description || '');
+      } catch (err) {
+        console.error('Failed to fetch listing:', err);
+        setError(t('editListing.errorLoading'));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchListing();
+  }, [listingId, t]);
+
+  const handleSave = async () => {
+    if (!listingId) return;
+    
+    setIsSaving(true);
+    setError(null);
+    
+    try {
+      await ticketsService.updateListing(listingId, {
+        pricePerTicket: {
+          amount: Math.round(parseFloat(price) * 100),
+          currency: listing?.pricePerTicket.currency || 'USD',
+        },
+        description: description || undefined,
+      });
+      
+      navigate('/my-tickets');
+    } catch (err) {
+      console.error('Failed to update listing:', err);
+      setError(err instanceof Error ? err.message : t('editListing.saveFailed'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!listingId) return;
+    
+    if (!confirm(t('editListing.confirmCancel'))) {
+      return;
+    }
+    
+    setIsCancelling(true);
+    setError(null);
+    
+    try {
+      await ticketsService.cancelListing(listingId);
+      navigate('/my-tickets');
+    } catch (err) {
+      console.error('Failed to cancel listing:', err);
+      setError(err instanceof Error ? err.message : t('editListing.cancelFailed'));
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {t('editListing.listingNotFound')}
-          </h2>
-          <Link to="/my-tickets" className="text-blue-600 hover:text-blue-700">
-            {t('editListing.backToMyTickets')}
-          </Link>
-        </div>
-      </div>
+      <LoadingSpinner 
+        size="lg" 
+        text={t('common.loading')} 
+        fullScreen 
+      />
     );
   }
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    navigate('/my-tickets');
-  };
+  // Error or not found
+  if (!listing) {
+    return (
+      <ErrorMessage 
+        title={error || t('editListing.listingNotFound')}
+        message={t('editListing.errorLoading')}
+        fullScreen
+      />
+    );
+  }
 
   const priceValue = parseFloat(price) || 0;
   const isValidPrice = priceValue > 0;
+  const eventDate = new Date(listing.eventDate);
+  const isActive = listing.status === 'Active';
+  const availableUnits = listing.ticketUnits.filter((unit) => unit.status === TicketUnitStatus.Available);
+  const numberedSeats = listing.ticketUnits
+    .filter((unit) => unit.seat)
+    .map((unit) => `${unit.seat!.row}-${unit.seat!.seatNumber}`);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,6 +136,11 @@ export function EditListing() {
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">{t('editListing.title')}</h1>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <ErrorAlert message={error} className="mb-6" />
+        )}
 
         {/* Important Disclaimer */}
         <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6 rounded-r-lg">
@@ -128,13 +161,9 @@ export function EditListing() {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Column - Ticket Preview */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="relative h-64 bg-gray-200">
-              <ImageWithFallback
-                src={listing.eventImage}
-                alt={listing.eventName}
-                className="w-full h-full object-cover"
-              />
-              {/* Active/Inactive Badge */}
+            <div className="relative h-64 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <Ticket className="w-24 h-24 text-white opacity-50" />
+              {/* Status Badge */}
               <div className="absolute top-4 right-4">
                 <span
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm bg-opacity-95 ${
@@ -144,7 +173,7 @@ export function EditListing() {
                   }`}
                 >
                   {isActive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  {isActive ? t('editListing.active') : t('editListing.inactive')}
+                  {isActive ? t('editListing.active') : listing.status}
                 </span>
               </div>
             </div>
@@ -160,7 +189,7 @@ export function EditListing() {
                   </label>
                   <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 rounded-md font-medium">
                     <Ticket className="w-4 h-4" />
-                    {listing.ticketType}
+                    {listing.section || listing.type}
                   </div>
                 </div>
 
@@ -170,23 +199,41 @@ export function EditListing() {
                   </label>
                   <div className="flex items-center gap-2 text-gray-900">
                     <Calendar className="w-4 h-4" />
-                    <span>{listing.eventDate} • {listing.eventTime}</span>
+                    <span>
+                      {eventDate.toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </span>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">
-                    {t('editListing.listedSince')}
+                    {t('editListing.venue')}
                   </label>
-                  <p className="text-gray-900">{listing.listedDate}</p>
+                  <p className="text-gray-900">{listing.venue}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">
-                    {t('editListing.totalViews')}
+                    {t('editListing.quantity')}
                   </label>
-                  <p className="text-gray-900">{listing.views} {t('boughtTickets.views')}</p>
+                  <p className="text-gray-900">
+                    {availableUnits.length} of {listing.ticketUnits.length} available
+                    {listing.sellTogether && ' (sold together)'}
+                  </p>
                 </div>
+
+                {numberedSeats.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      {t('editListing.seats')}
+                    </label>
+                    <p className="text-gray-900">{numberedSeats.join(', ')}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -216,6 +263,7 @@ export function EditListing() {
                       step="0.01"
                       className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                       placeholder="0.00"
+                      disabled={!isActive}
                     />
                   </div>
                   {!isValidPrice && price !== '' && (
@@ -226,68 +274,64 @@ export function EditListing() {
                   </p>
                 </div>
 
-                {/* Active/Inactive Toggle */}
+                {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    {t('editListing.listingStatus')}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('editListing.description')}
                   </label>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setIsActive(true)}
-                      className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                        isActive
-                          ? 'bg-green-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Eye className="w-5 h-5" />
-                        {t('editListing.active')}
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setIsActive(false)}
-                      className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                        !isActive
-                          ? 'bg-gray-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <EyeOff className="w-5 h-5" />
-                        {t('editListing.inactive')}
-                      </div>
-                    </button>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {isActive
-                      ? t('editListing.activeDescription')
-                      : t('editListing.inactiveDescription')
-                    }
-                  </p>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={t('editListing.descriptionPlaceholder')}
+                    disabled={!isActive}
+                  />
                 </div>
               </div>
             </div>
 
             {/* Save Button */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <button
-                onClick={handleSave}
-                disabled={!isValidPrice || isSaving}
-                className={`w-full py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
-                  !isValidPrice || isSaving
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                <Save className="w-5 h-5" />
-                {isSaving ? t('editListing.saving') : t('editListing.saveChanges')}
-              </button>
+              {isActive ? (
+                <>
+                  <button
+                    onClick={handleSave}
+                    disabled={!isValidPrice || isSaving}
+                    className={`w-full py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
+                      !isValidPrice || isSaving
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Save className="w-5 h-5" />
+                    )}
+                    {isSaving ? t('editListing.saving') : t('editListing.saveChanges')}
+                  </button>
 
-              {!isActive && (
-                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    {t('editListing.inactiveWarning')}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={handleCancel}
+                      disabled={isCancelling}
+                      className="w-full py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      {isCancelling ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
+                      {isCancelling ? t('common.loading') : t('editListing.cancelListing')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                  <EyeOff className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600">
+                    {t('editListing.listingInactive')}
                   </p>
                 </div>
               )}

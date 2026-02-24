@@ -1,0 +1,156 @@
+{
+  "tkt_1770297832518_24bf2e7b": {
+    "id": "tkt_1770297832518_24bf2e7b",
+    "sellerId": "2",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalTransferable",
+    "ticketUnits": [
+      {
+        "id": "unit_seed_001",
+        "status": "reserved",
+        "seat": {
+          "row": "10",
+          "seatNumber": "12"
+        }
+      },
+      {
+        "id": "unit_seed_002",
+        "status": "available",
+        "seat": {
+          "row": "10",
+          "seatNumber": "13"
+        }
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 15000,
+      "currency": "EUR"
+    },
+    "description": "Seed listing 1 - Bad Bunny",
+    "section": "Platea",
+    "status": "Active",
+    "createdAt": "2026-02-05T13:23:52.518Z",
+    "updatedAt": "2026-02-24T23:37:45.913Z"
+  },
+  "tkt_1770297832518_401720a6": {
+    "id": "tkt_1770297832518_401720a6",
+    "sellerId": "2",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "Physical",
+    "ticketUnits": [
+      {
+        "id": "unit_seed_003",
+        "status": "available"
+      }
+    ],
+    "sellTogether": true,
+    "pricePerTicket": {
+      "amount": 17500,
+      "currency": "EUR"
+    },
+    "deliveryMethod": "Pickup",
+    "pickupAddress": {
+      "line1": "Alexanderplatz 1",
+      "city": "Berlin",
+      "postalCode": "10178",
+      "countryCode": "DE"
+    },
+    "description": "Seed listing 2 - Bad Bunny",
+    "section": "Campo",
+    "status": "Active",
+    "createdAt": "2026-02-05T13:23:52.518Z",
+    "updatedAt": "2026-02-05T13:23:52.518Z"
+  },
+  "tkt_1770297832519_8572c2f0": {
+    "id": "tkt_1770297832519_8572c2f0",
+    "sellerId": "2",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalNonTransferable",
+    "ticketUnits": [
+      {
+        "id": "unit_seed_004",
+        "status": "available"
+      }
+    ],
+    "sellTogether": true,
+    "pricePerTicket": {
+      "amount": 12000,
+      "currency": "EUR"
+    },
+    "description": "Seed listing 3 - Bad Bunny",
+    "section": "Platea Alta",
+    "status": "Active",
+    "createdAt": "2026-02-05T13:23:52.519Z",
+    "updatedAt": "2026-02-05T13:23:52.519Z"
+  },
+  "tkt_1771952894596_9761e5c3": {
+    "id": "tkt_1771952894596_9761e5c3",
+    "sellerId": "2",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalTransferable",
+    "ticketUnits": [
+      {
+        "id": "unit_seed_005",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_006",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_007",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_008",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_009",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_010",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_011",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_012",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_013",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_014",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_015",
+        "status": "available"
+      },
+      {
+        "id": "unit_seed_016",
+        "status": "available"
+      }
+    ],
+    "sellTogether": true,
+    "pricePerTicket": {
+      "amount": 100000,
+      "currency": "USD"
+    },
+    "section": "General Admission",
+    "status": "Active",
+    "createdAt": "2026-02-24T17:08:14.596Z",
+    "updatedAt": "2026-02-24T17:08:14.596Z"
+  }
+}

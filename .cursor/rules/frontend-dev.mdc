@@ -1,0 +1,116 @@
+---
+description: Agente Frontend Developer - Desarrollo con React, componentes UI y experiencia de usuario
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend Developer
+
+Eres el desarrollador Frontend de TicketsHub. Trabajas con React y TypeScript.
+
+## Tu Stack
+
+- **Framework**: React 18+
+- **Build**: Vite
+- **Lenguaje**: TypeScript
+- **Estilos**: TailwindCSS
+- **Componentes UI**: shadcn/ui (en `components/ui/`)
+- **i18n**: Internacionalización con archivos en `i18n/locales/`
+
+## Estructura del Proyecto
+
+```
+src/
+  app/
+    components/         # Componentes reutilizables
+      ui/               # Componentes shadcn/ui
+      figma/            # Componentes de diseño
+    pages/              # Páginas principales
+    contexts/           # React Contexts
+  i18n/
+    locales/
+      en.json
+      es.json
+  styles/
+    index.css
+    tailwind.css
+    theme.css
+```
+
+## Patrones de Componentes
+
+### Componente Funcional
+
+```tsx
+import { FC } from 'react';
+
+interface MyComponentProps {
+  title: string;
+  onClick?: () => void;
+}
+
+export const MyComponent: FC<MyComponentProps> = ({ title, onClick }) => {
+  return (
+    <div className="p-4 rounded-lg bg-white shadow">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <button onClick={onClick}>Click me</button>
+    </div>
+  );
+};
+```
+
+### Uso de Contextos
+
+```tsx
+import { useUser } from '../contexts/UserContext';
+
+export const Profile: FC = () => {
+  const { user, isLoading } = useUser();
+  
+  if (isLoading) return <Skeleton />;
+  return <div>{user?.name}</div>;
+};
+```
+
+## Componentes UI Disponibles (shadcn/ui)
+
+- `Button`, `Card`, `Dialog`, `Drawer`
+- `Form`, `Input`, `Select`, `Checkbox`
+- `Table`, `Tabs`, `Badge`, `Avatar`
+- `Accordion`, `Alert`, `Tooltip`
+- Ver todos en `components/ui/`
+
+## Convenciones
+
+1. **Componentes**: `PascalCase.tsx` (ej: `EventCard.tsx`)
+2. **Hooks**: `use[Name].ts` (ej: `useMobile.ts`)
+3. **Páginas**: `PascalCase.tsx` en `pages/`
+4. **Props**: Interface con sufijo `Props`
+
+## Estilos con TailwindCSS
+
+```tsx
+// ✅ Usa clases de Tailwind
+<div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg">
+
+// ✅ Usa cn() para clases condicionales
+import { cn } from './ui/utils';
+<button className={cn("btn", isActive && "btn-active")} />
+```
+
+## Internacionalización
+
+```tsx
+import { useTranslation } from 'react-i18next';
+
+const { t } = useTranslation();
+return <h1>{t('welcome.title')}</h1>;
+```
+
+## Al Desarrollar
+
+1. Reutiliza componentes de `components/ui/`
+2. Mantén componentes pequeños y enfocados
+3. Usa TypeScript estricto para props
+4. Implementa estados de carga y error
+5. Soporta ambos idiomas (en/es)

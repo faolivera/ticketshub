@@ -1,192 +1,164 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Ticket, CheckCircle, Clock, Calendar, User, DollarSign, Edit } from 'lucide-react';
+import { Ticket, CheckCircle, Clock, Calendar, User, DollarSign, Edit, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { ticketsService } from '../../api/services/tickets.service';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorAlert } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
+import type { TransactionWithDetails, TicketListingWithEvent, TransactionStatus } from '../../api/types';
+import { TicketUnitStatus } from '../../api/types';
+import { useUser } from '../contexts/UserContext';
 
-interface TicketTransaction {
-  id: string;
-  eventName: string;
-  eventImage: string;
-  ticketType: string;
-  eventDate: string;
-  eventTime: string;
-  price: number;
-  isSeller: boolean;
-  status: 'pending_transfer' | 'transferred' | 'confirmed' | 'completed';
-  counterparty: string;
-  purchaseDate: string;
+type TabType = 'bought' | 'sold' | 'listed';
+
+/**
+ * Map API transaction status to display info
+ */
+function getTransactionStatusInfo(status: TransactionStatus, t: (key: string) => string) {
+  switch (status) {
+    case 'PendingPayment':
+      return {
+        label: t('boughtTickets.pendingPayment'),
+        color: 'bg-yellow-100 text-yellow-800',
+        icon: Clock
+      };
+    case 'PaymentReceived':
+      return {
+        label: t('boughtTickets.pending'),
+        color: 'bg-yellow-100 text-yellow-800',
+        icon: Clock
+      };
+    case 'TicketTransferred':
+      return {
+        label: t('boughtTickets.transferConfirmed'),
+        color: 'bg-blue-100 text-blue-800',
+        icon: Clock
+      };
+    case 'Completed':
+      return {
+        label: t('boughtTickets.completed'),
+        color: 'bg-green-100 text-green-800',
+        icon: CheckCircle
+      };
+    case 'Disputed':
+      return {
+        label: t('boughtTickets.disputed'),
+        color: 'bg-red-100 text-red-800',
+        icon: AlertCircle
+      };
+    case 'Refunded':
+      return {
+        label: t('boughtTickets.refunded'),
+        color: 'bg-gray-100 text-gray-800',
+        icon: CheckCircle
+      };
+    case 'Cancelled':
+      return {
+        label: t('boughtTickets.cancelled'),
+        color: 'bg-gray-100 text-gray-800',
+        icon: CheckCircle
+      };
+    default:
+      return {
+        label: status,
+        color: 'bg-gray-100 text-gray-800',
+        icon: Clock
+      };
+  }
 }
 
-interface ListedTicket {
-  id: string;
-  eventName: string;
-  eventImage: string;
-  ticketType: string;
-  eventDate: string;
-  eventTime: string;
-  listPrice: number;
-  status: 'active' | 'pending_sale' | 'sold';
-  views: number;
-  listedDate: string;
+/**
+ * Map listing status to display info
+ */
+function getListedStatusInfo(status: string, t: (key: string) => string) {
+  switch (status) {
+    case 'Active':
+      return {
+        label: t('boughtTickets.activeListing'),
+        color: 'bg-green-100 text-green-800',
+        icon: CheckCircle
+      };
+    case 'Sold':
+      return {
+        label: t('boughtTickets.sold'),
+        color: 'bg-gray-100 text-gray-800',
+        icon: CheckCircle
+      };
+    case 'Cancelled':
+      return {
+        label: t('boughtTickets.cancelled'),
+        color: 'bg-gray-100 text-gray-800',
+        icon: Clock
+      };
+    case 'Expired':
+      return {
+        label: t('boughtTickets.expired'),
+        color: 'bg-yellow-100 text-yellow-800',
+        icon: Clock
+      };
+    default:
+      return {
+        label: status,
+        color: 'bg-gray-100 text-gray-800',
+        icon: Clock
+      };
+  }
 }
-
-const mockTickets: TicketTransaction[] = [
-  {
-    id: '1',
-    eventName: 'Summer Music Festival',
-    eventImage: 'https://images.unsplash.com/photo-1656848981929-bab777fc26a9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMGZlc3RpdmFsJTIwY29uY2VydHxlbnwxfHx8fDE3Njk0MTQyOTN8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'VIP',
-    eventDate: 'July 15, 2026',
-    eventTime: '4:00 PM',
-    price: 250,
-    isSeller: false,
-    status: 'pending_transfer',
-    counterparty: 'John Smith',
-    purchaseDate: 'January 20, 2026'
-  },
-  {
-    id: '2',
-    eventName: 'Rock Night',
-    eventImage: 'https://images.unsplash.com/photo-1723902701334-08b0fe53ff4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyb2NrJTIwY29uY2VydCUyMHN0YWdlfGVufDF8fHx8MTc2OTM1MzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'General Admission',
-    eventDate: 'August 20, 2026',
-    eventTime: '8:00 PM',
-    price: 125,
-    isSeller: true,
-    status: 'transferred',
-    counterparty: 'Alice Brown',
-    purchaseDate: 'January 18, 2026'
-  },
-  {
-    id: '3',
-    eventName: 'Jazz Evening',
-    eventImage: 'https://images.unsplash.com/photo-1757439160077-dd5d62a4d851?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqYXp6JTIwcGVyZm9ybWFuY2UlMjBsaXZlfGVufDF8fHx8MTc2OTM1MzMyNHww&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'Premium',
-    eventDate: 'September 5, 2026',
-    eventTime: '7:00 PM',
-    price: 75,
-    isSeller: false,
-    status: 'completed',
-    counterparty: 'Sarah Johnson',
-    purchaseDate: 'January 15, 2026'
-  },
-  {
-    id: '4',
-    eventName: 'Summer Music Festival',
-    eventImage: 'https://images.unsplash.com/photo-1656848981929-bab777fc26a9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMGZlc3RpdmFsJTIwY29uY2VydHxlbnwxfHx8fDE3Njk0MTQyOTN8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'General Admission',
-    eventDate: 'July 15, 2026',
-    eventTime: '10:00 PM',
-    price: 150,
-    isSeller: false,
-    status: 'transferred',
-    counterparty: 'Mike Davis',
-    purchaseDate: 'January 22, 2026'
-  }
-];
-
-const mockListedTickets: ListedTicket[] = [
-  {
-    id: '5',
-    eventName: 'Football Championship',
-    eventImage: 'https://images.unsplash.com/photo-1764050359179-517599dab87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcG9ydHMlMjBzdGFkaXVtJTIwZXZlbnR8ZW58MXx8fHwxNzY5MzU4NzI2fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'VIP Box',
-    eventDate: 'June 10, 2026',
-    eventTime: '3:00 PM',
-    listPrice: 300,
-    status: 'active',
-    views: 42,
-    listedDate: 'January 10, 2026'
-  },
-  {
-    id: '6',
-    eventName: 'Theater Spectacular',
-    eventImage: 'https://images.unsplash.com/photo-1764936394584-c4a66ac31e00?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0aGVhdGVyJTIwcGVyZm9ybWFuY2UlMjBzdGFnZXxlbnwxfHx8fDE3NjkzNTUyOTd8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'Orchestra',
-    eventDate: 'May 22, 2026',
-    eventTime: '7:30 PM',
-    listPrice: 180,
-    status: 'active',
-    views: 28,
-    listedDate: 'January 12, 2026'
-  },
-  {
-    id: '7',
-    eventName: 'Rock Night',
-    eventImage: 'https://images.unsplash.com/photo-1723902701334-08b0fe53ff4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyb2NrJTIwY29uY2VydCUyMHN0YWdlfGVufDF8fHx8MTc2OTM1MzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    ticketType: 'VIP',
-    eventDate: 'August 20, 2026',
-    eventTime: '8:00 PM',
-    listPrice: 200,
-    status: 'pending_sale',
-    views: 15,
-    listedDate: 'January 19, 2026'
-  }
-];
 
 export function BoughtTicketManager() {
   const { t } = useTranslation();
-  const [tickets] = useState<TicketTransaction[]>(mockTickets);
-  const [listedTickets] = useState<ListedTicket[]>(mockListedTickets);
-  const [activeTab, setActiveTab] = useState<'bought' | 'sold' | 'listed'>('bought');
+  const { user, isAuthenticated } = useUser();
+  
+  const [bought, setBought] = useState<TransactionWithDetails[]>([]);
+  const [sold, setSold] = useState<TransactionWithDetails[]>([]);
+  const [listed, setListed] = useState<TicketListingWithEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('bought');
 
-  // Filter tickets based on active tab
-  const filteredTickets = tickets.filter(ticket => 
-    activeTab === 'bought' ? !ticket.isSeller : ticket.isSeller
-  );
+  // Fetch all tickets once when authenticated
+  useEffect(() => {
+    async function fetchData() {
+      if (!isAuthenticated) return;
 
-  const getTransactionStatusInfo = (status: TicketTransaction['status']) => {
-    switch (status) {
-      case 'pending_transfer':
-        return {
-          label: t('boughtTickets.pending'),
-          color: 'bg-yellow-100 text-yellow-800',
-          icon: Clock
-        };
-      case 'transferred':
-        return {
-          label: t('boughtTickets.transferConfirmed'),
-          color: 'bg-blue-100 text-blue-800',
-          icon: Clock
-        };
-      case 'confirmed':
-        return {
-          label: t('boughtTickets.receiptConfirmed'),
-          color: 'bg-purple-100 text-purple-800',
-          icon: CheckCircle
-        };
-      case 'completed':
-        return {
-          label: t('boughtTickets.completed'),
-          color: 'bg-green-100 text-green-800',
-          icon: CheckCircle
-        };
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await ticketsService.getMyTickets();
+        setBought(data.bought);
+        setSold(data.sold);
+        setListed(data.listed);
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        setError(t('common.errorLoading'));
+      } finally {
+        setIsLoading(false);
+      }
     }
-  };
 
-  const getListedStatusInfo = (status: ListedTicket['status']) => {
-    switch (status) {
-      case 'active':
-        return {
-          label: t('boughtTickets.activeListing'),
-          color: 'bg-green-100 text-green-800',
-          icon: CheckCircle
-        };
-      case 'pending_sale':
-        return {
-          label: t('boughtTickets.pendingSale'),
-          color: 'bg-yellow-100 text-yellow-800',
-          icon: Clock
-        };
-      case 'sold':
-        return {
-          label: t('boughtTickets.sold'),
-          color: 'bg-gray-100 text-gray-800',
-          icon: CheckCircle
-        };
-    }
-  };
+    fetchData();
+  }, [isAuthenticated, t]);
+
+  const displayedTransactions = activeTab === 'bought' ? bought : sold;
+
+  // Not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <EmptyState
+          icon={Ticket}
+          title={t('boughtTickets.loginRequired')}
+          description={t('boughtTickets.loginToView')}
+          action={{
+            label: t('header.login'),
+            to: '/register',
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -231,176 +203,202 @@ export function BoughtTicketManager() {
           </div>
         </div>
 
-        {/* Tickets Grid */}
-        {activeTab === 'listed' ? (
-          // Listed Tickets View
-          listedTickets.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listedTickets.map((ticket) => {
-                const statusInfo = getListedStatusInfo(ticket.status);
-                const StatusIcon = statusInfo.icon;
+        {/* Loading state */}
+        {isLoading && (
+          <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />
+        )}
 
-                return (
-                  <div
-                    key={ticket.id}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    {/* Event Image */}
-                    <div className="relative h-48 bg-gray-200">
-                      <ImageWithFallback
-                        src={ticket.eventImage}
-                        alt={ticket.eventName}
-                        className="w-full h-full object-cover"
-                      />
-                      {/* Status Badge */}
-                      <div className="absolute top-3 right-3">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {statusInfo.label}
-                        </span>
-                      </div>
-                    </div>
+        {/* Error state */}
+        {error && (
+          <ErrorAlert message={error} className="mb-6" />
+        )}
 
-                    {/* Card Content */}
-                    <div className="p-5">
-                      {/* Event Name */}
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
-                        {ticket.eventName}
-                      </h3>
+        {/* Content */}
+        {!isLoading && !error && (
+          <>
+            {activeTab === 'listed' ? (
+              // Listed Tickets View
+              listed.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {listed.map((listing) => {
+                    const statusInfo = getListedStatusInfo(listing.status, t);
+                    const StatusIcon = statusInfo.icon;
+                    const eventDate = new Date(listing.eventDate);
+                    const priceDisplay = listing.pricePerTicket.amount / 100;
+                    const availableCount = listing.ticketUnits.filter(
+                      (unit) => unit.status === TicketUnitStatus.Available,
+                    ).length;
 
-                      {/* Ticket Type */}
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
-                        <Ticket className="w-3.5 h-3.5" />
-                        {ticket.ticketType}
-                      </div>
-
-                      {/* Date and Time */}
-                      <div className="flex items-center gap-2 text-gray-600 mb-3">
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm">
-                          {ticket.eventDate} • {ticket.eventTime}
-                        </span>
-                      </div>
-
-                      {/* Price and Views */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-3">
-                        <div className="flex items-center gap-1.5 text-gray-900">
-                          <DollarSign className="w-4 h-4" />
-                          <span className="text-lg font-bold">{ticket.listPrice.toFixed(2)}</span>
-                        </div>
-                        <span className="text-sm text-gray-500">
-                          {ticket.views} {t('boughtTickets.views')}
-                        </span>
-                      </div>
-
-                      {/* Edit Button */}
-                      <Link
-                        to={`/edit-listing/${ticket.id}`}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    return (
+                      <div
+                        key={listing.id}
+                        className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                       >
-                        <Edit className="w-4 h-4" />
-                        {t('boughtTickets.editListing')}
+                        {/* Event Image */}
+                        <div className="relative h-48 bg-gray-200">
+                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <Ticket className="w-16 h-16 text-white opacity-50" />
+                          </div>
+                          {/* Status Badge */}
+                          <div className="absolute top-3 right-3">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              {statusInfo.label}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Card Content */}
+                        <div className="p-5">
+                          {/* Event Name */}
+                          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
+                            {listing.eventName}
+                          </h3>
+
+                          {/* Ticket Type */}
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
+                            <Ticket className="w-3.5 h-3.5" />
+                            {listing.section || listing.type}
+                          </div>
+
+                          {/* Date and Time */}
+                          <div className="flex items-center gap-2 text-gray-600 mb-3">
+                            <Calendar className="w-4 h-4 flex-shrink-0" />
+                            <span className="text-sm">
+                              {eventDate.toLocaleDateString('en-US', { 
+                                month: 'long', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+
+                          {/* Price and Quantity */}
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-3">
+                            <div className="flex items-center gap-1.5 text-gray-900">
+                              <DollarSign className="w-4 h-4" />
+                              <span className="text-lg font-bold">{priceDisplay.toFixed(2)}</span>
+                            </div>
+                            <span className="text-sm text-gray-500">
+                              {availableCount} {t('boughtTickets.available')}
+                            </span>
+                          </div>
+
+                          {/* Edit Button */}
+                          {listing.status === 'Active' && (
+                            <Link
+                              to={`/edit-listing/${listing.id}`}
+                              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <Edit className="w-4 h-4" />
+                              {t('boughtTickets.editListing')}
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-12">
+                  <EmptyState
+                    icon={Ticket}
+                    title={t('boughtTickets.noListingsYet')}
+                    description={t('boughtTickets.listedTicketsWillAppear')}
+                    action={{
+                      label: t('boughtTickets.startSelling'),
+                      to: '/sell-ticket',
+                    }}
+                  />
+                </div>
+              )
+            ) : (
+              // Bought/Sold Tickets View
+              displayedTransactions.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {displayedTransactions.map((transaction) => {
+                    const statusInfo = getTransactionStatusInfo(transaction.status, t);
+                    const StatusIcon = statusInfo.icon;
+                    const eventDate = new Date(transaction.eventDate);
+                    const isSeller = transaction.sellerId === user?.id;
+                    const counterparty = isSeller ? transaction.buyerName : transaction.sellerName;
+
+                    return (
+                      <Link
+                        key={transaction.id}
+                        to={`/ticket/${transaction.id}`}
+                        className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                      >
+                        {/* Event Image */}
+                        <div className="relative h-48 bg-gray-200">
+                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <Ticket className="w-16 h-16 text-white opacity-50" />
+                          </div>
+                          {/* Status Badge */}
+                          <div className="absolute top-3 right-3">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              {statusInfo.label}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Card Content */}
+                        <div className="p-5">
+                          {/* Event Name */}
+                          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
+                            {transaction.eventName}
+                          </h3>
+
+                          {/* Ticket Type */}
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
+                            <Ticket className="w-3.5 h-3.5" />
+                            {transaction.ticketType}
+                          </div>
+
+                          {/* Date and Time */}
+                          <div className="flex items-center gap-2 text-gray-600 mb-3">
+                            <Calendar className="w-4 h-4 flex-shrink-0" />
+                            <span className="text-sm">
+                              {eventDate.toLocaleDateString('en-US', { 
+                                month: 'long', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+
+                          {/* Seller/Buyer Info */}
+                          <div className="flex items-center gap-2 text-gray-600 pt-3 border-t border-gray-100">
+                            <User className="w-4 h-4 flex-shrink-0" />
+                            <span className="text-sm">
+                              {isSeller ? t('boughtTickets.to') : t('boughtTickets.soldBy')}{' '}
+                              <span className="font-medium text-gray-900">{counterparty}</span>
+                            </span>
+                          </div>
+                        </div>
                       </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <Ticket className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {t('boughtTickets.noListingsYet')}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {t('boughtTickets.listedTicketsWillAppear')}
-              </p>
-              <Link
-                to="/event-tickets"
-                className="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                {t('boughtTickets.startSelling')}
-              </Link>
-            </div>
-          )
-        ) : (
-          // Bought/Sold Tickets View
-          filteredTickets.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTickets.map((ticket) => {
-                const statusInfo = getTransactionStatusInfo(ticket.status);
-                const StatusIcon = statusInfo.icon;
-
-                return (
-                  <Link
-                    key={ticket.id}
-                    to={`/ticket/TKT-2026-${ticket.id.padStart(6, '0')}`}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    {/* Event Image */}
-                    <div className="relative h-48 bg-gray-200">
-                      <ImageWithFallback
-                        src={ticket.eventImage}
-                        alt={ticket.eventName}
-                        className="w-full h-full object-cover"
-                      />
-                      {/* Status Badge */}
-                      <div className="absolute top-3 right-3">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {statusInfo.label}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Card Content */}
-                    <div className="p-5">
-                      {/* Event Name */}
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
-                        {ticket.eventName}
-                      </h3>
-
-                      {/* Ticket Type */}
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
-                        <Ticket className="w-3.5 h-3.5" />
-                        {ticket.ticketType}
-                      </div>
-
-                      {/* Date and Time */}
-                      <div className="flex items-center gap-2 text-gray-600 mb-3">
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm">
-                          {ticket.eventDate} • {ticket.eventTime}
-                        </span>
-                      </div>
-
-                      {/* Seller/Buyer Info */}
-                      <div className="flex items-center gap-2 text-gray-600 pt-3 border-t border-gray-100">
-                        <User className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm">
-                          {ticket.isSeller ? t('boughtTickets.to') : t('boughtTickets.soldBy')}{' '}
-                          <span className="font-medium text-gray-900">{ticket.counterparty}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <Ticket className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {t('boughtTickets.noTicketsYet')}
-              </h3>
-              <p className="text-gray-600">
-                {activeTab === 'bought' 
-                  ? t('boughtTickets.purchasedTicketsWillAppear')
-                  : t('boughtTickets.soldTicketsWillAppear')
-                }
-              </p>
-            </div>
-          )
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-12">
+                  <EmptyState
+                    icon={Ticket}
+                    title={t('boughtTickets.noTicketsYet')}
+                    description={activeTab === 'bought' 
+                      ? t('boughtTickets.purchasedTicketsWillAppear')
+                      : t('boughtTickets.soldTicketsWillAppear')
+                    }
+                    action={activeTab === 'bought' ? {
+                      label: t('landing.upcomingEvents'),
+                      to: '/',
+                    } : undefined}
+                  />
+                </div>
+              )
+            )}
+          </>
         )}
       </div>
     </div>

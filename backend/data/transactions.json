@@ -1,0 +1,36 @@
+{
+  "txn_1771976265910_d5aba2c7": {
+    "id": "txn_1771976265910_d5aba2c7",
+    "listingId": "tkt_1770297832518_24bf2e7b",
+    "sellerId": "2",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_seed_001"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 15000,
+      "currency": "EUR"
+    },
+    "buyerFee": {
+      "amount": 1500,
+      "currency": "EUR"
+    },
+    "sellerFee": {
+      "amount": 750,
+      "currency": "EUR"
+    },
+    "totalPaid": {
+      "amount": 16500,
+      "currency": "EUR"
+    },
+    "sellerReceives": {
+      "amount": 14250,
+      "currency": "EUR"
+    },
+    "status": "PendingPayment",
+    "createdAt": "2026-02-24T23:37:45.910Z",
+    "updatedAt": "2026-02-24T23:37:45.910Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z"
+  }
+}

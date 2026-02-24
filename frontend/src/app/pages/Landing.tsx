@@ -1,105 +1,107 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Shield } from 'lucide-react';
+import { Search, Shield, Calendar } from 'lucide-react';
 import { EventCard } from '@/app/components/EventCard';
+import { LoadingSpinner } from '@/app/components/LoadingSpinner';
+import { ErrorMessage } from '@/app/components/ErrorMessage';
+import { EmptyState } from '@/app/components/EmptyState';
 import { useTranslation } from 'react-i18next';
+import { eventsService } from '../../api/services/events.service';
+import type { EventWithDates, EventCategory } from '../../api/types';
 
-const mockEvents = [
-  {
-    id: '1',
-    name: 'Summer Music Festival',
-    artist: 'Various Artists',
-    location: 'Los Angeles, CA',
-    venue: 'LA Stadium',
-    showTimes: [
-      { date: 'July 15, 2026', time: '4:00 PM' },
-      { date: 'July 15, 2026', time: '10:00 PM' },
-      { date: 'July 17, 2026', time: '10:00 PM' }
-    ],
-    ticketTypes: ['VIP', 'General Admission', 'Field'],
-    labels: ['Trending', 'New Event'],
-    price: 89
-  },
-  {
-    id: '2',
-    name: 'Bad Bunny',
-    artist: 'Bad Bunny',
-    location: 'New York, NY',
-    venue: 'Madison Square Garden',
-    showTimes: [
-      { date: 'July 15, 2026', time: '4:00 PM' },
-      { date: 'July 15, 2026', time: '10:00 PM' },
-      { date: 'July 17, 2026', time: '10:00 PM' }
-    ],
-    ticketTypes: ['VIP', 'Normal'],
-    labels: ['Trending'],
-    price: 125
-  },
-  {
-    id: '3',
-    name: 'Jazz Evening',
-    artist: 'Jazz Masters',
-    location: 'Chicago, IL',
-    venue: 'Chicago Theatre',
-    showTimes: [
-      { date: 'September 5, 2026', time: '7:30 PM' },
-      { date: 'September 6, 2026', time: '7:30 PM' }
-    ],
-    ticketTypes: ['Premium', 'Standard'],
-    labels: ['New Event'],
-    price: 75
-  },
-  {
-    id: '4',
-    name: 'Pop Concert',
-    artist: 'Pop Star',
-    location: 'Miami, FL',
-    venue: 'American Airlines Arena',
-    showTimes: [
-      { date: 'October 10, 2026', time: '9:00 PM' }
-    ],
-    ticketTypes: ['VIP', 'General Admission', 'Standing'],
-    price: 99
-  },
-  {
-    id: '5',
-    name: 'Electronic Dance Night',
-    artist: 'DJ Masters',
-    location: 'Las Vegas, NV',
-    venue: 'The Sphere',
-    showTimes: [
-      { date: 'November 1, 2026', time: '10:00 PM' },
-      { date: 'November 2, 2026', time: '10:00 PM' },
-      { date: 'November 3, 2026', time: '10:00 PM' },
-      { date: 'November 4, 2026', time: '10:00 PM' }
-    ],
-    ticketTypes: ['VIP', 'GA', 'Field'],
-    labels: ['Trending'],
-    price: 150
-  },
-  {
-    id: '6',
-    name: 'Classical Symphony',
-    artist: 'National Orchestra',
-    location: 'Boston, MA',
-    venue: 'Symphony Hall',
-    showTimes: [
-      { date: 'December 12, 2026', time: '7:00 PM' }
-    ],
-    ticketTypes: ['Premium', 'Standard', 'Balcony'],
-    price: 60
+/**
+ * Transform API event data to EventCard props format
+ */
+function transformEventForCard(event: EventWithDates) {
+  // Transform dates to showTimes format
+  const showTimes = event.dates
+    .filter(d => d.status === 'approved')
+    .map(d => {
+      const date = new Date(d.date);
+      const startTime = d.startTime ? new Date(d.startTime) : date;
+      return {
+        date: date.toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }),
+        time: startTime.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        }),
+      };
+    });
+
+  // Generate labels based on event properties
+  const labels: string[] = [];
+  const createdRecently = new Date(event.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  if (createdRecently) {
+    labels.push('New Event');
   }
-];
+
+  // Build location string
+  const locationStr = [event.location.city, event.location.countryCode].filter(Boolean).join(', ');
+
+  return {
+    id: event.id,
+    name: event.name,
+    artist: event.name, // Use event name as artist since backend doesn't have artist field
+    location: locationStr,
+    venue: event.venue,
+    showTimes,
+    ticketTypes: ['General'], // Will be updated when we fetch listings
+    labels,
+    image: event.images?.[0]?.src,
+    price: undefined, // Will be updated when we fetch listings
+  };
+}
 
 export function Landing() {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+  const [events, setEvents] = useState<EventWithDates[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredEvents = mockEvents.filter(event =>
-    event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Fetch events on mount
+  useEffect(() => {
+    async function fetchEvents() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await eventsService.listEvents({ 
+          status: 'approved',
+          limit: 50 
+        });
+        setEvents(data);
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+        setError(t('landing.errorLoadingEvents'));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchEvents();
+  }, [t]);
+
+  // Transform and filter events
+  const filteredEvents = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase();
+    
+    return events
+      .filter(event => {
+        if (!searchTerm) return true;
+        return (
+          event.name.toLowerCase().includes(searchLower) ||
+          event.venue.toLowerCase().includes(searchLower) ||
+          event.location.city.toLowerCase().includes(searchLower) ||
+          event.description.toLowerCase().includes(searchLower)
+        );
+      })
+      .map(transformEventForCard);
+  }, [events, searchTerm]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -142,18 +144,32 @@ export function Landing() {
           {searchTerm ? t('landing.searchResults') : t('landing.upcomingEvents')}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <EventCard key={event.id} {...event} />
-          ))}
-        </div>
+        {isLoading && (
+          <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />
+        )}
 
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              {t('landing.noEventsFound')}
-            </p>
+        {error && (
+          <ErrorMessage 
+            message={error}
+            onRetry={() => window.location.reload()}
+            className="py-12"
+          />
+        )}
+
+        {!isLoading && !error && filteredEvents.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredEvents.map((event) => (
+              <EventCard key={event.id} {...event} />
+            ))}
           </div>
+        )}
+
+        {!isLoading && !error && filteredEvents.length === 0 && (
+          <EmptyState
+            icon={Calendar}
+            title={t('landing.noEventsFound')}
+            description={searchTerm ? undefined : t('landing.checkBackLater')}
+          />
         )}
       </div>
     </div>

@@ -1,93 +1,61 @@
 import { useParams, Link } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, Minus, ArrowLeft, Calendar, Ticket } from 'lucide-react';
-
-const mockSellerData = {
-  seller1: {
-    id: 'seller1',
-    name: 'John Smith',
-    picture: '',
-    memberSince: 'January 2024',
-    totalSales: 127,
-    reviewStats: { positive: 120, neutral: 5, negative: 2 },
-    reviews: [
-      {
-        id: 'r1',
-        buyerName: 'Alice Brown',
-        type: 'positive' as const,
-        comment: 'Great seller! Tickets were delivered immediately and were valid. Would buy again!',
-        eventName: 'Summer Music Festival',
-        ticketType: 'VIP',
-        eventDate: 'July 15, 2026',
-        reviewDate: 'January 15, 2026'
-      },
-      {
-        id: 'r2',
-        buyerName: 'Bob Wilson',
-        type: 'neutral' as const,
-        comment: 'Good experience overall. Tickets arrived on time.',
-        eventName: 'Rock Night',
-        ticketType: 'General Admission',
-        eventDate: 'August 20, 2026',
-        reviewDate: 'January 10, 2026'
-      },
-      {
-        id: 'r3',
-        buyerName: 'Carol Martinez',
-        type: 'positive' as const,
-        comment: 'Excellent! Quick response and smooth transaction.',
-        eventName: 'Summer Music Festival',
-        ticketType: 'Field',
-        eventDate: 'July 15, 2026',
-        reviewDate: 'January 5, 2026'
-      },
-      {
-        id: 'r5',
-        buyerName: 'James Taylor',
-        type: 'negative' as const,
-        comment: 'Tickets took longer than expected to transfer, but eventually worked.',
-        eventName: 'Jazz Evening',
-        ticketType: 'Standard',
-        eventDate: 'September 5, 2026',
-        reviewDate: 'January 3, 2026'
-      }
-    ]
-  },
-  seller2: {
-    id: 'seller2',
-    name: 'Sarah Johnson',
-    picture: '',
-    memberSince: 'March 2024',
-    totalSales: 89,
-    reviewStats: { positive: 75, neutral: 10, negative: 4 },
-    reviews: [
-      {
-        id: 'r4',
-        buyerName: 'David Lee',
-        type: 'positive' as const,
-        comment: 'Perfect transaction! Highly recommended seller.',
-        eventName: 'Electronic Dance Night',
-        ticketType: 'VIP',
-        eventDate: 'November 1, 2026',
-        reviewDate: 'January 18, 2026'
-      }
-    ]
-  }
-};
+import { useEffect, useState } from 'react';
+import { ThumbsUp, ThumbsDown, Minus, ArrowLeft, Calendar, Ticket, MessageSquare } from 'lucide-react';
+import { sellersService } from '../../api/services/sellers.service';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
+import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import type { SellerProfile as SellerProfileData } from '../../api/types';
 
 export function SellerProfile() {
   const { sellerId } = useParams<{ sellerId: string }>();
-  const seller = mockSellerData[sellerId as keyof typeof mockSellerData];
+  const [seller, setSeller] = useState<SellerProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!seller) {
+  useEffect(() => {
+    async function fetchSellerProfile() {
+      if (!sellerId) {
+        setError('Seller not found');
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await sellersService.getSellerProfile(sellerId);
+        setSeller(data);
+      } catch (err) {
+        console.error('Failed to fetch seller profile:', err);
+        setError('Unable to load seller profile');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchSellerProfile();
+  }, [sellerId]);
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Seller not found</h2>
-          <Link to="/" className="text-blue-600 hover:text-blue-700">
-            Return to home
-          </Link>
-        </div>
-      </div>
+      <LoadingSpinner
+        size="lg"
+        text="Loading seller profile"
+        fullScreen
+      />
+    );
+  }
+
+  if (error || !seller) {
+    return (
+      <ErrorMessage
+        title={error || 'Seller not found'}
+        message="Please try again later."
+        fullScreen
+      />
     );
   }
 
@@ -113,8 +81,17 @@ export function SellerProfile() {
     }
   };
 
+  const getInitials = (name: string) => {
+    const parts = name.split(' ').filter(Boolean);
+    return parts.slice(0, 2).map((part) => part[0].toUpperCase()).join('') || '?';
+  };
+
   const totalReviews = seller.reviewStats.positive + seller.reviewStats.neutral + seller.reviewStats.negative;
   const positivePercentage = totalReviews > 0 ? Math.round((seller.reviewStats.positive / totalReviews) * 100) : 0;
+  const memberSinceDate = new Date(seller.memberSince);
+  const memberSinceLabel = Number.isNaN(memberSinceDate.getTime())
+    ? seller.memberSince
+    : memberSinceDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -129,13 +106,21 @@ export function SellerProfile() {
 
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
           <div className="flex items-start gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
-              {seller.name.split(' ').map(n => n[0]).join('')}
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0 overflow-hidden">
+              {seller.pic?.src ? (
+                <ImageWithFallback
+                  src={seller.pic.src}
+                  alt={`${seller.publicName} profile`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>{getInitials(seller.publicName)}</span>
+              )}
             </div>
 
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{seller.name}</h1>
-              <p className="text-gray-600 mb-4">Member since {seller.memberSince}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{seller.publicName}</h1>
+              <p className="text-gray-600 mb-4">Member since {memberSinceLabel}</p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -173,41 +158,49 @@ export function SellerProfile() {
         <div className="bg-white rounded-lg shadow-md p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
 
-          <div className="space-y-6">
-            {seller.reviews.map((review) => (
-              <div 
-                key={review.id}
-                className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-semibold text-gray-900">{review.buyerName}</p>
-                    <p className="text-sm text-gray-500">{review.reviewDate}</p>
+          {seller.reviews.length === 0 ? (
+            <EmptyState
+              icon={MessageSquare}
+              title="No reviews yet"
+              description="This seller has not received any reviews yet."
+            />
+          ) : (
+            <div className="space-y-6">
+              {seller.reviews.map((review) => (
+                <div 
+                  key={review.id}
+                  className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-semibold text-gray-900">{review.buyerName}</p>
+                      <p className="text-sm text-gray-500">{review.reviewDate}</p>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border-2 ${getReviewBadgeColor(review.type)}`}>
+                      {getReviewIcon(review.type)}
+                      <span className="text-sm font-semibold capitalize">{review.type}</span>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border-2 ${getReviewBadgeColor(review.type)}`}>
-                    {getReviewIcon(review.type)}
-                    <span className="text-sm font-semibold capitalize">{review.type}</span>
+
+                  <p className="text-gray-700 mb-3">{review.comment}</p>
+
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Ticket className="w-4 h-4" />
+                      <span>{review.eventName}</span>
+                    </div>
+                    <div className="text-gray-600">
+                      <span className="font-medium">Ticket:</span> {review.ticketType}
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Calendar className="w-4 h-4" />
+                      <span>{review.eventDate}</span>
+                    </div>
                   </div>
                 </div>
-
-                <p className="text-gray-700 mb-3">{review.comment}</p>
-
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Ticket className="w-4 h-4" />
-                    <span>{review.eventName}</span>
-                  </div>
-                  <div className="text-gray-600">
-                    <span className="font-medium">Ticket:</span> {review.ticketType}
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>{review.eventDate}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

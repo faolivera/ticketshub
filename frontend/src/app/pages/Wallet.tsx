@@ -1,196 +1,192 @@
-import { useState } from 'react';
-import { Wallet as WalletIcon, DollarSign, Clock, CheckCircle, ArrowUpRight, TrendingUp, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Wallet as WalletIcon, DollarSign, Clock, CheckCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { walletService } from '../../api/services/wallet.service';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorAlert } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
+import type { Wallet as WalletType, WalletTransaction, WalletTransactionType } from '../../api/types';
+import { useUser } from '../contexts/UserContext';
 
-interface Transaction {
-  id: string;
-  eventName: string;
-  ticketType: string;
-  amount: number;
-  status: 'pending' | 'released' | 'completed';
-  buyer: string;
-  saleDate: string;
-  releaseDate: string;
-  transactionDate?: string;
+/**
+ * Format money amount from cents to display
+ */
+function formatMoney(amount: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(amount / 100);
 }
 
-const mockTransactions: Transaction[] = [
-  {
-    id: '1',
-    eventName: 'Summer Music Festival',
-    ticketType: 'VIP',
-    amount: 250,
-    status: 'completed',
-    buyer: 'Alice Johnson',
-    saleDate: 'January 10, 2026',
-    releaseDate: 'January 13, 2026',
-    transactionDate: 'January 13, 2026'
-  },
-  {
-    id: '2',
-    eventName: 'Rock Night',
-    ticketType: 'General Admission',
-    amount: 125,
-    status: 'pending',
-    buyer: 'Bob Smith',
-    saleDate: 'January 18, 2026',
-    releaseDate: 'January 25, 2026'
-  },
-  {
-    id: '3',
-    eventName: 'Jazz Evening',
-    ticketType: 'Premium',
-    amount: 175,
-    status: 'completed',
-    buyer: 'Carol White',
-    saleDate: 'January 5, 2026',
-    releaseDate: 'January 8, 2026',
-    transactionDate: 'January 8, 2026'
-  },
-  {
-    id: '4',
-    eventName: 'Tech Conference 2026',
-    ticketType: 'Early Bird',
-    amount: 300,
-    status: 'pending',
-    buyer: 'David Brown',
-    saleDate: 'January 20, 2026',
-    releaseDate: 'January 27, 2026'
-  },
-  {
-    id: '5',
-    eventName: 'Comedy Show',
-    ticketType: 'Front Row',
-    amount: 80,
-    status: 'completed',
-    buyer: 'Emma Davis',
-    saleDate: 'December 28, 2025',
-    releaseDate: 'December 31, 2025',
-    transactionDate: 'December 31, 2025'
-  },
-  {
-    id: '6',
-    eventName: 'Food Festival',
-    ticketType: 'All Access',
-    amount: 95,
-    status: 'completed',
-    buyer: 'Frank Miller',
-    saleDate: 'December 20, 2025',
-    releaseDate: 'December 23, 2025',
-    transactionDate: 'December 23, 2025'
-  },
-  {
-    id: '7',
-    eventName: 'Theater Performance',
-    ticketType: 'Balcony',
-    amount: 60,
-    status: 'released',
-    buyer: 'Grace Lee',
-    saleDate: 'January 15, 2026',
-    releaseDate: 'January 22, 2026',
-    transactionDate: 'January 22, 2026'
+/**
+ * Get transaction type badge
+ */
+function getTransactionTypeBadge(type: WalletTransactionType, t: (key: string) => string) {
+  switch (type) {
+    case 'credit':
+      return {
+        label: t('wallet.credit'),
+        color: 'bg-green-100 text-green-800',
+        icon: ArrowDownRight,
+      };
+    case 'debit':
+      return {
+        label: t('wallet.debit'),
+        color: 'bg-red-100 text-red-800',
+        icon: ArrowUpRight,
+      };
+    case 'hold':
+      return {
+        label: t('wallet.hold'),
+        color: 'bg-yellow-100 text-yellow-800',
+        icon: Clock,
+      };
+    case 'release':
+      return {
+        label: t('wallet.release'),
+        color: 'bg-blue-100 text-blue-800',
+        icon: CheckCircle,
+      };
+    default:
+      return {
+        label: type,
+        color: 'bg-gray-100 text-gray-800',
+        icon: DollarSign,
+      };
   }
-];
+}
 
 export function Wallet() {
-  const [transactions] = useState<Transaction[]>(mockTransactions);
+  const { t } = useTranslation();
+  const { isAuthenticated } = useUser();
+  
+  const [wallet, setWallet] = useState<WalletType | null>(null);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
 
-  // Calculate stats
-  const pendingTransactions = transactions.filter(t => t.status === 'pending');
-  const completedTransactions = transactions.filter(t => t.status === 'completed' || t.status === 'released');
-  
-  const pendingAmount = pendingTransactions.reduce((sum, t) => sum + t.amount, 0);
-  
-  // Last month earnings (January 2026)
-  const lastMonthTransactions = completedTransactions.filter(t => {
-    const transDate = new Date(t.transactionDate || '');
-    return transDate.getMonth() === 0 && transDate.getFullYear() === 2026;
-  });
-  const lastMonthEarnings = lastMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
-  
-  // Last year earnings (2025)
-  const lastYearTransactions = completedTransactions.filter(t => {
-    const transDate = new Date(t.transactionDate || '');
-    return transDate.getFullYear() === 2025;
-  });
-  const lastYearEarnings = lastYearTransactions.reduce((sum, t) => sum + t.amount, 0);
+  // Fetch wallet and transactions
+  useEffect(() => {
+    async function fetchData() {
+      if (!isAuthenticated) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const [walletData, transactionsData] = await Promise.all([
+          walletService.getWallet(),
+          walletService.getTransactions(),
+        ]);
+        
+        setWallet(walletData);
+        setTransactions(transactionsData);
+      } catch (err) {
+        console.error('Failed to fetch wallet data:', err);
+        setError(t('wallet.errorLoading'));
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
+    fetchData();
+  }, [isAuthenticated, t]);
+
+  // Not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <EmptyState
+          icon={WalletIcon}
+          title={t('wallet.loginRequired')}
+          description={t('wallet.mustBeLoggedIn')}
+          action={{
+            label: t('wallet.loginToView'),
+            to: '/register',
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <LoadingSpinner 
+        size="lg" 
+        text={t('common.loading')} 
+        fullScreen 
+      />
+    );
+  }
+
+  // Filter transactions
+  const pendingTransactions = transactions.filter(t => t.type === 'hold');
   const filteredTransactions = activeTab === 'pending' 
     ? pendingTransactions 
-    : transactions.slice(0, 10);
-
-  const getStatusBadge = (status: Transaction['status']) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-            <Clock className="w-4 h-4" />
-            Pending
-          </span>
-        );
-      case 'released':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-            <ArrowUpRight className="w-4 h-4" />
-            Released
-          </span>
-        );
-      case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-            <CheckCircle className="w-4 h-4" />
-            Completed
-          </span>
-        );
-    }
-  };
+    : transactions.slice(0, 20);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">My Wallet</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('wallet.title')}</h1>
+
+        {error && (
+          <ErrorAlert message={error} className="mb-6" />
+        )}
 
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Pending Money */}
+          {/* Available Balance */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <DollarSign className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-600">{t('wallet.availableBalance')}</h3>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">
+              {wallet ? formatMoney(wallet.balance.amount, wallet.balance.currency) : '$0.00'}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              {t('wallet.readyToWithdraw')}
+            </p>
+          </div>
+
+          {/* Pending Balance */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-600">Pending Transfer</h3>
+              <h3 className="text-sm font-semibold text-gray-600">{t('wallet.pendingBalance')}</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">${pendingAmount.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-gray-900">
+              {wallet ? formatMoney(wallet.pendingBalance.amount, wallet.pendingBalance.currency) : '$0.00'}
+            </p>
             <p className="text-sm text-gray-600 mt-1">
-              {pendingTransactions.length} transaction{pendingTransactions.length !== 1 ? 's' : ''} waiting
+              {t('wallet.inEscrow')}
             </p>
           </div>
 
-          {/* Last Month Earnings */}
+          {/* Total Balance */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-blue-600" />
+                <WalletIcon className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-600">Last Month</h3>
+              <h3 className="text-sm font-semibold text-gray-600">{t('wallet.totalBalance')}</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">${lastMonthEarnings.toFixed(2)}</p>
-            <p className="text-sm text-gray-600 mt-1">
-              January 2026
+            <p className="text-3xl font-bold text-gray-900">
+              {wallet ? formatMoney(
+                wallet.balance.amount + wallet.pendingBalance.amount, 
+                wallet.balance.currency
+              ) : '$0.00'}
             </p>
-          </div>
-
-          {/* Last Year Earnings */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="text-sm font-semibold text-gray-600">Last Year</h3>
-            </div>
-            <p className="text-3xl font-bold text-gray-900">${lastYearEarnings.toFixed(2)}</p>
             <p className="text-sm text-gray-600 mt-1">
-              2025 Total
+              {t('wallet.availablePlusPending')}
             </p>
           </div>
         </div>
@@ -200,10 +196,9 @@ export function Wallet() {
           <div className="flex items-start gap-3">
             <WalletIcon className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-blue-900 mb-1">How payments work</h4>
+              <h4 className="font-semibold text-blue-900 mb-1">{t('wallet.howPaymentsWork')}</h4>
               <p className="text-sm text-blue-800">
-                Funds are held for 7 days after ticket sale completion to ensure buyer satisfaction. 
-                After the retention period, money is automatically transferred to your account.
+                {t('wallet.paymentExplanation')}
               </p>
             </div>
           </div>
@@ -221,7 +216,7 @@ export function Wallet() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Transaction History
+                {t('wallet.transactionHistory')}
               </button>
               <button
                 onClick={() => setActiveTab('pending')}
@@ -231,7 +226,7 @@ export function Wallet() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Pending ({pendingTransactions.length})
+                {t('wallet.pending')} ({pendingTransactions.length})
               </button>
             </div>
           </div>
@@ -244,74 +239,78 @@ export function Wallet() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Event
+                    {t('wallet.description')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Buyer
+                    {t('wallet.reference')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Amount
+                    {t('wallet.amount')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Sale Date
+                    {t('wallet.date')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Release Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Status
+                    {t('wallet.type')}
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-gray-900">{transaction.eventName}</p>
-                        <p className="text-sm text-gray-600">{transaction.ticketType}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-900">
-                      {transaction.buyer}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-semibold text-gray-900">${transaction.amount}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {transaction.saleDate}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {transaction.releaseDate}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(transaction.status)}
-                    </td>
-                  </tr>
-                ))}
+                {filteredTransactions.map((transaction) => {
+                  const badge = getTransactionTypeBadge(transaction.type, t);
+                  const BadgeIcon = badge.icon;
+                  const isPositive = transaction.type === 'credit' || transaction.type === 'release';
+                  
+                  return (
+                    <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-gray-900">{transaction.description}</p>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {transaction.reference}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`font-semibold ${isPositive ? 'text-green-600' : 'text-gray-900'}`}>
+                          {isPositive ? '+' : '-'}{formatMoney(transaction.amount.amount, transaction.amount.currency)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(transaction.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${badge.color}`}>
+                          <BadgeIcon className="w-4 h-4" />
+                          {badge.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {filteredTransactions.length === 0 && (
-            <div className="p-12 text-center">
-              <DollarSign className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No transactions yet
-              </h3>
-              <p className="text-gray-600">
-                {activeTab === 'pending' 
-                  ? 'You have no pending transactions'
-                  : 'Your transaction history will appear here'
+            <div className="p-12">
+              <EmptyState
+                icon={DollarSign}
+                title={t('wallet.noTransactions')}
+                description={activeTab === 'pending' 
+                  ? t('wallet.noPendingTransactions')
+                  : t('wallet.transactionHistoryEmpty')
                 }
-              </p>
+              />
             </div>
           )}
         </div>
 
-        {activeTab === 'all' && transactions.length > 10 && (
+        {activeTab === 'all' && transactions.length > 20 && (
           <p className="text-sm text-gray-600 mt-4 text-center">
-            Showing last 10 transactions
+            {t('wallet.showingLast20')}
           </p>
         )}
       </div>

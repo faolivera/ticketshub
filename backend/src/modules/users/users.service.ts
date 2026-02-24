@@ -2,14 +2,12 @@ import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { UsersRepository } from './users.repository';
 import { ImagesRepository } from '../images/images.repository';
-import { GeocodingService } from '../geocoding/geocoding.service';
 import type { Ctx } from '../../common/types/context';
 import type { User, UserAddress } from './users.domain';
 import type { UserPublicInfo, AuthenticatedUserPublicInfo } from './users.domain';
 import type { ProfileType } from './users.domain';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
-import type { Address } from '../geocoding/geocoding.domain';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -21,8 +19,6 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     @Inject(ImagesRepository)
     private readonly imagesRepository: ImagesRepository,
-    @Inject(GeocodingService)
-    private readonly geocodingService: GeocodingService,
   ) {}
 
     /**
@@ -110,18 +106,10 @@ export class UsersService {
       };
     }
 
+    const { password: _password, imageId: _imageId, ...safeUser } = user;
     return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      publicName: user.publicName,
+      ...safeUser,
       pic: image,
-      profiles: user.profiles,
-      lastUsedProfile: user.lastUsedProfile,
-      country: user.country,
-      currency: user.currency,
-      address: user.address,
     };
   }
 
@@ -132,6 +120,8 @@ export class UsersService {
     const payload: JWTPayload = {
       userId: user.id,
       email: user.email,
+      role: user.role,
+      level: user.level,
       profiles: user.profiles,
     };
     // @ts-ignore - JWT_EXPIRES_IN is a valid string for expiresIn
@@ -169,19 +159,7 @@ export class UsersService {
 
     return {
       token,
-      user: {
-        id: userInfo.id,
-        email: userInfo.email,
-        firstName: userInfo.firstName,
-        lastName: userInfo.lastName,
-        publicName: userInfo.publicName,
-        profiles: userInfo.profiles,
-        pic: userInfo.pic,
-        lastUsedProfile: userInfo.lastUsedProfile,
-        country: userInfo.country,
-        currency: userInfo.currency,
-        address: userInfo.address,
-      },
+      user: userInfo,
     };
   }
 
@@ -195,7 +173,7 @@ export class UsersService {
       firstName?: string;
       lastName?: string;
       publicName?: string;
-      addressToken?: string; // Geocoding JWT token
+      address?: UserAddress;
       imageId?: string;
     },
   ): Promise<{
@@ -205,7 +183,7 @@ export class UsersService {
     pic: Image;
     profiles: ProfileType[];
     lastUsedProfile: ProfileType | undefined;
-    address?: Address;
+    address?: UserAddress;
   } | null> {
     const user = await this.usersRepository.findById(ctx, userId);
     if (!user) {
@@ -235,20 +213,9 @@ export class UsersService {
       updateData.publicName = updates.publicName;
     }
 
-    // Validate and decode geocoding token if provided
-    if (updates.addressToken !== undefined) {
-      const decoded = this.geocodingService.decodeToken(updates.addressToken);
-      if (!decoded) {
-        throw new BadRequestException('Invalid or expired geocoding token');
-      }
-      // Convert Address to UserAddress by adding geoPoint
-      updateData.address = {
-        ...decoded.normalizedAddress,
-        geoPoint: {
-          lat: decoded.lat,
-          lng: decoded.lng,
-        },
-      };
+    // Update address if provided
+    if (updates.address !== undefined) {
+      updateData.address = updates.address;
     }
 
     // Validate imageId if provided

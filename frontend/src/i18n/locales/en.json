@@ -6,7 +6,21 @@
     "sellTickets": "Sell Tickets",
     "logout": "Logout",
     "login": "Login",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "signUp": "Sign Up"
+  },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Sign in to your TicketHub account",
+    "email": "Email Address",
+    "emailPlaceholder": "your.email@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create account",
+    "genericError": "Login failed. Please try again."
   },
   "landing": {
     "title": "Buy and Sell Tickets Securely",
@@ -15,7 +29,8 @@
     "searchPlaceholder": "Search for events, artists, or locations...",
     "searchResults": "Search Results",
     "upcomingEvents": "Upcoming Events",
-    "noEventsFound": "No events found matching your search."
+    "noEventsFound": "No events found matching your search.",
+    "errorLoadingEvents": "Failed to load events. Please try again."
   },
   "eventCard": {
     "trending": "Trending",
@@ -50,7 +65,11 @@
     "badgeTrusted": "Trusted",
     "badgeVerified": "Verified",
     "badgeBestSeller": "Best Seller",
-    "buyTicket": "Buy Ticket"
+    "buyTicket": "Buy Ticket",
+    "errorLoading": "Failed to load event details. Please try again.",
+    "noTicketsAvailable": "No tickets available for this event",
+    "checkBackLater": "Check back later or create a listing if you have tickets to sell",
+    "noReviewsYet": "No reviews yet"
   },
   "buyTicket": {
     "backToEvent": "Back to event",
@@ -72,7 +91,14 @@
     "cvv": "CVV",
     "cvvPlaceholder": "123",
     "completePurchase": "Complete Purchase",
-    "securePayment": "Your payment information is secure and encrypted"
+    "securePayment": "Your payment information is secure and encrypted",
+    "description": "Review your ticket details and complete the purchase securely.",
+    "errorLoading": "Failed to load ticket details. Please try again.",
+    "loginRequired": "Login Required",
+    "mustBeLoggedIn": "You must be logged in to purchase tickets",
+    "loginToBuy": "Login to Buy",
+    "purchaseFailed": "Purchase failed. Please try again.",
+    "processing": "Processing..."
   },
   "boughtTickets": {
     "title": "My Tickets",
@@ -115,7 +141,13 @@
     "listedTicketsWillAppear": "Your listed tickets will appear here",
     "views": "views",
     "editListing": "Edit Listing",
-    "startSelling": "Start Selling"
+    "startSelling": "Start Selling",
+    "errorLoading": "Failed to load tickets. Please try again.",
+    "cancelled": "Cancelled",
+    "available": "available"
+  },
+  "ditListing": {
+    "description": "Description"
   },
   "editListing": {
     "title": "Edit Listing",
@@ -125,6 +157,11 @@
     "changesDisclaimer": "Changes will only take effect for newly sold tickets. Tickets already reserved or sold will keep their original details.",
     "ticketType": "Ticket Type",
     "eventDateTime": "Event Date & Time",
+    "venue": "Venue",
+    "quantity": "Quantity",
+    "row": "Row",
+    "seats": "Seats",
+    "description": "Description",
     "listedSince": "Listed Since",
     "totalViews": "Total Views",
     "editableFields": "Editable Fields",
@@ -138,7 +175,10 @@
     "inactiveDescription": "Your listing is hidden from buyers and cannot be purchased",
     "saveChanges": "Save Changes",
     "saving": "Saving...",
-    "inactiveWarning": "This listing will be hidden from buyers. Activate it to make it available for purchase."
+    "inactiveWarning": "This listing will be hidden from buyers. Activate it to make it available for purchase.",
+    "errorLoading": "Failed to load listing. Please try again.",
+    "cancelListing": "Cancel Listing",
+    "cancelListingConfirm": "Are you sure you want to cancel this listing? This action cannot be undone."
   },
   "chat": {
     "online": "Online",
@@ -159,7 +199,10 @@
     "totalYear": "{{year}} Total",
     "howPaymentsWork": "How payments work",
     "paymentsInfo": "Funds are held for 7 days after ticket sale completion to ensure buyer satisfaction. After the retention period, money is automatically transferred to your account.",
+    "paymentExplanation": "Funds are held after sale completion and released after the retention period.",
     "transactionHistory": "Transaction History",
+    "noTransactions": "No transactions",
+    "transactionHistoryEmpty": "Your transaction history is empty.",
     "pending": "Pending ({{count}})",
     "event": "Event",
     "buyer": "Buyer",
@@ -172,7 +215,23 @@
     "noTransactionsYet": "No transactions yet",
     "transactionHistoryWillAppear": "Your transaction history will appear here",
     "noPendingTransactions": "You have no pending transactions",
-    "showingLast10": "Showing last 10 transactions"
+    "showingLast10": "Showing last 10 transactions",
+    "loginRequired": "Login Required",
+    "mustBeLoggedIn": "You must be logged in to view your wallet",
+    "loginToView": "Login to View Wallet",
+    "errorLoading": "Failed to load wallet. Please try again.",
+    "availableBalance": "Available Balance",
+    "readyToWithdraw": "Ready to withdraw",
+    "inEscrow": "In escrow",
+    "availablePlusPending": "Available + Pending",
+    "pendingBalance": "Pending Balance",
+    "totalBalance": "Total Balance",
+    "allTransactions": "All Transactions",
+    "deposit": "Deposit",
+    "withdrawal": "Withdrawal",
+    "hold": "Pending",
+    "release": "Released",
+    "showingLast20": "Showing last 20 transactions"
   },
   "userProfile": {
     "title": "My Profile",
@@ -489,6 +548,8 @@
     "venueLocation": "Venue & Location",
     "createEvent": "Create Event",
     "pleaseCompleteRequiredFields": "Please complete all required fields",
+    "invalidDateTime": "Please enter a valid date and time",
+    "createFailed": "Failed to create event. Please try again.",
     "eventCreatedSuccess": "Event created successfully!",
     "categories": {
       "music": "Music",
@@ -505,6 +566,8 @@
   "sellTicket": {
     "title": "Sell Tickets",
     "subtitle": "List your tickets for sale on our secure marketplace",
+    "description": "Provide your listing details to start selling your tickets.",
+    "descriptionPlaceholder": "Add details buyers should know about these tickets.",
     "backToTickets": "Back to My Tickets",
     "eventName": "Event Name",
     "typeToSearchEvent": "Type to search for an event...",
@@ -519,6 +582,8 @@
     "at": "at",
     "addDate": "Add Date",
     "ticketType": "Ticket Type",
+    "row": "Row",
+    "seats": "Seats",
     "typeToSearchTicketType": "Type to search or create a ticket type...",
     "noTicketTypesFound": "No matching types found. Press Enter to create a new type.",
     "creatingNewType": "Creating new ticket type",
@@ -555,7 +620,12 @@
     "pleaseCompleteAllFields": "Please complete all required fields",
     "pleaseSelectDeliveryMethod": "Please select a delivery method for physical tickets",
     "pleaseEnterPickupAddress": "Please enter a pickup address",
-    "listingCreatedSuccess": "Your ticket listing has been created successfully!"
+    "listingCreatedSuccess": "Your ticket listing has been created successfully!",
+    "loginRequired": "Login Required",
+    "mustBeLoggedIn": "You must be logged in to sell tickets",
+    "loginToSell": "Login to Sell",
+    "errorLoadingEvents": "Failed to load events. Please try again.",
+    "creating": "Creating..."
   },
   "common": {
     "loading": "Loading...",
@@ -571,7 +641,9 @@
     "previous": "Previous",
     "confirm": "Confirm",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "retry": "Try Again",
+    "somethingWentWrong": "Something went wrong"
   },
   "badges": {
     "newSeller": "New Seller",

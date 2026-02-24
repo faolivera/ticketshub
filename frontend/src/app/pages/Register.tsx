@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, User, Globe, ArrowLeft } from 'lucide-react';
-import { useUser } from '@/app/contexts/UserContext';
 
 export function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useUser();
 
   const [step, setStep] = useState<'register' | 'verify'>('register');
   const [formData, setFormData] = useState({
@@ -80,22 +78,7 @@ export function Register() {
       return;
     }
 
-    // Simulate verification
-    const newUser = {
-      id: `user-${Date.now()}`,
-      email: formData.email,
-      phone: '',
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      country: formData.country,
-      level: 0 as const,
-      isEmailVerified: true,
-      isPhoneVerified: false,
-      hasSeenSellerIntro: false
-    };
-
-    login(newUser);
-    navigate('/user-profile');
+    navigate('/login');
   };
 
   const handleResend = () => {

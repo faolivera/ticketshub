@@ -1,0 +1,56 @@
+{
+  "evt_1770297832516_6914364f": {
+    "id": "evt_1770297832516_6914364f",
+    "name": "BAD BUNNY",
+    "description": "Bad Bunny - DeBÍ TiRAR MáS FOToS World Tour. Estadio River Plate, Buenos Aires.",
+    "category": "Concert",
+    "venue": "Estadio River Plate",
+    "location": {
+      "line1": "Av. Figueroa Alcorta 7597",
+      "city": "Buenos Aires",
+      "state": "CABA",
+      "postalCode": "C1428",
+      "countryCode": "AR"
+    },
+    "imageIds": [
+      "img_seed_bad_bunny"
+    ],
+    "status": "approved",
+    "createdBy": "1",
+    "approvedBy": "1",
+    "createdAt": "2026-02-05T13:23:52.516Z",
+    "updatedAt": "2026-02-05T13:23:52.516Z"
+  },
+  "evt_1771949606617_a501c0d1": {
+    "id": "evt_1771949606617_a501c0d1",
+    "name": "aaaaa",
+    "description": "",
+    "category": "Concert",
+    "venue": "Hola que tal",
+    "location": {
+      "line1": "Mendoza",
+      "city": "Mendoza",
+      "countryCode": "US"
+    },
+    "imageIds": [],
+    "status": "pending",
+    "createdAt": "2026-02-24T16:13:26.617Z",
+    "updatedAt": "2026-02-24T16:13:26.617Z"
+  },
+  "evt_1771952996427_302b7baf": {
+    "id": "evt_1771952996427_302b7baf",
+    "name": "Arjona en Velez",
+    "description": "",
+    "category": "Concert",
+    "venue": "Velez",
+    "location": {
+      "line1": "Buenos Aires",
+      "city": "Buenos Aires",
+      "countryCode": "US"
+    },
+    "imageIds": [],
+    "status": "pending",
+    "createdAt": "2026-02-24T17:09:56.427Z",
+    "updatedAt": "2026-02-24T17:09:56.427Z"
+  }
+}

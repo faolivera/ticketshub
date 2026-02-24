@@ -1,0 +1,18 @@
+{
+  "img_seed_admin": {
+    "id": "img_seed_admin",
+    "src": "/images/default/default.png"
+  },
+  "img_seed_seller": {
+    "id": "img_seed_seller",
+    "src": "/images/default/default.png"
+  },
+  "img_seed_buyer": {
+    "id": "img_seed_buyer",
+    "src": "/images/default/default.png"
+  },
+  "img_seed_bad_bunny": {
+    "id": "img_seed_bad_bunny",
+    "src": "https://cdn.getcrowder.com/images/eefb35a2-3993-4a81-9dfc-16c29cfe6551-banner-mobile--quentro-640-x-640--14-feb.png"
+  }
+}
