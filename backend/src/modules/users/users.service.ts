@@ -230,6 +230,18 @@ export class UsersService {
       termsAcceptance: TermsAcceptanceData;
     },
   ): Promise<LoginResponse> {
+    // Validate terms acceptance data before proceeding
+    if (!data.termsAcceptance?.termsVersionId) {
+      throw new BadRequestException('Terms acceptance is required for registration');
+    }
+
+    // Validate that the terms version is valid and current for buyer
+    await this.termsService.validateTermsVersion(
+      ctx,
+      data.termsAcceptance.termsVersionId,
+      TermsUserType.Buyer,
+    );
+
     const existing = await this.findByEmail(ctx, data.email);
 
     if (existing) {

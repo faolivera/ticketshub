@@ -274,4 +274,47 @@ export class TermsService {
 
     return userState?.lastAcceptedVersionId === activeTerms.id;
   }
+
+  /**
+   * Validate that the given termsVersionId is the current active version for the given userType.
+   * Throws BadRequestException if validation fails.
+   */
+  async validateTermsVersion(
+    ctx: Ctx,
+    termsVersionId: string,
+    expectedUserType: TermsUserType,
+  ): Promise<void> {
+    this.logger.log(
+      ctx,
+      `Validating terms version ${termsVersionId} for userType: ${expectedUserType}`,
+    );
+
+    const termsVersion = await this.termsRepository.findVersionById(
+      ctx,
+      termsVersionId,
+    );
+
+    if (!termsVersion) {
+      throw new BadRequestException(
+        `Invalid terms version: ${termsVersionId}`,
+      );
+    }
+
+    if (termsVersion.userType !== expectedUserType) {
+      throw new BadRequestException(
+        `Terms version ${termsVersionId} is not for ${expectedUserType} users`,
+      );
+    }
+
+    const activeTerms = await this.termsRepository.findActiveByUserType(
+      ctx,
+      expectedUserType,
+    );
+
+    if (!activeTerms || activeTerms.id !== termsVersionId) {
+      throw new BadRequestException(
+        `Terms version ${termsVersionId} is not the current active version`,
+      );
+    }
+  }
 }
