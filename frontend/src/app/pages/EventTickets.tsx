@@ -9,6 +9,7 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import type { EventWithDates, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
+import { useUser } from '../contexts/UserContext';
 
 interface ShowTime {
   date: string;
@@ -117,6 +118,7 @@ const getBadgeLabel = (badge: 'trusted' | 'verified' | 'best_seller', t: (key: s
 export function EventTickets() {
   const { t } = useTranslation();
   const { eventId } = useParams<{ eventId: string }>();
+  const { user } = useUser();
   
   const [event, setEvent] = useState<EventWithDates | null>(null);
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
@@ -154,10 +156,12 @@ export function EventTickets() {
   }, [eventId, t]);
 
   // Transform listings to UI format (BFF already filters for active + available)
+  // Also filter out the current user's own listings so sellers don't see their own tickets
   const tickets = useMemo(() => {
     if (!event) return [];
-    return listings.map(l => transformListing(l, event.dates));
-  }, [listings, event]);
+    const filteredListings = listings.filter(l => l.sellerId !== user?.id);
+    return filteredListings.map(l => transformListing(l, event.dates));
+  }, [listings, event, user?.id]);
 
   // Get unique show times
   const uniqueShowTimes = useMemo(() => {

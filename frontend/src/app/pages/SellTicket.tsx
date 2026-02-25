@@ -163,7 +163,7 @@ export function SellTicket() {
     setIsSubmitting(true);
 
     try {
-      await ticketsService.createListing({
+      const listing = await ticketsService.createListing({
         eventId: formData.eventId,
         eventDateId: formData.eventDateId,
         type: ticketType,
@@ -194,7 +194,7 @@ export function SellTicket() {
         description: formData.description,
       });
 
-      navigate('/bought-tickets', { state: { tab: 'listed' } });
+      navigate(`/buy/${listing.id}`);
     } catch (err) {
       console.error('Failed to create listing:', err);
       setError(err instanceof Error ? err.message : t('sellTicket.createListingFailed'));

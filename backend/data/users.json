@@ -75,9 +75,9 @@
     "lastUsedProfile": "Customer",
     "imageId": "img_seed_buyer",
     "emailVerified": true,
-    "phoneVerified": false,
+    "phoneVerified": true,
     "createdAt": "2026-02-05T13:23:52.516Z",
-    "updatedAt": "2026-02-05T13:23:52.516Z"
+    "updatedAt": "2026-02-25T12:13:23.074Z"
   },
   "4": {
     "id": "4",
@@ -165,5 +165,26 @@
     "phoneVerified": true,
     "createdAt": "2026-02-25T10:56:50.825Z",
     "updatedAt": "2026-02-25T11:02:28.344Z"
+  },
+  "8": {
+    "id": "8",
+    "country": "United States",
+    "currency": "EUR",
+    "status": "Enabled",
+    "email": "facu@admin.com",
+    "password": "12345678",
+    "firstName": "Facu",
+    "lastName": "Admin",
+    "publicName": "Facu Admin",
+    "role": "Admin",
+    "level": "Basic",
+    "profiles": [
+      "Customer"
+    ],
+    "imageId": "default",
+    "emailVerified": true,
+    "phoneVerified": false,
+    "createdAt": "2026-02-25T12:11:05.435Z",
+    "updatedAt": "2026-02-25T12:11:09.347Z"
   }
 }

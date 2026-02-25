@@ -120,28 +120,43 @@ export class UsersController {
 
 - All business logic belongs in services
 - Handle complex validation, business rules, and orchestration
-- Can call repositories and other services
+- **Services can ONLY use their own module's repository**
+- **Services communicate with other modules through their services, never through repositories**
 
 ```typescript
+// ✅ GOOD - Using own repository + other modules' services
 @Injectable()
-export class UsersService {
-  constructor(private readonly repository: UsersRepository) {}
+export class OrdersService {
+  constructor(
+    private readonly repository: OrdersRepository,       // Own repository
+    private readonly usersService: UsersService,         // Other module's service
+    private readonly productsService: ProductsService,   // Other module's service
+  ) {}
   
-  async createUser(data: CreateUserRequest): Promise<User> {
-    // Business logic here
-    const existing = await this.repository.findByEmail(data.email);
-    if (existing) {
-      throw new ConflictException('Email already exists');
-    }
-    return this.repository.create(data);
+  async createOrder(data: CreateOrderRequest): Promise<Order> {
+    const user = await this.usersService.findById(data.userId);
+    const product = await this.productsService.findById(data.productId);
+    return this.repository.create({ ...data, user, product });
   }
 }
+
+// ❌ BAD - Using another module's repository directly
+@Injectable()
+export class OrdersService {
+  constructor(
+    private readonly repository: OrdersRepository,
+    private readonly usersRepository: UsersRepository,  // WRONG! Use UsersService
+  ) {}
+}
 ```
+
+**Rationale**: This ensures proper encapsulation and allows each module to control its own data access logic. Cross-module repository access creates tight coupling and bypasses business rules.
 
 ### Repositories
 
 - Handle data access only
 - All methods must have explicit return types
+- **Repositories should only be injected by their own module's service**
 
 ## Available Decorators
 

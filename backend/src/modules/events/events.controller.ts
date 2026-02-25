@@ -17,7 +17,7 @@ import { User } from '../../common/decorators/user.decorator';
 import { Context } from '../../common/decorators/ctx.decorator';
 import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
-import type { JWTPayload } from '../users/users.domain';
+import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
 import { Role } from '../users/users.domain';
 import type {
   CreateEventRequest,
@@ -48,12 +48,12 @@ export class EventsController {
   @UseGuards(JwtAuthGuard)
   async createEvent(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Body() body: CreateEventRequest,
   ): Promise<ApiResponse<CreateEventResponse>> {
     const event = await this.eventsService.createEvent(
       ctx,
-      user.userId,
+      user.id,
       user.role,
       user.level,
       body,
@@ -103,14 +103,14 @@ export class EventsController {
   @UseGuards(JwtAuthGuard)
   async addEventDate(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Param('id') eventId: string,
     @Body() body: AddEventDateRequest,
   ): Promise<ApiResponse<AddEventDateResponse>> {
     const date = await this.eventsService.addEventDate(
       ctx,
       eventId,
-      user.userId,
+      user.id,
       user.role,
       body,
     );
@@ -125,14 +125,14 @@ export class EventsController {
   @Roles(Role.Admin)
   async approveEvent(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Param('id') eventId: string,
     @Body() body: ApproveEventRequest,
   ): Promise<ApiResponse<ApproveEventResponse>> {
     const event = await this.eventsService.approveEvent(
       ctx,
       eventId,
-      user.userId,
+      user.id,
       body.approved,
       body.rejectionReason,
     );
@@ -147,14 +147,14 @@ export class EventsController {
   @Roles(Role.Admin)
   async approveEventDate(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Param('dateId') dateId: string,
     @Body() body: ApproveEventDateRequest,
   ): Promise<ApiResponse<ApproveEventDateResponse>> {
     const date = await this.eventsService.approveEventDate(
       ctx,
       dateId,
-      user.userId,
+      user.id,
       body.approved,
       body.rejectionReason,
     );
@@ -181,9 +181,9 @@ export class EventsController {
   @UseGuards(JwtAuthGuard)
   async getMyEvents(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<ListEventsResponse>> {
-    const events = await this.eventsService.getMyEvents(ctx, user.userId);
+    const events = await this.eventsService.getMyEvents(ctx, user.id);
     return { success: true, data: events };
   }
 }

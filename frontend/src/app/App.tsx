@@ -4,6 +4,8 @@ import { UserProvider } from '@/app/contexts/UserContext';
 import { Header } from '@/app/components/Header';
 import { Footer } from '@/app/components/Footer';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
+import { AdminProtectedRoute } from '@/app/components/admin/AdminProtectedRoute';
+import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Landing } from '@/app/pages/Landing';
 import { EventTickets } from '@/app/pages/EventTickets';
 import { UserProfile } from '@/app/pages/UserProfile';
@@ -20,6 +22,9 @@ import { SellerVerification } from '@/app/pages/SellerVerification';
 import { PhoneVerification } from '@/app/pages/PhoneVerification';
 import { MyTicket } from '@/app/pages/MyTicket';
 import { EditListing } from '@/app/pages/EditListing';
+import { AdminDashboard } from '@/app/pages/admin/AdminDashboard';
+import { EventManagement } from '@/app/pages/admin/EventManagement';
+import { PaymentApproval } from '@/app/pages/admin/PaymentApproval';
 
 export default function App() {
   return (
@@ -40,7 +45,7 @@ export default function App() {
               {/* Protected routes — require authentication */}
               <Route path="/my-tickets" element={<ProtectedRoute><BoughtTicketManager /></ProtectedRoute>} />
               <Route path="/bought-tickets" element={<ProtectedRoute><BoughtTicketManager /></ProtectedRoute>} />
-              <Route path="/ticket/:ticketId" element={<ProtectedRoute><MyTicket /></ProtectedRoute>} />
+              <Route path="/transaction/:transactionId" element={<ProtectedRoute><MyTicket /></ProtectedRoute>} />
               <Route path="/edit-listing/:listingId" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
               <Route path="/sell-ticket" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />
               <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
@@ -49,6 +54,13 @@ export default function App() {
               <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
               <Route path="/buy/:ticketId" element={<BuyTicketPage />} />
+
+              {/* Admin routes — require Admin role */}
+              <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="events" element={<EventManagement />} />
+                <Route path="payments" element={<PaymentApproval />} />
+              </Route>
             </Routes>
           </main>
           <Footer />

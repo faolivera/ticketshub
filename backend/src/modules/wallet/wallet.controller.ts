@@ -5,7 +5,7 @@ import { User } from '../../common/decorators/user.decorator';
 import { Context } from '../../common/decorators/ctx.decorator';
 import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
-import type { JWTPayload } from '../users/users.domain';
+import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
 import type {
   GetWalletResponse,
   ListWalletTransactionsResponse,
@@ -27,9 +27,9 @@ export class WalletController {
   @UseGuards(JwtAuthGuard)
   async getWallet(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<GetWalletResponse>> {
-    const wallet = await this.walletService.getBalance(ctx, user.userId);
+    const wallet = await this.walletService.getBalance(ctx, user.id);
     return { success: true, data: wallet };
   }
 
@@ -40,11 +40,11 @@ export class WalletController {
   @UseGuards(JwtAuthGuard)
   async getTransactions(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<ListWalletTransactionsResponse>> {
     const transactions = await this.walletService.getTransactions(
       ctx,
-      user.userId,
+      user.id,
     );
     return { success: true, data: transactions };
   }
@@ -57,18 +57,18 @@ export class WalletController {
   @UseGuards(JwtAuthGuard)
   async withdraw(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Body() body: WithdrawRequest,
   ): Promise<ApiResponse<WithdrawResponse>> {
     await this.walletService.debitFunds(
       ctx,
-      user.userId,
+      user.id,
       body.amount,
       `withdrawal_${Date.now()}`,
       'Withdrawal request',
     );
 
-    const wallet = await this.walletService.getBalance(ctx, user.userId);
+    const wallet = await this.walletService.getBalance(ctx, user.id);
 
     return {
       success: true,

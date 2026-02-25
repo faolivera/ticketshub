@@ -84,6 +84,16 @@ export interface Transaction {
   // Dispute reference
   disputeId?: string;
 
+  // Payment method used for this transaction
+  paymentMethodId?: string;
+
+  // Payment confirmation for manual payment methods
+  paymentConfirmationId?: string;
+
+  // Admin approval for manual payments
+  paymentApprovedBy?: string;
+  paymentApprovedAt?: Date;
+
   updatedAt: Date;
 }
 

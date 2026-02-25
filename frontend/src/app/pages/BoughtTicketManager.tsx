@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Ticket, CheckCircle, Clock, Calendar, User, DollarSign, Edit, AlertCircle } from 'lucide-react';
+import { Ticket, CheckCircle, Clock, Calendar, User, DollarSign, Edit, AlertCircle, Eye, Link as LinkIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -116,6 +116,9 @@ export function BoughtTicketManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('bought');
+  const [copiedListingId, setCopiedListingId] = useState<string | null>(null);
+
+  const isProvider = user?.profiles?.includes('Provider') ?? false;
 
   // Fetch all tickets once when authenticated
   useEffect(() => {
@@ -142,6 +145,17 @@ export function BoughtTicketManager() {
   }, [isAuthenticated, t]);
 
   const displayedTransactions = activeTab === 'bought' ? bought : sold;
+
+  const handleCopyLink = async (listingId: string) => {
+    const url = `${window.location.origin}/buy/${listingId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedListingId(listingId);
+      setTimeout(() => setCopiedListingId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
 
   // Not authenticated
   if (!isAuthenticated) {
@@ -179,26 +193,30 @@ export function BoughtTicketManager() {
               >
                 {t('boughtTickets.ticketsBought')}
               </button>
-              <button
-                onClick={() => setActiveTab('sold')}
-                className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
-                  activeTab === 'sold'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {t('boughtTickets.ticketsSold')}
-              </button>
-              <button
-                onClick={() => setActiveTab('listed')}
-                className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
-                  activeTab === 'listed'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {t('boughtTickets.ticketsListed')}
-              </button>
+              {isProvider && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('sold')}
+                    className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
+                      activeTab === 'sold'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {t('boughtTickets.ticketsSold')}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('listed')}
+                    className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
+                      activeTab === 'listed'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {t('boughtTickets.ticketsListed')}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -284,15 +302,33 @@ export function BoughtTicketManager() {
                             </span>
                           </div>
 
-                          {/* Edit Button */}
+                          {/* Action Buttons */}
                           {listing.status === 'Active' && (
-                            <Link
-                              to={`/edit-listing/${listing.id}`}
-                              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <Edit className="w-4 h-4" />
-                              {t('boughtTickets.editListing')}
-                            </Link>
+                            <div className="flex flex-col gap-2">
+                              <Link
+                                to={`/edit-listing/${listing.id}`}
+                                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Edit className="w-4 h-4" />
+                                {t('boughtTickets.editListing')}
+                              </Link>
+                              <Link
+                                to={`/buy/${listing.id}`}
+                                className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Eye className="w-4 h-4" />
+                                {t('boughtTickets.viewListing')}
+                              </Link>
+                              <button
+                                onClick={() => handleCopyLink(listing.id)}
+                                className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <LinkIcon className="w-4 h-4" />
+                                {copiedListingId === listing.id
+                                  ? t('boughtTickets.copied')
+                                  : t('boughtTickets.copyLink')}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -326,7 +362,7 @@ export function BoughtTicketManager() {
                     return (
                       <Link
                         key={transaction.id}
-                        to={`/ticket/${transaction.id}`}
+                        to={`/transaction/${transaction.id}`}
                         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                       >
                         {/* Event Image */}

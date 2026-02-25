@@ -20,7 +20,13 @@ import type {
 } from './transactions.domain';
 import { TransactionStatus } from './transactions.domain';
 import { TicketType } from '../tickets/tickets.domain';
-import type { ListTransactionsQuery } from './transactions.api';
+import type {
+  ListTransactionsQuery,
+  GetPendingPaymentsResponse,
+  TransactionWithPaymentInfo,
+} from './transactions.api';
+import type { PaymentMethodId } from '../payments/payments.domain';
+import { BUY_PAGE_PAYMENT_METHODS } from '../payments/payments.domain';
 
 @Injectable()
 export class TransactionsService {
@@ -76,6 +82,7 @@ export class TransactionsService {
     buyerId: string,
     listingId: string,
     ticketUnitIds: string[],
+    paymentMethodId: PaymentMethodId,
   ): Promise<{ transaction: Transaction; paymentIntentId: string }> {
     this.logger.log(ctx, `Initiating purchase for listing ${listingId}`);
 
@@ -148,6 +155,7 @@ export class TransactionsService {
       autoReleaseAt,
       deliveryMethod: listing.deliveryMethod,
       pickupAddress: listing.pickupAddress,
+      paymentMethodId,
     };
 
     await this.transactionsRepository.create(ctx, transaction);
@@ -442,6 +450,14 @@ export class TransactionsService {
   }
 
   /**
+   * Get raw transaction by ID (internal use only, no permission checks).
+   * Use this for service-to-service communication.
+   */
+  async findById(ctx: Ctx, id: string): Promise<Transaction | null> {
+    return this.transactionsRepository.findById(ctx, id);
+  }
+
+  /**
    * Enrich transaction with details
    */
   private async enrichTransaction(
@@ -605,5 +621,136 @@ export class TransactionsService {
     }
 
     return updated;
+  }
+
+  /**
+   * Get transactions pending manual payment approval (admin)
+   */
+  async getPendingManualPayments(
+    ctx: Ctx,
+  ): Promise<GetPendingPaymentsResponse> {
+    this.logger.log(ctx, 'Getting pending manual payments');
+
+    const allTransactions = await this.transactionsRepository.getAll(ctx);
+
+    // Filter for transactions that are pending payment and use manual approval method
+    const manualPaymentMethodIds = BUY_PAGE_PAYMENT_METHODS.filter(
+      (m) => m.type === 'manual_approval',
+    ).map((m) => m.id);
+
+    const pendingManual = allTransactions.filter(
+      (t) =>
+        t.status === TransactionStatus.PendingPayment &&
+        t.paymentMethodId &&
+        manualPaymentMethodIds.includes(t.paymentMethodId),
+    );
+
+    // Enrich with details
+    const enriched: TransactionWithPaymentInfo[] = await Promise.all(
+      pendingManual.map(async (t) => {
+        const details = await this.enrichTransaction(ctx, t);
+        const paymentMethod = BUY_PAGE_PAYMENT_METHODS.find(
+          (m) => m.id === t.paymentMethodId,
+        );
+        return {
+          ...details,
+          paymentMethodId: t.paymentMethodId,
+          paymentMethodName: paymentMethod?.name || 'Unknown',
+        };
+      }),
+    );
+
+    return {
+      transactions: enriched,
+      total: enriched.length,
+    };
+  }
+
+  /**
+   * Approve or reject manual payment (admin)
+   */
+  async approveManualPayment(
+    ctx: Ctx,
+    transactionId: string,
+    adminId: string,
+    approved: boolean,
+    rejectionReason?: string,
+  ): Promise<Transaction> {
+    this.logger.log(
+      ctx,
+      `Admin ${adminId} ${approved ? 'approving' : 'rejecting'} payment for transaction ${transactionId}`,
+    );
+
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    if (transaction.status !== TransactionStatus.PendingPayment) {
+      throw new BadRequestException(
+        'Transaction is not pending payment approval',
+      );
+    }
+
+    if (approved) {
+      // Hold funds in escrow for seller
+      await this.walletService.holdFunds(
+        ctx,
+        transaction.sellerId,
+        transaction.sellerReceives,
+        transactionId,
+        `Payment for ticket sale (manual approval)`,
+      );
+
+      const updated = await this.transactionsRepository.update(
+        ctx,
+        transactionId,
+        {
+          status: TransactionStatus.PaymentReceived,
+          paymentReceivedAt: new Date(),
+          paymentApprovedBy: adminId,
+          paymentApprovedAt: new Date(),
+        },
+      );
+
+      if (!updated) {
+        throw new NotFoundException('Transaction not found');
+      }
+
+      this.logger.log(
+        ctx,
+        `Transaction ${transactionId} - manual payment approved`,
+      );
+      return updated;
+    } else {
+      // Restore tickets to listing
+      await this.ticketsService.restoreTickets(
+        ctx,
+        transaction.listingId,
+        transaction.ticketUnitIds,
+      );
+
+      const updated = await this.transactionsRepository.update(
+        ctx,
+        transactionId,
+        {
+          status: TransactionStatus.Cancelled,
+          cancelledAt: new Date(),
+        },
+      );
+
+      if (!updated) {
+        throw new NotFoundException('Transaction not found');
+      }
+
+      this.logger.log(
+        ctx,
+        `Transaction ${transactionId} - manual payment rejected: ${rejectionReason}`,
+      );
+      return updated;
+    }
   }
 }

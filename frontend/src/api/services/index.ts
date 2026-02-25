@@ -8,3 +8,4 @@ export { supportService } from './support.service';
 export { otpService } from './otp.service';
 export { sellersService } from './sellers.service';
 export { termsService } from './terms.service';
+export { paymentConfirmationsService } from './payment-confirmations.service';

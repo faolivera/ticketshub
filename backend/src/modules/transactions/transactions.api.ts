@@ -2,6 +2,7 @@ import type {
   Transaction,
   TransactionWithDetails,
 } from './transactions.domain';
+import type { PaymentMethodId } from '../payments/payments.domain';
 
 /**
  * Request to initiate a purchase
@@ -9,6 +10,7 @@ import type {
 export interface InitiatePurchaseRequest {
   listingId: string;
   ticketUnitIds: string[];
+  paymentMethodId: PaymentMethodId;
 }
 
 /**
@@ -63,3 +65,32 @@ export interface ListTransactionsQuery {
   limit?: number;
   offset?: number;
 }
+
+/**
+ * Transaction with payment method info for admin view
+ */
+export interface TransactionWithPaymentInfo extends TransactionWithDetails {
+  paymentMethodId?: PaymentMethodId;
+  paymentMethodName: string;
+}
+
+/**
+ * Response for getting pending manual payments
+ */
+export interface GetPendingPaymentsResponse {
+  transactions: TransactionWithPaymentInfo[];
+  total: number;
+}
+
+/**
+ * Request to approve/reject manual payment
+ */
+export interface ApprovePaymentRequest {
+  approved: boolean;
+  rejectionReason?: string;
+}
+
+/**
+ * Response after payment approval action
+ */
+export type ApprovePaymentResponse = Transaction;

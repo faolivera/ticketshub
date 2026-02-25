@@ -18,7 +18,7 @@ import { User } from '../../common/decorators/user.decorator';
 import { Context } from '../../common/decorators/ctx.decorator';
 import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
-import type { JWTPayload } from '../users/users.domain';
+import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
 import { Role } from '../users/users.domain';
 import type {
   CreateSupportTicketRequest,
@@ -50,12 +50,12 @@ export class SupportController {
   @UseGuards(JwtAuthGuard)
   async createTicket(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Body() body: CreateSupportTicketRequest,
   ): Promise<ApiResponse<CreateSupportTicketResponse>> {
     const ticket = await this.supportService.createTicket(
       ctx,
-      user.userId,
+      user.id,
       body,
     );
     return { success: true, data: ticket };
@@ -68,7 +68,7 @@ export class SupportController {
   @UseGuards(JwtAuthGuard)
   async listTickets(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Query('status') status?: string,
     @Query('category') category?: SupportCategory,
     @Query('limit') limit?: string,
@@ -82,7 +82,7 @@ export class SupportController {
     };
     const tickets = await this.supportService.listUserTickets(
       ctx,
-      user.userId,
+      user.id,
       query,
     );
     return { success: true, data: tickets };
@@ -95,13 +95,13 @@ export class SupportController {
   @UseGuards(JwtAuthGuard)
   async getTicket(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
   ): Promise<ApiResponse<GetSupportTicketResponse>> {
     const ticket = await this.supportService.getTicketById(
       ctx,
       id,
-      user.userId,
+      user.id,
       user.role,
     );
     return { success: true, data: ticket };
@@ -114,7 +114,7 @@ export class SupportController {
   @UseGuards(JwtAuthGuard)
   async addMessage(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Param('id') ticketId: string,
     @Body() body: AddMessageRequest,
   ): Promise<ApiResponse<AddMessageResponse>> {
@@ -122,7 +122,7 @@ export class SupportController {
     const message = await this.supportService.addMessage(
       ctx,
       ticketId,
-      user.userId,
+      user.id,
       isAdmin,
       body.message,
       body.attachmentUrls,
@@ -137,10 +137,10 @@ export class SupportController {
   @UseGuards(JwtAuthGuard)
   async closeTicket(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
   ): Promise<ApiResponse<{ closed: boolean }>> {
-    await this.supportService.closeTicket(ctx, id, user.userId, user.role);
+    await this.supportService.closeTicket(ctx, id, user.id, user.role);
     return { success: true, data: { closed: true } };
   }
 
@@ -152,14 +152,14 @@ export class SupportController {
   @Roles(Role.Admin)
   async resolveDispute(
     @Context() ctx: Ctx,
-    @User() user: JWTPayload,
+    @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
     @Body() body: ResolveDisputeRequest,
   ): Promise<ApiResponse<ResolveDisputeResponse>> {
     const ticket = await this.supportService.resolveDispute(
       ctx,
       id,
-      user.userId,
+      user.id,
       body.resolution,
       body.resolutionNotes,
     );

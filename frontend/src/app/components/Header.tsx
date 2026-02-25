@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Ticket, ChevronDown, Wallet, LogOut, Languages, Plus } from 'lucide-react';
+import { User, Ticket, ChevronDown, Wallet, LogOut, Languages, Plus, Shield } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
@@ -41,6 +41,17 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-4">
+          {/* Admin Button - only for admins */}
+          {isAuthenticated && user?.role === 'Admin' && (
+            <Link
+              to="/admin"
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('header.admin')}</span>
+            </Link>
+          )}
+
           {/* Sell Tickets Button */}
           {isAuthenticated && (
             <Link

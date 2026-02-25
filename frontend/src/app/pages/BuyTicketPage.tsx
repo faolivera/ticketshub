@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone } from 'lucide-react';
+import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -54,6 +54,8 @@ export function BuyTicketPage() {
   const listing = buyPageData?.listing ?? null;
   const seller = buyPageData?.seller ?? null;
   const paymentMethods = buyPageData?.paymentMethods ?? [];
+
+  const isOwnListing = user?.id === listing?.sellerId;
 
   // Fetch buy page data from BFF
   useEffect(() => {
@@ -158,7 +160,7 @@ export function BuyTicketPage() {
         ticketUnitIds: unitsToPurchase,
       });
 
-      navigate(`/ticket/${response.transaction.id}`);
+      navigate(`/transaction/${response.transaction.id}`);
     } catch (err) {
       console.error('Purchase failed:', err);
       setPurchaseError(
@@ -233,6 +235,22 @@ export function BuyTicketPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {isOwnListing && listing && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <Eye className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-800 mb-1">
+                  {t('buyTicket.ownListingPreview')}
+                </p>
+                <p className="text-sm text-amber-700">
+                  {t('buyTicket.ownListingPreviewDescription')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <Link
           to={`/event/${listing.eventId}`}
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
@@ -501,7 +519,8 @@ export function BuyTicketPage() {
               disabled={
                 isPurchasing ||
                 availableUnits.length === 0 ||
-                selectedQuantity === 0
+                selectedQuantity === 0 ||
+                isOwnListing
               }
               className="w-full py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >

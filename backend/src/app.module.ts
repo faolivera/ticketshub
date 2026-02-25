@@ -12,12 +12,15 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
 import { SupportModule } from './modules/support/support.module';
 import { BffModule } from './modules/bff/bff.module';
 import { TermsModule } from './modules/terms/terms.module';
+import { StorageModule } from './common/storage/storage.module';
+import { PaymentConfirmationsModule } from './modules/payment-confirmations/payment-confirmations.module';
 
 @Module({
   imports: [
     // Global modules (must be first)
     PlatformConfigModule,
     NotificationsModule,
+    StorageModule,
 
     // Core modules
     HealthModule,
@@ -30,6 +33,7 @@ import { TermsModule } from './modules/terms/terms.module';
     WalletModule,
     PaymentsModule,
     TransactionsModule,
+    PaymentConfirmationsModule,
     SupportModule,
     BffModule,
     TermsModule,
