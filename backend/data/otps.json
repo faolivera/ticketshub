@@ -1,0 +1,12 @@
+{
+  "otp_1771987367858_24fd08e1": {
+    "id": "otp_1771987367858_24fd08e1",
+    "userId": "4",
+    "type": "EmailVerification",
+    "code": "111111",
+    "status": "Verified",
+    "expiresAt": "2026-02-25T02:52:47.858Z",
+    "createdAt": "2026-02-25T02:42:47.858Z",
+    "verifiedAt": "2026-02-25T02:43:24.810Z"
+  }
+}

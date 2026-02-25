@@ -1,6 +1,11 @@
 import type { Address } from '../shared/address.domain';
 import type { Image } from '../images/images.domain';
-import type { EventCategory, Event, EventDate, EventWithDates } from './events.domain';
+import type {
+  EventCategory,
+  Event,
+  EventDate,
+  EventWithDates,
+} from './events.domain';
 
 /**
  * Request to create a new event

@@ -6,11 +6,11 @@
     "sellTickets": "Vender Entradas",
     "logout": "Cerrar Sesión",
     "login": "Iniciar Sesión",
-    "signIn": "Iniciar Sesión"
+    "signUp": "Registrarse"
   },
   "login": {
     "title": "Bienvenido de nuevo",
-    "subtitle": "Inicia sesión en tu cuenta de TicketHub",
+    "subtitle": "Inicia sesión en tu cuenta de {{brand}}",
     "email": "Correo Electrónico",
     "emailPlaceholder": "tu.correo@ejemplo.com",
     "password": "Contraseña",
@@ -66,7 +66,10 @@
     "badgeVerified": "Verificado",
     "badgeBestSeller": "Mejor Vendedor",
     "buyTicket": "Comprar Entrada",
-    "noReviewsYet": "Aún no hay reseñas"
+    "noReviewsYet": "Aún no hay reseñas",
+    "commissionRange": "(+{{min}}% a +{{max}}% comisión)",
+    "soldAsBundle": "se vende como paquete",
+    "soldIndividually": "se vende por unidad"
   },
   "buyTicket": {
     "backToEvent": "Volver al evento",
@@ -336,13 +339,15 @@
     "newsletterSubtitle": "Suscríbete para recibir actualizaciones sobre nuevos eventos",
     "emailPlaceholder": "Tu correo electrónico",
     "subscribe": "Suscribirse",
-    "allRightsReserved": "© {{year}} TicketHub. Todos los derechos reservados."
+    "allRightsReserved": "© {{year}} {{brand}}. Todos los derechos reservados."
   },
   "register": {
     "signUp": "Registrarse",
-    "signUpDescription": "Únete a TicketHub para comprar y vender entradas de forma segura",
+    "signUpDescription": "Únete a {{brand}} para comprar y vender entradas de forma segura",
     "email": "Correo Electrónico",
     "emailPlaceholder": "tu.correo@ejemplo.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Al menos 8 caracteres",
     "firstName": "Nombre",
     "firstNamePlaceholder": "Juan",
     "lastName": "Apellido",
@@ -359,7 +364,10 @@
     "resendCode": "Reenviar código",
     "resendIn": "Reenviar en {{seconds}}s",
     "back": "Volver",
-    "pleaseEnterCompleteCode": "Por favor ingresa el código de verificación completo"
+    "pleaseEnterCompleteCode": "Por favor ingresa el código de verificación completo",
+    "registerError": "Error al registrarse. Inténtalo de nuevo.",
+    "verifyError": "Error al verificar. Revisa el código e inténtalo de nuevo.",
+    "resendError": "Error al reenviar el código. Inténtalo de nuevo."
   },
   "phoneVerification": {
     "title": "Verificar Número de Teléfono",

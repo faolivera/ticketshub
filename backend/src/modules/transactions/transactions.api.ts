@@ -1,4 +1,7 @@
-import type { Transaction, TransactionWithDetails } from './transactions.domain';
+import type {
+  Transaction,
+  TransactionWithDetails,
+} from './transactions.domain';
 
 /**
  * Request to initiate a purchase

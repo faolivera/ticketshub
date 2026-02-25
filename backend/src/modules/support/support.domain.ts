@@ -35,8 +35,8 @@ export enum SupportTicketStatus {
  * Dispute resolution outcome
  */
 export enum DisputeResolution {
-  BuyerWins = 'BuyerWins',    // Full refund to buyer
-  SellerWins = 'SellerWins',  // Payment released to seller
+  BuyerWins = 'BuyerWins', // Full refund to buyer
+  SellerWins = 'SellerWins', // Payment released to seller
   SplitResolution = 'SplitResolution', // Partial refund
   NoResolution = 'NoResolution', // Closed without resolution
 }
@@ -48,21 +48,21 @@ export interface SupportTicket {
   id: string;
   userId: string;
   transactionId?: string; // If related to a transaction
-  
+
   category: SupportCategory;
   disputeReason?: DisputeReason; // If category is TicketDispute
-  
+
   subject: string;
   description: string;
-  
+
   status: SupportTicketStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  
+
   // Resolution details
   resolution?: DisputeResolution;
   resolutionNotes?: string;
   resolvedBy?: string; // Admin userId
-  
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;

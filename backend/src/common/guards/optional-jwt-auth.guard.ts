@@ -41,7 +41,10 @@ export class OptionalJwtAuthGuard implements CanActivate {
       // Get context from request (set by ContextInterceptor)
       const ctx = (request as any).ctx || { source: 'HTTP' as const };
 
-      const userData = await this.usersService.getAuthenticatedUserInfo(ctx, payload.userId);
+      const userData = await this.usersService.getAuthenticatedUserInfo(
+        ctx,
+        payload.userId,
+      );
 
       // If user not found, allow request to proceed without user
       if (!userData) {
@@ -59,4 +62,3 @@ export class OptionalJwtAuthGuard implements CanActivate {
     return true;
   }
 }
-

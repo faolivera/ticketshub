@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  UseGuards,
-  Inject,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Inject } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { User } from '../../common/decorators/user.decorator';
@@ -49,7 +42,10 @@ export class WalletController {
     @Context() ctx: Ctx,
     @User() user: JWTPayload,
   ): Promise<ApiResponse<ListWalletTransactionsResponse>> {
-    const transactions = await this.walletService.getTransactions(ctx, user.userId);
+    const transactions = await this.walletService.getTransactions(
+      ctx,
+      user.userId,
+    );
     return { success: true, data: transactions };
   }
 
@@ -78,7 +74,8 @@ export class WalletController {
       success: true,
       data: {
         success: true,
-        message: 'Withdrawal request submitted. Funds will be transferred to your bank account.',
+        message:
+          'Withdrawal request submitted. Funds will be transferred to your bank account.',
         newBalance: wallet.balance,
       },
     };

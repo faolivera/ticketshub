@@ -53,7 +53,11 @@ export class SupportController {
     @User() user: JWTPayload,
     @Body() body: CreateSupportTicketRequest,
   ): Promise<ApiResponse<CreateSupportTicketResponse>> {
-    const ticket = await this.supportService.createTicket(ctx, user.userId, body);
+    const ticket = await this.supportService.createTicket(
+      ctx,
+      user.userId,
+      body,
+    );
     return { success: true, data: ticket };
   }
 
@@ -76,7 +80,11 @@ export class SupportController {
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     };
-    const tickets = await this.supportService.listUserTickets(ctx, user.userId, query);
+    const tickets = await this.supportService.listUserTickets(
+      ctx,
+      user.userId,
+      query,
+    );
     return { success: true, data: tickets };
   }
 
@@ -90,7 +98,12 @@ export class SupportController {
     @User() user: JWTPayload,
     @Param('id') id: string,
   ): Promise<ApiResponse<GetSupportTicketResponse>> {
-    const ticket = await this.supportService.getTicketById(ctx, id, user.userId, user.role);
+    const ticket = await this.supportService.getTicketById(
+      ctx,
+      id,
+      user.userId,
+      user.role,
+    );
     return { success: true, data: ticket };
   }
 
@@ -177,7 +190,11 @@ export class SupportController {
     @Param('id') id: string,
     @Body() body: { status: SupportTicketStatus },
   ): Promise<ApiResponse<CreateSupportTicketResponse>> {
-    const ticket = await this.supportService.updateTicketStatus(ctx, id, body.status);
+    const ticket = await this.supportService.updateTicketStatus(
+      ctx,
+      id,
+      body.status,
+    );
     return { success: true, data: ticket };
   }
 
@@ -185,9 +202,7 @@ export class SupportController {
    * Seed demo data for local testing (dev only)
    */
   @Post('dev/seed-demo')
-  async seedDemo(
-    @Context() ctx: Ctx,
-  ): Promise<ApiResponse<SeedDemoResponse>> {
+  async seedDemo(@Context() ctx: Ctx): Promise<ApiResponse<SeedDemoResponse>> {
     const result = await this.supportSeedService.seedDemoData(ctx);
     return { success: true, data: result };
   }

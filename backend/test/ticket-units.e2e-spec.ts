@@ -56,7 +56,11 @@ describe('Ticket Units (e2e)', () => {
     expect(numberedRes.body.success).toBe(true);
     expect(numberedRes.body.data.seatingType).toBe('numbered');
     expect(numberedRes.body.data.ticketUnits).toHaveLength(2);
-    expect(numberedRes.body.data.ticketUnits.every((unit: { seat?: unknown }) => unit.seat)).toBe(true);
+    expect(
+      numberedRes.body.data.ticketUnits.every(
+        (unit: { seat?: unknown }) => unit.seat,
+      ),
+    ).toBe(true);
 
     const unnumberedRes = await request(app.getHttpServer())
       .post('/api/tickets')
@@ -76,7 +80,11 @@ describe('Ticket Units (e2e)', () => {
     expect(unnumberedRes.body.success).toBe(true);
     expect(unnumberedRes.body.data.seatingType).toBe('unnumbered');
     expect(unnumberedRes.body.data.ticketUnits).toHaveLength(3);
-    expect(unnumberedRes.body.data.ticketUnits.every((unit: { seat?: unknown }) => !unit.seat)).toBe(true);
+    expect(
+      unnumberedRes.body.data.ticketUnits.every(
+        (unit: { seat?: unknown }) => !unit.seat,
+      ),
+    ).toBe(true);
   });
 
   it('rejects duplicate ticketUnitIds and foreign ticketUnitIds for purchase', async () => {
@@ -123,7 +131,9 @@ describe('Ticket Units (e2e)', () => {
       .expect(201);
 
     expect(purchaseRes.body.success).toBe(true);
-    expect(purchaseRes.body.data.transaction.ticketUnitIds).toEqual(['unit_seed_001']);
+    expect(purchaseRes.body.data.transaction.ticketUnitIds).toEqual([
+      'unit_seed_001',
+    ]);
 
     const transactionId = purchaseRes.body.data.transaction.id as string;
 

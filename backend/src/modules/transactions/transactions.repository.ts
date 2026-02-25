@@ -48,7 +48,10 @@ export class TransactionsRepository implements OnModuleInit {
     const all = await this.storage.getAll(ctx);
     return all
       .filter((t) => t.buyerId === buyerId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }
 
   /**
@@ -58,7 +61,10 @@ export class TransactionsRepository implements OnModuleInit {
     const all = await this.storage.getAll(ctx);
     return all
       .filter((t) => t.sellerId === sellerId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }
 
   /**
@@ -86,7 +92,11 @@ export class TransactionsRepository implements OnModuleInit {
   /**
    * Update transaction
    */
-  async update(ctx: Ctx, id: string, updates: Partial<Transaction>): Promise<Transaction | undefined> {
+  async update(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<Transaction>,
+  ): Promise<Transaction | undefined> {
     const existing = await this.storage.get(ctx, id);
     if (!existing) return undefined;
 

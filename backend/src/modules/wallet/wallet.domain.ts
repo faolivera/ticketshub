@@ -26,17 +26,17 @@ export enum WalletTransactionType {
    * Money added to wallet (e.g., from refund)
    */
   Credit = 'credit',
-  
+
   /**
    * Money removed from wallet (e.g., withdrawal)
    */
   Debit = 'debit',
-  
+
   /**
    * Money held in escrow (pending release)
    */
   Hold = 'hold',
-  
+
   /**
    * Money released from escrow to balance
    */

@@ -1,19 +1,25 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { SupportRepository } from './support.repository';
 import { TransactionsService } from '../transactions/transactions.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
-import type { 
-  SupportTicket, 
-  SupportMessage, 
-  SupportTicketWithMessages 
+import type {
+  SupportTicket,
+  SupportMessage,
+  SupportTicketWithMessages,
 } from './support.domain';
-import { 
-  SupportCategory, 
+import {
+  SupportCategory,
   DisputeReason,
-  SupportTicketStatus, 
-  DisputeResolution 
+  SupportTicketStatus,
+  DisputeResolution,
 } from './support.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import type { ListSupportTicketsQuery } from './support.api';
@@ -56,12 +62,18 @@ export class SupportService {
     // If dispute, mark transaction as disputed
     if (data.category === SupportCategory.TicketDispute && data.transactionId) {
       // Check if dispute already exists for this transaction
-      const existingDispute = await this.supportRepository.getTicketByTransactionId(
-        ctx,
-        data.transactionId,
-      );
-      if (existingDispute && existingDispute.status !== SupportTicketStatus.Closed) {
-        throw new BadRequestException('A dispute already exists for this transaction');
+      const existingDispute =
+        await this.supportRepository.getTicketByTransactionId(
+          ctx,
+          data.transactionId,
+        );
+      if (
+        existingDispute &&
+        existingDispute.status !== SupportTicketStatus.Closed
+      ) {
+        throw new BadRequestException(
+          'A dispute already exists for this transaction',
+        );
       }
     }
 
@@ -89,7 +101,11 @@ export class SupportService {
 
     // If it's a dispute, mark the transaction as disputed
     if (data.category === SupportCategory.TicketDispute && data.transactionId) {
-      await this.transactionsService.markDisputed(ctx, data.transactionId, ticket.id);
+      await this.transactionsService.markDisputed(
+        ctx,
+        data.transactionId,
+        ticket.id,
+      );
     }
 
     // Create initial message with description
@@ -118,7 +134,10 @@ export class SupportService {
       throw new ForbiddenException('Access denied');
     }
 
-    const messages = await this.supportRepository.getMessagesByTicketId(ctx, ticketId);
+    const messages = await this.supportRepository.getMessagesByTicketId(
+      ctx,
+      ticketId,
+    );
     return { ...ticket, messages };
   }
 
@@ -185,7 +204,10 @@ export class SupportService {
       throw new BadRequestException('This ticket is not a dispute');
     }
 
-    if (ticket.status === SupportTicketStatus.Resolved || ticket.status === SupportTicketStatus.Closed) {
+    if (
+      ticket.status === SupportTicketStatus.Resolved ||
+      ticket.status === SupportTicketStatus.Closed
+    ) {
       throw new BadRequestException('Dispute already resolved');
     }
 
@@ -193,7 +215,10 @@ export class SupportService {
     if (ticket.transactionId) {
       if (resolution === DisputeResolution.BuyerWins) {
         // Refund buyer
-        await this.transactionsService.refundTransaction(ctx, ticket.transactionId);
+        await this.transactionsService.refundTransaction(
+          ctx,
+          ticket.transactionId,
+        );
       } else if (resolution === DisputeResolution.SellerWins) {
         // Complete transaction (release payment to seller)
         // This would require adding a method to complete a disputed transaction
@@ -256,7 +281,9 @@ export class SupportService {
     ticketId: string,
     status: SupportTicketStatus,
   ): Promise<SupportTicket> {
-    const updated = await this.supportRepository.updateTicket(ctx, ticketId, { status });
+    const updated = await this.supportRepository.updateTicket(ctx, ticketId, {
+      status,
+    });
     if (!updated) {
       throw new NotFoundException('Support ticket not found');
     }

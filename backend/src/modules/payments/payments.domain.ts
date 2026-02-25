@@ -1,6 +1,52 @@
 import type { CurrencyCode } from '../shared/money.domain';
 import type { Ctx } from '../../common/types/context';
 
+/** Gateway identifier for payment methods */
+export type PaymentMethodId =
+  | 'payway'
+  | 'mercadopago'
+  | 'uala_bis_debito'
+  | 'bank_transfer';
+
+/** How the payment method is processed */
+export type PaymentMethodType = 'webhook_integrated' | 'manual_approval';
+
+/** Payment method option for buy page */
+export interface PaymentMethodOption {
+  id: PaymentMethodId;
+  name: string;
+  commissionPercent: number | null;
+  type: PaymentMethodType;
+}
+
+/** Static payment methods for buy page */
+export const BUY_PAGE_PAYMENT_METHODS: PaymentMethodOption[] = [
+  {
+    id: 'payway',
+    name: 'Payway',
+    commissionPercent: 12,
+    type: 'webhook_integrated',
+  },
+  {
+    id: 'mercadopago',
+    name: 'MercadoPago',
+    commissionPercent: 12,
+    type: 'webhook_integrated',
+  },
+  {
+    id: 'uala_bis_debito',
+    name: 'Uala Bis Debito',
+    commissionPercent: 12,
+    type: 'webhook_integrated',
+  },
+  {
+    id: 'bank_transfer',
+    name: 'Transferencia Bancaria',
+    commissionPercent: 5,
+    type: 'manual_approval',
+  },
+];
+
 /**
  * Money representation
  */
@@ -116,12 +162,20 @@ export interface PaymentProvider {
   /**
    * Refund a payment
    */
-  refundPayment(ctx: Ctx, paymentIntentId: string, amount?: Money): Promise<PaymentIntent>;
+  refundPayment(
+    ctx: Ctx,
+    paymentIntentId: string,
+    amount?: Money,
+  ): Promise<PaymentIntent>;
 
   /**
    * Process webhook from provider
    */
-  processWebhook(ctx: Ctx, payload: unknown, signature?: string): Promise<WebhookResult>;
+  processWebhook(
+    ctx: Ctx,
+    payload: unknown,
+    signature?: string,
+  ): Promise<WebhookResult>;
 }
 
 /**
@@ -131,5 +185,10 @@ export interface PayoutProvider {
   /**
    * Create a payout to seller's bank account
    */
-  createPayout(ctx: Ctx, userId: string, amount: Money, bankAccountId: string): Promise<PayoutResult>;
+  createPayout(
+    ctx: Ctx,
+    userId: string,
+    amount: Money,
+    bankAccountId: string,
+  ): Promise<PayoutResult>;
 }

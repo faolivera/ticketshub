@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
-import type { 
-  InAppNotification, 
-  EmailResult, 
-  SMSResult 
+import type {
+  InAppNotification,
+  EmailResult,
+  SMSResult,
 } from './notifications.domain';
 import { EmailTemplate, InAppNotificationType } from './notifications.domain';
 
@@ -26,9 +26,12 @@ export class NotificationsService {
     template: EmailTemplate,
     data: Record<string, unknown>,
   ): Promise<EmailResult> {
-    this.logger.log(ctx, `[MOCK] Sending email to ${to} with template ${template}`);
+    this.logger.log(
+      ctx,
+      `[MOCK] Sending email to ${to} with template ${template}`,
+    );
     this.logger.debug(ctx, `Email data: ${JSON.stringify(data)}`);
-    
+
     // Mock implementation - always succeeds
     return {
       success: true,
@@ -43,7 +46,7 @@ export class NotificationsService {
   async sendSMS(ctx: Ctx, to: string, message: string): Promise<SMSResult> {
     this.logger.log(ctx, `[MOCK] Sending SMS to ${to}`);
     this.logger.debug(ctx, `SMS message: ${message}`);
-    
+
     // Mock implementation - always succeeds
     return {
       success: true,
@@ -63,8 +66,11 @@ export class NotificationsService {
     message: string,
     actionUrl?: string,
   ): Promise<InAppNotification> {
-    this.logger.log(ctx, `[MOCK] Sending in-app notification to user ${userId}`);
-    
+    this.logger.log(
+      ctx,
+      `[MOCK] Sending in-app notification to user ${userId}`,
+    );
+
     const notification: InAppNotification = {
       id: `notif_${Date.now()}`,
       userId,
@@ -77,14 +83,18 @@ export class NotificationsService {
     };
 
     // TODO: Store notification and emit via WebSocket
-    
+
     return notification;
   }
 
   /**
    * Helper: Send OTP via email
    */
-  async sendOTPEmail(ctx: Ctx, email: string, code: string): Promise<EmailResult> {
+  async sendOTPEmail(
+    ctx: Ctx,
+    email: string,
+    code: string,
+  ): Promise<EmailResult> {
     return this.sendEmail(ctx, email, EmailTemplate.EmailVerification, {
       code,
       expiresInMinutes: 10,

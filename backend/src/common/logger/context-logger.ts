@@ -47,7 +47,11 @@ export class ContextLogger {
    * Write an 'error' level log.
    */
   error(ctx: Ctx, message: any, stack?: string, context?: string): void;
-  error(ctx: Ctx, message: any, ...optionalParams: [...any, string?, string?]): void;
+  error(
+    ctx: Ctx,
+    message: any,
+    ...optionalParams: [...any, string?, string?]
+  ): void;
   error(ctx: Ctx, message: any, ...optionalParams: any[]): void {
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
@@ -98,4 +102,3 @@ export class ContextLogger {
     this.logger.fatal(formattedMessage, ...optionalParams);
   }
 }
-

@@ -7,16 +7,28 @@
     "type": "DigitalTransferable",
     "seatingType": "unnumbered",
     "ticketUnits": [
-      {"id": "unit_s2_un_t_1", "status": "available"},
-      {"id": "unit_s2_un_t_2", "status": "available"},
-      {"id": "unit_s2_un_t_3", "status": "available"}
+      {
+        "id": "unit_s2_un_t_1",
+        "status": "reserved"
+      },
+      {
+        "id": "unit_s2_un_t_2",
+        "status": "reserved"
+      },
+      {
+        "id": "unit_s2_un_t_3",
+        "status": "reserved"
+      }
     ],
     "sellTogether": true,
-    "pricePerTicket": {"amount": 10000, "currency": "EUR"},
+    "pricePerTicket": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
     "section": "General",
-    "status": "Active",
+    "status": "Sold",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T10:00:00.000Z"
+    "updatedAt": "2026-02-25T02:43:56.981Z"
   },
   "tkt_s2_un_separate": {
     "id": "tkt_s2_un_separate",
@@ -26,12 +38,24 @@
     "type": "DigitalTransferable",
     "seatingType": "unnumbered",
     "ticketUnits": [
-      {"id": "unit_s2_un_s_1", "status": "available"},
-      {"id": "unit_s2_un_s_2", "status": "available"},
-      {"id": "unit_s2_un_s_3", "status": "available"}
+      {
+        "id": "unit_s2_un_s_1",
+        "status": "available"
+      },
+      {
+        "id": "unit_s2_un_s_2",
+        "status": "available"
+      },
+      {
+        "id": "unit_s2_un_s_3",
+        "status": "available"
+      }
     ],
     "sellTogether": false,
-    "pricePerTicket": {"amount": 10000, "currency": "EUR"},
+    "pricePerTicket": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
     "section": "General",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
@@ -45,10 +69,16 @@
     "type": "DigitalTransferable",
     "seatingType": "unnumbered",
     "ticketUnits": [
-      {"id": "unit_s2_un_1", "status": "available"}
+      {
+        "id": "unit_s2_un_1",
+        "status": "available"
+      }
     ],
     "sellTogether": true,
-    "pricePerTicket": {"amount": 10000, "currency": "EUR"},
+    "pricePerTicket": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
     "section": "General",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
@@ -62,12 +92,36 @@
     "type": "DigitalTransferable",
     "seatingType": "numbered",
     "ticketUnits": [
-      {"id": "unit_s2_num_t_1", "status": "available", "seat": {"row": "A", "seatNumber": "1"}},
-      {"id": "unit_s2_num_t_2", "status": "available", "seat": {"row": "A", "seatNumber": "2"}},
-      {"id": "unit_s2_num_t_3", "status": "available", "seat": {"row": "A", "seatNumber": "3"}}
+      {
+        "id": "unit_s2_num_t_1",
+        "status": "available",
+        "seat": {
+          "row": "A",
+          "seatNumber": "1"
+        }
+      },
+      {
+        "id": "unit_s2_num_t_2",
+        "status": "available",
+        "seat": {
+          "row": "A",
+          "seatNumber": "2"
+        }
+      },
+      {
+        "id": "unit_s2_num_t_3",
+        "status": "available",
+        "seat": {
+          "row": "A",
+          "seatNumber": "3"
+        }
+      }
     ],
     "sellTogether": true,
-    "pricePerTicket": {"amount": 15000, "currency": "EUR"},
+    "pricePerTicket": {
+      "amount": 15000,
+      "currency": "EUR"
+    },
     "section": "Platea",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
@@ -81,12 +135,36 @@
     "type": "DigitalTransferable",
     "seatingType": "numbered",
     "ticketUnits": [
-      {"id": "unit_s2_num_s_1", "status": "available", "seat": {"row": "B", "seatNumber": "1"}},
-      {"id": "unit_s2_num_s_2", "status": "available", "seat": {"row": "B", "seatNumber": "2"}},
-      {"id": "unit_s2_num_s_3", "status": "available", "seat": {"row": "B", "seatNumber": "3"}}
+      {
+        "id": "unit_s2_num_s_1",
+        "status": "available",
+        "seat": {
+          "row": "B",
+          "seatNumber": "1"
+        }
+      },
+      {
+        "id": "unit_s2_num_s_2",
+        "status": "available",
+        "seat": {
+          "row": "B",
+          "seatNumber": "2"
+        }
+      },
+      {
+        "id": "unit_s2_num_s_3",
+        "status": "available",
+        "seat": {
+          "row": "B",
+          "seatNumber": "3"
+        }
+      }
     ],
     "sellTogether": false,
-    "pricePerTicket": {"amount": 15000, "currency": "EUR"},
+    "pricePerTicket": {
+      "amount": 15000,
+      "currency": "EUR"
+    },
     "section": "Platea",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
@@ -100,13 +178,87 @@
     "type": "DigitalTransferable",
     "seatingType": "numbered",
     "ticketUnits": [
-      {"id": "unit_s2_num_1", "status": "available", "seat": {"row": "C", "seatNumber": "1"}}
+      {
+        "id": "unit_s2_num_1",
+        "status": "available",
+        "seat": {
+          "row": "C",
+          "seatNumber": "1"
+        }
+      }
     ],
     "sellTogether": true,
-    "pricePerTicket": {"amount": 15000, "currency": "EUR"},
+    "pricePerTicket": {
+      "amount": 15000,
+      "currency": "EUR"
+    },
     "section": "Platea",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
     "updatedAt": "2026-02-25T10:00:00.000Z"
+  },
+  "tkt_1771986888670_d70607e7": {
+    "id": "tkt_1771986888670_d70607e7",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalTransferable",
+    "seatingType": "numbered",
+    "ticketUnits": [
+      {
+        "id": "unit_1771986888670_559691c8",
+        "status": "available",
+        "seat": {
+          "row": "A",
+          "seatNumber": "1"
+        }
+      },
+      {
+        "id": "unit_1771986888670_dca20f25",
+        "status": "available",
+        "seat": {
+          "row": "A",
+          "seatNumber": "2"
+        }
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 1000,
+      "currency": "EUR"
+    },
+    "section": "Test Numbered",
+    "status": "Active",
+    "createdAt": "2026-02-25T02:34:48.670Z",
+    "updatedAt": "2026-02-25T02:34:48.670Z"
+  },
+  "tkt_1771986888673_145f5314": {
+    "id": "tkt_1771986888673_145f5314",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalTransferable",
+    "seatingType": "unnumbered",
+    "ticketUnits": [
+      {
+        "id": "unit_1771986888673_bbc5f8be",
+        "status": "available"
+      },
+      {
+        "id": "unit_1771986888673_0a3e3b02",
+        "status": "available"
+      },
+      {
+        "id": "unit_1771986888673_103bffa4",
+        "status": "available"
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 1000,
+      "currency": "EUR"
+    },
+    "section": "Test Unnumbered",
+    "status": "Active",
+    "createdAt": "2026-02-25T02:34:48.673Z",
+    "updatedAt": "2026-02-25T02:34:48.673Z"
   }
 }

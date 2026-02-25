@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
 import type { Ctx } from '../../common/types/context';
 import type { User, UserAddress } from './users.domain';
+import { UserStatus } from './users.domain';
 import type { ProfileType } from './users.domain';
 
 @Injectable()
@@ -23,21 +24,34 @@ export class UsersRepository implements OnModuleInit {
    * Get all users (returns deep copies)
    */
   async getAll(ctx: Ctx): Promise<User[]> {
-    return await this.storage.getAll(ctx);
+    const users = await this.storage.getAll(ctx);
+    return users.map((u) => this.ensureUserStatus(u));
+  }
+
+  /**
+   * Ensure user has status (backward compatibility for existing data)
+   */
+  private ensureUserStatus(user: User): User {
+    if (!user.status) {
+      return { ...user, status: UserStatus.Enabled };
+    }
+    return user;
   }
 
   /**
    * Find user by ID (returns deep copy)
    */
   async findById(ctx: Ctx, id: string): Promise<User | undefined> {
-    return await this.storage.get(ctx, id);
+    const user = await this.storage.get(ctx, id);
+    return user ? this.ensureUserStatus(user) : undefined;
   }
 
   /**
    * Find users by IDs (returns deep copies)
    */
   async findByIds(ctx: Ctx, ids: string[]): Promise<User[]> {
-    return await this.storage.getMany(ctx, ids);
+    const users = await this.storage.getMany(ctx, ids);
+    return users.map((u) => this.ensureUserStatus(u));
   }
 
   /**
@@ -45,7 +59,8 @@ export class UsersRepository implements OnModuleInit {
    */
   async findByEmail(ctx: Ctx, email: string): Promise<User | undefined> {
     const allUsers = await this.storage.getAll(ctx);
-    return allUsers.find((user) => user.email === email);
+    const user = allUsers.find((u) => u.email === email);
+    return user ? this.ensureUserStatus(user) : undefined;
   }
 
   /**
@@ -53,7 +68,9 @@ export class UsersRepository implements OnModuleInit {
    */
   async findByProfile(ctx: Ctx, profile: ProfileType): Promise<User[]> {
     const allUsers = await this.storage.getAll(ctx);
-    return allUsers.filter((user) => user.profiles.includes(profile));
+    return allUsers
+      .filter((user) => user.profiles.includes(profile))
+      .map((u) => this.ensureUserStatus(u));
   }
 
   /**
@@ -75,14 +92,15 @@ export class UsersRepository implements OnModuleInit {
    */
   async add(
     ctx: Ctx,
-    user: Omit<User, 'id' | 'country' | 'currency'> &
-      Partial<Pick<User, 'country' | 'currency'>>,
+    user: Omit<User, 'id' | 'country' | 'currency' | 'status'> &
+      Partial<Pick<User, 'country' | 'currency'>> & { status?: UserStatus },
   ): Promise<User> {
     const allUsers = await this.storage.getAll(ctx);
     const newUser: User = {
       id: String(allUsers.length + 1),
       country: user.country || 'Germany',
       currency: user.currency || 'EUR',
+      status: user.status ?? UserStatus.Enabled,
       ...user,
     };
     await this.storage.set(ctx, newUser.id, newUser);
@@ -90,9 +108,33 @@ export class UsersRepository implements OnModuleInit {
   }
 
   /**
+   * Update user email verification status
+   */
+  async updateEmailVerified(
+    ctx: Ctx,
+    userId: string,
+    emailVerified: boolean,
+  ): Promise<User | undefined> {
+    const existing = await this.storage.get(ctx, userId);
+    if (!existing) return undefined;
+
+    const updatedUser: User = {
+      ...existing,
+      emailVerified,
+      updatedAt: new Date(),
+    };
+    await this.storage.set(ctx, userId, updatedUser);
+    return updatedUser;
+  }
+
+  /**
    * Update user profiles
    */
-  async updateProfiles(ctx: Ctx, userId: string, profiles: ProfileType[]): Promise<User | undefined> {
+  async updateProfiles(
+    ctx: Ctx,
+    userId: string,
+    profiles: ProfileType[],
+  ): Promise<User | undefined> {
     const existing = await this.storage.get(ctx, userId);
     if (!existing) return undefined;
 
@@ -107,7 +149,11 @@ export class UsersRepository implements OnModuleInit {
   /**
    * Add profile to user
    */
-  async addProfile(ctx: Ctx, userId: string, profile: ProfileType): Promise<User | undefined> {
+  async addProfile(
+    ctx: Ctx,
+    userId: string,
+    profile: ProfileType,
+  ): Promise<User | undefined> {
     const existing = await this.storage.get(ctx, userId);
     if (!existing) return undefined;
 
@@ -167,7 +213,9 @@ export class UsersRepository implements OnModuleInit {
       ...existing,
       ...(updates.firstName !== undefined && { firstName: updates.firstName }),
       ...(updates.lastName !== undefined && { lastName: updates.lastName }),
-      ...(updates.publicName !== undefined && { publicName: updates.publicName }),
+      ...(updates.publicName !== undefined && {
+        publicName: updates.publicName,
+      }),
       ...(updates.address !== undefined && { address: updates.address }),
       ...(updates.imageId !== undefined && { imageId: updates.imageId }),
     };
@@ -175,4 +223,3 @@ export class UsersRepository implements OnModuleInit {
     return updatedUser;
   }
 }
-

@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { TransactionsRepository } from './transactions.repository';
 import { TicketsService } from '../tickets/tickets.service';
@@ -7,7 +13,11 @@ import { WalletService } from '../wallet/wallet.service';
 import { ConfigService } from '../config/config.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
-import type { Transaction, TransactionWithDetails, Money } from './transactions.domain';
+import type {
+  Transaction,
+  TransactionWithDetails,
+  Money,
+} from './transactions.domain';
 import { TransactionStatus } from './transactions.domain';
 import { TicketType } from '../tickets/tickets.domain';
 import type { ListTransactionsQuery } from './transactions.api';
@@ -39,7 +49,10 @@ export class TransactionsService {
   /**
    * Calculate fees
    */
-  private calculateFees(ticketPrice: Money): { buyerFee: Money; sellerFee: Money } {
+  private calculateFees(ticketPrice: Money): {
+    buyerFee: Money;
+    sellerFee: Money;
+  } {
     const buyerFeePercentage = this.configService.getBuyerFeePercentage();
     const sellerFeePercentage = this.configService.getSellerFeePercentage();
 
@@ -68,13 +81,15 @@ export class TransactionsService {
 
     // Get listing and validate
     const listing = await this.ticketsService.getListingById(ctx, listingId);
-    
+
     if (listing.sellerId === buyerId) {
       throw new BadRequestException('Cannot buy your own listing');
     }
 
     if (!ticketUnitIds.length) {
-      throw new BadRequestException('At least one ticket unit must be selected');
+      throw new BadRequestException(
+        'At least one ticket unit must be selected',
+      );
     }
 
     const quantity = ticketUnitIds.length;
@@ -100,9 +115,12 @@ export class TransactionsService {
     // Calculate auto-release time for digital non-transferable tickets
     let autoReleaseAt: Date | undefined;
     if (listing.type === TicketType.DigitalNonTransferable) {
-      const releaseMinutes = this.configService.getDigitalNonTransferableReleaseMinutes();
+      const releaseMinutes =
+        this.configService.getDigitalNonTransferableReleaseMinutes();
       const eventDate = new Date(listing.eventDate);
-      autoReleaseAt = new Date(eventDate.getTime() + releaseMinutes * 60 * 1000);
+      autoReleaseAt = new Date(
+        eventDate.getTime() + releaseMinutes * 60 * 1000,
+      );
     }
 
     // Create transaction
@@ -123,9 +141,10 @@ export class TransactionsService {
       createdAt: new Date(),
       updatedAt: new Date(),
       eventDateTime: new Date(listing.eventDate),
-      releaseAfterMinutes: listing.type === TicketType.DigitalNonTransferable
-        ? this.configService.getDigitalNonTransferableReleaseMinutes()
-        : undefined,
+      releaseAfterMinutes:
+        listing.type === TicketType.DigitalNonTransferable
+          ? this.configService.getDigitalNonTransferableReleaseMinutes()
+          : undefined,
       autoReleaseAt,
       deliveryMethod: listing.deliveryMethod,
       pickupAddress: listing.pickupAddress,
@@ -161,10 +180,16 @@ export class TransactionsService {
   /**
    * Handle payment received (called by payment webhook or after confirmation)
    */
-  async handlePaymentReceived(ctx: Ctx, transactionId: string): Promise<Transaction> {
+  async handlePaymentReceived(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<Transaction> {
     this.logger.log(ctx, `Payment received for transaction ${transactionId}`);
 
-    const transaction = await this.transactionsRepository.findById(ctx, transactionId);
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
@@ -183,10 +208,14 @@ export class TransactionsService {
     );
 
     // Update transaction status
-    const updated = await this.transactionsRepository.update(ctx, transactionId, {
-      status: TransactionStatus.PaymentReceived,
-      paymentReceivedAt: new Date(),
-    });
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      {
+        status: TransactionStatus.PaymentReceived,
+        paymentReceivedAt: new Date(),
+      },
+    );
 
     if (!updated) {
       throw new NotFoundException('Transaction not found');
@@ -201,10 +230,20 @@ export class TransactionsService {
   /**
    * Seller confirms ticket transfer
    */
-  async confirmTransfer(ctx: Ctx, transactionId: string, sellerId: string): Promise<Transaction> {
-    this.logger.log(ctx, `Seller confirming transfer for transaction ${transactionId}`);
+  async confirmTransfer(
+    ctx: Ctx,
+    transactionId: string,
+    sellerId: string,
+  ): Promise<Transaction> {
+    this.logger.log(
+      ctx,
+      `Seller confirming transfer for transaction ${transactionId}`,
+    );
 
-    const transaction = await this.transactionsRepository.findById(ctx, transactionId);
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
@@ -217,10 +256,14 @@ export class TransactionsService {
       throw new BadRequestException('Invalid transaction status');
     }
 
-    const updated = await this.transactionsRepository.update(ctx, transactionId, {
-      status: TransactionStatus.TicketTransferred,
-      ticketTransferredAt: new Date(),
-    });
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      {
+        status: TransactionStatus.TicketTransferred,
+        ticketTransferredAt: new Date(),
+      },
+    );
 
     if (!updated) {
       throw new NotFoundException('Transaction not found');
@@ -233,10 +276,20 @@ export class TransactionsService {
   /**
    * Buyer confirms receipt (for Physical and DigitalTransferable tickets)
    */
-  async confirmReceipt(ctx: Ctx, transactionId: string, buyerId: string): Promise<Transaction> {
-    this.logger.log(ctx, `Buyer confirming receipt for transaction ${transactionId}`);
+  async confirmReceipt(
+    ctx: Ctx,
+    transactionId: string,
+    buyerId: string,
+  ): Promise<Transaction> {
+    this.logger.log(
+      ctx,
+      `Buyer confirming receipt for transaction ${transactionId}`,
+    );
 
-    const transaction = await this.transactionsRepository.findById(ctx, transactionId);
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
@@ -258,11 +311,15 @@ export class TransactionsService {
       `Payment released for ticket sale`,
     );
 
-    const updated = await this.transactionsRepository.update(ctx, transactionId, {
-      status: TransactionStatus.Completed,
-      buyerConfirmedAt: new Date(),
-      completedAt: new Date(),
-    });
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      {
+        status: TransactionStatus.Completed,
+        buyerConfirmedAt: new Date(),
+        completedAt: new Date(),
+      },
+    );
 
     if (!updated) {
       throw new NotFoundException('Transaction not found');
@@ -280,7 +337,8 @@ export class TransactionsService {
   async processAutoReleases(ctx: Ctx): Promise<number> {
     this.logger.log(ctx, 'Processing auto-releases');
 
-    const pendingReleases = await this.transactionsRepository.getPendingAutoRelease(ctx);
+    const pendingReleases =
+      await this.transactionsRepository.getPendingAutoRelease(ctx);
     let released = 0;
 
     for (const transaction of pendingReleases) {
@@ -302,7 +360,10 @@ export class TransactionsService {
         released++;
         this.logger.log(ctx, `Auto-released transaction ${transaction.id}`);
       } catch (error) {
-        this.logger.error(ctx, `Failed to auto-release transaction ${transaction.id}: ${error}`);
+        this.logger.error(
+          ctx,
+          `Failed to auto-release transaction ${transaction.id}: ${error}`,
+        );
       }
     }
 
@@ -312,8 +373,15 @@ export class TransactionsService {
   /**
    * Cancel transaction (before payment)
    */
-  async cancelTransaction(ctx: Ctx, transactionId: string, userId: string): Promise<Transaction> {
-    const transaction = await this.transactionsRepository.findById(ctx, transactionId);
+  async cancelTransaction(
+    ctx: Ctx,
+    transactionId: string,
+    userId: string,
+  ): Promise<Transaction> {
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
@@ -323,16 +391,26 @@ export class TransactionsService {
     }
 
     if (transaction.status !== TransactionStatus.PendingPayment) {
-      throw new BadRequestException('Can only cancel pending payment transactions');
+      throw new BadRequestException(
+        'Can only cancel pending payment transactions',
+      );
     }
 
     // Restore tickets to listing
-    await this.ticketsService.restoreTickets(ctx, transaction.listingId, transaction.ticketUnitIds);
+    await this.ticketsService.restoreTickets(
+      ctx,
+      transaction.listingId,
+      transaction.ticketUnitIds,
+    );
 
-    const updated = await this.transactionsRepository.update(ctx, transactionId, {
-      status: TransactionStatus.Cancelled,
-      cancelledAt: new Date(),
-    });
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      {
+        status: TransactionStatus.Cancelled,
+        cancelledAt: new Date(),
+      },
+    );
 
     if (!updated) {
       throw new NotFoundException('Transaction not found');
@@ -345,7 +423,11 @@ export class TransactionsService {
   /**
    * Get transaction by ID with details
    */
-  async getTransactionById(ctx: Ctx, id: string, userId: string): Promise<TransactionWithDetails> {
+  async getTransactionById(
+    ctx: Ctx,
+    id: string,
+    userId: string,
+  ): Promise<TransactionWithDetails> {
     const transaction = await this.transactionsRepository.findById(ctx, id);
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
@@ -362,8 +444,14 @@ export class TransactionsService {
   /**
    * Enrich transaction with details
    */
-  private async enrichTransaction(ctx: Ctx, transaction: Transaction): Promise<TransactionWithDetails> {
-    const listing = await this.ticketsService.getListingById(ctx, transaction.listingId);
+  private async enrichTransaction(
+    ctx: Ctx,
+    transaction: Transaction,
+  ): Promise<TransactionWithDetails> {
+    const listing = await this.ticketsService.getListingById(
+      ctx,
+      transaction.listingId,
+    );
 
     return {
       ...transaction,
@@ -386,14 +474,27 @@ export class TransactionsService {
     let transactions: Transaction[];
 
     if (query.role === 'seller') {
-      transactions = await this.transactionsRepository.getBySellerId(ctx, userId);
+      transactions = await this.transactionsRepository.getBySellerId(
+        ctx,
+        userId,
+      );
     } else if (query.role === 'buyer') {
-      transactions = await this.transactionsRepository.getByBuyerId(ctx, userId);
+      transactions = await this.transactionsRepository.getByBuyerId(
+        ctx,
+        userId,
+      );
     } else {
-      const asBuyer = await this.transactionsRepository.getByBuyerId(ctx, userId);
-      const asSeller = await this.transactionsRepository.getBySellerId(ctx, userId);
+      const asBuyer = await this.transactionsRepository.getByBuyerId(
+        ctx,
+        userId,
+      );
+      const asSeller = await this.transactionsRepository.getBySellerId(
+        ctx,
+        userId,
+      );
       transactions = [...asBuyer, ...asSeller].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     }
 
@@ -407,27 +508,48 @@ export class TransactionsService {
     const limit = query.limit || 20;
     transactions = transactions.slice(offset, offset + limit);
 
-    return await Promise.all(transactions.map((t) => this.enrichTransaction(ctx, t)));
+    return await Promise.all(
+      transactions.map((t) => this.enrichTransaction(ctx, t)),
+    );
   }
 
   /**
    * Get total completed sales for a seller
    */
-  async getSellerCompletedSalesTotal(ctx: Ctx, sellerId: string): Promise<number> {
-    const transactions = await this.transactionsRepository.getBySellerId(ctx, sellerId);
+  async getSellerCompletedSalesTotal(
+    ctx: Ctx,
+    sellerId: string,
+  ): Promise<number> {
+    const transactions = await this.transactionsRepository.getBySellerId(
+      ctx,
+      sellerId,
+    );
     return transactions
-      .filter((transaction) => transaction.status === TransactionStatus.Completed)
-      .reduce((total, transaction) => total + transaction.ticketUnitIds.length, 0);
+      .filter(
+        (transaction) => transaction.status === TransactionStatus.Completed,
+      )
+      .reduce(
+        (total, transaction) => total + transaction.ticketUnitIds.length,
+        0,
+      );
   }
 
   /**
    * Mark transaction as disputed
    */
-  async markDisputed(ctx: Ctx, transactionId: string, disputeId: string): Promise<Transaction> {
-    const updated = await this.transactionsRepository.update(ctx, transactionId, {
-      status: TransactionStatus.Disputed,
-      disputeId,
-    });
+  async markDisputed(
+    ctx: Ctx,
+    transactionId: string,
+    disputeId: string,
+  ): Promise<Transaction> {
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      {
+        status: TransactionStatus.Disputed,
+        disputeId,
+      },
+    );
 
     if (!updated) {
       throw new NotFoundException('Transaction not found');
@@ -439,8 +561,14 @@ export class TransactionsService {
   /**
    * Refund transaction (for dispute resolution)
    */
-  async refundTransaction(ctx: Ctx, transactionId: string): Promise<Transaction> {
-    const transaction = await this.transactionsRepository.findById(ctx, transactionId);
+  async refundTransaction(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<Transaction> {
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
@@ -455,15 +583,22 @@ export class TransactionsService {
     );
 
     // Refund payment to buyer via payment provider
-    const payment = await this.paymentsService.getPaymentByTransactionId(ctx, transactionId);
+    const payment = await this.paymentsService.getPaymentByTransactionId(
+      ctx,
+      transactionId,
+    );
     if (payment) {
       await this.paymentsService.refundPayment(ctx, payment.id);
     }
 
-    const updated = await this.transactionsRepository.update(ctx, transactionId, {
-      status: TransactionStatus.Refunded,
-      refundedAt: new Date(),
-    });
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      {
+        status: TransactionStatus.Refunded,
+        refundedAt: new Date(),
+      },
+    );
 
     if (!updated) {
       throw new NotFoundException('Transaction not found');

@@ -1,9 +1,19 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { TicketsRepository } from './tickets.repository';
 import { EventsService } from '../events/events.service';
 import type { Ctx } from '../../common/types/context';
-import type { TicketListing, TicketListingWithEvent, TicketUnit } from './tickets.domain';
+import type {
+  TicketListing,
+  TicketListingWithEvent,
+  TicketUnit,
+} from './tickets.domain';
 import {
   TicketType,
   DeliveryMethod,
@@ -54,19 +64,22 @@ export class TicketsService {
     }
 
     if (listing.seatingType === SeatingType.Numbered && hasSeatlessUnits) {
-      throw new BadRequestException('Numbered listings require seat information for all units');
+      throw new BadRequestException(
+        'Numbered listings require seat information for all units',
+      );
     }
 
     if (listing.seatingType === SeatingType.Unnumbered && hasSeatUnits) {
-      throw new BadRequestException('Unnumbered listings cannot contain seat information');
+      throw new BadRequestException(
+        'Unnumbered listings cannot contain seat information',
+      );
     }
   }
 
-  private buildTicketUnits(
-    data: CreateListingRequest,
-  ): TicketUnit[] {
+  private buildTicketUnits(data: CreateListingRequest): TicketUnit[] {
     const hasQuantity = data.quantity !== undefined;
-    const hasTicketUnits = Array.isArray(data.ticketUnits) && data.ticketUnits.length > 0;
+    const hasTicketUnits =
+      Array.isArray(data.ticketUnits) && data.ticketUnits.length > 0;
 
     if (hasQuantity === hasTicketUnits) {
       throw new BadRequestException('Provide either quantity or ticketUnits');
@@ -74,7 +87,9 @@ export class TicketsService {
 
     if (hasQuantity) {
       if (data.seatingType !== SeatingType.Unnumbered) {
-        throw new BadRequestException('Quantity can only be used for unnumbered listings');
+        throw new BadRequestException(
+          'Quantity can only be used for unnumbered listings',
+        );
       }
       if (!data.quantity || data.quantity < 1) {
         throw new BadRequestException('Quantity must be at least 1');
@@ -85,36 +100,51 @@ export class TicketsService {
       }));
     }
 
-    const incomingUnits = (data.ticketUnits as CreateListingTicketUnitInput[])
-      .map((unit) => ({
-        id: this.generateUnitId(),
-        status: TicketUnitStatus.Available,
-        seat: unit.seat,
-      }));
+    const incomingUnits = (
+      data.ticketUnits as CreateListingTicketUnitInput[]
+    ).map((unit) => ({
+      id: this.generateUnitId(),
+      status: TicketUnitStatus.Available,
+      seat: unit.seat,
+    }));
 
     const hasNumbered = incomingUnits.some((unit) => unit.seat);
     const hasUnnumbered = incomingUnits.some((unit) => !unit.seat);
     if (hasNumbered && hasUnnumbered) {
-      throw new BadRequestException('All ticket units must be either numbered or unnumbered');
+      throw new BadRequestException(
+        'All ticket units must be either numbered or unnumbered',
+      );
     }
 
     if (hasNumbered) {
       if (data.seatingType !== SeatingType.Numbered) {
-        throw new BadRequestException('Numbered ticket units require seatingType=numbered');
+        throw new BadRequestException(
+          'Numbered ticket units require seatingType=numbered',
+        );
       }
       const seatKeySet = new Set<string>();
       for (const unit of incomingUnits) {
-        if (!unit.seat || !unit.seat.row.trim() || !unit.seat.seatNumber.trim()) {
-          throw new BadRequestException('Each numbered unit must include row and seatNumber');
+        if (
+          !unit.seat ||
+          !unit.seat.row.trim() ||
+          !unit.seat.seatNumber.trim()
+        ) {
+          throw new BadRequestException(
+            'Each numbered unit must include row and seatNumber',
+          );
         }
         const seatKey = `${unit.seat.row.trim().toLowerCase()}::${unit.seat.seatNumber.trim().toLowerCase()}`;
         if (seatKeySet.has(seatKey)) {
-          throw new BadRequestException('Duplicate seat detected in ticketUnits');
+          throw new BadRequestException(
+            'Duplicate seat detected in ticketUnits',
+          );
         }
         seatKeySet.add(seatKey);
       }
     } else if (data.seatingType !== SeatingType.Unnumbered) {
-      throw new BadRequestException('Unnumbered ticket units require seatingType=unnumbered');
+      throw new BadRequestException(
+        'Unnumbered ticket units require seatingType=unnumbered',
+      );
     }
 
     return incomingUnits;
@@ -130,7 +160,10 @@ export class TicketsService {
     data: CreateListingRequest,
   ): Promise<TicketListing> {
     // Check permissions
-    if (userLevel !== UserLevel.Seller && userLevel !== UserLevel.VerifiedSeller) {
+    if (
+      userLevel !== UserLevel.Seller &&
+      userLevel !== UserLevel.VerifiedSeller
+    ) {
       throw new ForbiddenException('Only sellers can create listings');
     }
 
@@ -149,10 +182,17 @@ export class TicketsService {
     // Validate physical ticket requirements
     if (data.type === TicketType.Physical) {
       if (!data.deliveryMethod) {
-        throw new BadRequestException('Delivery method is required for physical tickets');
+        throw new BadRequestException(
+          'Delivery method is required for physical tickets',
+        );
       }
-      if (data.deliveryMethod === DeliveryMethod.Pickup && !data.pickupAddress) {
-        throw new BadRequestException('Pickup address is required for pickup delivery');
+      if (
+        data.deliveryMethod === DeliveryMethod.Pickup &&
+        !data.pickupAddress
+      ) {
+        throw new BadRequestException(
+          'Pickup address is required for pickup delivery',
+        );
       }
     }
 
@@ -215,15 +255,24 @@ export class TicketsService {
   /**
    * List listings with optional filters
    */
-  async listListings(ctx: Ctx, query: ListListingsQuery): Promise<TicketListingWithEvent[]> {
+  async listListings(
+    ctx: Ctx,
+    query: ListListingsQuery,
+  ): Promise<TicketListingWithEvent[]> {
     let listings: TicketListing[];
 
     if (query.eventDateId) {
-      listings = await this.ticketsRepository.getByEventDateId(ctx, query.eventDateId);
+      listings = await this.ticketsRepository.getByEventDateId(
+        ctx,
+        query.eventDateId,
+      );
     } else if (query.eventId) {
       listings = await this.ticketsRepository.getByEventId(ctx, query.eventId);
     } else if (query.sellerId) {
-      listings = await this.ticketsRepository.getBySellerId(ctx, query.sellerId);
+      listings = await this.ticketsRepository.getBySellerId(
+        ctx,
+        query.sellerId,
+      );
     } else {
       listings = await this.ticketsRepository.getActiveListings(ctx);
     }
@@ -234,11 +283,15 @@ export class TicketsService {
     }
 
     if (query.minPrice !== undefined) {
-      listings = listings.filter((l) => l.pricePerTicket.amount >= query.minPrice!);
+      listings = listings.filter(
+        (l) => l.pricePerTicket.amount >= query.minPrice!,
+      );
     }
 
     if (query.maxPrice !== undefined) {
-      listings = listings.filter((l) => l.pricePerTicket.amount <= query.maxPrice!);
+      listings = listings.filter(
+        (l) => l.pricePerTicket.amount <= query.maxPrice!,
+      );
     }
 
     // Pagination
@@ -279,19 +332,29 @@ export class TicketsService {
         (unit) => unit.status !== TicketUnitStatus.Available,
       );
       if (hasReservedOrSold) {
-        throw new BadRequestException('Cannot change seating type when units are already reserved or sold');
+        throw new BadRequestException(
+          'Cannot change seating type when units are already reserved or sold',
+        );
       }
 
       const hasSeatUnits = listing.ticketUnits.some((unit) => unit.seat);
       if (updates.seatingType === SeatingType.Numbered && !hasSeatUnits) {
-        throw new BadRequestException('Cannot switch to numbered without seat information');
+        throw new BadRequestException(
+          'Cannot switch to numbered without seat information',
+        );
       }
       if (updates.seatingType === SeatingType.Unnumbered && hasSeatUnits) {
-        throw new BadRequestException('Cannot switch to unnumbered while seat information exists');
+        throw new BadRequestException(
+          'Cannot switch to unnumbered while seat information exists',
+        );
       }
     }
 
-    const updated = await this.ticketsRepository.update(ctx, listingId, updates);
+    const updated = await this.ticketsRepository.update(
+      ctx,
+      listingId,
+      updates,
+    );
     if (!updated) {
       throw new NotFoundException('Listing not found');
     }
@@ -302,7 +365,11 @@ export class TicketsService {
   /**
    * Cancel a listing
    */
-  async cancelListing(ctx: Ctx, listingId: string, sellerId: string): Promise<TicketListing> {
+  async cancelListing(
+    ctx: Ctx,
+    listingId: string,
+    sellerId: string,
+  ): Promise<TicketListing> {
     const listing = await this.ticketsRepository.findById(ctx, listingId);
     if (!listing) {
       throw new NotFoundException('Listing not found');
@@ -329,7 +396,10 @@ export class TicketsService {
   /**
    * Get my listings
    */
-  async getMyListings(ctx: Ctx, sellerId: string): Promise<TicketListingWithEvent[]> {
+  async getMyListings(
+    ctx: Ctx,
+    sellerId: string,
+  ): Promise<TicketListingWithEvent[]> {
     const listings = await this.ticketsRepository.getBySellerId(ctx, sellerId);
     return await Promise.all(
       listings.map((l) => this.enrichListingWithEvent(ctx, l)),
@@ -356,23 +426,36 @@ export class TicketsService {
     this.validateListingSeatingConsistency(listing);
 
     if (!ticketUnitIds.length) {
-      throw new BadRequestException('At least one ticket unit must be selected');
+      throw new BadRequestException(
+        'At least one ticket unit must be selected',
+      );
     }
 
     if (new Set(ticketUnitIds).size !== ticketUnitIds.length) {
-      throw new BadRequestException('Duplicate ticket unit IDs are not allowed');
+      throw new BadRequestException(
+        'Duplicate ticket unit IDs are not allowed',
+      );
     }
 
     const availableUnitIds = this.getAvailableUnitIds(listing);
     if (ticketUnitIds.some((id) => !availableUnitIds.includes(id))) {
-      throw new BadRequestException('One or more ticket units are not available');
+      throw new BadRequestException(
+        'One or more ticket units are not available',
+      );
     }
 
-    if (listing.sellTogether && ticketUnitIds.length !== availableUnitIds.length) {
+    if (
+      listing.sellTogether &&
+      ticketUnitIds.length !== availableUnitIds.length
+    ) {
       throw new BadRequestException('Must purchase all tickets together');
     }
 
-    const updated = await this.ticketsRepository.reserveUnits(ctx, listingId, ticketUnitIds);
+    const updated = await this.ticketsRepository.reserveUnits(
+      ctx,
+      listingId,
+      ticketUnitIds,
+    );
     if (!updated) {
       throw new BadRequestException('Unable to reserve selected ticket units');
     }
@@ -388,6 +471,10 @@ export class TicketsService {
     listingId: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
-    return await this.ticketsRepository.restoreUnits(ctx, listingId, ticketUnitIds);
+    return await this.ticketsRepository.restoreUnits(
+      ctx,
+      listingId,
+      ticketUnitIds,
+    );
   }
 }

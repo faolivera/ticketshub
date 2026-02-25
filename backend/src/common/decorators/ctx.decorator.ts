@@ -3,7 +3,7 @@ import { Ctx } from '../types/context';
 
 /**
  * Decorator to inject the request context into controller methods
- * 
+ *
  * @example
  * ```typescript
  * @Get('example')
@@ -20,4 +20,3 @@ export const Context = createParamDecorator(
     return request.ctx || { source: 'HTTP' };
   },
 );
-

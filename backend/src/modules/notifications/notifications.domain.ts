@@ -5,22 +5,22 @@ export enum EmailTemplate {
   // User verification
   EmailVerification = 'EmailVerification',
   PhoneVerification = 'PhoneVerification',
-  
+
   // Transaction notifications
   PaymentReceived = 'PaymentReceived',
   TicketSold = 'TicketSold',
   TicketPurchased = 'TicketPurchased',
   TicketTransferred = 'TicketTransferred',
   PaymentReleased = 'PaymentReleased',
-  
+
   // Dispute notifications
   DisputeOpened = 'DisputeOpened',
   DisputeResolved = 'DisputeResolved',
-  
+
   // Event notifications
   EventApproved = 'EventApproved',
   EventRejected = 'EventRejected',
-  
+
   // Account notifications
   IdentityVerificationApproved = 'IdentityVerificationApproved',
   IdentityVerificationRejected = 'IdentityVerificationRejected',

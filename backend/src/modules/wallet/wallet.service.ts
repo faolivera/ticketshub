@@ -23,9 +23,13 @@ export class WalletService {
   /**
    * Get or create wallet for user
    */
-  async getOrCreateWallet(ctx: Ctx, userId: string, currency: CurrencyCode = 'EUR'): Promise<Wallet> {
+  async getOrCreateWallet(
+    ctx: Ctx,
+    userId: string,
+    currency: CurrencyCode = 'EUR',
+  ): Promise<Wallet> {
     let wallet = await this.walletRepository.getByUserId(ctx, userId);
-    
+
     if (!wallet) {
       wallet = {
         userId,
@@ -60,7 +64,12 @@ export class WalletService {
 
     // Add to pending balance
     const newPending = wallet.pendingBalance.amount + amount.amount;
-    await this.walletRepository.updateBalances(ctx, sellerId, wallet.balance.amount, newPending);
+    await this.walletRepository.updateBalances(
+      ctx,
+      sellerId,
+      wallet.balance.amount,
+      newPending,
+    );
 
     // Create transaction record
     const transaction: WalletTransaction = {
@@ -95,7 +104,12 @@ export class WalletService {
     // Move from pending to available
     const newPending = wallet.pendingBalance.amount - amount.amount;
     const newBalance = wallet.balance.amount + amount.amount;
-    await this.walletRepository.updateBalances(ctx, sellerId, newBalance, newPending);
+    await this.walletRepository.updateBalances(
+      ctx,
+      sellerId,
+      newBalance,
+      newPending,
+    );
 
     // Create transaction record
     const transaction: WalletTransaction = {
@@ -124,8 +138,16 @@ export class WalletService {
     const wallet = await this.getOrCreateWallet(ctx, sellerId, amount.currency);
 
     // Remove from pending balance (refund goes back to buyer via payment provider)
-    const newPending = Math.max(0, wallet.pendingBalance.amount - amount.amount);
-    await this.walletRepository.updateBalances(ctx, sellerId, wallet.balance.amount, newPending);
+    const newPending = Math.max(
+      0,
+      wallet.pendingBalance.amount - amount.amount,
+    );
+    await this.walletRepository.updateBalances(
+      ctx,
+      sellerId,
+      wallet.balance.amount,
+      newPending,
+    );
 
     // Create transaction record
     const transaction: WalletTransaction = {
@@ -154,7 +176,12 @@ export class WalletService {
     const wallet = await this.getOrCreateWallet(ctx, userId, amount.currency);
 
     const newBalance = wallet.balance.amount + amount.amount;
-    await this.walletRepository.updateBalances(ctx, userId, newBalance, wallet.pendingBalance.amount);
+    await this.walletRepository.updateBalances(
+      ctx,
+      userId,
+      newBalance,
+      wallet.pendingBalance.amount,
+    );
 
     const transaction: WalletTransaction = {
       id: this.generateId(),
@@ -186,7 +213,12 @@ export class WalletService {
     }
 
     const newBalance = wallet.balance.amount - amount.amount;
-    await this.walletRepository.updateBalances(ctx, userId, newBalance, wallet.pendingBalance.amount);
+    await this.walletRepository.updateBalances(
+      ctx,
+      userId,
+      newBalance,
+      wallet.pendingBalance.amount,
+    );
 
     const transaction: WalletTransaction = {
       id: this.generateId(),
@@ -204,7 +236,10 @@ export class WalletService {
   /**
    * Get wallet transaction history
    */
-  async getTransactions(ctx: Ctx, userId: string): Promise<WalletTransaction[]> {
+  async getTransactions(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<WalletTransaction[]> {
     return await this.walletRepository.getTransactionsByUserId(ctx, userId);
   }
 }

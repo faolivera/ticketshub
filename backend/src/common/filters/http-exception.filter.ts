@@ -30,10 +30,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
         error = exception.constructor.name.replace('Exception', '');
-      } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null
+      ) {
         const responseObj = exceptionResponse as any;
         message = responseObj.message || exception.message;
-        error = responseObj.error || exception.constructor.name.replace('Exception', '');
+        error =
+          responseObj.error ||
+          exception.constructor.name.replace('Exception', '');
       } else {
         message = exception.message;
         error = exception.constructor.name.replace('Exception', '');
@@ -59,14 +64,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     // Log the error with appropriate level based on status code
     const logMessage = `${request.method} ${request.url} - Status: ${status} - Message: ${message}`;
-    
+
     // Get stack trace or cause - check both the exception and its cause property
     let trace: string | undefined;
-    
+
     if (exception instanceof Error) {
       const stackTrace = exception.stack;
       const cause = 'cause' in exception ? exception.cause : undefined;
-      
+
       // Build trace information: include exception stack and cause if available
       if (cause) {
         if (cause instanceof Error) {
@@ -98,4 +103,3 @@ export class HttpExceptionFilter implements ExceptionFilter {
     response.status(status).json(apiResponse);
   }
 }
-

@@ -43,13 +43,13 @@ export interface Event {
   venue: string;
   location: Address;
   imageIds: string[];
-  
+
   status: EventStatus;
   rejectionReason?: string;
-  
+
   createdBy: string; // userId
   approvedBy?: string; // adminId
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,18 +60,18 @@ export interface Event {
 export interface EventDate {
   id: string;
   eventId: string;
-  
+
   date: Date;
   doorsOpenAt?: Date;
   startTime?: Date;
   endTime?: Date;
-  
+
   status: EventDateStatus;
   rejectionReason?: string;
-  
+
   createdBy: string;
   approvedBy?: string;
-  
+
   createdAt: Date;
   updatedAt: Date;
 }

@@ -3,10 +3,10 @@ import { randomBytes } from 'crypto';
 import { PaymentsRepository } from './payments.repository';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
-import type { 
-  PaymentIntent, 
-  Money, 
-  PaymentMetadata, 
+import type {
+  PaymentIntent,
+  Money,
+  PaymentMetadata,
   WebhookResult,
   PaymentProvider,
   PayoutProvider,
@@ -43,7 +43,10 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
     amount: Money,
     metadata: PaymentMetadata,
   ): Promise<PaymentIntent> {
-    this.logger.log(ctx, `Creating payment intent for transaction ${transactionId}`);
+    this.logger.log(
+      ctx,
+      `Creating payment intent for transaction ${transactionId}`,
+    );
 
     const paymentIntent: PaymentIntent = {
       id: this.generateId('pi'),
@@ -57,7 +60,7 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
     };
 
     await this.paymentsRepository.create(ctx, paymentIntent);
-    
+
     this.logger.log(ctx, `Payment intent ${paymentIntent.id} created`);
     return paymentIntent;
   }
@@ -76,14 +79,23 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
   /**
    * Get payment intent by transaction ID
    */
-  async getPaymentByTransactionId(ctx: Ctx, transactionId: string): Promise<PaymentIntent | undefined> {
-    return await this.paymentsRepository.findByTransactionId(ctx, transactionId);
+  async getPaymentByTransactionId(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<PaymentIntent | undefined> {
+    return await this.paymentsRepository.findByTransactionId(
+      ctx,
+      transactionId,
+    );
   }
 
   /**
    * Confirm a payment (mock - in production this would be handled by provider webhook)
    */
-  async confirmPayment(ctx: Ctx, paymentIntentId: string): Promise<PaymentIntent> {
+  async confirmPayment(
+    ctx: Ctx,
+    paymentIntentId: string,
+  ): Promise<PaymentIntent> {
     this.logger.log(ctx, `Confirming payment ${paymentIntentId}`);
 
     const updated = await this.paymentsRepository.update(ctx, paymentIntentId, {
@@ -101,7 +113,10 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
   /**
    * Cancel a payment
    */
-  async cancelPayment(ctx: Ctx, paymentIntentId: string): Promise<PaymentIntent> {
+  async cancelPayment(
+    ctx: Ctx,
+    paymentIntentId: string,
+  ): Promise<PaymentIntent> {
     this.logger.log(ctx, `Cancelling payment ${paymentIntentId}`);
 
     const updated = await this.paymentsRepository.update(ctx, paymentIntentId, {
@@ -119,10 +134,17 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
   /**
    * Refund a payment
    */
-  async refundPayment(ctx: Ctx, paymentIntentId: string, amount?: Money): Promise<PaymentIntent> {
+  async refundPayment(
+    ctx: Ctx,
+    paymentIntentId: string,
+    amount?: Money,
+  ): Promise<PaymentIntent> {
     this.logger.log(ctx, `Refunding payment ${paymentIntentId}`);
 
-    const payment = await this.paymentsRepository.findById(ctx, paymentIntentId);
+    const payment = await this.paymentsRepository.findById(
+      ctx,
+      paymentIntentId,
+    );
     if (!payment) {
       throw new NotFoundException('Payment intent not found');
     }
@@ -143,14 +165,25 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
   /**
    * Process webhook from payment provider
    */
-  async processWebhook(ctx: Ctx, payload: unknown, _signature?: string): Promise<WebhookResult> {
+  async processWebhook(
+    ctx: Ctx,
+    payload: unknown,
+    _signature?: string,
+  ): Promise<WebhookResult> {
     this.logger.log(ctx, `Processing webhook`);
 
     try {
       // In production, validate webhook signature and parse provider-specific payload
-      const event = payload as { type: string; paymentIntentId: string; status: PaymentStatus };
+      const event = payload as {
+        type: string;
+        paymentIntentId: string;
+        status: PaymentStatus;
+      };
 
-      const payment = await this.paymentsRepository.findByProviderPaymentId(ctx, event.paymentIntentId);
+      const payment = await this.paymentsRepository.findByProviderPaymentId(
+        ctx,
+        event.paymentIntentId,
+      );
       if (!payment) {
         return { processed: false, error: 'Payment not found' };
       }
@@ -182,7 +215,7 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
     const payoutId = this.generateId('po');
 
     this.logger.log(ctx, `Payout ${payoutId} created for user ${userId}`);
-    
+
     return {
       success: true,
       payoutId,

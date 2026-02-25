@@ -5,9 +5,18 @@ import { UsersService } from '../users/users.service';
 import { EventsService } from '../events/events.service';
 import { TicketsService } from '../tickets/tickets.service';
 import { TicketsRepository } from '../tickets/tickets.repository';
-import { IdentityVerificationStatus, Role, UserLevel } from '../users/users.domain';
+import {
+  IdentityVerificationStatus,
+  Role,
+  UserLevel,
+  UserStatus,
+} from '../users/users.domain';
 import { EventCategory } from '../events/events.domain';
-import { TicketType, DeliveryMethod, SeatingType } from '../tickets/tickets.domain';
+import {
+  TicketType,
+  DeliveryMethod,
+  SeatingType,
+} from '../tickets/tickets.domain';
 import type { SeedDemoResponse } from './support.api';
 import type { User } from '../users/users.domain';
 import type { CreateEventRequest } from '../events/events.api';
@@ -30,7 +39,9 @@ export class SupportSeedService {
 
   async seedDemoData(ctx: Ctx): Promise<SeedDemoResponse> {
     if (process.env.NODE_ENV === 'production') {
-      throw new ForbiddenException('This endpoint is not available in production');
+      throw new ForbiddenException(
+        'This endpoint is not available in production',
+      );
     }
 
     const credentials = {
@@ -72,6 +83,7 @@ export class SupportSeedService {
       publicName: 'TicketsHub Admin',
       role: Role.Admin,
       level: UserLevel.Basic,
+      status: UserStatus.Enabled,
       profiles: ['Customer'],
       lastUsedProfile: 'Customer',
       imageId: imageIds.admin,
@@ -87,6 +99,7 @@ export class SupportSeedService {
       publicName: 'Verified Seller',
       role: Role.User,
       level: UserLevel.VerifiedSeller,
+      status: UserStatus.Enabled,
       profiles: ['Provider', 'Customer'],
       lastUsedProfile: 'Provider',
       imageId: imageIds.seller,
@@ -116,6 +129,7 @@ export class SupportSeedService {
       publicName: 'Buyer',
       role: Role.User,
       level: UserLevel.Buyer,
+      status: UserStatus.Enabled,
       profiles: ['Customer'],
       lastUsedProfile: 'Customer',
       imageId: imageIds.buyer,
@@ -159,9 +173,15 @@ export class SupportSeedService {
     for (const date of targetDates) {
       const key = this.toDateKey(date);
       if (existingDateKeys.has(key)) continue;
-      const created = await this.eventsService.addEventDate(ctx, event.id, admin.id, Role.Admin, {
-        date,
-      });
+      const created = await this.eventsService.addEventDate(
+        ctx,
+        event.id,
+        admin.id,
+        Role.Admin,
+        {
+          date,
+        },
+      );
       createdDateIds.push(created.id);
       existingDateKeys.add(key);
     }
@@ -173,9 +193,14 @@ export class SupportSeedService {
     }
 
     // Tickets: 3 listings from seller
-    const sellerListings = await this.ticketsRepository.getBySellerId(ctx, seller.id);
+    const sellerListings = await this.ticketsRepository.getBySellerId(
+      ctx,
+      seller.id,
+    );
     const existingSeedListings = sellerListings.filter(
-      (l) => l.eventId === event.id && (l.description || '').startsWith('Seed listing'),
+      (l) =>
+        l.eventId === event.id &&
+        (l.description || '').startsWith('Seed listing'),
     );
 
     const desiredDescriptions = [
@@ -184,7 +209,9 @@ export class SupportSeedService {
       'Seed listing 3 - Bad Bunny',
     ];
 
-    const existingDescriptions = new Set(existingSeedListings.map((l) => l.description || ''));
+    const existingDescriptions = new Set(
+      existingSeedListings.map((l) => l.description || ''),
+    );
     const createdListingIds: string[] = [];
 
     for (const desc of desiredDescriptions) {
@@ -199,9 +226,14 @@ export class SupportSeedService {
       createdListingIds.push(listing.id);
     }
 
-    const finalListings = await this.ticketsRepository.getBySellerId(ctx, seller.id);
+    const finalListings = await this.ticketsRepository.getBySellerId(
+      ctx,
+      seller.id,
+    );
     const finalSeedListings = finalListings.filter(
-      (l) => l.eventId === event.id && (l.description || '').startsWith('Seed listing'),
+      (l) =>
+        l.eventId === event.id &&
+        (l.description || '').startsWith('Seed listing'),
     );
 
     return {
@@ -225,7 +257,10 @@ export class SupportSeedService {
 
   private async upsertUser(
     ctx: Ctx,
-    data: Omit<User, 'id' | 'country' | 'currency' | 'createdAt' | 'updatedAt'> & {
+    data: Omit<
+      User,
+      'id' | 'country' | 'currency' | 'createdAt' | 'updatedAt'
+    > & {
       lastUsedProfile?: 'Customer' | 'Provider';
     },
   ): Promise<User> {
@@ -321,4 +356,3 @@ export class SupportSeedService {
     return iso.slice(0, 10);
   }
 }
-

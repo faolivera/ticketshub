@@ -59,7 +59,11 @@ export class TransactionsController {
     @User() user: JWTPayload,
     @Param('id') id: string,
   ): Promise<ApiResponse<GetTransactionResponse>> {
-    const transaction = await this.transactionsService.getTransactionById(ctx, id, user.userId);
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      id,
+      user.userId,
+    );
     return { success: true, data: transaction };
   }
 
@@ -73,7 +77,11 @@ export class TransactionsController {
     @User() user: JWTPayload,
     @Param('id') id: string,
   ): Promise<ApiResponse<ConfirmTransferResponse>> {
-    const transaction = await this.transactionsService.confirmTransfer(ctx, id, user.userId);
+    const transaction = await this.transactionsService.confirmTransfer(
+      ctx,
+      id,
+      user.userId,
+    );
     return { success: true, data: transaction };
   }
 
@@ -91,7 +99,11 @@ export class TransactionsController {
     if (!body.confirmed) {
       throw new Error('Receipt must be confirmed');
     }
-    const transaction = await this.transactionsService.confirmReceipt(ctx, id, user.userId);
+    const transaction = await this.transactionsService.confirmReceipt(
+      ctx,
+      id,
+      user.userId,
+    );
     return { success: true, data: transaction };
   }
 
@@ -118,7 +130,10 @@ export class TransactionsController {
     @Context() ctx: Ctx,
     @Param('id') id: string,
   ): Promise<ApiResponse<GetTransactionResponse>> {
-    const transaction = await this.transactionsService.handlePaymentReceived(ctx, id);
+    const transaction = await this.transactionsService.handlePaymentReceived(
+      ctx,
+      id,
+    );
     return { success: true, data: transaction as any };
   }
 }

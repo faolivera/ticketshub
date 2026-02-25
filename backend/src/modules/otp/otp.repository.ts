@@ -52,14 +52,39 @@ export class OTPRepository implements OnModuleInit {
     );
     // Return the most recent one
     return filtered.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )[0];
+  }
+
+  /**
+   * Expire all pending OTPs for a user and type
+   */
+  async expireAllPendingByUserAndType(
+    ctx: Ctx,
+    userId: string,
+    type: string,
+  ): Promise<void> {
+    const allOtps = await this.storage.getAll(ctx);
+    const toExpire = allOtps.filter(
+      (otp) =>
+        otp.userId === userId &&
+        otp.type === type &&
+        otp.status === OTPStatus.Pending,
+    );
+    for (const otp of toExpire) {
+      await this.updateStatus(ctx, otp.id, OTPStatus.Expired);
+    }
   }
 
   /**
    * Update OTP status
    */
-  async updateStatus(ctx: Ctx, id: string, status: OTPStatus): Promise<OTP | undefined> {
+  async updateStatus(
+    ctx: Ctx,
+    id: string,
+    status: OTPStatus,
+  ): Promise<OTP | undefined> {
     const existing = await this.storage.get(ctx, id);
     if (!existing) return undefined;
 

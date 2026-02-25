@@ -20,9 +20,7 @@ describe('MyTickets (e2e)', () => {
   });
 
   it('unauthenticated GET /api/my-tickets returns 401', () => {
-    return request(app.getHttpServer())
-      .get('/api/my-tickets')
-      .expect(401);
+    return request(app.getHttpServer()).get('/api/my-tickets').expect(401);
   });
 
   it('authenticated GET /api/my-tickets returns 200 with bought/sold/listed arrays', async () => {
@@ -54,6 +52,10 @@ describe('MyTickets (e2e)', () => {
     expect(Array.isArray(data.sold)).toBe(true);
     expect(Array.isArray(data.listed)).toBe(true);
     expect(data.listed.length).toBeGreaterThan(0);
-    expect(data.listed.every((listing: { sellerId: string }) => listing.sellerId === '2')).toBe(true);
+    expect(
+      data.listed.every(
+        (listing: { sellerId: string }) => listing.sellerId === '2',
+      ),
+    ).toBe(true);
   });
 });

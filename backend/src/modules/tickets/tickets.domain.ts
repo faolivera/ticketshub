@@ -17,12 +17,12 @@ export enum TicketType {
    * Physical ticket that needs to be delivered
    */
   Physical = 'Physical',
-  
+
   /**
    * Digital ticket that can be transferred (e.g., PDF, e-ticket)
    */
   DigitalTransferable = 'DigitalTransferable',
-  
+
   /**
    * Digital ticket that cannot be transferred (e.g., ID-linked, app-only)
    * Payment released automatically after event + X minutes
@@ -38,7 +38,7 @@ export enum DeliveryMethod {
    * Buyer picks up at specified address
    */
   Pickup = 'Pickup',
-  
+
   /**
    * Buyer and seller arrange delivery details via messaging
    */
@@ -85,24 +85,24 @@ export interface TicketListing {
   sellerId: string;
   eventId: string;
   eventDateId: string;
-  
+
   type: TicketType;
   seatingType: SeatingType;
   ticketUnits: TicketUnit[];
   sellTogether: boolean; // true = all or nothing
-  
+
   pricePerTicket: Money;
-  
+
   // Physical tickets only
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
-  
+
   // Ticket details
   description?: string;
   section?: string;
-  
+
   status: ListingStatus;
-  
+
   expiresAt?: Date; // Optional expiration
   createdAt: Date;
   updatedAt: Date;

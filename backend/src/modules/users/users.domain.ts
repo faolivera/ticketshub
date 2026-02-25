@@ -7,6 +7,12 @@ export enum Role {
   Admin = 'Admin',
 }
 
+export enum UserStatus {
+  Enabled = 'Enabled',
+  Disabled = 'Disabled',
+  Suspended = 'Suspended',
+}
+
 export enum UserLevel {
   Basic = 'Basic',
   Buyer = 'Buyer',
@@ -60,6 +66,7 @@ export interface User {
   lastName: string;
   role: Role;
   level: UserLevel;
+  status: UserStatus;
   publicName: string;
   imageId: string;
   phone?: string;
@@ -73,7 +80,7 @@ export interface User {
   // Verification fields
   emailVerified: boolean;
   phoneVerified: boolean;
-  
+
   // Terms of Service acceptance
   tosAcceptedAt?: Date;
 
@@ -93,13 +100,18 @@ export interface UserPublicInfo {
   pic: Image;
 }
 
-export interface AuthenticatedUserPublicInfo extends Omit<User, 'password' | 'imageId'> {
+export interface AuthenticatedUserPublicInfo extends Omit<
+  User,
+  'password' | 'imageId'
+> {
   pic: Image;
 }
 
 export interface LoginResponse {
   token: string;
   user: AuthenticatedUserPublicInfo;
+  /** When true, frontend should redirect to OTP verification flow */
+  requiresEmailVerification?: boolean;
 }
 
 export interface JWTPayload {

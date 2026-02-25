@@ -62,7 +62,10 @@ export class TicketsRepository implements OnModuleInit {
   /**
    * Get listings by event date
    */
-  async getByEventDateId(ctx: Ctx, eventDateId: string): Promise<TicketListing[]> {
+  async getByEventDateId(
+    ctx: Ctx,
+    eventDateId: string,
+  ): Promise<TicketListing[]> {
     const all = await this.storage.getAll(ctx);
     return all.filter(
       (l) => l.eventDateId === eventDateId && l.status === ListingStatus.Active,
@@ -119,7 +122,9 @@ export class TicketsRepository implements OnModuleInit {
       return undefined;
     }
 
-    const unitsById = new Map(existing.ticketUnits.map((unit) => [unit.id, unit]));
+    const unitsById = new Map(
+      existing.ticketUnits.map((unit) => [unit.id, unit]),
+    );
     for (const unitId of ticketUnitIds) {
       const unit = unitsById.get(unitId);
       if (!unit || unit.status !== TicketUnitStatus.Available) {
@@ -128,9 +133,13 @@ export class TicketsRepository implements OnModuleInit {
     }
 
     const updatedUnits = existing.ticketUnits.map((unit) =>
-      idSet.has(unit.id) ? { ...unit, status: TicketUnitStatus.Reserved } : unit,
+      idSet.has(unit.id)
+        ? { ...unit, status: TicketUnitStatus.Reserved }
+        : unit,
     );
-    const hasAvailable = updatedUnits.some((unit) => unit.status === TicketUnitStatus.Available);
+    const hasAvailable = updatedUnits.some(
+      (unit) => unit.status === TicketUnitStatus.Available,
+    );
     const nextStatus = hasAvailable ? ListingStatus.Active : ListingStatus.Sold;
 
     const updated: TicketListing = {
@@ -156,7 +165,9 @@ export class TicketsRepository implements OnModuleInit {
       return undefined;
     }
 
-    const unitsById = new Map(existing.ticketUnits.map((unit) => [unit.id, unit]));
+    const unitsById = new Map(
+      existing.ticketUnits.map((unit) => [unit.id, unit]),
+    );
     for (const unitId of ticketUnitIds) {
       const unit = unitsById.get(unitId);
       if (!unit || unit.status !== TicketUnitStatus.Reserved) {
@@ -165,9 +176,13 @@ export class TicketsRepository implements OnModuleInit {
     }
 
     const updatedUnits = existing.ticketUnits.map((unit) =>
-      idSet.has(unit.id) ? { ...unit, status: TicketUnitStatus.Available } : unit,
+      idSet.has(unit.id)
+        ? { ...unit, status: TicketUnitStatus.Available }
+        : unit,
     );
-    const hasAvailable = updatedUnits.some((unit) => unit.status === TicketUnitStatus.Available);
+    const hasAvailable = updatedUnits.some(
+      (unit) => unit.status === TicketUnitStatus.Available,
+    );
 
     const updated: TicketListing = {
       ...existing,

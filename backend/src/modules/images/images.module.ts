@@ -6,4 +6,3 @@ import { ImagesRepository } from './images.repository';
   exports: [ImagesRepository],
 })
 export class ImagesModule {}
-

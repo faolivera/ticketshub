@@ -1,6 +1,10 @@
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import type { TransactionWithDetails } from '../transactions/transactions.domain';
-import type { SellerProfile, ListingWithSeller, BuyPageData } from './bff.domain';
+import type {
+  SellerProfile,
+  ListingWithSeller,
+  BuyPageData,
+} from './bff.domain';
 
 export interface GetMyTicketsData {
   bought: TransactionWithDetails[];

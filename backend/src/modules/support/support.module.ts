@@ -10,7 +10,13 @@ import { ImagesModule } from '../images/images.module';
 import { SupportSeedService } from './support-seed.service';
 
 @Module({
-  imports: [TransactionsModule, UsersModule, EventsModule, TicketsModule, ImagesModule],
+  imports: [
+    TransactionsModule,
+    UsersModule,
+    EventsModule,
+    TicketsModule,
+    ImagesModule,
+  ],
   controllers: [SupportController],
   providers: [SupportService, SupportRepository, SupportSeedService],
   exports: [SupportService],

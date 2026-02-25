@@ -78,5 +78,26 @@
     "phoneVerified": false,
     "createdAt": "2026-02-05T13:23:52.516Z",
     "updatedAt": "2026-02-05T13:23:52.516Z"
+  },
+  "4": {
+    "id": "4",
+    "country": "Argentina",
+    "currency": "EUR",
+    "status": "Enabled",
+    "email": "f@f.com",
+    "password": "12345678",
+    "firstName": "Facundo",
+    "lastName": "Oli",
+    "publicName": "Facundo Oli",
+    "role": "User",
+    "level": "Basic",
+    "profiles": [
+      "Customer"
+    ],
+    "imageId": "default",
+    "emailVerified": true,
+    "phoneVerified": false,
+    "createdAt": "2026-02-25T02:42:47.856Z",
+    "updatedAt": "2026-02-25T02:43:24.814Z"
   }
 }

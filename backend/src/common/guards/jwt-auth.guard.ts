@@ -31,10 +31,10 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid or expired token');
     }
     const requestId =
-    (request.headers['x-request-id'] as string) ||
-    `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      (request.headers['x-request-id'] as string) ||
+      `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Build context object
+    // Build context object
     const ctxDefault: Ctx = {
       source: 'HTTP',
       requestId,
@@ -47,7 +47,10 @@ export class JwtAuthGuard implements CanActivate {
     // Get context from request (set by ContextInterceptor)
     const ctx = (request as any).ctx || ctxDefault;
 
-    const userData = await this.usersService.getAuthenticatedUserInfo(ctx, payload.userId);
+    const userData = await this.usersService.getAuthenticatedUserInfo(
+      ctx,
+      payload.userId,
+    );
 
     if (!userData) {
       throw new UnauthorizedException('User not found');
@@ -59,4 +62,3 @@ export class JwtAuthGuard implements CanActivate {
     return true;
   }
 }
-

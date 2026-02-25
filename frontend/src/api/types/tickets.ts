@@ -174,6 +174,8 @@ export type ListListingsResponse = TicketListingWithEvent[];
 export interface ListingWithSeller extends TicketListingWithEvent {
   sellerPublicName: string;
   sellerPic: import('./common').Image;
+  /** Commission percent range (min–max) depending on payment method */
+  commissionPercentRange: { min: number; max: number };
 }
 
 /**

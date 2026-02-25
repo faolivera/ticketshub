@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { EventsRepository } from './events.repository';
 import { ImagesRepository } from '../images/images.repository';
@@ -47,7 +53,10 @@ export class EventsService {
   ): Promise<Event> {
     // Check permissions: Admin can create approved events, Sellers create pending
     const isAdmin = userRole === Role.Admin;
-    const canCreate = isAdmin || userLevel === UserLevel.Seller || userLevel === UserLevel.VerifiedSeller;
+    const canCreate =
+      isAdmin ||
+      userLevel === UserLevel.Seller ||
+      userLevel === UserLevel.VerifiedSeller;
 
     if (!canCreate) {
       throw new ForbiddenException('Only sellers and admins can create events');
@@ -81,7 +90,9 @@ export class EventsService {
     }
 
     const dates = await this.eventsRepository.getDatesByEventId(ctx, id);
-    const [eventWithImages] = await this.attachImages(ctx, [{ ...event, dates }]);
+    const [eventWithImages] = await this.attachImages(ctx, [
+      { ...event, dates },
+    ]);
     return eventWithImages;
   }
 
@@ -130,7 +141,10 @@ export class EventsService {
       events.map(async (event) => {
         const dates = includeAllStatuses
           ? await this.eventsRepository.getDatesByEventId(ctx, event.id)
-          : await this.eventsRepository.getApprovedDatesByEventId(ctx, event.id);
+          : await this.eventsRepository.getApprovedDatesByEventId(
+              ctx,
+              event.id,
+            );
         return { ...event, dates };
       }),
     );
@@ -222,7 +236,10 @@ export class EventsService {
     approved: boolean,
     rejectionReason?: string,
   ): Promise<EventDate> {
-    const eventDate = await this.eventsRepository.findEventDateById(ctx, dateId);
+    const eventDate = await this.eventsRepository.findEventDateById(
+      ctx,
+      dateId,
+    );
     if (!eventDate) {
       throw new NotFoundException('Event date not found');
     }
@@ -253,10 +270,13 @@ export class EventsService {
    */
   async getPendingEvents(ctx: Ctx): Promise<EventWithDatesResponse[]> {
     const events = await this.eventsRepository.getPendingEvents(ctx);
-    
+
     const eventsWithDates: EventWithDates[] = await Promise.all(
       events.map(async (event) => {
-        const dates = await this.eventsRepository.getDatesByEventId(ctx, event.id);
+        const dates = await this.eventsRepository.getDatesByEventId(
+          ctx,
+          event.id,
+        );
         return { ...event, dates };
       }),
     );
@@ -267,12 +287,18 @@ export class EventsService {
   /**
    * Get events created by a user
    */
-  async getMyEvents(ctx: Ctx, userId: string): Promise<EventWithDatesResponse[]> {
+  async getMyEvents(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<EventWithDatesResponse[]> {
     const events = await this.eventsRepository.getEventsByCreator(ctx, userId);
-    
+
     const eventsWithDates: EventWithDates[] = await Promise.all(
       events.map(async (event) => {
-        const dates = await this.eventsRepository.getDatesByEventId(ctx, event.id);
+        const dates = await this.eventsRepository.getDatesByEventId(
+          ctx,
+          event.id,
+        );
         return { ...event, dates };
       }),
     );
@@ -284,9 +310,15 @@ export class EventsService {
     ctx: Ctx,
     events: EventWithDates[],
   ): Promise<EventWithDatesResponse[]> {
-    const imageIds = Array.from(new Set(events.flatMap((event) => event.imageIds || [])));
-    const images = imageIds.length ? await this.imagesRepository.getByIds(ctx, imageIds) : [];
-    const imagesMap = new Map<string, Image>(images.map((image) => [image.id, image]));
+    const imageIds = Array.from(
+      new Set(events.flatMap((event) => event.imageIds || [])),
+    );
+    const images = imageIds.length
+      ? await this.imagesRepository.getByIds(ctx, imageIds)
+      : [];
+    const imagesMap = new Map<string, Image>(
+      images.map((image) => [image.id, image]),
+    );
 
     return events.map((event) => ({
       ...event,
@@ -294,7 +326,10 @@ export class EventsService {
     }));
   }
 
-  private resolveImages(imageIds: string[], imagesMap: Map<string, Image>): Image[] {
+  private resolveImages(
+    imageIds: string[],
+    imagesMap: Map<string, Image>,
+  ): Image[] {
     if (!imageIds.length) return [];
     return imageIds.map((id) => imagesMap.get(id) || DEFAULT_IMAGE);
   }

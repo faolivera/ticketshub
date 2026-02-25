@@ -16,10 +16,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Context } from '../../common/decorators/ctx.decorator';
 import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
-import type {
-  WebhookResponse,
-  GetPaymentStatusResponse,
-} from './payments.api';
+import type { WebhookResponse, GetPaymentStatusResponse } from './payments.api';
 
 @Controller('api/payments')
 export class PaymentsController {

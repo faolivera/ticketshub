@@ -1,7 +1,7 @@
-import type { 
-  SupportCategory, 
-  DisputeReason, 
-  SupportTicket, 
+import type {
+  SupportCategory,
+  DisputeReason,
+  SupportTicket,
   SupportTicketWithMessages,
   DisputeResolution,
 } from './support.domain';

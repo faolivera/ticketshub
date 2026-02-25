@@ -6,12 +6,11 @@
     "sellTickets": "Sell Tickets",
     "logout": "Logout",
     "login": "Login",
-    "signIn": "Sign In",
     "signUp": "Sign Up"
   },
   "login": {
     "title": "Welcome back",
-    "subtitle": "Sign in to your TicketHub account",
+    "subtitle": "Sign in to your {{brand}} account",
     "email": "Email Address",
     "emailPlaceholder": "your.email@example.com",
     "password": "Password",
@@ -71,7 +70,10 @@
     "errorLoading": "Failed to load event details. Please try again.",
     "noTicketsAvailable": "No tickets available for this event",
     "checkBackLater": "Check back later or create a listing if you have tickets to sell",
-    "noReviewsYet": "No reviews yet"
+    "noReviewsYet": "No reviews yet",
+    "commissionRange": "(+{{min}}% to +{{max}}% commission)",
+    "soldAsBundle": "sold as bundle",
+    "soldIndividually": "sold individually"
   },
   "buyTicket": {
     "backToEvent": "Back to event",
@@ -363,13 +365,15 @@
     "newsletterSubtitle": "Subscribe to get updates on new events",
     "emailPlaceholder": "Your email",
     "subscribe": "Subscribe",
-    "allRightsReserved": "© {{year}} TicketHub. All rights reserved."
+    "allRightsReserved": "© {{year}} {{brand}}. All rights reserved."
   },
   "register": {
     "signUp": "Sign Up",
-    "signUpDescription": "Join TicketHub to buy and sell tickets securely",
+    "signUpDescription": "Join {{brand}} to buy and sell tickets securely",
     "email": "Email Address",
     "emailPlaceholder": "your.email@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
     "firstName": "First Name",
     "firstNamePlaceholder": "John",
     "lastName": "Last Name",
@@ -386,7 +390,10 @@
     "resendCode": "Resend code",
     "resendIn": "Resend in {{seconds}}s",
     "back": "Back",
-    "pleaseEnterCompleteCode": "Please enter the complete verification code"
+    "pleaseEnterCompleteCode": "Please enter the complete verification code",
+    "registerError": "Registration failed. Please try again.",
+    "verifyError": "Verification failed. Please check the code and try again.",
+    "resendError": "Failed to resend code. Please try again."
   },
   "phoneVerification": {
     "title": "Verify Phone Number",

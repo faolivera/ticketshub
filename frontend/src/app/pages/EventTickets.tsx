@@ -28,6 +28,8 @@ interface TransformedTicket {
   type: string;
   price: number;
   available: number;
+  sellTogether: boolean;
+  commissionPercentRange: { min: number; max: number };
   seller: string;
   sellerName: string;
   sellerPicture?: string;
@@ -54,6 +56,8 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
     type: listing.section || typeDisplay,
     price: listing.pricePerTicket.amount / 100,
     available: listing.ticketUnits.filter((unit) => unit.status === TicketUnitStatus.Available).length,
+    sellTogether: listing.sellTogether,
+    commissionPercentRange: listing.commissionPercentRange,
     seller: listing.sellerId,
     sellerName: listing.sellerPublicName,
     sellerPicture: listing.sellerPic.src,
@@ -478,10 +482,27 @@ export function EventTickets() {
                                 <div>
                                   <p className="text-xs text-gray-500">{t('eventTickets.price')}</p>
                                   <p className="text-3xl font-bold text-blue-600">${ticket.price}</p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {t('eventTickets.commissionRange', {
+                                      min: ticket.commissionPercentRange.min,
+                                      max: ticket.commissionPercentRange.max,
+                                    })}
+                                  </p>
                                 </div>
                                 <div>
                                   <p className="text-xs text-gray-500">{t('eventTickets.available')}</p>
-                                  <p className="text-sm text-gray-900">{t('eventTickets.ticketsAvailable', { count: ticket.available })}</p>
+                                  <p className="text-sm text-gray-900">
+                                    {t('eventTickets.ticketsAvailable', { count: ticket.available })}
+                                    {ticket.sellTogether ? (
+                                      <span className="ml-1 text-gray-500">
+                                        ({t('eventTickets.soldAsBundle')})
+                                      </span>
+                                    ) : (
+                                      <span className="ml-1 text-gray-500">
+                                        ({t('eventTickets.soldIndividually')})
+                                      </span>
+                                    )}
+                                  </p>
                                 </div>
                               </div>
                             </div>

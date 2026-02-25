@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authService } from '../../api/services/auth.service';
 import { getToken, removeToken } from '../../api/client';
-import type { 
-  AuthenticatedUserPublicInfo, 
+import type {
+  AuthenticatedUserPublicInfo,
   LoginRequest,
+  LoginResponse,
   UserLevel,
 } from '../../api/types';
 
@@ -37,7 +38,7 @@ interface UserContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<LoginResponse>;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
   refreshUser: () => Promise<void>;
@@ -102,17 +103,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
-   * Login with email and password
+   * Login with email and password.
+   * Returns the response so caller can check requiresEmailVerification.
    */
-  const login = async (credentials: LoginRequest) => {
+  const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await authService.login(credentials);
-      setUser({
-        ...response.user,
-        hasSeenSellerIntro: localStorage.getItem('hasSeenSellerIntro') === 'true',
-      });
+      if (response.requiresEmailVerification) {
+        // Keep token for OTP endpoints, but do not mark session as authenticated yet.
+        setUser(null);
+      } else {
+        setUser({
+          ...response.user,
+          hasSeenSellerIntro:
+            localStorage.getItem('hasSeenSellerIntro') === 'true',
+        });
+      }
+      return response;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
       setError(message);

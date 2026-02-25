@@ -6,7 +6,13 @@ import { TicketUnitStatus } from '../tickets/tickets.domain';
 import { UserLevel } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
 import type { GetMyTicketsData } from './bff.api';
-import type { SellerProfile, ListingWithSeller, BuyPageData, BuyPageSellerInfo, PaymentMethodOption } from './bff.domain';
+import { BUY_PAGE_PAYMENT_METHODS } from '../payments/payments.domain';
+import type {
+  SellerProfile,
+  ListingWithSeller,
+  BuyPageData,
+  BuyPageSellerInfo,
+} from './bff.domain';
 
 @Injectable()
 export class BffService {
@@ -23,24 +29,47 @@ export class BffService {
    * Get event listings enriched with seller public info.
    * Only returns active listings with available tickets.
    */
-  async getEventListings(ctx: Ctx, eventId: string): Promise<ListingWithSeller[]> {
+  async getEventListings(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<ListingWithSeller[]> {
     const listings = await this.ticketsService.listListings(ctx, { eventId });
     const activeListings = listings.filter(
       (l) =>
         l.status === 'Active' &&
-        l.ticketUnits.some((unit) => unit.status === TicketUnitStatus.Available),
+        l.ticketUnits.some(
+          (unit) => unit.status === TicketUnitStatus.Available,
+        ),
     );
 
     const uniqueSellerIds = [...new Set(activeListings.map((l) => l.sellerId))];
-    const sellers = await this.usersService.getPublicUserInfoByIds(ctx, uniqueSellerIds);
+    const sellers = await this.usersService.getPublicUserInfoByIds(
+      ctx,
+      uniqueSellerIds,
+    );
     const sellersMap = new Map(sellers.map((s) => [s.id, s]));
+
+    const commissionPercents = BUY_PAGE_PAYMENT_METHODS.map(
+      (pm) => pm.commissionPercent,
+    ).filter((p): p is number => p != null);
+    const commissionPercentRange =
+      commissionPercents.length > 0
+        ? {
+            min: Math.min(...commissionPercents),
+            max: Math.max(...commissionPercents),
+          }
+        : { min: 0, max: 0 };
 
     return activeListings.map((listing) => {
       const seller = sellersMap.get(listing.sellerId);
       return {
         ...listing,
         sellerPublicName: seller?.publicName ?? 'Unknown',
-        sellerPic: seller?.pic ?? { id: 'default', src: '/images/default/default.png' },
+        sellerPic: seller?.pic ?? {
+          id: 'default',
+          src: '/images/default/default.png',
+        },
+        commissionPercentRange,
       };
     });
   }
@@ -51,12 +80,18 @@ export class BffService {
       throw new NotFoundException('Seller not found');
     }
 
-    const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [sellerId]);
+    const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [
+      sellerId,
+    ]);
     if (!publicInfo) {
       throw new NotFoundException('Seller not found');
     }
 
-    const totalSales = await this.transactionsService.getSellerCompletedSalesTotal(ctx, sellerId);
+    const totalSales =
+      await this.transactionsService.getSellerCompletedSalesTotal(
+        ctx,
+        sellerId,
+      );
 
     return {
       id: sellerId,
@@ -73,27 +108,28 @@ export class BffService {
     };
   }
 
-  /** Static payment methods for buy page */
-  private static readonly BUY_PAGE_PAYMENT_METHODS: PaymentMethodOption[] = [
-    { id: 'payway', name: 'Payway', commissionPercent: 7, type: 'webhook_integrated' },
-    { id: 'mercadopago', name: 'MercadoPago', commissionPercent: 8, type: 'webhook_integrated' },
-    { id: 'uala_bis_debito', name: 'Uala Bis Debito', commissionPercent: 5, type: 'webhook_integrated' },
-    { id: 'bank_transfer', name: 'Transferencia Bancaria', commissionPercent: null, type: 'manual_approval' },
-  ];
-
   /**
    * Get buy page data: listing, seller info, and payment methods.
    */
   async getBuyPageData(ctx: Ctx, ticketId: string): Promise<BuyPageData> {
     const listing = await this.ticketsService.getListingById(ctx, ticketId);
-    const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [listing.sellerId]);
+    const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [
+      listing.sellerId,
+    ]);
     const user = await this.usersService.findById(ctx, listing.sellerId);
-    const totalSales = await this.transactionsService.getSellerCompletedSalesTotal(ctx, listing.sellerId);
+    const totalSales =
+      await this.transactionsService.getSellerCompletedSalesTotal(
+        ctx,
+        listing.sellerId,
+      );
 
     const seller: BuyPageSellerInfo = {
       id: listing.sellerId,
       publicName: publicInfo?.publicName ?? 'Unknown',
-      pic: publicInfo?.pic ?? { id: 'default', src: '/images/default/default.png' },
+      pic: publicInfo?.pic ?? {
+        id: 'default',
+        src: '/images/default/default.png',
+      },
       badges: user?.level === UserLevel.VerifiedSeller ? ['verified'] : [],
       totalSales,
       // TODO: Implement seller reviews; return mock values until review system exists
@@ -104,7 +140,7 @@ export class BffService {
     return {
       listing,
       seller,
-      paymentMethods: BffService.BUY_PAGE_PAYMENT_METHODS,
+      paymentMethods: BUY_PAGE_PAYMENT_METHODS,
     };
   }
 
@@ -114,7 +150,9 @@ export class BffService {
   async getMyTickets(ctx: Ctx, userId: string): Promise<GetMyTicketsData> {
     const [bought, sold, listed] = await Promise.all([
       this.transactionsService.listTransactions(ctx, userId, { role: 'buyer' }),
-      this.transactionsService.listTransactions(ctx, userId, { role: 'seller' }),
+      this.transactionsService.listTransactions(ctx, userId, {
+        role: 'seller',
+      }),
       this.ticketsService.getMyListings(ctx, userId),
     ]);
     return { bought, sold, listed };

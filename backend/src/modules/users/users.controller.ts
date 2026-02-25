@@ -21,6 +21,8 @@ import type { ApiResponse } from '../../common/types/api';
 import type {
   LoginRequest,
   LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
 } from './users.api';
 import {
   LoginResponseSchema,
@@ -58,6 +60,35 @@ export class UsersController {
     };
   }
 
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ValidateResponse(LoginResponseSchema)
+  async register(
+    @Context() ctx: Ctx,
+    @Body() body: RegisterRequest,
+  ): Promise<ApiResponse<RegisterResponse>> {
+    const { email, password, firstName, lastName, country } = body;
+
+    if (!email || !password || !firstName || !lastName || !country) {
+      throw new BadRequestException(
+        'Email, password, firstName, lastName and country are required',
+      );
+    }
+
+    const result = await this.usersService.register(ctx, {
+      email,
+      password,
+      firstName,
+      lastName,
+      country,
+    });
+
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(GetMeResponseSchema)
@@ -65,14 +96,9 @@ export class UsersController {
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<AuthenticatedUserPublicInfo>> {
-
     return {
       success: true,
-      data: user
+      data: user,
     };
   }
-
-
-
 }
-

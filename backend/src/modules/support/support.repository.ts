@@ -10,8 +10,12 @@ export class SupportRepository implements OnModuleInit {
   private readonly messageStorage: KeyValueFileStorage<SupportMessage>;
 
   constructor() {
-    this.ticketStorage = new KeyValueFileStorage<SupportTicket>('support-tickets');
-    this.messageStorage = new KeyValueFileStorage<SupportMessage>('support-messages');
+    this.ticketStorage = new KeyValueFileStorage<SupportTicket>(
+      'support-tickets',
+    );
+    this.messageStorage = new KeyValueFileStorage<SupportMessage>(
+      'support-messages',
+    );
   }
 
   /**
@@ -35,7 +39,10 @@ export class SupportRepository implements OnModuleInit {
   /**
    * Find ticket by ID
    */
-  async findTicketById(ctx: Ctx, id: string): Promise<SupportTicket | undefined> {
+  async findTicketById(
+    ctx: Ctx,
+    id: string,
+  ): Promise<SupportTicket | undefined> {
     return await this.ticketStorage.get(ctx, id);
   }
 
@@ -53,7 +60,10 @@ export class SupportRepository implements OnModuleInit {
     const all = await this.ticketStorage.getAll(ctx);
     return all
       .filter((t) => t.userId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }
 
   /**
@@ -62,18 +72,25 @@ export class SupportRepository implements OnModuleInit {
   async getActiveTickets(ctx: Ctx): Promise<SupportTicket[]> {
     const all = await this.ticketStorage.getAll(ctx);
     return all
-      .filter((t) => 
-        t.status === SupportTicketStatus.Open || 
-        t.status === SupportTicketStatus.InProgress ||
-        t.status === SupportTicketStatus.WaitingForCustomer
+      .filter(
+        (t) =>
+          t.status === SupportTicketStatus.Open ||
+          t.status === SupportTicketStatus.InProgress ||
+          t.status === SupportTicketStatus.WaitingForCustomer,
       )
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }
 
   /**
    * Get ticket by transaction ID
    */
-  async getTicketByTransactionId(ctx: Ctx, transactionId: string): Promise<SupportTicket | undefined> {
+  async getTicketByTransactionId(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<SupportTicket | undefined> {
     const all = await this.ticketStorage.getAll(ctx);
     return all.find((t) => t.transactionId === transactionId);
   }
@@ -104,7 +121,10 @@ export class SupportRepository implements OnModuleInit {
   /**
    * Create a message
    */
-  async createMessage(ctx: Ctx, message: SupportMessage): Promise<SupportMessage> {
+  async createMessage(
+    ctx: Ctx,
+    message: SupportMessage,
+  ): Promise<SupportMessage> {
     await this.messageStorage.set(ctx, message.id, message);
     return message;
   }
@@ -112,10 +132,16 @@ export class SupportRepository implements OnModuleInit {
   /**
    * Get messages for a ticket
    */
-  async getMessagesByTicketId(ctx: Ctx, ticketId: string): Promise<SupportMessage[]> {
+  async getMessagesByTicketId(
+    ctx: Ctx,
+    ticketId: string,
+  ): Promise<SupportMessage[]> {
     const all = await this.messageStorage.getAll(ctx);
     return all
       .filter((m) => m.ticketId === ticketId)
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
   }
 }

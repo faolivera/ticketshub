@@ -19,4 +19,3 @@ export interface ImageStorage {
    */
   delete(id: string): Promise<boolean>;
 }
-

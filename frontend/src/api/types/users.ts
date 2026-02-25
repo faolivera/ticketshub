@@ -121,7 +121,25 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   user: AuthenticatedUserPublicInfo;
+  /** When true, frontend should redirect to OTP verification flow */
+  requiresEmailVerification?: boolean;
 }
+
+/**
+ * Register request
+ */
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  country: string;
+}
+
+/**
+ * Register response (same shape as login)
+ */
+export type RegisterResponse = LoginResponse;
 
 /**
  * JWT payload structure

@@ -1,12 +1,20 @@
 import { z } from 'zod';
-import { ImageSchema, AddressSchema, CurrencyCodeSchema } from '../../users/schemas/api.schemas';
+import {
+  ImageSchema,
+  AddressSchema,
+  CurrencyCodeSchema,
+} from '../../users/schemas/api.schemas';
 
 const MoneySchema = z.object({
   amount: z.number(),
   currency: CurrencyCodeSchema,
 });
 
-const TicketTypeSchema = z.enum(['Physical', 'DigitalTransferable', 'DigitalNonTransferable']);
+const TicketTypeSchema = z.enum([
+  'Physical',
+  'DigitalTransferable',
+  'DigitalNonTransferable',
+]);
 const DeliveryMethodSchema = z.enum(['Pickup', 'ArrangeWithSeller']);
 const TransactionStatusSchema = z.enum([
   'PendingPayment',
@@ -32,7 +40,11 @@ const TicketUnitSchema = z.object({
   seat: TicketSeatSchema.optional(),
 });
 
-export const SellerReviewTypeSchema = z.enum(['positive', 'neutral', 'negative']);
+export const SellerReviewTypeSchema = z.enum([
+  'positive',
+  'neutral',
+  'negative',
+]);
 
 export const SellerReviewSchema = z.object({
   id: z.string(),
@@ -63,6 +75,11 @@ export const SellerProfileSchema = z.object({
 
 export const GetSellerProfileResponseSchema = SellerProfileSchema;
 
+const CommissionPercentRangeSchema = z.object({
+  min: z.number(),
+  max: z.number(),
+});
+
 export const ListingWithSellerSchema = z.object({
   id: z.string(),
   sellerId: z.string(),
@@ -86,6 +103,7 @@ export const ListingWithSellerSchema = z.object({
   venue: z.string(),
   sellerPublicName: z.string(),
   sellerPic: ImageSchema,
+  commissionPercentRange: CommissionPercentRangeSchema,
 });
 
 export const GetEventListingsResponseSchema = z.array(ListingWithSellerSchema);
@@ -128,6 +146,7 @@ const TransactionWithDetailsSchema = z.object({
 const TicketListingWithEventSchema = ListingWithSellerSchema.omit({
   sellerPublicName: true,
   sellerPic: true,
+  commissionPercentRange: true,
 });
 
 export const GetMyTicketsResponseSchema = z.object({
@@ -136,8 +155,16 @@ export const GetMyTicketsResponseSchema = z.object({
   listed: z.array(TicketListingWithEventSchema),
 });
 
-const PaymentMethodIdSchema = z.enum(['payway', 'mercadopago', 'uala_bis_debito', 'bank_transfer']);
-const PaymentMethodTypeSchema = z.enum(['webhook_integrated', 'manual_approval']);
+const PaymentMethodIdSchema = z.enum([
+  'payway',
+  'mercadopago',
+  'uala_bis_debito',
+  'bank_transfer',
+]);
+const PaymentMethodTypeSchema = z.enum([
+  'webhook_integrated',
+  'manual_approval',
+]);
 const PaymentMethodOptionSchema = z.object({
   id: PaymentMethodIdSchema,
   name: z.string(),

@@ -20,11 +20,15 @@ export const ProfileTypeSchema = z.enum(['Customer', 'Provider']);
 export const CurrencyCodeSchema = z.enum(['EUR', 'USD', 'GBP']);
 
 export const UserAddressSchema = AddressSchema.extend({
-  geoPoint: z.object({
-    lat: z.number(),
-    lng: z.number(),
-  }).optional(),
+  geoPoint: z
+    .object({
+      lat: z.number(),
+      lng: z.number(),
+    })
+    .optional(),
 });
+
+export const UserStatusSchema = z.enum(['Enabled', 'Disabled', 'Suspended']);
 
 // Domain schemas
 export const AuthenticatedUserPublicInfoSchema = z.object({
@@ -39,12 +43,16 @@ export const AuthenticatedUserPublicInfoSchema = z.object({
   country: z.string(),
   currency: CurrencyCodeSchema,
   address: UserAddressSchema.optional(),
+  status: UserStatusSchema,
+  emailVerified: z.boolean(),
+  phoneVerified: z.boolean(),
 });
 
 // API response schemas
 export const LoginResponseSchema = z.object({
   token: z.string(),
   user: AuthenticatedUserPublicInfoSchema,
+  requiresEmailVerification: z.boolean().optional(),
 });
 
 export const GetMeResponseSchema = z.object({
@@ -75,4 +83,3 @@ export const UpdateBasicInfoResponseSchema = z.object({
   lastUsedProfile: ProfileTypeSchema.optional(),
   address: AddressSchema.optional(),
 });
-

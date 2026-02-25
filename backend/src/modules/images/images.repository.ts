@@ -27,4 +27,3 @@ export class ImagesRepository implements OnModuleInit {
     await this.storage.set(ctx, image.id, image);
   }
 }
-

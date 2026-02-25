@@ -36,7 +36,10 @@ export class PaymentsRepository implements OnModuleInit {
   /**
    * Get payment intent by transaction ID
    */
-  async findByTransactionId(ctx: Ctx, transactionId: string): Promise<PaymentIntent | undefined> {
+  async findByTransactionId(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<PaymentIntent | undefined> {
     const all = await this.storage.getAll(ctx);
     return all.find((p) => p.transactionId === transactionId);
   }
@@ -44,7 +47,10 @@ export class PaymentsRepository implements OnModuleInit {
   /**
    * Get payment intent by provider ID
    */
-  async findByProviderPaymentId(ctx: Ctx, providerPaymentId: string): Promise<PaymentIntent | undefined> {
+  async findByProviderPaymentId(
+    ctx: Ctx,
+    providerPaymentId: string,
+  ): Promise<PaymentIntent | undefined> {
     const all = await this.storage.getAll(ctx);
     return all.find((p) => p.providerPaymentId === providerPaymentId);
   }
@@ -52,7 +58,11 @@ export class PaymentsRepository implements OnModuleInit {
   /**
    * Update payment intent
    */
-  async update(ctx: Ctx, id: string, updates: Partial<PaymentIntent>): Promise<PaymentIntent | undefined> {
+  async update(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<PaymentIntent>,
+  ): Promise<PaymentIntent | undefined> {
     const existing = await this.storage.get(ctx, id);
     if (!existing) return undefined;
 

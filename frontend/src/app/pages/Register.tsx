@@ -1,33 +1,46 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, User, Globe, ArrowLeft } from 'lucide-react';
+import { Mail, User, Globe, ArrowLeft, Lock } from 'lucide-react';
+import { authService } from '@/api/services/auth.service';
+import { otpService } from '@/api/services/otp.service';
+import { useUser } from '@/app/contexts/UserContext';
+import { OTPType } from '@/api/types';
 
 export function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshUser } = useUser();
 
-  const [step, setStep] = useState<'register' | 'verify'>('register');
+  const locationState = location.state as
+    | { verifyEmail?: boolean; email?: string; fromLogin?: boolean; from?: string | { pathname?: string } }
+    | undefined;
+  const fromVal = locationState?.from;
+  const redirectTarget =
+    typeof fromVal === 'string' ? fromVal : (fromVal && typeof fromVal === 'object' ? fromVal.pathname : undefined) ?? '/';
+
+  const [step, setStep] = useState<'register' | 'verify'>(
+    locationState?.verifyEmail && locationState?.email ? 'verify' : 'register'
+  );
   const [formData, setFormData] = useState({
-    email: '',
+    email: locationState?.email ?? '',
+    password: '',
     firstName: '',
     lastName: '',
-    country: 'United States'
+    country: 'United States',
   });
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
-
-  const redirectTarget =
-    typeof location.state?.from === 'string'
-      ? location.state.from
-      : location.state?.from?.pathname || '/';
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const fromLogin = Boolean(locationState?.fromLogin);
 
   // Auto-detect country (mock)
   useEffect(() => {
-    // In production, you would use a geolocation API
-    setFormData(prev => ({ ...prev, country: 'United States' }));
+    setFormData(prev => ({ ...prev, country: prev.country || 'United States' }));
   }, []);
 
   // Timer for resend
@@ -46,12 +59,31 @@ export function Register() {
     }
   }, [step, timer]);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate sending email OTP
-    setStep('verify');
-    setTimer(60);
-    setCanResend(false);
+    setIsSubmitting(true);
+    setRegisterError(null);
+    try {
+      const response = await authService.register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        country: formData.country,
+      });
+      if (response.requiresEmailVerification) {
+        setStep('verify');
+        setTimer(60);
+        setCanResend(false);
+      } else {
+        await refreshUser();
+        navigate(redirectTarget);
+      }
+    } catch (err) {
+      setRegisterError(err instanceof Error ? err.message : t('register.registerError'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -75,24 +107,38 @@ export function Register() {
     }
   };
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const code = verificationCode.join('');
     if (code.length !== 6) {
-      alert(t('register.pleaseEnterCompleteCode'));
+      setVerifyError(t('register.pleaseEnterCompleteCode'));
       return;
     }
 
-    navigate('/login', { state: { from: redirectTarget } });
+    setIsSubmitting(true);
+    setVerifyError(null);
+    try {
+      await otpService.verifyOTP({ type: OTPType.EmailVerification, code });
+      await refreshUser();
+      navigate(redirectTarget);
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : t('register.verifyError'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleResend = () => {
-    if (canResend) {
+  const handleResend = async () => {
+    if (!canResend) return;
+    setVerifyError(null);
+    try {
+      await otpService.sendOTP({ type: OTPType.EmailVerification });
       setTimer(60);
       setCanResend(false);
       setVerificationCode(['', '', '', '', '', '']);
-      // Simulate resending code
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : t('register.resendError'));
     }
   };
 
@@ -102,7 +148,7 @@ export function Register() {
         <div className="max-w-md mx-auto px-4">
           <div className="bg-white rounded-lg shadow-md p-8">
             <button
-              onClick={() => setStep('register')}
+              onClick={() => (fromLogin ? navigate('/login', { state: { from: redirectTarget } }) : setStep('register'))}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -120,6 +166,12 @@ export function Register() {
                 {t('register.verifyEmailDescription', { email: formData.email })}
               </p>
             </div>
+
+            {verifyError && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {verifyError}
+              </div>
+            )}
 
             <form onSubmit={handleVerify} className="space-y-6">
               <div>
@@ -145,9 +197,10 @@ export function Register() {
 
               <button
                 type="submit"
-                className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={isSubmitting}
+                className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {t('register.verify')}
+                {isSubmitting ? t('common.loading') : t('register.verify')}
               </button>
 
               <div className="text-center">
@@ -185,6 +238,12 @@ export function Register() {
             </p>
           </div>
 
+          {registerError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {registerError}
+            </div>
+          )}
+
           <form onSubmit={handleRegister} className="space-y-6">
             {/* Email */}
             <div>
@@ -201,6 +260,26 @@ export function Register() {
                 placeholder={t('register.emailPlaceholder')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  {t('register.password')} <span className="text-red-500">*</span>
+                </div>
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder={t('register.passwordPlaceholder')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                minLength={8}
+                autoComplete="new-password"
               />
             </div>
 
@@ -271,9 +350,10 @@ export function Register() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={isSubmitting}
+              className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {t('register.createAccount')}
+              {isSubmitting ? t('common.loading') : t('register.createAccount')}
             </button>
 
             <p className="text-center text-sm text-gray-600">

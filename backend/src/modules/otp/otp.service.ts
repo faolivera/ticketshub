@@ -13,15 +13,10 @@ export class OTPService {
   ) {}
 
   /**
-   * Generate a random OTP code
+   * Generate OTP code. For now always returns hardcoded value for testing.
    */
   private generateCode(): string {
-    const bytes = randomBytes(4);
-    const num = bytes.readUInt32BE(0);
-    const code = (num % Math.pow(10, OTP_CONFIG.codeLength))
-      .toString()
-      .padStart(OTP_CONFIG.codeLength, '0');
-    return code;
+    return '111111';
   }
 
   /**
@@ -36,18 +31,13 @@ export class OTPService {
    * Note: In production, this would integrate with email/SMS providers
    */
   async sendOTP(ctx: Ctx, userId: string, type: OTPType): Promise<OTP> {
-    // Invalidate any existing pending OTPs for this user and type
-    const existingOtp = await this.otpRepository.findLatestPendingByUserAndType(
-      ctx,
-      userId,
-      type,
-    );
-    if (existingOtp) {
-      await this.otpRepository.updateStatus(ctx, existingOtp.id, OTPStatus.Expired);
-    }
+    // Expire all previous pending OTPs for this user and type
+    await this.otpRepository.expireAllPendingByUserAndType(ctx, userId, type);
 
     const code = this.generateCode();
-    const expiresAt = new Date(Date.now() + OTP_CONFIG.expirationMinutes * 60 * 1000);
+    const expiresAt = new Date(
+      Date.now() + OTP_CONFIG.expirationMinutes * 60 * 1000,
+    );
 
     const otp: OTP = {
       id: this.generateId(),
@@ -76,15 +66,23 @@ export class OTPService {
     type: OTPType,
     code: string,
   ): Promise<boolean> {
-    const otp = await this.otpRepository.findLatestPendingByUserAndType(ctx, userId, type);
+    const otp = await this.otpRepository.findLatestPendingByUserAndType(
+      ctx,
+      userId,
+      type,
+    );
 
     if (!otp) {
-      throw new BadRequestException('No pending OTP found. Please request a new one.');
+      throw new BadRequestException(
+        'No pending OTP found. Please request a new one.',
+      );
     }
 
     if (new Date(otp.expiresAt) < new Date()) {
       await this.otpRepository.updateStatus(ctx, otp.id, OTPStatus.Expired);
-      throw new BadRequestException('OTP has expired. Please request a new one.');
+      throw new BadRequestException(
+        'OTP has expired. Please request a new one.',
+      );
     }
 
     if (otp.code !== code) {
@@ -98,8 +96,16 @@ export class OTPService {
   /**
    * Check if user has a valid pending OTP
    */
-  async hasPendingOTP(ctx: Ctx, userId: string, type: OTPType): Promise<boolean> {
-    const otp = await this.otpRepository.findLatestPendingByUserAndType(ctx, userId, type);
+  async hasPendingOTP(
+    ctx: Ctx,
+    userId: string,
+    type: OTPType,
+  ): Promise<boolean> {
+    const otp = await this.otpRepository.findLatestPendingByUserAndType(
+      ctx,
+      userId,
+      type,
+    );
     return otp !== undefined && new Date(otp.expiresAt) > new Date();
   }
 }

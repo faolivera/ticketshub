@@ -40,7 +40,7 @@ export class ResponseValidationInterceptor implements NestInterceptor {
           try {
             // Validate the data against the schema
             const validatedData = schema.parse(data.data);
-            
+
             // Return with validated data
             return {
               ...data,
@@ -50,11 +50,17 @@ export class ResponseValidationInterceptor implements NestInterceptor {
             // If validation fails, log and throw InternalServerError
             if (error instanceof ZodError) {
               const errorMessage = `Response validation failed for ${controllerName}.${methodName}: ${error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
-              
+
               console.error(errorMessage);
-              console.error('Validation errors:', JSON.stringify(error.issues, null, 2));
-              console.error('Received data:', JSON.stringify(data.data, null, 2));
-              
+              console.error(
+                'Validation errors:',
+                JSON.stringify(error.issues, null, 2),
+              );
+              console.error(
+                'Received data:',
+                JSON.stringify(data.data, null, 2),
+              );
+
               throw new InternalServerErrorException({
                 message: 'Response validation failed',
                 errors: error.issues,
@@ -70,4 +76,3 @@ export class ResponseValidationInterceptor implements NestInterceptor {
     );
   }
 }
-

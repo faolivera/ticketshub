@@ -1,15 +1,27 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { UsersRepository } from './users.repository';
 import { ImagesRepository } from '../images/images.repository';
+import { OTPService } from '../otp/otp.service';
 import type { Ctx } from '../../common/types/context';
 import type { User, UserAddress } from './users.domain';
-import type { UserPublicInfo, AuthenticatedUserPublicInfo } from './users.domain';
+import type {
+  UserPublicInfo,
+  AuthenticatedUserPublicInfo,
+} from './users.domain';
 import type { ProfileType } from './users.domain';
+import { Role, UserLevel, UserStatus } from './users.domain';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
+import { OTPType } from '../otp/otp.domain';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 @Injectable()
@@ -19,22 +31,35 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     @Inject(ImagesRepository)
     private readonly imagesRepository: ImagesRepository,
+    @Inject(OTPService)
+    private readonly otpService: OTPService,
   ) {}
 
-    /**
+  /**
    * Get user by ID (public info only)
    */
-    async getPublicUserInfoByIds(ctx: Ctx, ids: string[]): Promise<UserPublicInfo[]> {
-      const users = await this.findByIds(ctx, ids);
-      if (!users) return [];
-      const images = await this.imagesRepository.getByIds(ctx, users.map(user => user.imageId));
-      const imagesMap = new Map<string, Image>(images.map(image => [image.id, image]));
-      return users.map(user => ({
-        id: user.id,
-        publicName: user.publicName,
-        pic: imagesMap.get(user.imageId) || { id: 'default', src: '/images/default/default.png' },
-      }));
-    }
+  async getPublicUserInfoByIds(
+    ctx: Ctx,
+    ids: string[],
+  ): Promise<UserPublicInfo[]> {
+    const users = await this.findByIds(ctx, ids);
+    if (!users) return [];
+    const images = await this.imagesRepository.getByIds(
+      ctx,
+      users.map((user) => user.imageId),
+    );
+    const imagesMap = new Map<string, Image>(
+      images.map((image) => [image.id, image]),
+    );
+    return users.map((user) => ({
+      id: user.id,
+      publicName: user.publicName,
+      pic: imagesMap.get(user.imageId) || {
+        id: 'default',
+        src: '/images/default/default.png',
+      },
+    }));
+  }
 
   /**
    * Find user by email
@@ -78,31 +103,49 @@ export class UsersService {
   /**
    * Add profile to user
    */
-  async addProfile(ctx: Ctx, userId: string, profile: ProfileType): Promise<User | undefined> {
+  async addProfile(
+    ctx: Ctx,
+    userId: string,
+    profile: ProfileType,
+  ): Promise<User | undefined> {
     return await this.usersRepository.addProfile(ctx, userId, profile);
   }
 
   /**
    * Update last used profile for a user
    */
-  async updateLastUsedProfile(ctx: Ctx, userId: string, profile: ProfileType): Promise<User | undefined> {
-    return await this.usersRepository.updateLastUsedProfile(ctx, userId, profile);
+  async updateLastUsedProfile(
+    ctx: Ctx,
+    userId: string,
+    profile: ProfileType,
+  ): Promise<User | undefined> {
+    return await this.usersRepository.updateLastUsedProfile(
+      ctx,
+      userId,
+      profile,
+    );
   }
 
   /**
    * Get authenticated user info (for use with JWT tokens)
    */
-  async getAuthenticatedUserInfo(ctx: Ctx, userId: string): Promise<AuthenticatedUserPublicInfo | null> {
+  async getAuthenticatedUserInfo(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<AuthenticatedUserPublicInfo | null> {
     const user = await this.usersRepository.findById(ctx, userId);
     if (!user) {
       return null;
     }
 
-    let image: Image | undefined = await this.imagesRepository.getById(ctx, user.imageId);
+    let image: Image | undefined = await this.imagesRepository.getById(
+      ctx,
+      user.imageId,
+    );
     if (!image) {
       image = {
         id: 'default',
-        src: '/images/default/default.png'
+        src: '/images/default/default.png',
       };
     }
 
@@ -143,14 +186,18 @@ export class UsersService {
   /**
    * Authenticate user by email and password
    */
-  async login(ctx: Ctx, email: string, password: string): Promise<LoginResponse | null> {
+  async login(
+    ctx: Ctx,
+    email: string,
+    password: string,
+  ): Promise<LoginResponse | null> {
     const user = await this.findByEmail(ctx, email);
     if (!user || user.password !== password) {
       return null;
     }
 
     const token = this.generateToken(user);
-    
+
     // Verify user has an image (required for authentication)
     const userInfo = await this.getAuthenticatedUserInfo(ctx, user.id);
     if (!userInfo) {
@@ -160,7 +207,92 @@ export class UsersService {
     return {
       token,
       user: userInfo,
+      requiresEmailVerification: !user.emailVerified,
     };
+  }
+
+  /**
+   * Register a new user or resume verification for existing unverified user
+   */
+  async register(
+    ctx: Ctx,
+    data: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      country: string;
+    },
+  ): Promise<LoginResponse> {
+    const existing = await this.findByEmail(ctx, data.email);
+
+    if (existing) {
+      if (existing.emailVerified) {
+        throw new ConflictException('Email already registered');
+      }
+      if (existing.password !== data.password) {
+        throw new BadRequestException('Invalid password for existing account');
+      }
+      // Resume verification: resend OTP
+      await this.otpService.sendOTP(
+        ctx,
+        existing.id,
+        OTPType.EmailVerification,
+      );
+      const token = this.generateToken(existing);
+      const userInfo = await this.getAuthenticatedUserInfo(ctx, existing.id);
+      if (!userInfo) {
+        throw new BadRequestException('User data error');
+      }
+      return {
+        token,
+        user: userInfo,
+        requiresEmailVerification: true,
+      };
+    }
+
+    // Create new user
+    const publicName = `${data.firstName} ${data.lastName}`.trim();
+    const now = new Date();
+    const newUser = await this.usersRepository.add(ctx, {
+      email: data.email,
+      password: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      publicName,
+      role: Role.User,
+      level: UserLevel.Basic,
+      status: UserStatus.Enabled,
+      profiles: ['Customer'],
+      imageId: 'default',
+      country: data.country,
+      currency: 'EUR',
+      emailVerified: false,
+      phoneVerified: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await this.otpService.sendOTP(ctx, newUser.id, OTPType.EmailVerification);
+
+    const token = this.generateToken(newUser);
+    const userInfo = await this.getAuthenticatedUserInfo(ctx, newUser.id);
+    if (!userInfo) {
+      throw new BadRequestException('User data error');
+    }
+
+    return {
+      token,
+      user: userInfo,
+      requiresEmailVerification: true,
+    };
+  }
+
+  /**
+   * Mark user email as verified
+   */
+  async markEmailVerified(ctx: Ctx, userId: string): Promise<void> {
+    await this.usersRepository.updateEmailVerified(ctx, userId, true);
   }
 
   /**
@@ -228,7 +360,11 @@ export class UsersService {
     }
 
     // Update user
-    const updatedUser = await this.usersRepository.updateBasicInfo(ctx, userId, updateData);
+    const updatedUser = await this.usersRepository.updateBasicInfo(
+      ctx,
+      userId,
+      updateData,
+    );
     if (!updatedUser) {
       return null;
     }
@@ -250,4 +386,3 @@ export class UsersService {
     };
   }
 }
-

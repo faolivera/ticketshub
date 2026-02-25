@@ -104,7 +104,12 @@ export class TicketsController {
     @Param('id') id: string,
     @Body() body: UpdateListingRequest,
   ): Promise<ApiResponse<UpdateListingResponse>> {
-    const listing = await this.ticketsService.updateListing(ctx, id, user.userId, body);
+    const listing = await this.ticketsService.updateListing(
+      ctx,
+      id,
+      user.userId,
+      body,
+    );
     return { success: true, data: listing };
   }
 

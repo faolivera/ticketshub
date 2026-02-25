@@ -27,15 +27,30 @@ export class PublicDirectoryImageStorage implements ImageStorage {
     if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
       return '.jpg';
     }
-    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+    if (
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47
+    ) {
       return '.png';
     }
     if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
       return '.gif';
     }
-    if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
+    if (
+      buffer[0] === 0x52 &&
+      buffer[1] === 0x49 &&
+      buffer[2] === 0x46 &&
+      buffer[3] === 0x46
+    ) {
       // Could be WebP or other RIFF format, check further
-      if (buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
+      if (
+        buffer[8] === 0x57 &&
+        buffer[9] === 0x45 &&
+        buffer[10] === 0x42 &&
+        buffer[11] === 0x50
+      ) {
         return '.webp';
       }
     }
@@ -75,11 +90,11 @@ export class PublicDirectoryImageStorage implements ImageStorage {
     // We need to find the file by id, but we don't know the extension
     // Try common extensions
     const extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    
+
     for (const ext of extensions) {
       const filename = `${id}${ext}`;
       const filePath = path.join(this.uploadDir, filename);
-      
+
       try {
         await fs.unlink(filePath);
         return true;
@@ -91,8 +106,7 @@ export class PublicDirectoryImageStorage implements ImageStorage {
         }
       }
     }
-    
+
     return false;
   }
 }
-

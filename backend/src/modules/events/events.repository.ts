@@ -73,7 +73,11 @@ export class EventsRepository implements OnModuleInit {
   /**
    * Update event
    */
-  async updateEvent(ctx: Ctx, id: string, updates: Partial<Event>): Promise<Event | undefined> {
+  async updateEvent(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<Event>,
+  ): Promise<Event | undefined> {
     const existing = await this.eventStorage.get(ctx, id);
     if (!existing) return undefined;
 
@@ -107,7 +111,10 @@ export class EventsRepository implements OnModuleInit {
   /**
    * Find event date by ID
    */
-  async findEventDateById(ctx: Ctx, id: string): Promise<EventDate | undefined> {
+  async findEventDateById(
+    ctx: Ctx,
+    id: string,
+  ): Promise<EventDate | undefined> {
     return await this.dateStorage.get(ctx, id);
   }
 
@@ -122,7 +129,10 @@ export class EventsRepository implements OnModuleInit {
   /**
    * Get approved dates for an event
    */
-  async getApprovedDatesByEventId(ctx: Ctx, eventId: string): Promise<EventDate[]> {
+  async getApprovedDatesByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<EventDate[]> {
     const all = await this.dateStorage.getAll(ctx);
     return all.filter(
       (d) => d.eventId === eventId && d.status === EventDateStatus.Approved,

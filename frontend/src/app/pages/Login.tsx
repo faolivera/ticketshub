@@ -31,8 +31,14 @@ export function Login() {
     setLocalError(null);
 
     try {
-      await login({ email: formData.email, password: formData.password });
-      navigate(redirectTarget);
+      const response = await login({ email: formData.email, password: formData.password });
+      if (response.requiresEmailVerification) {
+        navigate('/register', {
+          state: { verifyEmail: true, email: response.user.email, fromLogin: true, from: redirectTarget },
+        });
+      } else {
+        navigate(redirectTarget);
+      }
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : t('login.genericError'));
     } finally {

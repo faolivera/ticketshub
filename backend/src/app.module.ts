@@ -17,12 +17,12 @@ import { BffModule } from './modules/bff/bff.module';
     // Global modules (must be first)
     PlatformConfigModule,
     NotificationsModule,
-    
+
     // Core modules
     HealthModule,
     UsersModule,
     OTPModule,
-    
+
     // Business modules
     EventsModule,
     TicketsModule,
@@ -34,4 +34,3 @@ import { BffModule } from './modules/bff/bff.module';
   ],
 })
 export class AppModule {}
-

@@ -10,7 +10,9 @@ export class WalletRepository implements OnModuleInit {
 
   constructor() {
     this.walletStorage = new KeyValueFileStorage<Wallet>('wallets');
-    this.transactionStorage = new KeyValueFileStorage<WalletTransaction>('wallet-transactions');
+    this.transactionStorage = new KeyValueFileStorage<WalletTransaction>(
+      'wallet-transactions',
+    );
   }
 
   /**
@@ -65,7 +67,10 @@ export class WalletRepository implements OnModuleInit {
   /**
    * Create wallet transaction
    */
-  async createTransaction(ctx: Ctx, transaction: WalletTransaction): Promise<WalletTransaction> {
+  async createTransaction(
+    ctx: Ctx,
+    transaction: WalletTransaction,
+  ): Promise<WalletTransaction> {
     await this.transactionStorage.set(ctx, transaction.id, transaction);
     return transaction;
   }
@@ -73,17 +78,26 @@ export class WalletRepository implements OnModuleInit {
   /**
    * Get transactions by user
    */
-  async getTransactionsByUserId(ctx: Ctx, userId: string): Promise<WalletTransaction[]> {
+  async getTransactionsByUserId(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<WalletTransaction[]> {
     const all = await this.transactionStorage.getAll(ctx);
     return all
       .filter((t) => t.walletUserId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }
 
   /**
    * Get transaction by ID
    */
-  async getTransactionById(ctx: Ctx, id: string): Promise<WalletTransaction | undefined> {
+  async getTransactionById(
+    ctx: Ctx,
+    id: string,
+  ): Promise<WalletTransaction | undefined> {
     return await this.transactionStorage.get(ctx, id);
   }
 }

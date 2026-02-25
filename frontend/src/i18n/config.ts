@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { BRAND_NAME } from '../constants/brand';
 import en from './locales/en.json';
 import es from './locales/es.json';
 
@@ -13,7 +14,10 @@ i18n
     lng: 'es', // default language
     fallbackLng: 'es',
     interpolation: {
-      escapeValue: false
+      escapeValue: false,
+      defaultVariables: {
+        brand: BRAND_NAME
+      }
     }
   });
 

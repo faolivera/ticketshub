@@ -1,12 +1,12 @@
 import type { Address } from '../shared/address.domain';
-import type { 
-  TicketType, 
-  DeliveryMethod, 
-  Money, 
+import type {
+  TicketType,
+  DeliveryMethod,
+  Money,
   SeatingType,
   TicketSeat,
-  TicketListing, 
-  TicketListingWithEvent 
+  TicketListing,
+  TicketListingWithEvent,
 } from './tickets.domain';
 
 /**
@@ -15,19 +15,19 @@ import type {
 export interface CreateListingRequest {
   eventId: string;
   eventDateId: string;
-  
+
   type: TicketType;
   seatingType: SeatingType;
   quantity?: number;
   ticketUnits?: CreateListingTicketUnitInput[];
   sellTogether?: boolean;
-  
+
   pricePerTicket: Money;
-  
+
   // Physical tickets only
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
-  
+
   // Ticket details
   description?: string;
   section?: string;

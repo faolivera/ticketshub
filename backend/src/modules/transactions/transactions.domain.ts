@@ -64,11 +64,11 @@ export interface Transaction {
   quantity: number;
 
   // Pricing breakdown
-  ticketPrice: Money;     // Price per ticket * quantity
-  buyerFee: Money;        // Platform fee from buyer
-  sellerFee: Money;       // Platform fee from seller
-  totalPaid: Money;       // ticketPrice + buyerFee
-  sellerReceives: Money;  // ticketPrice - sellerFee
+  ticketPrice: Money; // Price per ticket * quantity
+  buyerFee: Money; // Platform fee from buyer
+  sellerFee: Money; // Platform fee from seller
+  totalPaid: Money; // ticketPrice + buyerFee
+  sellerReceives: Money; // ticketPrice - sellerFee
 
   status: TransactionStatus;
 

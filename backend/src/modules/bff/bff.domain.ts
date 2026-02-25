@@ -1,5 +1,6 @@
 import type { Image } from '../images/images.domain';
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
+import type { PaymentMethodOption } from '../payments/payments.domain';
 
 export type SellerReviewType = 'positive' | 'neutral' | 'negative';
 
@@ -20,6 +21,11 @@ export interface SellerReviewStats {
   negative: number;
 }
 
+export interface CommissionPercentRange {
+  min: number;
+  max: number;
+}
+
 export interface SellerProfile {
   id: string;
   publicName: string;
@@ -36,20 +42,7 @@ export interface SellerProfile {
 export interface ListingWithSeller extends TicketListingWithEvent {
   sellerPublicName: string;
   sellerPic: Image;
-}
-
-/** Gateway identifier for payment methods */
-export type PaymentMethodId = 'payway' | 'mercadopago' | 'uala_bis_debito' | 'bank_transfer';
-
-/** How the payment method is processed */
-export type PaymentMethodType = 'webhook_integrated' | 'manual_approval';
-
-/** Payment method option for buy page */
-export interface PaymentMethodOption {
-  id: PaymentMethodId;
-  name: string;
-  commissionPercent: number | null;
-  type: PaymentMethodType;
+  commissionPercentRange: CommissionPercentRange;
 }
 
 /** Seller section data for buy page */
