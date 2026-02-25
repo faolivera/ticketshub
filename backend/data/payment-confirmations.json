@@ -1,0 +1,15 @@
+{
+  "pc_1772032799245_87102687": {
+    "id": "pc_1772032799245_87102687",
+    "transactionId": "txn_1772032780263_e2079fda",
+    "uploadedBy": "3",
+    "storageKey": "txn_1772032780263_e2079fda_1772032799244_e9a672f93a2e.png",
+    "originalFilename": "Screenshot 2026-02-25 at 01.12.30.png",
+    "contentType": "image/png",
+    "sizeBytes": 16690,
+    "status": "Accepted",
+    "createdAt": "2026-02-25T15:19:59.245Z",
+    "reviewedBy": "8",
+    "reviewedAt": "2026-02-25T15:30:18.970Z"
+  }
+}

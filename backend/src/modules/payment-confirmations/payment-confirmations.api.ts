@@ -42,6 +42,8 @@ export interface ListPaymentConfirmationsResponse {
 export interface UpdateConfirmationStatusRequest {
   status: 'Accepted' | 'Rejected';
   adminNotes?: string;
+  /** If true, also approve/reject the associated transaction. Defaults to true. */
+  updateTransaction?: boolean;
 }
 
 /**

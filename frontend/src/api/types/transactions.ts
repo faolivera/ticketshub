@@ -116,6 +116,7 @@ export interface TransactionWithDetails extends Transaction {
 export interface InitiatePurchaseRequest {
   listingId: string;
   ticketUnitIds: string[];
+  paymentMethodId: string;
 }
 
 /**

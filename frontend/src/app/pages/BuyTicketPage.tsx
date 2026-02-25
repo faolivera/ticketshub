@@ -154,10 +154,10 @@ export function BuyTicketPage() {
         return;
       }
 
-      // TODO: Include selectedPaymentMethod.id in the request when backend supports it
       const response = await transactionsService.initiatePurchase({
         listingId: ticketId,
         ticketUnitIds: unitsToPurchase,
+        paymentMethodId: selectedPaymentMethod?.id ?? 'payway',
       });
 
       navigate(`/transaction/${response.transaction.id}`);

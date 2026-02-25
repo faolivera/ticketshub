@@ -94,7 +94,7 @@
     "ticketUnits": [
       {
         "id": "unit_s2_num_t_1",
-        "status": "available",
+        "status": "reserved",
         "seat": {
           "row": "A",
           "seatNumber": "1"
@@ -102,7 +102,7 @@
       },
       {
         "id": "unit_s2_num_t_2",
-        "status": "available",
+        "status": "reserved",
         "seat": {
           "row": "A",
           "seatNumber": "2"
@@ -110,7 +110,7 @@
       },
       {
         "id": "unit_s2_num_t_3",
-        "status": "available",
+        "status": "reserved",
         "seat": {
           "row": "A",
           "seatNumber": "3"
@@ -123,9 +123,9 @@
       "currency": "EUR"
     },
     "section": "Platea",
-    "status": "Active",
+    "status": "Sold",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T10:00:00.000Z"
+    "updatedAt": "2026-02-25T15:19:40.266Z"
   },
   "tkt_s2_num_separate": {
     "id": "tkt_s2_num_separate",
@@ -332,7 +332,7 @@
     "ticketUnits": [
       {
         "id": "unit_1772019043848_e5c012cc",
-        "status": "available",
+        "status": "reserved",
         "seat": {
           "row": "a",
           "seatNumber": "12"
@@ -340,7 +340,7 @@
       },
       {
         "id": "unit_1772019043848_cd0db89f",
-        "status": "available",
+        "status": "reserved",
         "seat": {
           "row": "b",
           "seatNumber": "12"
@@ -348,7 +348,7 @@
       },
       {
         "id": "unit_1772019043848_46fe9c5a",
-        "status": "available",
+        "status": "reserved",
         "seat": {
           "row": "b",
           "seatNumber": "13"
@@ -361,9 +361,9 @@
       "currency": "USD"
     },
     "section": "General Admission",
-    "status": "Active",
+    "status": "Sold",
     "createdAt": "2026-02-25T11:30:43.849Z",
-    "updatedAt": "2026-02-25T11:30:43.849Z"
+    "updatedAt": "2026-02-25T15:15:33.360Z"
   },
   "tkt_1772020615668_6d8ee400": {
     "id": "tkt_1772020615668_6d8ee400",

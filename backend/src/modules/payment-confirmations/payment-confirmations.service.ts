@@ -283,6 +283,7 @@ export class PaymentConfirmationsService {
 
   /**
    * Update confirmation status (admin only).
+   * When updateTransaction is true (default), also approves/rejects the associated transaction.
    */
   async updateStatus(
     ctx: Ctx,
@@ -290,6 +291,7 @@ export class PaymentConfirmationsService {
     adminId: string,
     status: 'Accepted' | 'Rejected',
     adminNotes?: string,
+    updateTransaction: boolean = true,
   ): Promise<PaymentConfirmation> {
     const confirmation = await this.repository.findById(ctx, confirmationId);
     if (!confirmation) {
@@ -299,6 +301,22 @@ export class PaymentConfirmationsService {
     if (confirmation.status !== PaymentConfirmationStatus.Pending) {
       throw new BadRequestException(
         'Only pending confirmations can be reviewed',
+      );
+    }
+
+    if (updateTransaction) {
+      const approved = status === 'Accepted';
+      this.logger.log(
+        ctx,
+        `Coordinating transaction ${confirmation.transactionId} ${approved ? 'approval' : 'rejection'} with confirmation ${confirmationId}`,
+      );
+
+      await this.transactionsService.approveManualPayment(
+        ctx,
+        confirmation.transactionId,
+        adminId,
+        approved,
+        approved ? undefined : adminNotes,
       );
     }
 

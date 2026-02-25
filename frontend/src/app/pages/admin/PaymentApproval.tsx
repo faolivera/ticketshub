@@ -43,6 +43,8 @@ export function PaymentApproval() {
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const fetchPendingConfirmations = async () => {
     try {
@@ -60,20 +62,11 @@ export function PaymentApproval() {
     fetchPendingConfirmations();
   }, [token]);
 
-  const handleApprove = async (confirmationId: string, transactionId: string) => {
+  const handleApprove = async (confirmationId: string) => {
     try {
       setProcessing(confirmationId);
       
       await paymentConfirmationsService.updateStatus(confirmationId, 'Accepted');
-      
-      await fetch(`/api/transactions/${transactionId}/approve-payment`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ approved: true }),
-      });
       
       await fetchPendingConfirmations();
     } catch (err) {
@@ -110,9 +103,28 @@ export function PaymentApproval() {
     setIsRejectDialogOpen(true);
   };
 
-  const openPreviewDialog = (confirmation: PaymentConfirmationWithTransaction) => {
+  const openPreviewDialog = async (confirmation: PaymentConfirmationWithTransaction) => {
     setSelectedConfirmation(confirmation);
     setIsPreviewDialogOpen(true);
+    setPreviewLoading(true);
+    setPreviewBlobUrl(null);
+    
+    try {
+      const blobUrl = await paymentConfirmationsService.getFileBlobUrl(confirmation.transactionId);
+      setPreviewBlobUrl(blobUrl);
+    } catch (err) {
+      console.error('Failed to load file preview:', err);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const closePreviewDialog = () => {
+    setIsPreviewDialogOpen(false);
+    if (previewBlobUrl) {
+      URL.revokeObjectURL(previewBlobUrl);
+      setPreviewBlobUrl(null);
+    }
   };
 
   const formatAmount = (amount: number, currency: string) => {
@@ -227,7 +239,7 @@ export function PaymentApproval() {
                           size="sm"
                           variant="outline"
                           className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={() => handleApprove(confirmation.id, confirmation.transactionId)}
+                          onClick={() => handleApprove(confirmation.id)}
                           disabled={processing === confirmation.id}
                         >
                           <Check className="w-4 h-4 mr-1" />
@@ -254,7 +266,7 @@ export function PaymentApproval() {
       </Card>
 
       {/* Preview Dialog */}
-      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+      <Dialog open={isPreviewDialogOpen} onOpenChange={(open) => { if (!open) closePreviewDialog(); }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -291,46 +303,57 @@ export function PaymentApproval() {
                   </div>
                 </div>
                 
-                {selectedConfirmation.contentType.includes('pdf') ? (
-                  <iframe
-                    src={paymentConfirmationsService.getFileUrl(selectedConfirmation.transactionId)}
-                    className="w-full h-[500px] border rounded"
-                    title={t('admin.payments.paymentConfirmation')}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center bg-gray-100 rounded p-4">
-                    <img
-                      src={paymentConfirmationsService.getFileUrl(selectedConfirmation.transactionId)}
-                      alt={t('admin.payments.paymentConfirmation')}
-                      className="max-w-full max-h-[500px] object-contain"
+                {previewLoading ? (
+                  <div className="flex items-center justify-center h-[400px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : previewBlobUrl ? (
+                  selectedConfirmation.contentType.includes('pdf') ? (
+                    <iframe
+                      src={previewBlobUrl}
+                      className="w-full h-[500px] border rounded"
+                      title={t('admin.payments.paymentConfirmation')}
                     />
+                  ) : (
+                    <div className="flex items-center justify-center bg-gray-100 rounded p-4">
+                      <img
+                        src={previewBlobUrl}
+                        alt={t('admin.payments.paymentConfirmation')}
+                        className="max-w-full max-h-[500px] object-contain"
+                      />
+                    </div>
+                  )
+                ) : (
+                  <div className="flex items-center justify-center h-[400px] text-muted-foreground">
+                    {t('common.errorLoading')}
                   </div>
                 )}
               </>
             )}
           </div>
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
+            <Button variant="outline" onClick={closePreviewDialog}>
               {t('common.close')}
             </Button>
             {selectedConfirmation && (
               <>
-                <a
-                  href={paymentConfirmationsService.getFileUrl(selectedConfirmation.transactionId)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex"
-                >
-                  <Button variant="outline">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    {t('admin.payments.openInNewTab')}
-                  </Button>
-                </a>
+                {previewBlobUrl && (
+                  <a
+                    href={previewBlobUrl}
+                    download={selectedConfirmation.originalFilename}
+                    className="inline-flex"
+                  >
+                    <Button variant="outline">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      {t('admin.payments.download')}
+                    </Button>
+                  </a>
+                )}
                 <Button
                   className="bg-green-600 hover:bg-green-700"
                   onClick={() => {
-                    handleApprove(selectedConfirmation.id, selectedConfirmation.transactionId);
-                    setIsPreviewDialogOpen(false);
+                    handleApprove(selectedConfirmation.id);
+                    closePreviewDialog();
                   }}
                   disabled={processing === selectedConfirmation.id}
                 >
@@ -340,7 +363,7 @@ export function PaymentApproval() {
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    setIsPreviewDialogOpen(false);
+                    closePreviewDialog();
                     openRejectDialog(selectedConfirmation);
                   }}
                   disabled={processing === selectedConfirmation.id}

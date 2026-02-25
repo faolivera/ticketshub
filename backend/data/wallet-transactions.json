@@ -1,0 +1,14 @@
+{
+  "wtx_1772033418961_06d29ab8": {
+    "id": "wtx_1772033418961_06d29ab8",
+    "walletUserId": "2",
+    "type": "hold",
+    "amount": {
+      "amount": 42750,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772032780263_e2079fda",
+    "description": "Payment for ticket sale (manual approval)",
+    "createdAt": "2026-02-25T15:30:18.961Z"
+  }
+}

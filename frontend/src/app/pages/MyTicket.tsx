@@ -24,6 +24,8 @@ export function MyTicket() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,6 +135,30 @@ export function MyTicket() {
         return 4;
       default:
         return 0;
+    }
+  };
+
+  const openPreviewModal = async () => {
+    if (!transactionId) return;
+    setShowPreviewModal(true);
+    setPreviewLoading(true);
+    setPreviewBlobUrl(null);
+    
+    try {
+      const blobUrl = await paymentConfirmationsService.getFileBlobUrl(transactionId);
+      setPreviewBlobUrl(blobUrl);
+    } catch (err) {
+      console.error('Failed to load file preview:', err);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const closePreviewModal = () => {
+    setShowPreviewModal(false);
+    if (previewBlobUrl) {
+      URL.revokeObjectURL(previewBlobUrl);
+      setPreviewBlobUrl(null);
     }
   };
 
@@ -494,7 +520,7 @@ export function MyTicket() {
                       </p>
                       
                       <button
-                        onClick={() => setShowPreviewModal(true)}
+                        onClick={openPreviewModal}
                         className="mt-2 inline-flex items-center gap-1 text-sm font-medium underline"
                       >
                         <Eye className="w-4 h-4" />
@@ -715,25 +741,35 @@ export function MyTicket() {
                 {t('myTicket.paymentConfirmation')}
               </h3>
               <button
-                onClick={() => setShowPreviewModal(false)}
+                onClick={closePreviewModal}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-4 overflow-auto max-h-[calc(90vh-80px)]">
-              {paymentConfirmation.contentType.includes('pdf') ? (
-                <iframe
-                  src={paymentConfirmationsService.getFileUrl(transaction.id)}
-                  className="w-full h-[70vh]"
-                  title={t('myTicket.paymentConfirmation')}
-                />
+              {previewLoading ? (
+                <div className="flex items-center justify-center h-[400px]">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : previewBlobUrl ? (
+                paymentConfirmation.contentType.includes('pdf') ? (
+                  <iframe
+                    src={previewBlobUrl}
+                    className="w-full h-[70vh]"
+                    title={t('myTicket.paymentConfirmation')}
+                  />
+                ) : (
+                  <img
+                    src={previewBlobUrl}
+                    alt={t('myTicket.paymentConfirmation')}
+                    className="max-w-full mx-auto"
+                  />
+                )
               ) : (
-                <img
-                  src={paymentConfirmationsService.getFileUrl(transaction.id)}
-                  alt={t('myTicket.paymentConfirmation')}
-                  className="max-w-full mx-auto"
-                />
+                <div className="flex items-center justify-center h-[400px] text-gray-500">
+                  {t('common.errorLoading')}
+                </div>
               )}
             </div>
           </div>

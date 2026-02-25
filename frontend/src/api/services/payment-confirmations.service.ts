@@ -45,10 +45,22 @@ export const paymentConfirmationsService = {
   },
 
   /**
-   * Get URL to download/view payment confirmation file
+   * Get URL path for the payment confirmation file endpoint
    */
   getFileUrl(transactionId: string): string {
-    return `${apiClient.defaults.baseURL}/transactions/${transactionId}/payment-confirmation/file`;
+    return `/transactions/${transactionId}/payment-confirmation/file`;
+  },
+
+  /**
+   * Fetch the payment confirmation file as a blob URL.
+   * This method handles authentication properly.
+   */
+  async getFileBlobUrl(transactionId: string): Promise<string> {
+    const response = await apiClient.get<Blob>(
+      `/transactions/${transactionId}/payment-confirmation/file`,
+      { responseType: 'blob' },
+    );
+    return URL.createObjectURL(response.data);
   },
 
   /**

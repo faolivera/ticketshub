@@ -165,6 +165,7 @@ export class PaymentConfirmationsController {
 
   /**
    * Update confirmation status (admin only).
+   * When updateTransaction is true (default), also approves/rejects the associated transaction.
    */
   @Patch('admin/payment-confirmations/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -181,6 +182,7 @@ export class PaymentConfirmationsController {
       user.id,
       body.status,
       body.adminNotes,
+      body.updateTransaction ?? true,
     );
 
     return { success: true, data: confirmation };
