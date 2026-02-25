@@ -48,7 +48,7 @@ export default function App() {
               <Route path="/phone-verification" element={<ProtectedRoute><PhoneVerification /></ProtectedRoute>} />
               <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
-              <Route path="/buy/:ticketId" element={<ProtectedRoute><BuyTicketPage /></ProtectedRoute>} />
+              <Route path="/buy/:ticketId" element={<BuyTicketPage />} />
             </Routes>
           </main>
           <Footer />

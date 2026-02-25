@@ -61,6 +61,11 @@ export enum TicketUnitStatus {
   Sold = 'sold',
 }
 
+export enum SeatingType {
+  Numbered = 'numbered',
+  Unnumbered = 'unnumbered',
+}
+
 export interface TicketSeat {
   row: string;
   seatNumber: string;
@@ -82,6 +87,7 @@ export interface TicketListing {
   eventDateId: string;
   
   type: TicketType;
+  seatingType: SeatingType;
   ticketUnits: TicketUnit[];
   sellTogether: boolean; // true = all or nothing
   

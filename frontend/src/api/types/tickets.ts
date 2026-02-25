@@ -51,6 +51,11 @@ export enum TicketUnitStatus {
   Sold = 'sold',
 }
 
+export enum SeatingType {
+  Numbered = 'numbered',
+  Unnumbered = 'unnumbered',
+}
+
 export interface TicketSeat {
   row: string;
   seatNumber: string;
@@ -72,6 +77,7 @@ export interface TicketListing {
   eventDateId: string;
 
   type: TicketType;
+  seatingType: SeatingType;
   ticketUnits: TicketUnit[];
   sellTogether: boolean;
 
@@ -111,6 +117,7 @@ export interface CreateListingRequest {
   eventDateId: string;
 
   type: TicketType;
+  seatingType: SeatingType;
   quantity?: number;
   ticketUnits?: CreateListingTicketUnitInput[];
   sellTogether?: boolean;
@@ -143,6 +150,7 @@ export interface UpdateListingRequest {
   description?: string;
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
+  seatingType?: SeatingType;
 }
 
 /**
@@ -172,6 +180,41 @@ export interface ListingWithSeller extends TicketListingWithEvent {
  * Response from the BFF event listings endpoint
  */
 export type GetEventListingsResponse = ListingWithSeller[];
+
+/** Gateway identifier for payment methods */
+export type PaymentMethodId = 'payway' | 'mercadopago' | 'uala_bis_debito' | 'bank_transfer';
+
+/** How the payment method is processed */
+export type PaymentMethodType = 'webhook_integrated' | 'manual_approval';
+
+/** Payment method option for buy page */
+export interface PaymentMethodOption {
+  id: PaymentMethodId;
+  name: string;
+  commissionPercent: number | null;
+  type: PaymentMethodType;
+}
+
+/** Seller section data for buy page (BFF) */
+export interface BuyPageSellerInfo {
+  id: string;
+  publicName: string;
+  pic: import('./common').Image;
+  badges: string[];
+  totalSales: number;
+  percentPositiveReviews: number | null;
+  totalReviews: number;
+}
+
+/** Full buy page data (listing + seller + payment methods) from BFF */
+export interface BuyPageData {
+  listing: TicketListingWithEvent;
+  seller: BuyPageSellerInfo;
+  paymentMethods: PaymentMethodOption[];
+}
+
+/** Response from GET /api/buy/:ticketId */
+export type GetBuyPageResponse = BuyPageData;
 
 /**
  * Query params for listing listings

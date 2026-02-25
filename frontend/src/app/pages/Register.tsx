@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, User, Globe, ArrowLeft } from 'lucide-react';
 
 export function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [step, setStep] = useState<'register' | 'verify'>('register');
   const [formData, setFormData] = useState({
@@ -17,6 +18,11 @@ export function Register() {
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
+
+  const redirectTarget =
+    typeof location.state?.from === 'string'
+      ? location.state.from
+      : location.state?.from?.pathname || '/';
 
   // Auto-detect country (mock)
   useEffect(() => {
@@ -78,7 +84,7 @@ export function Register() {
       return;
     }
 
-    navigate('/login');
+    navigate('/login', { state: { from: redirectTarget } });
   };
 
   const handleResend = () => {
@@ -272,7 +278,11 @@ export function Register() {
 
             <p className="text-center text-sm text-gray-600">
               {t('register.alreadyHaveAccount')}{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link
+                to="/login"
+                state={{ from: redirectTarget }}
+                className="text-blue-600 hover:text-blue-700 font-semibold"
+              >
                 {t('register.signIn')}
               </Link>
             </p>

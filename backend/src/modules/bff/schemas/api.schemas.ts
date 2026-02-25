@@ -19,6 +19,7 @@ const TransactionStatusSchema = z.enum([
 ]);
 const ListingStatusSchema = z.enum(['Active', 'Sold', 'Cancelled', 'Expired']);
 const TicketUnitStatusSchema = z.enum(['available', 'reserved', 'sold']);
+const SeatingTypeSchema = z.enum(['numbered', 'unnumbered']);
 
 const TicketSeatSchema = z.object({
   row: z.string(),
@@ -68,6 +69,7 @@ export const ListingWithSellerSchema = z.object({
   eventId: z.string(),
   eventDateId: z.string(),
   type: TicketTypeSchema,
+  seatingType: SeatingTypeSchema,
   ticketUnits: z.array(TicketUnitSchema),
   sellTogether: z.boolean(),
   pricePerTicket: MoneySchema,
@@ -132,4 +134,29 @@ export const GetMyTicketsResponseSchema = z.object({
   bought: z.array(TransactionWithDetailsSchema),
   sold: z.array(TransactionWithDetailsSchema),
   listed: z.array(TicketListingWithEventSchema),
+});
+
+const PaymentMethodIdSchema = z.enum(['payway', 'mercadopago', 'uala_bis_debito', 'bank_transfer']);
+const PaymentMethodTypeSchema = z.enum(['webhook_integrated', 'manual_approval']);
+const PaymentMethodOptionSchema = z.object({
+  id: PaymentMethodIdSchema,
+  name: z.string(),
+  commissionPercent: z.number().nullable(),
+  type: PaymentMethodTypeSchema,
+});
+
+const BuyPageSellerInfoSchema = z.object({
+  id: z.string(),
+  publicName: z.string(),
+  pic: ImageSchema,
+  badges: z.array(z.string()),
+  totalSales: z.number(),
+  percentPositiveReviews: z.number().nullable(),
+  totalReviews: z.number(),
+});
+
+export const GetBuyPageResponseSchema = z.object({
+  listing: TicketListingWithEventSchema,
+  seller: BuyPageSellerInfoSchema,
+  paymentMethods: z.array(PaymentMethodOptionSchema),
 });

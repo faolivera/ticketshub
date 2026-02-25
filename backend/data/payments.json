@@ -16,5 +16,41 @@
     },
     "createdAt": "2026-02-24T23:37:45.914Z",
     "updatedAt": "2026-02-24T23:37:45.914Z"
+  },
+  "pi_1771976902711_22d452b8": {
+    "id": "pi_1771976902711_22d452b8",
+    "transactionId": "txn_1771976902710_3f6486f5",
+    "amount": {
+      "amount": 16500,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1771976902711_d9ef1559",
+    "metadata": {
+      "sellerId": "2",
+      "listingId": "tkt_1770297832518_24bf2e7b",
+      "eventName": "BAD BUNNY",
+      "ticketDescription": "Seed listing 1 - Bad Bunny"
+    },
+    "createdAt": "2026-02-24T23:48:22.711Z",
+    "updatedAt": "2026-02-24T23:48:22.711Z"
+  },
+  "pi_1771976985820_992bbf56": {
+    "id": "pi_1771976985820_992bbf56",
+    "transactionId": "txn_1771976985816_f649fde1",
+    "amount": {
+      "amount": 33000,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1771976985820_21720ecb",
+    "metadata": {
+      "sellerId": "2",
+      "listingId": "tkt_1770297832518_24bf2e7b",
+      "eventName": "BAD BUNNY",
+      "ticketDescription": "Seed listing 1 - Bad Bunny"
+    },
+    "createdAt": "2026-02-24T23:49:45.820Z",
+    "updatedAt": "2026-02-24T23:49:45.820Z"
   }
 }

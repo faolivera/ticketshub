@@ -4,7 +4,13 @@ import { TicketsRepository } from './tickets.repository';
 import { EventsService } from '../events/events.service';
 import type { Ctx } from '../../common/types/context';
 import type { TicketListing, TicketListingWithEvent, TicketUnit } from './tickets.domain';
-import { TicketType, DeliveryMethod, ListingStatus, TicketUnitStatus } from './tickets.domain';
+import {
+  TicketType,
+  DeliveryMethod,
+  ListingStatus,
+  TicketUnitStatus,
+  SeatingType,
+} from './tickets.domain';
 import type {
   CreateListingRequest,
   CreateListingTicketUnitInput,
@@ -39,6 +45,23 @@ export class TicketsService {
       .map((unit) => unit.id);
   }
 
+  private validateListingSeatingConsistency(listing: TicketListing): void {
+    const hasSeatUnits = listing.ticketUnits.some((unit) => unit.seat);
+    const hasSeatlessUnits = listing.ticketUnits.some((unit) => !unit.seat);
+
+    if (hasSeatUnits && hasSeatlessUnits) {
+      throw new BadRequestException('Listing ticket units must be homogeneous');
+    }
+
+    if (listing.seatingType === SeatingType.Numbered && hasSeatlessUnits) {
+      throw new BadRequestException('Numbered listings require seat information for all units');
+    }
+
+    if (listing.seatingType === SeatingType.Unnumbered && hasSeatUnits) {
+      throw new BadRequestException('Unnumbered listings cannot contain seat information');
+    }
+  }
+
   private buildTicketUnits(
     data: CreateListingRequest,
   ): TicketUnit[] {
@@ -50,6 +73,9 @@ export class TicketsService {
     }
 
     if (hasQuantity) {
+      if (data.seatingType !== SeatingType.Unnumbered) {
+        throw new BadRequestException('Quantity can only be used for unnumbered listings');
+      }
       if (!data.quantity || data.quantity < 1) {
         throw new BadRequestException('Quantity must be at least 1');
       }
@@ -73,6 +99,9 @@ export class TicketsService {
     }
 
     if (hasNumbered) {
+      if (data.seatingType !== SeatingType.Numbered) {
+        throw new BadRequestException('Numbered ticket units require seatingType=numbered');
+      }
       const seatKeySet = new Set<string>();
       for (const unit of incomingUnits) {
         if (!unit.seat || !unit.seat.row.trim() || !unit.seat.seatNumber.trim()) {
@@ -84,6 +113,8 @@ export class TicketsService {
         }
         seatKeySet.add(seatKey);
       }
+    } else if (data.seatingType !== SeatingType.Unnumbered) {
+      throw new BadRequestException('Unnumbered ticket units require seatingType=unnumbered');
     }
 
     return incomingUnits;
@@ -133,6 +164,7 @@ export class TicketsService {
       eventId: data.eventId,
       eventDateId: data.eventDateId,
       type: data.type,
+      seatingType: data.seatingType,
       ticketUnits,
       sellTogether: data.sellTogether || false,
       pricePerTicket: data.pricePerTicket,
@@ -144,6 +176,8 @@ export class TicketsService {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    this.validateListingSeatingConsistency(listing);
 
     return await this.ticketsRepository.create(ctx, listing);
   }
@@ -240,6 +274,23 @@ export class TicketsService {
       throw new BadRequestException('Can only update active listings');
     }
 
+    if (updates.seatingType && updates.seatingType !== listing.seatingType) {
+      const hasReservedOrSold = listing.ticketUnits.some(
+        (unit) => unit.status !== TicketUnitStatus.Available,
+      );
+      if (hasReservedOrSold) {
+        throw new BadRequestException('Cannot change seating type when units are already reserved or sold');
+      }
+
+      const hasSeatUnits = listing.ticketUnits.some((unit) => unit.seat);
+      if (updates.seatingType === SeatingType.Numbered && !hasSeatUnits) {
+        throw new BadRequestException('Cannot switch to numbered without seat information');
+      }
+      if (updates.seatingType === SeatingType.Unnumbered && hasSeatUnits) {
+        throw new BadRequestException('Cannot switch to unnumbered while seat information exists');
+      }
+    }
+
     const updated = await this.ticketsRepository.update(ctx, listingId, updates);
     if (!updated) {
       throw new NotFoundException('Listing not found');
@@ -301,6 +352,8 @@ export class TicketsService {
     if (listing.status !== ListingStatus.Active) {
       throw new BadRequestException('Listing is not available');
     }
+
+    this.validateListingSeatingConsistency(listing);
 
     if (!ticketUnitIds.length) {
       throw new BadRequestException('At least one ticket unit must be selected');

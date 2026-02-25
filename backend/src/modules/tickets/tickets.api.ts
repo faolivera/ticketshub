@@ -3,6 +3,7 @@ import type {
   TicketType, 
   DeliveryMethod, 
   Money, 
+  SeatingType,
   TicketSeat,
   TicketListing, 
   TicketListingWithEvent 
@@ -16,6 +17,7 @@ export interface CreateListingRequest {
   eventDateId: string;
   
   type: TicketType;
+  seatingType: SeatingType;
   quantity?: number;
   ticketUnits?: CreateListingTicketUnitInput[];
   sellTogether?: boolean;
@@ -48,6 +50,7 @@ export interface UpdateListingRequest {
   description?: string;
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
+  seatingType?: SeatingType;
 }
 
 /**

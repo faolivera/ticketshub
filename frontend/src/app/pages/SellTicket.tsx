@@ -9,6 +9,7 @@ import { EmptyState } from '@/app/components/EmptyState';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { eventsService } from '../../api/services/events.service';
 import { ticketsService } from '../../api/services/tickets.service';
+import { SeatingType } from '../../api/types';
 import type { EventWithDates, TicketType, DeliveryMethod } from '../../api/types';
 
 interface TicketListingForm {
@@ -125,6 +126,7 @@ export function SellTicket() {
       ? formData.seats.split(',').map((seat) => seat.trim()).filter(Boolean)
       : [];
     const isNumberedListing = parsedSeats.length > 0;
+    const seatingType = isNumberedListing ? SeatingType.Numbered : SeatingType.Unnumbered;
     if (isNumberedListing && !formData.row?.trim()) {
       setError(t('sellTicket.row'));
       return;
@@ -152,6 +154,7 @@ export function SellTicket() {
         eventId: formData.eventId,
         eventDateId: formData.eventDateId,
         type: ticketType,
+        seatingType,
         quantity: isNumberedListing ? undefined : formData.quantity,
         ticketUnits: isNumberedListing
           ? parsedSeats.map((seatNumber) => ({

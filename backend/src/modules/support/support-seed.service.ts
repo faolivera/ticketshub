@@ -7,7 +7,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { TicketsRepository } from '../tickets/tickets.repository';
 import { IdentityVerificationStatus, Role, UserLevel } from '../users/users.domain';
 import { EventCategory } from '../events/events.domain';
-import { TicketType, DeliveryMethod } from '../tickets/tickets.domain';
+import { TicketType, DeliveryMethod, SeatingType } from '../tickets/tickets.domain';
 import type { SeedDemoResponse } from './support.api';
 import type { User } from '../users/users.domain';
 import type { CreateEventRequest } from '../events/events.api';
@@ -269,7 +269,7 @@ export class SupportSeedService {
         eventId,
         eventDateId,
         type: TicketType.DigitalTransferable,
-        quantity: 2,
+        seatingType: SeatingType.Numbered,
         sellTogether: false,
         pricePerTicket: { amount: 15000, currency: 'EUR' },
         description,
@@ -286,6 +286,7 @@ export class SupportSeedService {
         eventId,
         eventDateId,
         type: TicketType.Physical,
+        seatingType: SeatingType.Unnumbered,
         quantity: 1,
         sellTogether: true,
         pricePerTicket: { amount: 17500, currency: 'EUR' },
@@ -305,6 +306,7 @@ export class SupportSeedService {
       eventId,
       eventDateId,
       type: TicketType.DigitalNonTransferable,
+      seatingType: SeatingType.Unnumbered,
       quantity: 1,
       sellTogether: true,
       pricePerTicket: { amount: 12000, currency: 'EUR' },

@@ -8,6 +8,21 @@
     "login": "Iniciar Sesión",
     "signIn": "Iniciar Sesión"
   },
+  "login": {
+    "title": "Bienvenido de nuevo",
+    "subtitle": "Inicia sesión en tu cuenta de TicketHub",
+    "email": "Correo Electrónico",
+    "emailPlaceholder": "tu.correo@ejemplo.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "passwordPlaceHolder": "Ingresa tu contraseña",
+    "signIn": "Iniciar Sesión",
+    "signinIn": "Iniciar Sesión",
+    "signingIn": "Iniciando sesión...",
+    "noAccount": "¿No tienes una cuenta?",
+    "createAccount": "Crear cuenta",
+    "genericError": "Error al iniciar sesión. Inténtalo de nuevo."
+  },
   "landing": {
     "title": "Compra y Vende Entradas de Forma Segura",
     "subtitle": "Encuentra entradas para conciertos, deportes y más con protección al comprador",
@@ -50,7 +65,8 @@
     "badgeTrusted": "Confiable",
     "badgeVerified": "Verificado",
     "badgeBestSeller": "Mejor Vendedor",
-    "buyTicket": "Comprar Entrada"
+    "buyTicket": "Comprar Entrada",
+    "noReviewsYet": "Aún no hay reseñas"
   },
   "buyTicket": {
     "backToEvent": "Volver al evento",
@@ -60,11 +76,19 @@
     "event": "Evento",
     "ticketType": "Tipo de Entrada",
     "seller": "Vendedor",
-    "quantity": "Cantidad",
+    "quantity": "Seleccionar cantidad",
     "paymentSummary": "Resumen de Pago",
     "ticketPrice": "Precio de Entrada x {{quantity}}",
     "serviceFee": "Tarifa de Servicio (10%)",
     "total": "Total",
+    "paymentMethod": "Método de Pago",
+    "buyerFee": "Tarifa de comprador ({{percent}}%)",
+    "buyerFeeManual": "Tarifa de comprador (aprobación manual)",
+    "commissionPercent": "{{percent}}%",
+    "manualApproval": "Aprobación manual",
+    "sellerTotalSales": "{{count}} entradas vendidas",
+    "sellerReviews": "{{percent}}% positivo ({{total}} reseñas)",
+    "sellerReviewsCount": "{{total}} reseñas",
     "cardNumber": "Número de Tarjeta",
     "cardPlaceholder": "1234 5678 9012 3456",
     "expiryDate": "Fecha de Vencimiento",
@@ -73,7 +97,14 @@
     "cvvPlaceholder": "123",
     "completePurchase": "Completar Compra",
     "securePayment": "Tu información de pago es segura y está encriptada",
-    "description": "Revisa los detalles de tu entrada y completa la compra de forma segura."
+    "description": "Revisa los detalles de tu entrada y completa la compra de forma segura.",
+    "available": "disponibles",
+    "numberedTicketsAvailable": "Hay entradas numeradas disponibles para seleccionar asientos",
+    "selectSeats": "Selecciona asientos",
+    "seatsSelected": "{{count}} asiento(s) seleccionado(s)",
+    "sellTogetherSeatHint": "Este anuncio debe comprarse como un paquete completo",
+    "soldTogetherLabel": "(se vende en conjunto)",
+    "selectAtLeastOneSeat": "Selecciona al menos un asiento para continuar"
   },
   "boughtTickets": {
     "title": "Mis Entradas",

@@ -19,11 +19,13 @@ import type {
   GetSellerProfileResponse,
   GetEventListingsResponse,
   GetMyTicketsResponse,
+  GetBuyPageResponse,
 } from './bff.api';
 import {
   GetSellerProfileResponseSchema,
   GetEventListingsResponseSchema,
   GetMyTicketsResponseSchema,
+  GetBuyPageResponseSchema,
 } from './schemas/api.schemas';
 
 @Controller('api')
@@ -57,6 +59,19 @@ export class BffController {
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<GetMyTicketsResponse>> {
     const data = await this.bffService.getMyTickets(ctx, user.id);
+    return { success: true, data };
+  }
+
+  /**
+   * Get buy page data: listing, seller info, and payment methods
+   */
+  @Get('buy/:ticketId')
+  @ValidateResponse(GetBuyPageResponseSchema)
+  async getBuyPage(
+    @Context() ctx: Ctx,
+    @Param('ticketId') ticketId: string,
+  ): Promise<ApiResponse<GetBuyPageResponse>> {
+    const data = await this.bffService.getBuyPageData(ctx, ticketId);
     return { success: true, data };
   }
 

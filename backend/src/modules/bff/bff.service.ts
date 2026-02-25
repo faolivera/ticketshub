@@ -3,9 +3,10 @@ import { UsersService } from '../users/users.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { TicketsService } from '../tickets/tickets.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
+import { UserLevel } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
 import type { GetMyTicketsData } from './bff.api';
-import type { SellerProfile, ListingWithSeller } from './bff.domain';
+import type { SellerProfile, ListingWithSeller, BuyPageData, BuyPageSellerInfo, PaymentMethodOption } from './bff.domain';
 
 @Injectable()
 export class BffService {
@@ -69,6 +70,41 @@ export class BffService {
         negative: 0,
       },
       reviews: [],
+    };
+  }
+
+  /** Static payment methods for buy page */
+  private static readonly BUY_PAGE_PAYMENT_METHODS: PaymentMethodOption[] = [
+    { id: 'payway', name: 'Payway', commissionPercent: 7, type: 'webhook_integrated' },
+    { id: 'mercadopago', name: 'MercadoPago', commissionPercent: 8, type: 'webhook_integrated' },
+    { id: 'uala_bis_debito', name: 'Uala Bis Debito', commissionPercent: 5, type: 'webhook_integrated' },
+    { id: 'bank_transfer', name: 'Transferencia Bancaria', commissionPercent: null, type: 'manual_approval' },
+  ];
+
+  /**
+   * Get buy page data: listing, seller info, and payment methods.
+   */
+  async getBuyPageData(ctx: Ctx, ticketId: string): Promise<BuyPageData> {
+    const listing = await this.ticketsService.getListingById(ctx, ticketId);
+    const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [listing.sellerId]);
+    const user = await this.usersService.findById(ctx, listing.sellerId);
+    const totalSales = await this.transactionsService.getSellerCompletedSalesTotal(ctx, listing.sellerId);
+
+    const seller: BuyPageSellerInfo = {
+      id: listing.sellerId,
+      publicName: publicInfo?.publicName ?? 'Unknown',
+      pic: publicInfo?.pic ?? { id: 'default', src: '/images/default/default.png' },
+      badges: user?.level === UserLevel.VerifiedSeller ? ['verified'] : [],
+      totalSales,
+      // TODO: Implement seller reviews; return mock values until review system exists
+      percentPositiveReviews: null,
+      totalReviews: 0,
+    };
+
+    return {
+      listing,
+      seller,
+      paymentMethods: BffService.BUY_PAGE_PAYMENT_METHODS,
     };
   }
 

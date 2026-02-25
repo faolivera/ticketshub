@@ -42,6 +42,7 @@ describe('Ticket Units (e2e)', () => {
         eventId: EXISTING_EVENT_ID,
         eventDateId: EXISTING_EVENT_DATE_ID,
         type: 'DigitalTransferable',
+        seatingType: 'numbered',
         ticketUnits: [
           { seat: { row: 'A', seatNumber: '1' } },
           { seat: { row: 'A', seatNumber: '2' } },
@@ -53,6 +54,7 @@ describe('Ticket Units (e2e)', () => {
       .expect(201);
 
     expect(numberedRes.body.success).toBe(true);
+    expect(numberedRes.body.data.seatingType).toBe('numbered');
     expect(numberedRes.body.data.ticketUnits).toHaveLength(2);
     expect(numberedRes.body.data.ticketUnits.every((unit: { seat?: unknown }) => unit.seat)).toBe(true);
 
@@ -63,6 +65,7 @@ describe('Ticket Units (e2e)', () => {
         eventId: EXISTING_EVENT_ID,
         eventDateId: EXISTING_EVENT_DATE_ID,
         type: 'DigitalTransferable',
+        seatingType: 'unnumbered',
         quantity: 3,
         sellTogether: false,
         pricePerTicket: { amount: 1000, currency: 'EUR' },
@@ -71,6 +74,7 @@ describe('Ticket Units (e2e)', () => {
       .expect(201);
 
     expect(unnumberedRes.body.success).toBe(true);
+    expect(unnumberedRes.body.data.seatingType).toBe('unnumbered');
     expect(unnumberedRes.body.data.ticketUnits).toHaveLength(3);
     expect(unnumberedRes.body.data.ticketUnits.every((unit: { seat?: unknown }) => !unit.seat)).toBe(true);
   });

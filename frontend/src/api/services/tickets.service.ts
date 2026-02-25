@@ -9,6 +9,7 @@ import type {
   ListListingsQuery,
   GetEventListingsResponse,
   GetMyTicketsResponse,
+  GetBuyPageResponse,
 } from '../types';
 
 /**
@@ -68,6 +69,14 @@ export const ticketsService = {
    */
   async getMyTickets(): Promise<GetMyTicketsResponse> {
     const response = await apiClient.get<GetMyTicketsResponse>('/my-tickets');
+    return response.data;
+  },
+
+  /**
+   * Get buy page data: listing, seller info, and payment methods (BFF endpoint)
+   */
+  async getBuyPage(ticketId: string): Promise<GetBuyPageResponse> {
+    const response = await apiClient.get<GetBuyPageResponse>(`/buy/${ticketId}`);
     return response.data;
   },
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, Ticket } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
@@ -7,11 +7,17 @@ import { useUser } from '@/app/contexts/UserContext';
 export function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, error, clearError } = useUser();
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const redirectTarget =
+    typeof location.state?.from === 'string'
+      ? location.state.from
+      : location.state?.from?.pathname || '/';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     clearError();
@@ -26,7 +32,7 @@ export function Login() {
 
     try {
       await login({ email: formData.email, password: formData.password });
-      navigate('/');
+      navigate(redirectTarget);
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : t('login.genericError'));
     } finally {
@@ -103,7 +109,11 @@ export function Login() {
 
             <p className="text-center text-sm text-gray-600">
               {t('login.noAccount')}{' '}
-              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link
+                to="/register"
+                state={{ from: redirectTarget }}
+                className="text-blue-600 hover:text-blue-700 font-semibold"
+              >
                 {t('login.createAccount')}
               </Link>
             </p>

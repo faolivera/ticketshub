@@ -1,6 +1,6 @@
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import type { TransactionWithDetails } from '../transactions/transactions.domain';
-import type { SellerProfile, ListingWithSeller } from './bff.domain';
+import type { SellerProfile, ListingWithSeller, BuyPageData } from './bff.domain';
 
 export interface GetMyTicketsData {
   bought: TransactionWithDetails[];
@@ -29,3 +29,8 @@ export type GetEventListingsResponse = ListingWithSeller[];
 export interface GetEventListingsQuery {
   eventId: string;
 }
+
+/**
+ * Get buy page response (listing + seller + payment methods)
+ */
+export type GetBuyPageResponse = BuyPageData;
