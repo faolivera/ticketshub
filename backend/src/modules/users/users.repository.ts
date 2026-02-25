@@ -128,6 +128,26 @@ export class UsersRepository implements OnModuleInit {
   }
 
   /**
+   * Update user phone verification status
+   */
+  async updatePhoneVerified(
+    ctx: Ctx,
+    userId: string,
+    phoneVerified: boolean,
+  ): Promise<User | undefined> {
+    const existing = await this.storage.get(ctx, userId);
+    if (!existing) return undefined;
+
+    const updatedUser: User = {
+      ...existing,
+      phoneVerified,
+      updatedAt: new Date(),
+    };
+    await this.storage.set(ctx, userId, updatedUser);
+    return updatedUser;
+  }
+
+  /**
    * Update user profiles
    */
   async updateProfiles(

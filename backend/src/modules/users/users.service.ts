@@ -296,6 +296,13 @@ export class UsersService {
   }
 
   /**
+   * Mark user phone as verified
+   */
+  async markPhoneVerified(ctx: Ctx, userId: string): Promise<void> {
+    await this.usersRepository.updatePhoneVerified(ctx, userId, true);
+  }
+
+  /**
    * Update basic user information (firstName, lastName, publicName, address, imageId)
    */
   async updateBasicInfo(

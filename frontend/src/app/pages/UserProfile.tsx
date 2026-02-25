@@ -147,16 +147,16 @@ export function UserProfile() {
 
             {/* Phone Verification Status */}
             <div className={`p-4 rounded-lg border-2 ${
-              user.isPhoneVerified 
+              user.phoneVerified 
                 ? 'bg-green-50 border-green-200' 
                 : 'bg-yellow-50 border-yellow-200'
             }`}>
               <div className="flex items-start gap-3">
                 <Phone className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                  user.isPhoneVerified ? 'text-green-600' : 'text-yellow-600'
+                  user.phoneVerified ? 'text-green-600' : 'text-yellow-600'
                 }`} />
                 <div className="flex-1">
-                  {user.isPhoneVerified ? (
+                  {user.phoneVerified ? (
                     <>
                       <p className="font-semibold text-gray-900 mb-1">
                         {t('userProfile.phoneVerified')}

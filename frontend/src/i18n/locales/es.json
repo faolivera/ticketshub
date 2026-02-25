@@ -107,7 +107,11 @@
     "seatsSelected": "{{count}} asiento(s) seleccionado(s)",
     "sellTogetherSeatHint": "Este anuncio debe comprarse como un paquete completo",
     "soldTogetherLabel": "(se vende en conjunto)",
-    "selectAtLeastOneSeat": "Selecciona al menos un asiento para continuar"
+    "selectAtLeastOneSeat": "Selecciona al menos un asiento para continuar",
+    "phoneRequired": "Verificación de Teléfono Requerida",
+    "phoneRequiredDescription": "Para completar tu compra, primero verifica tu número de teléfono.",
+    "phoneRequiredToPurchase": "Por favor verifica tu número de teléfono antes de comprar.",
+    "verifyPhoneNow": "Verificar Teléfono"
   },
   "boughtTickets": {
     "title": "Mis Entradas",
@@ -383,7 +387,9 @@
     "resendIn": "Reenviar en {{seconds}}s",
     "back": "Volver",
     "pleaseEnterPhone": "Por favor ingresa tu número de teléfono",
-    "pleaseEnterCompleteCode": "Por favor ingresa el código de verificación completo"
+    "pleaseEnterCompleteCode": "Por favor ingresa el código de verificación completo",
+    "sendError": "Error al enviar el código de verificación. Inténtalo de nuevo.",
+    "verifyError": "Error al verificar. Revisa el código e inténtalo de nuevo."
   },
   "myTicket": {
     "backToMyTickets": "Volver a Mis Entradas",
@@ -618,7 +624,11 @@
     "pleaseCompleteAllFields": "Por favor completa todos los campos requeridos",
     "pleaseSelectDeliveryMethod": "Por favor selecciona un método de entrega para entradas físicas",
     "pleaseEnterPickupAddress": "Por favor ingresa una dirección de recogida",
-    "listingCreatedSuccess": "¡Tu anuncio de entrada ha sido creado exitosamente!"
+    "listingCreatedSuccess": "¡Tu anuncio de entrada ha sido creado exitosamente!",
+    "createListingFailed": "Error al crear el anuncio. Inténtalo de nuevo.",
+    "phoneRequired": "Verificación de Teléfono Requerida",
+    "phoneRequiredDescription": "Debes verificar tu número de teléfono antes de poder vender tickets.",
+    "verifyPhoneNow": "Verificar Teléfono Ahora"
   },
   "common": {
     "loading": "Cargando...",

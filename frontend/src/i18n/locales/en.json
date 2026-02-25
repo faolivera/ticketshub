@@ -117,7 +117,11 @@
     "seatsSelected": "{{count}} seat(s) selected",
     "sellTogetherSeatHint": "This listing must be purchased as a full bundle",
     "soldTogetherLabel": "(sold together)",
-    "selectAtLeastOneSeat": "Select at least one seat to continue"
+    "selectAtLeastOneSeat": "Select at least one seat to continue",
+    "phoneRequired": "Phone Verification Required",
+    "phoneRequiredDescription": "To complete your purchase, please verify your phone number first.",
+    "phoneRequiredToPurchase": "Please verify your phone number before purchasing.",
+    "verifyPhoneNow": "Verify Phone"
   },
   "boughtTickets": {
     "title": "My Tickets",
@@ -409,7 +413,9 @@
     "resendIn": "Resend in {{seconds}}s",
     "back": "Back",
     "pleaseEnterPhone": "Please enter your phone number",
-    "pleaseEnterCompleteCode": "Please enter the complete verification code"
+    "pleaseEnterCompleteCode": "Please enter the complete verification code",
+    "sendError": "Failed to send verification code. Please try again.",
+    "verifyError": "Verification failed. Please check the code and try again."
   },
   "myTicket": {
     "backToMyTickets": "Back to My Tickets",
@@ -649,7 +655,11 @@
     "mustBeLoggedIn": "You must be logged in to sell tickets",
     "loginToSell": "Login to Sell",
     "errorLoadingEvents": "Failed to load events. Please try again.",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "createListingFailed": "Failed to create listing. Please try again.",
+    "phoneRequired": "Phone Verification Required",
+    "phoneRequiredDescription": "You must verify your phone number before you can sell tickets.",
+    "verifyPhoneNow": "Verify Phone Now"
   },
   "common": {
     "loading": "Loading...",

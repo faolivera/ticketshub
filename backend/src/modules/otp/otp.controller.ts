@@ -86,6 +86,8 @@ export class OTPController {
 
     if (type === OTPType.EmailVerification) {
       await this.usersService.markEmailVerified(ctx, user.id);
+    } else if (type === OTPType.PhoneVerification) {
+      await this.usersService.markPhoneVerified(ctx, user.id);
     }
 
     return {

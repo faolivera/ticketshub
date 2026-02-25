@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Ticket, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Ticket, Plus, Loader2, Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
@@ -259,6 +259,26 @@ export function SellTicket() {
             to: '/register',
           }}
         />
+      </div>
+    );
+  }
+
+  // Block selling without verified phone
+  if (user && !user.phoneVerified) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md text-center">
+          <Phone className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('sellTicket.phoneRequired')}</h2>
+          <p className="text-gray-600 mb-6">{t('sellTicket.phoneRequiredDescription')}</p>
+          <Link
+            to="/phone-verification"
+            state={{ returnTo: '/sell-ticket' }}
+            className="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {t('sellTicket.verifyPhoneNow')}
+          </Link>
+        </div>
       </div>
     );
   }

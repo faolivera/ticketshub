@@ -13,10 +13,16 @@ export class OTPService {
   ) {}
 
   /**
-   * Generate OTP code. For now always returns hardcoded value for testing.
+   * Generate OTP code based on type. Returns hardcoded values for testing.
    */
-  private generateCode(): string {
-    return '111111';
+  private generateCode(type: OTPType): string {
+    switch (type) {
+      case OTPType.PhoneVerification:
+        return '222222';
+      case OTPType.EmailVerification:
+      default:
+        return '111111';
+    }
   }
 
   /**
@@ -34,7 +40,7 @@ export class OTPService {
     // Expire all previous pending OTPs for this user and type
     await this.otpRepository.expireAllPendingByUserAndType(ctx, userId, type);
 
-    const code = this.generateCode();
+    const code = this.generateCode(type);
     const expiresAt = new Date(
       Date.now() + OTP_CONFIG.expirationMinutes * 60 * 1000,
     );
