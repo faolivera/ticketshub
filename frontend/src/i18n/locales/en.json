@@ -661,7 +661,18 @@
     "createListingFailed": "Failed to create listing. Please try again.",
     "phoneRequired": "Phone Verification Required",
     "phoneRequiredDescription": "You must verify your phone number before you can sell tickets.",
-    "verifyPhoneNow": "Verify Phone Now"
+    "verifyPhoneNow": "Verify Phone Now",
+    "seatingType": "Seating Type",
+    "numberedSeating": "Numbered Seating",
+    "numberedSeatingDesc": "Assigned row and seat numbers",
+    "generalAdmission": "General Admission",
+    "generalAdmissionDesc": "No assigned seats",
+    "seatsRequired": "At least one seat with row and seat number is required",
+    "addSeatsDescription": "Add each seat with its row and seat number",
+    "rowPlaceholder": "Row (e.g., A, 12)",
+    "seatPlaceholder": "Seat (e.g., 1, 15)",
+    "addAnotherSeat": "Add another seat",
+    "removeSeat": "Remove seat"
   },
   "common": {
     "loading": "Loading...",

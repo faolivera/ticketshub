@@ -199,6 +199,7 @@
   },
   "tkt_1771986888670_d70607e7": {
     "id": "tkt_1771986888670_d70607e7",
+    "sellerId": "6",
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
@@ -233,6 +234,7 @@
   },
   "tkt_1771986888673_145f5314": {
     "id": "tkt_1771986888673_145f5314",
+    "sellerId": "6",
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
@@ -263,6 +265,7 @@
   },
   "tkt_1772014177633_5ab16f4d": {
     "id": "tkt_1772014177633_5ab16f4d",
+    "sellerId": "6",
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
@@ -318,5 +321,48 @@
     "status": "Active",
     "createdAt": "2026-02-25T10:09:37.633Z",
     "updatedAt": "2026-02-25T10:09:37.633Z"
+  },
+  "tkt_1772019043848_10873abd": {
+    "id": "tkt_1772019043848_10873abd",
+    "sellerId": "6",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalTransferable",
+    "seatingType": "numbered",
+    "ticketUnits": [
+      {
+        "id": "unit_1772019043848_e5c012cc",
+        "status": "available",
+        "seat": {
+          "row": "a",
+          "seatNumber": "12"
+        }
+      },
+      {
+        "id": "unit_1772019043848_cd0db89f",
+        "status": "available",
+        "seat": {
+          "row": "b",
+          "seatNumber": "12"
+        }
+      },
+      {
+        "id": "unit_1772019043848_46fe9c5a",
+        "status": "available",
+        "seat": {
+          "row": "b",
+          "seatNumber": "13"
+        }
+      }
+    ],
+    "sellTogether": true,
+    "pricePerTicket": {
+      "amount": 10000,
+      "currency": "USD"
+    },
+    "section": "General Admission",
+    "status": "Active",
+    "createdAt": "2026-02-25T11:30:43.849Z",
+    "updatedAt": "2026-02-25T11:30:43.849Z"
   }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Ticket, Plus, Loader2, Phone } from 'lucide-react';
+import { ArrowLeft, Ticket, Plus, Loader2, Phone, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
@@ -9,8 +9,13 @@ import { EmptyState } from '@/app/components/EmptyState';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { eventsService } from '../../api/services/events.service';
 import { ticketsService } from '../../api/services/tickets.service';
-import { SeatingType } from '../../api/types';
-import type { EventWithDates, TicketType, DeliveryMethod } from '../../api/types';
+import { SeatingType, TicketType, DeliveryMethod } from '../../api/types';
+import type { EventWithDates } from '../../api/types';
+
+interface NumberedSeat {
+  row: string;
+  seatNumber: string;
+}
 
 interface TicketListingForm {
   eventId: string;
@@ -26,8 +31,8 @@ interface TicketListingForm {
   quantity: number;
   sellTogether: boolean;
   pricePerTicket: number;
-  row?: string;
-  seats?: string;
+  seatingType: 'numbered' | 'unnumbered';
+  numberedSeats: NumberedSeat[];
   description?: string;
 }
 
@@ -59,7 +64,9 @@ export function SellTicket() {
     pickupAddress: '',
     quantity: 1,
     sellTogether: false,
-    pricePerTicket: 0
+    pricePerTicket: 0,
+    seatingType: 'unnumbered',
+    numberedSeats: [{ row: '', seatNumber: '' }]
   });
 
   const [ticketTypes] = useState<string[]>(defaultTicketTypes);
@@ -122,29 +129,35 @@ export function SellTicket() {
       return;
     }
 
-    const parsedSeats = formData.seats
-      ? formData.seats.split(',').map((seat) => seat.trim()).filter(Boolean)
-      : [];
-    const isNumberedListing = parsedSeats.length > 0;
+    const isNumberedListing = formData.seatingType === 'numbered';
     const seatingType = isNumberedListing ? SeatingType.Numbered : SeatingType.Unnumbered;
-    if (isNumberedListing && !formData.row?.trim()) {
-      setError(t('sellTicket.row'));
-      return;
+
+    if (isNumberedListing) {
+      const validSeats = formData.numberedSeats.filter(s => s.row.trim() && s.seatNumber.trim());
+      if (validSeats.length === 0) {
+        setError(t('sellTicket.seatsRequired'));
+        return;
+      }
+    } else {
+      if (formData.quantity < 1) {
+        setError(t('sellTicket.pleaseCompleteAllFields'));
+        return;
+      }
     }
 
     // Map form data to API request
     let ticketType: TicketType;
     if (formData.deliveryMethod === 'physical') {
-      ticketType = 'Physical';
+      ticketType = TicketType.Physical;
     } else if (formData.digitallyTransferable) {
-      ticketType = 'DigitalTransferable';
+      ticketType = TicketType.DigitalTransferable;
     } else {
-      ticketType = 'DigitalNonTransferable';
+      ticketType = TicketType.DigitalNonTransferable;
     }
 
     let deliveryMethod: DeliveryMethod | undefined;
     if (formData.deliveryMethod === 'physical') {
-      deliveryMethod = formData.physicalDeliveryMethod === 'pickup' ? 'Pickup' : 'ArrangeWithSeller';
+      deliveryMethod = formData.physicalDeliveryMethod === 'pickup' ? DeliveryMethod.Pickup : DeliveryMethod.ArrangeWithSeller;
     }
 
     setIsSubmitting(true);
@@ -157,12 +170,14 @@ export function SellTicket() {
         seatingType,
         quantity: isNumberedListing ? undefined : formData.quantity,
         ticketUnits: isNumberedListing
-          ? parsedSeats.map((seatNumber) => ({
-              seat: {
-                row: formData.row!.trim(),
-                seatNumber,
-              },
-            }))
+          ? formData.numberedSeats
+              .filter(s => s.row.trim() && s.seatNumber.trim())
+              .map((seat) => ({
+                seat: {
+                  row: seat.row.trim(),
+                  seatNumber: seat.seatNumber.trim(),
+                },
+              }))
           : undefined,
         sellTogether: formData.sellTogether,
         pricePerTicket: {
@@ -438,31 +453,168 @@ export function SellTicket() {
                 </div>
               </div>
 
-              {/* Row and Seats (optional) */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('sellTicket.row')}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.row || ''}
-                    onChange={(e) => setFormData({ ...formData, row: e.target.value })}
-                    placeholder="e.g., A, 12"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+              {/* Seating Type Selector */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('sellTicket.seatingType')} <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, seatingType: 'unnumbered', quantity: formData.quantity || 1 })}
+                    className={`p-4 border-2 rounded-lg transition-colors ${
+                      formData.seatingType === 'unnumbered'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">{t('sellTicket.generalAdmission')}</p>
+                      <p className="text-sm text-gray-600">{t('sellTicket.generalAdmissionDesc')}</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, seatingType: 'numbered', numberedSeats: formData.numberedSeats.length > 0 ? formData.numberedSeats : [{ row: '', seatNumber: '' }] })}
+                    className={`p-4 border-2 rounded-lg transition-colors ${
+                      formData.seatingType === 'numbered'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">{t('sellTicket.numberedSeating')}</p>
+                      <p className="text-sm text-gray-600">{t('sellTicket.numberedSeatingDesc')}</p>
+                    </div>
+                  </button>
                 </div>
-                <div>
+
+                {/* Quantity field for unnumbered seating */}
+                {formData.seatingType === 'unnumbered' && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      {t('sellTicket.quantity')} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Numbered seats list */}
+                {formData.seatingType === 'numbered' && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm text-gray-600">{t('sellTicket.addSeatsDescription')}</p>
+                    {formData.numberedSeats.map((seat, index) => (
+                      <div key={index} className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={seat.row}
+                            onChange={(e) => {
+                              const newSeats = [...formData.numberedSeats];
+                              newSeats[index] = { ...newSeats[index], row: e.target.value };
+                              setFormData({ ...formData, numberedSeats: newSeats });
+                            }}
+                            placeholder={t('sellTicket.rowPlaceholder')}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={seat.seatNumber}
+                            onChange={(e) => {
+                              const newSeats = [...formData.numberedSeats];
+                              newSeats[index] = { ...newSeats[index], seatNumber: e.target.value };
+                              setFormData({ ...formData, numberedSeats: newSeats });
+                            }}
+                            placeholder={t('sellTicket.seatPlaceholder')}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        {formData.numberedSeats.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newSeats = formData.numberedSeats.filter((_, i) => i !== index);
+                              setFormData({ ...formData, numberedSeats: newSeats });
+                            }}
+                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                            title={t('sellTicket.removeSeat')}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, numberedSeats: [...formData.numberedSeats, { row: '', seatNumber: '' }] })}
+                      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {t('sellTicket.addAnotherSeat')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Sell Together Option - shown when multiple tickets */}
+                {((formData.seatingType === 'unnumbered' && formData.quantity > 1) ||
+                  (formData.seatingType === 'numbered' && formData.numberedSeats.filter(s => s.row.trim() && s.seatNumber.trim()).length > 1)) && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.sellTogether}
+                        onChange={(e) => setFormData({ ...formData, sellTogether: e.target.checked })}
+                        className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <div>
+                        <p className="font-semibold text-gray-900">{t('sellTicket.sellTogether')}</p>
+                        <p className="text-sm text-gray-600">{t('sellTicket.sellTogetherDesc')}</p>
+                      </div>
+                    </label>
+                  </div>
+                )}
+
+                {/* Price Per Ticket */}
+                <div className="mt-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('sellTicket.seats')}
+                    {t('sellTicket.pricePerTicket')} <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={formData.seats || ''}
-                    onChange={(e) => setFormData({ ...formData, seats: e.target.value })}
-                    placeholder="e.g., 1, 2, 3"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.pricePerTicket || ''}
+                      onChange={(e) => setFormData({ ...formData, pricePerTicket: parseFloat(e.target.value) || 0 })}
+                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                  {(() => {
+                    const ticketCount = formData.seatingType === 'numbered'
+                      ? formData.numberedSeats.filter(s => s.row.trim() && s.seatNumber.trim()).length
+                      : formData.quantity;
+                    return ticketCount > 1 ? (
+                      <p className="text-sm text-gray-600 mt-2">
+                        {t('sellTicket.totalValue')}: ${(formData.pricePerTicket * ticketCount).toFixed(2)}
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
               </div>
 
@@ -578,67 +730,6 @@ export function SellTicket() {
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-
-              {/* Quantity */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('sellTicket.quantity')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              {/* Sell Together Option */}
-              {formData.quantity > 1 && (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.sellTogether}
-                      onChange={(e) => setFormData({ ...formData, sellTogether: e.target.checked })}
-                      className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <div>
-                      <p className="font-semibold text-gray-900">{t('sellTicket.sellTogether')}</p>
-                      <p className="text-sm text-gray-600">{t('sellTicket.sellTogetherDesc')}</p>
-                    </div>
-                  </label>
-                </div>
-              )}
-
-              {/* Price */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('sellTicket.pricePerTicket')} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.pricePerTicket || ''}
-                    onChange={(e) => setFormData({ ...formData, pricePerTicket: parseFloat(e.target.value) || 0 })}
-                    className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-                {formData.quantity > 1 && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    {t('sellTicket.totalValue')}: ${(formData.pricePerTicket * formData.quantity).toFixed(2)}
-                  </p>
                 )}
               </div>
 

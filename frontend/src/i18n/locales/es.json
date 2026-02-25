@@ -630,7 +630,18 @@
     "createListingFailed": "Error al crear el anuncio. Inténtalo de nuevo.",
     "phoneRequired": "Verificación de Teléfono Requerida",
     "phoneRequiredDescription": "Debes verificar tu número de teléfono antes de poder vender tickets.",
-    "verifyPhoneNow": "Verificar Teléfono Ahora"
+    "verifyPhoneNow": "Verificar Teléfono Ahora",
+    "seatingType": "Tipo de Asientos",
+    "numberedSeating": "Asientos Numerados",
+    "numberedSeatingDesc": "Fila y número de asiento asignados",
+    "generalAdmission": "Entrada General",
+    "generalAdmissionDesc": "Sin asientos asignados",
+    "seatsRequired": "Se requiere al menos un asiento con fila y número",
+    "addSeatsDescription": "Agrega cada asiento con su fila y número",
+    "rowPlaceholder": "Fila (ej: A, 12)",
+    "seatPlaceholder": "Asiento (ej: 1, 15)",
+    "addAnotherSeat": "Agregar otro asiento",
+    "removeSeat": "Eliminar asiento"
   },
   "common": {
     "loading": "Cargando...",
