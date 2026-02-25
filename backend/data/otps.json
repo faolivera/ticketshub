@@ -28,5 +28,65 @@
     "expiresAt": "2026-02-25T03:14:31.199Z",
     "createdAt": "2026-02-25T03:04:31.200Z",
     "verifiedAt": "2026-02-25T03:04:33.837Z"
+  },
+  "otp_1772013121420_6937b65a": {
+    "id": "otp_1772013121420_6937b65a",
+    "userId": "5",
+    "type": "EmailVerification",
+    "code": "111111",
+    "status": "Verified",
+    "expiresAt": "2026-02-25T10:02:01.420Z",
+    "createdAt": "2026-02-25T09:52:01.421Z",
+    "verifiedAt": "2026-02-25T09:52:06.511Z"
+  },
+  "otp_1772013244575_3323735d": {
+    "id": "otp_1772013244575_3323735d",
+    "userId": "5",
+    "type": "PhoneVerification",
+    "code": "222222",
+    "status": "Verified",
+    "expiresAt": "2026-02-25T10:04:04.575Z",
+    "createdAt": "2026-02-25T09:54:04.575Z",
+    "verifiedAt": "2026-02-25T09:54:07.021Z"
+  },
+  "otp_1772013929293_69d8e9e2": {
+    "id": "otp_1772013929293_69d8e9e2",
+    "userId": "6",
+    "type": "EmailVerification",
+    "code": "111111",
+    "status": "Verified",
+    "expiresAt": "2026-02-25T10:15:29.293Z",
+    "createdAt": "2026-02-25T10:05:29.293Z",
+    "verifiedAt": "2026-02-25T10:05:37.290Z"
+  },
+  "otp_1772013986508_05c50321": {
+    "id": "otp_1772013986508_05c50321",
+    "userId": "6",
+    "type": "PhoneVerification",
+    "code": "222222",
+    "status": "Verified",
+    "expiresAt": "2026-02-25T10:16:26.508Z",
+    "createdAt": "2026-02-25T10:06:26.509Z",
+    "verifiedAt": "2026-02-25T10:06:29.030Z"
+  },
+  "otp_1772017010828_35625a45": {
+    "id": "otp_1772017010828_35625a45",
+    "userId": "7",
+    "type": "EmailVerification",
+    "code": "111111",
+    "status": "Verified",
+    "expiresAt": "2026-02-25T11:06:50.828Z",
+    "createdAt": "2026-02-25T10:56:50.829Z",
+    "verifiedAt": "2026-02-25T10:56:55.178Z"
+  },
+  "otp_1772017021320_58d3a571": {
+    "id": "otp_1772017021320_58d3a571",
+    "userId": "7",
+    "type": "PhoneVerification",
+    "code": "222222",
+    "status": "Verified",
+    "expiresAt": "2026-02-25T11:07:01.320Z",
+    "createdAt": "2026-02-25T10:57:01.320Z",
+    "verifiedAt": "2026-02-25T10:57:03.742Z"
   }
 }

@@ -99,5 +99,71 @@
     "phoneVerified": true,
     "createdAt": "2026-02-25T02:42:47.856Z",
     "updatedAt": "2026-02-25T03:04:33.839Z"
+  },
+  "5": {
+    "id": "5",
+    "country": "Argentina",
+    "currency": "EUR",
+    "status": "Enabled",
+    "email": "r@zz.com",
+    "password": "12345678",
+    "firstName": "Richard",
+    "lastName": "Javier",
+    "publicName": "Richard Javier",
+    "role": "User",
+    "level": "Seller",
+    "profiles": [
+      "Customer",
+      "Provider"
+    ],
+    "imageId": "default",
+    "emailVerified": true,
+    "phoneVerified": true,
+    "createdAt": "2026-02-25T09:52:01.417Z",
+    "updatedAt": "2026-02-25T09:54:09.800Z"
+  },
+  "6": {
+    "id": "6",
+    "country": "Argentina",
+    "currency": "EUR",
+    "status": "Enabled",
+    "email": "Richard@Javier.com",
+    "password": "12345678",
+    "firstName": "Richard",
+    "lastName": "Javi",
+    "publicName": "Richard Javi",
+    "role": "User",
+    "level": "Seller",
+    "profiles": [
+      "Customer",
+      "Provider"
+    ],
+    "imageId": "default",
+    "emailVerified": true,
+    "phoneVerified": true,
+    "createdAt": "2026-02-25T10:05:29.289Z",
+    "updatedAt": "2026-02-25T10:08:26.870Z"
+  },
+  "7": {
+    "id": "7",
+    "country": "Argentina",
+    "currency": "EUR",
+    "status": "Enabled",
+    "email": "rr@zz.com",
+    "password": "12345667",
+    "firstName": "rr",
+    "lastName": "jj",
+    "publicName": "rr jj",
+    "role": "User",
+    "level": "Seller",
+    "profiles": [
+      "Customer",
+      "Provider"
+    ],
+    "imageId": "default",
+    "emailVerified": true,
+    "phoneVerified": true,
+    "createdAt": "2026-02-25T10:56:50.825Z",
+    "updatedAt": "2026-02-25T11:02:28.344Z"
   }
 }

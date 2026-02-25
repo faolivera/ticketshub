@@ -10,3 +10,4 @@ export * from './wallet';
 export * from './support';
 export * from './otp';
 export * from './sellers';
+export * from './terms';

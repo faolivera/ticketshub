@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authService } from '../../api/services/auth.service';
+import { usersService } from '../../api/services/users.service';
 import { getToken, removeToken } from '../../api/client';
 import type {
   AuthenticatedUserPublicInfo,
@@ -43,6 +44,7 @@ interface UserContextType {
   updateUser: (updates: Partial<User>) => void;
   refreshUser: () => Promise<void>;
   clearError: () => void;
+  upgradeToLevel1: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -160,6 +162,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setError(null);
   };
 
+  /**
+   * Upgrade user to seller (level 1)
+   */
+  const upgradeToLevel1 = async () => {
+    try {
+      await usersService.upgradeToSeller();
+      await refreshUser();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upgrade';
+      setError(message);
+      throw err;
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -172,6 +188,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         updateUser,
         refreshUser,
         clearError,
+        upgradeToLevel1,
       }}
     >
       {children}

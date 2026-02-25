@@ -8,6 +8,7 @@ import * as jwt from 'jsonwebtoken';
 import { UsersRepository } from './users.repository';
 import { ImagesRepository } from '../images/images.repository';
 import { OTPService } from '../otp/otp.service';
+import { TermsService } from '../terms/terms.service';
 import type { Ctx } from '../../common/types/context';
 import type { User, UserAddress } from './users.domain';
 import type {
@@ -19,6 +20,8 @@ import { Role, UserLevel, UserStatus } from './users.domain';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
 import { OTPType } from '../otp/otp.domain';
+import type { TermsAcceptanceData } from './users.api';
+import { TermsUserType } from '../terms/terms.domain';
 
 const JWT_SECRET =
   process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -33,6 +36,8 @@ export class UsersService {
     private readonly imagesRepository: ImagesRepository,
     @Inject(OTPService)
     private readonly otpService: OTPService,
+    @Inject(TermsService)
+    private readonly termsService: TermsService,
   ) {}
 
   /**
@@ -222,6 +227,7 @@ export class UsersService {
       firstName: string;
       lastName: string;
       country: string;
+      termsAcceptance: TermsAcceptanceData;
     },
   ): Promise<LoginResponse> {
     const existing = await this.findByEmail(ctx, data.email);
@@ -272,6 +278,14 @@ export class UsersService {
       createdAt: now,
       updatedAt: now,
     });
+
+    // Record terms acceptance for the new user
+    await this.termsService.acceptTerms(
+      ctx,
+      newUser.id,
+      data.termsAcceptance.termsVersionId,
+      data.termsAcceptance.method,
+    );
 
     await this.otpService.sendOTP(ctx, newUser.id, OTPType.EmailVerification);
 
@@ -391,5 +405,46 @@ export class UsersService {
       lastUsedProfile: updatedUser.lastUsedProfile,
       address: updatedUser.address,
     };
+  }
+
+  /**
+   * Upgrade user to seller (requires seller terms to be accepted first)
+   */
+  async upgradeToSeller(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<AuthenticatedUserPublicInfo> {
+    const user = await this.usersRepository.findById(ctx, userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Verify seller terms are accepted
+    const hasAcceptedSellerTerms = await this.termsService.hasAcceptedCurrentTerms(
+      ctx,
+      userId,
+      TermsUserType.Seller,
+    );
+
+    if (!hasAcceptedSellerTerms) {
+      throw new BadRequestException('Must accept seller terms first');
+    }
+
+    // Add Provider profile if not present
+    if (!user.profiles.includes('Provider')) {
+      await this.usersRepository.addProfile(ctx, userId, 'Provider');
+    }
+
+    // Upgrade level to Seller if currently Basic or Buyer
+    if (user.level === UserLevel.Basic || user.level === UserLevel.Buyer) {
+      await this.usersRepository.updateLevel(ctx, userId, UserLevel.Seller);
+    }
+
+    const updatedUserInfo = await this.getAuthenticatedUserInfo(ctx, userId);
+    if (!updatedUserInfo) {
+      throw new BadRequestException('Failed to get updated user info');
+    }
+
+    return updatedUserInfo;
   }
 }

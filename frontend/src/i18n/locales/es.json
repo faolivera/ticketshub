@@ -371,7 +371,9 @@
     "pleaseEnterCompleteCode": "Por favor ingresa el código de verificación completo",
     "registerError": "Error al registrarse. Inténtalo de nuevo.",
     "verifyError": "Error al verificar. Revisa el código e inténtalo de nuevo.",
-    "resendError": "Error al reenviar el código. Inténtalo de nuevo."
+    "resendError": "Error al reenviar el código. Inténtalo de nuevo.",
+    "agreeToTerms": "Acepto los",
+    "termsAndConditions": "Términos y Condiciones"
   },
   "phoneVerification": {
     "title": "Verificar Número de Teléfono",
@@ -654,5 +656,8 @@
   "buyerProtection": {
     "title": "Pago protegido por la plataforma",
     "message": "El vendedor recibe el pago después del evento. Tu compra es segura."
+  },
+  "terms": {
+    "termsAndConditions": "Términos y Condiciones"
   }
 }

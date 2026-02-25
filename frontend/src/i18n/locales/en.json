@@ -397,7 +397,9 @@
     "pleaseEnterCompleteCode": "Please enter the complete verification code",
     "registerError": "Registration failed. Please try again.",
     "verifyError": "Verification failed. Please check the code and try again.",
-    "resendError": "Failed to resend code. Please try again."
+    "resendError": "Failed to resend code. Please try again.",
+    "agreeToTerms": "I agree to the",
+    "termsAndConditions": "Terms and Conditions"
   },
   "phoneVerification": {
     "title": "Verify Phone Number",
@@ -687,5 +689,8 @@
   "buyerProtection": {
     "title": "Payment protected by the platform",
     "message": "Seller is paid after the event. Your purchase is secure."
+  },
+  "terms": {
+    "termsAndConditions": "Terms and Conditions"
   }
 }

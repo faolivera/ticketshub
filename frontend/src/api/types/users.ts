@@ -1,4 +1,5 @@
 import type { AddressWithGeoPoint, CurrencyCode, Image } from './common';
+import type { TermsAcceptanceData } from './terms';
 
 /**
  * User roles
@@ -134,6 +135,7 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   country: string;
+  termsAcceptance: TermsAcceptanceData;
 }
 
 /**

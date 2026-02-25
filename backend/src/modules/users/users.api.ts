@@ -1,5 +1,6 @@
 import type { Image } from '../images/images.domain';
-import type { LoginResponse } from './users.domain';
+import type { LoginResponse, AuthenticatedUserPublicInfo } from './users.domain';
+import type { AcceptanceMethod } from '../terms/terms.domain';
 
 /**
  * Request body for POST /users/login
@@ -7,6 +8,14 @@ import type { LoginResponse } from './users.domain';
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+/**
+ * Terms acceptance data included during registration
+ */
+export interface TermsAcceptanceData {
+  termsVersionId: string;
+  method: AcceptanceMethod;
 }
 
 /**
@@ -18,6 +27,7 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   country: string;
+  termsAcceptance: TermsAcceptanceData;
 }
 
 /**
@@ -29,3 +39,8 @@ export type RegisterResponse = LoginResponse;
  * Response data for POST /users/login
  */
 export type { LoginResponse };
+
+/**
+ * Response data for PUT /users/upgrade-to-seller
+ */
+export type UpgradeToSellerResponse = AuthenticatedUserPublicInfo;

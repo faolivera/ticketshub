@@ -2,7 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { X, Shield, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { termsService } from '@/api/services/terms.service';
+import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
+import { TermsModal } from './TermsModal';
 
 interface SellerIntroModalProps {
   onClose: () => void;
@@ -13,50 +16,43 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
   const { upgradeToLevel1 } = useUser();
   const navigate = useNavigate();
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
+  const [termsVersionId, setTermsVersionId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
-  const handleStartSelling = () => {
-    if (!termsAccepted) {
+  useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        const terms = await termsService.getCurrentTerms(TermsUserType.Seller);
+        setTermsVersionId(terms.id);
+      } catch (err) {
+        console.error('Failed to fetch seller terms:', err);
+      }
+    };
+    fetchTerms();
+  }, []);
+
+  const handleStartSelling = async () => {
+    if (!termsAccepted || !termsVersionId) {
       alert(t('sellerIntro.pleaseAcceptTerms'));
       return;
     }
-    upgradeToLevel1();
-    onClose();
-    navigate('/sell-ticket');
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await termsService.acceptTerms(termsVersionId, AcceptanceMethod.Checkbox);
+      await upgradeToLevel1();
+      onClose();
+      navigate('/sell-ticket');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start selling');
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  if (showTerms) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-start justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {t('sellerIntro.sellerTerms')}
-              </h2>
-              <button
-                onClick={() => setShowTerms(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="prose max-w-none mb-6">
-              <p className="text-gray-700 mb-4">{t('sellerIntro.termsContent')}</p>
-            </div>
-
-            <button
-              onClick={() => setShowTerms(false)}
-              className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              {t('sellerIntro.close')}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -248,8 +244,9 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
                 {t('sellerIntro.agreeToTerms')}{' '}
                 <button
                   type="button"
-                  onClick={() => setShowTerms(true)}
-                  className="text-blue-600 hover:text-blue-700 font-semibold underline"
+                  onClick={() => termsVersionId && setShowTermsModal(true)}
+                  disabled={!termsVersionId}
+                  className="text-blue-600 hover:text-blue-700 font-semibold underline disabled:opacity-50"
                 >
                   {t('sellerIntro.sellerTermsLink')}
                 </button>
@@ -257,18 +254,25 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
             </label>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-4">
             <button
               onClick={handleStartSelling}
-              disabled={!termsAccepted}
+              disabled={!termsAccepted || !termsVersionId || isLoading}
               className={`flex-1 px-6 py-4 font-bold rounded-lg transition-colors ${
-                termsAccepted
+                termsAccepted && termsVersionId && !isLoading
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
-              {t('sellerIntro.startSelling')}
+              {isLoading ? t('common.loading') : t('sellerIntro.startSelling')}
             </button>
             <button
               onClick={onClose}
@@ -279,6 +283,15 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
           </div>
         </div>
       </div>
+
+      {/* Seller Terms Modal */}
+      {showTermsModal && termsVersionId && (
+        <TermsModal
+          termsVersionId={termsVersionId}
+          title={t('sellerIntro.sellerTermsLink')}
+          onClose={() => setShowTermsModal(false)}
+        />
+      )}
     </div>
   );
 }

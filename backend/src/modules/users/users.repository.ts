@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
 import type { Ctx } from '../../common/types/context';
 import type { User, UserAddress } from './users.domain';
-import { UserStatus } from './users.domain';
+import { UserStatus, UserLevel } from './users.domain';
 import type { ProfileType } from './users.domain';
 
 @Injectable()
@@ -238,6 +238,26 @@ export class UsersRepository implements OnModuleInit {
       }),
       ...(updates.address !== undefined && { address: updates.address }),
       ...(updates.imageId !== undefined && { imageId: updates.imageId }),
+    };
+    await this.storage.set(ctx, userId, updatedUser);
+    return updatedUser;
+  }
+
+  /**
+   * Update user level
+   */
+  async updateLevel(
+    ctx: Ctx,
+    userId: string,
+    level: UserLevel,
+  ): Promise<User | undefined> {
+    const existing = await this.storage.get(ctx, userId);
+    if (!existing) return undefined;
+
+    const updatedUser: User = {
+      ...existing,
+      level,
+      updatedAt: new Date(),
     };
     await this.storage.set(ctx, userId, updatedUser);
     return updatedUser;

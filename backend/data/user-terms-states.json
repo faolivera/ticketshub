@@ -1,0 +1,80 @@
+{
+  "5-buyer": {
+    "id": "state-5-buyer",
+    "userId": "5",
+    "userType": "buyer",
+    "currentTermsVersionId": "terms-buyer-v001",
+    "lastAcceptedVersionId": "terms-buyer-v001",
+    "lastAcceptedAt": "2026-02-25T09:52:01.419Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-25T09:52:01.419Z"
+  },
+  "5-seller": {
+    "id": "state-5-seller",
+    "userId": "5",
+    "userType": "seller",
+    "currentTermsVersionId": "terms-seller-v001",
+    "lastAcceptedVersionId": "terms-seller-v001",
+    "lastAcceptedAt": "2026-02-25T09:54:09.786Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-25T09:54:09.786Z"
+  },
+  "6-buyer": {
+    "id": "state-6-buyer",
+    "userId": "6",
+    "userType": "buyer",
+    "currentTermsVersionId": "terms-buyer-v001",
+    "lastAcceptedVersionId": "terms-buyer-v001",
+    "lastAcceptedAt": "2026-02-25T10:05:29.292Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-25T10:05:29.292Z"
+  },
+  "6-seller": {
+    "id": "state-6-seller",
+    "userId": "6",
+    "userType": "seller",
+    "currentTermsVersionId": "terms-seller-v001",
+    "lastAcceptedVersionId": "terms-seller-v001",
+    "lastAcceptedAt": "2026-02-25T10:08:26.857Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-25T10:08:26.857Z"
+  },
+  "7-buyer": {
+    "id": "state-7-buyer",
+    "userId": "7",
+    "userType": "buyer",
+    "currentTermsVersionId": "terms-buyer-v001",
+    "lastAcceptedVersionId": "terms-buyer-v001",
+    "lastAcceptedAt": "2026-02-25T10:56:50.827Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-25T10:56:50.827Z"
+  },
+  "7-seller": {
+    "id": "state-7-seller",
+    "userId": "7",
+    "userType": "seller",
+    "currentTermsVersionId": "terms-seller-v001",
+    "lastAcceptedVersionId": "terms-seller-v001",
+    "lastAcceptedAt": "2026-02-25T11:02:28.325Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-25T11:02:28.325Z"
+  }
+}

@@ -4,8 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { Mail, User, Globe, ArrowLeft, Lock } from 'lucide-react';
 import { authService } from '@/api/services/auth.service';
 import { otpService } from '@/api/services/otp.service';
+import { termsService } from '@/api/services/terms.service';
 import { useUser } from '@/app/contexts/UserContext';
 import { OTPType } from '@/api/types';
+import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
+import { TermsModal } from '@/app/components/TermsModal';
 
 export function Register() {
   const { t } = useTranslation();
@@ -38,10 +41,36 @@ export function Register() {
   const [registerError, setRegisterError] = useState<string | null>(null);
   const fromLogin = Boolean(locationState?.fromLogin);
 
+  const [termsVersionId, setTermsVersionId] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsLoading, setTermsLoading] = useState(true);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
   // Auto-detect country (mock)
   useEffect(() => {
     setFormData(prev => ({ ...prev, country: prev.country || 'United States' }));
   }, []);
+
+  // Fetch current terms on mount
+  useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        const terms = await termsService.getCurrentTerms(TermsUserType.Buyer);
+        setTermsVersionId(terms.id);
+      } catch (err) {
+        console.error('Failed to fetch terms:', err);
+      } finally {
+        setTermsLoading(false);
+      }
+    };
+    fetchTerms();
+  }, []);
+
+  const handleOpenTermsModal = () => {
+    if (termsVersionId) {
+      setShowTermsModal(true);
+    }
+  };
 
   // Timer for resend
   useEffect(() => {
@@ -70,6 +99,10 @@ export function Register() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         country: formData.country,
+        termsAcceptance: {
+          termsVersionId: termsVersionId!,
+          method: AcceptanceMethod.Checkbox,
+        },
       });
       if (response.requiresEmailVerification) {
         setStep('verify');
@@ -347,10 +380,33 @@ export function Register() {
               </p>
             </div>
 
+            {/* Terms and Conditions */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                disabled={!termsVersionId || termsLoading}
+                className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-700">
+                {t('register.agreeToTerms')}{' '}
+                <button
+                  type="button"
+                  onClick={handleOpenTermsModal}
+                  disabled={!termsVersionId || termsLoading}
+                  className="text-blue-600 hover:text-blue-700 font-semibold underline disabled:opacity-50"
+                >
+                  {t('register.termsAndConditions')}
+                </button>
+              </label>
+            </div>
+
             {/* Submit */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !termsVersionId || !termsAccepted}
               className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? t('common.loading') : t('register.createAccount')}
@@ -369,6 +425,15 @@ export function Register() {
           </form>
         </div>
       </div>
+
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && termsVersionId && (
+        <TermsModal
+          termsVersionId={termsVersionId}
+          title={t('register.termsAndConditions')}
+          onClose={() => setShowTermsModal(false)}
+        />
+      )}
     </div>
   );
 }

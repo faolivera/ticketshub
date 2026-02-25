@@ -40,7 +40,7 @@
     "ticketUnits": [
       {
         "id": "unit_s2_un_s_1",
-        "status": "available"
+        "status": "reserved"
       },
       {
         "id": "unit_s2_un_s_2",
@@ -59,7 +59,7 @@
     "section": "General",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T10:00:00.000Z"
+    "updatedAt": "2026-02-25T10:06:35.937Z"
   },
   "tkt_s2_un_single": {
     "id": "tkt_s2_un_single",
@@ -260,5 +260,63 @@
     "status": "Active",
     "createdAt": "2026-02-25T02:34:48.673Z",
     "updatedAt": "2026-02-25T02:34:48.673Z"
+  },
+  "tkt_1772014177633_5ab16f4d": {
+    "id": "tkt_1772014177633_5ab16f4d",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalTransferable",
+    "seatingType": "unnumbered",
+    "ticketUnits": [
+      {
+        "id": "unit_1772014177633_4506d535",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_51b66916",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_3011b265",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_dc51a3c7",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_e2f1b164",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_d34c0d2a",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_3787db99",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_4bbb2dfd",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_27aba4f8",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772014177633_1ed96a65",
+        "status": "available"
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 20000,
+      "currency": "USD"
+    },
+    "section": "VIP",
+    "status": "Active",
+    "createdAt": "2026-02-25T10:09:37.633Z",
+    "updatedAt": "2026-02-25T10:09:37.633Z"
   }
 }

@@ -11,6 +11,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { SupportModule } from './modules/support/support.module';
 import { BffModule } from './modules/bff/bff.module';
+import { TermsModule } from './modules/terms/terms.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { BffModule } from './modules/bff/bff.module';
     TransactionsModule,
     SupportModule,
     BffModule,
+    TermsModule,
   ],
 })
 export class AppModule {}

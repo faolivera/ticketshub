@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Body,
   UseGuards,
   HttpCode,
@@ -23,6 +24,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  UpgradeToSellerResponse,
 } from './users.api';
 import {
   LoginResponseSchema,
@@ -67,11 +69,17 @@ export class UsersController {
     @Context() ctx: Ctx,
     @Body() body: RegisterRequest,
   ): Promise<ApiResponse<RegisterResponse>> {
-    const { email, password, firstName, lastName, country } = body;
+    const { email, password, firstName, lastName, country, termsAcceptance } = body;
 
     if (!email || !password || !firstName || !lastName || !country) {
       throw new BadRequestException(
         'Email, password, firstName, lastName and country are required',
+      );
+    }
+
+    if (!termsAcceptance?.termsVersionId || !termsAcceptance?.method) {
+      throw new BadRequestException(
+        'Terms acceptance is required to register',
       );
     }
 
@@ -81,6 +89,7 @@ export class UsersController {
       firstName,
       lastName,
       country,
+      termsAcceptance,
     });
 
     return {
@@ -99,6 +108,21 @@ export class UsersController {
     return {
       success: true,
       data: user,
+    };
+  }
+
+  @Put('upgrade-to-seller')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async upgradeToSeller(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+  ): Promise<ApiResponse<UpgradeToSellerResponse>> {
+    const updatedUser = await this.usersService.upgradeToSeller(ctx, user.id);
+
+    return {
+      success: true,
+      data: updatedUser,
     };
   }
 }
