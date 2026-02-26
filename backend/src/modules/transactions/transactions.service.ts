@@ -763,4 +763,20 @@ export class TransactionsService {
       return updated;
     }
   }
+
+  /**
+   * Check if any listings have completed transactions.
+   * Used by admin when attempting to delete event dates.
+   */
+  async hasCompletedTransactionsForListings(
+    ctx: Ctx,
+    listingIds: string[],
+  ): Promise<boolean> {
+    if (listingIds.length === 0) return false;
+
+    const transactions =
+      await this.transactionsRepository.getByListingIds(ctx, listingIds);
+
+    return transactions.some((t) => t.status === TransactionStatus.Completed);
+  }
 }

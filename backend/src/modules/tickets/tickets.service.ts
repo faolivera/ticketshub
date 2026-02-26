@@ -591,4 +591,46 @@ export class TicketsService {
       ListingStatus.Active,
     );
   }
+
+  /**
+   * Get all listings for an event date (including all statuses).
+   * Used for admin operations like date deletion checks.
+   */
+  async getListingsByDateId(
+    ctx: Ctx,
+    eventDateId: string,
+  ): Promise<TicketListing[]> {
+    return await this.ticketsRepository.getAllByEventDateId(ctx, eventDateId);
+  }
+
+  /**
+   * Cancel all pending/active listings for an event date.
+   * Returns the number of cancelled listings and their IDs.
+   */
+  async cancelListingsByDateId(
+    ctx: Ctx,
+    eventDateId: string,
+  ): Promise<{ cancelledCount: number; listingIds: string[] }> {
+    const listings = await this.ticketsRepository.getAllByEventDateId(
+      ctx,
+      eventDateId,
+    );
+
+    const listingsToCancel = listings.filter(
+      (l) => l.status === ListingStatus.Active || l.status === ListingStatus.Pending,
+    );
+
+    if (listingsToCancel.length === 0) {
+      return { cancelledCount: 0, listingIds: [] };
+    }
+
+    const listingIds = listingsToCancel.map((l) => l.id);
+    const cancelledCount = await this.ticketsRepository.bulkUpdateStatus(
+      ctx,
+      listingIds,
+      ListingStatus.Cancelled,
+    );
+
+    return { cancelledCount, listingIds };
+  }
 }

@@ -11,6 +11,8 @@ import type {
   AdminPendingEventsResponse,
   AdminPendingEventItem,
   AdminPendingEventDateItem,
+  AdminUpdateEventRequest,
+  AdminUpdateEventResponse,
   Money,
 } from './admin.api';
 import { EventStatus, EventDateStatus } from '../events/events.domain';
@@ -165,5 +167,32 @@ export class AdminService {
       events: enrichedEvents,
       total: enrichedEvents.length,
     };
+  }
+
+  /**
+   * Update an event and its dates (admin only).
+   * Delegates to EventsService for the actual update logic.
+   */
+  async updateEventWithDates(
+    ctx: Ctx,
+    eventId: string,
+    data: AdminUpdateEventRequest,
+    adminId: string,
+  ): Promise<AdminUpdateEventResponse> {
+    this.logger.log(ctx, `Admin ${adminId} updating event ${eventId}`);
+
+    const result = await this.eventsService.adminUpdateEventWithDates(
+      ctx,
+      eventId,
+      data,
+      adminId,
+    );
+
+    this.logger.log(
+      ctx,
+      `Event ${eventId} updated. Deleted ${result.deletedDateIds.length} dates.`,
+    );
+
+    return result;
   }
 }

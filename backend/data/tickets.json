@@ -431,5 +431,71 @@
     "status": "Active",
     "createdAt": "2026-02-25T11:56:55.668Z",
     "updatedAt": "2026-02-25T11:56:55.668Z"
+  },
+  "tkt_1772072337297_72bc30e5": {
+    "id": "tkt_1772072337297_72bc30e5",
+    "sellerId": "6",
+    "eventId": "evt_1772072297395_db322c92",
+    "eventDateId": "edt_1772072297409_f1d274fc",
+    "type": "DigitalTransferable",
+    "seatingType": "unnumbered",
+    "ticketUnits": [
+      {
+        "id": "unit_1772072337296_48fc5fec",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772072337296_990b14f1",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772072337297_727696db",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772072337297_fdc99ad3",
+        "status": "available"
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 20000,
+      "currency": "USD"
+    },
+    "section": "VIP",
+    "status": "Active",
+    "createdAt": "2026-02-26T02:18:57.297Z",
+    "updatedAt": "2026-02-26T02:20:07.801Z"
+  },
+  "tkt_1772072599033_abd147d8": {
+    "id": "tkt_1772072599033_abd147d8",
+    "sellerId": "6",
+    "eventId": "evt_1772072297395_db322c92",
+    "eventDateId": "edt_1772072571303_8538b651",
+    "type": "DigitalTransferable",
+    "seatingType": "unnumbered",
+    "ticketUnits": [
+      {
+        "id": "unit_1772072599033_dba6bd27",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772072599033_2b4be34e",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772072599033_a3e8a6a2",
+        "status": "available"
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 25000,
+      "currency": "USD"
+    },
+    "section": "General Admission",
+    "status": "Active",
+    "createdAt": "2026-02-26T02:23:19.033Z",
+    "updatedAt": "2026-02-26T02:26:06.673Z"
   }
 }

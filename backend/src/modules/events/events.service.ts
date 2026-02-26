@@ -10,16 +10,22 @@ import { randomBytes } from 'crypto';
 import { EventsRepository } from './events.repository';
 import { ImagesRepository } from '../images/images.repository';
 import { TicketsService } from '../tickets/tickets.service';
+import { TransactionsService } from '../transactions/transactions.service';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type { Image } from '../images/images.domain';
 import type { Event, EventDate, EventWithDates } from './events.domain';
-import { EventStatus, EventDateStatus } from './events.domain';
+import { EventStatus, EventDateStatus, EventCategory } from './events.domain';
 import type {
   CreateEventRequest,
   AddEventDateRequest,
   ListEventsQuery,
   EventWithDatesResponse,
 } from './events.api';
+import type {
+  AdminUpdateEventRequest,
+  AdminUpdateEventResponse,
+} from '../admin/admin.api';
 import { Role, UserLevel } from '../users/users.domain';
 
 const DEFAULT_IMAGE: Image = {
@@ -29,6 +35,8 @@ const DEFAULT_IMAGE: Image = {
 
 @Injectable()
 export class EventsService {
+  private readonly logger = new ContextLogger(EventsService.name);
+
   constructor(
     @Inject(EventsRepository)
     private readonly eventsRepository: EventsRepository,
@@ -36,6 +44,8 @@ export class EventsService {
     private readonly imagesRepository: ImagesRepository,
     @Inject(forwardRef(() => TicketsService))
     private readonly ticketsService: TicketsService,
+    @Inject(forwardRef(() => TransactionsService))
+    private readonly transactionsService: TransactionsService,
   ) {}
 
   /**
@@ -350,5 +360,232 @@ export class EventsService {
   ): Image[] {
     if (!imageIds.length) return [];
     return imageIds.map((id) => imagesMap.get(id) || DEFAULT_IMAGE);
+  }
+
+  /**
+   * Admin update event with dates.
+   * Supports updating event fields, adding/updating/deleting dates.
+   */
+  async adminUpdateEventWithDates(
+    ctx: Ctx,
+    eventId: string,
+    data: AdminUpdateEventRequest,
+    adminId: string,
+  ): Promise<AdminUpdateEventResponse> {
+    this.logger.log(ctx, `Admin updating event ${eventId}`);
+
+    const event = await this.eventsRepository.findEventById(ctx, eventId);
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const warnings: string[] = [];
+    const deletedDateIds: string[] = [];
+
+    // 1. Handle date deletions first
+    if (data.datesToDelete && data.datesToDelete.length > 0) {
+      for (const dateId of data.datesToDelete) {
+        const eventDate = await this.eventsRepository.findEventDateById(
+          ctx,
+          dateId,
+        );
+        if (!eventDate) {
+          this.logger.warn(ctx, `Date ${dateId} not found, skipping deletion`);
+          continue;
+        }
+
+        if (eventDate.eventId !== eventId) {
+          throw new BadRequestException(
+            `Date ${dateId} does not belong to event ${eventId}`,
+          );
+        }
+
+        // Check for listings on this date
+        const listings = await this.ticketsService.getListingsByDateId(
+          ctx,
+          dateId,
+        );
+
+        if (listings.length > 0) {
+          const listingIds = listings.map((l) => l.id);
+
+          // Check for completed transactions
+          const hasCompletedTransactions =
+            await this.transactionsService.hasCompletedTransactionsForListings(
+              ctx,
+              listingIds,
+            );
+
+          if (hasCompletedTransactions) {
+            throw new BadRequestException(
+              `Cannot delete date ${dateId}: has completed transactions`,
+            );
+          }
+
+          // Cancel pending/active listings
+          const { cancelledCount } =
+            await this.ticketsService.cancelListingsByDateId(ctx, dateId);
+
+          if (cancelledCount > 0) {
+            warnings.push(
+              `Cancelled ${cancelledCount} listing(s) for deleted date ${dateId}`,
+            );
+          }
+        }
+
+        // Delete the date
+        await this.eventsRepository.deleteEventDate(ctx, dateId);
+        deletedDateIds.push(dateId);
+        this.logger.log(ctx, `Deleted event date ${dateId}`);
+      }
+    }
+
+    // 2. Update event fields
+    const eventUpdates: Partial<Event> = {};
+    if (data.name !== undefined) eventUpdates.name = data.name;
+    if (data.description !== undefined)
+      eventUpdates.description = data.description;
+    if (data.category !== undefined)
+      eventUpdates.category = data.category as EventCategory;
+    if (data.venue !== undefined) eventUpdates.venue = data.venue;
+    if (data.location !== undefined) eventUpdates.location = data.location;
+    if (data.imageIds !== undefined) eventUpdates.imageIds = data.imageIds;
+
+    let updatedEvent = event;
+    if (Object.keys(eventUpdates).length > 0) {
+      const result = await this.eventsRepository.updateEvent(
+        ctx,
+        eventId,
+        eventUpdates,
+      );
+      if (!result) {
+        throw new NotFoundException('Event not found after update');
+      }
+      updatedEvent = result;
+    }
+
+    // 3. Handle date updates and creations
+    if (data.dates && data.dates.length > 0) {
+      for (const dateUpdate of data.dates) {
+        if (dateUpdate.id) {
+          // Update existing date
+          const existingDate = await this.eventsRepository.findEventDateById(
+            ctx,
+            dateUpdate.id,
+          );
+          if (!existingDate) {
+            throw new NotFoundException(
+              `Event date ${dateUpdate.id} not found`,
+            );
+          }
+          if (existingDate.eventId !== eventId) {
+            throw new BadRequestException(
+              `Date ${dateUpdate.id} does not belong to event ${eventId}`,
+            );
+          }
+
+          const dateUpdates: Partial<EventDate> = {
+            date: new Date(dateUpdate.date),
+            doorsOpenAt: dateUpdate.doorsOpenAt
+              ? new Date(dateUpdate.doorsOpenAt)
+              : existingDate.doorsOpenAt,
+            startTime: dateUpdate.startTime
+              ? new Date(dateUpdate.startTime)
+              : existingDate.startTime,
+            endTime: dateUpdate.endTime
+              ? new Date(dateUpdate.endTime)
+              : existingDate.endTime,
+          };
+
+          if (dateUpdate.status !== undefined) {
+            dateUpdates.status = dateUpdate.status as EventDateStatus;
+            if (
+              dateUpdate.status === EventDateStatus.Approved &&
+              !existingDate.approvedBy
+            ) {
+              dateUpdates.approvedBy = adminId;
+            }
+          }
+
+          await this.eventsRepository.updateEventDate(
+            ctx,
+            dateUpdate.id,
+            dateUpdates,
+          );
+        } else {
+          // Create new date
+          const newDate: EventDate = {
+            id: this.generateId('edt'),
+            eventId,
+            date: new Date(dateUpdate.date),
+            doorsOpenAt: dateUpdate.doorsOpenAt
+              ? new Date(dateUpdate.doorsOpenAt)
+              : undefined,
+            startTime: dateUpdate.startTime
+              ? new Date(dateUpdate.startTime)
+              : undefined,
+            endTime: dateUpdate.endTime
+              ? new Date(dateUpdate.endTime)
+              : undefined,
+            status:
+              (dateUpdate.status as EventDateStatus) ||
+              EventDateStatus.Approved,
+            createdBy: adminId,
+            approvedBy:
+              !dateUpdate.status ||
+              dateUpdate.status === EventDateStatus.Approved
+                ? adminId
+                : undefined,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          await this.eventsRepository.createEventDate(ctx, newDate);
+        }
+      }
+    }
+
+    // 4. Get final state
+    const finalEvent = await this.eventsRepository.findEventById(ctx, eventId);
+    if (!finalEvent) {
+      throw new NotFoundException('Event not found after update');
+    }
+
+    const finalDates = await this.eventsRepository.getDatesByEventId(
+      ctx,
+      eventId,
+    );
+
+    return {
+      event: {
+        id: finalEvent.id,
+        name: finalEvent.name,
+        description: finalEvent.description,
+        category: finalEvent.category,
+        venue: finalEvent.venue,
+        location: finalEvent.location,
+        imageIds: finalEvent.imageIds,
+        status: finalEvent.status,
+        createdBy: finalEvent.createdBy,
+        approvedBy: finalEvent.approvedBy,
+        createdAt: finalEvent.createdAt,
+        updatedAt: finalEvent.updatedAt,
+      },
+      dates: finalDates.map((d) => ({
+        id: d.id,
+        eventId: d.eventId,
+        date: d.date,
+        doorsOpenAt: d.doorsOpenAt,
+        startTime: d.startTime,
+        endTime: d.endTime,
+        status: d.status,
+        createdBy: d.createdBy,
+        approvedBy: d.approvedBy,
+        createdAt: d.createdAt,
+        updatedAt: d.updatedAt,
+      })),
+      deletedDateIds,
+      warnings: warnings.length > 0 ? warnings : undefined,
+    };
   }
 }

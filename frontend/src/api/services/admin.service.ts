@@ -1,5 +1,10 @@
 import apiClient from '../client';
-import type { AdminPaymentsResponse, AdminPendingEventsResponse } from '../types/admin';
+import type {
+  AdminPaymentsResponse,
+  AdminPendingEventsResponse,
+  AdminUpdateEventRequest,
+  AdminUpdateEventResponse,
+} from '../types/admin';
 
 /**
  * Admin service
@@ -21,6 +26,20 @@ export const adminService = {
   async getPendingEvents(): Promise<AdminPendingEventsResponse> {
     const response =
       await apiClient.get<AdminPendingEventsResponse>('/admin/events/pending');
+    return response.data;
+  },
+
+  /**
+   * Update an event (admin only)
+   */
+  async updateEvent(
+    eventId: string,
+    data: AdminUpdateEventRequest
+  ): Promise<AdminUpdateEventResponse> {
+    const response = await apiClient.patch<AdminUpdateEventResponse>(
+      `/admin/events/${eventId}`,
+      data
+    );
     return response.data;
   },
 };

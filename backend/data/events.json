@@ -21,36 +21,22 @@
     "createdAt": "2026-02-05T13:23:52.516Z",
     "updatedAt": "2026-02-05T13:23:52.516Z"
   },
-  "evt_1771949606617_a501c0d1": {
-    "id": "evt_1771949606617_a501c0d1",
-    "name": "aaaaa",
-    "description": "",
+  "evt_1772072297395_db322c92": {
+    "id": "evt_1772072297395_db322c92",
+    "name": "Chayanne",
+    "description": "Chayanne bailando",
     "category": "Concert",
-    "venue": "Hola que tal",
+    "venue": "Movistar Arena",
     "location": {
-      "line1": "Mendoza",
-      "city": "Mendoza",
+      "line1": "Ciudad, Buenos Aires",
+      "city": "Ciudad",
       "countryCode": "US"
     },
     "imageIds": [],
-    "status": "pending",
-    "createdAt": "2026-02-24T16:13:26.617Z",
-    "updatedAt": "2026-02-24T16:13:26.617Z"
-  },
-  "evt_1771952996427_302b7baf": {
-    "id": "evt_1771952996427_302b7baf",
-    "name": "Arjona en Velez",
-    "description": "",
-    "category": "Concert",
-    "venue": "Velez",
-    "location": {
-      "line1": "Buenos Aires",
-      "city": "Buenos Aires",
-      "countryCode": "US"
-    },
-    "imageIds": [],
-    "status": "pending",
-    "createdAt": "2026-02-24T17:09:56.427Z",
-    "updatedAt": "2026-02-24T17:09:56.427Z"
+    "status": "approved",
+    "createdBy": "6",
+    "createdAt": "2026-02-26T02:18:17.396Z",
+    "updatedAt": "2026-02-26T02:20:07.798Z",
+    "approvedBy": "8"
   }
 }

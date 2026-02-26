@@ -83,3 +83,76 @@ export interface AdminPendingEventsResponse {
   events: AdminPendingEventItem[];
   total: number;
 }
+
+/**
+ * Address structure for event location
+ */
+export interface AdminEventAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  state?: string;
+  postalCode?: string;
+  countryCode: string;
+}
+
+/**
+ * Event date update for admin editing
+ */
+export interface AdminEventDateUpdate {
+  id?: string; // If provided, update existing. If omitted, create new
+  date: string; // ISO date string
+  doorsOpenAt?: string;
+  startTime?: string;
+  endTime?: string;
+  status?: string; // Admin can set status directly
+}
+
+/**
+ * Request for PATCH /api/admin/events/:id
+ */
+export interface AdminUpdateEventRequest {
+  name?: string;
+  description?: string;
+  category?: string;
+  venue?: string;
+  location?: AdminEventAddress;
+  imageIds?: string[];
+  dates?: AdminEventDateUpdate[];
+  datesToDelete?: string[]; // IDs of dates to remove
+}
+
+/**
+ * Response for PATCH /api/admin/events/:id
+ */
+export interface AdminUpdateEventResponse {
+  event: {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    venue: string;
+    location: AdminEventAddress;
+    imageIds: string[];
+    status: string;
+    createdBy: string;
+    approvedBy?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  dates: {
+    id: string;
+    eventId: string;
+    date: Date;
+    doorsOpenAt?: Date;
+    startTime?: Date;
+    endTime?: Date;
+    status: string;
+    createdBy: string;
+    approvedBy?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+  deletedDateIds: string[];
+  warnings?: string[];
+}

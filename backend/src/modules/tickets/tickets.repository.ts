@@ -246,4 +246,15 @@ export class TicketsRepository implements OnModuleInit {
 
     return updatedCount;
   }
+
+  /**
+   * Get all listings for an event date (including all statuses)
+   */
+  async getAllByEventDateId(
+    ctx: Ctx,
+    eventDateId: string,
+  ): Promise<TicketListing[]> {
+    const all = await this.storage.getAll(ctx);
+    return all.filter((l) => l.eventDateId === eventDateId);
+  }
 }

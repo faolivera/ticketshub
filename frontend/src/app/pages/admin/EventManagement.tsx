@@ -32,10 +32,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../components/ui/collapsible';
-import { Calendar, Check, X, Plus, Clock, MapPin, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, Check, X, Plus, Clock, MapPin, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import { eventsService } from '../../../api/services/events.service';
 import { adminService } from '../../../api/services/admin.service';
 import type { AdminPendingEventItem, AdminPendingEventDateItem } from '../../../api/types/admin';
+import type { Event, EventDate } from '../../../api/types/events';
+import { EditEventModal } from './components/EditEventModal';
 
 type RejectTarget = { type: 'event'; event: AdminPendingEventItem } | { type: 'date'; event: AdminPendingEventItem; date: AdminPendingEventDateItem };
 
@@ -50,6 +52,9 @@ export function EventManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEventDates, setEditingEventDates] = useState<EventDate[]>([]);
 
   const fetchPendingEvents = async () => {
     try {
@@ -123,6 +128,24 @@ export function EventManagement() {
   const openRejectDateDialog = (event: AdminPendingEventItem, date: AdminPendingEventDateItem) => {
     setRejectTarget({ type: 'date', event, date });
     setIsRejectDialogOpen(true);
+  };
+
+  const handleOpenEditModal = async (eventId: string) => {
+    try {
+      setActionLoading(eventId);
+      const eventWithDates = await eventsService.getEvent(eventId);
+      setEditingEvent(eventWithDates);
+      setEditingEventDates(eventWithDates.dates || []);
+      setIsEditModalOpen(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load event details');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    fetchPendingEvents();
   };
 
   const toggleEventExpanded = (eventId: string) => {
@@ -265,29 +288,40 @@ export function EventManagement() {
                           <div className="flex items-center gap-4">
                             {getStatusBadge(event.status)}
                             
-                            {event.status === 'pending' && (
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                  onClick={() => handleApproveEvent(event.id)}
-                                  disabled={actionLoading === event.id}
-                                >
-                                  <Check className="w-4 h-4 mr-1" />
-                                  {t('admin.events.approve')}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  onClick={() => openRejectEventDialog(event)}
-                                >
-                                  <X className="w-4 h-4 mr-1" />
-                                  {t('admin.events.reject')}
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenEditModal(event.id)}
+                                disabled={actionLoading === event.id}
+                              >
+                                <Pencil className="w-4 h-4 mr-1" />
+                                {t('common.edit')}
+                              </Button>
+                              {event.status === 'pending' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    onClick={() => handleApproveEvent(event.id)}
+                                    disabled={actionLoading === event.id}
+                                  >
+                                    <Check className="w-4 h-4 mr-1" />
+                                    {t('admin.events.approve')}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => openRejectEventDialog(event)}
+                                  >
+                                    <X className="w-4 h-4 mr-1" />
+                                    {t('admin.events.reject')}
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -405,6 +439,14 @@ export function EventManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EditEventModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        event={editingEvent}
+        eventDates={editingEventDates}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }

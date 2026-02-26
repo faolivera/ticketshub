@@ -109,4 +109,14 @@ export class TransactionsRepository implements OnModuleInit {
     await this.storage.set(ctx, id, updated);
     return updated;
   }
+
+  /**
+   * Get transactions by listing IDs
+   */
+  async getByListingIds(ctx: Ctx, listingIds: string[]): Promise<Transaction[]> {
+    if (listingIds.length === 0) return [];
+    const all = await this.storage.getAll(ctx);
+    const listingIdSet = new Set(listingIds);
+    return all.filter((t) => listingIdSet.has(t.listingId));
+  }
 }

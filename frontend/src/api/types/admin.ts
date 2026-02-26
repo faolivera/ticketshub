@@ -1,4 +1,5 @@
-import type { Money } from './common';
+import type { Money, Address } from './common';
+import type { EventCategory, EventDateStatus, Event, EventDate } from './events';
 
 /**
  * Enriched payment item for admin payments list
@@ -72,4 +73,40 @@ export interface AdminPendingEventItem {
 export interface AdminPendingEventsResponse {
   events: AdminPendingEventItem[];
   total: number;
+}
+
+/**
+ * Event date update for admin event editing
+ */
+export interface AdminEventDateUpdate {
+  id?: string;
+  date: string;
+  doorsOpenAt?: string;
+  startTime?: string;
+  endTime?: string;
+  status?: EventDateStatus;
+}
+
+/**
+ * Request for PATCH /api/admin/events/:id
+ */
+export interface AdminUpdateEventRequest {
+  name?: string;
+  description?: string;
+  category?: EventCategory;
+  venue?: string;
+  location?: Address;
+  imageIds?: string[];
+  dates?: AdminEventDateUpdate[];
+  datesToDelete?: string[];
+}
+
+/**
+ * Response for PATCH /api/admin/events/:id
+ */
+export interface AdminUpdateEventResponse {
+  event: Event;
+  dates: EventDate[];
+  deletedDateIds: string[];
+  warnings?: string[];
 }

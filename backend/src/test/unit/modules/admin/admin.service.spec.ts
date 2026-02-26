@@ -7,14 +7,17 @@ import { TicketsRepository } from '../../../../modules/tickets/tickets.repositor
 import { PaymentConfirmationStatus } from '../../../../modules/payment-confirmations/payment-confirmations.domain';
 import { TransactionStatus } from '../../../../modules/transactions/transactions.domain';
 import { TicketType } from '../../../../modules/tickets/tickets.domain';
+import { EventStatus, EventDateStatus } from '../../../../modules/events/events.domain';
 import type { Ctx } from '../../../../common/types/context';
 import type { Transaction } from '../../../../modules/transactions/transactions.domain';
 import type { PaymentConfirmationWithTransaction } from '../../../../modules/payment-confirmations/payment-confirmations.api';
+import type { AdminUpdateEventResponse } from '../../../../modules/admin/admin.api';
 
 describe('AdminService', () => {
   let service: AdminService;
   let paymentConfirmationsService: jest.Mocked<PaymentConfirmationsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
+  let eventsService: jest.Mocked<EventsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -65,6 +68,7 @@ describe('AdminService', () => {
 
     const mockEventsService = {
       getPendingEvents: jest.fn().mockResolvedValue([]),
+      adminUpdateEventWithDates: jest.fn(),
     };
 
     const mockTicketsRepository = {
@@ -87,6 +91,7 @@ describe('AdminService', () => {
     service = module.get<AdminService>(AdminService);
     paymentConfirmationsService = module.get(PaymentConfirmationsService);
     transactionsService = module.get(TransactionsService);
+    eventsService = module.get(EventsService);
   });
 
   describe('getAdminPayments', () => {
@@ -224,6 +229,109 @@ describe('AdminService', () => {
       const payment = result.payments[0];
       expect(payment.reviewedAt).toBeDefined();
       expect(payment.adminNotes).toBe('Test notes');
+    });
+  });
+
+  describe('updateEventWithDates', () => {
+    const mockUpdateResponse: AdminUpdateEventResponse = {
+      event: {
+        id: 'evt_123',
+        name: 'Updated Event',
+        description: 'Updated description',
+        category: 'Concert',
+        venue: 'Updated Venue',
+        location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+        imageIds: [],
+        status: EventStatus.Approved,
+        createdBy: 'user_123',
+        approvedBy: 'admin_123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      dates: [
+        {
+          id: 'edt_123',
+          eventId: 'evt_123',
+          date: new Date(),
+          status: EventDateStatus.Approved,
+          createdBy: 'admin_123',
+          approvedBy: 'admin_123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      deletedDateIds: [],
+    };
+
+    it('should delegate to eventsService.adminUpdateEventWithDates', async () => {
+      eventsService.adminUpdateEventWithDates.mockResolvedValue(mockUpdateResponse);
+
+      const result = await service.updateEventWithDates(
+        mockCtx,
+        'evt_123',
+        { name: 'Updated Event' },
+        'admin_123',
+      );
+
+      expect(eventsService.adminUpdateEventWithDates).toHaveBeenCalledWith(
+        mockCtx,
+        'evt_123',
+        { name: 'Updated Event' },
+        'admin_123',
+      );
+      expect(result).toEqual(mockUpdateResponse);
+    });
+
+    it('should return response with deleted date IDs when dates are deleted', async () => {
+      const responseWithDeletes: AdminUpdateEventResponse = {
+        ...mockUpdateResponse,
+        deletedDateIds: ['edt_456', 'edt_789'],
+        warnings: ['Cancelled 2 listing(s) for deleted date edt_456'],
+      };
+      eventsService.adminUpdateEventWithDates.mockResolvedValue(responseWithDeletes);
+
+      const result = await service.updateEventWithDates(
+        mockCtx,
+        'evt_123',
+        { datesToDelete: ['edt_456', 'edt_789'] },
+        'admin_123',
+      );
+
+      expect(result.deletedDateIds).toEqual(['edt_456', 'edt_789']);
+      expect(result.warnings).toContain('Cancelled 2 listing(s) for deleted date edt_456');
+    });
+
+    it('should handle update with new dates', async () => {
+      const responseWithNewDate: AdminUpdateEventResponse = {
+        ...mockUpdateResponse,
+        dates: [
+          ...mockUpdateResponse.dates,
+          {
+            id: 'edt_new',
+            eventId: 'evt_123',
+            date: new Date('2025-06-01'),
+            status: EventDateStatus.Approved,
+            createdBy: 'admin_123',
+            approvedBy: 'admin_123',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      };
+      eventsService.adminUpdateEventWithDates.mockResolvedValue(responseWithNewDate);
+
+      const result = await service.updateEventWithDates(
+        mockCtx,
+        'evt_123',
+        {
+          dates: [
+            { date: '2025-06-01T19:00:00Z', status: 'approved' },
+          ],
+        },
+        'admin_123',
+      );
+
+      expect(result.dates).toHaveLength(2);
     });
   });
 });
