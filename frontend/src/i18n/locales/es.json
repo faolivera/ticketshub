@@ -792,7 +792,8 @@
       "dashboard": "Panel Principal",
       "events": "Gestión de Eventos",
       "payments": "Aprobación de Pagos",
-      "transactions": "Gestión de Transacciones"
+      "transactions": "Gestión de Transacciones",
+      "paymentMethods": "Métodos de Pago"
     },
     "dashboard": {
       "title": "Panel Principal",
@@ -1041,6 +1042,59 @@
       "statusCancelled": "Cancelada",
       "statusRefunded": "Reembolsada",
       "statusDisputed": "En Disputa"
+    },
+    "paymentMethods": {
+      "title": "Métodos de Pago",
+      "subtitle": "Configurar y administrar los métodos de pago disponibles para compradores",
+      "create": "Agregar Método de Pago",
+      "listTitle": "Métodos de Pago",
+      "listDescription": "Todos los métodos de pago configurados para la plataforma",
+      "noMethods": "No hay métodos de pago configurados aún",
+      "createTitle": "Agregar Método de Pago",
+      "createDescription": "Configurar un nuevo método de pago para la plataforma",
+      "editTitle": "Editar Método de Pago",
+      "editDescription": "Actualizar la configuración del método de pago",
+      "deleteTitle": "Eliminar Método de Pago",
+      "deleteDescription": "¿Estás seguro de que deseas eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
+      "table": {
+        "name": "Nombre",
+        "type": "Tipo",
+        "provider": "Proveedor / Banco",
+        "buyerCommission": "Comisión Comprador",
+        "sellerCommission": "Comisión Vendedor",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "types": {
+        "payment_gateway": "Pasarela de Pago",
+        "manual_approval": "Transferencia Bancaria"
+      },
+      "status": {
+        "enabled": "Habilitado",
+        "disabled": "Deshabilitado"
+      },
+      "form": {
+        "name": "Nombre a Mostrar",
+        "namePlaceholder": "ej., MercadoPago - Cuenta Principal",
+        "type": "Tipo de Pago",
+        "buyerCommission": "Comisión Comprador (%)",
+        "sellerCommission": "Comisión Vendedor (%)",
+        "gatewayProvider": "Proveedor de Pasarela",
+        "selectProvider": "Seleccionar un proveedor",
+        "envPrefix": "Prefijo de Entorno",
+        "envPrefixHint": "Las credenciales se cargarán de variables de entorno con este prefijo (ej., MERCADOPAGO_MAIN_ACCESS_TOKEN)",
+        "bankConfig": "Datos de Cuenta Bancaria",
+        "cbu": "CBU",
+        "accountHolder": "Nombre del Titular",
+        "bankName": "Nombre del Banco",
+        "cuitCuil": "CUIT/CUIL"
+      },
+      "errors": {
+        "nameRequired": "El nombre es obligatorio",
+        "providerRequired": "El proveedor de pasarela es obligatorio",
+        "envPrefixRequired": "El prefijo de entorno es obligatorio",
+        "bankConfigRequired": "Todos los campos de cuenta bancaria son obligatorios"
+      }
     }
   }
 }

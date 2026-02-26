@@ -459,3 +459,48 @@ export interface AdminTransactionsPendingSummaryResponse {
   /** Transaction IDs in PendingPayment status */
   pendingTransactionIds: string[];
 }
+
+// === Admin Payment Methods ===
+
+import type {
+  PaymentMethodOption,
+  PaymentMethodType,
+  PaymentGatewayProvider,
+  BankTransferConfig,
+} from './tickets';
+
+/**
+ * Request to create a payment method (admin)
+ */
+export interface AdminCreatePaymentMethodRequest {
+  name: string;
+  type: PaymentMethodType;
+  buyerCommissionPercent: number | null;
+  sellerCommissionPercent: number | null;
+  gatewayProvider?: PaymentGatewayProvider;
+  gatewayConfigEnvPrefix?: string;
+  bankTransferConfig?: BankTransferConfig;
+}
+
+/**
+ * Request to update a payment method (admin)
+ */
+export interface AdminUpdatePaymentMethodRequest {
+  name?: string;
+  status?: 'enabled' | 'disabled';
+  buyerCommissionPercent?: number | null;
+  sellerCommissionPercent?: number | null;
+  gatewayProvider?: PaymentGatewayProvider;
+  gatewayConfigEnvPrefix?: string;
+  bankTransferConfig?: BankTransferConfig;
+}
+
+/**
+ * Response for GET /api/admin/payment-methods
+ */
+export type AdminPaymentMethodsResponse = PaymentMethodOption[];
+
+/**
+ * Response for GET /api/admin/payment-methods/:id
+ */
+export type AdminPaymentMethodResponse = PaymentMethodOption;

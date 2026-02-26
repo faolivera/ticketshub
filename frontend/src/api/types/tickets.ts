@@ -185,18 +185,49 @@ export interface ListingWithSeller extends TicketListingWithEvent {
  */
 export type GetEventListingsResponse = ListingWithSeller[];
 
-/** Gateway identifier for payment methods */
-export type PaymentMethodId = 'payway' | 'mercadopago' | 'uala_bis_debito' | 'bank_transfer';
-
 /** How the payment method is processed */
-export type PaymentMethodType = 'webhook_integrated' | 'manual_approval';
+export type PaymentMethodType = 'payment_gateway' | 'manual_approval';
 
-/** Payment method option for buy page */
+/** Payment method status */
+export type PaymentMethodStatus = 'enabled' | 'disabled';
+
+/** Available payment gateway providers */
+export type PaymentGatewayProvider =
+  | 'mercadopago'
+  | 'uala_bis'
+  | 'payway'
+  | 'astropay';
+
+/** Configuration for bank transfer payment methods */
+export interface BankTransferConfig {
+  cbu: string;
+  accountHolderName: string;
+  bankName: string;
+  cuitCuil: string;
+}
+
+/** Payment method option - admin managed (full) */
 export interface PaymentMethodOption {
-  id: PaymentMethodId;
+  id: string;
   name: string;
-  commissionPercent: number | null;
   type: PaymentMethodType;
+  status: PaymentMethodStatus;
+  buyerCommissionPercent: number | null;
+  sellerCommissionPercent: number | null;
+  gatewayProvider?: PaymentGatewayProvider;
+  gatewayConfigEnvPrefix?: string;
+  bankTransferConfig?: BankTransferConfig;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Public payment method option - exposed to buyers (safe fields only) */
+export interface PublicPaymentMethodOption {
+  id: string;
+  name: string;
+  type: PaymentMethodType;
+  buyerCommissionPercent: number | null;
+  bankTransferConfig?: BankTransferConfig;
 }
 
 /** Seller section data for buy page (BFF) */
@@ -214,7 +245,7 @@ export interface BuyPageSellerInfo {
 export interface BuyPageData {
   listing: TicketListingWithEvent;
   seller: BuyPageSellerInfo;
-  paymentMethods: PaymentMethodOption[];
+  paymentMethods: PublicPaymentMethodOption[];
 }
 
 /** Response from GET /api/buy/:ticketId */

@@ -1,51 +1,50 @@
 import type { CurrencyCode } from '../shared/money.domain';
 import type { Ctx } from '../../common/types/context';
 
-/** Gateway identifier for payment methods */
-export type PaymentMethodId =
-  | 'payway'
-  | 'mercadopago'
-  | 'uala_bis_debito'
-  | 'bank_transfer';
-
 /** How the payment method is processed */
-export type PaymentMethodType = 'webhook_integrated' | 'manual_approval';
+export type PaymentMethodType = 'payment_gateway' | 'manual_approval';
 
-/** Payment method option for buy page */
-export interface PaymentMethodOption {
-  id: PaymentMethodId;
-  name: string;
-  commissionPercent: number | null;
-  type: PaymentMethodType;
+/** Payment method status */
+export type PaymentMethodStatus = 'enabled' | 'disabled';
+
+/** Available payment gateway providers */
+export type PaymentGatewayProvider =
+  | 'mercadopago'
+  | 'uala_bis'
+  | 'payway'
+  | 'astropay';
+
+/** Configuration for bank transfer payment methods */
+export interface BankTransferConfig {
+  cbu: string;
+  accountHolderName: string;
+  bankName: string;
+  cuitCuil: string;
 }
 
-/** Static payment methods for buy page */
-export const BUY_PAGE_PAYMENT_METHODS: PaymentMethodOption[] = [
-  {
-    id: 'payway',
-    name: 'Payway',
-    commissionPercent: 12,
-    type: 'webhook_integrated',
-  },
-  {
-    id: 'mercadopago',
-    name: 'MercadoPago',
-    commissionPercent: 12,
-    type: 'webhook_integrated',
-  },
-  {
-    id: 'uala_bis_debito',
-    name: 'Uala Bis Debito',
-    commissionPercent: 12,
-    type: 'webhook_integrated',
-  },
-  {
-    id: 'bank_transfer',
-    name: 'Transferencia Bancaria',
-    commissionPercent: 5,
-    type: 'manual_approval',
-  },
-];
+/** Payment method option - admin managed */
+export interface PaymentMethodOption {
+  id: string;
+  name: string;
+  type: PaymentMethodType;
+  status: PaymentMethodStatus;
+  buyerCommissionPercent: number | null;
+  sellerCommissionPercent: number | null;
+  gatewayProvider?: PaymentGatewayProvider;
+  gatewayConfigEnvPrefix?: string;
+  bankTransferConfig?: BankTransferConfig;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Public payment method option - exposed to buyers (safe fields only) */
+export interface PublicPaymentMethodOption {
+  id: string;
+  name: string;
+  type: PaymentMethodType;
+  buyerCommissionPercent: number | null;
+  bankTransferConfig?: BankTransferConfig;
+}
 
 /**
  * Money representation

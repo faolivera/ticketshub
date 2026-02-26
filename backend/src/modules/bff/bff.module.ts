@@ -6,6 +6,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
 import { TicketsModule } from '../tickets/tickets.module';
 import { ReviewsModule } from '../reviews/reviews.module';
 import { PaymentConfirmationsModule } from '../payment-confirmations/payment-confirmations.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PaymentConfirmationsModule } from '../payment-confirmations/payment-con
     TicketsModule,
     ReviewsModule,
     PaymentConfirmationsModule,
+    PaymentsModule,
   ],
   controllers: [BffController],
   providers: [BffService],

@@ -1,4 +1,13 @@
-import type { Money, PaymentIntent, PaymentStatus } from './payments.domain';
+import type {
+  Money,
+  PaymentIntent,
+  PaymentStatus,
+  PaymentMethodOption,
+  PaymentMethodType,
+  PaymentGatewayProvider,
+  BankTransferConfig,
+  PublicPaymentMethodOption,
+} from './payments.domain';
 
 /**
  * Request to create a payment intent
@@ -20,7 +29,7 @@ export interface CreatePaymentIntentRequest {
  */
 export interface CreatePaymentIntentResponse {
   paymentIntentId: string;
-  clientSecret?: string; // For client-side payment confirmation (e.g., Stripe)
+  clientSecret?: string;
   status: PaymentStatus;
 }
 
@@ -46,3 +55,44 @@ export interface WebhookResponse {
  * Response for getting payment status
  */
 export type GetPaymentStatusResponse = PaymentIntent;
+
+/**
+ * Request to create a payment method (admin)
+ */
+export interface CreatePaymentMethodRequest {
+  name: string;
+  type: PaymentMethodType;
+  buyerCommissionPercent: number | null;
+  sellerCommissionPercent: number | null;
+  gatewayProvider?: PaymentGatewayProvider;
+  gatewayConfigEnvPrefix?: string;
+  bankTransferConfig?: BankTransferConfig;
+}
+
+/**
+ * Request to update a payment method (admin)
+ */
+export interface UpdatePaymentMethodRequest {
+  name?: string;
+  status?: 'enabled' | 'disabled';
+  buyerCommissionPercent?: number | null;
+  sellerCommissionPercent?: number | null;
+  gatewayProvider?: PaymentGatewayProvider;
+  gatewayConfigEnvPrefix?: string;
+  bankTransferConfig?: BankTransferConfig;
+}
+
+/**
+ * Response for listing all payment methods (admin)
+ */
+export type GetPaymentMethodsResponse = PaymentMethodOption[];
+
+/**
+ * Response for getting a single payment method (admin)
+ */
+export type GetPaymentMethodResponse = PaymentMethodOption;
+
+/**
+ * Response for public payment methods (buy page)
+ */
+export type GetPublicPaymentMethodsResponse = PublicPaymentMethodOption[];

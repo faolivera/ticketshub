@@ -1,6 +1,6 @@
 import type { Image } from '../images/images.domain';
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
-import type { PaymentMethodOption } from '../payments/payments.domain';
+import type { PublicPaymentMethodOption } from '../payments/payments.domain';
 
 export type SellerReviewType = 'positive' | 'neutral' | 'negative';
 
@@ -60,5 +60,5 @@ export interface BuyPageSellerInfo {
 export interface BuyPageData {
   listing: TicketListingWithEvent;
   seller: BuyPageSellerInfo;
-  paymentMethods: PaymentMethodOption[];
+  paymentMethods: PublicPaymentMethodOption[];
 }

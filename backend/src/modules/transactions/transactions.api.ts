@@ -2,7 +2,6 @@ import type {
   Transaction,
   TransactionWithDetails,
 } from './transactions.domain';
-import type { PaymentMethodId } from '../payments/payments.domain';
 
 /**
  * Request to initiate a purchase
@@ -10,7 +9,7 @@ import type { PaymentMethodId } from '../payments/payments.domain';
 export interface InitiatePurchaseRequest {
   listingId: string;
   ticketUnitIds: string[];
-  paymentMethodId: PaymentMethodId;
+  paymentMethodId: string;
 }
 
 /**
@@ -70,7 +69,7 @@ export interface ListTransactionsQuery {
  * Transaction with payment method info for admin view
  */
 export interface TransactionWithPaymentInfo extends TransactionWithDetails {
-  paymentMethodId?: PaymentMethodId;
+  paymentMethodId?: string;
   paymentMethodName: string;
 }
 

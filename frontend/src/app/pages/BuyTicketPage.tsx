@@ -213,7 +213,7 @@ export function BuyTicketPage() {
       ? selectedUnitIds.length
       : quantity;
   const subtotal = pricePerTicket * selectedQuantity;
-  const commissionPercent = selectedPaymentMethod?.commissionPercent ?? 0;
+  const commissionPercent = selectedPaymentMethod?.buyerCommissionPercent ?? 0;
   const buyerFee = subtotal * (commissionPercent / 100);
   const grandTotal = subtotal + buyerFee;
 
@@ -477,9 +477,9 @@ export function BuyTicketPage() {
 
               <div className="flex justify-between">
                 <span className="text-gray-700">
-                  {selectedPaymentMethod?.commissionPercent != null
+                  {selectedPaymentMethod?.buyerCommissionPercent != null
                     ? t('buyTicket.buyerFee', {
-                        percent: selectedPaymentMethod.commissionPercent,
+                        percent: selectedPaymentMethod.buyerCommissionPercent,
                       })
                     : t('buyTicket.buyerFeeManual')}
                 </span>
@@ -516,9 +516,9 @@ export function BuyTicketPage() {
                       >
                         <span className="font-medium text-gray-900">{method.name}</span>
                         <span className="text-sm text-gray-500">
-                          {method.commissionPercent != null
+                          {method.buyerCommissionPercent != null
                             ? t('buyTicket.commissionPercent', {
-                                percent: method.commissionPercent,
+                                percent: method.buyerCommissionPercent,
                               })
                             : t('buyTicket.manualApproval')}
                         </span>

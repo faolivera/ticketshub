@@ -18,6 +18,10 @@ import type {
   AdminTransactionsResponse,
   AdminTransactionDetailResponse,
   AdminTransactionsPendingSummaryResponse,
+  AdminPaymentMethodsResponse,
+  AdminPaymentMethodResponse,
+  AdminCreatePaymentMethodRequest,
+  AdminUpdatePaymentMethodRequest,
 } from '../types/admin';
 
 /**
@@ -171,6 +175,79 @@ export const adminService = {
   async getTransactionsPendingSummary(): Promise<AdminTransactionsPendingSummaryResponse> {
     const response = await apiClient.get<AdminTransactionsPendingSummaryResponse>(
       '/admin/transactions/pending-summary'
+    );
+    return response.data;
+  },
+
+  // === Payment Methods CRUD ===
+
+  /**
+   * Get all payment methods
+   */
+  async getPaymentMethods(): Promise<AdminPaymentMethodsResponse> {
+    const response = await apiClient.get<AdminPaymentMethodsResponse>(
+      '/admin/payment-methods'
+    );
+    return response.data;
+  },
+
+  /**
+   * Get single payment method by ID
+   */
+  async getPaymentMethod(id: string): Promise<AdminPaymentMethodResponse> {
+    const response = await apiClient.get<AdminPaymentMethodResponse>(
+      `/admin/payment-methods/${id}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Create a new payment method
+   */
+  async createPaymentMethod(
+    data: AdminCreatePaymentMethodRequest
+  ): Promise<AdminPaymentMethodResponse> {
+    const response = await apiClient.post<AdminPaymentMethodResponse>(
+      '/admin/payment-methods',
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Update an existing payment method
+   */
+  async updatePaymentMethod(
+    id: string,
+    data: AdminUpdatePaymentMethodRequest
+  ): Promise<AdminPaymentMethodResponse> {
+    const response = await apiClient.patch<AdminPaymentMethodResponse>(
+      `/admin/payment-methods/${id}`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Toggle payment method status (enable/disable)
+   */
+  async togglePaymentMethodStatus(
+    id: string,
+    status: 'enabled' | 'disabled'
+  ): Promise<AdminPaymentMethodResponse> {
+    const response = await apiClient.patch<AdminPaymentMethodResponse>(
+      `/admin/payment-methods/${id}/toggle`,
+      { status }
+    );
+    return response.data;
+  },
+
+  /**
+   * Delete a payment method
+   */
+  async deletePaymentMethod(id: string): Promise<{ deleted: boolean }> {
+    const response = await apiClient.delete<{ deleted: boolean }>(
+      `/admin/payment-methods/${id}`
     );
     return response.data;
   },

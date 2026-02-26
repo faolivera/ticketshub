@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   Calendar,
   CreditCard,
-  Settings,
+  Wallet,
   Ticket,
 } from 'lucide-react';
 import {
@@ -40,6 +40,11 @@ const navItems: NavItem[] = [
     to: '/admin/transactions',
     icon: <CreditCard className="w-4 h-4" />,
     labelKey: 'admin.sidebar.transactions',
+  },
+  {
+    to: '/admin/payment-methods',
+    icon: <Wallet className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.paymentMethods',
   },
 ];
 

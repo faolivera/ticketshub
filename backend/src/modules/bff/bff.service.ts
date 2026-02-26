@@ -9,6 +9,7 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { TicketsService } from '../tickets/tickets.service';
 import { ReviewsService } from '../reviews/reviews.service';
 import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
+import { PaymentMethodsService } from '../payments/payment-methods.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import { UserLevel, Role } from '../users/users.domain';
@@ -18,7 +19,6 @@ import type {
   GetTransactionDetailsResponse,
   TransactionReviewsData,
 } from './bff.api';
-import { BUY_PAGE_PAYMENT_METHODS } from '../payments/payments.domain';
 import type {
   SellerProfile,
   ListingWithSeller,
@@ -39,6 +39,8 @@ export class BffService {
     private readonly reviewsService: ReviewsService,
     @Inject(PaymentConfirmationsService)
     private readonly paymentConfirmationsService: PaymentConfirmationsService,
+    @Inject(PaymentMethodsService)
+    private readonly paymentMethodsService: PaymentMethodsService,
   ) {}
 
   /**
@@ -65,9 +67,11 @@ export class BffService {
     );
     const sellersMap = new Map(sellers.map((s) => [s.id, s]));
 
-    const commissionPercents = BUY_PAGE_PAYMENT_METHODS.map(
-      (pm) => pm.commissionPercent,
-    ).filter((p): p is number => p != null);
+    const paymentMethods =
+      await this.paymentMethodsService.getPublicPaymentMethods(ctx);
+    const commissionPercents = paymentMethods
+      .map((pm) => pm.buyerCommissionPercent)
+      .filter((p): p is number => p != null);
     const commissionPercentRange =
       commissionPercents.length > 0
         ? {
@@ -127,14 +131,17 @@ export class BffService {
     const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [
       listing.sellerId,
     ]);
-    const [user, totalSales, sellerMetrics] = await Promise.all([
-      this.usersService.findById(ctx, listing.sellerId),
-      this.transactionsService.getSellerCompletedSalesTotal(
-        ctx,
-        listing.sellerId,
-      ),
-      this.reviewsService.getSellerMetrics(ctx, listing.sellerId),
-    ]);
+    const [user, totalSales, sellerMetrics, paymentMethods] = await Promise.all(
+      [
+        this.usersService.findById(ctx, listing.sellerId),
+        this.transactionsService.getSellerCompletedSalesTotal(
+          ctx,
+          listing.sellerId,
+        ),
+        this.reviewsService.getSellerMetrics(ctx, listing.sellerId),
+        this.paymentMethodsService.getPublicPaymentMethods(ctx),
+      ],
+    );
 
     const seller: BuyPageSellerInfo = {
       id: listing.sellerId,
@@ -152,7 +159,7 @@ export class BffService {
     return {
       listing,
       seller,
-      paymentMethods: BUY_PAGE_PAYMENT_METHODS,
+      paymentMethods,
     };
   }
 

@@ -1,7 +1,6 @@
 import type { CurrencyCode } from '../shared/money.domain';
 import type { Address } from '../shared/address.domain';
 import type { TicketType, DeliveryMethod } from '../tickets/tickets.domain';
-import type { PaymentMethodId } from '../payments/payments.domain';
 
 /**
  * Money representation
@@ -95,7 +94,7 @@ export interface Transaction {
   disputeId?: string;
 
   // Payment method used for this transaction
-  paymentMethodId?: PaymentMethodId;
+  paymentMethodId?: string;
 
   // Payment confirmation for manual payment methods
   paymentConfirmationId?: string;

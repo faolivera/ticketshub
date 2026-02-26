@@ -825,7 +825,8 @@
       "dashboard": "Dashboard",
       "events": "Event Management",
       "payments": "Payment Approval",
-      "transactions": "Transaction Management"
+      "transactions": "Transaction Management",
+      "paymentMethods": "Payment Methods"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -1074,6 +1075,59 @@
       "statusCancelled": "Cancelled",
       "statusRefunded": "Refunded",
       "statusDisputed": "Disputed"
+    },
+    "paymentMethods": {
+      "title": "Payment Methods",
+      "subtitle": "Configure and manage payment methods available for buyers",
+      "create": "Add Payment Method",
+      "listTitle": "Payment Methods",
+      "listDescription": "All configured payment methods for the platform",
+      "noMethods": "No payment methods configured yet",
+      "createTitle": "Add Payment Method",
+      "createDescription": "Configure a new payment method for the platform",
+      "editTitle": "Edit Payment Method",
+      "editDescription": "Update the payment method configuration",
+      "deleteTitle": "Delete Payment Method",
+      "deleteDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "table": {
+        "name": "Name",
+        "type": "Type",
+        "provider": "Provider / Bank",
+        "buyerCommission": "Buyer Fee",
+        "sellerCommission": "Seller Fee",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "types": {
+        "payment_gateway": "Payment Gateway",
+        "manual_approval": "Bank Transfer"
+      },
+      "status": {
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "form": {
+        "name": "Display Name",
+        "namePlaceholder": "e.g., MercadoPago - Main Account",
+        "type": "Payment Type",
+        "buyerCommission": "Buyer Fee (%)",
+        "sellerCommission": "Seller Fee (%)",
+        "gatewayProvider": "Gateway Provider",
+        "selectProvider": "Select a provider",
+        "envPrefix": "Environment Prefix",
+        "envPrefixHint": "Credentials will be loaded from env vars with this prefix (e.g., MERCADOPAGO_MAIN_ACCESS_TOKEN)",
+        "bankConfig": "Bank Account Details",
+        "cbu": "CBU",
+        "accountHolder": "Account Holder Name",
+        "bankName": "Bank Name",
+        "cuitCuil": "CUIT/CUIL"
+      },
+      "errors": {
+        "nameRequired": "Name is required",
+        "providerRequired": "Gateway provider is required",
+        "envPrefixRequired": "Environment prefix is required",
+        "bankConfigRequired": "All bank account fields are required"
+      }
     }
   }
 }

@@ -25,6 +25,7 @@ import { EditListing } from '@/app/pages/EditListing';
 import { AdminDashboard } from '@/app/pages/admin/AdminDashboard';
 import { EventManagement } from '@/app/pages/admin/EventManagement';
 import TransactionManagement from '@/app/pages/admin/TransactionManagement';
+import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManagement';
 
 export default function App() {
   return (
@@ -60,6 +61,7 @@ export default function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="events" element={<EventManagement />} />
                 <Route path="transactions" element={<TransactionManagement />} />
+                <Route path="payment-methods" element={<PaymentMethodsManagement />} />
               </Route>
             </Routes>
           </main>

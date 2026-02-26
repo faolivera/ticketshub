@@ -156,21 +156,23 @@ export const GetMyTicketsResponseSchema = z.object({
   listed: z.array(TicketListingWithEventSchema),
 });
 
-const PaymentMethodIdSchema = z.enum([
-  'payway',
-  'mercadopago',
-  'uala_bis_debito',
-  'bank_transfer',
-]);
-const PaymentMethodTypeSchema = z.enum([
-  'webhook_integrated',
-  'manual_approval',
-]);
-const PaymentMethodOptionSchema = z.object({
-  id: PaymentMethodIdSchema,
+const PaymentMethodTypeSchema = z.enum(['payment_gateway', 'manual_approval']);
+
+const BankTransferConfigSchema = z
+  .object({
+    cbu: z.string(),
+    accountHolderName: z.string(),
+    bankName: z.string(),
+    cuitCuil: z.string(),
+  })
+  .optional();
+
+const PublicPaymentMethodOptionSchema = z.object({
+  id: z.string(),
   name: z.string(),
-  commissionPercent: z.number().nullable(),
   type: PaymentMethodTypeSchema,
+  buyerCommissionPercent: z.number().nullable(),
+  bankTransferConfig: BankTransferConfigSchema,
 });
 
 const BuyPageSellerInfoSchema = z.object({
@@ -186,7 +188,7 @@ const BuyPageSellerInfoSchema = z.object({
 export const GetBuyPageResponseSchema = z.object({
   listing: TicketListingWithEventSchema,
   seller: BuyPageSellerInfoSchema,
-  paymentMethods: z.array(PaymentMethodOptionSchema),
+  paymentMethods: z.array(PublicPaymentMethodOptionSchema),
 });
 
 const PaymentConfirmationStatusSchema = z.enum([

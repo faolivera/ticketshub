@@ -26,8 +26,7 @@ import type {
   GetPendingPaymentsResponse,
   TransactionWithPaymentInfo,
 } from './transactions.api';
-import type { PaymentMethodId } from '../payments/payments.domain';
-import { BUY_PAGE_PAYMENT_METHODS } from '../payments/payments.domain';
+import { PaymentMethodsService } from '../payments/payment-methods.service';
 
 @Injectable()
 export class TransactionsService {
@@ -46,6 +45,8 @@ export class TransactionsService {
     private readonly configService: ConfigService,
     @Inject(UsersService)
     private readonly usersService: UsersService,
+    @Inject(PaymentMethodsService)
+    private readonly paymentMethodsService: PaymentMethodsService,
   ) {}
 
   /**
@@ -85,7 +86,7 @@ export class TransactionsService {
     buyerId: string,
     listingId: string,
     ticketUnitIds: string[],
-    paymentMethodId: PaymentMethodId,
+    paymentMethodId: string,
   ): Promise<{ transaction: Transaction; paymentIntentId: string }> {
     this.logger.log(ctx, `Initiating purchase for listing ${listingId}`);
 
@@ -678,11 +679,12 @@ export class TransactionsService {
     this.logger.log(ctx, 'Getting pending manual payments');
 
     const allTransactions = await this.transactionsRepository.getAll(ctx);
+    const allPaymentMethods = await this.paymentMethodsService.findAll(ctx);
 
     // Filter for transactions that are pending payment and use manual approval method
-    const manualPaymentMethodIds = BUY_PAGE_PAYMENT_METHODS.filter(
-      (m) => m.type === 'manual_approval',
-    ).map((m) => m.id);
+    const manualPaymentMethodIds = allPaymentMethods
+      .filter((m) => m.type === 'manual_approval')
+      .map((m) => m.id);
 
     const pendingManual = allTransactions.filter(
       (t) =>
@@ -695,7 +697,7 @@ export class TransactionsService {
     const enriched: TransactionWithPaymentInfo[] = await Promise.all(
       pendingManual.map(async (t) => {
         const details = await this.enrichTransaction(ctx, t);
-        const paymentMethod = BUY_PAGE_PAYMENT_METHODS.find(
+        const paymentMethod = allPaymentMethods.find(
           (m) => m.id === t.paymentMethodId,
         );
         return {
