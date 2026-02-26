@@ -154,8 +154,7 @@ export class TransactionsController {
   async getPendingManualPayments(
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<GetPendingPaymentsResponse>> {
-    const result =
-      await this.transactionsService.getPendingManualPayments(ctx);
+    const result = await this.transactionsService.getPendingManualPayments(ctx);
     return { success: true, data: result };
   }
 

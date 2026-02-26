@@ -37,8 +37,9 @@ import { Input } from '../../components/ui/input';
 import { eventsService } from '../../../api/services/events.service';
 import { adminService } from '../../../api/services/admin.service';
 import type { AdminPendingEventItem, AdminPendingEventDateItem, AdminPendingSectionItem } from '../../../api/types/admin';
-import type { Event, EventDate } from '../../../api/types/events';
+import type { EventWithDates, EventDate } from '../../../api/types/events';
 import { EditEventModal } from './components/EditEventModal';
+import { AllEventsTable } from './components/AllEventsTable';
 import { Layers } from 'lucide-react';
 
 type RejectTarget = 
@@ -64,7 +65,7 @@ export function EventManagement() {
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<EventWithDates | null>(null);
   const [editingEventDates, setEditingEventDates] = useState<EventDate[]>([]);
   
   // Add Section state
@@ -474,6 +475,7 @@ export function EventManagement() {
                                 <TableHeader>
                                   <TableRow>
                                     <TableHead>{t('admin.events.dateColumn')}</TableHead>
+                                    <TableHead className="text-right">{t('admin.events.pendingListings')}</TableHead>
                                     <TableHead>{t('admin.events.status')}</TableHead>
                                     <TableHead>{t('admin.events.createdAt')}</TableHead>
                                     <TableHead className="text-right">{t('admin.events.actions')}</TableHead>
@@ -485,6 +487,7 @@ export function EventManagement() {
                                         <TableCell className="font-medium">
                                           {formatDateTime(eventDate.date)}
                                         </TableCell>
+                                        <TableCell className="text-right">{eventDate.pendingListingsCount}</TableCell>
                                         <TableCell>{getStatusBadge(eventDate.status)}</TableCell>
                                         <TableCell>{formatDate(eventDate.createdAt)}</TableCell>
                                         <TableCell className="text-right">
@@ -525,8 +528,9 @@ export function EventManagement() {
                               </h4>
                               <Table>
                                 <TableHeader>
-                                  <TableRow>
+                                    <TableRow>
                                     <TableHead>{t('admin.events.sectionName')}</TableHead>
+                                    <TableHead>{t('sellTicket.seatingType')}</TableHead>
                                     <TableHead>{t('admin.events.status')}</TableHead>
                                     <TableHead>{t('admin.events.pendingListings')}</TableHead>
                                     <TableHead>{t('admin.events.createdAt')}</TableHead>
@@ -538,6 +542,11 @@ export function EventManagement() {
                                       <TableRow key={section.id}>
                                         <TableCell className="font-medium">
                                           {section.name}
+                                        </TableCell>
+                                        <TableCell>
+                                          {section.seatingType
+                                            ? t(section.seatingType === 'numbered' ? 'sellTicket.numberedSeating' : 'sellTicket.generalAdmission')
+                                            : '—'}
                                         </TableCell>
                                         <TableCell>{getStatusBadge(section.status)}</TableCell>
                                         <TableCell>{section.pendingListingsCount}</TableCell>
@@ -597,6 +606,8 @@ export function EventManagement() {
           )}
         </CardContent>
       </Card>
+
+      <AllEventsTable onEventUpdated={fetchPendingEvents} />
 
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>

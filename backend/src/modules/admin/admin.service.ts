@@ -3,6 +3,8 @@ import { PaymentConfirmationsService } from '../payment-confirmations/payment-co
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventsService } from '../events/events.service';
 import { TicketsRepository } from '../tickets/tickets.repository';
+import { TicketsService } from '../tickets/tickets.service';
+import { UsersService } from '../users/users.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -14,9 +16,14 @@ import type {
   AdminPendingSectionItem,
   AdminUpdateEventRequest,
   AdminUpdateEventResponse,
+  AdminAllEventsQuery,
+  AdminAllEventsResponse,
+  AdminAllEventItem,
+  AdminEventListingsResponse,
+  AdminEventListingItem,
   Money,
 } from './admin.api';
-import { EventStatus, EventDateStatus, EventSectionStatus } from '../events/events.domain';
+import { EventDateStatus, EventSectionStatus } from '../events/events.domain';
 
 @Injectable()
 export class AdminService {
@@ -31,6 +38,10 @@ export class AdminService {
     private readonly eventsService: EventsService,
     @Inject(TicketsRepository)
     private readonly ticketsRepository: TicketsRepository,
+    @Inject(TicketsService)
+    private readonly ticketsService: TicketsService,
+    @Inject(UsersService)
+    private readonly usersService: UsersService,
   ) {}
 
   /**
@@ -60,7 +71,9 @@ export class AdminService {
       }
 
       const pricePerUnit: Money = {
-        amount: Math.round(transaction.ticketPrice.amount / transaction.quantity),
+        amount: Math.round(
+          transaction.ticketPrice.amount / transaction.quantity,
+        ),
         currency: transaction.ticketPrice.currency,
       };
 
@@ -162,6 +175,8 @@ export class AdminService {
             eventId: event.id,
             eventName: event.name,
             name: section.name,
+            seatingType:
+              section.seatingType === 'numbered' ? 'numbered' : 'unnumbered',
             status: section.status,
             pendingListingsCount: sectionListings.length,
             createdAt: section.createdAt,
@@ -215,5 +230,154 @@ export class AdminService {
     );
 
     return result;
+  }
+
+  /**
+   * Get all events with pagination and search filter.
+   * Returns events with creator info and listing stats.
+   */
+  async getAllEvents(
+    ctx: Ctx,
+    query: AdminAllEventsQuery,
+  ): Promise<AdminAllEventsResponse> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+
+    this.logger.log(
+      ctx,
+      `Getting all events - page: ${page}, limit: ${limit}, search: ${query.search || 'none'}`,
+    );
+
+    const { events, total } = await this.eventsService.getAllEventsPaginated(
+      ctx,
+      { page, limit, search: query.search },
+    );
+
+    if (events.length === 0) {
+      return {
+        events: [],
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
+
+    const creatorIds = [...new Set(events.map((e) => e.createdBy))];
+    const creators = await this.usersService.findByIds(ctx, creatorIds);
+    const creatorsMap = new Map(creators.map((u) => [u.id, u]));
+
+    const eventIds = events.map((e) => e.id);
+    const listingStatsMap = await this.ticketsService.getListingStatsByEventIds(
+      ctx,
+      eventIds,
+    );
+
+    const enrichedEvents: AdminAllEventItem[] = events.map((event) => {
+      const creator = creatorsMap.get(event.createdBy);
+      const stats = listingStatsMap.get(event.id) || {
+        listingsCount: 0,
+        availableTicketsCount: 0,
+      };
+
+      return {
+        id: event.id,
+        name: event.name,
+        status: event.status,
+        createdAt: event.createdAt,
+        createdBy: {
+          id: event.createdBy,
+          publicName: creator?.publicName || 'Unknown User',
+        },
+        listingsCount: stats.listingsCount,
+        availableTicketsCount: stats.availableTicketsCount,
+      };
+    });
+
+    this.logger.log(ctx, `Found ${total} events, returning page ${page}`);
+
+    return {
+      events: enrichedEvents,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /**
+   * Get all ticket listings for a specific event.
+   * Returns aggregated listing data with seller info, event date, and section.
+   */
+  async getEventListings(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<AdminEventListingsResponse> {
+    this.logger.log(ctx, `Getting listings for event ${eventId}`);
+
+    const listings = await this.ticketsRepository.getAllByEventId(ctx, eventId);
+
+    if (listings.length === 0) {
+      return { listings: [], total: 0 };
+    }
+
+    // Collect unique seller IDs
+    const sellerIds = [...new Set(listings.map((l) => l.sellerId))];
+    const sellers = await this.usersService.findByIds(ctx, sellerIds);
+    const sellersMap = new Map(sellers.map((u) => [u.id, u]));
+
+    // Get event with dates and sections
+    const eventWithDates = await this.eventsService.getEventById(ctx, eventId);
+    const datesMap = new Map(eventWithDates.dates.map((d) => [d.id, d]));
+    const sectionsMap = new Map(eventWithDates.sections.map((s) => [s.id, s]));
+
+    // Build response
+    const enrichedListings: AdminEventListingItem[] = listings.map((listing) => {
+      const seller = sellersMap.get(listing.sellerId);
+      const eventDate = datesMap.get(listing.eventDateId);
+      const eventSection = sectionsMap.get(listing.eventSectionId);
+
+      const ticketsByStatus = {
+        available: listing.ticketUnits.filter((u) => u.status === 'available')
+          .length,
+        reserved: listing.ticketUnits.filter((u) => u.status === 'reserved')
+          .length,
+        sold: listing.ticketUnits.filter((u) => u.status === 'sold').length,
+      };
+
+      return {
+        id: listing.id,
+        createdBy: {
+          id: listing.sellerId,
+          publicName: seller?.publicName || 'Unknown User',
+        },
+        eventDate: {
+          id: listing.eventDateId,
+          date: eventDate?.date || new Date(),
+        },
+        eventSection: {
+          id: listing.eventSectionId,
+          name: eventSection?.name || 'Unknown Section',
+        },
+        totalTickets: listing.ticketUnits.length,
+        ticketsByStatus,
+        status: listing.status,
+        pricePerTicket: {
+          amount: listing.pricePerTicket.amount,
+          currency: listing.pricePerTicket.currency,
+        },
+        createdAt: listing.createdAt,
+      };
+    });
+
+    this.logger.log(
+      ctx,
+      `Found ${enrichedListings.length} listings for event ${eventId}`,
+    );
+
+    return {
+      listings: enrichedListings,
+      total: enrichedListings.length,
+    };
   }
 }

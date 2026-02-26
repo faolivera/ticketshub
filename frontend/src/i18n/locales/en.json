@@ -753,7 +753,8 @@
     "newSectionPendingNote": "New sections require admin approval before tickets can be listed as active.",
     "createSection": "Create Section",
     "createSectionFailed": "Failed to create section. Please try again.",
-    "noSectionsFound": "No matching sections found"
+    "noSectionsFound": "No matching sections found",
+    "noDatesFound": "No matching dates found"
   },
   "common": {
     "loading": "Loading...",
@@ -921,7 +922,45 @@
         "success": "Event updated successfully",
         "error": "Failed to update event",
         "warnings": "Warnings",
-        "confirmDeleteDate": "Dates to be deleted:"
+        "confirmDeleteDate": "Dates to be deleted:",
+        "eventSections": "Event Sections",
+        "addSection": "Add Section",
+        "newSection": "New Section",
+        "noSections": "No sections yet",
+        "saveSection": "Save Section",
+        "sectionAddError": "Failed to add section",
+        "sectionUpdateError": "Failed to update section",
+        "sectionDeleteError": "Failed to delete section (section may have listings)"
+      },
+      "allEvents": {
+        "title": "All Events",
+        "description": "Browse and manage all events on the platform",
+        "searchPlaceholder": "Search events by name...",
+        "eventName": "Event Name",
+        "createdBy": "Created By",
+        "listings": "Listings",
+        "availableTickets": "Available Tickets",
+        "status": "Status",
+        "actions": "Actions",
+        "noEvents": "No events found",
+        "loading": "Loading events...",
+        "previous": "Previous",
+        "next": "Next",
+        "pageInfo": "Page {{page}} of {{totalPages}}",
+        "showingResults": "Showing {{count}} of {{total}} events",
+        "expandListings": "Show Listings",
+        "collapseListings": "Hide Listings",
+        "noListings": "No listings for this event",
+        "listingsTable": {
+          "listingId": "Listing ID",
+          "creator": "Creator",
+          "date": "Date",
+          "section": "Section",
+          "totalTickets": "Total Tickets",
+          "ticketStatus": "Available / Reserved / Sold",
+          "listingStatus": "Status",
+          "price": "Price"
+        }
       }
     },
     "payments": {

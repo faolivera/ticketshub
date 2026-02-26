@@ -294,4 +294,53 @@ export class TicketsRepository implements OnModuleInit {
     const all = await this.storage.getAll(ctx);
     return all.filter((l) => l.eventSectionId === eventSectionId);
   }
+
+  /**
+   * Get all listings for an event (including all statuses)
+   */
+  async getAllByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    const all = await this.storage.getAll(ctx);
+    return all.filter((l) => l.eventId === eventId);
+  }
+
+  /**
+   * Get listing stats (count and available tickets) for multiple event IDs.
+   * Returns a map of eventId -> { listingsCount, availableTicketsCount }
+   */
+  async getListingStatsByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<
+    Map<string, { listingsCount: number; availableTicketsCount: number }>
+  > {
+    const all = await this.storage.getAll(ctx);
+    const eventIdSet = new Set(eventIds);
+
+    const statsMap = new Map<
+      string,
+      { listingsCount: number; availableTicketsCount: number }
+    >();
+
+    for (const eventId of eventIds) {
+      statsMap.set(eventId, { listingsCount: 0, availableTicketsCount: 0 });
+    }
+
+    for (const listing of all) {
+      if (!eventIdSet.has(listing.eventId)) continue;
+
+      const stats = statsMap.get(listing.eventId);
+      if (!stats) continue;
+
+      stats.listingsCount++;
+
+      if (listing.status === ListingStatus.Active) {
+        const availableUnits = listing.ticketUnits.filter(
+          (unit) => unit.status === TicketUnitStatus.Available,
+        ).length;
+        stats.availableTicketsCount += availableUnits;
+      }
+    }
+
+    return statsMap;
+  }
 }

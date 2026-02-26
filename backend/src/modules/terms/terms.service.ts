@@ -27,9 +27,7 @@ import type {
 
 @Injectable()
 export class TermsService {
-  private readonly logger: ContextLogger = new ContextLogger(
-    TermsService.name,
-  );
+  private readonly logger: ContextLogger = new ContextLogger(TermsService.name);
 
   constructor(
     @Inject(TermsRepository)
@@ -114,10 +112,7 @@ export class TermsService {
     ipAddress?: string,
     userAgent?: string,
   ): Promise<UserTermsAcceptance> {
-    this.logger.log(
-      ctx,
-      `User ${userId} accepting terms version ${versionId}`,
-    );
+    this.logger.log(ctx, `User ${userId} accepting terms version ${versionId}`);
 
     const termsVersion = await this.termsRepository.findVersionById(
       ctx,
@@ -134,7 +129,10 @@ export class TermsService {
       versionId,
     );
 
-    if (existingAcceptance && existingAcceptance.status === AcceptanceStatus.Accepted) {
+    if (
+      existingAcceptance &&
+      existingAcceptance.status === AcceptanceStatus.Accepted
+    ) {
       throw new BadRequestException('Terms already accepted');
     }
 
@@ -160,10 +158,7 @@ export class TermsService {
 
     await this.updateUserTermsState(ctx, userId, termsVersion, now);
 
-    this.logger.log(
-      ctx,
-      `Terms acceptance recorded: ${acceptanceId}`,
-    );
+    this.logger.log(ctx, `Terms acceptance recorded: ${acceptanceId}`);
 
     return acceptance;
   }
@@ -237,8 +232,7 @@ export class TermsService {
       userType,
     );
 
-    const isCompliant =
-      userState?.lastAcceptedVersionId === activeTerms.id;
+    const isCompliant = userState?.lastAcceptedVersionId === activeTerms.id;
 
     return {
       userType,
@@ -295,9 +289,7 @@ export class TermsService {
     );
 
     if (!termsVersion) {
-      throw new BadRequestException(
-        `Invalid terms version: ${termsVersionId}`,
-      );
+      throw new BadRequestException(`Invalid terms version: ${termsVersionId}`);
     }
 
     if (termsVersion.userType !== expectedUserType) {

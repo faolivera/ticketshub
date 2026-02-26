@@ -33,9 +33,7 @@ import { Role } from '../users/users.domain';
 
 @Injectable()
 export class PaymentConfirmationsService {
-  private readonly logger = new ContextLogger(
-    PaymentConfirmationsService.name,
-  );
+  private readonly logger = new ContextLogger(PaymentConfirmationsService.name);
 
   constructor(
     @Inject(PaymentConfirmationsRepository)
@@ -124,7 +122,9 @@ export class PaymentConfirmationsService {
       );
     }
 
-    if (!ALLOWED_MIME_TYPES.includes(file.mimetype as PaymentConfirmationMimeType)) {
+    if (
+      !ALLOWED_MIME_TYPES.includes(file.mimetype as PaymentConfirmationMimeType)
+    ) {
       throw new BadRequestException(
         `Invalid file type. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}`,
       );

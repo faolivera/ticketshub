@@ -722,7 +722,8 @@
     "newSectionPendingNote": "Las nuevas secciones requieren aprobación del administrador antes de que las entradas puedan listarse como activas.",
     "createSection": "Crear Sección",
     "createSectionFailed": "Error al crear la sección. Inténtalo de nuevo.",
-    "noSectionsFound": "No se encontraron secciones coincidentes"
+    "noSectionsFound": "No se encontraron secciones coincidentes",
+    "noDatesFound": "No se encontraron fechas coincidentes"
   },
   "common": {
     "loading": "Cargando...",
@@ -888,7 +889,45 @@
         "success": "Evento actualizado exitosamente",
         "error": "Error al actualizar el evento",
         "warnings": "Advertencias",
-        "confirmDeleteDate": "Fechas a eliminar:"
+        "confirmDeleteDate": "Fechas a eliminar:",
+        "eventSections": "Secciones del Evento",
+        "addSection": "Agregar Sección",
+        "newSection": "Nueva Sección",
+        "noSections": "Aún no hay secciones",
+        "saveSection": "Guardar Sección",
+        "sectionAddError": "Error al agregar la sección",
+        "sectionUpdateError": "Error al actualizar la sección",
+        "sectionDeleteError": "Error al eliminar la sección (puede tener listados)"
+      },
+      "allEvents": {
+        "title": "Todos los Eventos",
+        "description": "Navega y gestiona todos los eventos de la plataforma",
+        "searchPlaceholder": "Buscar eventos por nombre...",
+        "eventName": "Nombre del Evento",
+        "createdBy": "Creado Por",
+        "listings": "Listados",
+        "availableTickets": "Tickets Disponibles",
+        "status": "Estado",
+        "actions": "Acciones",
+        "noEvents": "No se encontraron eventos",
+        "loading": "Cargando eventos...",
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "pageInfo": "Página {{page}} de {{totalPages}}",
+        "showingResults": "Mostrando {{count}} de {{total}} eventos",
+        "expandListings": "Mostrar Listados",
+        "collapseListings": "Ocultar Listados",
+        "noListings": "No hay listados para este evento",
+        "listingsTable": {
+          "listingId": "ID de Listado",
+          "creator": "Creador",
+          "date": "Fecha",
+          "section": "Sección",
+          "totalTickets": "Total de Tickets",
+          "ticketStatus": "Disponibles / Reservados / Vendidos",
+          "listingStatus": "Estado",
+          "price": "Precio"
+        }
       }
     },
     "payments": {

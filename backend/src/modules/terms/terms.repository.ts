@@ -66,7 +66,8 @@ export class TermsRepository implements OnModuleInit {
     const allAcceptances = await this.acceptancesStorage.getAll(ctx);
     return allAcceptances.filter(
       (a) =>
-        a.userId === userId && (userType === undefined || a.userType === userType),
+        a.userId === userId &&
+        (userType === undefined || a.userType === userType),
     );
   }
 

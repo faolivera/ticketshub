@@ -204,7 +204,9 @@ export class UsersService {
   ): Promise<LoginResponse> {
     // Validate terms acceptance data before proceeding
     if (!data.termsAcceptance?.termsVersionId) {
-      throw new BadRequestException('Terms acceptance is required for registration');
+      throw new BadRequestException(
+        'Terms acceptance is required for registration',
+      );
     }
 
     // Validate that the terms version is valid and current for buyer
@@ -300,7 +302,12 @@ export class UsersService {
     userId: string,
     phoneNumber: string,
   ): Promise<void> {
-    await this.usersRepository.updatePhoneVerified(ctx, userId, true, phoneNumber);
+    await this.usersRepository.updatePhoneVerified(
+      ctx,
+      userId,
+      true,
+      phoneNumber,
+    );
 
     const user = await this.usersRepository.findById(ctx, userId);
     if (user?.level === UserLevel.Basic) {
@@ -408,11 +415,12 @@ export class UsersService {
     }
 
     // Verify seller terms are accepted
-    const hasAcceptedSellerTerms = await this.termsService.hasAcceptedCurrentTerms(
-      ctx,
-      userId,
-      TermsUserType.Seller,
-    );
+    const hasAcceptedSellerTerms =
+      await this.termsService.hasAcceptedCurrentTerms(
+        ctx,
+        userId,
+        TermsUserType.Seller,
+      );
 
     if (!hasAcceptedSellerTerms) {
       throw new BadRequestException('Must accept seller terms first');

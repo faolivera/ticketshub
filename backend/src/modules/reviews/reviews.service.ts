@@ -93,9 +93,7 @@ export class ReviewsService {
       );
 
     if (existingReview) {
-      throw new ConflictException(
-        'You have already reviewed this transaction',
-      );
+      throw new ConflictException('You have already reviewed this transaction');
     }
 
     const reviewerRole: ReviewPartyRole = isBuyer ? 'buyer' : 'seller';
@@ -230,9 +228,7 @@ export class ReviewsService {
     const negativeReviews = reviews.filter(
       (r) => r.rating === 'negative',
     ).length;
-    const neutralReviews = reviews.filter(
-      (r) => r.rating === 'neutral',
-    ).length;
+    const neutralReviews = reviews.filter((r) => r.rating === 'neutral').length;
 
     const nonNeutralReviews = totalReviews - neutralReviews;
     const positivePercent =
@@ -284,9 +280,7 @@ export class ReviewsService {
     const negativeReviews = reviews.filter(
       (r) => r.rating === 'negative',
     ).length;
-    const neutralReviews = reviews.filter(
-      (r) => r.rating === 'neutral',
-    ).length;
+    const neutralReviews = reviews.filter((r) => r.rating === 'neutral').length;
 
     const nonNeutralReviews = totalReviews - neutralReviews;
     const positivePercent =

@@ -35,7 +35,10 @@ export class PaymentConfirmationsRepository implements OnModuleInit {
     return all.filter((c) => c.status === PaymentConfirmationStatus.Pending);
   }
 
-  async save(ctx: Ctx, confirmation: PaymentConfirmation): Promise<PaymentConfirmation> {
+  async save(
+    ctx: Ctx,
+    confirmation: PaymentConfirmation,
+  ): Promise<PaymentConfirmation> {
     await this.storage.set(ctx, confirmation.id, confirmation);
     return confirmation;
   }

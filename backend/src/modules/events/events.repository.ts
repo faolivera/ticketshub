@@ -17,7 +17,9 @@ export class EventsRepository implements OnModuleInit {
   constructor() {
     this.eventStorage = new KeyValueFileStorage<Event>('events');
     this.dateStorage = new KeyValueFileStorage<EventDate>('event-dates');
-    this.sectionStorage = new KeyValueFileStorage<EventSection>('event-sections');
+    this.sectionStorage = new KeyValueFileStorage<EventSection>(
+      'event-sections',
+    );
   }
 
   /**
@@ -69,7 +71,9 @@ export class EventsRepository implements OnModuleInit {
     const allEvents = await this.eventStorage.getAll(ctx);
     const pendingDates = await this.getPendingDates(ctx);
     const pendingSections = await this.getPendingSections(ctx);
-    const eventIdsWithPendingDates = new Set(pendingDates.map((d) => d.eventId));
+    const eventIdsWithPendingDates = new Set(
+      pendingDates.map((d) => d.eventId),
+    );
     const eventIdsWithPendingSections = new Set(
       pendingSections.map((s) => s.eventId),
     );
@@ -344,5 +348,32 @@ export class EventsRepository implements OnModuleInit {
    */
   async deleteEventSection(ctx: Ctx, id: string): Promise<void> {
     await this.sectionStorage.delete(ctx, id);
+  }
+
+  /**
+   * Get all events with optional search filter, returning paginated results.
+   * Search is case-insensitive on event name.
+   */
+  async getAllEventsPaginated(
+    ctx: Ctx,
+    options: { page: number; limit: number; search?: string },
+  ): Promise<{ events: Event[]; total: number }> {
+    let events = await this.eventStorage.getAll(ctx);
+
+    if (options.search) {
+      const searchLower = options.search.toLowerCase();
+      events = events.filter((e) => e.name.toLowerCase().includes(searchLower));
+    }
+
+    events.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    const total = events.length;
+    const offset = (options.page - 1) * options.limit;
+    const paginatedEvents = events.slice(offset, offset + options.limit);
+
+    return { events: paginatedEvents, total };
   }
 }

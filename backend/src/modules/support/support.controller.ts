@@ -53,11 +53,7 @@ export class SupportController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: CreateSupportTicketRequest,
   ): Promise<ApiResponse<CreateSupportTicketResponse>> {
-    const ticket = await this.supportService.createTicket(
-      ctx,
-      user.id,
-      body,
-    );
+    const ticket = await this.supportService.createTicket(ctx, user.id, body);
     return { success: true, data: ticket };
   }
 

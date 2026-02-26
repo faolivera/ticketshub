@@ -774,8 +774,10 @@ export class TransactionsService {
   ): Promise<boolean> {
     if (listingIds.length === 0) return false;
 
-    const transactions =
-      await this.transactionsRepository.getByListingIds(ctx, listingIds);
+    const transactions = await this.transactionsRepository.getByListingIds(
+      ctx,
+      listingIds,
+    );
 
     return transactions.some((t) => t.status === TransactionStatus.Completed);
   }

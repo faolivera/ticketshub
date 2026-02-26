@@ -69,6 +69,7 @@ export interface AdminPendingSectionItem {
   eventId: string;
   eventName: string;
   name: string;
+  seatingType: 'numbered' | 'unnumbered';
   status: string;
   pendingListingsCount: number;
   createdAt: Date;
@@ -214,4 +215,123 @@ export interface AdminAddSectionResponse {
 export interface AdminDeleteSectionResponse {
   success: boolean;
   message: string;
+}
+
+/**
+ * Request for PUT /api/admin/events/sections/:id (update section name and seating type)
+ */
+export interface AdminUpdateSectionRequest {
+  name?: string;
+  seatingType?: 'numbered' | 'unnumbered';
+}
+
+/**
+ * Response for PUT /api/admin/events/sections/:id
+ */
+export interface AdminUpdateSectionResponse {
+  id: string;
+  eventId: string;
+  name: string;
+  seatingType: 'numbered' | 'unnumbered';
+  status: string;
+  approvedBy?: string;
+  rejectionReason?: string;
+  updatedAt: Date;
+}
+
+/**
+ * Query parameters for GET /api/admin/events/all
+ */
+export interface AdminAllEventsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+/**
+ * Creator info for admin all events list
+ */
+export interface AdminEventCreatorInfo {
+  id: string;
+  publicName: string;
+}
+
+/**
+ * Event item for admin all events list
+ */
+export interface AdminAllEventItem {
+  id: string;
+  name: string;
+  status: string;
+  createdAt: Date;
+  createdBy: AdminEventCreatorInfo;
+  listingsCount: number;
+  availableTicketsCount: number;
+}
+
+/**
+ * Response for GET /api/admin/events/all
+ */
+export interface AdminAllEventsResponse {
+  events: AdminAllEventItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * Ticket status counts for admin listing view
+ */
+export interface AdminTicketStatusCounts {
+  available: number;
+  reserved: number;
+  sold: number;
+}
+
+/**
+ * Event date reference for listing
+ */
+export interface AdminListingEventDate {
+  id: string;
+  date: Date;
+}
+
+/**
+ * Event section reference for listing
+ */
+export interface AdminListingEventSection {
+  id: string;
+  name: string;
+}
+
+/**
+ * Creator info for listing
+ */
+export interface AdminListingCreatorInfo {
+  id: string;
+  publicName: string;
+}
+
+/**
+ * Ticket listing item for admin event listings view
+ */
+export interface AdminEventListingItem {
+  id: string;
+  createdBy: AdminListingCreatorInfo;
+  eventDate: AdminListingEventDate;
+  eventSection: AdminListingEventSection;
+  totalTickets: number;
+  ticketsByStatus: AdminTicketStatusCounts;
+  status: string;
+  pricePerTicket: Money;
+  createdAt: Date;
+}
+
+/**
+ * Response for GET /api/admin/events/:eventId/listings
+ */
+export interface AdminEventListingsResponse {
+  listings: AdminEventListingItem[];
+  total: number;
 }

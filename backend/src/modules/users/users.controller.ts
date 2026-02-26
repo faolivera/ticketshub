@@ -69,7 +69,8 @@ export class UsersController {
     @Context() ctx: Ctx,
     @Body() body: RegisterRequest,
   ): Promise<ApiResponse<RegisterResponse>> {
-    const { email, password, firstName, lastName, country, termsAcceptance } = body;
+    const { email, password, firstName, lastName, country, termsAcceptance } =
+      body;
 
     if (!email || !password || !firstName || !lastName || !country) {
       throw new BadRequestException(
@@ -78,9 +79,7 @@ export class UsersController {
     }
 
     if (!termsAcceptance?.termsVersionId || !termsAcceptance?.method) {
-      throw new BadRequestException(
-        'Terms acceptance is required to register',
-      );
+      throw new BadRequestException('Terms acceptance is required to register');
     }
 
     const result = await this.usersService.register(ctx, {

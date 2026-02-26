@@ -146,5 +146,15 @@
         "src": "/images/default/default.png"
       }
     }
+  },
+  "sec_1772114262673_bdb6b8d7": {
+    "id": "sec_1772114262673_bdb6b8d7",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "Platea Cubierta",
+    "seatingType": "numbered",
+    "status": "pending",
+    "createdBy": "2",
+    "createdAt": "2026-02-26T13:57:42.674Z",
+    "updatedAt": "2026-02-26T13:57:42.674Z"
   }
 }

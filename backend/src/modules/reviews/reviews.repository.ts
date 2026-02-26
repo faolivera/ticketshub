@@ -72,7 +72,9 @@ export class ReviewsRepository implements OnModuleInit {
   ): Promise<Review[]> {
     const all = await this.storage.getAll(ctx);
     return all
-      .filter((r) => r.revieweeId === revieweeId && r.revieweeRole === revieweeRole)
+      .filter(
+        (r) => r.revieweeId === revieweeId && r.revieweeRole === revieweeRole,
+      )
       .sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),

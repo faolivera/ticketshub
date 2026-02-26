@@ -1,5 +1,8 @@
 import type { Image } from '../images/images.domain';
-import type { LoginResponse, AuthenticatedUserPublicInfo } from './users.domain';
+import type {
+  LoginResponse,
+  AuthenticatedUserPublicInfo,
+} from './users.domain';
 import type { AcceptanceMethod } from '../terms/terms.domain';
 
 /**

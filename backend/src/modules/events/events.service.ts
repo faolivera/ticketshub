@@ -37,8 +37,10 @@ import type {
 import type {
   AdminUpdateEventRequest,
   AdminUpdateEventResponse,
+  AdminUpdateSectionRequest,
 } from '../admin/admin.api';
 import { Role, UserLevel } from '../users/users.domain';
+import { SeatingType } from '../tickets/tickets.domain';
 
 const DEFAULT_IMAGE: Image = {
   id: 'default',
@@ -524,6 +526,68 @@ export class EventsService {
   }
 
   /**
+   * Update an event section (admin only).
+   * Updates name and/or seating type. At least one field must be provided.
+   */
+  async adminUpdateEventSection(
+    ctx: Ctx,
+    sectionId: string,
+    data: AdminUpdateSectionRequest,
+  ): Promise<EventSection> {
+    const section = await this.eventsRepository.findEventSectionById(
+      ctx,
+      sectionId,
+    );
+    if (!section) {
+      throw new NotFoundException('Event section not found');
+    }
+
+    const updates: Partial<EventSection> = {};
+
+    if (data.name !== undefined) {
+      const existingSections = await this.eventsRepository.getSectionsByEventId(
+        ctx,
+        section.eventId,
+      );
+      const normalizedName = data.name.toLowerCase();
+      const duplicate = existingSections.find(
+        (s) => s.id !== sectionId && s.name.toLowerCase() === normalizedName,
+      );
+      if (duplicate) {
+        throw new BadRequestException(
+          `Section "${data.name}" already exists for this event`,
+        );
+      }
+      updates.name = data.name;
+    }
+
+    if (data.seatingType !== undefined) {
+      updates.seatingType =
+        data.seatingType === 'numbered'
+          ? (SeatingType.Numbered as EventSection['seatingType'])
+          : (SeatingType.Unnumbered as EventSection['seatingType']);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      throw new BadRequestException(
+        'At least one of name or seatingType must be provided',
+      );
+    }
+
+    const updated = await this.eventsRepository.updateEventSection(
+      ctx,
+      sectionId,
+      updates,
+    );
+
+    if (!updated) {
+      throw new NotFoundException('Event section not found');
+    }
+
+    return updated;
+  }
+
+  /**
    * Delete an event section (admin only).
    * Throws if section has any listings.
    */
@@ -710,10 +774,7 @@ export class EventsService {
               eventId,
               normalizedDate,
             );
-          if (
-            existingWithDate &&
-            existingWithDate.id !== dateUpdate.id
-          ) {
+          if (existingWithDate && existingWithDate.id !== dateUpdate.id) {
             throw new ConflictException(
               'An event date with this date already exists for this event',
             );
@@ -743,11 +804,12 @@ export class EventsService {
           const normalizedDate = this.normalizeDatetimeToMinute(
             dateUpdate.date,
           );
-          const existing = await this.eventsRepository.findEventDateByEventIdAndDate(
-            ctx,
-            eventId,
-            normalizedDate,
-          );
+          const existing =
+            await this.eventsRepository.findEventDateByEventIdAndDate(
+              ctx,
+              eventId,
+              normalizedDate,
+            );
           if (existing) {
             throw new ConflictException(
               'An event date with this date already exists for this event',
@@ -815,5 +877,16 @@ export class EventsService {
       deletedDateIds,
       warnings: warnings.length > 0 ? warnings : undefined,
     };
+  }
+
+  /**
+   * Get all events with pagination and optional search filter.
+   * Used for admin views.
+   */
+  async getAllEventsPaginated(
+    ctx: Ctx,
+    options: { page: number; limit: number; search?: string },
+  ): Promise<{ events: Event[]; total: number }> {
+    return await this.eventsRepository.getAllEventsPaginated(ctx, options);
   }
 }

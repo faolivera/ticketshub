@@ -7,11 +7,7 @@ import { UsersModule } from '../users/users.module';
 import { TicketsModule } from '../tickets/tickets.module';
 
 @Module({
-  imports: [
-    forwardRef(() => TransactionsModule),
-    UsersModule,
-    TicketsModule,
-  ],
+  imports: [forwardRef(() => TransactionsModule), UsersModule, TicketsModule],
   controllers: [PaymentConfirmationsController],
   providers: [PaymentConfirmationsService, PaymentConfirmationsRepository],
   exports: [PaymentConfirmationsService],

@@ -4,20 +4,34 @@ import { PaymentConfirmationsService } from '../../../../modules/payment-confirm
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
 import { EventsService } from '../../../../modules/events/events.service';
 import { TicketsRepository } from '../../../../modules/tickets/tickets.repository';
+import { TicketsService } from '../../../../modules/tickets/tickets.service';
+import { UsersService } from '../../../../modules/users/users.service';
 import { PaymentConfirmationStatus } from '../../../../modules/payment-confirmations/payment-confirmations.domain';
 import { TransactionStatus } from '../../../../modules/transactions/transactions.domain';
 import { TicketType } from '../../../../modules/tickets/tickets.domain';
-import { EventStatus, EventDateStatus } from '../../../../modules/events/events.domain';
+import {
+  EventStatus,
+  EventDateStatus,
+  EventSectionStatus,
+  EventCategory,
+} from '../../../../modules/events/events.domain';
+import { SeatingType } from '../../../../modules/tickets/tickets.domain';
 import type { Ctx } from '../../../../common/types/context';
 import type { Transaction } from '../../../../modules/transactions/transactions.domain';
 import type { PaymentConfirmationWithTransaction } from '../../../../modules/payment-confirmations/payment-confirmations.api';
 import type { AdminUpdateEventResponse } from '../../../../modules/admin/admin.api';
+import type { Event } from '../../../../modules/events/events.domain';
+import type { User } from '../../../../modules/users/users.domain';
+import { Role, UserLevel, UserStatus } from '../../../../modules/users/users.domain';
 
 describe('AdminService', () => {
   let service: AdminService;
   let paymentConfirmationsService: jest.Mocked<PaymentConfirmationsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let eventsService: jest.Mocked<EventsService>;
+  let ticketsRepository: jest.Mocked<TicketsRepository>;
+  let ticketsService: jest.Mocked<TicketsService>;
+  let usersService: jest.Mocked<UsersService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -69,10 +83,21 @@ describe('AdminService', () => {
     const mockEventsService = {
       getPendingEvents: jest.fn().mockResolvedValue([]),
       adminUpdateEventWithDates: jest.fn(),
+      getAllEventsPaginated: jest.fn(),
+      getEventById: jest.fn(),
     };
 
     const mockTicketsRepository = {
       getAll: jest.fn().mockResolvedValue([]),
+      getAllByEventId: jest.fn().mockResolvedValue([]),
+    };
+
+    const mockTicketsService = {
+      getListingStatsByEventIds: jest.fn(),
+    };
+
+    const mockUsersService = {
+      findByIds: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -85,6 +110,8 @@ describe('AdminService', () => {
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: EventsService, useValue: mockEventsService },
         { provide: TicketsRepository, useValue: mockTicketsRepository },
+        { provide: TicketsService, useValue: mockTicketsService },
+        { provide: UsersService, useValue: mockUsersService },
       ],
     }).compile();
 
@@ -92,6 +119,9 @@ describe('AdminService', () => {
     paymentConfirmationsService = module.get(PaymentConfirmationsService);
     transactionsService = module.get(TransactionsService);
     eventsService = module.get(EventsService);
+    ticketsRepository = module.get(TicketsRepository);
+    ticketsService = module.get(TicketsService);
+    usersService = module.get(UsersService);
   });
 
   describe('getAdminPayments', () => {
@@ -232,6 +262,75 @@ describe('AdminService', () => {
     });
   });
 
+  describe('getPendingEvents', () => {
+    const mockEventWithPendingSection = {
+      id: 'evt_123',
+      name: 'Test Event',
+      venue: 'Test Venue',
+      category: EventCategory.Concert,
+      status: EventStatus.Pending,
+      createdAt: new Date(),
+      dates: [
+        {
+          id: 'edt_123',
+          eventId: 'evt_123',
+          date: new Date('2025-06-01'),
+          status: EventDateStatus.Approved,
+          createdBy: 'user_123',
+          approvedBy: 'admin_123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      sections: [
+        {
+          id: 'sec_123',
+          eventId: 'evt_123',
+          name: 'VIP Section',
+          seatingType: SeatingType.Numbered,
+          status: EventSectionStatus.Pending,
+          createdBy: 'user_123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    };
+
+    it('should include seatingType in pending sections', async () => {
+      eventsService.getPendingEvents.mockResolvedValue([
+        mockEventWithPendingSection as any,
+      ]);
+
+      const result = await service.getPendingEvents(mockCtx);
+
+      expect(result.events).toHaveLength(1);
+      expect(result.events[0].pendingSections).toHaveLength(1);
+      expect(result.events[0].pendingSections[0].seatingType).toBe('numbered');
+      expect(result.events[0].pendingSections[0].name).toBe('VIP Section');
+    });
+
+    it('should map unnumbered seating type correctly', async () => {
+      const eventWithUnnumbered = {
+        ...mockEventWithPendingSection,
+        sections: [
+          {
+            ...mockEventWithPendingSection.sections[0],
+            seatingType: SeatingType.Unnumbered,
+          },
+        ],
+      };
+      eventsService.getPendingEvents.mockResolvedValue([
+        eventWithUnnumbered as any,
+      ]);
+
+      const result = await service.getPendingEvents(mockCtx);
+
+      expect(result.events[0].pendingSections[0].seatingType).toBe(
+        'unnumbered',
+      );
+    });
+  });
+
   describe('updateEventWithDates', () => {
     const mockUpdateResponse: AdminUpdateEventResponse = {
       event: {
@@ -240,7 +339,11 @@ describe('AdminService', () => {
         description: 'Updated description',
         category: 'Concert',
         venue: 'Updated Venue',
-        location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+        location: {
+          line1: '123 Main St',
+          city: 'Test City',
+          countryCode: 'US',
+        },
         imageIds: [],
         status: EventStatus.Approved,
         createdBy: 'user_123',
@@ -264,7 +367,9 @@ describe('AdminService', () => {
     };
 
     it('should delegate to eventsService.adminUpdateEventWithDates', async () => {
-      eventsService.adminUpdateEventWithDates.mockResolvedValue(mockUpdateResponse);
+      eventsService.adminUpdateEventWithDates.mockResolvedValue(
+        mockUpdateResponse,
+      );
 
       const result = await service.updateEventWithDates(
         mockCtx,
@@ -288,7 +393,9 @@ describe('AdminService', () => {
         deletedDateIds: ['edt_456', 'edt_789'],
         warnings: ['Cancelled 2 listing(s) for deleted date edt_456'],
       };
-      eventsService.adminUpdateEventWithDates.mockResolvedValue(responseWithDeletes);
+      eventsService.adminUpdateEventWithDates.mockResolvedValue(
+        responseWithDeletes,
+      );
 
       const result = await service.updateEventWithDates(
         mockCtx,
@@ -298,7 +405,9 @@ describe('AdminService', () => {
       );
 
       expect(result.deletedDateIds).toEqual(['edt_456', 'edt_789']);
-      expect(result.warnings).toContain('Cancelled 2 listing(s) for deleted date edt_456');
+      expect(result.warnings).toContain(
+        'Cancelled 2 listing(s) for deleted date edt_456',
+      );
     });
 
     it('should handle update with new dates', async () => {
@@ -318,20 +427,411 @@ describe('AdminService', () => {
           },
         ],
       };
-      eventsService.adminUpdateEventWithDates.mockResolvedValue(responseWithNewDate);
+      eventsService.adminUpdateEventWithDates.mockResolvedValue(
+        responseWithNewDate,
+      );
 
       const result = await service.updateEventWithDates(
         mockCtx,
         'evt_123',
         {
-          dates: [
-            { date: '2025-06-01T19:00:00Z', status: 'approved' },
-          ],
+          dates: [{ date: '2025-06-01T19:00:00Z', status: 'approved' }],
         },
         'admin_123',
       );
 
       expect(result.dates).toHaveLength(2);
+    });
+  });
+
+  describe('getAllEvents', () => {
+    const mockEvent: Event = {
+      id: 'evt_123',
+      name: 'Test Concert',
+      description: 'A test concert',
+      category: EventCategory.Concert,
+      venue: 'Test Venue',
+      location: {
+        line1: '123 Main St',
+        city: 'Test City',
+        countryCode: 'US',
+      },
+      imageIds: [],
+      status: EventStatus.Approved,
+      createdBy: 'user_123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockUser: User = {
+      id: 'user_123',
+      email: 'user@test.com',
+      password: 'hashedpassword',
+      firstName: 'Test',
+      lastName: 'User',
+      publicName: 'Test User',
+      role: Role.User,
+      level: UserLevel.Seller,
+      status: UserStatus.Enabled,
+      imageId: 'img_123',
+      country: 'US',
+      currency: 'USD',
+      emailVerified: true,
+      phoneVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should return paginated events with creator info and listing stats', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [mockEvent],
+        total: 1,
+      });
+      usersService.findByIds.mockResolvedValue([mockUser]);
+      ticketsService.getListingStatsByEventIds.mockResolvedValue(
+        new Map([
+          ['evt_123', { listingsCount: 5, availableTicketsCount: 20 }],
+        ]),
+      );
+
+      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+
+      expect(result.events).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
+      expect(result.totalPages).toBe(1);
+
+      const event = result.events[0];
+      expect(event.id).toBe('evt_123');
+      expect(event.name).toBe('Test Concert');
+      expect(event.createdBy.id).toBe('user_123');
+      expect(event.createdBy.publicName).toBe('Test User');
+      expect(event.listingsCount).toBe(5);
+      expect(event.availableTicketsCount).toBe(20);
+    });
+
+    it('should use default pagination values when not provided', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [],
+        total: 0,
+      });
+
+      await service.getAllEvents(mockCtx, {});
+
+      expect(eventsService.getAllEventsPaginated).toHaveBeenCalledWith(
+        mockCtx,
+        { page: 1, limit: 20, search: undefined },
+      );
+    });
+
+    it('should pass search filter to events service', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [],
+        total: 0,
+      });
+
+      await service.getAllEvents(mockCtx, { search: 'concert' });
+
+      expect(eventsService.getAllEventsPaginated).toHaveBeenCalledWith(
+        mockCtx,
+        { page: 1, limit: 20, search: 'concert' },
+      );
+    });
+
+    it('should return empty result when no events found', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [],
+        total: 0,
+      });
+
+      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+
+      expect(result.events).toHaveLength(0);
+      expect(result.total).toBe(0);
+      expect(result.totalPages).toBe(0);
+    });
+
+    it('should calculate total pages correctly', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [mockEvent],
+        total: 45,
+      });
+      usersService.findByIds.mockResolvedValue([mockUser]);
+      ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
+
+      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+
+      expect(result.totalPages).toBe(3);
+    });
+
+    it('should handle unknown users gracefully', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [mockEvent],
+        total: 1,
+      });
+      usersService.findByIds.mockResolvedValue([]);
+      ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
+
+      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+
+      expect(result.events[0].createdBy.publicName).toBe('Unknown User');
+    });
+
+    it('should handle events without listing stats', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [mockEvent],
+        total: 1,
+      });
+      usersService.findByIds.mockResolvedValue([mockUser]);
+      ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
+
+      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+
+      expect(result.events[0].listingsCount).toBe(0);
+      expect(result.events[0].availableTicketsCount).toBe(0);
+    });
+
+    it('should handle multiple events with different creators', async () => {
+      const secondEvent: Event = {
+        ...mockEvent,
+        id: 'evt_456',
+        name: 'Second Event',
+        createdBy: 'user_456',
+      };
+      const secondUser: User = {
+        ...mockUser,
+        id: 'user_456',
+        publicName: 'Another User',
+      };
+
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [mockEvent, secondEvent],
+        total: 2,
+      });
+      usersService.findByIds.mockResolvedValue([mockUser, secondUser]);
+      ticketsService.getListingStatsByEventIds.mockResolvedValue(
+        new Map([
+          ['evt_123', { listingsCount: 5, availableTicketsCount: 20 }],
+          ['evt_456', { listingsCount: 3, availableTicketsCount: 10 }],
+        ]),
+      );
+
+      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+
+      expect(result.events).toHaveLength(2);
+      expect(result.events[0].createdBy.publicName).toBe('Test User');
+      expect(result.events[1].createdBy.publicName).toBe('Another User');
+    });
+  });
+
+  describe('getEventListings', () => {
+    const mockEventWithDates = {
+      id: 'evt_123',
+      name: 'Test Concert',
+      description: 'A test concert',
+      category: EventCategory.Concert,
+      venue: 'Test Venue',
+      location: {
+        line1: '123 Main St',
+        city: 'Test City',
+        countryCode: 'US',
+      },
+      imageIds: [],
+      images: [],
+      status: EventStatus.Approved,
+      createdBy: 'user_123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      dates: [
+        {
+          id: 'edt_123',
+          eventId: 'evt_123',
+          date: new Date('2025-06-01'),
+          status: EventDateStatus.Approved,
+          createdBy: 'user_123',
+          approvedBy: 'admin_123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      sections: [
+        {
+          id: 'sec_123',
+          eventId: 'evt_123',
+          name: 'VIP Section',
+          seatingType: SeatingType.Numbered,
+          status: EventSectionStatus.Approved,
+          createdBy: 'user_123',
+          approvedBy: 'admin_123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    };
+
+    const mockListing = {
+      id: 'listing_123',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_123',
+      type: TicketType.DigitalTransferable,
+      ticketUnits: [
+        { id: 'unit_1', status: 'available' },
+        { id: 'unit_2', status: 'reserved' },
+        { id: 'unit_3', status: 'sold' },
+      ],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: 'Active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockSeller: User = {
+      id: 'seller_123',
+      email: 'seller@test.com',
+      password: 'hashedpassword',
+      firstName: 'Test',
+      lastName: 'Seller',
+      publicName: 'Test Seller',
+      role: Role.User,
+      level: UserLevel.Seller,
+      status: UserStatus.Enabled,
+      imageId: 'img_123',
+      country: 'US',
+      currency: 'USD',
+      emailVerified: true,
+      phoneVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should return enriched listings with seller, date, and section info', async () => {
+      ticketsRepository.getAllByEventId.mockResolvedValue([mockListing as any]);
+      usersService.findByIds.mockResolvedValue([mockSeller]);
+      eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
+
+      const result = await service.getEventListings(mockCtx, 'evt_123');
+
+      expect(result.listings).toHaveLength(1);
+      expect(result.total).toBe(1);
+
+      const listing = result.listings[0];
+      expect(listing.id).toBe('listing_123');
+      expect(listing.createdBy.id).toBe('seller_123');
+      expect(listing.createdBy.publicName).toBe('Test Seller');
+      expect(listing.eventDate.id).toBe('edt_123');
+      expect(listing.eventSection.id).toBe('sec_123');
+      expect(listing.eventSection.name).toBe('VIP Section');
+      expect(listing.totalTickets).toBe(3);
+      expect(listing.ticketsByStatus).toEqual({
+        available: 1,
+        reserved: 1,
+        sold: 1,
+      });
+      expect(listing.status).toBe('Active');
+      expect(listing.pricePerTicket).toEqual({ amount: 5000, currency: 'USD' });
+    });
+
+    it('should return empty response when event has no listings', async () => {
+      ticketsRepository.getAllByEventId.mockResolvedValue([]);
+
+      const result = await service.getEventListings(mockCtx, 'evt_123');
+
+      expect(result.listings).toHaveLength(0);
+      expect(result.total).toBe(0);
+      expect(usersService.findByIds).not.toHaveBeenCalled();
+      expect(eventsService.getEventById).not.toHaveBeenCalled();
+    });
+
+    it('should aggregate user info correctly for multiple listings', async () => {
+      const secondListing = {
+        ...mockListing,
+        id: 'listing_456',
+        sellerId: 'seller_456',
+      };
+      const secondSeller: User = {
+        ...mockSeller,
+        id: 'seller_456',
+        publicName: 'Another Seller',
+      };
+
+      ticketsRepository.getAllByEventId.mockResolvedValue([
+        mockListing as any,
+        secondListing as any,
+      ]);
+      usersService.findByIds.mockResolvedValue([mockSeller, secondSeller]);
+      eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
+
+      const result = await service.getEventListings(mockCtx, 'evt_123');
+
+      expect(result.listings).toHaveLength(2);
+      expect(result.listings[0].createdBy.publicName).toBe('Test Seller');
+      expect(result.listings[1].createdBy.publicName).toBe('Another Seller');
+
+      expect(usersService.findByIds).toHaveBeenCalledTimes(1);
+      expect(usersService.findByIds).toHaveBeenCalledWith(mockCtx, [
+        'seller_123',
+        'seller_456',
+      ]);
+    });
+
+    it('should handle unknown seller gracefully', async () => {
+      ticketsRepository.getAllByEventId.mockResolvedValue([mockListing as any]);
+      usersService.findByIds.mockResolvedValue([]);
+      eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
+
+      const result = await service.getEventListings(mockCtx, 'evt_123');
+
+      expect(result.listings[0].createdBy.publicName).toBe('Unknown User');
+    });
+
+    it('should count ticket statuses correctly', async () => {
+      const listingWithAllAvailable = {
+        ...mockListing,
+        ticketUnits: [
+          { id: 'unit_1', status: 'available' },
+          { id: 'unit_2', status: 'available' },
+          { id: 'unit_3', status: 'available' },
+        ],
+      };
+
+      ticketsRepository.getAllByEventId.mockResolvedValue([
+        listingWithAllAvailable as any,
+      ]);
+      usersService.findByIds.mockResolvedValue([mockSeller]);
+      eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
+
+      const result = await service.getEventListings(mockCtx, 'evt_123');
+
+      expect(result.listings[0].ticketsByStatus).toEqual({
+        available: 3,
+        reserved: 0,
+        sold: 0,
+      });
+    });
+
+    it('should handle multiple listings from same seller', async () => {
+      const secondListing = {
+        ...mockListing,
+        id: 'listing_456',
+      };
+
+      ticketsRepository.getAllByEventId.mockResolvedValue([
+        mockListing as any,
+        secondListing as any,
+      ]);
+      usersService.findByIds.mockResolvedValue([mockSeller]);
+      eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
+
+      const result = await service.getEventListings(mockCtx, 'evt_123');
+
+      expect(result.listings).toHaveLength(2);
+      expect(usersService.findByIds).toHaveBeenCalledWith(mockCtx, [
+        'seller_123',
+      ]);
     });
   });
 });

@@ -9,7 +9,11 @@ import {
   SeatingType,
   TicketUnitStatus,
 } from '../../../../modules/tickets/tickets.domain';
-import { EventStatus, EventDateStatus, EventSectionStatus } from '../../../../modules/events/events.domain';
+import {
+  EventStatus,
+  EventDateStatus,
+  EventSectionStatus,
+} from '../../../../modules/events/events.domain';
 import { UserLevel } from '../../../../modules/users/users.domain';
 import type { TicketListing } from '../../../../modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../modules/shared/money.domain';
@@ -172,7 +176,9 @@ describe('TicketsService', () => {
 
     it('should create listing with Active status when event and date are approved', async () => {
       eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
-      ticketsRepository.create.mockImplementation(async (ctx, listing) => listing);
+      ticketsRepository.create.mockImplementation(
+        async (ctx, listing) => listing,
+      );
 
       const result = await service.createListing(
         mockCtx,
@@ -187,7 +193,9 @@ describe('TicketsService', () => {
 
     it('should create listing with Pending status when event date is pending', async () => {
       eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
-      ticketsRepository.create.mockImplementation(async (ctx, listing) => listing);
+      ticketsRepository.create.mockImplementation(
+        async (ctx, listing) => listing,
+      );
 
       const result = await service.createListing(
         mockCtx,
@@ -201,24 +209,38 @@ describe('TicketsService', () => {
 
     it('should create listing with Pending status when event is pending', async () => {
       eventsService.getEventById.mockResolvedValue(mockPendingEvent as any);
-      ticketsRepository.create.mockImplementation(async (ctx, listing) => listing);
+      ticketsRepository.create.mockImplementation(
+        async (ctx, listing) => listing,
+      );
 
       const result = await service.createListing(
         mockCtx,
         'seller_123',
         UserLevel.Seller,
-        { ...baseCreateRequest, eventId: 'evt_pending', eventDateId: 'edt_789' },
+        {
+          ...baseCreateRequest,
+          eventId: 'evt_pending',
+          eventDateId: 'edt_789',
+        },
       );
 
       expect(result.status).toBe(ListingStatus.Pending);
     });
 
     it('should throw BadRequestException when event is rejected', async () => {
-      const rejectedEvent = { ...mockApprovedEvent, status: EventStatus.Rejected };
+      const rejectedEvent = {
+        ...mockApprovedEvent,
+        status: EventStatus.Rejected,
+      };
       eventsService.getEventById.mockResolvedValue(rejectedEvent as any);
 
       await expect(
-        service.createListing(mockCtx, 'seller_123', UserLevel.Seller, baseCreateRequest),
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          baseCreateRequest,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -232,18 +254,32 @@ describe('TicketsService', () => {
           },
         ],
       };
-      eventsService.getEventById.mockResolvedValue(eventWithRejectedDate as any);
+      eventsService.getEventById.mockResolvedValue(
+        eventWithRejectedDate as any,
+      );
 
       await expect(
-        service.createListing(mockCtx, 'seller_123', UserLevel.Seller, baseCreateRequest),
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          baseCreateRequest,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw NotFoundException when event does not exist', async () => {
-      eventsService.getEventById.mockRejectedValue(new NotFoundException('Event not found'));
+      eventsService.getEventById.mockRejectedValue(
+        new NotFoundException('Event not found'),
+      );
 
       await expect(
-        service.createListing(mockCtx, 'seller_123', UserLevel.Seller, baseCreateRequest),
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          baseCreateRequest,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -259,7 +295,10 @@ describe('TicketsService', () => {
       ticketsRepository.getPendingByEventId.mockResolvedValue(pendingListings);
       ticketsRepository.bulkUpdateStatus.mockResolvedValue(1);
 
-      const result = await service.activatePendingListingsForEvent(mockCtx, 'evt_123');
+      const result = await service.activatePendingListingsForEvent(
+        mockCtx,
+        'evt_123',
+      );
 
       expect(result).toBe(1);
       expect(ticketsRepository.bulkUpdateStatus).toHaveBeenCalledWith(
@@ -272,7 +311,10 @@ describe('TicketsService', () => {
     it('should return 0 when event is not approved', async () => {
       eventsService.getEventById.mockResolvedValue(mockPendingEvent as any);
 
-      const result = await service.activatePendingListingsForEvent(mockCtx, 'evt_pending');
+      const result = await service.activatePendingListingsForEvent(
+        mockCtx,
+        'evt_pending',
+      );
 
       expect(result).toBe(0);
       expect(ticketsRepository.bulkUpdateStatus).not.toHaveBeenCalled();
@@ -282,7 +324,10 @@ describe('TicketsService', () => {
       eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
       ticketsRepository.getPendingByEventId.mockResolvedValue([]);
 
-      const result = await service.activatePendingListingsForEvent(mockCtx, 'evt_123');
+      const result = await service.activatePendingListingsForEvent(
+        mockCtx,
+        'evt_123',
+      );
 
       expect(result).toBe(0);
       expect(ticketsRepository.bulkUpdateStatus).not.toHaveBeenCalled();
@@ -336,9 +381,9 @@ describe('TicketsService', () => {
     it('should throw NotFoundException when listing does not exist', async () => {
       ticketsRepository.findById.mockResolvedValue(null);
 
-      await expect(service.getListingById(mockCtx, 'non_existent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getListingById(mockCtx, 'non_existent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should return pendingReason with event when event is not approved', async () => {
@@ -399,7 +444,9 @@ describe('TicketsService', () => {
       };
 
       ticketsRepository.findById.mockResolvedValue(pendingListing);
-      eventsService.getEventById.mockResolvedValue(eventWithPendingSection as any);
+      eventsService.getEventById.mockResolvedValue(
+        eventWithPendingSection as any,
+      );
 
       const result = await service.getListingById(mockCtx, 'tkt_123');
 
@@ -433,7 +480,9 @@ describe('TicketsService', () => {
       };
 
       ticketsRepository.findById.mockResolvedValue(pendingListing);
-      eventsService.getEventById.mockResolvedValue(eventWithPendingItems as any);
+      eventsService.getEventById.mockResolvedValue(
+        eventWithPendingItems as any,
+      );
 
       const result = await service.getListingById(mockCtx, 'tkt_123');
 
@@ -460,7 +509,9 @@ describe('TicketsService', () => {
       ];
 
       eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
-      ticketsRepository.getPendingByEventDateId.mockResolvedValue(pendingListings);
+      ticketsRepository.getPendingByEventDateId.mockResolvedValue(
+        pendingListings,
+      );
       ticketsRepository.bulkUpdateStatus.mockResolvedValue(1);
 
       const result = await service.activatePendingListingsForEventDate(
@@ -571,10 +622,7 @@ describe('TicketsService', () => {
     it('should return empty array when no listings exist for section', async () => {
       ticketsRepository.getAllByEventSectionId.mockResolvedValue([]);
 
-      const result = await service.getListingsBySectionId(
-        mockCtx,
-        'sec_empty',
-      );
+      const result = await service.getListingsBySectionId(mockCtx, 'sec_empty');
 
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);

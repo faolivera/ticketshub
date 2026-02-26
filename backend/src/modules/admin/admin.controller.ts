@@ -3,9 +3,11 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Param,
   Body,
+  Query,
   Inject,
   UseGuards,
 } from '@nestjs/common';
@@ -30,6 +32,10 @@ import type {
   AdminAddSectionRequest,
   AdminAddSectionResponse,
   AdminDeleteSectionResponse,
+  AdminUpdateSectionRequest,
+  AdminUpdateSectionResponse,
+  AdminAllEventsResponse,
+  AdminEventListingsResponse,
 } from './admin.api';
 import {
   AdminPaymentsResponseSchema,
@@ -38,8 +44,12 @@ import {
   AdminApproveSectionResponseSchema,
   AdminAddSectionResponseSchema,
   AdminDeleteSectionResponseSchema,
+  AdminUpdateSectionResponseSchema,
+  AdminAllEventsResponseSchema,
+  AdminEventListingsResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
+import { SeatingType } from '../tickets/tickets.domain';
 
 @Controller('api/admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -75,6 +85,40 @@ export class AdminController {
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<AdminPendingEventsResponse>> {
     const data = await this.adminService.getPendingEvents(ctx);
+    return { success: true, data };
+  }
+
+  /**
+   * Get all events with pagination and optional search filter.
+   * Returns events with creator info and listing stats.
+   */
+  @Get('events/all')
+  @ValidateResponse(AdminAllEventsResponseSchema)
+  async getAllEvents(
+    @Context() ctx: Ctx,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ApiResponse<AdminAllEventsResponse>> {
+    const data = await this.adminService.getAllEvents(ctx, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      search,
+    });
+    return { success: true, data };
+  }
+
+  /**
+   * Get all ticket listings for a specific event.
+   * Returns aggregated listing data with seller info, event date, and section.
+   */
+  @Get('events/:eventId/listings')
+  @ValidateResponse(AdminEventListingsResponseSchema)
+  async getEventListings(
+    @Context() ctx: Ctx,
+    @Param('eventId') eventId: string,
+  ): Promise<ApiResponse<AdminEventListingsResponse>> {
+    const data = await this.adminService.getEventListings(ctx, eventId);
     return { success: true, data };
   }
 
@@ -132,6 +176,36 @@ export class AdminController {
   }
 
   /**
+   * Update an event section (name and/or seating type).
+   */
+  @Put('events/sections/:id')
+  @ValidateResponse(AdminUpdateSectionResponseSchema)
+  async updateSection(
+    @Context() ctx: Ctx,
+    @Param('id') sectionId: string,
+    @Body() body: AdminUpdateSectionRequest,
+  ): Promise<ApiResponse<AdminUpdateSectionResponse>> {
+    const section = await this.eventsService.adminUpdateEventSection(
+      ctx,
+      sectionId,
+      body,
+    );
+    return {
+      success: true,
+      data: {
+        id: section.id,
+        eventId: section.eventId,
+        name: section.name,
+        seatingType: section.seatingType,
+        status: section.status,
+        approvedBy: section.approvedBy,
+        rejectionReason: section.rejectionReason,
+        updatedAt: section.updatedAt,
+      },
+    };
+  }
+
+  /**
    * Add a section to an event (auto-approved when admin creates).
    */
   @Post('events/:eventId/sections')
@@ -142,12 +216,16 @@ export class AdminController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: AdminAddSectionRequest,
   ): Promise<ApiResponse<AdminAddSectionResponse>> {
+    const seatingType =
+      body.seatingType === 'numbered'
+        ? SeatingType.Numbered
+        : SeatingType.Unnumbered;
     const section = await this.eventsService.addEventSection(
       ctx,
       eventId,
       user.id,
       Role.Admin,
-      { name: body.name, seatingType: body.seatingType },
+      { name: body.name, seatingType },
     );
     return {
       success: true,

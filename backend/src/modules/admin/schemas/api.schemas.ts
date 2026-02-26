@@ -52,6 +52,7 @@ export const AdminPendingSectionItemSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
   name: z.string(),
+  seatingType: z.enum(['numbered', 'unnumbered']),
   status: z.string(),
   pendingListingsCount: z.number(),
   createdAt: z.coerce.date(),
@@ -109,25 +110,25 @@ const AdminEventDateUpdateSchema = z.object({
 });
 
 export const AdminUpdateEventRequestSchema = z.object({
-    name: z.string().min(3).max(200).optional(),
-    description: z.string().min(10).max(5000).optional(),
-    category: z
-      .enum([
-        'Concert',
-        'Sports',
-        'Theater',
-        'Festival',
-        'Conference',
-        'Comedy',
-        'Other',
-      ])
-      .optional(),
-    venue: z.string().min(2).max(200).optional(),
-    location: AdminEventAddressSchema.optional(),
-    imageIds: z.array(z.string()).optional(),
-    dates: z.array(AdminEventDateUpdateSchema).optional(),
-    datesToDelete: z.array(z.string()).optional(),
-  });
+  name: z.string().min(3).max(200).optional(),
+  description: z.string().min(10).max(5000).optional(),
+  category: z
+    .enum([
+      'Concert',
+      'Sports',
+      'Theater',
+      'Festival',
+      'Conference',
+      'Comedy',
+      'Other',
+    ])
+    .optional(),
+  venue: z.string().min(2).max(200).optional(),
+  location: AdminEventAddressSchema.optional(),
+  imageIds: z.array(z.string()).optional(),
+  dates: z.array(AdminEventDateUpdateSchema).optional(),
+  datesToDelete: z.array(z.string()).optional(),
+});
 
 const AdminEventResponseSchema = z.object({
   id: z.string(),
@@ -182,4 +183,95 @@ export const AdminAddSectionResponseSchema = z.object({
 export const AdminDeleteSectionResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
+});
+
+export const AdminUpdateSectionRequestSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    seatingType: z.enum(['numbered', 'unnumbered']).optional(),
+  })
+  .refine((data) => data.name !== undefined || data.seatingType !== undefined, {
+    message: 'At least one of name or seatingType must be provided',
+  });
+
+export const AdminUpdateSectionResponseSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  name: z.string(),
+  seatingType: z.enum(['numbered', 'unnumbered']),
+  status: z.string(),
+  approvedBy: z.string().optional(),
+  rejectionReason: z.string().optional(),
+  updatedAt: z.coerce.date(),
+});
+
+// Admin All Events Schemas
+
+export const AdminAllEventsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  search: z.string().optional(),
+});
+
+export const AdminEventCreatorInfoSchema = z.object({
+  id: z.string(),
+  publicName: z.string(),
+});
+
+export const AdminAllEventItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  status: z.string(),
+  createdAt: z.coerce.date(),
+  createdBy: AdminEventCreatorInfoSchema,
+  listingsCount: z.number(),
+  availableTicketsCount: z.number(),
+});
+
+export const AdminAllEventsResponseSchema = z.object({
+  events: z.array(AdminAllEventItemSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
+// Admin Event Listings Schemas
+
+export const AdminTicketStatusCountsSchema = z.object({
+  available: z.number(),
+  reserved: z.number(),
+  sold: z.number(),
+});
+
+export const AdminListingEventDateSchema = z.object({
+  id: z.string(),
+  date: z.coerce.date(),
+});
+
+export const AdminListingEventSectionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const AdminListingCreatorInfoSchema = z.object({
+  id: z.string(),
+  publicName: z.string(),
+});
+
+export const AdminEventListingItemSchema = z.object({
+  id: z.string(),
+  createdBy: AdminListingCreatorInfoSchema,
+  eventDate: AdminListingEventDateSchema,
+  eventSection: AdminListingEventSectionSchema,
+  totalTickets: z.number(),
+  ticketsByStatus: AdminTicketStatusCountsSchema,
+  status: z.string(),
+  pricePerTicket: MoneySchema,
+  createdAt: z.coerce.date(),
+});
+
+export const AdminEventListingsResponseSchema = z.object({
+  listings: z.array(AdminEventListingItemSchema),
+  total: z.number(),
 });

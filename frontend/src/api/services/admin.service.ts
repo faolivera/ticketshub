@@ -8,7 +8,12 @@ import type {
   AdminApproveSectionResponse,
   AdminAddSectionRequest,
   AdminAddSectionResponse,
+  AdminUpdateSectionRequest,
+  AdminUpdateSectionResponse,
   AdminDeleteSectionResponse,
+  AdminAllEventsQuery,
+  AdminAllEventsResponse,
+  AdminEventListingsResponse,
 } from '../types/admin';
 
 /**
@@ -77,11 +82,52 @@ export const adminService = {
   },
 
   /**
+   * Update an event section (name and/or seating type)
+   */
+  async updateSection(
+    sectionId: string,
+    data: AdminUpdateSectionRequest
+  ): Promise<AdminUpdateSectionResponse> {
+    const response = await apiClient.put<AdminUpdateSectionResponse>(
+      `/admin/events/sections/${sectionId}`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
    * Delete an event section (only allowed if no listings exist)
    */
   async deleteSection(sectionId: string): Promise<AdminDeleteSectionResponse> {
     const response = await apiClient.delete<AdminDeleteSectionResponse>(
       `/admin/events/sections/${sectionId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get all events with pagination and optional search filter
+   */
+  async getAllEvents(
+    query: AdminAllEventsQuery = {}
+  ): Promise<AdminAllEventsResponse> {
+    const params = new URLSearchParams();
+    if (query.page !== undefined) params.append('page', String(query.page));
+    if (query.limit !== undefined) params.append('limit', String(query.limit));
+    if (query.search) params.append('search', query.search);
+
+    const queryString = params.toString();
+    const url = `/admin/events/all${queryString ? `?${queryString}` : ''}`;
+    const response = await apiClient.get<AdminAllEventsResponse>(url);
+    return response.data;
+  },
+
+  /**
+   * Get all ticket listings for a specific event
+   */
+  async getEventListings(eventId: string): Promise<AdminEventListingsResponse> {
+    const response = await apiClient.get<AdminEventListingsResponse>(
+      `/admin/events/${eventId}/listings`
     );
     return response.data;
   },

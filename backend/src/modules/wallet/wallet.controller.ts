@@ -42,10 +42,7 @@ export class WalletController {
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<ListWalletTransactionsResponse>> {
-    const transactions = await this.walletService.getTransactions(
-      ctx,
-      user.id,
-    );
+    const transactions = await this.walletService.getTransactions(ctx, user.id);
     return { success: true, data: transactions };
   }
 

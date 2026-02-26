@@ -87,8 +87,10 @@ export function SellTicket() {
 
   const [eventSearchTerm, setEventSearchTerm] = useState(newEvent?.name || '');
   const [ticketTypeSearchTerm, setTicketTypeSearchTerm] = useState('');
+  const [dateSearchTerm, setDateSearchTerm] = useState('');
   const [showEventSuggestions, setShowEventSuggestions] = useState(false);
   const [showTicketTypeSuggestions, setShowTicketTypeSuggestions] = useState(false);
+  const [showDateSuggestions, setShowDateSuggestions] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventWithDates | null>(null);
 
   // Fetch events (both approved and pending for creation)
@@ -252,6 +254,8 @@ export function SellTicket() {
     setEventSearchTerm(event.name);
     setShowEventSuggestions(false);
     setSelectedEvent(event);
+    setDateSearchTerm('');
+    setTicketTypeSearchTerm('');
     setIsPendingListing(event.status === EventStatus.Pending);
   };
 
@@ -342,6 +346,7 @@ export function SellTicket() {
     setFormData({ ...formData, eventName: value, eventId: '', eventDateId: '', eventDate: '', eventTime: '' });
     setShowEventSuggestions(value.length > 0);
     setSelectedEvent(null);
+    setDateSearchTerm('');
     setIsPendingListing(false);
   };
 
@@ -377,7 +382,7 @@ export function SellTicket() {
       setEvents(events.map(e => e.id === selectedEvent.id ? updatedEvent : e));
 
       // Select the new date
-      handleDateSelect(newEventDate.id);
+      handleDateSelect(newEventDate);
       
       setShowCreateDateModal(false);
       setNewDateForm({ date: '', time: '' });
@@ -395,32 +400,58 @@ export function SellTicket() {
     setShowTicketTypeSuggestions(value.length > 0);
   };
 
-  const handleDateSelect = (dateId: string) => {
+  const handleDateSelect = (eventDate: EventDate | 'create-new') => {
     if (!selectedEvent) return;
     
-    if (dateId === 'create-new') {
+    if (eventDate === 'create-new') {
       setShowCreateDateModal(true);
+      setShowDateSuggestions(false);
       return;
     }
     
-    const eventDate = selectedEvent.dates.find(d => d.id === dateId);
-    if (eventDate) {
-      const date = new Date(eventDate.date);
-      
-      setFormData({
-        ...formData,
-        eventDateId: dateId,
-        eventDate: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-        eventTime: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-      });
-      
-      // Check if this creates a pending listing
-      const eventPending = selectedEvent.status === EventStatus.Pending;
-      const datePending = eventDate.status === EventDateStatus.Pending;
-      const selectedSection = selectedEvent.sections.find(s => s.id === formData.eventSectionId);
-      const sectionPending = selectedSection?.status === EventSectionStatus.Pending;
-      setIsPendingListing(eventPending || datePending || sectionPending);
-    }
+    const date = new Date(eventDate.date);
+    const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const formattedTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    
+    setFormData({
+      ...formData,
+      eventDateId: eventDate.id,
+      eventDate: formattedDate,
+      eventTime: formattedTime,
+    });
+    
+    setDateSearchTerm(`${formattedDate} at ${formattedTime}`);
+    setShowDateSuggestions(false);
+    
+    // Check if this creates a pending listing
+    const eventPending = selectedEvent.status === EventStatus.Pending;
+    const datePending = eventDate.status === EventDateStatus.Pending;
+    const selectedSection = selectedEvent.sections.find(s => s.id === formData.eventSectionId);
+    const sectionPending = selectedSection?.status === EventSectionStatus.Pending;
+    setIsPendingListing(eventPending || datePending || sectionPending);
+  };
+  
+  const formatDateForDisplay = (eventDate: EventDate) => {
+    const date = new Date(eventDate.date);
+    const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const formattedTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `${formattedDate} at ${formattedTime}`;
+  };
+  
+  const getFilteredDates = () => {
+    if (!selectedEvent) return { approved: [], pending: [] };
+    
+    const searchLower = dateSearchTerm.toLowerCase();
+    
+    const approved = selectedEvent.dates
+      .filter(d => d.status === EventDateStatus.Approved)
+      .filter(d => formatDateForDisplay(d).toLowerCase().includes(searchLower));
+    
+    const pending = selectedEvent.dates
+      .filter(d => d.status === EventDateStatus.Pending)
+      .filter(d => formatDateForDisplay(d).toLowerCase().includes(searchLower));
+    
+    return { approved, pending };
   };
 
   // Redirect if not authenticated
@@ -749,47 +780,72 @@ export function SellTicket() {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('sellTicket.dateTime')} <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    value={formData.eventDateId}
-                    onChange={(e) => handleDateSelect(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">{t('sellTicket.selectDateTime')}</option>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={dateSearchTerm}
+                      onChange={(e) => {
+                        setDateSearchTerm(e.target.value);
+                        setFormData({ ...formData, eventDateId: '', eventDate: '', eventTime: '' });
+                        setShowDateSuggestions(true);
+                      }}
+                      onFocus={() => setShowDateSuggestions(true)}
+                      placeholder={t('sellTicket.selectDateTime')}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                     
-                    {/* Approved dates */}
-                    {selectedEvent.dates
-                      .filter(d => d.status === EventDateStatus.Approved)
-                      .map((eventDate) => {
-                        const date = new Date(eventDate.date);
-                        return (
-                          <option key={eventDate.id} value={eventDate.id}>
-                            {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                            {' '}at{' '}
-                            {date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                          </option>
-                        );
-                      })}
-                    
-                    {/* Pending dates */}
-                    {selectedEvent.dates
-                      .filter(d => d.status === EventDateStatus.Pending)
-                      .map((eventDate) => {
-                        const date = new Date(eventDate.date);
-                        return (
-                          <option key={eventDate.id} value={eventDate.id}>
-                            ⏳ {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                            {' '}at{' '}
-                            {date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                            {' '}({t('sellTicket.pendingApproval')})
-                          </option>
-                        );
-                      })}
-                    
-                    {/* Create new date option */}
-                    <option value="create-new">➕ {t('sellTicket.createNewDateTime')}</option>
-                  </select>
-                  
+                    {showDateSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {/* Approved dates first */}
+                        {getFilteredDates().approved.map((eventDate) => (
+                          <button
+                            key={eventDate.id}
+                            type="button"
+                            onClick={() => handleDateSelect(eventDate)}
+                            className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100"
+                          >
+                            <p className="font-semibold text-gray-900">{formatDateForDisplay(eventDate)}</p>
+                          </button>
+                        ))}
+                        
+                        {/* Pending dates */}
+                        {getFilteredDates().pending.map((eventDate) => (
+                          <button
+                            key={eventDate.id}
+                            type="button"
+                            onClick={() => handleDateSelect(eventDate)}
+                            className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100"
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className="font-semibold text-gray-900">{formatDateForDisplay(eventDate)}</p>
+                              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
+                                <Clock className="w-3 h-3" />
+                                {t('common.pending')}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                        
+                        {/* No dates message */}
+                        {getFilteredDates().approved.length === 0 && getFilteredDates().pending.length === 0 && (
+                          <div className="px-4 py-3 text-sm text-gray-600">
+                            {t('sellTicket.noDatesFound')}
+                          </div>
+                        )}
+                        
+                        {/* Create new date option */}
+                        <button
+                          type="button"
+                          onClick={() => handleDateSelect('create-new')}
+                          className="w-full text-left px-4 py-3 hover:bg-green-50 border-t border-gray-200 text-green-700 font-semibold flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {t('sellTicket.createNewDateTime')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

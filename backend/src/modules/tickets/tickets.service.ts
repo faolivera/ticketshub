@@ -189,7 +189,7 @@ export class TicketsService {
     sellerId: string,
     userLevel: UserLevel,
     data: CreateListingRequest,
-  ): Promise<TicketListing> {
+  ): Promise<TicketListingWithEvent> {
     // Check permissions
     if (
       userLevel !== UserLevel.Seller &&
@@ -500,8 +500,7 @@ export class TicketsService {
     const eventSection = event.sections.find(
       (s) => s.id === listing.eventSectionId,
     );
-    const seatingType =
-      eventSection?.seatingType ?? SeatingType.Unnumbered;
+    const seatingType = eventSection?.seatingType ?? SeatingType.Unnumbered;
     this.validateListingSeatingConsistency(listing.ticketUnits, seatingType);
 
     if (!ticketUnitIds.length) {
@@ -571,8 +570,10 @@ export class TicketsService {
       return 0;
     }
 
-    const pendingListings =
-      await this.ticketsRepository.getPendingByEventId(ctx, eventId);
+    const pendingListings = await this.ticketsRepository.getPendingByEventId(
+      ctx,
+      eventId,
+    );
 
     const approvedDateIds = new Set(
       event.dates
@@ -714,7 +715,8 @@ export class TicketsService {
     );
 
     const listingsToCancel = listings.filter(
-      (l) => l.status === ListingStatus.Active || l.status === ListingStatus.Pending,
+      (l) =>
+        l.status === ListingStatus.Active || l.status === ListingStatus.Pending,
     );
 
     if (listingsToCancel.length === 0) {
@@ -775,5 +777,21 @@ export class TicketsService {
     );
 
     return { cancelledCount, listingIds };
+  }
+
+  /**
+   * Get listing stats (count and available tickets) for multiple event IDs.
+   * Used for admin views that need aggregated listing information.
+   */
+  async getListingStatsByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<
+    Map<string, { listingsCount: number; availableTicketsCount: number }>
+  > {
+    return await this.ticketsRepository.getListingStatsByEventIds(
+      ctx,
+      eventIds,
+    );
   }
 }

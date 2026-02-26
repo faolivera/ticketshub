@@ -1,13 +1,31 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from '../../../../modules/events/events.service';
 import { EventsRepository } from '../../../../modules/events/events.repository';
 import { ImagesRepository } from '../../../../modules/images/images.repository';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
-import { EventStatus, EventDateStatus, EventCategory, EventSectionStatus } from '../../../../modules/events/events.domain';
-import { ListingStatus, SeatingType, TicketType, TicketUnitStatus } from '../../../../modules/tickets/tickets.domain';
-import type { Event, EventDate, EventSection } from '../../../../modules/events/events.domain';
+import {
+  EventStatus,
+  EventDateStatus,
+  EventCategory,
+  EventSectionStatus,
+} from '../../../../modules/events/events.domain';
+import {
+  ListingStatus,
+  SeatingType,
+  TicketType,
+  TicketUnitStatus,
+} from '../../../../modules/tickets/tickets.domain';
+import type {
+  Event,
+  EventDate,
+  EventSection,
+} from '../../../../modules/events/events.domain';
 import type { TicketListing } from '../../../../modules/tickets/tickets.domain';
 import type { Ctx } from '../../../../common/types/context';
 
@@ -56,6 +74,8 @@ describe('EventsService', () => {
       updateEventDate: jest.fn(),
       deleteEventDate: jest.fn(),
       deleteEventSection: jest.fn(),
+      updateEventSection: jest.fn(),
+      createEventSection: jest.fn(),
       getApprovedEvents: jest.fn(),
       getAllEvents: jest.fn(),
       getPendingEvents: jest.fn(),
@@ -166,8 +186,14 @@ describe('EventsService', () => {
 
     it('should return pending and approved dates/sections by default (excludes rejected)', async () => {
       eventsRepository.getApprovedEvents.mockResolvedValue([mockApprovedEvent]);
-      eventsRepository.getDatesByEventIdAndStatus.mockResolvedValue([mockApprovedEventDate, mockPendingEventDate]);
-      eventsRepository.getSectionsByEventIdAndStatus.mockResolvedValue([mockApprovedSection, mockPendingSection]);
+      eventsRepository.getDatesByEventIdAndStatus.mockResolvedValue([
+        mockApprovedEventDate,
+        mockPendingEventDate,
+      ]);
+      eventsRepository.getSectionsByEventIdAndStatus.mockResolvedValue([
+        mockApprovedSection,
+        mockPendingSection,
+      ]);
       imagesRepository.getByIds.mockResolvedValue([]);
 
       const result = await service.listEvents(mockCtx, {}, false);
@@ -175,24 +201,33 @@ describe('EventsService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].dates).toHaveLength(2);
       expect(result[0].sections).toHaveLength(2);
-      expect(result[0].sections.map(s => s.name)).toContain('VIP');
-      expect(result[0].sections.map(s => s.name)).toContain('Campo Delantero');
+      expect(result[0].sections.map((s) => s.name)).toContain('VIP');
+      expect(result[0].sections.map((s) => s.name)).toContain(
+        'Campo Delantero',
+      );
       expect(eventsRepository.getDatesByEventIdAndStatus).toHaveBeenCalledWith(
         mockCtx,
         'evt_123',
         [EventDateStatus.Pending, EventDateStatus.Approved],
       );
-      expect(eventsRepository.getSectionsByEventIdAndStatus).toHaveBeenCalledWith(
-        mockCtx,
-        'evt_123',
-        [EventSectionStatus.Pending, EventSectionStatus.Approved],
-      );
+      expect(
+        eventsRepository.getSectionsByEventIdAndStatus,
+      ).toHaveBeenCalledWith(mockCtx, 'evt_123', [
+        EventSectionStatus.Pending,
+        EventSectionStatus.Approved,
+      ]);
     });
 
     it('should include all statuses when includeAllStatuses is true', async () => {
       eventsRepository.getAllEvents.mockResolvedValue([mockApprovedEvent]);
-      eventsRepository.getDatesByEventId.mockResolvedValue([mockApprovedEventDate, mockPendingEventDate]);
-      eventsRepository.getSectionsByEventId.mockResolvedValue([mockApprovedSection, mockPendingSection]);
+      eventsRepository.getDatesByEventId.mockResolvedValue([
+        mockApprovedEventDate,
+        mockPendingEventDate,
+      ]);
+      eventsRepository.getSectionsByEventId.mockResolvedValue([
+        mockApprovedSection,
+        mockPendingSection,
+      ]);
       imagesRepository.getByIds.mockResolvedValue([]);
 
       const result = await service.listEvents(mockCtx, {}, true);
@@ -202,14 +237,21 @@ describe('EventsService', () => {
       expect(result[0].sections).toHaveLength(2);
       expect(eventsRepository.getDatesByEventId).toHaveBeenCalled();
       expect(eventsRepository.getSectionsByEventId).toHaveBeenCalled();
-      expect(eventsRepository.getDatesByEventIdAndStatus).not.toHaveBeenCalled();
-      expect(eventsRepository.getSectionsByEventIdAndStatus).not.toHaveBeenCalled();
+      expect(
+        eventsRepository.getDatesByEventIdAndStatus,
+      ).not.toHaveBeenCalled();
+      expect(
+        eventsRepository.getSectionsByEventIdAndStatus,
+      ).not.toHaveBeenCalled();
     });
   });
 
   describe('approveEvent', () => {
     it('should approve event and activate pending listings', async () => {
-      const approvedEvent = { ...mockPendingEvent, status: EventStatus.Approved };
+      const approvedEvent = {
+        ...mockPendingEvent,
+        status: EventStatus.Approved,
+      };
 
       eventsRepository.findEventById.mockResolvedValue(mockPendingEvent);
       eventsRepository.updateEvent.mockResolvedValue(approvedEvent);
@@ -223,10 +265,9 @@ describe('EventsService', () => {
       );
 
       expect(result.status).toBe(EventStatus.Approved);
-      expect(ticketsService.activatePendingListingsForEvent).toHaveBeenCalledWith(
-        mockCtx,
-        'evt_123',
-      );
+      expect(
+        ticketsService.activatePendingListingsForEvent,
+      ).toHaveBeenCalledWith(mockCtx, 'evt_123');
     });
 
     it('should reject event without activating listings', async () => {
@@ -248,7 +289,9 @@ describe('EventsService', () => {
       );
 
       expect(result.status).toBe(EventStatus.Rejected);
-      expect(ticketsService.activatePendingListingsForEvent).not.toHaveBeenCalled();
+      expect(
+        ticketsService.activatePendingListingsForEvent,
+      ).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when event does not exist', async () => {
@@ -260,7 +303,10 @@ describe('EventsService', () => {
     });
 
     it('should throw BadRequestException when event is not pending', async () => {
-      const approvedEvent = { ...mockPendingEvent, status: EventStatus.Approved };
+      const approvedEvent = {
+        ...mockPendingEvent,
+        status: EventStatus.Approved,
+      };
       eventsRepository.findEventById.mockResolvedValue(approvedEvent);
 
       await expect(
@@ -279,9 +325,14 @@ describe('EventsService', () => {
 
   describe('approveEventDate', () => {
     it('should approve event date and activate pending listings', async () => {
-      const approvedDate = { ...mockPendingEventDate, status: EventDateStatus.Approved };
+      const approvedDate = {
+        ...mockPendingEventDate,
+        status: EventDateStatus.Approved,
+      };
 
-      eventsRepository.findEventDateById.mockResolvedValue(mockPendingEventDate);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockPendingEventDate,
+      );
       eventsRepository.updateEventDate.mockResolvedValue(approvedDate);
       ticketsService.activatePendingListingsForEventDate.mockResolvedValue(2);
 
@@ -293,11 +344,9 @@ describe('EventsService', () => {
       );
 
       expect(result.status).toBe(EventDateStatus.Approved);
-      expect(ticketsService.activatePendingListingsForEventDate).toHaveBeenCalledWith(
-        mockCtx,
-        'edt_123',
-        'evt_123',
-      );
+      expect(
+        ticketsService.activatePendingListingsForEventDate,
+      ).toHaveBeenCalledWith(mockCtx, 'edt_123', 'evt_123');
     });
 
     it('should reject event date without activating listings', async () => {
@@ -307,7 +356,9 @@ describe('EventsService', () => {
         rejectionReason: 'Invalid date',
       };
 
-      eventsRepository.findEventDateById.mockResolvedValue(mockPendingEventDate);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockPendingEventDate,
+      );
       eventsRepository.updateEventDate.mockResolvedValue(rejectedDate);
 
       const result = await service.approveEventDate(
@@ -319,7 +370,9 @@ describe('EventsService', () => {
       );
 
       expect(result.status).toBe(EventDateStatus.Rejected);
-      expect(ticketsService.activatePendingListingsForEventDate).not.toHaveBeenCalled();
+      expect(
+        ticketsService.activatePendingListingsForEventDate,
+      ).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when event date does not exist', async () => {
@@ -331,7 +384,10 @@ describe('EventsService', () => {
     });
 
     it('should throw BadRequestException when event date is not pending', async () => {
-      const approvedDate = { ...mockPendingEventDate, status: EventDateStatus.Approved };
+      const approvedDate = {
+        ...mockPendingEventDate,
+        status: EventDateStatus.Approved,
+      };
       eventsRepository.findEventDateById.mockResolvedValue(approvedDate);
 
       await expect(
@@ -340,7 +396,9 @@ describe('EventsService', () => {
     });
 
     it('should throw BadRequestException when rejecting without reason', async () => {
-      eventsRepository.findEventDateById.mockResolvedValue(mockPendingEventDate);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockPendingEventDate,
+      );
 
       await expect(
         service.approveEventDate(mockCtx, 'edt_123', 'admin_123', false),
@@ -409,7 +467,9 @@ describe('EventsService', () => {
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(updatedEvent);
       eventsRepository.updateEvent.mockResolvedValue(updatedEvent);
-      eventsRepository.getDatesByEventId.mockResolvedValue([mockApprovedEventDate]);
+      eventsRepository.getDatesByEventId.mockResolvedValue([
+        mockApprovedEventDate,
+      ]);
 
       const result = await service.adminUpdateEventWithDates(
         mockCtx,
@@ -427,12 +487,19 @@ describe('EventsService', () => {
     });
 
     it('should update existing event date', async () => {
-      const updatedDate = { ...mockApprovedEventDate, date: new Date('2025-07-01T19:00:00.000Z') };
+      const updatedDate = {
+        ...mockApprovedEventDate,
+        date: new Date('2025-07-01T19:00:00.000Z'),
+      };
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(mockApprovedEventDate);
-      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(undefined);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockApprovedEventDate,
+      );
+      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(
+        undefined,
+      );
       eventsRepository.updateEventDate.mockResolvedValue(updatedDate);
       eventsRepository.getDatesByEventId.mockResolvedValue([updatedDate]);
 
@@ -464,9 +531,14 @@ describe('EventsService', () => {
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
-      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(undefined);
+      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(
+        undefined,
+      );
       eventsRepository.createEventDate.mockResolvedValue(newDate);
-      eventsRepository.getDatesByEventId.mockResolvedValue([mockApprovedEventDate, newDate]);
+      eventsRepository.getDatesByEventId.mockResolvedValue([
+        mockApprovedEventDate,
+        newDate,
+      ]);
 
       const result = await service.adminUpdateEventWithDates(
         mockCtx,
@@ -485,7 +557,9 @@ describe('EventsService', () => {
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(mockApprovedEventDate);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockApprovedEventDate,
+      );
       ticketsService.getListingsByDateId.mockResolvedValue([]);
       eventsRepository.deleteEventDate.mockResolvedValue();
       eventsRepository.getDatesByEventId.mockResolvedValue([]);
@@ -497,15 +571,22 @@ describe('EventsService', () => {
         'admin_123',
       );
 
-      expect(eventsRepository.deleteEventDate).toHaveBeenCalledWith(mockCtx, 'edt_123');
+      expect(eventsRepository.deleteEventDate).toHaveBeenCalledWith(
+        mockCtx,
+        'edt_123',
+      );
       expect(result.deletedDateIds).toContain('edt_123');
     });
 
     it('should throw BadRequestException when deleting date with completed transactions', async () => {
       eventsRepository.findEventById.mockResolvedValue(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(mockApprovedEventDate);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockApprovedEventDate,
+      );
       ticketsService.getListingsByDateId.mockResolvedValue([mockListing]);
-      transactionsService.hasCompletedTransactionsForListings.mockResolvedValue(true);
+      transactionsService.hasCompletedTransactionsForListings.mockResolvedValue(
+        true,
+      );
 
       await expect(
         service.adminUpdateEventWithDates(
@@ -521,9 +602,13 @@ describe('EventsService', () => {
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(mockApprovedEventDate);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockApprovedEventDate,
+      );
       ticketsService.getListingsByDateId.mockResolvedValue([mockListing]);
-      transactionsService.hasCompletedTransactionsForListings.mockResolvedValue(false);
+      transactionsService.hasCompletedTransactionsForListings.mockResolvedValue(
+        false,
+      );
       ticketsService.cancelListingsByDateId.mockResolvedValue({
         cancelledCount: 1,
         listingIds: ['tkt_123'],
@@ -538,7 +623,10 @@ describe('EventsService', () => {
         'admin_123',
       );
 
-      expect(ticketsService.cancelListingsByDateId).toHaveBeenCalledWith(mockCtx, 'edt_123');
+      expect(ticketsService.cancelListingsByDateId).toHaveBeenCalledWith(
+        mockCtx,
+        'edt_123',
+      );
       expect(result.warnings).toBeDefined();
       expect(result.warnings![0]).toContain('Cancelled 1 listing');
     });
@@ -549,7 +637,9 @@ describe('EventsService', () => {
         eventId: 'evt_different',
       };
       eventsRepository.findEventById.mockResolvedValue(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(dateFromDifferentEvent);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        dateFromDifferentEvent,
+      );
 
       await expect(
         service.adminUpdateEventWithDates(
@@ -595,8 +685,12 @@ describe('EventsService', () => {
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(updatedEvent);
       eventsRepository.updateEvent.mockResolvedValue(updatedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(mockApprovedEventDate);
-      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(undefined);
+      eventsRepository.findEventDateById.mockResolvedValue(
+        mockApprovedEventDate,
+      );
+      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(
+        undefined,
+      );
       eventsRepository.updateEventDate.mockResolvedValue(mockApprovedEventDate);
       eventsRepository.createEventDate.mockResolvedValue({
         ...mockApprovedEventDate,
@@ -709,7 +803,9 @@ describe('EventsService', () => {
         await service.deleteEventSection(mockCtx, 'sec_123');
       } catch (error) {
         expect(error).toBeInstanceOf(BadRequestException);
-        expect((error as BadRequestException).message).toContain('3 listing(s)');
+        expect((error as BadRequestException).message).toContain(
+          '3 listing(s)',
+        );
       }
 
       expect(eventsRepository.deleteEventSection).not.toHaveBeenCalled();

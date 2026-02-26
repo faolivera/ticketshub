@@ -83,7 +83,9 @@ export class OTPController {
     }
 
     if (type === OTPType.PhoneVerification && !phoneNumber) {
-      throw new BadRequestException('Phone number is required for phone verification');
+      throw new BadRequestException(
+        'Phone number is required for phone verification',
+      );
     }
 
     await this.otpService.verifyOTP(ctx, user.id, type, code);

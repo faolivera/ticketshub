@@ -25,10 +25,12 @@ import { Badge } from '../../../components/ui/badge';
 import {
   AlertTriangle,
   Calendar,
+  Layers,
   Plus,
   Trash2,
   Loader2,
   MapPin,
+  Pencil,
 } from 'lucide-react';
 import { adminService } from '../../../../api/services/admin.service';
 import type {
@@ -38,15 +40,18 @@ import type {
 import {
   EventCategory,
   EventDateStatus,
+  EventSectionStatus,
   type Event,
   type EventDate,
+  type EventSection,
+  type EventWithDates,
 } from '../../../../api/types/events';
 import type { Address } from '../../../../api/types/common';
 
 interface EditEventModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  event: Event | null;
+  event: EventWithDates | null;
   eventDates: EventDate[];
   onSuccess: () => void;
 }
@@ -56,6 +61,15 @@ interface DateFormState {
   date: string;
   time: string;
   status: EventDateStatus;
+  isNew?: boolean;
+  isDeleted?: boolean;
+}
+
+interface SectionFormState {
+  id: string;
+  name: string;
+  seatingType: 'numbered' | 'unnumbered';
+  status: EventSectionStatus;
   isNew?: boolean;
   isDeleted?: boolean;
 }
@@ -91,9 +105,18 @@ export function EditEventModal({
     countryCode: '',
   });
   const [dates, setDates] = useState<DateFormState[]>([]);
+  const [sections, setSections] = useState<SectionFormState[]>([]);
   const [saving, setSaving] = useState(false);
+  const [sectionActionLoading, setSectionActionLoading] = useState<string | null>(null);
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
+  const [newSectionName, setNewSectionName] = useState('');
+  const [newSectionSeatingType, setNewSectionSeatingType] = useState<'numbered' | 'unnumbered'>('unnumbered');
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+
+  const toSeatingType = (v: string): 'numbered' | 'unnumbered' =>
+    v === 'numbered' ? 'numbered' : 'unnumbered';
 
   useEffect(() => {
     if (event && open) {
@@ -112,8 +135,22 @@ export function EditEventModal({
           isDeleted: false,
         }))
       );
+      setSections(
+        (event.sections || []).map((s) => ({
+          id: s.id,
+          name: s.name,
+          seatingType: toSeatingType(s.seatingType),
+          status: s.status,
+          isNew: false,
+          isDeleted: false,
+        }))
+      );
       setError(null);
       setWarnings([]);
+      setEditingSectionId(null);
+      setIsAddSectionOpen(false);
+      setNewSectionName('');
+      setNewSectionSeatingType('unnumbered');
     }
   }, [event, eventDates, open]);
 
@@ -155,6 +192,83 @@ export function EditEventModal({
     const updated = [...dates];
     updated[index] = { ...updated[index], [field]: value };
     setDates(updated);
+  };
+
+  const handleAddSection = async () => {
+    if (!event || !newSectionName.trim()) return;
+    try {
+      setSectionActionLoading('add');
+      setError(null);
+      const created = await adminService.addSection(event.id, {
+        name: newSectionName.trim(),
+        seatingType: newSectionSeatingType,
+      });
+      setSections((prev) => [
+        ...prev,
+        {
+          id: created.id,
+          name: created.name,
+          seatingType: toSeatingType(created.seatingType),
+          status: created.status as EventSectionStatus,
+          isNew: false,
+          isDeleted: false,
+        },
+      ]);
+      setIsAddSectionOpen(false);
+      setNewSectionName('');
+      setNewSectionSeatingType('unnumbered');
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('admin.events.edit.sectionAddError'));
+    } finally {
+      setSectionActionLoading(null);
+    }
+  };
+
+  const handleUpdateSection = async (sectionId: string, name: string, seatingType: 'numbered' | 'unnumbered') => {
+    try {
+      setSectionActionLoading(sectionId);
+      setError(null);
+      const updated = await adminService.updateSection(sectionId, { name, seatingType });
+      setSections((prev) =>
+        prev.map((s) =>
+          s.id === sectionId
+            ? {
+                ...s,
+                name: updated.name,
+                seatingType: toSeatingType(updated.seatingType),
+                status: updated.status as EventSectionStatus,
+              }
+            : s
+        )
+      );
+      setEditingSectionId(null);
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('admin.events.edit.sectionUpdateError'));
+    } finally {
+      setSectionActionLoading(null);
+    }
+  };
+
+  const handleDeleteSection = async (sectionId: string) => {
+    try {
+      setSectionActionLoading(sectionId);
+      setError(null);
+      await adminService.deleteSection(sectionId);
+      setSections((prev) => prev.filter((s) => s.id !== sectionId));
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('admin.events.edit.sectionDeleteError'));
+    } finally {
+      setSectionActionLoading(null);
+    }
+  };
+
+  const handleSectionChange = (index: number, field: keyof SectionFormState, value: string) => {
+    const updated = [...sections];
+    updated[index] = { ...updated[index], [field]: value };
+    setSections(updated);
   };
 
   const buildDateISO = (dateStr: string, timeStr: string): string => {
@@ -517,6 +631,208 @@ export function EditEventModal({
                         );
                       })}
                     </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Layers className="h-4 w-4" />
+                    {t('admin.events.edit.eventSections')}
+                  </span>
+                  {!isAddSectionOpen ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsAddSectionOpen(true)}
+                      disabled={sectionActionLoading !== null}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      {t('admin.events.edit.addSection')}
+                    </Button>
+                  ) : null}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isAddSectionOpen && (
+                  <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                    <p className="text-sm font-medium">{t('admin.events.edit.newSection')}</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">
+                          {t('admin.events.sectionNameLabel')}
+                        </Label>
+                        <Input
+                          value={newSectionName}
+                          onChange={(e) => setNewSectionName(e.target.value)}
+                          placeholder={t('admin.events.sectionNamePlaceholder')}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">
+                          {t('admin.events.sectionSeatingType')}
+                        </Label>
+                        <Select
+                          value={newSectionSeatingType}
+                          onValueChange={(v) => setNewSectionSeatingType(v as 'numbered' | 'unnumbered')}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unnumbered">
+                              {t('sellTicket.generalAdmission')}
+                            </SelectItem>
+                            <SelectItem value="numbered">
+                              {t('sellTicket.numberedSeating')}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={handleAddSection}
+                        disabled={!newSectionName.trim() || sectionActionLoading === 'add'}
+                      >
+                        {sectionActionLoading === 'add' ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
+                        {t('admin.events.addSection')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setIsAddSectionOpen(false);
+                          setNewSectionName('');
+                          setNewSectionSeatingType('unnumbered');
+                        }}
+                        disabled={sectionActionLoading === 'add'}
+                      >
+                        {t('common.cancel')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {sections.length === 0 && !isAddSectionOpen ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {t('admin.events.edit.noSections')}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {sections.map((section, index) => (
+                      <div
+                        key={section.id}
+                        className="border rounded-lg p-4 space-y-3"
+                      >
+                        {editingSectionId === section.id ? (
+                          <>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">
+                                  {t('admin.events.sectionNameLabel')}
+                                </Label>
+                                <Input
+                                  value={section.name}
+                                  onChange={(e) =>
+                                    handleSectionChange(index, 'name', e.target.value)
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">
+                                  {t('admin.events.sectionSeatingType')}
+                                </Label>
+                                <Select
+                                  value={section.seatingType}
+                                  onValueChange={(v) =>
+                                    handleSectionChange(index, 'seatingType', v)
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="unnumbered">
+                                      {t('sellTicket.generalAdmission')}
+                                    </SelectItem>
+                                    <SelectItem value="numbered">
+                                      {t('sellTicket.numberedSeating')}
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleUpdateSection(
+                                    section.id,
+                                    section.name,
+                                    section.seatingType
+                                  )
+                                }
+                                disabled={
+                                  !section.name.trim() ||
+                                  sectionActionLoading === section.id
+                                }
+                              >
+                                {sectionActionLoading === section.id ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : null}
+                                {t('admin.events.edit.saveSection')}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingSectionId(null)}
+                                disabled={sectionActionLoading === section.id}
+                              >
+                                {t('common.cancel')}
+                              </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary">{section.status}</Badge>
+                                <span className="font-medium">{section.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  ({t(section.seatingType === 'numbered' ? 'sellTicket.numberedSeating' : 'sellTicket.generalAdmission')})
+                                </span>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setEditingSectionId(section.id)}
+                                  disabled={sectionActionLoading !== null}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => handleDeleteSection(section.id)}
+                                  disabled={sectionActionLoading !== null}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
