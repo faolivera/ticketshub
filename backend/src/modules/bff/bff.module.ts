@@ -4,9 +4,17 @@ import { BffService } from './bff.service';
 import { UsersModule } from '../users/users.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { TicketsModule } from '../tickets/tickets.module';
+import { ReviewsModule } from '../reviews/reviews.module';
+import { PaymentConfirmationsModule } from '../payment-confirmations/payment-confirmations.module';
 
 @Module({
-  imports: [UsersModule, TransactionsModule, TicketsModule],
+  imports: [
+    UsersModule,
+    TransactionsModule,
+    TicketsModule,
+    ReviewsModule,
+    PaymentConfirmationsModule,
+  ],
   controllers: [BffController],
   providers: [BffService],
 })

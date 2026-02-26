@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  forwardRef,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { TicketsRepository } from './tickets.repository';
@@ -28,13 +29,14 @@ import type {
   ListListingsQuery,
 } from './tickets.api';
 import { UserLevel } from '../users/users.domain';
+import { EventStatus, EventDateStatus } from '../events/events.domain';
 
 @Injectable()
 export class TicketsService {
   constructor(
     @Inject(TicketsRepository)
     private readonly ticketsRepository: TicketsRepository,
-    @Inject(EventsService)
+    @Inject(forwardRef(() => EventsService))
     private readonly eventsService: EventsService,
   ) {}
 
@@ -151,6 +153,23 @@ export class TicketsService {
   }
 
   /**
+   * Determine listing status based on event and event date approval status
+   */
+  private determineListingStatus(
+    eventStatus: EventStatus,
+    eventDateStatus: EventDateStatus,
+  ): ListingStatus {
+    const eventApproved = eventStatus === EventStatus.Approved;
+    const dateApproved = eventDateStatus === EventDateStatus.Approved;
+
+    if (eventApproved && dateApproved) {
+      return ListingStatus.Active;
+    }
+
+    return ListingStatus.Pending;
+  }
+
+  /**
    * Create a new listing
    */
   async createListing(
@@ -167,16 +186,33 @@ export class TicketsService {
       throw new ForbiddenException('Only sellers can create listings');
     }
 
-    // Validate event exists and is approved
+    // Validate event exists
     const event = await this.eventsService.getEventById(ctx, data.eventId);
     if (!event) {
       throw new NotFoundException('Event not found');
+    }
+
+    // Reject if event is rejected
+    if (event.status === EventStatus.Rejected) {
+      throw new BadRequestException(
+        'Cannot create listing for a rejected event',
+      );
     }
 
     // Validate event date exists
     const eventDate = event.dates.find((d) => d.id === data.eventDateId);
     if (!eventDate) {
       throw new NotFoundException('Event date not found');
+    }
+
+    // Reject if event date is rejected or cancelled
+    if (
+      eventDate.status === EventDateStatus.Rejected ||
+      eventDate.status === EventDateStatus.Cancelled
+    ) {
+      throw new BadRequestException(
+        'Cannot create listing for a rejected or cancelled event date',
+      );
     }
 
     // Validate physical ticket requirements
@@ -198,6 +234,12 @@ export class TicketsService {
 
     const ticketUnits = this.buildTicketUnits(data);
 
+    // Determine listing status based on event and date approval
+    const listingStatus = this.determineListingStatus(
+      event.status,
+      eventDate.status,
+    );
+
     const listing: TicketListing = {
       id: this.generateId(),
       sellerId,
@@ -212,7 +254,7 @@ export class TicketsService {
       pickupAddress: data.pickupAddress,
       description: data.description,
       section: data.section,
-      status: ListingStatus.Active,
+      status: listingStatus,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -475,6 +517,78 @@ export class TicketsService {
       ctx,
       listingId,
       ticketUnitIds,
+    );
+  }
+
+  /**
+   * Activate pending listings for an event.
+   * Called when an event is approved.
+   * Only activates listings whose event date is also approved.
+   */
+  async activatePendingListingsForEvent(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<number> {
+    const event = await this.eventsService.getEventById(ctx, eventId);
+    if (!event || event.status !== EventStatus.Approved) {
+      return 0;
+    }
+
+    const pendingListings =
+      await this.ticketsRepository.getPendingByEventId(ctx, eventId);
+
+    const approvedDateIds = new Set(
+      event.dates
+        .filter((d) => d.status === EventDateStatus.Approved)
+        .map((d) => d.id),
+    );
+
+    const listingsToActivate = pendingListings.filter((listing) =>
+      approvedDateIds.has(listing.eventDateId),
+    );
+
+    if (listingsToActivate.length === 0) {
+      return 0;
+    }
+
+    return await this.ticketsRepository.bulkUpdateStatus(
+      ctx,
+      listingsToActivate.map((l) => l.id),
+      ListingStatus.Active,
+    );
+  }
+
+  /**
+   * Activate pending listings for an event date.
+   * Called when an event date is approved.
+   * Only activates if the parent event is also approved.
+   */
+  async activatePendingListingsForEventDate(
+    ctx: Ctx,
+    eventDateId: string,
+    eventId: string,
+  ): Promise<number> {
+    const event = await this.eventsService.getEventById(ctx, eventId);
+    if (!event || event.status !== EventStatus.Approved) {
+      return 0;
+    }
+
+    const eventDate = event.dates.find((d) => d.id === eventDateId);
+    if (!eventDate || eventDate.status !== EventDateStatus.Approved) {
+      return 0;
+    }
+
+    const pendingListings =
+      await this.ticketsRepository.getPendingByEventDateId(ctx, eventDateId);
+
+    if (pendingListings.length === 0) {
+      return 0;
+    }
+
+    return await this.ticketsRepository.bulkUpdateStatus(
+      ctx,
+      pendingListings.map((l) => l.id),
+      ListingStatus.Active,
     );
   }
 }

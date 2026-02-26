@@ -1,0 +1,30 @@
+{
+  "rev_1772043747460_df4c6d38": {
+    "id": "rev_1772043747460_df4c6d38",
+    "transactionId": "txn_1772040573237_bc515e4d",
+    "buyerId": "3",
+    "sellerId": "2",
+    "reviewerId": "3",
+    "reviewerRole": "buyer",
+    "revieweeId": "2",
+    "revieweeRole": "seller",
+    "rating": "positive",
+    "comment": "excelente",
+    "createdAt": "2026-02-25T18:22:27.460Z",
+    "updatedAt": "2026-02-25T18:22:27.460Z"
+  },
+  "rev_1772043860937_ffaf887e": {
+    "id": "rev_1772043860937_ffaf887e",
+    "transactionId": "txn_1772043791484_ae692888",
+    "buyerId": "6",
+    "sellerId": "2",
+    "reviewerId": "6",
+    "reviewerRole": "buyer",
+    "revieweeId": "2",
+    "revieweeRole": "seller",
+    "rating": "positive",
+    "comment": "10 puntos",
+    "createdAt": "2026-02-25T18:24:20.937Z",
+    "updatedAt": "2026-02-25T18:24:20.937Z"
+  }
+}

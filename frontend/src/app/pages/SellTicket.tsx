@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Ticket, Plus, Loader2, Phone, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ticket, Plus, Loader2, Phone, Trash2, Clock, AlertTriangle, Calendar, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
@@ -9,8 +9,8 @@ import { EmptyState } from '@/app/components/EmptyState';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { eventsService } from '../../api/services/events.service';
 import { ticketsService } from '../../api/services/tickets.service';
-import { SeatingType, TicketType, DeliveryMethod } from '../../api/types';
-import type { EventWithDates } from '../../api/types';
+import { SeatingType, TicketType, DeliveryMethod, EventStatus, EventDateStatus } from '../../api/types';
+import type { EventWithDates, EventDate } from '../../api/types';
 
 interface NumberedSeat {
   row: string;
@@ -51,6 +51,19 @@ export function SellTicket() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Create date modal state
+  const [showCreateDateModal, setShowCreateDateModal] = useState(false);
+  const [isCreatingDate, setIsCreatingDate] = useState(false);
+  const [newDateForm, setNewDateForm] = useState({
+    date: '',
+    startTime: '',
+    endTime: '',
+    doorsOpenAt: '',
+  });
+  
+  // Track if selected event/date is pending
+  const [isPendingListing, setIsPendingListing] = useState(false);
+  
   const [formData, setFormData] = useState<TicketListingForm>({
     eventId: '',
     eventDateId: '',
@@ -76,13 +89,33 @@ export function SellTicket() {
   const [showTicketTypeSuggestions, setShowTicketTypeSuggestions] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventWithDates | null>(null);
 
-  // Fetch approved events
+  // Fetch events (both approved and pending for creation)
   useEffect(() => {
     async function fetchEvents() {
       setIsLoadingEvents(true);
       try {
-        const data = await eventsService.listEvents({ status: 'approved' });
-        setEvents(data);
+        // Fetch approved events for public listing
+        const approvedData = await eventsService.listEvents({ status: 'approved' });
+        // Also fetch user's own events which may include pending
+        let myEvents: EventWithDates[] = [];
+        try {
+          myEvents = await eventsService.getMyEvents();
+        } catch {
+          // User may not have any events, ignore error
+        }
+        
+        // Merge events, removing duplicates
+        const eventMap = new Map<string, EventWithDates>();
+        for (const event of approvedData) {
+          eventMap.set(event.id, event);
+        }
+        for (const event of myEvents) {
+          if (!eventMap.has(event.id)) {
+            eventMap.set(event.id, event);
+          }
+        }
+        
+        setEvents(Array.from(eventMap.values()));
       } catch (err) {
         console.error('Failed to fetch events:', err);
       } finally {
@@ -223,6 +256,7 @@ export function SellTicket() {
     setEventSearchTerm(event.name);
     setShowEventSuggestions(false);
     setSelectedEvent(event);
+    setIsPendingListing(event.status === EventStatus.Pending);
   };
 
   const handleTicketTypeSelect = (type: string) => {
@@ -236,6 +270,52 @@ export function SellTicket() {
     setFormData({ ...formData, eventName: value, eventId: '', eventDateId: '', eventDate: '', eventTime: '' });
     setShowEventSuggestions(value.length > 0);
     setSelectedEvent(null);
+    setIsPendingListing(false);
+  };
+
+  const handleCreateDate = async () => {
+    if (!selectedEvent || !newDateForm.date || !newDateForm.startTime) {
+      setError(t('sellTicket.dateTimeRequired'));
+      return;
+    }
+
+    setIsCreatingDate(true);
+    setError(null);
+
+    try {
+      const dateTime = new Date(`${newDateForm.date}T${newDateForm.startTime}`);
+      const endDateTime = newDateForm.endTime ? new Date(`${newDateForm.date}T${newDateForm.endTime}`) : undefined;
+      const doorsOpenDateTime = newDateForm.doorsOpenAt ? new Date(`${newDateForm.date}T${newDateForm.doorsOpenAt}`) : undefined;
+
+      const newEventDate = await eventsService.addEventDate(selectedEvent.id, {
+        date: dateTime,
+        startTime: dateTime,
+        endTime: endDateTime,
+        doorsOpenAt: doorsOpenDateTime,
+      });
+
+      // Update the selected event with the new date
+      const updatedEvent = {
+        ...selectedEvent,
+        dates: [...selectedEvent.dates, newEventDate],
+      };
+      setSelectedEvent(updatedEvent);
+      
+      // Update events list
+      setEvents(events.map(e => e.id === selectedEvent.id ? updatedEvent : e));
+
+      // Select the new date
+      handleDateSelect(newEventDate.id);
+      
+      // Close modal and reset form
+      setShowCreateDateModal(false);
+      setNewDateForm({ date: '', startTime: '', endTime: '', doorsOpenAt: '' });
+    } catch (err) {
+      console.error('Failed to create event date:', err);
+      setError(err instanceof Error ? err.message : t('sellTicket.createDateFailed'));
+    } finally {
+      setIsCreatingDate(false);
+    }
   };
 
   const handleTicketTypeInputChange = (value: string) => {
@@ -246,6 +326,11 @@ export function SellTicket() {
 
   const handleDateSelect = (dateId: string) => {
     if (!selectedEvent) return;
+    
+    if (dateId === 'create-new') {
+      setShowCreateDateModal(true);
+      return;
+    }
     
     const eventDate = selectedEvent.dates.find(d => d.id === dateId);
     if (eventDate) {
@@ -258,6 +343,11 @@ export function SellTicket() {
         eventDate: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
         eventTime: time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       });
+      
+      // Check if this creates a pending listing
+      const eventPending = selectedEvent.status === EventStatus.Pending;
+      const datePending = eventDate.status === EventDateStatus.Pending;
+      setIsPendingListing(eventPending || datePending);
     }
   };
 
@@ -307,6 +397,115 @@ export function SellTicket() {
             navigate('/');
           }}
         />
+      )}
+
+      {/* Create Date Modal */}
+      {showCreateDateModal && selectedEvent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-6 h-6 text-blue-600" />
+                <h2 className="text-xl font-bold text-gray-900">{t('sellTicket.createDateTitle')}</h2>
+              </div>
+              <button
+                onClick={() => setShowCreateDateModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-4">
+              {t('sellTicket.createDateDesc', { eventName: selectedEvent.name })}
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  {t('sellTicket.eventDate')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={newDateForm.date}
+                  onChange={(e) => setNewDateForm({ ...newDateForm, date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {t('sellTicket.startTime')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={newDateForm.startTime}
+                    onChange={(e) => setNewDateForm({ ...newDateForm, startTime: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {t('sellTicket.endTime')}
+                  </label>
+                  <input
+                    type="time"
+                    value={newDateForm.endTime}
+                    onChange={(e) => setNewDateForm({ ...newDateForm, endTime: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  {t('sellTicket.doorsOpen')}
+                </label>
+                <input
+                  type="time"
+                  value={newDateForm.doorsOpenAt}
+                  onChange={(e) => setNewDateForm({ ...newDateForm, doorsOpenAt: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-yellow-800">
+                    {t('sellTicket.newDatePendingNote')}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowCreateDateModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateDate}
+                disabled={isCreatingDate || !newDateForm.date || !newDateForm.startTime}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isCreatingDate ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                {isCreatingDate ? t('common.creating') : t('sellTicket.createDate')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="min-h-screen bg-gray-50">
@@ -363,7 +562,15 @@ export function SellTicket() {
                             onClick={() => handleEventSelect(event)}
                             className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
                           >
-                            <p className="font-semibold text-gray-900">{event.name}</p>
+                            <div className="flex items-center justify-between">
+                              <p className="font-semibold text-gray-900">{event.name}</p>
+                              {event.status === EventStatus.Pending && (
+                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
+                                  <Clock className="w-3 h-3" />
+                                  {t('common.pending')}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-sm text-gray-600">
                               {event.dates.length} date{event.dates.length !== 1 ? 's' : ''} available
                             </p>
@@ -391,7 +598,7 @@ export function SellTicket() {
               </div>
 
               {/* Date Selection */}
-              {selectedEvent && selectedEvent.dates.length > 0 && (
+              {selectedEvent && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('sellTicket.dateTime')} <span className="text-red-500">*</span>
@@ -403,8 +610,10 @@ export function SellTicket() {
                     required
                   >
                     <option value="">{t('sellTicket.selectDateTime')}</option>
+                    
+                    {/* Approved dates */}
                     {selectedEvent.dates
-                      .filter(d => d.status === 'approved')
+                      .filter(d => d.status === EventDateStatus.Approved)
                       .map((eventDate) => {
                         const date = new Date(eventDate.date);
                         const time = eventDate.startTime ? new Date(eventDate.startTime) : date;
@@ -416,7 +625,37 @@ export function SellTicket() {
                           </option>
                         );
                       })}
+                    
+                    {/* Pending dates */}
+                    {selectedEvent.dates
+                      .filter(d => d.status === EventDateStatus.Pending)
+                      .map((eventDate) => {
+                        const date = new Date(eventDate.date);
+                        const time = eventDate.startTime ? new Date(eventDate.startTime) : date;
+                        return (
+                          <option key={eventDate.id} value={eventDate.id}>
+                            ⏳ {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            {' '}at{' '}
+                            {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            {' '}({t('sellTicket.pendingApproval')})
+                          </option>
+                        );
+                      })}
+                    
+                    {/* Create new date option */}
+                    <option value="create-new">➕ {t('sellTicket.createNewDateTime')}</option>
                   </select>
+                  
+                  {/* Pending listing warning */}
+                  {isPendingListing && formData.eventDateId && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+                      <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-yellow-800">
+                        <p className="font-semibold">{t('sellTicket.pendingListingWarningTitle')}</p>
+                        <p>{t('sellTicket.pendingListingWarningDesc')}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

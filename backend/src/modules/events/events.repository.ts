@@ -56,10 +56,17 @@ export class EventsRepository implements OnModuleInit {
 
   /**
    * Get pending events (for admin)
+   * Returns events that are pending OR have pending dates
    */
   async getPendingEvents(ctx: Ctx): Promise<Event[]> {
-    const all = await this.eventStorage.getAll(ctx);
-    return all.filter((e) => e.status === EventStatus.Pending);
+    const allEvents = await this.eventStorage.getAll(ctx);
+    const pendingDates = await this.getPendingDates(ctx);
+    const eventIdsWithPendingDates = new Set(pendingDates.map((d) => d.eventId));
+
+    return allEvents.filter(
+      (e) =>
+        e.status === EventStatus.Pending || eventIdsWithPendingDates.has(e.id),
+    );
   }
 
   /**

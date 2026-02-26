@@ -1,13 +1,15 @@
 import apiClient from '../client';
 import type {
   UploadPaymentConfirmationResponse,
-  GetPaymentConfirmationResponse,
   ListPaymentConfirmationsResponse,
   PaymentConfirmation,
 } from '../types/payment-confirmations';
 
 /**
  * Payment confirmations service
+ *
+ * Note: For fetching payment confirmation metadata along with transaction details,
+ * use bffService.getTransactionDetails() instead.
  */
 export const paymentConfirmationsService = {
   /**
@@ -30,25 +32,6 @@ export const paymentConfirmationsService = {
       },
     );
     return response.data;
-  },
-
-  /**
-   * Get payment confirmation for a transaction
-   */
-  async getConfirmation(
-    transactionId: string,
-  ): Promise<GetPaymentConfirmationResponse> {
-    const response = await apiClient.get<GetPaymentConfirmationResponse>(
-      `/transactions/${transactionId}/payment-confirmation`,
-    );
-    return response.data;
-  },
-
-  /**
-   * Get URL path for the payment confirmation file endpoint
-   */
-  getFileUrl(transactionId: string): string {
-    return `/transactions/${transactionId}/payment-confirmation/file`;
   },
 
   /**

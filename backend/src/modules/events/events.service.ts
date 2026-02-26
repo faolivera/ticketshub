@@ -4,10 +4,12 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  forwardRef,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { EventsRepository } from './events.repository';
 import { ImagesRepository } from '../images/images.repository';
+import { TicketsService } from '../tickets/tickets.service';
 import type { Ctx } from '../../common/types/context';
 import type { Image } from '../images/images.domain';
 import type { Event, EventDate, EventWithDates } from './events.domain';
@@ -32,6 +34,8 @@ export class EventsService {
     private readonly eventsRepository: EventsRepository,
     @Inject(ImagesRepository)
     private readonly imagesRepository: ImagesRepository,
+    @Inject(forwardRef(() => TicketsService))
+    private readonly ticketsService: TicketsService,
   ) {}
 
   /**
@@ -192,6 +196,7 @@ export class EventsService {
 
   /**
    * Approve or reject an event (admin only)
+   * When approved, activates pending listings for this event
    */
   async approveEvent(
     ctx: Ctx,
@@ -223,11 +228,16 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
+    if (approved) {
+      await this.ticketsService.activatePendingListingsForEvent(ctx, eventId);
+    }
+
     return updated;
   }
 
   /**
    * Approve or reject an event date (admin only)
+   * When approved, activates pending listings for this date
    */
   async approveEventDate(
     ctx: Ctx,
@@ -260,6 +270,14 @@ export class EventsService {
 
     if (!updated) {
       throw new NotFoundException('Event date not found');
+    }
+
+    if (approved) {
+      await this.ticketsService.activatePendingListingsForEventDate(
+        ctx,
+        dateId,
+        eventDate.eventId,
+      );
     }
 
     return updated;

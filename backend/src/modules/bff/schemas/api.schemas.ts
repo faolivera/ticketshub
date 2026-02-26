@@ -187,3 +187,54 @@ export const GetBuyPageResponseSchema = z.object({
   seller: BuyPageSellerInfoSchema,
   paymentMethods: z.array(PaymentMethodOptionSchema),
 });
+
+const PaymentConfirmationStatusSchema = z.enum([
+  'Pending',
+  'Accepted',
+  'Rejected',
+]);
+
+const PaymentConfirmationSchema = z.object({
+  id: z.string(),
+  transactionId: z.string(),
+  uploadedBy: z.string(),
+  storageKey: z.string(),
+  originalFilename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.number(),
+  status: PaymentConfirmationStatusSchema,
+  adminNotes: z.string().optional(),
+  reviewedBy: z.string().optional(),
+  createdAt: z.coerce.date(),
+  reviewedAt: z.coerce.date().optional(),
+});
+
+const ReviewRatingSchema = z.enum(['positive', 'negative', 'neutral']);
+const ReviewPartyRoleSchema = z.enum(['buyer', 'seller']);
+
+const ReviewSchema = z.object({
+  id: z.string(),
+  transactionId: z.string(),
+  buyerId: z.string(),
+  sellerId: z.string(),
+  reviewerId: z.string(),
+  reviewerRole: ReviewPartyRoleSchema,
+  revieweeId: z.string(),
+  revieweeRole: ReviewPartyRoleSchema,
+  rating: ReviewRatingSchema,
+  comment: z.string().optional(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+
+const TransactionReviewsDataSchema = z.object({
+  buyerReview: ReviewSchema.nullable(),
+  sellerReview: ReviewSchema.nullable(),
+  canReview: z.boolean(),
+});
+
+export const GetTransactionDetailsResponseSchema = z.object({
+  transaction: TransactionWithDetailsSchema,
+  paymentConfirmation: PaymentConfirmationSchema.nullable(),
+  reviews: TransactionReviewsDataSchema.nullable(),
+});

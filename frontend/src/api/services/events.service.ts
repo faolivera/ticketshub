@@ -7,6 +7,10 @@ import type {
   ListEventsQuery,
   AddEventDateRequest,
   AddEventDateResponse,
+  ApproveEventRequest,
+  ApproveEventResponse,
+  ApproveEventDateRequest,
+  ApproveEventDateResponse,
 } from '../types';
 
 /**
@@ -50,6 +54,22 @@ export const eventsService = {
    */
   async getMyEvents(): Promise<ListEventsResponse> {
     const response = await apiClient.get<ListEventsResponse>('/events/my/events');
+    return response.data;
+  },
+
+  /**
+   * Approve or reject an event (admin only)
+   */
+  async approveEvent(eventId: string, data: ApproveEventRequest): Promise<ApproveEventResponse> {
+    const response = await apiClient.patch<ApproveEventResponse>(`/events/${eventId}/approve`, data);
+    return response.data;
+  },
+
+  /**
+   * Approve or reject an event date (admin only)
+   */
+  async approveEventDate(dateId: string, data: ApproveEventDateRequest): Promise<ApproveEventDateResponse> {
+    const response = await apiClient.patch<ApproveEventDateResponse>(`/events/dates/${dateId}/approve`, data);
     return response.data;
   },
 };

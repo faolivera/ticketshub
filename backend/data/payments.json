@@ -1,1 +1,74 @@
-{}
+{
+  "pi_1772033769902_5de6351a": {
+    "id": "pi_1772033769902_5de6351a",
+    "transactionId": "txn_1772033769899_420c5738",
+    "amount": {
+      "amount": 11000,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772033769902_aa376d69",
+    "metadata": {
+      "buyerId": "3",
+      "sellerId": "2",
+      "listingId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-25T15:36:09.902Z",
+    "updatedAt": "2026-02-25T15:36:09.902Z"
+  },
+  "pi_1772040573243_94eac0c4": {
+    "id": "pi_1772040573243_94eac0c4",
+    "transactionId": "txn_1772040573237_bc515e4d",
+    "amount": {
+      "amount": 11000,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772040573243_b0869186",
+    "metadata": {
+      "buyerId": "3",
+      "sellerId": "2",
+      "listingId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-25T17:29:33.243Z",
+    "updatedAt": "2026-02-25T17:29:33.243Z"
+  },
+  "pi_1772043791489_1b727e78": {
+    "id": "pi_1772043791489_1b727e78",
+    "transactionId": "txn_1772043791484_ae692888",
+    "amount": {
+      "amount": 33000,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772043791489_bd8ba731",
+    "metadata": {
+      "buyerId": "6",
+      "sellerId": "2",
+      "listingId": "tkt_s2_num_separate",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-25T18:23:11.489Z",
+    "updatedAt": "2026-02-25T18:23:11.489Z"
+  },
+  "pi_1772066884013_cc732622": {
+    "id": "pi_1772066884013_cc732622",
+    "transactionId": "txn_1772066884008_e12d41ee",
+    "amount": {
+      "amount": 33000,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772066884013_a10eff50",
+    "metadata": {
+      "buyerId": "6",
+      "sellerId": "2",
+      "listingId": "tkt_s2_un_together",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-26T00:48:04.013Z",
+    "updatedAt": "2026-02-26T00:48:04.013Z"
+  }
+}

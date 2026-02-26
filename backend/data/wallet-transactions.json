@@ -1,1 +1,62 @@
-{}
+{
+  "wtx_1772033798774_2f7887bd": {
+    "id": "wtx_1772033798774_2f7887bd",
+    "walletUserId": "2",
+    "type": "hold",
+    "amount": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772033769899_420c5738",
+    "description": "Payment for ticket sale (manual approval)",
+    "createdAt": "2026-02-25T15:36:38.774Z"
+  },
+  "wtx_1772041017819_bf5e35be": {
+    "id": "wtx_1772041017819_bf5e35be",
+    "walletUserId": "2",
+    "type": "hold",
+    "amount": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772040573237_bc515e4d",
+    "description": "Payment for ticket sale (manual approval)",
+    "createdAt": "2026-02-25T17:36:57.819Z"
+  },
+  "wtx_1772041348524_f7209502": {
+    "id": "wtx_1772041348524_f7209502",
+    "walletUserId": "2",
+    "type": "release",
+    "amount": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772040573237_bc515e4d",
+    "description": "Payment released for ticket sale",
+    "createdAt": "2026-02-25T17:42:28.524Z"
+  },
+  "wtx_1772043817091_345a11da": {
+    "id": "wtx_1772043817091_345a11da",
+    "walletUserId": "2",
+    "type": "hold",
+    "amount": {
+      "amount": 28500,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772043791484_ae692888",
+    "description": "Payment for ticket sale (manual approval)",
+    "createdAt": "2026-02-25T18:23:37.091Z"
+  },
+  "wtx_1772043851191_03f4945f": {
+    "id": "wtx_1772043851191_03f4945f",
+    "walletUserId": "2",
+    "type": "release",
+    "amount": {
+      "amount": 28500,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772043791484_ae692888",
+    "description": "Payment released for ticket sale",
+    "createdAt": "2026-02-25T18:24:11.191Z"
+  }
+}

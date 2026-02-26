@@ -11,6 +11,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { PaymentsService } from '../payments/payments.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ConfigService } from '../config/config.service';
+import { UsersService } from '../users/users.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -43,6 +44,8 @@ export class TransactionsService {
     private readonly walletService: WalletService,
     @Inject(ConfigService)
     private readonly configService: ConfigService,
+    @Inject(UsersService)
+    private readonly usersService: UsersService,
   ) {}
 
   /**
@@ -464,18 +467,25 @@ export class TransactionsService {
     ctx: Ctx,
     transaction: Transaction,
   ): Promise<TransactionWithDetails> {
-    const listing = await this.ticketsService.getListingById(
-      ctx,
-      transaction.listingId,
-    );
+    const [listing, userInfos] = await Promise.all([
+      this.ticketsService.getListingById(ctx, transaction.listingId),
+      this.usersService.getPublicUserInfoByIds(ctx, [
+        transaction.buyerId,
+        transaction.sellerId,
+      ]),
+    ]);
+
+    const userInfoMap = new Map(userInfos.map((u) => [u.id, u]));
+    const buyerInfo = userInfoMap.get(transaction.buyerId);
+    const sellerInfo = userInfoMap.get(transaction.sellerId);
 
     return {
       ...transaction,
       eventName: listing.eventName,
       eventDate: listing.eventDate,
       venue: listing.venue,
-      buyerName: 'Buyer', // TODO: Get from users service
-      sellerName: 'Seller', // TODO: Get from users service
+      buyerName: buyerInfo?.publicName ?? 'Unknown',
+      sellerName: sellerInfo?.publicName ?? 'Unknown',
     };
   }
 

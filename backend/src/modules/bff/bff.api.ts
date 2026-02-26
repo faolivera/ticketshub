@@ -1,5 +1,7 @@
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import type { TransactionWithDetails } from '../transactions/transactions.domain';
+import type { PaymentConfirmation } from '../payment-confirmations/payment-confirmations.domain';
+import type { Review } from '../reviews/reviews.domain';
 import type {
   SellerProfile,
   ListingWithSeller,
@@ -38,3 +40,21 @@ export interface GetEventListingsQuery {
  * Get buy page response (listing + seller + payment methods)
  */
 export type GetBuyPageResponse = BuyPageData;
+
+/**
+ * Transaction reviews data for the transaction details page
+ */
+export interface TransactionReviewsData {
+  buyerReview: Review | null;
+  sellerReview: Review | null;
+  canReview: boolean;
+}
+
+/**
+ * Get transaction details response (aggregated data for transaction page)
+ */
+export interface GetTransactionDetailsResponse {
+  transaction: TransactionWithDetails;
+  paymentConfirmation: PaymentConfirmation | null;
+  reviews: TransactionReviewsData | null;
+}

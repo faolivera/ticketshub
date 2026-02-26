@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
 import {
   Table,
   TableBody,
@@ -29,16 +28,16 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { CreditCard, Check, X, BanknoteIcon, User, FileText, Image, Eye, ExternalLink } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
-import { paymentConfirmationsService } from '../../../api/services';
-import type { PaymentConfirmationWithTransaction } from '../../../api/types';
+import { paymentConfirmationsService, adminService } from '../../../api/services';
+import type { AdminPaymentItem } from '../../../api/types/admin';
 
 export function PaymentApproval() {
   const { t } = useTranslation();
   const { token } = useUser();
-  const [confirmations, setConfirmations] = useState<PaymentConfirmationWithTransaction[]>([]);
+  const [confirmations, setConfirmations] = useState<AdminPaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedConfirmation, setSelectedConfirmation] = useState<PaymentConfirmationWithTransaction | null>(null);
+  const [selectedConfirmation, setSelectedConfirmation] = useState<AdminPaymentItem | null>(null);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -49,8 +48,8 @@ export function PaymentApproval() {
   const fetchPendingConfirmations = async () => {
     try {
       setLoading(true);
-      const data = await paymentConfirmationsService.listPendingConfirmations();
-      setConfirmations(data.confirmations || []);
+      const data = await adminService.getPayments();
+      setConfirmations(data.payments || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -98,12 +97,12 @@ export function PaymentApproval() {
     }
   };
 
-  const openRejectDialog = (confirmation: PaymentConfirmationWithTransaction) => {
+  const openRejectDialog = (confirmation: AdminPaymentItem) => {
     setSelectedConfirmation(confirmation);
     setIsRejectDialogOpen(true);
   };
 
-  const openPreviewDialog = async (confirmation: PaymentConfirmationWithTransaction) => {
+  const openPreviewDialog = async (confirmation: AdminPaymentItem) => {
     setSelectedConfirmation(confirmation);
     setIsPreviewDialogOpen(true);
     setPreviewLoading(true);
@@ -190,6 +189,11 @@ export function PaymentApproval() {
                   <TableHead>{t('admin.payments.buyer')}</TableHead>
                   <TableHead>{t('admin.payments.seller')}</TableHead>
                   <TableHead>{t('admin.payments.amount')}</TableHead>
+                  <TableHead>{t('admin.payments.listing')}</TableHead>
+                  <TableHead>{t('admin.payments.quantity')}</TableHead>
+                  <TableHead>{t('admin.payments.pricePerUnit')}</TableHead>
+                  <TableHead>{t('admin.payments.buyerFee')}</TableHead>
+                  <TableHead>{t('admin.payments.sellerFee')}</TableHead>
                   <TableHead>{t('admin.payments.confirmation')}</TableHead>
                   <TableHead>{t('admin.payments.uploadedAt')}</TableHead>
                   <TableHead className="text-right">{t('admin.payments.actions')}</TableHead>
@@ -215,6 +219,29 @@ export function PaymentApproval() {
                     </TableCell>
                     <TableCell className="font-semibold text-green-600">
                       {formatAmount(confirmation.transactionAmount, confirmation.transactionCurrency)}
+                    </TableCell>
+                    <TableCell>
+                      <a 
+                        href={`/tickets/${confirmation.listingId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-primary hover:underline"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        {t('admin.payments.viewListing')}
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      {confirmation.quantity} {t('admin.payments.tickets')}
+                    </TableCell>
+                    <TableCell>
+                      {formatAmount(confirmation.pricePerUnit.amount, confirmation.pricePerUnit.currency)}
+                    </TableCell>
+                    <TableCell className="text-orange-600">
+                      {formatAmount(confirmation.buyerFee.amount, confirmation.buyerFee.currency)}
+                    </TableCell>
+                    <TableCell className="text-orange-600">
+                      {formatAmount(confirmation.sellerFee.amount, confirmation.sellerFee.currency)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -299,6 +326,40 @@ export function PaymentApproval() {
                     <div>
                       <span className="text-muted-foreground">{t('admin.payments.seller')}:</span>
                       <span className="ml-2">{selectedConfirmation.sellerName}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('admin.payments.listing')}:</span>
+                      <a 
+                        href={`/tickets/${selectedConfirmation.listingId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-primary hover:underline inline-flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        {t('admin.payments.viewListing')}
+                      </a>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('admin.payments.quantity')}:</span>
+                      <span className="ml-2">{selectedConfirmation.quantity} {t('admin.payments.tickets')}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('admin.payments.pricePerUnit')}:</span>
+                      <span className="ml-2">
+                        {formatAmount(selectedConfirmation.pricePerUnit.amount, selectedConfirmation.pricePerUnit.currency)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('admin.payments.buyerFee')}:</span>
+                      <span className="ml-2 text-orange-600">
+                        {formatAmount(selectedConfirmation.buyerFee.amount, selectedConfirmation.buyerFee.currency)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t('admin.payments.sellerFee')}:</span>
+                      <span className="ml-2 text-orange-600">
+                        {formatAmount(selectedConfirmation.sellerFee.amount, selectedConfirmation.sellerFee.currency)}
+                      </span>
                     </div>
                   </div>
                 </div>

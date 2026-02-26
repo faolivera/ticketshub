@@ -193,4 +193,57 @@ export class TicketsRepository implements OnModuleInit {
     await this.storage.set(ctx, id, updated);
     return updated;
   }
+
+  /**
+   * Get pending listings by event ID
+   */
+  async getPendingByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<TicketListing[]> {
+    const all = await this.storage.getAll(ctx);
+    return all.filter(
+      (l) => l.eventId === eventId && l.status === ListingStatus.Pending,
+    );
+  }
+
+  /**
+   * Get pending listings by event date ID
+   */
+  async getPendingByEventDateId(
+    ctx: Ctx,
+    eventDateId: string,
+  ): Promise<TicketListing[]> {
+    const all = await this.storage.getAll(ctx);
+    return all.filter(
+      (l) =>
+        l.eventDateId === eventDateId && l.status === ListingStatus.Pending,
+    );
+  }
+
+  /**
+   * Bulk update status for multiple listings
+   */
+  async bulkUpdateStatus(
+    ctx: Ctx,
+    listingIds: string[],
+    status: ListingStatus,
+  ): Promise<number> {
+    let updatedCount = 0;
+
+    for (const id of listingIds) {
+      const existing = await this.storage.get(ctx, id);
+      if (existing) {
+        const updated: TicketListing = {
+          ...existing,
+          status,
+          updatedAt: new Date(),
+        };
+        await this.storage.set(ctx, id, updated);
+        updatedCount++;
+      }
+    }
+
+    return updatedCount;
+  }
 }

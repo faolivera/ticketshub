@@ -14,6 +14,8 @@ import { BffModule } from './modules/bff/bff.module';
 import { TermsModule } from './modules/terms/terms.module';
 import { StorageModule } from './common/storage/storage.module';
 import { PaymentConfirmationsModule } from './modules/payment-confirmations/payment-confirmations.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -34,9 +36,11 @@ import { PaymentConfirmationsModule } from './modules/payment-confirmations/paym
     PaymentsModule,
     TransactionsModule,
     PaymentConfirmationsModule,
+    ReviewsModule,
     SupportModule,
     BffModule,
     TermsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

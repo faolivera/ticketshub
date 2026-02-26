@@ -9,3 +9,6 @@ export { otpService } from './otp.service';
 export { sellersService } from './sellers.service';
 export { termsService } from './terms.service';
 export { paymentConfirmationsService } from './payment-confirmations.service';
+export { reviewsService } from './reviews.service';
+export { bffService } from './bff.service';
+export { adminService } from './admin.service';

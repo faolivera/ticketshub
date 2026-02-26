@@ -1,11 +1,23 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { TicketsService } from '../tickets/tickets.service';
+import { ReviewsService } from '../reviews/reviews.service';
+import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
-import { UserLevel } from '../users/users.domain';
+import { TransactionStatus } from '../transactions/transactions.domain';
+import { UserLevel, Role } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
-import type { GetMyTicketsData } from './bff.api';
+import type {
+  GetMyTicketsData,
+  GetTransactionDetailsResponse,
+  TransactionReviewsData,
+} from './bff.api';
 import { BUY_PAGE_PAYMENT_METHODS } from '../payments/payments.domain';
 import type {
   SellerProfile,
@@ -23,6 +35,10 @@ export class BffService {
     private readonly transactionsService: TransactionsService,
     @Inject(TicketsService)
     private readonly ticketsService: TicketsService,
+    @Inject(ReviewsService)
+    private readonly reviewsService: ReviewsService,
+    @Inject(PaymentConfirmationsService)
+    private readonly paymentConfirmationsService: PaymentConfirmationsService,
   ) {}
 
   /**
@@ -87,11 +103,10 @@ export class BffService {
       throw new NotFoundException('Seller not found');
     }
 
-    const totalSales =
-      await this.transactionsService.getSellerCompletedSalesTotal(
-        ctx,
-        sellerId,
-      );
+    const [totalSales, reviewData] = await Promise.all([
+      this.transactionsService.getSellerCompletedSalesTotal(ctx, sellerId),
+      this.reviewsService.getSellerProfileReviews(ctx, sellerId),
+    ]);
 
     return {
       id: sellerId,
@@ -99,12 +114,8 @@ export class BffService {
       pic: publicInfo.pic,
       memberSince: new Date(user.createdAt).toISOString(),
       totalSales,
-      reviewStats: {
-        positive: 0,
-        neutral: 0,
-        negative: 0,
-      },
-      reviews: [],
+      reviewStats: reviewData.stats,
+      reviews: reviewData.reviews,
     };
   }
 
@@ -116,12 +127,14 @@ export class BffService {
     const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [
       listing.sellerId,
     ]);
-    const user = await this.usersService.findById(ctx, listing.sellerId);
-    const totalSales =
-      await this.transactionsService.getSellerCompletedSalesTotal(
+    const [user, totalSales, sellerMetrics] = await Promise.all([
+      this.usersService.findById(ctx, listing.sellerId),
+      this.transactionsService.getSellerCompletedSalesTotal(
         ctx,
         listing.sellerId,
-      );
+      ),
+      this.reviewsService.getSellerMetrics(ctx, listing.sellerId),
+    ]);
 
     const seller: BuyPageSellerInfo = {
       id: listing.sellerId,
@@ -132,9 +145,8 @@ export class BffService {
       },
       badges: user?.level === UserLevel.VerifiedSeller ? ['verified'] : [],
       totalSales,
-      // TODO: Implement seller reviews; return mock values until review system exists
-      percentPositiveReviews: null,
-      totalReviews: 0,
+      percentPositiveReviews: sellerMetrics.positivePercent,
+      totalReviews: sellerMetrics.totalReviews,
     };
 
     return {
@@ -156,5 +168,68 @@ export class BffService {
       this.ticketsService.getMyListings(ctx, userId),
     ]);
     return { bought, sold, listed };
+  }
+
+  /**
+   * Get transaction details aggregating transaction, payment confirmation, and reviews.
+   * This is a BFF endpoint that combines multiple data sources for the transaction details page.
+   */
+  async getTransactionDetails(
+    ctx: Ctx,
+    transactionId: string,
+    userId: string,
+    userRole: string,
+  ): Promise<GetTransactionDetailsResponse> {
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      transactionId,
+      userId,
+    );
+
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const isBuyer = transaction.buyerId === userId;
+    const isSeller = transaction.sellerId === userId;
+    const isAdmin = userRole === Role.Admin;
+
+    if (!isBuyer && !isSeller && !isAdmin) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    let paymentConfirmation = null;
+    if (transaction.paymentMethodId?.includes('bank_transfer')) {
+      try {
+        paymentConfirmation =
+          await this.paymentConfirmationsService.getConfirmationByTransaction(
+            ctx,
+            transactionId,
+            userId,
+            userRole,
+          );
+      } catch {
+        // No confirmation yet, that's fine
+      }
+    }
+
+    let reviews: TransactionReviewsData | null = null;
+    if (transaction.status === TransactionStatus.Completed) {
+      try {
+        reviews = await this.reviewsService.getTransactionReviews(
+          ctx,
+          transactionId,
+          userId,
+        );
+      } catch {
+        // Failed to load reviews, user can still view transaction
+      }
+    }
+
+    return {
+      transaction,
+      paymentConfirmation,
+      reviews,
+    };
   }
 }

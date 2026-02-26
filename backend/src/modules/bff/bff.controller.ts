@@ -20,12 +20,14 @@ import type {
   GetEventListingsResponse,
   GetMyTicketsResponse,
   GetBuyPageResponse,
+  GetTransactionDetailsResponse,
 } from './bff.api';
 import {
   GetSellerProfileResponseSchema,
   GetEventListingsResponseSchema,
   GetMyTicketsResponseSchema,
   GetBuyPageResponseSchema,
+  GetTransactionDetailsResponseSchema,
 } from './schemas/api.schemas';
 
 @Controller('api')
@@ -89,5 +91,26 @@ export class BffController {
     }
     const listings = await this.bffService.getEventListings(ctx, eventId);
     return { success: true, data: listings };
+  }
+
+  /**
+   * Get transaction details (BFF aggregation)
+   * Combines transaction, payment confirmation, and reviews data.
+   */
+  @Get('transaction-details/:id')
+  @UseGuards(JwtAuthGuard)
+  @ValidateResponse(GetTransactionDetailsResponseSchema)
+  async getTransactionDetails(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') transactionId: string,
+  ): Promise<ApiResponse<GetTransactionDetailsResponse>> {
+    const data = await this.bffService.getTransactionDetails(
+      ctx,
+      transactionId,
+      user.id,
+      user.role,
+    );
+    return { success: true, data };
   }
 }

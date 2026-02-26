@@ -25,52 +25,40 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
-import { Calendar, Check, X, Plus, Clock, MapPin } from 'lucide-react';
-import { useUser } from '../../contexts/UserContext';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '../../components/ui/collapsible';
+import { Calendar, Check, X, Plus, Clock, MapPin, ChevronDown, ChevronRight } from 'lucide-react';
+import { eventsService } from '../../../api/services/events.service';
+import { adminService } from '../../../api/services/admin.service';
+import type { AdminPendingEventItem, AdminPendingEventDateItem } from '../../../api/types/admin';
 
-interface Event {
-  id: string;
-  name: string;
-  venue: string;
-  category: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-  dates: EventDate[];
-}
-
-interface EventDate {
-  id: string;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
-}
+type RejectTarget = { type: 'event'; event: AdminPendingEventItem } | { type: 'date'; event: AdminPendingEventItem; date: AdminPendingEventDateItem };
 
 export function EventManagement() {
   const { t } = useTranslation();
-  const { token } = useUser();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<AdminPendingEventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectTarget, setRejectTarget] = useState<RejectTarget | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchPendingEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/events/admin/pending', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch events');
-      const data = await response.json();
-      setEvents(data.data || []);
+      setError(null);
+      const data = await adminService.getPendingEvents();
+      setEvents(data.events || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Failed to fetch events');
     } finally {
       setLoading(false);
     }
@@ -78,52 +66,73 @@ export function EventManagement() {
 
   useEffect(() => {
     fetchPendingEvents();
-  }, [token]);
+  }, []);
 
-  const handleApprove = async (eventId: string) => {
+  const handleApproveEvent = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/events/${eventId}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ approved: true }),
-      });
-      if (!response.ok) throw new Error('Failed to approve event');
+      setActionLoading(eventId);
+      await eventsService.approveEvent(eventId, { approved: true });
       await fetchPendingEvents();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to approve');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleApproveDate = async (dateId: string) => {
+    try {
+      setActionLoading(dateId);
+      await eventsService.approveEventDate(dateId, { approved: true });
+      await fetchPendingEvents();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to approve date');
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleReject = async () => {
-    if (!selectedEvent) return;
+    if (!rejectTarget) return;
     try {
-      const response = await fetch(`/api/events/${selectedEvent.id}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      if (rejectTarget.type === 'event') {
+        await eventsService.approveEvent(rejectTarget.event.id, {
           approved: false,
           rejectionReason,
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to reject event');
+        });
+      } else {
+        await eventsService.approveEventDate(rejectTarget.date.id, {
+          approved: false,
+          rejectionReason,
+        });
+      }
       setIsRejectDialogOpen(false);
       setRejectionReason('');
-      setSelectedEvent(null);
+      setRejectTarget(null);
       await fetchPendingEvents();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reject');
     }
   };
 
-  const openRejectDialog = (event: Event) => {
-    setSelectedEvent(event);
+  const openRejectEventDialog = (event: AdminPendingEventItem) => {
+    setRejectTarget({ type: 'event', event });
     setIsRejectDialogOpen(true);
+  };
+
+  const openRejectDateDialog = (event: AdminPendingEventItem, date: AdminPendingEventDateItem) => {
+    setRejectTarget({ type: 'date', event, date });
+    setIsRejectDialogOpen(true);
+  };
+
+  const toggleEventExpanded = (eventId: string) => {
+    const newExpanded = new Set(expandedEvents);
+    if (newExpanded.has(eventId)) {
+      newExpanded.delete(eventId);
+    } else {
+      newExpanded.add(eventId);
+    }
+    setExpandedEvents(newExpanded);
   };
 
   const formatDate = (dateString: string) => {
@@ -132,6 +141,20 @@ export function EventManagement() {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const formatDateTime = (dateString: string, timeString?: string) => {
+    const date = new Date(dateString);
+    const dateFormatted = date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+    if (timeString) {
+      const time = new Date(timeString);
+      return `${dateFormatted} at ${time.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+    }
+    return dateFormatted;
   };
 
   const getStatusBadge = (status: string) => {
@@ -146,6 +169,21 @@ export function EventManagement() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  const getPendingDatesCount = (event: AdminPendingEventItem) => {
+    return event.pendingDates?.length || 0;
+  };
+
+  const rejectDialogTitle = rejectTarget?.type === 'event' 
+    ? t('admin.events.rejectTitle')
+    : t('admin.events.rejectDateTitle');
+  
+  const rejectDialogDescription = rejectTarget?.type === 'event'
+    ? t('admin.events.rejectDescription', { name: rejectTarget?.event?.name })
+    : t('admin.events.rejectDateDescription', { 
+        eventName: rejectTarget?.event?.name,
+        date: rejectTarget?.type === 'date' ? formatDate(rejectTarget.date.date) : '',
+      });
 
   return (
     <div className="space-y-6">
@@ -184,62 +222,135 @@ export function EventManagement() {
               {t('admin.events.noEvents')}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('admin.events.name')}</TableHead>
-                  <TableHead>{t('admin.events.venue')}</TableHead>
-                  <TableHead>{t('admin.events.category')}</TableHead>
-                  <TableHead>{t('admin.events.dates')}</TableHead>
-                  <TableHead>{t('admin.events.status')}</TableHead>
-                  <TableHead>{t('admin.events.createdAt')}</TableHead>
-                  <TableHead className="text-right">{t('admin.events.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell className="font-medium">{event.name}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-muted-foreground" />
-                        {event.venue}
+            <div className="space-y-4">
+              {events.map((event) => {
+                const pendingDatesCount = getPendingDatesCount(event);
+                const isExpanded = expandedEvents.has(event.id);
+                const hasPendingDates = pendingDatesCount > 0;
+                
+                return (
+                  <Collapsible key={event.id} open={isExpanded} onOpenChange={() => toggleEventExpanded(event.id)}>
+                    <div className="border rounded-lg">
+                      <div className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            {hasPendingDates && (
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm" className="p-0 h-auto">
+                                  {isExpanded ? (
+                                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                            )}
+                            <div>
+                              <h3 className="font-semibold text-lg">{event.name}</h3>
+                              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {event.venue}
+                                </span>
+                                <Badge variant="secondary">{event.category}</Badge>
+                                {hasPendingDates && (
+                                  <span className="text-yellow-600">
+                                    {pendingDatesCount} {t('admin.events.pendingDates')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-4">
+                            {getStatusBadge(event.status)}
+                            
+                            {event.status === 'pending' && (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => handleApproveEvent(event.id)}
+                                  disabled={actionLoading === event.id}
+                                >
+                                  <Check className="w-4 h-4 mr-1" />
+                                  {t('admin.events.approve')}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => openRejectEventDialog(event)}
+                                >
+                                  <X className="w-4 h-4 mr-1" />
+                                  {t('admin.events.reject')}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{event.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {event.dates?.length || 0} {t('admin.events.datesCount')}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(event.status)}</TableCell>
-                    <TableCell>{formatDate(event.createdAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={() => handleApprove(event.id)}
-                        >
-                          <Check className="w-4 h-4 mr-1" />
-                          {t('admin.events.approve')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => openRejectDialog(event)}
-                        >
-                          <X className="w-4 h-4 mr-1" />
-                          {t('admin.events.reject')}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      
+                      {hasPendingDates && (
+                        <CollapsibleContent>
+                          <div className="border-t bg-muted/30 p-4">
+                            <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              {t('admin.events.pendingDatesTitle')}
+                            </h4>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>{t('admin.events.dateColumn')}</TableHead>
+                                  <TableHead>{t('admin.events.status')}</TableHead>
+                                  <TableHead>{t('admin.events.createdAt')}</TableHead>
+                                  <TableHead className="text-right">{t('admin.events.actions')}</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {event.pendingDates.map((eventDate) => (
+                                    <TableRow key={eventDate.id}>
+                                      <TableCell className="font-medium">
+                                        {formatDateTime(eventDate.date, eventDate.startTime)}
+                                      </TableCell>
+                                      <TableCell>{getStatusBadge(eventDate.status)}</TableCell>
+                                      <TableCell>{formatDate(eventDate.createdAt)}</TableCell>
+                                      <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                            onClick={() => handleApproveDate(eventDate.id)}
+                                            disabled={actionLoading === eventDate.id}
+                                          >
+                                            <Check className="w-4 h-4 mr-1" />
+                                            {t('admin.events.approve')}
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            onClick={() => openRejectDateDialog(event, eventDate)}
+                                          >
+                                            <X className="w-4 h-4 mr-1" />
+                                            {t('admin.events.reject')}
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </CollapsibleContent>
+                      )}
+                    </div>
+                  </Collapsible>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -247,9 +358,9 @@ export function EventManagement() {
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('admin.events.rejectTitle')}</DialogTitle>
+            <DialogTitle>{rejectDialogTitle}</DialogTitle>
             <DialogDescription>
-              {t('admin.events.rejectDescription', { name: selectedEvent?.name })}
+              {rejectDialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

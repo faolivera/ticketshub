@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
-import { transactionsService, paymentConfirmationsService } from '@/api/services';
+import { UserReviewsCard } from '@/app/components/UserReviewsCard';
+import { transactionsService, paymentConfirmationsService, reviewsService, bffService } from '@/api/services';
 import { useUser } from '../contexts/UserContext';
-import type { TransactionWithDetails, PaymentConfirmation, PaymentConfirmationStatus } from '@/api/types';
+import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData } from '@/api/types';
 import { TransactionStatus } from '@/api/types';
 
 export function MyTicket() {
@@ -27,6 +28,12 @@ export function MyTicket() {
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   
+  const [reviewData, setReviewData] = useState<TransactionReviewsData | null>(null);
+  const [selectedRating, setSelectedRating] = useState<ReviewRating | null>(null);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isBuyer = transaction?.buyerId === user?.id;
@@ -40,17 +47,10 @@ export function MyTicket() {
       setError(null);
 
       try {
-        const txData = await transactionsService.getTransaction(transactionId);
-        setTransaction(txData);
-
-        if (txData.paymentMethodId?.includes('bank_transfer')) {
-          try {
-            const confirmationData = await paymentConfirmationsService.getConfirmation(transactionId);
-            setPaymentConfirmation(confirmationData.confirmation);
-          } catch {
-            // No confirmation yet, that's fine
-          }
-        }
+        const data = await bffService.getTransactionDetails(transactionId);
+        setTransaction(data.transaction);
+        setPaymentConfirmation(data.paymentConfirmation);
+        setReviewData(data.reviews);
       } catch (err) {
         console.error('Failed to fetch transaction:', err);
         setError(t('common.errorLoading'));
@@ -62,35 +62,37 @@ export function MyTicket() {
     fetchData();
   }, [transactionId, t]);
 
-  const getStatusInfo = (status: TransactionStatus) => {
+  const getStatusInfo = (status: TransactionStatus, role: 'buyer' | 'seller') => {
+    const suffix = role === 'buyer' ? 'Buyer' : 'Seller';
+    
     switch (status) {
       case TransactionStatus.PendingPayment:
         return {
-          label: t('myTicket.statusPendingPayment'),
+          label: t(`myTicket.statusPendingPayment${suffix}`),
           color: 'yellow',
           icon: Clock,
-          description: t('myTicket.statusPendingPaymentDesc')
+          description: t(`myTicket.statusPendingPaymentDesc${suffix}`)
         };
       case TransactionStatus.PaymentReceived:
         return {
-          label: t('myTicket.statusPaymentReceived'),
+          label: t(`myTicket.statusPaymentReceived${suffix}`),
           color: 'blue',
           icon: Clock,
-          description: t('myTicket.statusPaymentReceivedDesc')
+          description: t(`myTicket.statusPaymentReceivedDesc${suffix}`)
         };
       case TransactionStatus.TicketTransferred:
         return {
-          label: t('myTicket.statusTransferred'),
+          label: t(`myTicket.statusTransferred${suffix}`),
           color: 'blue',
           icon: AlertCircle,
-          description: t('myTicket.statusTransferredDesc')
+          description: t(`myTicket.statusTransferredDesc${suffix}`)
         };
       case TransactionStatus.Completed:
         return {
-          label: t('myTicket.statusCompleted'),
+          label: t(`myTicket.statusCompleted${suffix}`),
           color: 'green',
           icon: CheckCircle,
-          description: t('myTicket.statusCompletedDesc')
+          description: t(`myTicket.statusCompletedDesc${suffix}`)
         };
       case TransactionStatus.Cancelled:
         return {
@@ -208,6 +210,54 @@ export function MyTicket() {
     }
   };
 
+  const handleSubmitReview = async () => {
+    if (!transactionId || !selectedRating) return;
+
+    setIsSubmittingReview(true);
+    setReviewError(null);
+
+    try {
+      await reviewsService.createReview({
+        transactionId,
+        rating: selectedRating,
+        comment: reviewComment || undefined,
+      });
+
+      const updatedReviews = await reviewsService.getTransactionReviews(transactionId);
+      setReviewData(updatedReviews);
+      setSelectedRating(null);
+      setReviewComment('');
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+      setReviewError(t('reviews.reviewError'));
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const getRatingIcon = (rating: ReviewRating) => {
+    switch (rating) {
+      case 'positive':
+        return <ThumbsUp className="w-5 h-5" />;
+      case 'neutral':
+        return <Minus className="w-5 h-5" />;
+      case 'negative':
+        return <ThumbsDown className="w-5 h-5" />;
+    }
+  };
+
+  const getRatingColor = (rating: ReviewRating, isSelected: boolean) => {
+    if (!isSelected) return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+    switch (rating) {
+      case 'positive':
+        return 'bg-green-100 text-green-700 border-green-500';
+      case 'neutral':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-500';
+      case 'negative':
+        return 'bg-red-100 text-red-700 border-red-500';
+    }
+  };
+
   const isManualPayment = transaction?.paymentMethodId?.includes('bank_transfer');
   const needsPaymentConfirmation = isManualPayment && 
     transaction?.status === TransactionStatus.PendingPayment && 
@@ -232,7 +282,7 @@ export function MyTicket() {
     );
   }
 
-  const statusInfo = getStatusInfo(transaction.status);
+  const statusInfo = getStatusInfo(transaction.status, isBuyer ? 'buyer' : 'seller');
   const StatusIcon = statusInfo.icon;
   const statusStep = getStatusStep(transaction.status);
   const eventDate = new Date(transaction.eventDate);
@@ -564,6 +614,120 @@ export function MyTicket() {
               )}
             </div>
 
+            {/* Leave a Review Section - Only show when transaction is completed */}
+            {transaction.status === TransactionStatus.Completed && reviewData && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Star className="w-5 h-5 text-blue-600" />
+                  <h2 className="text-xl font-bold text-gray-900">{t('reviews.leaveReview')}</h2>
+                </div>
+
+                {reviewData.canReview ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">{t('reviews.leaveReviewDesc')}</p>
+
+                    <div className="flex gap-3">
+                      {(['positive', 'neutral', 'negative'] as ReviewRating[]).map((rating) => (
+                        <button
+                          key={rating}
+                          onClick={() => setSelectedRating(rating)}
+                          className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                            getRatingColor(rating, selectedRating === rating)
+                          } ${selectedRating === rating ? 'border-2' : 'border-transparent'}`}
+                        >
+                          {getRatingIcon(rating)}
+                          <span className="text-sm font-medium">{t(`reviews.${rating}`)}</span>
+                          <span className="text-xs text-center opacity-75">{t(`reviews.${rating}Desc`)}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder={t('reviews.commentPlaceholder')}
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      rows={3}
+                    />
+
+                    {reviewError && (
+                      <p className="text-sm text-red-600">{reviewError}</p>
+                    )}
+
+                    <button
+                      onClick={handleSubmitReview}
+                      disabled={!selectedRating || isSubmittingReview}
+                      className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-green-900">{t('reviews.reviewSubmitted')}</p>
+                          <p className="text-sm text-green-800">{t('reviews.reviewSubmittedDesc')}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Show user's own review */}
+                    {(isBuyer ? reviewData.buyerReview : reviewData.sellerReview) && (
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">{t('reviews.yourReview')}</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium ${
+                            (isBuyer ? reviewData.buyerReview : reviewData.sellerReview)?.rating === 'positive'
+                              ? 'bg-green-100 text-green-700'
+                              : (isBuyer ? reviewData.buyerReview : reviewData.sellerReview)?.rating === 'neutral'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-red-100 text-red-700'
+                          }`}>
+                            {getRatingIcon((isBuyer ? reviewData.buyerReview : reviewData.sellerReview)!.rating)}
+                            {t(`reviews.${(isBuyer ? reviewData.buyerReview : reviewData.sellerReview)!.rating}`)}
+                          </span>
+                        </div>
+                        {(isBuyer ? reviewData.buyerReview : reviewData.sellerReview)?.comment && (
+                          <p className="text-sm text-gray-600 italic">
+                            "{(isBuyer ? reviewData.buyerReview : reviewData.sellerReview)?.comment}"
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Show other party's review if they left one */}
+                    {(isBuyer ? reviewData.sellerReview : reviewData.buyerReview) && (
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">{t('reviews.otherPartyReview')}</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium ${
+                            (isBuyer ? reviewData.sellerReview : reviewData.buyerReview)?.rating === 'positive'
+                              ? 'bg-green-100 text-green-700'
+                              : (isBuyer ? reviewData.sellerReview : reviewData.buyerReview)?.rating === 'neutral'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-red-100 text-red-700'
+                          }`}>
+                            {getRatingIcon((isBuyer ? reviewData.sellerReview : reviewData.buyerReview)!.rating)}
+                            {t(`reviews.${(isBuyer ? reviewData.sellerReview : reviewData.buyerReview)!.rating}`)}
+                          </span>
+                        </div>
+                        {(isBuyer ? reviewData.sellerReview : reviewData.buyerReview)?.comment ? (
+                          <p className="text-sm text-gray-600 italic">
+                            "{(isBuyer ? reviewData.sellerReview : reviewData.buyerReview)?.comment}"
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-400">{t('reviews.noComment')}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Payment Information */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center gap-2 mb-4">
@@ -632,36 +796,21 @@ export function MyTicket() {
                 {isBuyer ? t('myTicket.sellerInfo') : t('myTicket.buyerInfo')}
               </h2>
 
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-500">
-                    {(isBuyer ? transaction.sellerName : transaction.buyerName).charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">
-                    {isBuyer ? transaction.sellerName : transaction.buyerName}
-                  </h3>
-                </div>
-              </div>
+              <UserReviewsCard
+                userId={isBuyer ? transaction.sellerId : transaction.buyerId}
+                publicName={isBuyer ? transaction.sellerName : transaction.buyerName}
+                role={isBuyer ? 'seller' : 'buyer'}
+                showProfileLink={isBuyer}
+              />
 
               {isBuyer && (
-                <>
-                  <Link
-                    to={`/seller/${transaction.sellerId}`}
-                    className="block w-full text-center bg-gray-100 text-gray-900 py-2 px-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors mb-3"
-                  >
-                    {t('myTicket.viewSellerProfile')}
-                  </Link>
-
-                  <button
-                    onClick={() => setIsChatOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    {t('myTicket.contactSeller')}
-                  </button>
-                </>
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-3"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  {t('myTicket.contactSeller')}
+                </button>
               )}
             </div>
 

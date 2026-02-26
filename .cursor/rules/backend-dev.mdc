@@ -202,3 +202,130 @@ throw new HttpException('Custom error', HttpStatus.INTERNAL_SERVER_ERROR);
 4. Use contextual logger (`ContextLogger`)
 5. Keep business logic in services, not controllers
 6. **No backward compatibility**: When making changes, migrate everything - don't keep old models/logic
+
+---
+
+## MANDATORY: Unit Testing (Cannot Be Skipped)
+
+**This rule is mandatory and cannot be skipped under any circumstances.**
+
+All service layer code MUST have accompanying unit tests. This applies to:
+- New services being created
+- Existing services being modified
+- Refactors that change business logic
+
+### Test File Location
+
+Unit test files must be placed in a centralized test directory that mirrors the module structure:
+
+```
+backend/src/
+  ├── modules/
+  │   └── {module}/
+  │       └── {module}.service.ts
+  └── test/
+      └── unit/
+          └── modules/
+              └── {module}/
+                  └── {module}.service.spec.ts   # Required for all services
+```
+
+**Example**: Tests for `modules/reviews/reviews.service.ts` go in `test/unit/modules/reviews/reviews.service.spec.ts`
+
+### Test Structure
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { MyService } from '../../../../modules/my-module/my.service';
+import { MyRepository } from '../../../../modules/my-module/my.repository';
+import { OtherModuleService } from '../../../../modules/other-module/other-module.service';
+
+describe('MyService', () => {
+  let service: MyService;
+  let repository: jest.Mocked<MyRepository>;
+  let otherService: jest.Mocked<OtherModuleService>;
+
+  const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
+
+  beforeEach(async () => {
+    const mockRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      // ... mock all repository methods
+    };
+
+    const mockOtherService = {
+      findById: jest.fn(),
+      // ... mock all external service methods
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        MyService,
+        { provide: MyRepository, useValue: mockRepository },
+        { provide: OtherModuleService, useValue: mockOtherService },
+      ],
+    }).compile();
+
+    service = module.get<MyService>(MyService);
+    repository = module.get(MyRepository);
+    otherService = module.get(OtherModuleService);
+  });
+
+  describe('methodName', () => {
+    it('should do X when Y', async () => {
+      // Arrange
+      repository.findById.mockResolvedValue(mockEntity);
+
+      // Act
+      const result = await service.methodName(mockCtx, 'id');
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(repository.findById).toHaveBeenCalledWith(mockCtx, 'id');
+    });
+  });
+});
+```
+
+### Testing Requirements
+
+1. **Mock all dependencies**: Repository and external services must be mocked
+2. **Test happy paths**: Verify successful execution of business logic
+3. **Test error cases**: Verify all exception throws (NotFoundException, BadRequestException, etc.)
+4. **Test edge cases**: Boundary conditions, null/undefined handling
+5. **Test business rules**: Validate that business logic is enforced
+
+### Minimum Test Coverage
+
+For each public service method, test at minimum:
+- ✅ Successful execution (happy path)
+- ✅ Not found scenarios (when applicable)
+- ✅ Authorization/forbidden scenarios (when applicable)
+- ✅ Validation failures (when applicable)
+- ✅ Conflict scenarios (when applicable)
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test -- --testPathPattern="service-name.spec"
+
+# Run with coverage
+npm test -- --coverage
+
+# Watch mode
+npm test -- --watch
+```
+
+### When Modifying Existing Code
+
+When modifying an existing service:
+1. Ensure existing tests still pass
+2. Add new tests for new functionality
+3. Update tests if behavior changes
+
+**Failure to include tests will result in the task being considered incomplete.**

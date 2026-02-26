@@ -2,7 +2,6 @@ import apiClient from '../client';
 import type {
   InitiatePurchaseRequest,
   InitiatePurchaseResponse,
-  GetTransactionResponse,
   ConfirmTransferResponse,
   ConfirmReceiptRequest,
   ConfirmReceiptResponse,
@@ -10,6 +9,9 @@ import type {
 
 /**
  * Transactions service
+ *
+ * Note: For fetching transaction details with payment confirmation and reviews,
+ * use bffService.getTransactionDetails() instead.
  */
 export const transactionsService = {
   /**
@@ -17,14 +19,6 @@ export const transactionsService = {
    */
   async initiatePurchase(data: InitiatePurchaseRequest): Promise<InitiatePurchaseResponse> {
     const response = await apiClient.post<InitiatePurchaseResponse>('/transactions', data);
-    return response.data;
-  },
-
-  /**
-   * Get transaction by ID
-   */
-  async getTransaction(id: string): Promise<GetTransactionResponse> {
-    const response = await apiClient.get<GetTransactionResponse>(`/transactions/${id}`);
     return response.data;
   },
 

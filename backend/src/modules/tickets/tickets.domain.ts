@@ -49,6 +49,7 @@ export enum DeliveryMethod {
  * Listing status
  */
 export enum ListingStatus {
+  Pending = 'Pending',
   Active = 'Active',
   Sold = 'Sold',
   Cancelled = 'Cancelled',
