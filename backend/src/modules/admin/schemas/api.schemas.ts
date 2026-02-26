@@ -330,6 +330,8 @@ export const AdminTransactionsResponseSchema = z.object({
 export const AdminTransactionsPendingSummaryResponseSchema = z.object({
   pendingConfirmationsCount: z.number(),
   pendingTransactionsCount: z.number(),
+  pendingConfirmationTransactionIds: z.array(z.string()),
+  pendingTransactionIds: z.array(z.string()),
 });
 
 const AdminTransactionDetailPaymentConfirmationSchema =
@@ -340,6 +342,12 @@ const AdminTransactionDetailPaymentConfirmationSchema =
       contentType: z.string(),
     }),
   );
+
+const BankTransferDestinationSchema = z.object({
+  holderName: z.string(),
+  iban: z.string(),
+  bic: z.string().optional(),
+});
 
 export const AdminTransactionDetailResponseSchema = z.object({
   id: z.string(),
@@ -353,10 +361,17 @@ export const AdminTransactionDetailResponseSchema = z.object({
   sellerFee: MoneySchema,
   totalPaid: MoneySchema,
   sellerReceives: MoneySchema,
+  paymentMethodId: z.string().optional(),
   createdAt: z.coerce.date(),
   paymentReceivedAt: z.coerce.date().optional(),
   ticketTransferredAt: z.coerce.date().optional(),
   buyerConfirmedAt: z.coerce.date().optional(),
   completedAt: z.coerce.date().optional(),
+  cancelledAt: z.coerce.date().optional(),
+  refundedAt: z.coerce.date().optional(),
+  paymentApprovedAt: z.coerce.date().optional(),
+  paymentApprovedBy: z.string().optional(),
+  disputeId: z.string().optional(),
   paymentConfirmations: z.array(AdminTransactionDetailPaymentConfirmationSchema),
+  bankTransferDestination: BankTransferDestinationSchema.optional(),
 });

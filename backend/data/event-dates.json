@@ -67,5 +67,15 @@
     "createdBy": "2",
     "createdAt": "2026-02-26T14:00:46.075Z",
     "updatedAt": "2026-02-26T14:00:46.075Z"
+  },
+  "edt_1772124045537_7ff6ab64": {
+    "id": "edt_1772124045537_7ff6ab64",
+    "eventId": "evt_1772072297395_db322c92",
+    "date": "2026-03-03T19:00:00.000Z",
+    "status": "approved",
+    "createdBy": "10",
+    "createdAt": "2026-02-26T16:40:45.538Z",
+    "updatedAt": "2026-02-26T16:48:08.258Z",
+    "approvedBy": "8"
   }
 }

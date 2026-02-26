@@ -411,6 +411,10 @@ export interface AdminTransactionsResponse {
 export interface AdminTransactionsPendingSummaryResponse {
   pendingConfirmationsCount: number;
   pendingTransactionsCount: number;
+  /** Transaction IDs that have pending payment confirmations */
+  pendingConfirmationTransactionIds: string[];
+  /** Transaction IDs in PendingPayment status */
+  pendingTransactionIds: string[];
 }
 
 /**
@@ -428,11 +432,19 @@ export interface AdminTransactionDetailResponse {
   sellerFee: Money;
   totalPaid: Money;
   sellerReceives: Money;
+  /** Payment method ID used for this transaction (optional if absent) */
+  paymentMethodId?: string;
+  /** Timeline dates */
   createdAt: Date;
   paymentReceivedAt?: Date;
   ticketTransferredAt?: Date;
   buyerConfirmedAt?: Date;
   completedAt?: Date;
+  cancelledAt?: Date;
+  refundedAt?: Date;
+  paymentApprovedAt?: Date;
+  paymentApprovedBy?: string;
+  disputeId?: string;
   paymentConfirmations: Array<
     AdminTransactionPaymentConfirmationRef & {
       transactionId: string;
@@ -440,4 +452,10 @@ export interface AdminTransactionDetailResponse {
       contentType: string;
     }
   >;
+  /** Bank transfer destination for proof validation (from seller bankAccount) */
+  bankTransferDestination?: {
+    holderName: string;
+    iban: string;
+    bic?: string;
+  };
 }

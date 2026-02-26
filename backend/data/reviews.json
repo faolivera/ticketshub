@@ -26,5 +26,33 @@
     "comment": "10 puntos",
     "createdAt": "2026-02-25T18:24:20.937Z",
     "updatedAt": "2026-02-25T18:24:20.937Z"
+  },
+  "rev_1772123659004_5b5896a2": {
+    "id": "rev_1772123659004_5b5896a2",
+    "transactionId": "txn_1772122468261_b30835e5",
+    "buyerId": "10",
+    "sellerId": "2",
+    "reviewerId": "2",
+    "reviewerRole": "seller",
+    "revieweeId": "10",
+    "revieweeRole": "buyer",
+    "rating": "positive",
+    "comment": "Mica es muy Linda",
+    "createdAt": "2026-02-26T16:34:19.004Z",
+    "updatedAt": "2026-02-26T16:34:19.004Z"
+  },
+  "rev_1772123687245_a9ae027d": {
+    "id": "rev_1772123687245_a9ae027d",
+    "transactionId": "txn_1772122468261_b30835e5",
+    "buyerId": "10",
+    "sellerId": "2",
+    "reviewerId": "10",
+    "reviewerRole": "buyer",
+    "revieweeId": "2",
+    "revieweeRole": "seller",
+    "rating": "positive",
+    "comment": "La entrada funciono, yaaay",
+    "createdAt": "2026-02-26T16:34:47.245Z",
+    "updatedAt": "2026-02-26T16:34:47.245Z"
   }
 }

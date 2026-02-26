@@ -257,6 +257,13 @@ export class PaymentConfirmationsService {
   }
 
   /**
+   * Get transaction IDs that have pending payment confirmations (admin use).
+   */
+  async getPendingTransactionIds(ctx: Ctx): Promise<string[]> {
+    return this.repository.getPendingTransactionIds(ctx);
+  }
+
+  /**
    * List all pending payment confirmations (admin only).
    */
   async listPendingConfirmations(

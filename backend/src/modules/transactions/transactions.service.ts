@@ -468,7 +468,7 @@ export class TransactionsService {
     page: number,
     limit: number,
     filters?: {
-      transactionId?: string;
+      transactionIds?: string[];
       buyerIds?: string[];
       sellerIds?: string[];
     },
@@ -484,6 +484,16 @@ export class TransactionsService {
     statuses: TransactionStatus[],
   ): Promise<number> {
     return this.transactionsRepository.countByStatuses(ctx, statuses);
+  }
+
+  /**
+   * Get transaction IDs by status values (admin use).
+   */
+  async getIdsByStatuses(
+    ctx: Ctx,
+    statuses: TransactionStatus[],
+  ): Promise<string[]> {
+    return this.transactionsRepository.getIdsByStatuses(ctx, statuses);
   }
 
   /**

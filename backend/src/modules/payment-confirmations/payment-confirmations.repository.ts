@@ -45,6 +45,16 @@ export class PaymentConfirmationsRepository implements OnModuleInit {
   }
 
   /**
+   * Get transaction IDs that have pending payment confirmations.
+   */
+  async getPendingTransactionIds(ctx: Ctx): Promise<string[]> {
+    const all = await this.storage.getAll(ctx);
+    return all
+      .filter((c) => c.status === PaymentConfirmationStatus.Pending)
+      .map((c) => c.transactionId);
+  }
+
+  /**
    * Find payment confirmations by transaction IDs (batch).
    */
   async findByTransactionIds(

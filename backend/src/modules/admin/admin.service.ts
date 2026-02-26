@@ -442,20 +442,27 @@ export class AdminService {
   }
 
   /**
-   * Get pending payment confirmations summary.
+   * Get pending payment confirmations summary with IDs.
    */
   async getTransactionsPendingSummary(
     ctx: Ctx,
   ): Promise<AdminTransactionsPendingSummaryResponse> {
-    const [pendingConfirmationsCount, pendingTransactionsCount] =
-      await Promise.all([
-        this.paymentConfirmationsService.getPendingCount(ctx),
-        this.transactionsService.countByStatuses(ctx, [
-          TransactionStatus.PendingPayment,
-        ]),
-      ]);
+    const [
+      pendingConfirmationTransactionIds,
+      pendingTransactionIds,
+    ] = await Promise.all([
+      this.paymentConfirmationsService.getPendingTransactionIds(ctx),
+      this.transactionsService.getIdsByStatuses(ctx, [
+        TransactionStatus.PendingPayment,
+      ]),
+    ]);
 
-    return { pendingConfirmationsCount, pendingTransactionsCount };
+    return {
+      pendingConfirmationsCount: pendingConfirmationTransactionIds.length,
+      pendingTransactionsCount: pendingTransactionIds.length,
+      pendingConfirmationTransactionIds,
+      pendingTransactionIds,
+    };
   }
 
   /**
@@ -517,6 +524,14 @@ export class AdminService {
       pricePerTicket: listing.pricePerTicket,
     };
 
+    const bankTransferDestination = seller?.bankAccount
+      ? {
+          holderName: seller.bankAccount.holderName,
+          iban: seller.bankAccount.iban,
+          bic: seller.bankAccount.bic,
+        }
+      : undefined;
+
     return {
       id: transaction.id,
       seller: sellerRef,
@@ -529,12 +544,19 @@ export class AdminService {
       sellerFee: transaction.sellerFee,
       totalPaid: transaction.totalPaid,
       sellerReceives: transaction.sellerReceives,
+      paymentMethodId: transaction.paymentMethodId,
       createdAt: transaction.createdAt,
       paymentReceivedAt: transaction.paymentReceivedAt,
       ticketTransferredAt: transaction.ticketTransferredAt,
       buyerConfirmedAt: transaction.buyerConfirmedAt,
       completedAt: transaction.completedAt,
+      cancelledAt: transaction.cancelledAt,
+      refundedAt: transaction.refundedAt,
+      paymentApprovedAt: transaction.paymentApprovedAt,
+      paymentApprovedBy: transaction.paymentApprovedBy,
+      disputeId: transaction.disputeId,
       paymentConfirmations,
+      bankTransferDestination,
     };
   }
 
@@ -543,7 +565,7 @@ export class AdminService {
     search?: string,
   ): Promise<
     | {
-        transactionId?: string;
+        transactionIds?: string[];
         buyerIds?: string[];
         sellerIds?: string[];
       }
@@ -554,13 +576,22 @@ export class AdminService {
     const term = search.trim();
 
     const filters: {
-      transactionId?: string;
+      transactionIds?: string[];
       buyerIds?: string[];
       sellerIds?: string[];
     } = {};
 
-    // Always try exact transaction-id matching as part of search.
-    filters.transactionId = term;
+    // Support comma-separated transaction IDs (e.g. from pending summary click).
+    if (term.includes(',')) {
+      const ids = term.split(',').map((id) => id.trim()).filter(Boolean);
+      if (ids.length > 0) {
+        filters.transactionIds = ids;
+        return filters;
+      }
+    }
+
+    // Single transaction ID or email search.
+    filters.transactionIds = [term];
 
     const usersByEmail =
       await this.usersService.findByEmailContaining(ctx, term);
@@ -570,17 +601,17 @@ export class AdminService {
       filters.sellerIds = userIds;
     }
 
-    if (!filters.buyerIds && !filters.sellerIds && !filters.transactionId) {
-      return { transactionId: '__no_match__' };
+    if (!filters.buyerIds && !filters.sellerIds && (!filters.transactionIds || filters.transactionIds.length === 0)) {
+      return { transactionIds: ['__no_match__'] };
     }
 
     const hasEmailMatches =
       (filters.buyerIds?.length ?? 0) > 0 || (filters.sellerIds?.length ?? 0) > 0;
-    const hasTransactionId = Boolean(filters.transactionId);
-    if (!hasEmailMatches && hasTransactionId && !term.startsWith('txn_')) {
+    const hasTransactionIds = filters.transactionIds && filters.transactionIds.length > 0;
+    if (!hasEmailMatches && hasTransactionIds && !term.startsWith('txn_')) {
       // For non transaction-id text (e.g. random keyword) with no email matches,
       // avoid returning all rows by forcing a no-match filter.
-      return { transactionId: '__no_match__' };
+      return { transactionIds: ['__no_match__'] };
     }
 
     return filters;

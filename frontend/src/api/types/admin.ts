@@ -404,7 +404,16 @@ export interface AdminTransactionDetail {
   ticketTransferredAt?: string;
   buyerConfirmedAt?: string;
   completedAt?: string;
+  cancelledAt?: string;
+  refundedAt?: string;
+  paymentApprovedAt?: string;
+  paymentMethodId?: string;
   paymentConfirmations: AdminTransactionPaymentConfirmation[];
+  bankTransferDestination?: {
+    holderName: string;
+    iban: string;
+    bic?: string;
+  };
 }
 
 /**
@@ -427,7 +436,16 @@ export interface AdminTransactionDetailResponse {
   ticketTransferredAt?: string;
   buyerConfirmedAt?: string;
   completedAt?: string;
+  cancelledAt?: string;
+  refundedAt?: string;
+  paymentApprovedAt?: string;
+  paymentMethodId?: string;
   paymentConfirmations: AdminTransactionPaymentConfirmation[];
+  bankTransferDestination?: {
+    holderName: string;
+    iban: string;
+    bic?: string;
+  };
 }
 
 /**
@@ -436,4 +454,8 @@ export interface AdminTransactionDetailResponse {
 export interface AdminTransactionsPendingSummaryResponse {
   pendingConfirmationsCount: number;
   pendingTransactionsCount: number;
+  /** Transaction IDs that have pending payment confirmations */
+  pendingConfirmationTransactionIds: string[];
+  /** Transaction IDs in PendingPayment status */
+  pendingTransactionIds: string[];
 }

@@ -77,12 +77,14 @@ describe('AdminService', () => {
       listPendingConfirmations: jest.fn(),
       findByTransactionIds: jest.fn(),
       getPendingCount: jest.fn(),
+      getPendingTransactionIds: jest.fn(),
     };
 
     const mockTransactionsService = {
       findById: jest.fn(),
       getPaginated: jest.fn(),
       countByStatuses: jest.fn(),
+      getIdsByStatuses: jest.fn(),
     };
 
     const mockEventsService = {
@@ -901,7 +903,7 @@ describe('AdminService', () => {
         mockCtx,
         1,
         20,
-        { transactionId: 'txn_123' },
+        { transactionIds: ['txn_123'] },
       );
       expect(result.transactions).toHaveLength(1);
     });
@@ -941,30 +943,36 @@ describe('AdminService', () => {
   });
 
   describe('getTransactionsPendingSummary', () => {
-    it('should return pending confirmations count', async () => {
-      paymentConfirmationsService.getPendingCount.mockResolvedValue(5);
-      transactionsService.countByStatuses.mockResolvedValue(3);
+    it('should return pending confirmations count and IDs', async () => {
+      const confirmationIds = ['txn_1', 'txn_2', 'txn_3', 'txn_4', 'txn_5'];
+      const pendingTxIds = ['txn_6', 'txn_7', 'txn_8'];
+      paymentConfirmationsService.getPendingTransactionIds.mockResolvedValue(confirmationIds);
+      transactionsService.getIdsByStatuses.mockResolvedValue(pendingTxIds);
 
       const result = await service.getTransactionsPendingSummary(mockCtx);
 
       expect(result.pendingConfirmationsCount).toBe(5);
       expect(result.pendingTransactionsCount).toBe(3);
-      expect(paymentConfirmationsService.getPendingCount).toHaveBeenCalledWith(
+      expect(result.pendingConfirmationTransactionIds).toEqual(confirmationIds);
+      expect(result.pendingTransactionIds).toEqual(pendingTxIds);
+      expect(paymentConfirmationsService.getPendingTransactionIds).toHaveBeenCalledWith(
         mockCtx,
       );
-      expect(transactionsService.countByStatuses).toHaveBeenCalledWith(mockCtx, [
+      expect(transactionsService.getIdsByStatuses).toHaveBeenCalledWith(mockCtx, [
         TransactionStatus.PendingPayment,
       ]);
     });
 
     it('should return zero when no pending confirmations', async () => {
-      paymentConfirmationsService.getPendingCount.mockResolvedValue(0);
-      transactionsService.countByStatuses.mockResolvedValue(0);
+      paymentConfirmationsService.getPendingTransactionIds.mockResolvedValue([]);
+      transactionsService.getIdsByStatuses.mockResolvedValue([]);
 
       const result = await service.getTransactionsPendingSummary(mockCtx);
 
       expect(result.pendingConfirmationsCount).toBe(0);
       expect(result.pendingTransactionsCount).toBe(0);
+      expect(result.pendingConfirmationTransactionIds).toEqual([]);
+      expect(result.pendingTransactionIds).toEqual([]);
     });
   });
 
@@ -1027,6 +1035,210 @@ describe('AdminService', () => {
       expect(result.paymentConfirmations).toHaveLength(1);
       expect(result.paymentConfirmations[0].id).toBe('pc_123');
       expect(result.paymentConfirmations[0].originalFilename).toBe('receipt.png');
+    });
+
+    it('should include paymentMethodId when present on transaction', async () => {
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.paymentMethodId).toBe('bank_transfer');
+    });
+
+    it('should include full price breakdown (ticketPrice, buyerFee, sellerFee, totalPaid, sellerReceives)', async () => {
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.ticketPrice).toEqual({ amount: 20000, currency: 'USD' });
+      expect(result.buyerFee).toEqual({ amount: 2000, currency: 'USD' });
+      expect(result.sellerFee).toEqual({ amount: 1000, currency: 'USD' });
+      expect(result.totalPaid).toEqual({ amount: 22000, currency: 'USD' });
+      expect(result.sellerReceives).toEqual({ amount: 19000, currency: 'USD' });
+    });
+
+    it('should include timeline dates when present on transaction', async () => {
+      const cancelledAt = new Date('2025-06-15');
+      const refundedAt = new Date('2025-06-16');
+      const paymentApprovedAt = new Date('2025-06-10');
+      const txnWithTimeline: Transaction = {
+        ...mockTransaction,
+        cancelledAt,
+        refundedAt,
+        paymentApprovedAt,
+        paymentApprovedBy: 'admin_456',
+        disputeId: 'dispute_789',
+      };
+
+      transactionsService.findById.mockResolvedValue(txnWithTimeline);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.createdAt).toEqual(mockTransaction.createdAt);
+      expect(result.cancelledAt).toEqual(cancelledAt);
+      expect(result.refundedAt).toEqual(refundedAt);
+      expect(result.paymentApprovedAt).toEqual(paymentApprovedAt);
+      expect(result.paymentApprovedBy).toBe('admin_456');
+      expect(result.disputeId).toBe('dispute_789');
+    });
+
+    it('should omit optional timeline fields when absent', async () => {
+      const txnMinimal: Transaction = {
+        ...mockTransaction,
+        paymentMethodId: undefined,
+        cancelledAt: undefined,
+        refundedAt: undefined,
+        paymentApprovedAt: undefined,
+        paymentApprovedBy: undefined,
+        disputeId: undefined,
+      };
+
+      transactionsService.findById.mockResolvedValue(txnMinimal);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.paymentMethodId).toBeUndefined();
+      expect(result.cancelledAt).toBeUndefined();
+      expect(result.refundedAt).toBeUndefined();
+      expect(result.paymentApprovedAt).toBeUndefined();
+      expect(result.paymentApprovedBy).toBeUndefined();
+      expect(result.disputeId).toBeUndefined();
+    });
+
+    it('should include bankTransferDestination when seller has bankAccount', async () => {
+      const sellerWithBankAccount: User = {
+        id: 'seller_123',
+        email: 'jane@test.com',
+        password: 'hashed',
+        firstName: 'Jane',
+        lastName: 'Seller',
+        publicName: 'Jane',
+        role: Role.User,
+        level: UserLevel.Seller,
+        status: UserStatus.Enabled,
+        imageId: '',
+        country: 'ES',
+        currency: 'EUR',
+        emailVerified: true,
+        phoneVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        bankAccount: {
+          holderName: 'Jane Seller',
+          iban: 'ES9121000418450200051332',
+          bic: 'CAIXESBBXXX',
+          verified: true,
+        },
+      };
+
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([sellerWithBankAccount]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.bankTransferDestination).toBeDefined();
+      expect(result.bankTransferDestination).toEqual({
+        holderName: 'Jane Seller',
+        iban: 'ES9121000418450200051332',
+        bic: 'CAIXESBBXXX',
+      });
+    });
+
+    it('should omit bankTransferDestination when seller has no bankAccount', async () => {
+      const sellerWithoutBankAccount: User = {
+        id: 'seller_123',
+        email: 'jane@test.com',
+        password: 'hashed',
+        firstName: 'Jane',
+        lastName: 'Seller',
+        publicName: 'Jane',
+        role: Role.User,
+        level: UserLevel.Seller,
+        status: UserStatus.Enabled,
+        imageId: '',
+        country: 'ES',
+        currency: 'EUR',
+        emailVerified: true,
+        phoneVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([sellerWithoutBankAccount]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.bankTransferDestination).toBeUndefined();
+    });
+
+    it('should include bankTransferDestination without bic when seller bankAccount has no bic', async () => {
+      const sellerWithBankAccountNoBic: User = {
+        id: 'seller_123',
+        email: 'jane@test.com',
+        password: 'hashed',
+        firstName: 'Jane',
+        lastName: 'Seller',
+        publicName: 'Jane',
+        role: Role.User,
+        level: UserLevel.Seller,
+        status: UserStatus.Enabled,
+        imageId: '',
+        country: 'ES',
+        currency: 'EUR',
+        emailVerified: true,
+        phoneVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        bankAccount: {
+          holderName: 'Jane Seller',
+          iban: 'ES9121000418450200051332',
+          verified: true,
+        },
+      };
+
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([sellerWithBankAccountNoBic]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.bankTransferDestination).toEqual({
+        holderName: 'Jane Seller',
+        iban: 'ES9121000418450200051332',
+        bic: undefined,
+      });
     });
   });
 });

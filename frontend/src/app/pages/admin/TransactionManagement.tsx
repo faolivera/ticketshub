@@ -1,5 +1,5 @@
-import { Fragment, type ReactNode, useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { Fragment, type ReactNode, useCallback, useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -31,8 +31,10 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import {
   Check,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
+  Clock,
   CreditCard,
   Eye,
   FileText,
@@ -245,6 +247,9 @@ export default function TransactionManagement() {
       setPreviewLoading(true);
       setPreviewTransactionId(transactionId);
       setPreviewBlobUrl(null);
+      if (!detailCache[transactionId]) {
+        await loadDetail(transactionId);
+      }
       const blobUrl = await paymentConfirmationsService.getFileBlobUrl(transactionId);
       setPreviewBlobUrl(blobUrl);
     } catch {
@@ -365,9 +370,47 @@ export default function TransactionManagement() {
       );
     }
 
+    const getStatusStep = (): number => {
+      if (detail.completedAt) return 4;
+      if (detail.buyerConfirmedAt) return 3;
+      if (detail.ticketTransferredAt) return 2;
+      if (detail.paymentReceivedAt || detail.paymentApprovedAt) return 1;
+
+      switch (detail.status) {
+        case 'Completed':
+          return 4;
+        case 'TicketTransferred':
+          return 2;
+        case 'PaymentReceived':
+          return 1;
+        default:
+          return 0;
+      }
+    };
+
+    const statusStep = getStatusStep();
+
+    const timelineSteps = [
+      { step: 1, labelKey: 'statusStepPaid', date: detail.paymentReceivedAt ?? detail.paymentApprovedAt ?? detail.createdAt },
+      { step: 2, labelKey: 'statusStepTransferred', date: detail.ticketTransferredAt },
+      { step: 3, labelKey: 'statusStepConfirmed', date: detail.buyerConfirmedAt },
+      { step: 4, labelKey: 'statusStepReleased', date: detail.completedAt },
+    ];
+
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="text-muted-foreground">{t('admin.transactions.listingId')}:</span>
+            <p className="font-medium">
+              <Link
+                to={`/buy/${detail.listing.id}`}
+                className="text-primary hover:underline font-mono"
+              >
+                {detail.listing.id}
+              </Link>
+            </p>
+          </div>
           <div>
             <span className="text-muted-foreground">{t('admin.transactions.event')}:</span>
             <p className="font-medium">{detail.listing.eventName}</p>
@@ -383,10 +426,92 @@ export default function TransactionManagement() {
             </p>
           </div>
           <div>
-            <span className="text-muted-foreground">{t('admin.transactions.amount')}:</span>
-            <p className="font-medium">
-              {formatAmount(detail.totalPaid.amount, detail.totalPaid.currency)}
-            </p>
+            <span className="text-muted-foreground">{t('admin.transactions.paymentMethod')}:</span>
+            <p className="font-medium">{detail.paymentMethodId ?? '-'}</p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold mb-2">{t('admin.transactions.priceBreakdown')}</h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.ticketPrice')}:</span>
+              <p className="font-medium">
+                {formatAmount(detail.ticketPrice.amount, detail.ticketPrice.currency)}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.buyerFee')}:</span>
+              <p className="font-medium">
+                {formatAmount(detail.buyerFee.amount, detail.buyerFee.currency)}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.sellerFee')}:</span>
+              <p className="font-medium">
+                {formatAmount(detail.sellerFee.amount, detail.sellerFee.currency)}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.totalPaid')}:</span>
+              <p className="font-medium">
+                {formatAmount(detail.totalPaid.amount, detail.totalPaid.currency)}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.sellerReceives')}:</span>
+              <p className="font-medium">
+                {formatAmount(detail.sellerReceives.amount, detail.sellerReceives.currency)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold mb-3">{t('admin.transactions.transactionStatus')}</h4>
+          <div className="relative">
+            <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted" aria-hidden="true" />
+            <div
+              className="absolute top-5 left-0 h-0.5 bg-primary transition-all duration-500"
+              style={{
+                width: `${(statusStep / 4) * 100}%`,
+              }}
+              aria-hidden="true"
+            />
+            <div className="relative grid grid-cols-4 gap-2">
+              {timelineSteps.map(({ step, labelKey, date }) => {
+                const isDone = statusStep >= step;
+                const isCurrent = statusStep === step - 1;
+                const stepColor = isDone
+                  ? 'bg-primary text-primary-foreground'
+                  : isCurrent
+                    ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-500'
+                    : 'bg-muted text-muted-foreground';
+                return (
+                  <div key={step} className="flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${stepColor}`}
+                    >
+                      {isDone ? (
+                        <CheckCircle className="w-5 h-5" />
+                      ) : (
+                        <Clock className="w-5 h-5" />
+                      )}
+                    </div>
+                    <p
+                      className={`text-xs text-center font-medium ${
+                        isDone ? 'text-foreground' : isCurrent ? 'text-yellow-600 dark:text-yellow-500' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {t(`myTicket.${labelKey}`)}
+                    </p>
+                    {date && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(date)}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -473,18 +598,36 @@ export default function TransactionManagement() {
             </div>
           ) : pendingSummary ? (
             <div className="flex gap-6">
-              <div className="rounded-lg border px-4 py-3 bg-muted/50">
+              <button
+                type="button"
+                className="rounded-lg border px-4 py-3 bg-muted/50 text-left hover:bg-muted transition-colors cursor-pointer"
+                onClick={() => {
+                  if (pendingSummary.pendingConfirmationTransactionIds.length > 0) {
+                    setSearchQuery(pendingSummary.pendingConfirmationTransactionIds.join(','));
+                  }
+                }}
+                disabled={pendingSummary.pendingConfirmationsCount === 0}
+              >
                 <div className="text-2xl font-bold">{pendingSummary.pendingConfirmationsCount}</div>
                 <div className="text-sm text-muted-foreground">
                   {t('admin.transactions.pendingConfirmations')}
                 </div>
-              </div>
-              <div className="rounded-lg border px-4 py-3 bg-muted/50">
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border px-4 py-3 bg-muted/50 text-left hover:bg-muted transition-colors cursor-pointer"
+                onClick={() => {
+                  if (pendingSummary.pendingTransactionIds.length > 0) {
+                    setSearchQuery(pendingSummary.pendingTransactionIds.join(','));
+                  }
+                }}
+                disabled={pendingSummary.pendingTransactionsCount === 0}
+              >
                 <div className="text-2xl font-bold">{pendingSummary.pendingTransactionsCount}</div>
                 <div className="text-sm text-muted-foreground">
                   {t('admin.transactions.pendingTransactions')}
                 </div>
-              </div>
+              </button>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">{t('admin.transactions.summaryUnavailable')}</p>
@@ -668,6 +811,55 @@ export default function TransactionManagement() {
             <DialogTitle>{t('admin.transactions.viewConfirmation')}</DialogTitle>
             <DialogDescription>{previewTransactionId}</DialogDescription>
           </DialogHeader>
+          {previewTransactionId && detailCache[previewTransactionId] && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
+              <div>
+                <span className="text-muted-foreground block text-xs">
+                  {t('admin.transactions.proofPreviewBuyerName')}
+                </span>
+                <span className="font-medium">
+                  {detailCache[previewTransactionId].buyer?.name ?? '-'}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">
+                  {t('admin.transactions.proofPreviewTotalAmount')}
+                </span>
+                <span className="font-medium">
+                  {detailCache[previewTransactionId].totalPaid
+                    ? formatAmount(
+                        detailCache[previewTransactionId].totalPaid.amount,
+                        detailCache[previewTransactionId].totalPaid.currency,
+                      )
+                    : '-'}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">
+                  {t('admin.transactions.proofPreviewDestinationAccount')}
+                </span>
+                <span className="font-medium">
+                  {detailCache[previewTransactionId].bankTransferDestination?.iban ?? '-'}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">
+                  {t('admin.transactions.proofPreviewHolderName')}
+                </span>
+                <span className="font-medium">
+                  {detailCache[previewTransactionId].bankTransferDestination?.holderName ?? '-'}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">
+                  {t('admin.transactions.proofPreviewBic')}
+                </span>
+                <span className="font-medium">
+                  {detailCache[previewTransactionId].bankTransferDestination?.bic ?? '-'}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="flex-1 overflow-auto min-h-[400px]">
             {previewLoading ? (
               <div className="flex items-center justify-center h-[400px]">

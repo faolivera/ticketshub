@@ -128,5 +128,31 @@
     "requiresAction": false,
     "actionDeadline": null,
     "updatedAt": "2026-02-26T13:30:08.094Z"
+  },
+  "10-buyer": {
+    "id": "state-10-buyer",
+    "userId": "10",
+    "userType": "buyer",
+    "currentTermsVersionId": "terms-buyer-v001",
+    "lastAcceptedVersionId": "terms-buyer-v001",
+    "lastAcceptedAt": "2026-02-26T16:10:07.905Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-26T16:10:07.905Z"
+  },
+  "10-seller": {
+    "id": "state-10-seller",
+    "userId": "10",
+    "userType": "seller",
+    "currentTermsVersionId": "terms-seller-v001",
+    "lastAcceptedVersionId": "terms-seller-v001",
+    "lastAcceptedAt": "2026-02-26T16:39:37.573Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-26T16:39:37.573Z"
   }
 }

@@ -125,14 +125,14 @@ export class TransactionsRepository implements OnModuleInit {
 
   /**
    * Get paginated transactions with optional filters.
-   * Filters are OR'd: match transactionId OR buyerId in buyerIds OR sellerId in sellerIds.
+   * Filters are OR'd: match transactionIds OR buyerId in buyerIds OR sellerId in sellerIds.
    */
   async getPaginated(
     ctx: Ctx,
     page: number,
     limit: number,
     filters?: {
-      transactionId?: string;
+      transactionIds?: string[];
       buyerIds?: string[];
       sellerIds?: string[];
     },
@@ -140,7 +140,10 @@ export class TransactionsRepository implements OnModuleInit {
     let all = await this.storage.getAll(ctx);
 
     if (filters) {
-      const { transactionId, buyerIds, sellerIds } = filters;
+      const { transactionIds, buyerIds, sellerIds } = filters;
+      const transactionIdSet = transactionIds?.length
+        ? new Set(transactionIds)
+        : undefined;
       const buyerIdSet = buyerIds?.length
         ? new Set(buyerIds)
         : undefined;
@@ -149,7 +152,7 @@ export class TransactionsRepository implements OnModuleInit {
         : undefined;
 
       all = all.filter((t) => {
-        if (transactionId && t.id === transactionId) return true;
+        if (transactionIdSet?.has(t.id)) return true;
         if (buyerIdSet?.has(t.buyerId)) return true;
         if (sellerIdSet?.has(t.sellerId)) return true;
         return false;
@@ -189,5 +192,20 @@ export class TransactionsRepository implements OnModuleInit {
     const statusSet = new Set(statuses);
     const all = await this.storage.getAll(ctx);
     return all.filter((transaction) => statusSet.has(transaction.status)).length;
+  }
+
+  /**
+   * Get transaction IDs by status values.
+   */
+  async getIdsByStatuses(
+    ctx: Ctx,
+    statuses: TransactionStatus[],
+  ): Promise<string[]> {
+    if (statuses.length === 0) return [];
+    const statusSet = new Set(statuses);
+    const all = await this.storage.getAll(ctx);
+    return all
+      .filter((transaction) => statusSet.has(transaction.status))
+      .map((transaction) => transaction.id);
   }
 }
