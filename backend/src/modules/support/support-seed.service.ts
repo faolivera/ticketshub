@@ -11,7 +11,7 @@ import {
   UserLevel,
   UserStatus,
 } from '../users/users.domain';
-import { EventCategory } from '../events/events.domain';
+import { EventCategory, EventSectionStatus } from '../events/events.domain';
 import {
   TicketType,
   DeliveryMethod,
@@ -84,8 +84,6 @@ export class SupportSeedService {
       role: Role.Admin,
       level: UserLevel.Basic,
       status: UserStatus.Enabled,
-      profiles: ['Customer'],
-      lastUsedProfile: 'Customer',
       imageId: imageIds.admin,
       emailVerified: true,
       phoneVerified: true,
@@ -100,8 +98,6 @@ export class SupportSeedService {
       role: Role.User,
       level: UserLevel.VerifiedSeller,
       status: UserStatus.Enabled,
-      profiles: ['Provider', 'Customer'],
-      lastUsedProfile: 'Provider',
       imageId: imageIds.seller,
       emailVerified: true,
       phoneVerified: true,
@@ -130,11 +126,9 @@ export class SupportSeedService {
       role: Role.User,
       level: UserLevel.Buyer,
       status: UserStatus.Enabled,
-      profiles: ['Customer'],
-      lastUsedProfile: 'Customer',
       imageId: imageIds.buyer,
       emailVerified: true,
-      phoneVerified: false,
+      phoneVerified: true,
     });
 
     // Event: BAD BUNNY
@@ -192,6 +186,30 @@ export class SupportSeedService {
       throw new Error('Seed failed: event date was not created');
     }
 
+    // Create event sections if they don't exist
+    const sectionNames = ['Platea', 'Campo', 'Platea Alta'];
+    const existingSections = refreshedEvent.sections || [];
+    const existingSectionNames = new Set(
+      existingSections.map((s) => s.name.toLowerCase()),
+    );
+
+    const sectionMap: Record<string, string> = {};
+    for (const section of existingSections) {
+      sectionMap[section.name] = section.id;
+    }
+
+    for (const sectionName of sectionNames) {
+      if (existingSectionNames.has(sectionName.toLowerCase())) continue;
+      const createdSection = await this.eventsService.addEventSection(
+        ctx,
+        event.id,
+        admin.id,
+        Role.Admin,
+        { name: sectionName },
+      );
+      sectionMap[sectionName] = createdSection.id;
+    }
+
     // Tickets: 3 listings from seller
     const sellerListings = await this.ticketsRepository.getBySellerId(
       ctx,
@@ -216,7 +234,12 @@ export class SupportSeedService {
 
     for (const desc of desiredDescriptions) {
       if (existingDescriptions.has(desc)) continue;
-      const req = this.getSeedListingRequest(event.id, primaryDateId, desc);
+      const req = this.getSeedListingRequest(
+        event.id,
+        primaryDateId,
+        desc,
+        sectionMap,
+      );
       const listing = await this.ticketsService.createListing(
         ctx,
         seller.id,
@@ -257,12 +280,7 @@ export class SupportSeedService {
 
   private async upsertUser(
     ctx: Ctx,
-    data: Omit<
-      User,
-      'id' | 'country' | 'currency' | 'createdAt' | 'updatedAt'
-    > & {
-      lastUsedProfile?: 'Customer' | 'Provider';
-    },
+    data: Omit<User, 'id' | 'country' | 'currency' | 'createdAt' | 'updatedAt'>,
   ): Promise<User> {
     const existing = await this.usersService.findByEmail(ctx, data.email);
     if (existing) {
@@ -298,6 +316,7 @@ export class SupportSeedService {
     eventId: string,
     eventDateId: string,
     description: string,
+    sectionMap: Record<string, string>,
   ): CreateListingRequest {
     if (description.includes('1')) {
       return {
@@ -308,7 +327,7 @@ export class SupportSeedService {
         sellTogether: false,
         pricePerTicket: { amount: 15000, currency: 'EUR' },
         description,
-        section: 'Platea',
+        eventSectionId: sectionMap['Platea'],
         ticketUnits: [
           { seat: { row: '10', seatNumber: '12' } },
           { seat: { row: '10', seatNumber: '13' } },
@@ -333,7 +352,7 @@ export class SupportSeedService {
           countryCode: 'DE',
         },
         description,
-        section: 'Campo',
+        eventSectionId: sectionMap['Campo'],
       };
     }
 
@@ -346,7 +365,7 @@ export class SupportSeedService {
       sellTogether: true,
       pricePerTicket: { amount: 12000, currency: 'EUR' },
       description,
-      section: 'Platea Alta',
+      eventSectionId: sectionMap['Platea Alta'],
     };
   }
 

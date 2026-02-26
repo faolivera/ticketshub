@@ -14,11 +14,22 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type { Image } from '../images/images.domain';
-import type { Event, EventDate, EventWithDates } from './events.domain';
-import { EventStatus, EventDateStatus, EventCategory } from './events.domain';
+import type {
+  Event,
+  EventDate,
+  EventSection,
+  EventWithDates,
+} from './events.domain';
+import {
+  EventStatus,
+  EventDateStatus,
+  EventSectionStatus,
+  EventCategory,
+} from './events.domain';
 import type {
   CreateEventRequest,
   AddEventDateRequest,
+  AddEventSectionRequest,
   ListEventsQuery,
   EventWithDatesResponse,
 } from './events.api';
@@ -95,7 +106,7 @@ export class EventsService {
   }
 
   /**
-   * Get event by ID with dates
+   * Get event by ID with dates and sections
    */
   async getEventById(ctx: Ctx, id: string): Promise<EventWithDatesResponse> {
     const event = await this.eventsRepository.findEventById(ctx, id);
@@ -103,9 +114,12 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    const dates = await this.eventsRepository.getDatesByEventId(ctx, id);
+    const [dates, sections] = await Promise.all([
+      this.eventsRepository.getDatesByEventId(ctx, id),
+      this.eventsRepository.getSectionsByEventId(ctx, id),
+    ]);
     const [eventWithImages] = await this.attachImages(ctx, [
-      { ...event, dates },
+      { ...event, dates, sections },
     ]);
     return eventWithImages;
   }
@@ -150,16 +164,18 @@ export class EventsService {
     const limit = query.limit || 20;
     events = events.slice(offset, offset + limit);
 
-    // Add dates to each event
+    // Add dates and sections to each event
     const eventsWithDates: EventWithDates[] = await Promise.all(
       events.map(async (event) => {
-        const dates = includeAllStatuses
-          ? await this.eventsRepository.getDatesByEventId(ctx, event.id)
-          : await this.eventsRepository.getApprovedDatesByEventId(
-              ctx,
-              event.id,
-            );
-        return { ...event, dates };
+        const [dates, sections] = await Promise.all([
+          includeAllStatuses
+            ? this.eventsRepository.getDatesByEventId(ctx, event.id)
+            : this.eventsRepository.getApprovedDatesByEventId(ctx, event.id),
+          includeAllStatuses
+            ? this.eventsRepository.getSectionsByEventId(ctx, event.id)
+            : this.eventsRepository.getApprovedSectionsByEventId(ctx, event.id),
+        ]);
+        return { ...event, dates, sections };
       }),
     );
 
@@ -183,9 +199,6 @@ export class EventsService {
 
     // Only event creator or admin can add dates
     const isAdmin = userRole === Role.Admin;
-    if (!isAdmin && event.createdBy !== userId) {
-      throw new ForbiddenException('Only event creator or admin can add dates');
-    }
 
     const eventDate: EventDate = {
       id: this.generateId('edt'),
@@ -301,11 +314,11 @@ export class EventsService {
 
     const eventsWithDates: EventWithDates[] = await Promise.all(
       events.map(async (event) => {
-        const dates = await this.eventsRepository.getDatesByEventId(
-          ctx,
-          event.id,
-        );
-        return { ...event, dates };
+        const [dates, sections] = await Promise.all([
+          this.eventsRepository.getDatesByEventId(ctx, event.id),
+          this.eventsRepository.getSectionsByEventId(ctx, event.id),
+        ]);
+        return { ...event, dates, sections };
       }),
     );
 
@@ -323,15 +336,159 @@ export class EventsService {
 
     const eventsWithDates: EventWithDates[] = await Promise.all(
       events.map(async (event) => {
-        const dates = await this.eventsRepository.getDatesByEventId(
-          ctx,
-          event.id,
-        );
-        return { ...event, dates };
+        const [dates, sections] = await Promise.all([
+          this.eventsRepository.getDatesByEventId(ctx, event.id),
+          this.eventsRepository.getSectionsByEventId(ctx, event.id),
+        ]);
+        return { ...event, dates, sections };
       }),
     );
 
     return await this.attachImages(ctx, eventsWithDates);
+  }
+
+  // ==================== Event Sections ====================
+
+  /**
+   * Add a section to an event
+   * Section names must be unique per event (case-insensitive)
+   */
+  async addEventSection(
+    ctx: Ctx,
+    eventId: string,
+    userId: string,
+    userRole: Role,
+    data: AddEventSectionRequest,
+  ): Promise<EventSection> {
+    const event = await this.eventsRepository.findEventById(ctx, eventId);
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const isAdmin = userRole === Role.Admin;
+
+    const existingSections = await this.eventsRepository.getSectionsByEventId(
+      ctx,
+      eventId,
+    );
+    const normalizedName = data.name.toLowerCase();
+    const duplicate = existingSections.find(
+      (s) => s.name.toLowerCase() === normalizedName,
+    );
+    if (duplicate) {
+      throw new BadRequestException(
+        `Section "${data.name}" already exists for this event`,
+      );
+    }
+
+    const section: EventSection = {
+      id: this.generateId('sec'),
+      eventId,
+      name: data.name,
+      status: isAdmin
+        ? EventSectionStatus.Approved
+        : EventSectionStatus.Pending,
+      createdBy: userId,
+      approvedBy: isAdmin ? userId : undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return await this.eventsRepository.createEventSection(ctx, section);
+  }
+
+  /**
+   * Approve or reject an event section (admin only)
+   * When approved, activates pending listings for this section
+   */
+  async approveEventSection(
+    ctx: Ctx,
+    sectionId: string,
+    adminId: string,
+    approved: boolean,
+    rejectionReason?: string,
+  ): Promise<EventSection> {
+    const section = await this.eventsRepository.findEventSectionById(
+      ctx,
+      sectionId,
+    );
+    if (!section) {
+      throw new NotFoundException('Event section not found');
+    }
+
+    if (section.status !== EventSectionStatus.Pending) {
+      throw new BadRequestException('Event section is not pending approval');
+    }
+
+    if (!approved && !rejectionReason) {
+      throw new BadRequestException('Rejection reason is required');
+    }
+
+    const updated = await this.eventsRepository.updateEventSection(
+      ctx,
+      sectionId,
+      {
+        status: approved
+          ? EventSectionStatus.Approved
+          : EventSectionStatus.Rejected,
+        approvedBy: approved ? adminId : undefined,
+        rejectionReason: approved ? undefined : rejectionReason,
+      },
+    );
+
+    if (!updated) {
+      throw new NotFoundException('Event section not found');
+    }
+
+    if (approved) {
+      await this.ticketsService.activatePendingListingsForEventSection(
+        ctx,
+        sectionId,
+        section.eventId,
+      );
+    }
+
+    return updated;
+  }
+
+  /**
+   * Get sections for an event
+   */
+  async getSectionsByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<EventSection[]> {
+    return await this.eventsRepository.getSectionsByEventId(ctx, eventId);
+  }
+
+  /**
+   * Get approved sections for an event
+   */
+  async getApprovedSectionsByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<EventSection[]> {
+    return await this.eventsRepository.getApprovedSectionsByEventId(
+      ctx,
+      eventId,
+    );
+  }
+
+  /**
+   * Get pending sections for admin review
+   */
+  async getPendingSections(ctx: Ctx): Promise<EventSection[]> {
+    return await this.eventsRepository.getPendingSections(ctx);
+  }
+
+  /**
+   * Find section by ID
+   */
+  async findSectionById(
+    ctx: Ctx,
+    sectionId: string,
+  ): Promise<EventSection | undefined> {
+    return await this.eventsRepository.findEventSectionById(ctx, sectionId);
   }
 
   private async attachImages(

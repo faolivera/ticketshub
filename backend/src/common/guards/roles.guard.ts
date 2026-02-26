@@ -32,15 +32,7 @@ export class RolesGuard implements CanActivate {
     }
 
     return requiredRoles.some((requiredRole) => {
-      // Check user.role field (e.g., "Admin")
-      if (user.role === requiredRole) {
-        return true;
-      }
-      // Check user.profiles array (e.g., ["Customer", "Provider"])
-      if (user.profiles?.includes(requiredRole)) {
-        return true;
-      }
-      return false;
+      return user.role === requiredRole;
     });
   }
 }

@@ -20,11 +20,6 @@ export enum UserLevel {
 }
 
 /**
- * Profile types
- */
-export type ProfileType = 'Customer' | 'Provider';
-
-/**
  * Identity verification status
  */
 export enum IdentityVerificationStatus {
@@ -69,8 +64,6 @@ export interface User {
   publicName: string;
   imageId: string;
   phone?: string;
-  profiles: ProfileType[];
-  lastUsedProfile?: ProfileType;
   country: string;
   currency: CurrencyCode;
   address?: AddressWithGeoPoint;
@@ -151,5 +144,4 @@ export interface JWTPayload {
   email: string;
   role: Role;
   level: UserLevel;
-  profiles: ProfileType[];
 }

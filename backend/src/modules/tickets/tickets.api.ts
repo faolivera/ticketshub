@@ -30,7 +30,7 @@ export interface CreateListingRequest {
 
   // Ticket details
   description?: string;
-  section?: string;
+  eventSectionId: string;
 }
 
 export interface CreateListingTicketUnitInput {

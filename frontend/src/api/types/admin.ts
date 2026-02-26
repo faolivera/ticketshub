@@ -54,6 +54,39 @@ export interface AdminPendingEventDateItem {
 }
 
 /**
+ * Pending event section item for admin
+ */
+export interface AdminPendingSectionItem {
+  id: string;
+  eventId: string;
+  eventName: string;
+  name: string;
+  status: string;
+  pendingListingsCount: number;
+  createdAt: string;
+}
+
+/**
+ * Request for PATCH /api/admin/events/sections/:id
+ */
+export interface AdminApproveSectionRequest {
+  approved: boolean;
+  rejectionReason?: string;
+}
+
+/**
+ * Response for PATCH /api/admin/events/sections/:id
+ */
+export interface AdminApproveSectionResponse {
+  id: string;
+  eventId: string;
+  name: string;
+  status: string;
+  approvedBy?: string;
+  rejectionReason?: string;
+}
+
+/**
  * Pending event item for admin
  */
 export interface AdminPendingEventItem {
@@ -64,6 +97,7 @@ export interface AdminPendingEventItem {
   status: string;
   createdAt: string;
   pendingDates: AdminPendingEventDateItem[];
+  pendingSections: AdminPendingSectionItem[];
   pendingListingsCount: number;
 }
 

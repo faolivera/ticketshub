@@ -10,10 +10,6 @@
     "publicName": "TicketsHub Admin",
     "role": "Admin",
     "level": "Basic",
-    "profiles": [
-      "Customer"
-    ],
-    "lastUsedProfile": "Customer",
     "imageId": "img_seed_admin",
     "emailVerified": true,
     "phoneVerified": true,
@@ -31,11 +27,6 @@
     "publicName": "Venito V.",
     "role": "User",
     "level": "VerifiedSeller",
-    "profiles": [
-      "Provider",
-      "Customer"
-    ],
-    "lastUsedProfile": "Provider",
     "imageId": "img_seed_seller",
     "emailVerified": true,
     "phoneVerified": true,
@@ -64,20 +55,16 @@
     "currency": "EUR",
     "email": "buyer@ticketshub.local",
     "password": "buyer123",
-    "firstName": "Buyer",
+    "firstName": "Pepito",
     "lastName": "User",
-    "publicName": "Buyer",
+    "publicName": "Pepito",
     "role": "User",
-    "level": "Buyer",
-    "profiles": [
-      "Customer"
-    ],
-    "lastUsedProfile": "Customer",
+    "level": "Seller",
     "imageId": "img_seed_buyer",
     "emailVerified": true,
     "phoneVerified": true,
     "createdAt": "2026-02-05T13:23:52.516Z",
-    "updatedAt": "2026-02-25T12:13:23.074Z"
+    "updatedAt": "2026-02-26T11:48:23.364Z"
   },
   "4": {
     "id": "4",
@@ -90,10 +77,7 @@
     "lastName": "Oli",
     "publicName": "Facundo Oli",
     "role": "User",
-    "level": "Basic",
-    "profiles": [
-      "Customer"
-    ],
+    "level": "Buyer",
     "imageId": "default",
     "emailVerified": true,
     "phoneVerified": true,
@@ -112,10 +96,6 @@
     "publicName": "Richard Javier",
     "role": "User",
     "level": "Seller",
-    "profiles": [
-      "Customer",
-      "Provider"
-    ],
     "imageId": "default",
     "emailVerified": true,
     "phoneVerified": true,
@@ -134,10 +114,6 @@
     "publicName": "Richard Javi",
     "role": "User",
     "level": "Seller",
-    "profiles": [
-      "Customer",
-      "Provider"
-    ],
     "imageId": "default",
     "emailVerified": true,
     "phoneVerified": true,
@@ -156,10 +132,6 @@
     "publicName": "rr jj",
     "role": "User",
     "level": "Seller",
-    "profiles": [
-      "Customer",
-      "Provider"
-    ],
     "imageId": "default",
     "emailVerified": true,
     "phoneVerified": true,
@@ -178,13 +150,28 @@
     "publicName": "Facu Admin",
     "role": "Admin",
     "level": "Basic",
-    "profiles": [
-      "Customer"
-    ],
     "imageId": "default",
     "emailVerified": true,
     "phoneVerified": false,
     "createdAt": "2026-02-25T12:11:05.435Z",
     "updatedAt": "2026-02-25T12:11:09.347Z"
+  },
+  "9": {
+    "id": "9",
+    "country": "United States",
+    "currency": "EUR",
+    "status": "Enabled",
+    "email": "test@test.com",
+    "password": "12345678",
+    "firstName": "Juan",
+    "lastName": "Perez",
+    "publicName": "Juan Perez",
+    "role": "User",
+    "level": "Basic",
+    "imageId": "default",
+    "emailVerified": true,
+    "phoneVerified": false,
+    "createdAt": "2026-02-26T10:57:22.743Z",
+    "updatedAt": "2026-02-26T10:58:20.372Z"
   }
 }

@@ -35,11 +35,15 @@ import {
 import { Calendar, Check, X, Plus, Clock, MapPin, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import { eventsService } from '../../../api/services/events.service';
 import { adminService } from '../../../api/services/admin.service';
-import type { AdminPendingEventItem, AdminPendingEventDateItem } from '../../../api/types/admin';
+import type { AdminPendingEventItem, AdminPendingEventDateItem, AdminPendingSectionItem } from '../../../api/types/admin';
 import type { Event, EventDate } from '../../../api/types/events';
 import { EditEventModal } from './components/EditEventModal';
+import { Layers } from 'lucide-react';
 
-type RejectTarget = { type: 'event'; event: AdminPendingEventItem } | { type: 'date'; event: AdminPendingEventItem; date: AdminPendingEventDateItem };
+type RejectTarget = 
+  | { type: 'event'; event: AdminPendingEventItem } 
+  | { type: 'date'; event: AdminPendingEventItem; date: AdminPendingEventDateItem }
+  | { type: 'section'; event: AdminPendingEventItem; section: AdminPendingSectionItem };
 
 export function EventManagement() {
   const { t } = useTranslation();
@@ -97,6 +101,18 @@ export function EventManagement() {
     }
   };
 
+  const handleApproveSection = async (sectionId: string) => {
+    try {
+      setActionLoading(sectionId);
+      await adminService.approveSection(sectionId, { approved: true });
+      await fetchPendingEvents();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to approve section');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleReject = async () => {
     if (!rejectTarget) return;
     try {
@@ -105,8 +121,13 @@ export function EventManagement() {
           approved: false,
           rejectionReason,
         });
-      } else {
+      } else if (rejectTarget.type === 'date') {
         await eventsService.approveEventDate(rejectTarget.date.id, {
+          approved: false,
+          rejectionReason,
+        });
+      } else if (rejectTarget.type === 'section') {
+        await adminService.approveSection(rejectTarget.section.id, {
           approved: false,
           rejectionReason,
         });
@@ -127,6 +148,11 @@ export function EventManagement() {
 
   const openRejectDateDialog = (event: AdminPendingEventItem, date: AdminPendingEventDateItem) => {
     setRejectTarget({ type: 'date', event, date });
+    setIsRejectDialogOpen(true);
+  };
+
+  const openRejectSectionDialog = (event: AdminPendingEventItem, section: AdminPendingSectionItem) => {
+    setRejectTarget({ type: 'section', event, section });
     setIsRejectDialogOpen(true);
   };
 
@@ -197,16 +223,38 @@ export function EventManagement() {
     return event.pendingDates?.length || 0;
   };
 
-  const rejectDialogTitle = rejectTarget?.type === 'event' 
-    ? t('admin.events.rejectTitle')
-    : t('admin.events.rejectDateTitle');
-  
-  const rejectDialogDescription = rejectTarget?.type === 'event'
-    ? t('admin.events.rejectDescription', { name: rejectTarget?.event?.name })
-    : t('admin.events.rejectDateDescription', { 
+  const getPendingSectionsCount = (event: AdminPendingEventItem) => {
+    return event.pendingSections?.length || 0;
+  };
+
+  const getRejectDialogTitle = () => {
+    if (rejectTarget?.type === 'event') return t('admin.events.rejectTitle');
+    if (rejectTarget?.type === 'date') return t('admin.events.rejectDateTitle');
+    if (rejectTarget?.type === 'section') return t('admin.events.rejectSectionTitle');
+    return '';
+  };
+
+  const getRejectDialogDescription = () => {
+    if (rejectTarget?.type === 'event') {
+      return t('admin.events.rejectDescription', { name: rejectTarget?.event?.name });
+    }
+    if (rejectTarget?.type === 'date') {
+      return t('admin.events.rejectDateDescription', { 
         eventName: rejectTarget?.event?.name,
-        date: rejectTarget?.type === 'date' ? formatDate(rejectTarget.date.date) : '',
+        date: formatDate(rejectTarget.date.date),
       });
+    }
+    if (rejectTarget?.type === 'section') {
+      return t('admin.events.rejectSectionDescription', { 
+        eventName: rejectTarget?.event?.name,
+        sectionName: rejectTarget.section.name,
+      });
+    }
+    return '';
+  };
+
+  const rejectDialogTitle = getRejectDialogTitle();
+  const rejectDialogDescription = getRejectDialogDescription();
 
   return (
     <div className="space-y-6">
@@ -248,8 +296,11 @@ export function EventManagement() {
             <div className="space-y-4">
               {events.map((event) => {
                 const pendingDatesCount = getPendingDatesCount(event);
+                const pendingSectionsCount = getPendingSectionsCount(event);
                 const isExpanded = expandedEvents.has(event.id);
                 const hasPendingDates = pendingDatesCount > 0;
+                const hasPendingSections = pendingSectionsCount > 0;
+                const hasExpandableContent = hasPendingDates || hasPendingSections;
                 
                 return (
                   <Collapsible key={event.id} open={isExpanded} onOpenChange={() => toggleEventExpanded(event.id)}>
@@ -257,7 +308,7 @@ export function EventManagement() {
                       <div className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            {hasPendingDates && (
+                            {hasExpandableContent && (
                               <CollapsibleTrigger asChild>
                                 <Button variant="ghost" size="sm" className="p-0 h-auto">
                                   {isExpanded ? (
@@ -279,6 +330,11 @@ export function EventManagement() {
                                 {hasPendingDates && (
                                   <span className="text-yellow-600">
                                     {pendingDatesCount} {t('admin.events.pendingDates')}
+                                  </span>
+                                )}
+                                {hasPendingSections && (
+                                  <span className="text-yellow-600">
+                                    {pendingSectionsCount} {t('admin.events.pendingSections')}
                                   </span>
                                 )}
                               </div>
@@ -326,58 +382,115 @@ export function EventManagement() {
                         </div>
                       </div>
                       
-                      {hasPendingDates && (
+                      {hasExpandableContent && (
                         <CollapsibleContent>
-                          <div className="border-t bg-muted/30 p-4">
-                            <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              {t('admin.events.pendingDatesTitle')}
-                            </h4>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>{t('admin.events.dateColumn')}</TableHead>
-                                  <TableHead>{t('admin.events.status')}</TableHead>
-                                  <TableHead>{t('admin.events.createdAt')}</TableHead>
-                                  <TableHead className="text-right">{t('admin.events.actions')}</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {event.pendingDates.map((eventDate) => (
-                                    <TableRow key={eventDate.id}>
-                                      <TableCell className="font-medium">
-                                        {formatDateTime(eventDate.date, eventDate.startTime)}
-                                      </TableCell>
-                                      <TableCell>{getStatusBadge(eventDate.status)}</TableCell>
-                                      <TableCell>{formatDate(eventDate.createdAt)}</TableCell>
-                                      <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                            onClick={() => handleApproveDate(eventDate.id)}
-                                            disabled={actionLoading === eventDate.id}
-                                          >
-                                            <Check className="w-4 h-4 mr-1" />
-                                            {t('admin.events.approve')}
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                            onClick={() => openRejectDateDialog(event, eventDate)}
-                                          >
-                                            <X className="w-4 h-4 mr-1" />
-                                            {t('admin.events.reject')}
-                                          </Button>
-                                        </div>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                              </TableBody>
-                            </Table>
-                          </div>
+                          {hasPendingDates && (
+                            <div className="border-t bg-muted/30 p-4">
+                              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                {t('admin.events.pendingDatesTitle')}
+                              </h4>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>{t('admin.events.dateColumn')}</TableHead>
+                                    <TableHead>{t('admin.events.status')}</TableHead>
+                                    <TableHead>{t('admin.events.createdAt')}</TableHead>
+                                    <TableHead className="text-right">{t('admin.events.actions')}</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {event.pendingDates.map((eventDate) => (
+                                      <TableRow key={eventDate.id}>
+                                        <TableCell className="font-medium">
+                                          {formatDateTime(eventDate.date, eventDate.startTime)}
+                                        </TableCell>
+                                        <TableCell>{getStatusBadge(eventDate.status)}</TableCell>
+                                        <TableCell>{formatDate(eventDate.createdAt)}</TableCell>
+                                        <TableCell className="text-right">
+                                          <div className="flex justify-end gap-2">
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                              onClick={() => handleApproveDate(eventDate.id)}
+                                              disabled={actionLoading === eventDate.id}
+                                            >
+                                              <Check className="w-4 h-4 mr-1" />
+                                              {t('admin.events.approve')}
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                              onClick={() => openRejectDateDialog(event, eventDate)}
+                                            >
+                                              <X className="w-4 h-4 mr-1" />
+                                              {t('admin.events.reject')}
+                                            </Button>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          )}
+
+                          {hasPendingSections && (
+                            <div className="border-t bg-muted/30 p-4">
+                              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <Layers className="w-4 h-4" />
+                                {t('admin.events.pendingSectionsTitle')}
+                              </h4>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>{t('admin.events.sectionName')}</TableHead>
+                                    <TableHead>{t('admin.events.status')}</TableHead>
+                                    <TableHead>{t('admin.events.pendingListings')}</TableHead>
+                                    <TableHead>{t('admin.events.createdAt')}</TableHead>
+                                    <TableHead className="text-right">{t('admin.events.actions')}</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {event.pendingSections.map((section) => (
+                                      <TableRow key={section.id}>
+                                        <TableCell className="font-medium">
+                                          {section.name}
+                                        </TableCell>
+                                        <TableCell>{getStatusBadge(section.status)}</TableCell>
+                                        <TableCell>{section.pendingListingsCount}</TableCell>
+                                        <TableCell>{formatDate(section.createdAt)}</TableCell>
+                                        <TableCell className="text-right">
+                                          <div className="flex justify-end gap-2">
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                              onClick={() => handleApproveSection(section.id)}
+                                              disabled={actionLoading === section.id}
+                                            >
+                                              <Check className="w-4 h-4 mr-1" />
+                                              {t('admin.events.approveSection')}
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                              onClick={() => openRejectSectionDialog(event, section)}
+                                            >
+                                              <X className="w-4 h-4 mr-1" />
+                                              {t('admin.events.rejectSection')}
+                                            </Button>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          )}
                         </CollapsibleContent>
                       )}
                     </div>

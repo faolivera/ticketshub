@@ -15,12 +15,16 @@ import type {
   AdminPendingEventsResponse,
   AdminUpdateEventRequest,
   AdminUpdateEventResponse,
+  AdminApproveSectionRequest,
+  AdminApproveSectionResponse,
 } from './admin.api';
 import {
   AdminPaymentsResponseSchema,
   AdminPendingEventsResponseSchema,
   AdminUpdateEventResponseSchema,
+  AdminApproveSectionResponseSchema,
 } from './schemas/api.schemas';
+import { EventsService } from '../events/events.service';
 
 @Controller('api/admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,6 +33,8 @@ export class AdminController {
   constructor(
     @Inject(AdminService)
     private readonly adminService: AdminService,
+    @Inject(EventsService)
+    private readonly eventsService: EventsService,
   ) {}
 
   /**
@@ -76,5 +82,36 @@ export class AdminController {
       user.id,
     );
     return { success: true, data };
+  }
+
+  /**
+   * Approve or reject an event section.
+   */
+  @Patch('events/sections/:id')
+  @ValidateResponse(AdminApproveSectionResponseSchema)
+  async approveSection(
+    @Context() ctx: Ctx,
+    @Param('id') sectionId: string,
+    @User('id') adminId: string,
+    @Body() body: AdminApproveSectionRequest,
+  ): Promise<ApiResponse<AdminApproveSectionResponse>> {
+    const section = await this.eventsService.approveEventSection(
+      ctx,
+      sectionId,
+      adminId,
+      body.approved,
+      body.rejectionReason,
+    );
+    return {
+      success: true,
+      data: {
+        id: section.id,
+        eventId: section.eventId,
+        name: section.name,
+        status: section.status,
+        approvedBy: section.approvedBy,
+        rejectionReason: section.rejectionReason,
+      },
+    };
   }
 }

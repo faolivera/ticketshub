@@ -20,6 +20,15 @@ export enum EventDateStatus {
 }
 
 /**
+ * Event section status
+ */
+export enum EventSectionStatus {
+  Pending = 'pending',
+  Approved = 'approved',
+  Rejected = 'rejected',
+}
+
+/**
  * Event category
  */
 export enum EventCategory {
@@ -77,8 +86,27 @@ export interface EventDate {
 }
 
 /**
- * Event with dates for display
+ * Event section entity - an event can have multiple sections (e.g., VIP, General, Balcony)
+ */
+export interface EventSection {
+  id: string;
+  eventId: string;
+  name: string;
+
+  status: EventSectionStatus;
+  rejectionReason?: string;
+
+  createdBy: string;
+  approvedBy?: string;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Event with dates and sections for display
  */
 export interface EventWithDates extends Event {
   dates: EventDate[];
+  sections: EventSection[];
 }

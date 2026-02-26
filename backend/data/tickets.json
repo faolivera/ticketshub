@@ -25,10 +25,10 @@
       "amount": 10000,
       "currency": "EUR"
     },
-    "section": "General",
     "status": "Sold",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-26T00:48:04.012Z"
+    "updatedAt": "2026-02-26T00:48:04.012Z",
+    "eventSectionId": "sec_1772074566371_998a7761"
   },
   "tkt_s2_un_separate": {
     "id": "tkt_s2_un_separate",
@@ -56,10 +56,10 @@
       "amount": 10000,
       "currency": "EUR"
     },
-    "section": "General",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T17:29:33.242Z"
+    "updatedAt": "2026-02-25T17:29:33.242Z",
+    "eventSectionId": "sec_1772074566371_998a7761"
   },
   "tkt_s2_un_single": {
     "id": "tkt_s2_un_single",
@@ -79,10 +79,10 @@
       "amount": 10000,
       "currency": "EUR"
     },
-    "section": "General",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T14:24:46.700Z"
+    "updatedAt": "2026-02-25T14:24:46.700Z",
+    "eventSectionId": "sec_1772074566371_998a7761"
   },
   "tkt_s2_num_together": {
     "id": "tkt_s2_num_together",
@@ -122,10 +122,10 @@
       "amount": 15000,
       "currency": "EUR"
     },
-    "section": "Platea",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T15:19:40.266Z"
+    "updatedAt": "2026-02-25T15:19:40.266Z",
+    "eventSectionId": "sec_1772074566371_4ddbc87c"
   },
   "tkt_s2_num_separate": {
     "id": "tkt_s2_num_separate",
@@ -165,10 +165,10 @@
       "amount": 15000,
       "currency": "EUR"
     },
-    "section": "Platea",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T18:23:11.487Z"
+    "updatedAt": "2026-02-25T18:23:11.487Z",
+    "eventSectionId": "sec_1772074566371_4ddbc87c"
   },
   "tkt_s2_num_single": {
     "id": "tkt_s2_num_single",
@@ -192,10 +192,10 @@
       "amount": 15000,
       "currency": "EUR"
     },
-    "section": "Platea",
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T10:00:00.000Z"
+    "updatedAt": "2026-02-25T10:00:00.000Z",
+    "eventSectionId": "sec_1772074566371_4ddbc87c"
   },
   "tkt_1771986888670_d70607e7": {
     "id": "tkt_1771986888670_d70607e7",
@@ -227,10 +227,10 @@
       "amount": 1000,
       "currency": "EUR"
     },
-    "section": "Test Numbered",
     "status": "Active",
     "createdAt": "2026-02-25T02:34:48.670Z",
-    "updatedAt": "2026-02-25T12:13:32.035Z"
+    "updatedAt": "2026-02-25T12:13:32.035Z",
+    "eventSectionId": "sec_1772074566371_3f015245"
   },
   "tkt_1771986888673_145f5314": {
     "id": "tkt_1771986888673_145f5314",
@@ -258,10 +258,10 @@
       "amount": 1000,
       "currency": "EUR"
     },
-    "section": "Test Unnumbered",
     "status": "Active",
     "createdAt": "2026-02-25T02:34:48.673Z",
-    "updatedAt": "2026-02-25T02:34:48.673Z"
+    "updatedAt": "2026-02-25T02:34:48.673Z",
+    "eventSectionId": "sec_1772074566371_84eec75e"
   },
   "tkt_1772014177633_5ab16f4d": {
     "id": "tkt_1772014177633_5ab16f4d",
@@ -317,10 +317,10 @@
       "amount": 20000,
       "currency": "USD"
     },
-    "section": "VIP",
     "status": "Active",
     "createdAt": "2026-02-25T10:09:37.633Z",
-    "updatedAt": "2026-02-25T10:09:37.633Z"
+    "updatedAt": "2026-02-25T10:09:37.633Z",
+    "eventSectionId": "sec_1772074566371_0fff4a76"
   },
   "tkt_1772019043848_10873abd": {
     "id": "tkt_1772019043848_10873abd",
@@ -360,10 +360,10 @@
       "amount": 10000,
       "currency": "USD"
     },
-    "section": "General Admission",
     "status": "Active",
     "createdAt": "2026-02-25T11:30:43.849Z",
-    "updatedAt": "2026-02-25T15:15:33.360Z"
+    "updatedAt": "2026-02-25T15:15:33.360Z",
+    "eventSectionId": "sec_1772074566371_2af6fb43"
   },
   "tkt_1772020615668_6d8ee400": {
     "id": "tkt_1772020615668_6d8ee400",
@@ -427,10 +427,10 @@
       "amount": 20000,
       "currency": "USD"
     },
-    "section": "VIP",
     "status": "Active",
     "createdAt": "2026-02-25T11:56:55.668Z",
-    "updatedAt": "2026-02-25T11:56:55.668Z"
+    "updatedAt": "2026-02-25T11:56:55.668Z",
+    "eventSectionId": "sec_1772074566371_0fff4a76"
   },
   "tkt_1772072337297_72bc30e5": {
     "id": "tkt_1772072337297_72bc30e5",
@@ -462,10 +462,10 @@
       "amount": 20000,
       "currency": "USD"
     },
-    "section": "VIP",
     "status": "Active",
     "createdAt": "2026-02-26T02:18:57.297Z",
-    "updatedAt": "2026-02-26T02:20:07.801Z"
+    "updatedAt": "2026-02-26T02:20:07.801Z",
+    "eventSectionId": "sec_1772074566371_e157e241"
   },
   "tkt_1772072599033_abd147d8": {
     "id": "tkt_1772072599033_abd147d8",
@@ -477,7 +477,7 @@
     "ticketUnits": [
       {
         "id": "unit_1772072599033_dba6bd27",
-        "status": "available"
+        "status": "reserved"
       },
       {
         "id": "unit_1772072599033_2b4be34e",
@@ -493,9 +493,68 @@
       "amount": 25000,
       "currency": "USD"
     },
-    "section": "General Admission",
     "status": "Active",
     "createdAt": "2026-02-26T02:23:19.033Z",
-    "updatedAt": "2026-02-26T02:26:06.673Z"
+    "updatedAt": "2026-02-26T02:30:05.760Z",
+    "eventSectionId": "sec_1772074566371_8aa5e984"
+  },
+  "tkt_1772106572406_8746e293": {
+    "id": "tkt_1772106572406_8746e293",
+    "sellerId": "3",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1770297832517_8ab73b15",
+    "type": "DigitalTransferable",
+    "seatingType": "unnumbered",
+    "ticketUnits": [
+      {
+        "id": "unit_1772106572406_15777f73",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_cc54b6d9",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_c736d2b6",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_9119761b",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_6a1ae52d",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_6800fef7",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_efa5fab4",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_3e4f1a61",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_afd28564",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772106572406_9b24c71f",
+        "status": "available"
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 20000,
+      "currency": "USD"
+    },
+    "eventSectionId": "sec_1772106540443_20b67b98",
+    "status": "Pending",
+    "createdAt": "2026-02-26T11:49:32.406Z",
+    "updatedAt": "2026-02-26T11:49:32.406Z"
   }
 }

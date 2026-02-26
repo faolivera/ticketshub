@@ -7,8 +7,8 @@ import { useUser } from '@/app/contexts/UserContext';
 const QUICK_LOGIN_USERS = [
   { label: 'Admin Facu', email: 'facu@admin.com', password: '12345678' },
   { label: 'Venito Seller', email: 'seller@ticketshub.local', password: 'seller123' },
-  { label: 'Buyer 1', email: 'buyer@ticketshub.local', password: 'buyer123' },
-  { label: 'Buyer 2', email: 'f@f.com', password: '12345678' },
+  { label: 'Pepito', email: 'buyer@ticketshub.local', password: 'buyer123' },
+  { label: 'Facu Oli', email: 'f@f.com', password: '12345678' },
 ];
 
 export function Login() {

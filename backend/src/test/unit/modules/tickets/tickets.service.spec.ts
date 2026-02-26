@@ -9,7 +9,7 @@ import {
   SeatingType,
   TicketUnitStatus,
 } from '../../../../modules/tickets/tickets.domain';
-import { EventStatus, EventDateStatus } from '../../../../modules/events/events.domain';
+import { EventStatus, EventDateStatus, EventSectionStatus } from '../../../../modules/events/events.domain';
 import { UserLevel } from '../../../../modules/users/users.domain';
 import type { TicketListing } from '../../../../modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../modules/shared/money.domain';
@@ -47,6 +47,18 @@ describe('TicketsService', () => {
         createdBy: 'user_123',
       },
     ],
+    sections: [
+      {
+        id: 'sec_test_123',
+        eventId: 'evt_123',
+        name: 'General',
+        status: EventSectionStatus.Approved,
+        createdBy: 'user_123',
+        approvedBy: 'admin_123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
     images: [],
     category: 'Concert',
     description: 'Test description',
@@ -72,6 +84,18 @@ describe('TicketsService', () => {
         createdBy: 'user_123',
       },
     ],
+    sections: [
+      {
+        id: 'sec_test_123',
+        eventId: 'evt_pending',
+        name: 'General',
+        status: EventSectionStatus.Approved,
+        createdBy: 'user_123',
+        approvedBy: 'admin_123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
   };
 
   const mockPendingListing: TicketListing = {
@@ -79,6 +103,7 @@ describe('TicketsService', () => {
     sellerId: 'seller_123',
     eventId: 'evt_123',
     eventDateId: 'edt_456',
+    eventSectionId: 'sec_test_123',
     type: TicketType.DigitalTransferable,
     seatingType: SeatingType.Unnumbered,
     ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
@@ -135,6 +160,7 @@ describe('TicketsService', () => {
     const baseCreateRequest = {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
       seatingType: SeatingType.Unnumbered,
       quantity: 2,
@@ -257,6 +283,60 @@ describe('TicketsService', () => {
 
       expect(result).toBe(0);
       expect(ticketsRepository.bulkUpdateStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getListingById', () => {
+    const mockListing: TicketListing = {
+      id: 'tkt_123',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
+      type: TicketType.DigitalTransferable,
+      seatingType: SeatingType.Unnumbered,
+      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: ListingStatus.Active,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should return listing enriched with event info including sectionName', async () => {
+      ticketsRepository.findById.mockResolvedValue(mockListing);
+      eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
+
+      const result = await service.getListingById(mockCtx, 'tkt_123');
+
+      expect(result).toMatchObject({
+        ...mockListing,
+        eventName: 'Test Event',
+        venue: 'Test Venue',
+        sectionName: 'General',
+      });
+      expect(result.eventDate).toBeDefined();
+    });
+
+    it('should return sectionName as Unknown when section not found', async () => {
+      const listingWithMissingSection = {
+        ...mockListing,
+        eventSectionId: 'non_existent_section',
+      };
+      ticketsRepository.findById.mockResolvedValue(listingWithMissingSection);
+      eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
+
+      const result = await service.getListingById(mockCtx, 'tkt_123');
+
+      expect(result.sectionName).toBe('Unknown');
+    });
+
+    it('should throw NotFoundException when listing does not exist', async () => {
+      ticketsRepository.findById.mockResolvedValue(null);
+
+      await expect(service.getListingById(mockCtx, 'non_existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

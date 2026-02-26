@@ -15,7 +15,6 @@ import type {
   UserPublicInfo,
   AuthenticatedUserPublicInfo,
 } from './users.domain';
-import type { ProfileType } from './users.domain';
 import { Role, UserLevel, UserStatus } from './users.domain';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
@@ -88,10 +87,10 @@ export class UsersService {
   }
 
   /**
-   * Get providers
+   * Get all sellers (users with Seller or VerifiedSeller level)
    */
-  async getProviders(ctx: Ctx): Promise<User[]> {
-    return await this.usersRepository.getProviders(ctx);
+  async getSellers(ctx: Ctx): Promise<User[]> {
+    return await this.usersRepository.getSellers(ctx);
   }
 
   /**
@@ -103,32 +102,6 @@ export class UsersService {
       Partial<Pick<User, 'country' | 'currency'>>,
   ): Promise<User> {
     return await this.usersRepository.add(ctx, user);
-  }
-
-  /**
-   * Add profile to user
-   */
-  async addProfile(
-    ctx: Ctx,
-    userId: string,
-    profile: ProfileType,
-  ): Promise<User | undefined> {
-    return await this.usersRepository.addProfile(ctx, userId, profile);
-  }
-
-  /**
-   * Update last used profile for a user
-   */
-  async updateLastUsedProfile(
-    ctx: Ctx,
-    userId: string,
-    profile: ProfileType,
-  ): Promise<User | undefined> {
-    return await this.usersRepository.updateLastUsedProfile(
-      ctx,
-      userId,
-      profile,
-    );
   }
 
   /**
@@ -170,7 +143,6 @@ export class UsersService {
       email: user.email,
       role: user.role,
       level: user.level,
-      profiles: user.profiles,
     };
     // @ts-ignore - JWT_EXPIRES_IN is a valid string for expiresIn
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
@@ -281,7 +253,6 @@ export class UsersService {
       role: Role.User,
       level: UserLevel.Basic,
       status: UserStatus.Enabled,
-      profiles: ['Customer'],
       imageId: 'default',
       country: data.country,
       currency: 'EUR',
@@ -322,10 +293,15 @@ export class UsersService {
   }
 
   /**
-   * Mark user phone as verified
+   * Mark user phone as verified and upgrade to Buyer level if Basic
    */
   async markPhoneVerified(ctx: Ctx, userId: string): Promise<void> {
     await this.usersRepository.updatePhoneVerified(ctx, userId, true);
+
+    const user = await this.usersRepository.findById(ctx, userId);
+    if (user?.level === UserLevel.Basic) {
+      await this.usersRepository.updateLevel(ctx, userId, UserLevel.Buyer);
+    }
   }
 
   /**
@@ -346,8 +322,6 @@ export class UsersService {
     email: string;
     publicName: string;
     pic: Image;
-    profiles: ProfileType[];
-    lastUsedProfile: ProfileType | undefined;
     address?: UserAddress;
   } | null> {
     const user = await this.usersRepository.findById(ctx, userId);
@@ -413,8 +387,6 @@ export class UsersService {
       email: updatedUser.email,
       publicName: updatedUser.publicName,
       pic: image,
-      profiles: updatedUser.profiles,
-      lastUsedProfile: updatedUser.lastUsedProfile,
       address: updatedUser.address,
     };
   }
@@ -440,11 +412,6 @@ export class UsersService {
 
     if (!hasAcceptedSellerTerms) {
       throw new BadRequestException('Must accept seller terms first');
-    }
-
-    // Add Provider profile if not present
-    if (!user.profiles.includes('Provider')) {
-      await this.usersRepository.addProfile(ctx, userId, 'Provider');
     }
 
     // Upgrade level to Seller if currently Basic or Buyer

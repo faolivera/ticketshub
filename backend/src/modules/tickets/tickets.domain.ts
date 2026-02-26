@@ -100,7 +100,7 @@ export interface TicketListing {
 
   // Ticket details
   description?: string;
-  section?: string;
+  eventSectionId: string;
 
   status: ListingStatus;
 
@@ -116,4 +116,5 @@ export interface TicketListingWithEvent extends TicketListing {
   eventName: string;
   eventDate: Date;
   venue: string;
+  sectionName: string;
 }

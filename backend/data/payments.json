@@ -70,5 +70,23 @@
     },
     "createdAt": "2026-02-26T00:48:04.013Z",
     "updatedAt": "2026-02-26T00:48:04.013Z"
+  },
+  "pi_1772073005761_154ee7c0": {
+    "id": "pi_1772073005761_154ee7c0",
+    "transactionId": "txn_1772073005757_874dd765",
+    "amount": {
+      "amount": 27500,
+      "currency": "USD"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772073005761_e48642cd",
+    "metadata": {
+      "buyerId": "3",
+      "sellerId": "6",
+      "listingId": "tkt_1772072599033_abd147d8",
+      "eventName": "Chayanne"
+    },
+    "createdAt": "2026-02-26T02:30:05.761Z",
+    "updatedAt": "2026-02-26T02:30:05.761Z"
   }
 }

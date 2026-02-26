@@ -108,7 +108,7 @@ function getListedStatusInfo(status: string, t: (key: string) => string) {
 
 export function BoughtTicketManager() {
   const { t } = useTranslation();
-  const { user, isAuthenticated } = useUser();
+  const { user, isAuthenticated, canSell } = useUser();
   
   const [bought, setBought] = useState<TransactionWithDetails[]>([]);
   const [sold, setSold] = useState<TransactionWithDetails[]>([]);
@@ -118,7 +118,7 @@ export function BoughtTicketManager() {
   const [activeTab, setActiveTab] = useState<TabType>('bought');
   const [copiedListingId, setCopiedListingId] = useState<string | null>(null);
 
-  const isProvider = user?.profiles?.includes('Provider') ?? false;
+  const isSeller = canSell();
 
   // Fetch all tickets once when authenticated
   useEffect(() => {
@@ -193,7 +193,7 @@ export function BoughtTicketManager() {
               >
                 {t('boughtTickets.ticketsBought')}
               </button>
-              {isProvider && (
+              {isSeller && (
                 <>
                   <button
                     onClick={() => setActiveTab('sold')}
@@ -276,7 +276,7 @@ export function BoughtTicketManager() {
                           {/* Ticket Type */}
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
                             <Ticket className="w-3.5 h-3.5" />
-                            {listing.section || listing.type}
+                            {listing.sectionName || listing.type}
                           </div>
 
                           {/* Date and Time */}

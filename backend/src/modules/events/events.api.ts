@@ -4,6 +4,7 @@ import type {
   EventCategory,
   Event,
   EventDate,
+  EventSection,
   EventWithDates,
 } from './events.domain';
 
@@ -91,4 +92,44 @@ export interface ListEventsQuery {
   search?: string;
   limit?: number;
   offset?: number;
+}
+
+/**
+ * Request to add a section to an event
+ */
+export interface AddEventSectionRequest {
+  name: string;
+}
+
+/**
+ * Response after adding a section
+ */
+export type AddEventSectionResponse = EventSection;
+
+/**
+ * Request to approve/reject an event section
+ */
+export interface ApproveEventSectionRequest {
+  approved: boolean;
+  rejectionReason?: string;
+}
+
+/**
+ * Response after section approval action
+ */
+export type ApproveEventSectionResponse = EventSection;
+
+/**
+ * Response for an event section
+ */
+export interface EventSectionResponse {
+  id: string;
+  eventId: string;
+  name: string;
+  status: string;
+  rejectionReason?: string;
+  createdBy: string;
+  approvedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

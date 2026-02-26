@@ -31,8 +31,11 @@ import type {
   GetEventResponse,
   ListEventsResponse,
   ListEventsQuery,
+  AddEventSectionRequest,
+  AddEventSectionResponse,
 } from './events.api';
 import { EventCategory } from './events.domain';
+import type { EventSection } from './events.domain';
 
 @Controller('api/events')
 export class EventsController {
@@ -185,5 +188,41 @@ export class EventsController {
   ): Promise<ApiResponse<ListEventsResponse>> {
     const events = await this.eventsService.getMyEvents(ctx, user.id);
     return { success: true, data: events };
+  }
+
+  /**
+   * Add a section to an event
+   */
+  @Post(':eventId/sections')
+  @UseGuards(JwtAuthGuard)
+  async addSection(
+    @Context() ctx: Ctx,
+    @Param('eventId') eventId: string,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Body() body: AddEventSectionRequest,
+  ): Promise<ApiResponse<AddEventSectionResponse>> {
+    const section = await this.eventsService.addEventSection(
+      ctx,
+      eventId,
+      user.id,
+      user.role,
+      body,
+    );
+    return { success: true, data: section };
+  }
+
+  /**
+   * Get sections for an event (public, approved only)
+   */
+  @Get(':eventId/sections')
+  async getSections(
+    @Context() ctx: Ctx,
+    @Param('eventId') eventId: string,
+  ): Promise<ApiResponse<EventSection[]>> {
+    const sections = await this.eventsService.getApprovedSectionsByEventId(
+      ctx,
+      eventId,
+    );
+    return { success: true, data: sections };
   }
 }

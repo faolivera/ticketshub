@@ -3,7 +3,6 @@ import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage
 import type { Ctx } from '../../common/types/context';
 import type { User, UserAddress } from './users.domain';
 import { UserStatus, UserLevel } from './users.domain';
-import type { ProfileType } from './users.domain';
 
 @Injectable()
 export class UsersRepository implements OnModuleInit {
@@ -64,27 +63,17 @@ export class UsersRepository implements OnModuleInit {
   }
 
   /**
-   * Find users by profile type (returns deep copies)
+   * Get all sellers (users with Seller or VerifiedSeller level)
    */
-  async findByProfile(ctx: Ctx, profile: ProfileType): Promise<User[]> {
+  async getSellers(ctx: Ctx): Promise<User[]> {
     const allUsers = await this.storage.getAll(ctx);
     return allUsers
-      .filter((user) => user.profiles.includes(profile))
+      .filter(
+        (user) =>
+          user.level === UserLevel.Seller ||
+          user.level === UserLevel.VerifiedSeller,
+      )
       .map((u) => this.ensureUserStatus(u));
-  }
-
-  /**
-   * Get all providers (users with Provider profile) (returns deep copies)
-   */
-  async getProviders(ctx: Ctx): Promise<User[]> {
-    return await this.findByProfile(ctx, 'Provider');
-  }
-
-  /**
-   * Get all customers (users with Customer profile) (returns deep copies)
-   */
-  async getCustomers(ctx: Ctx): Promise<User[]> {
-    return await this.findByProfile(ctx, 'Customer');
   }
 
   /**
@@ -142,71 +131,6 @@ export class UsersRepository implements OnModuleInit {
       ...existing,
       phoneVerified,
       updatedAt: new Date(),
-    };
-    await this.storage.set(ctx, userId, updatedUser);
-    return updatedUser;
-  }
-
-  /**
-   * Update user profiles
-   */
-  async updateProfiles(
-    ctx: Ctx,
-    userId: string,
-    profiles: ProfileType[],
-  ): Promise<User | undefined> {
-    const existing = await this.storage.get(ctx, userId);
-    if (!existing) return undefined;
-
-    const updatedUser: User = {
-      ...existing,
-      profiles: [...profiles],
-    };
-    await this.storage.set(ctx, userId, updatedUser);
-    return updatedUser;
-  }
-
-  /**
-   * Add profile to user
-   */
-  async addProfile(
-    ctx: Ctx,
-    userId: string,
-    profile: ProfileType,
-  ): Promise<User | undefined> {
-    const existing = await this.storage.get(ctx, userId);
-    if (!existing) return undefined;
-
-    if (!existing.profiles.includes(profile)) {
-      const updatedUser: User = {
-        ...existing,
-        profiles: [...existing.profiles, profile],
-      };
-      await this.storage.set(ctx, userId, updatedUser);
-      return updatedUser;
-    }
-    return existing;
-  }
-
-  /**
-   * Update last used profile for a user
-   */
-  async updateLastUsedProfile(
-    ctx: Ctx,
-    userId: string,
-    profile: ProfileType,
-  ): Promise<User | undefined> {
-    const existing = await this.storage.get(ctx, userId);
-    if (!existing) return undefined;
-
-    // Validate that user has this profile
-    if (!existing.profiles.includes(profile)) {
-      return undefined;
-    }
-
-    const updatedUser: User = {
-      ...existing,
-      lastUsedProfile: profile,
     };
     await this.storage.set(ctx, userId, updatedUser);
     return updatedUser;

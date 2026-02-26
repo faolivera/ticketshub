@@ -1,17 +1,23 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
 import type { Ctx } from '../../common/types/context';
-import type { Event, EventDate } from './events.domain';
-import { EventStatus, EventDateStatus } from './events.domain';
+import type { Event, EventDate, EventSection } from './events.domain';
+import {
+  EventStatus,
+  EventDateStatus,
+  EventSectionStatus,
+} from './events.domain';
 
 @Injectable()
 export class EventsRepository implements OnModuleInit {
   private readonly eventStorage: KeyValueFileStorage<Event>;
   private readonly dateStorage: KeyValueFileStorage<EventDate>;
+  private readonly sectionStorage: KeyValueFileStorage<EventSection>;
 
   constructor() {
     this.eventStorage = new KeyValueFileStorage<Event>('events');
     this.dateStorage = new KeyValueFileStorage<EventDate>('event-dates');
+    this.sectionStorage = new KeyValueFileStorage<EventSection>('event-sections');
   }
 
   /**
@@ -20,6 +26,7 @@ export class EventsRepository implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.eventStorage.onModuleInit();
     await this.dateStorage.onModuleInit();
+    await this.sectionStorage.onModuleInit();
   }
 
   // ==================== Events ====================
@@ -181,5 +188,101 @@ export class EventsRepository implements OnModuleInit {
    */
   async deleteEventDate(ctx: Ctx, id: string): Promise<void> {
     await this.dateStorage.delete(ctx, id);
+  }
+
+  // ==================== Event Sections ====================
+
+  /**
+   * Create a new event section
+   */
+  async createEventSection(
+    ctx: Ctx,
+    section: EventSection,
+  ): Promise<EventSection> {
+    await this.sectionStorage.set(ctx, section.id, section);
+    return section;
+  }
+
+  /**
+   * Find event section by ID
+   */
+  async findEventSectionById(
+    ctx: Ctx,
+    id: string,
+  ): Promise<EventSection | undefined> {
+    return await this.sectionStorage.get(ctx, id);
+  }
+
+  /**
+   * Get sections for an event
+   */
+  async getSectionsByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<EventSection[]> {
+    const all = await this.sectionStorage.getAll(ctx);
+    return all.filter((s) => s.eventId === eventId);
+  }
+
+  /**
+   * Get approved sections for an event
+   */
+  async getApprovedSectionsByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<EventSection[]> {
+    const all = await this.sectionStorage.getAll(ctx);
+    return all.filter(
+      (s) => s.eventId === eventId && s.status === EventSectionStatus.Approved,
+    );
+  }
+
+  /**
+   * Get pending sections (for admin)
+   */
+  async getPendingSections(ctx: Ctx): Promise<EventSection[]> {
+    const all = await this.sectionStorage.getAll(ctx);
+    return all.filter((s) => s.status === EventSectionStatus.Pending);
+  }
+
+  /**
+   * Find section by event ID and name (for uniqueness validation)
+   */
+  async findSectionByEventAndName(
+    ctx: Ctx,
+    eventId: string,
+    name: string,
+  ): Promise<EventSection | undefined> {
+    const all = await this.sectionStorage.getAll(ctx);
+    return all.find((s) => s.eventId === eventId && s.name === name);
+  }
+
+  /**
+   * Update event section
+   */
+  async updateEventSection(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<EventSection>,
+  ): Promise<EventSection | undefined> {
+    const existing = await this.sectionStorage.get(ctx, id);
+    if (!existing) return undefined;
+
+    const updated: EventSection = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+      eventId: existing.eventId,
+      updatedAt: new Date(),
+    };
+    await this.sectionStorage.set(ctx, id, updated);
+    return updated;
+  }
+
+  /**
+   * Delete event section
+   */
+  async deleteEventSection(ctx: Ctx, id: string): Promise<void> {
+    await this.sectionStorage.delete(ctx, id);
   }
 }

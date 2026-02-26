@@ -4,6 +4,8 @@ import type {
   AdminPendingEventsResponse,
   AdminUpdateEventRequest,
   AdminUpdateEventResponse,
+  AdminApproveSectionRequest,
+  AdminApproveSectionResponse,
 } from '../types/admin';
 
 /**
@@ -38,6 +40,20 @@ export const adminService = {
   ): Promise<AdminUpdateEventResponse> {
     const response = await apiClient.patch<AdminUpdateEventResponse>(
       `/admin/events/${eventId}`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Approve or reject an event section
+   */
+  async approveSection(
+    sectionId: string,
+    data: AdminApproveSectionRequest
+  ): Promise<AdminApproveSectionResponse> {
+    const response = await apiClient.patch<AdminApproveSectionResponse>(
+      `/admin/events/sections/${sectionId}`,
       data
     );
     return response.data;

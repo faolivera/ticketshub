@@ -48,6 +48,16 @@ export const AdminPendingEventDateItemSchema = z.object({
   createdAt: z.coerce.date(),
 });
 
+export const AdminPendingSectionItemSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  eventName: z.string(),
+  name: z.string(),
+  status: z.string(),
+  pendingListingsCount: z.number(),
+  createdAt: z.coerce.date(),
+});
+
 export const AdminPendingEventItemSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -56,12 +66,27 @@ export const AdminPendingEventItemSchema = z.object({
   status: z.string(),
   createdAt: z.coerce.date(),
   pendingDates: z.array(AdminPendingEventDateItemSchema),
+  pendingSections: z.array(AdminPendingSectionItemSchema),
   pendingListingsCount: z.number(),
 });
 
 export const AdminPendingEventsResponseSchema = z.object({
   events: z.array(AdminPendingEventItemSchema),
   total: z.number(),
+});
+
+export const AdminApproveSectionRequestSchema = z.object({
+  approved: z.boolean(),
+  rejectionReason: z.string().optional(),
+});
+
+export const AdminApproveSectionResponseSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  name: z.string(),
+  status: z.string(),
+  approvedBy: z.string().optional(),
+  rejectionReason: z.string().optional(),
 });
 
 // Admin Event Update Schemas

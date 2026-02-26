@@ -77,10 +77,35 @@ export interface EventDate {
 }
 
 /**
- * Event with dates
+ * Event section status
+ */
+export enum EventSectionStatus {
+  Pending = 'pending',
+  Approved = 'approved',
+  Rejected = 'rejected',
+}
+
+/**
+ * Event section entity
+ */
+export interface EventSection {
+  id: string;
+  eventId: string;
+  name: string;
+  status: EventSectionStatus;
+  rejectionReason?: string;
+  createdBy: string;
+  approvedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Event with dates and sections
  */
 export interface EventWithDates extends Event {
   dates: EventDate[];
+  sections: EventSection[];
   images: Image[];
 }
 
@@ -143,6 +168,18 @@ export interface ApproveEventDateRequest {
  * Response after date approval action
  */
 export type ApproveEventDateResponse = EventDate;
+
+/**
+ * Request to add a section to an event
+ */
+export interface AddEventSectionRequest {
+  name: string;
+}
+
+/**
+ * Response after adding a section
+ */
+export type AddEventSectionResponse = EventSection;
 
 /**
  * Response for getting event details

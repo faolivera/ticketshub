@@ -257,4 +257,19 @@ export class TicketsRepository implements OnModuleInit {
     const all = await this.storage.getAll(ctx);
     return all.filter((l) => l.eventDateId === eventDateId);
   }
+
+  /**
+   * Get pending listings by event section ID
+   */
+  async getPendingByEventSectionId(
+    ctx: Ctx,
+    eventSectionId: string,
+  ): Promise<TicketListing[]> {
+    const all = await this.storage.getAll(ctx);
+    return all.filter(
+      (l) =>
+        l.eventSectionId === eventSectionId &&
+        l.status === ListingStatus.Pending,
+    );
+  }
 }

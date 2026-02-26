@@ -20,8 +20,6 @@ export enum UserLevel {
   VerifiedSeller = 'VerifiedSeller',
 }
 
-export type ProfileType = 'Customer' | 'Provider';
-
 /**
  * User address with geographic point
  */
@@ -71,8 +69,6 @@ export interface User {
   imageId: string;
   phone?: string;
   password: string;
-  profiles: ProfileType[];
-  lastUsedProfile?: ProfileType;
   country: string;
   currency: CurrencyCode;
   address?: UserAddress;
@@ -119,7 +115,6 @@ export interface JWTPayload {
   email: string;
   role: Role;
   level: UserLevel;
-  profiles: ProfileType[];
 }
 
 export { Address, AddressWithGeoPoint } from '../shared/address.domain';

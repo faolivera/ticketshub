@@ -1,0 +1,109 @@
+{
+  "sec_1772074566371_998a7761": {
+    "id": "sec_1772074566371_998a7761",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "General",
+    "status": "approved",
+    "createdBy": "2",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772074566371_4ddbc87c": {
+    "id": "sec_1772074566371_4ddbc87c",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "Platea",
+    "status": "approved",
+    "createdBy": "2",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772074566371_3f015245": {
+    "id": "sec_1772074566371_3f015245",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "Test Numbered",
+    "status": "approved",
+    "createdBy": "6",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772074566371_84eec75e": {
+    "id": "sec_1772074566371_84eec75e",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "Test Unnumbered",
+    "status": "approved",
+    "createdBy": "6",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772074566371_0fff4a76": {
+    "id": "sec_1772074566371_0fff4a76",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "VIP",
+    "status": "approved",
+    "createdBy": "6",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772074566371_2af6fb43": {
+    "id": "sec_1772074566371_2af6fb43",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "General Admission",
+    "status": "approved",
+    "createdBy": "6",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772074566371_e157e241": {
+    "id": "sec_1772074566371_e157e241",
+    "eventId": "evt_1772072297395_db322c92",
+    "name": "VIP",
+    "status": "approved",
+    "createdBy": "6",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772074566371_8aa5e984": {
+    "id": "sec_1772074566371_8aa5e984",
+    "eventId": "evt_1772072297395_db322c92",
+    "name": "General Admission",
+    "status": "approved",
+    "createdBy": "6",
+    "approvedBy": "migration",
+    "createdAt": "2026-02-26T02:56:06.371Z",
+    "updatedAt": "2026-02-26T02:56:06.371Z"
+  },
+  "sec_1772103088072_283cbbe6": {
+    "id": "sec_1772103088072_283cbbe6",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "Campo Delantero",
+    "status": "pending",
+    "createdBy": "3",
+    "createdAt": "2026-02-26T10:51:28.073Z",
+    "updatedAt": "2026-02-26T10:51:28.073Z"
+  },
+  "sec_1772105356456_21204562": {
+    "id": "sec_1772105356456_21204562",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "Campo Trasero",
+    "status": "pending",
+    "createdBy": "3",
+    "createdAt": "2026-02-26T11:29:16.457Z",
+    "updatedAt": "2026-02-26T11:29:16.457Z"
+  },
+  "sec_1772106540443_20b67b98": {
+    "id": "sec_1772106540443_20b67b98",
+    "eventId": "evt_1770297832516_6914364f",
+    "name": "Camoi",
+    "status": "pending",
+    "createdBy": "3",
+    "createdAt": "2026-02-26T11:49:00.443Z",
+    "updatedAt": "2026-02-26T11:49:00.443Z"
+  }
+}

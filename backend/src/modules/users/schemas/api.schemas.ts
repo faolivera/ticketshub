@@ -15,8 +15,6 @@ export const AddressSchema = z.object({
   countryCode: z.string(),
 });
 
-export const ProfileTypeSchema = z.enum(['Customer', 'Provider']);
-
 export const CurrencyCodeSchema = z.enum(['EUR', 'USD', 'GBP']);
 
 export const UserAddressSchema = AddressSchema.extend({
@@ -38,8 +36,6 @@ export const AuthenticatedUserPublicInfoSchema = z.object({
   lastName: z.string(),
   publicName: z.string(),
   pic: ImageSchema,
-  profiles: z.array(ProfileTypeSchema),
-  lastUsedProfile: ProfileTypeSchema.optional(),
   country: z.string(),
   currency: CurrencyCodeSchema,
   address: UserAddressSchema.optional(),
@@ -59,9 +55,7 @@ export const GetMeResponseSchema = z.object({
   userId: z.string(),
   email: z.string().email(),
   publicName: z.string(),
-  profiles: z.array(ProfileTypeSchema),
   pic: ImageSchema,
-  lastUsedProfile: ProfileTypeSchema.optional(),
   address: AddressSchema.optional(),
 });
 
@@ -69,17 +63,13 @@ export const UpdateProfileResponseSchema = z.object({
   userId: z.string(),
   email: z.string().email(),
   publicName: z.string(),
-  profiles: z.array(ProfileTypeSchema),
   pic: ImageSchema,
-  lastUsedProfile: ProfileTypeSchema.optional(),
 });
 
 export const UpdateBasicInfoResponseSchema = z.object({
   userId: z.string(),
   email: z.string().email(),
   publicName: z.string(),
-  profiles: z.array(ProfileTypeSchema),
   pic: ImageSchema,
-  lastUsedProfile: ProfileTypeSchema.optional(),
   address: AddressSchema.optional(),
 });

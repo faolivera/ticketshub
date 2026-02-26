@@ -269,6 +269,7 @@ describe('EventsService', () => {
       sellerId: 'seller_123',
       eventId: 'evt_123',
       eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
       seatingType: SeatingType.Unnumbered,
       ticketUnits: [{ id: 'unit_1', status: 'available' as any }],

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { SellerBadge } from '@/app/components/SellerBadge';
 import { useState } from 'react';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
+import { UserLevel } from '@/api/types/users';
 
 const mockActivity = [
   {
@@ -42,15 +43,19 @@ export function UserProfile() {
     return null;
   }
 
+  const isSeller = user.level === UserLevel.Seller || user.level === UserLevel.VerifiedSeller;
+
   const getRole = () => {
-    if (user.level === 0) return t('userProfile.roleBuyer');
-    if (user.level === 1) return t('userProfile.roleBuyerAndSeller');
+    if (user.level === UserLevel.Basic || user.level === UserLevel.Buyer) {
+      return t('userProfile.roleBuyer');
+    }
     return t('userProfile.roleBuyerAndSeller');
   };
 
   const getAccountLevel = () => {
-    if (user.level === 0) return t('userProfile.level0');
-    if (user.level === 1) return t('userProfile.level1');
+    if (user.level === UserLevel.Basic) return t('userProfile.level0');
+    if (user.level === UserLevel.Buyer) return t('userProfile.level0');
+    if (user.level === UserLevel.Seller) return t('userProfile.level1');
     return t('userProfile.level2');
   };
 
@@ -69,7 +74,7 @@ export function UserProfile() {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-2xl font-bold text-gray-900">{user.firstName} {user.lastName}</h2>
-                {user.level > 0 && <SellerBadge level={user.level} />}
+                {isSeller && <SellerBadge level={user.level} />}
               </div>
 
               <div className="space-y-2">
@@ -115,7 +120,7 @@ export function UserProfile() {
                 <Ticket className="w-6 h-6 text-green-600" />
                 <h3 className="text-lg font-semibold text-gray-900">{t('userProfile.ticketsSold')}</h3>
               </div>
-              <p className="text-4xl font-bold text-green-600">{user.level > 0 ? '5' : '0'}</p>
+              <p className="text-4xl font-bold text-green-600">{isSeller ? '5' : '0'}</p>
             </div>
           </div>
         </div>
@@ -184,8 +189,8 @@ export function UserProfile() {
             </div>
           </div>
 
-          {/* Become a Seller CTA */}
-          {user.level === 0 && (
+          {/* Become a Seller CTA - Show for Basic and Buyer levels */}
+          {(user.level === UserLevel.Basic || user.level === UserLevel.Buyer) && (
             <div className="border-t pt-6">
               <button
                 onClick={() => setShowSellerModal(true)}
@@ -197,7 +202,7 @@ export function UserProfile() {
           )}
 
           {/* Seller Level 1 - Verification CTA */}
-          {user.level === 1 && (
+          {user.level === UserLevel.Seller && (
             <div className="border-t pt-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-3">
@@ -222,7 +227,7 @@ export function UserProfile() {
           )}
 
           {/* Seller Level 2 - Fully Verified */}
-          {user.level === 2 && (
+          {user.level === UserLevel.VerifiedSeller && (
             <div className="border-t pt-6">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center gap-3">

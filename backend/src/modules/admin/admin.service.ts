@@ -11,11 +11,12 @@ import type {
   AdminPendingEventsResponse,
   AdminPendingEventItem,
   AdminPendingEventDateItem,
+  AdminPendingSectionItem,
   AdminUpdateEventRequest,
   AdminUpdateEventResponse,
   Money,
 } from './admin.api';
-import { EventStatus, EventDateStatus } from '../events/events.domain';
+import { EventStatus, EventDateStatus, EventSectionStatus } from '../events/events.domain';
 
 @Injectable()
 export class AdminService {
@@ -112,7 +113,7 @@ export class AdminService {
 
   /**
    * Get pending events and event dates for admin approval page.
-   * Returns events that are pending or have pending dates, with listing counts.
+   * Returns events that are pending or have pending dates/sections, with listing counts.
    */
   async getPendingEvents(ctx: Ctx): Promise<AdminPendingEventsResponse> {
     this.logger.log(ctx, 'Getting pending events list');
@@ -149,6 +150,26 @@ export class AdminService {
         }
       }
 
+      const pendingSections: AdminPendingSectionItem[] = [];
+
+      for (const section of event.sections) {
+        if (section.status === EventSectionStatus.Pending) {
+          const sectionListings = pendingEventListings.filter(
+            (l) => l.eventSectionId === section.id,
+          );
+
+          pendingSections.push({
+            id: section.id,
+            eventId: event.id,
+            eventName: event.name,
+            name: section.name,
+            status: section.status,
+            pendingListingsCount: sectionListings.length,
+            createdAt: section.createdAt,
+          });
+        }
+      }
+
       enrichedEvents.push({
         id: event.id,
         name: event.name,
@@ -157,6 +178,7 @@ export class AdminService {
         status: event.status,
         createdAt: event.createdAt,
         pendingDates,
+        pendingSections,
         pendingListingsCount: pendingEventListings.length,
       });
     }

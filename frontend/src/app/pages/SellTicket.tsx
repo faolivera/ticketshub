@@ -9,8 +9,8 @@ import { EmptyState } from '@/app/components/EmptyState';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { eventsService } from '../../api/services/events.service';
 import { ticketsService } from '../../api/services/tickets.service';
-import { SeatingType, TicketType, DeliveryMethod, EventStatus, EventDateStatus } from '../../api/types';
-import type { EventWithDates, EventDate } from '../../api/types';
+import { SeatingType, TicketType, DeliveryMethod, EventStatus, EventDateStatus, EventSectionStatus } from '../../api/types';
+import type { EventWithDates, EventDate, EventSection } from '../../api/types';
 
 interface NumberedSeat {
   row: string;
@@ -23,7 +23,7 @@ interface TicketListingForm {
   eventName: string;
   eventDate: string;
   eventTime: string;
-  section: string;
+  eventSectionId: string;
   deliveryMethod: 'digital' | 'physical';
   digitallyTransferable: boolean;
   physicalDeliveryMethod: 'pickup' | 'arrange' | '';
@@ -36,14 +36,12 @@ interface TicketListingForm {
   description?: string;
 }
 
-const defaultTicketTypes = ['General Admission', 'VIP', 'Premium', 'Field', 'Normal'];
-
 export function SellTicket() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const newEvent = location.state?.newEvent;
-  const { user, isAuthenticated } = useUser();
+  const { user, isAuthenticated, canSell } = useUser();
 
   const [showSellerIntroModal, setShowSellerIntroModal] = useState(false);
   const [events, setEvents] = useState<EventWithDates[]>([]);
@@ -61,7 +59,12 @@ export function SellTicket() {
     doorsOpenAt: '',
   });
   
-  // Track if selected event/date is pending
+  // Create section modal state
+  const [showCreateSectionModal, setShowCreateSectionModal] = useState(false);
+  const [isCreatingSection, setIsCreatingSection] = useState(false);
+  const [newSectionName, setNewSectionName] = useState('');
+  
+  // Track if selected event/date/section is pending
   const [isPendingListing, setIsPendingListing] = useState(false);
   
   const [formData, setFormData] = useState<TicketListingForm>({
@@ -70,7 +73,7 @@ export function SellTicket() {
     eventName: '',
     eventDate: '',
     eventTime: '',
-    section: '',
+    eventSectionId: '',
     deliveryMethod: 'digital',
     digitallyTransferable: true,
     physicalDeliveryMethod: '',
@@ -82,7 +85,6 @@ export function SellTicket() {
     numberedSeats: [{ row: '', seatNumber: '' }]
   });
 
-  const [ticketTypes] = useState<string[]>(defaultTicketTypes);
   const [eventSearchTerm, setEventSearchTerm] = useState(newEvent?.name || '');
   const [ticketTypeSearchTerm, setTicketTypeSearchTerm] = useState('');
   const [showEventSuggestions, setShowEventSuggestions] = useState(false);
@@ -128,7 +130,7 @@ export function SellTicket() {
 
   // Check if user needs to see seller intro modal
   useEffect(() => {
-    if (user && user.level === 'Basic' && !user.hasSeenSellerIntro) {
+    if (user && !canSell() && !user.hasSeenSellerIntro) {
       setShowSellerIntroModal(true);
     }
 
@@ -147,7 +149,7 @@ export function SellTicket() {
     e.preventDefault();
     setError(null);
     
-    if (!formData.eventId || !formData.eventDateId || !formData.section || formData.pricePerTicket <= 0) {
+    if (!formData.eventId || !formData.eventDateId || !formData.eventSectionId || formData.pricePerTicket <= 0) {
       setError(t('sellTicket.pleaseCompleteAllFields'));
       return;
     }
@@ -223,7 +225,7 @@ export function SellTicket() {
           city: '',
           countryCode: 'US',
         } : undefined,
-        section: formData.section,
+        eventSectionId: formData.eventSectionId,
         description: formData.description,
       });
 
@@ -238,10 +240,6 @@ export function SellTicket() {
 
   const filteredEvents = events.filter(event =>
     event.name.toLowerCase().includes(eventSearchTerm.toLowerCase())
-  );
-
-  const filteredTicketTypes = ticketTypes.filter(type =>
-    type.toLowerCase().includes(ticketTypeSearchTerm.toLowerCase())
   );
 
   const handleEventSelect = (event: EventWithDates) => {
@@ -259,10 +257,71 @@ export function SellTicket() {
     setIsPendingListing(event.status === EventStatus.Pending);
   };
 
-  const handleTicketTypeSelect = (type: string) => {
-    setFormData({ ...formData, section: type });
-    setTicketTypeSearchTerm(type);
+  const handleSectionSelect = (section: EventSection | 'create-new') => {
+    if (section === 'create-new') {
+      setShowCreateSectionModal(true);
+      setShowTicketTypeSuggestions(false);
+      return;
+    }
+    
+    setFormData({ ...formData, eventSectionId: section.id });
+    setTicketTypeSearchTerm(section.name);
     setShowTicketTypeSuggestions(false);
+    
+    // Update pending status based on section
+    updatePendingStatus(section.status === EventSectionStatus.Pending);
+  };
+  
+  const updatePendingStatus = (sectionPending: boolean) => {
+    if (!selectedEvent) return;
+    
+    const eventPending = selectedEvent.status === EventStatus.Pending;
+    const selectedDate = selectedEvent.dates.find(d => d.id === formData.eventDateId);
+    const datePending = selectedDate?.status === EventDateStatus.Pending;
+    
+    setIsPendingListing(eventPending || datePending || sectionPending);
+  };
+  
+  const handleCreateSection = async () => {
+    if (!selectedEvent || !newSectionName.trim()) {
+      setError(t('sellTicket.sectionNameRequired'));
+      return;
+    }
+
+    setIsCreatingSection(true);
+    setError(null);
+
+    try {
+      const newSection = await eventsService.addEventSection(selectedEvent.id, {
+        name: newSectionName.trim(),
+      });
+
+      // Update the selected event with the new section
+      const updatedEvent = {
+        ...selectedEvent,
+        sections: [...selectedEvent.sections, newSection],
+      };
+      setSelectedEvent(updatedEvent);
+      
+      // Update events list
+      setEvents(events.map(e => e.id === selectedEvent.id ? updatedEvent : e));
+
+      // Select the new section
+      setFormData({ ...formData, eventSectionId: newSection.id });
+      setTicketTypeSearchTerm(newSection.name);
+      
+      // Update pending status
+      updatePendingStatus(newSection.status === EventSectionStatus.Pending);
+      
+      // Close modal and reset form
+      setShowCreateSectionModal(false);
+      setNewSectionName('');
+    } catch (err) {
+      console.error('Failed to create section:', err);
+      setError(err instanceof Error ? err.message : t('sellTicket.createSectionFailed'));
+    } finally {
+      setIsCreatingSection(false);
+    }
   };
 
   const handleEventInputChange = (value: string) => {
@@ -318,9 +377,9 @@ export function SellTicket() {
     }
   };
 
-  const handleTicketTypeInputChange = (value: string) => {
+  const handleSectionInputChange = (value: string) => {
     setTicketTypeSearchTerm(value);
-    setFormData({ ...formData, section: value });
+    setFormData({ ...formData, eventSectionId: '' });
     setShowTicketTypeSuggestions(value.length > 0);
   };
 
@@ -347,7 +406,9 @@ export function SellTicket() {
       // Check if this creates a pending listing
       const eventPending = selectedEvent.status === EventStatus.Pending;
       const datePending = eventDate.status === EventDateStatus.Pending;
-      setIsPendingListing(eventPending || datePending);
+      const selectedSection = selectedEvent.sections.find(s => s.id === formData.eventSectionId);
+      const sectionPending = selectedSection?.status === EventSectionStatus.Pending;
+      setIsPendingListing(eventPending || datePending || sectionPending);
     }
   };
 
@@ -508,6 +569,77 @@ export function SellTicket() {
         </div>
       )}
 
+      {/* Create Section Modal */}
+      {showCreateSectionModal && selectedEvent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Ticket className="w-6 h-6 text-blue-600" />
+                <h2 className="text-xl font-bold text-gray-900">{t('sellTicket.createSectionTitle')}</h2>
+              </div>
+              <button
+                onClick={() => setShowCreateSectionModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-4">
+              {t('sellTicket.createSectionDesc', { eventName: selectedEvent.name })}
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  {t('sellTicket.sectionName')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newSectionName}
+                  onChange={(e) => setNewSectionName(e.target.value)}
+                  placeholder={t('sellTicket.sectionNamePlaceholder')}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-yellow-800">
+                    {t('sellTicket.newSectionPendingNote')}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowCreateSectionModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateSection}
+                disabled={isCreatingSection || !newSectionName.trim()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isCreatingSection ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                {isCreatingSection ? t('common.creating') : t('sellTicket.createSection')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Link 
@@ -646,51 +778,83 @@ export function SellTicket() {
                     <option value="create-new">➕ {t('sellTicket.createNewDateTime')}</option>
                   </select>
                   
-                  {/* Pending listing warning */}
-                  {isPendingListing && formData.eventDateId && (
-                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
-                      <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-yellow-800">
-                        <p className="font-semibold">{t('sellTicket.pendingListingWarningTitle')}</p>
-                        <p>{t('sellTicket.pendingListingWarningDesc')}</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* Ticket Type with Autocomplete */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('sellTicket.ticketType')} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={ticketTypeSearchTerm}
-                    onChange={(e) => handleTicketTypeInputChange(e.target.value)}
-                    onFocus={() => setShowTicketTypeSuggestions(true)}
-                    placeholder={t('sellTicket.typeToSearchTicketType')}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                  
-                  {showTicketTypeSuggestions && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredTicketTypes.map((type) => (
+              {/* Section Selection */}
+              {selectedEvent && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('sellTicket.ticketType')} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={ticketTypeSearchTerm}
+                      onChange={(e) => handleSectionInputChange(e.target.value)}
+                      onFocus={() => setShowTicketTypeSuggestions(true)}
+                      placeholder={t('sellTicket.typeToSearchTicketType')}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    
+                    {showTicketTypeSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {/* Approved sections first */}
+                        {selectedEvent.sections
+                          .filter(s => s.status === EventSectionStatus.Approved && s.name.toLowerCase().includes(ticketTypeSearchTerm.toLowerCase()))
+                          .map((section) => (
+                            <button
+                              key={section.id}
+                              type="button"
+                              onClick={() => handleSectionSelect(section)}
+                              className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100"
+                            >
+                              <p className="font-semibold text-gray-900">{section.name}</p>
+                            </button>
+                          ))}
+                        
+                        {/* Pending sections */}
+                        {selectedEvent.sections
+                          .filter(s => s.status === EventSectionStatus.Pending && s.name.toLowerCase().includes(ticketTypeSearchTerm.toLowerCase()))
+                          .map((section) => (
+                            <button
+                              key={section.id}
+                              type="button"
+                              onClick={() => handleSectionSelect(section)}
+                              className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100"
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="font-semibold text-gray-900">{section.name}</p>
+                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
+                                  <Clock className="w-3 h-3" />
+                                  {t('common.pending')}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        
+                        {/* No sections message */}
+                        {selectedEvent.sections.filter(s => s.name.toLowerCase().includes(ticketTypeSearchTerm.toLowerCase())).length === 0 && (
+                          <div className="px-4 py-3 text-sm text-gray-600">
+                            {t('sellTicket.noSectionsFound')}
+                          </div>
+                        )}
+                        
+                        {/* Create new section option */}
                         <button
-                          key={type}
                           type="button"
-                          onClick={() => handleTicketTypeSelect(type)}
-                          className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
+                          onClick={() => handleSectionSelect('create-new')}
+                          className="w-full text-left px-4 py-3 hover:bg-green-50 border-t border-gray-200 text-green-700 font-semibold flex items-center gap-2"
                         >
-                          <p className="font-semibold text-gray-900">{type}</p>
+                          <Plus className="w-4 h-4" />
+                          {t('sellTicket.createNewSection')}
                         </button>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Seating Type Selector */}
               <div>
@@ -1008,6 +1172,32 @@ export function SellTicket() {
                   {isSubmitting ? t('common.saving') : t('sellTicket.createListing')}
                 </button>
               </div>
+
+              {/* Pending listing warning - shows which items need approval */}
+              {isPendingListing && formData.eventDateId && formData.eventSectionId && (() => {
+                const eventPending = selectedEvent?.status === EventStatus.Pending;
+                const selectedDate = selectedEvent?.dates.find(d => d.id === formData.eventDateId);
+                const datePending = selectedDate?.status === EventDateStatus.Pending;
+                const selectedSection = selectedEvent?.sections.find(s => s.id === formData.eventSectionId);
+                const sectionPending = selectedSection?.status === EventSectionStatus.Pending;
+                
+                return (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-yellow-800">
+                        <p className="font-semibold mb-1">{t('sellTicket.pendingListingWarningTitle')}</p>
+                        <p className="mb-2">{t('sellTicket.pendingListingWarningDescSpecific')}</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {eventPending && <li>{t('sellTicket.pendingEvent')}</li>}
+                          {datePending && <li>{t('sellTicket.pendingDate')}</li>}
+                          {sectionPending && <li>{t('sellTicket.pendingSection')}</li>}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </form>
           </div>
         </div>

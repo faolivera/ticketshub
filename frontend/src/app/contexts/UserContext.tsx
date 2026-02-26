@@ -45,6 +45,8 @@ interface UserContextType {
   refreshUser: () => Promise<void>;
   clearError: () => void;
   upgradeToLevel1: () => Promise<void>;
+  canBuy: () => boolean;
+  canSell: () => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -176,6 +178,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Check if user can buy tickets (level !== Basic)
+   */
+  const canBuy = useCallback((): boolean => {
+    if (!user) return false;
+    return user.level !== 'Basic';
+  }, [user]);
+
+  /**
+   * Check if user can sell tickets (level === Seller or VerifiedSeller)
+   */
+  const canSell = useCallback((): boolean => {
+    if (!user) return false;
+    return user.level === 'Seller' || user.level === 'VerifiedSeller';
+  }, [user]);
+
   return (
     <UserContext.Provider
       value={{
@@ -189,6 +207,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         refreshUser,
         clearError,
         upgradeToLevel1,
+        canBuy,
+        canSell,
       }}
     >
       {children}

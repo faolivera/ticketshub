@@ -189,7 +189,7 @@ export function EditListing() {
                   </label>
                   <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 rounded-md font-medium">
                     <Ticket className="w-4 h-4" />
-                    {listing.section || listing.type}
+                    {listing.sectionName || listing.type}
                   </div>
                 </div>
 

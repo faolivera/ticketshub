@@ -54,7 +54,7 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
 
   return {
     id: listing.id,
-    type: listing.section || typeDisplay,
+    type: listing.sectionName || typeDisplay,
     price: listing.pricePerTicket.amount / 100,
     available: listing.ticketUnits.filter((unit) => unit.status === TicketUnitStatus.Available).length,
     sellTogether: listing.sellTogether,

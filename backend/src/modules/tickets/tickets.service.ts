@@ -29,7 +29,11 @@ import type {
   ListListingsQuery,
 } from './tickets.api';
 import { UserLevel } from '../users/users.domain';
-import { EventStatus, EventDateStatus } from '../events/events.domain';
+import {
+  EventStatus,
+  EventDateStatus,
+  EventSectionStatus,
+} from '../events/events.domain';
 
 @Injectable()
 export class TicketsService {
@@ -153,16 +157,18 @@ export class TicketsService {
   }
 
   /**
-   * Determine listing status based on event and event date approval status
+   * Determine listing status based on event, event date, and event section approval status
    */
   private determineListingStatus(
     eventStatus: EventStatus,
     eventDateStatus: EventDateStatus,
+    eventSectionStatus: EventSectionStatus,
   ): ListingStatus {
     const eventApproved = eventStatus === EventStatus.Approved;
     const dateApproved = eventDateStatus === EventDateStatus.Approved;
+    const sectionApproved = eventSectionStatus === EventSectionStatus.Approved;
 
-    if (eventApproved && dateApproved) {
+    if (eventApproved && dateApproved && sectionApproved) {
       return ListingStatus.Active;
     }
 
@@ -215,6 +221,21 @@ export class TicketsService {
       );
     }
 
+    // Validate event section exists
+    const eventSection = event.sections.find(
+      (s) => s.id === data.eventSectionId,
+    );
+    if (!eventSection) {
+      throw new NotFoundException('Event section not found');
+    }
+
+    // Reject if section is rejected
+    if (eventSection.status === EventSectionStatus.Rejected) {
+      throw new BadRequestException(
+        'Cannot create listing for a rejected section',
+      );
+    }
+
     // Validate physical ticket requirements
     if (data.type === TicketType.Physical) {
       if (!data.deliveryMethod) {
@@ -234,10 +255,11 @@ export class TicketsService {
 
     const ticketUnits = this.buildTicketUnits(data);
 
-    // Determine listing status based on event and date approval
+    // Determine listing status based on event, date, and section approval
     const listingStatus = this.determineListingStatus(
       event.status,
       eventDate.status,
+      eventSection.status,
     );
 
     const listing: TicketListing = {
@@ -253,7 +275,7 @@ export class TicketsService {
       deliveryMethod: data.deliveryMethod,
       pickupAddress: data.pickupAddress,
       description: data.description,
-      section: data.section,
+      eventSectionId: data.eventSectionId,
       status: listingStatus,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -285,12 +307,16 @@ export class TicketsService {
   ): Promise<TicketListingWithEvent> {
     const event = await this.eventsService.getEventById(ctx, listing.eventId);
     const eventDate = event.dates.find((d) => d.id === listing.eventDateId);
+    const eventSection = event.sections.find(
+      (s) => s.id === listing.eventSectionId,
+    );
 
     return {
       ...listing,
       eventName: event.name,
       eventDate: eventDate?.date || new Date(),
       venue: event.venue,
+      sectionName: eventSection?.name || 'Unknown',
     };
   }
 
@@ -523,7 +549,7 @@ export class TicketsService {
   /**
    * Activate pending listings for an event.
    * Called when an event is approved.
-   * Only activates listings whose event date is also approved.
+   * Only activates listings whose event date and section are also approved.
    */
   async activatePendingListingsForEvent(
     ctx: Ctx,
@@ -543,8 +569,16 @@ export class TicketsService {
         .map((d) => d.id),
     );
 
-    const listingsToActivate = pendingListings.filter((listing) =>
-      approvedDateIds.has(listing.eventDateId),
+    const approvedSectionIds = new Set(
+      event.sections
+        .filter((s) => s.status === EventSectionStatus.Approved)
+        .map((s) => s.id),
+    );
+
+    const listingsToActivate = pendingListings.filter(
+      (listing) =>
+        approvedDateIds.has(listing.eventDateId) &&
+        approvedSectionIds.has(listing.eventSectionId),
     );
 
     if (listingsToActivate.length === 0) {
@@ -561,7 +595,7 @@ export class TicketsService {
   /**
    * Activate pending listings for an event date.
    * Called when an event date is approved.
-   * Only activates if the parent event is also approved.
+   * Only activates if the parent event and section are also approved.
    */
   async activatePendingListingsForEventDate(
     ctx: Ctx,
@@ -578,16 +612,68 @@ export class TicketsService {
       return 0;
     }
 
+    const approvedSectionIds = new Set(
+      event.sections
+        .filter((s) => s.status === EventSectionStatus.Approved)
+        .map((s) => s.id),
+    );
+
     const pendingListings =
       await this.ticketsRepository.getPendingByEventDateId(ctx, eventDateId);
 
-    if (pendingListings.length === 0) {
+    const listingsToActivate = pendingListings.filter((listing) =>
+      approvedSectionIds.has(listing.eventSectionId),
+    );
+
+    if (listingsToActivate.length === 0) {
       return 0;
     }
 
     return await this.ticketsRepository.bulkUpdateStatus(
       ctx,
-      pendingListings.map((l) => l.id),
+      listingsToActivate.map((l) => l.id),
+      ListingStatus.Active,
+    );
+  }
+
+  /**
+   * Activate pending listings for an event section.
+   * Called when an event section is approved.
+   * Only activates if the parent event and event date are also approved.
+   */
+  async activatePendingListingsForEventSection(
+    ctx: Ctx,
+    eventSectionId: string,
+    eventId: string,
+  ): Promise<number> {
+    const event = await this.eventsService.getEventById(ctx, eventId);
+    if (!event || event.status !== EventStatus.Approved) {
+      return 0;
+    }
+
+    const approvedDateIds = new Set(
+      event.dates
+        .filter((d) => d.status === EventDateStatus.Approved)
+        .map((d) => d.id),
+    );
+
+    const pendingListings =
+      await this.ticketsRepository.getPendingByEventSectionId(
+        ctx,
+        eventSectionId,
+      );
+
+    const listingsToActivate = pendingListings.filter((listing) =>
+      approvedDateIds.has(listing.eventDateId),
+    );
+
+    if (listingsToActivate.length === 0) {
+      return 0;
+    }
+
+    return await this.ticketsRepository.bulkUpdateStatus(
+      ctx,
+      listingsToActivate.map((l) => l.id),
       ListingStatus.Active,
     );
   }

@@ -108,5 +108,25 @@
     "expiresAt": "2026-02-25T12:23:20.949Z",
     "createdAt": "2026-02-25T12:13:20.950Z",
     "verifiedAt": "2026-02-25T12:13:23.074Z"
+  },
+  "otp_1772103442751_9c51598b": {
+    "id": "otp_1772103442751_9c51598b",
+    "userId": "9",
+    "type": "EmailVerification",
+    "code": "111111",
+    "status": "Verified",
+    "expiresAt": "2026-02-26T11:07:22.751Z",
+    "createdAt": "2026-02-26T10:57:22.751Z",
+    "verifiedAt": "2026-02-26T10:57:25.728Z"
+  },
+  "otp_1772103498229_f27336d2": {
+    "id": "otp_1772103498229_f27336d2",
+    "userId": "9",
+    "type": "PhoneVerification",
+    "code": "222222",
+    "status": "Verified",
+    "expiresAt": "2026-02-26T11:08:18.229Z",
+    "createdAt": "2026-02-26T10:58:18.229Z",
+    "verifiedAt": "2026-02-26T10:58:20.369Z"
   }
 }

@@ -11,6 +11,9 @@ import type {
   ApproveEventResponse,
   ApproveEventDateRequest,
   ApproveEventDateResponse,
+  AddEventSectionRequest,
+  AddEventSectionResponse,
+  EventSection,
 } from '../types';
 
 /**
@@ -70,6 +73,22 @@ export const eventsService = {
    */
   async approveEventDate(dateId: string, data: ApproveEventDateRequest): Promise<ApproveEventDateResponse> {
     const response = await apiClient.patch<ApproveEventDateResponse>(`/events/dates/${dateId}/approve`, data);
+    return response.data;
+  },
+
+  /**
+   * Add a section to an event
+   */
+  async addEventSection(eventId: string, data: AddEventSectionRequest): Promise<AddEventSectionResponse> {
+    const response = await apiClient.post<AddEventSectionResponse>(`/events/${eventId}/sections`, data);
+    return response.data;
+  },
+
+  /**
+   * Get sections for an event
+   */
+  async getEventSections(eventId: string): Promise<EventSection[]> {
+    const response = await apiClient.get<EventSection[]>(`/events/${eventId}/sections`);
     return response.data;
   },
 };
