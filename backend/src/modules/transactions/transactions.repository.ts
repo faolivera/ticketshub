@@ -122,4 +122,72 @@ export class TransactionsRepository implements OnModuleInit {
     const listingIdSet = new Set(listingIds);
     return all.filter((t) => listingIdSet.has(t.listingId));
   }
+
+  /**
+   * Get paginated transactions with optional filters.
+   * Filters are OR'd: match transactionId OR buyerId in buyerIds OR sellerId in sellerIds.
+   */
+  async getPaginated(
+    ctx: Ctx,
+    page: number,
+    limit: number,
+    filters?: {
+      transactionId?: string;
+      buyerIds?: string[];
+      sellerIds?: string[];
+    },
+  ): Promise<{ transactions: Transaction[]; total: number }> {
+    let all = await this.storage.getAll(ctx);
+
+    if (filters) {
+      const { transactionId, buyerIds, sellerIds } = filters;
+      const buyerIdSet = buyerIds?.length
+        ? new Set(buyerIds)
+        : undefined;
+      const sellerIdSet = sellerIds?.length
+        ? new Set(sellerIds)
+        : undefined;
+
+      all = all.filter((t) => {
+        if (transactionId && t.id === transactionId) return true;
+        if (buyerIdSet?.has(t.buyerId)) return true;
+        if (sellerIdSet?.has(t.sellerId)) return true;
+        return false;
+      });
+    }
+
+    const sorted = all.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    const total = sorted.length;
+    const start = (page - 1) * limit;
+    const transactions = sorted.slice(start, start + limit);
+
+    return { transactions, total };
+  }
+
+  /**
+   * Get transactions by IDs (batch).
+   */
+  async findByIds(
+    ctx: Ctx,
+    ids: string[],
+  ): Promise<Transaction[]> {
+    if (ids.length === 0) return [];
+    return await this.storage.getMany(ctx, ids);
+  }
+
+  /**
+   * Count transactions by status values.
+   */
+  async countByStatuses(
+    ctx: Ctx,
+    statuses: TransactionStatus[],
+  ): Promise<number> {
+    if (statuses.length === 0) return 0;
+    const statusSet = new Set(statuses);
+    const all = await this.storage.getAll(ctx);
+    return all.filter((transaction) => statusSet.has(transaction.status)).length;
+  }
 }

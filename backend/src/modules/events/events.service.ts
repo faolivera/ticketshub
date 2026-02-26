@@ -139,6 +139,44 @@ export class EventsService {
   }
 
   /**
+   * Get events by IDs with dates and sections (batch).
+   * Returns empty array for missing IDs; does not throw.
+   */
+  async getEventsByIds(
+    ctx: Ctx,
+    ids: string[],
+  ): Promise<EventWithDatesResponse[]> {
+    if (ids.length === 0) return [];
+    const events = await this.eventsRepository.findEventsByIds(ctx, ids);
+    if (events.length === 0) return [];
+
+    const [allDates, allSections] = await Promise.all([
+      this.eventsRepository.getDatesByEventIds(ctx, ids),
+      this.eventsRepository.getSectionsByEventIds(ctx, ids),
+    ]);
+    const datesByEvent = new Map<string, EventDate[]>();
+    const sectionsByEvent = new Map<string, EventSection[]>();
+    for (const d of allDates) {
+      const arr = datesByEvent.get(d.eventId) ?? [];
+      arr.push(d);
+      datesByEvent.set(d.eventId, arr);
+    }
+    for (const s of allSections) {
+      const arr = sectionsByEvent.get(s.eventId) ?? [];
+      arr.push(s);
+      sectionsByEvent.set(s.eventId, arr);
+    }
+
+    const eventsWithDates: EventWithDates[] = events.map((event) => ({
+      ...event,
+      dates: datesByEvent.get(event.id) ?? [],
+      sections: sectionsByEvent.get(event.id) ?? [],
+    }));
+
+    return await this.attachImages(ctx, eventsWithDates);
+  }
+
+  /**
    * List events with optional filters
    * Always includes pending and approved dates/sections (excludes rejected)
    */

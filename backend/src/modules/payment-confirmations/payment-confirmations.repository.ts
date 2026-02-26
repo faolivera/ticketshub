@@ -35,6 +35,28 @@ export class PaymentConfirmationsRepository implements OnModuleInit {
     return all.filter((c) => c.status === PaymentConfirmationStatus.Pending);
   }
 
+  /**
+   * Count pending payment confirmations.
+   */
+  async countPending(ctx: Ctx): Promise<number> {
+    const all = await this.storage.getAll(ctx);
+    return all.filter((c) => c.status === PaymentConfirmationStatus.Pending)
+      .length;
+  }
+
+  /**
+   * Find payment confirmations by transaction IDs (batch).
+   */
+  async findByTransactionIds(
+    ctx: Ctx,
+    transactionIds: string[],
+  ): Promise<PaymentConfirmation[]> {
+    if (transactionIds.length === 0) return [];
+    const idSet = new Set(transactionIds);
+    const all = await this.storage.getAll(ctx);
+    return all.filter((c) => idSet.has(c.transactionId));
+  }
+
   async save(
     ctx: Ctx,
     confirmation: PaymentConfirmation,

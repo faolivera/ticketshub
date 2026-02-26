@@ -239,6 +239,24 @@ export class PaymentConfirmationsService {
   }
 
   /**
+   * Find payment confirmations by transaction IDs (batch).
+   */
+  async findByTransactionIds(
+    ctx: Ctx,
+    transactionIds: string[],
+  ): Promise<PaymentConfirmation[]> {
+    if (transactionIds.length === 0) return [];
+    return this.repository.findByTransactionIds(ctx, transactionIds);
+  }
+
+  /**
+   * Get count of pending payment confirmations (admin use).
+   */
+  async getPendingCount(ctx: Ctx): Promise<number> {
+    return this.repository.countPending(ctx);
+  }
+
+  /**
    * List all pending payment confirmations (admin only).
    */
   async listPendingConfirmations(

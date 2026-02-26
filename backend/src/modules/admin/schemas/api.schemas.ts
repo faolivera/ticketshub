@@ -275,3 +275,88 @@ export const AdminEventListingsResponseSchema = z.object({
   listings: z.array(AdminEventListingItemSchema),
   total: z.number(),
 });
+
+// Admin Transactions Schemas
+
+export const AdminTransactionsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(20).optional().default(20),
+  search: z.string().optional(),
+});
+
+const AdminTransactionUserRefSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+});
+
+const AdminTransactionListingRefSchema = z.object({
+  id: z.string(),
+  eventName: z.string(),
+  eventDate: z.coerce.date(),
+  sectionName: z.string(),
+  quantity: z.number(),
+  pricePerTicket: MoneySchema,
+});
+
+const AdminTransactionPaymentConfirmationRefSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  originalFilename: z.string(),
+  createdAt: z.coerce.date(),
+  reviewedAt: z.coerce.date().optional(),
+  adminNotes: z.string().optional(),
+});
+
+export const AdminTransactionListItemSchema = z.object({
+  id: z.string(),
+  seller: AdminTransactionUserRefSchema,
+  buyer: AdminTransactionUserRefSchema,
+  status: z.string(),
+  listing: AdminTransactionListingRefSchema,
+  totalPaid: MoneySchema,
+  createdAt: z.coerce.date(),
+  paymentConfirmation: AdminTransactionPaymentConfirmationRefSchema.optional(),
+});
+
+export const AdminTransactionsResponseSchema = z.object({
+  transactions: z.array(AdminTransactionListItemSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
+export const AdminTransactionsPendingSummaryResponseSchema = z.object({
+  pendingConfirmationsCount: z.number(),
+  pendingTransactionsCount: z.number(),
+});
+
+const AdminTransactionDetailPaymentConfirmationSchema =
+  AdminTransactionPaymentConfirmationRefSchema.merge(
+    z.object({
+      transactionId: z.string(),
+      uploadedBy: z.string(),
+      contentType: z.string(),
+    }),
+  );
+
+export const AdminTransactionDetailResponseSchema = z.object({
+  id: z.string(),
+  seller: AdminTransactionUserRefSchema,
+  buyer: AdminTransactionUserRefSchema,
+  status: z.string(),
+  listing: AdminTransactionListingRefSchema,
+  quantity: z.number(),
+  ticketPrice: MoneySchema,
+  buyerFee: MoneySchema,
+  sellerFee: MoneySchema,
+  totalPaid: MoneySchema,
+  sellerReceives: MoneySchema,
+  createdAt: z.coerce.date(),
+  paymentReceivedAt: z.coerce.date().optional(),
+  ticketTransferredAt: z.coerce.date().optional(),
+  buyerConfirmedAt: z.coerce.date().optional(),
+  completedAt: z.coerce.date().optional(),
+  paymentConfirmations: z.array(AdminTransactionDetailPaymentConfirmationSchema),
+});

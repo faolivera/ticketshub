@@ -335,3 +335,109 @@ export interface AdminEventListingsResponse {
   listings: AdminEventListingItem[];
   total: number;
 }
+
+// ==================== Admin Transaction Management ====================
+
+/**
+ * Query parameters for GET /api/admin/transactions
+ */
+export interface AdminTransactionsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+/**
+ * User reference for transaction list/detail
+ */
+export interface AdminTransactionUserRef {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/**
+ * Listing/event reference for transaction list/detail
+ */
+export interface AdminTransactionListingRef {
+  id: string;
+  eventName: string;
+  eventDate: Date;
+  sectionName: string;
+  quantity: number;
+  pricePerTicket: Money;
+}
+
+/**
+ * Payment confirmation summary for transaction list/detail
+ */
+export interface AdminTransactionPaymentConfirmationRef {
+  id: string;
+  status: string;
+  originalFilename: string;
+  createdAt: Date;
+  reviewedAt?: Date;
+  adminNotes?: string;
+}
+
+/**
+ * Transaction list item for GET /api/admin/transactions
+ */
+export interface AdminTransactionListItem {
+  id: string;
+  seller: AdminTransactionUserRef;
+  buyer: AdminTransactionUserRef;
+  status: string;
+  listing: AdminTransactionListingRef;
+  totalPaid: Money;
+  createdAt: Date;
+  paymentConfirmation?: AdminTransactionPaymentConfirmationRef;
+}
+
+/**
+ * Response for GET /api/admin/transactions
+ */
+export interface AdminTransactionsResponse {
+  transactions: AdminTransactionListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * Response for GET /api/admin/transactions/pending-summary
+ */
+export interface AdminTransactionsPendingSummaryResponse {
+  pendingConfirmationsCount: number;
+  pendingTransactionsCount: number;
+}
+
+/**
+ * Transaction detail for GET /api/admin/transactions/:id
+ */
+export interface AdminTransactionDetailResponse {
+  id: string;
+  seller: AdminTransactionUserRef;
+  buyer: AdminTransactionUserRef;
+  status: string;
+  listing: AdminTransactionListingRef;
+  quantity: number;
+  ticketPrice: Money;
+  buyerFee: Money;
+  sellerFee: Money;
+  totalPaid: Money;
+  sellerReceives: Money;
+  createdAt: Date;
+  paymentReceivedAt?: Date;
+  ticketTransferredAt?: Date;
+  buyerConfirmedAt?: Date;
+  completedAt?: Date;
+  paymentConfirmations: Array<
+    AdminTransactionPaymentConfirmationRef & {
+      transactionId: string;
+      uploadedBy: string;
+      contentType: string;
+    }
+  >;
+}

@@ -37,9 +37,9 @@ const navItems: NavItem[] = [
     labelKey: 'admin.sidebar.events',
   },
   {
-    to: '/admin/payments',
+    to: '/admin/transactions',
     icon: <CreditCard className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.payments',
+    labelKey: 'admin.sidebar.transactions',
   },
 ];
 

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { AdminService } from '../../../../modules/admin/admin.service';
 import { PaymentConfirmationsService } from '../../../../modules/payment-confirmations/payment-confirmations.service';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
@@ -74,10 +75,14 @@ describe('AdminService', () => {
   beforeEach(async () => {
     const mockPaymentConfirmationsService = {
       listPendingConfirmations: jest.fn(),
+      findByTransactionIds: jest.fn(),
+      getPendingCount: jest.fn(),
     };
 
     const mockTransactionsService = {
       findById: jest.fn(),
+      getPaginated: jest.fn(),
+      countByStatuses: jest.fn(),
     };
 
     const mockEventsService = {
@@ -94,10 +99,13 @@ describe('AdminService', () => {
 
     const mockTicketsService = {
       getListingStatsByEventIds: jest.fn(),
+      getListingsByIds: jest.fn(),
+      getListingById: jest.fn(),
     };
 
     const mockUsersService = {
       findByIds: jest.fn(),
+      findByEmailContaining: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -832,6 +840,193 @@ describe('AdminService', () => {
       expect(usersService.findByIds).toHaveBeenCalledWith(mockCtx, [
         'seller_123',
       ]);
+    });
+  });
+
+  describe('getTransactionsList', () => {
+    const mockListingWithEvent = {
+      id: 'listing_123',
+      eventName: 'Test Concert',
+      eventDate: new Date('2025-06-01'),
+      sectionName: 'VIP Section',
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+    };
+
+    it('should return paginated transactions with enriched data', async () => {
+      transactionsService.getPaginated.mockResolvedValue({
+        transactions: [mockTransaction],
+        total: 1,
+      });
+      usersService.findByIds.mockResolvedValue([
+        { id: 'buyer_123', publicName: 'John Buyer', email: 'buyer@test.com' } as User,
+        { id: 'seller_123', publicName: 'Jane Seller', email: 'seller@test.com' } as User,
+      ]);
+      ticketsService.getListingsByIds.mockResolvedValue([mockListingWithEvent as any]);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionsList(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.transactions).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
+      expect(result.totalPages).toBe(1);
+      expect(result.transactions[0].id).toBe('txn_123');
+      expect(result.transactions[0].seller.name).toBe('Jane Seller');
+      expect(result.transactions[0].buyer.name).toBe('John Buyer');
+      expect(result.transactions[0].listing.eventName).toBe('Test Concert');
+    });
+
+    it('should use default pagination and resolve search by transaction id', async () => {
+      usersService.findByEmailContaining.mockResolvedValue([]);
+      transactionsService.getPaginated.mockResolvedValue({
+        transactions: [mockTransaction],
+        total: 1,
+      });
+      usersService.findByIds.mockResolvedValue([
+        { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        { id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User,
+      ]);
+      ticketsService.getListingsByIds.mockResolvedValue([mockListingWithEvent as any]);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionsList(mockCtx, {
+        search: 'txn_123',
+      });
+
+      expect(transactionsService.getPaginated).toHaveBeenCalledWith(
+        mockCtx,
+        1,
+        20,
+        { transactionId: 'txn_123' },
+      );
+      expect(result.transactions).toHaveLength(1);
+    });
+
+    it('should return empty result when no transactions', async () => {
+      transactionsService.getPaginated.mockResolvedValue({
+        transactions: [],
+        total: 0,
+      });
+
+      const result = await service.getTransactionsList(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.transactions).toHaveLength(0);
+      expect(result.total).toBe(0);
+      expect(result.totalPages).toBe(0);
+      expect(usersService.findByIds).not.toHaveBeenCalled();
+    });
+
+    it('should cap limit at 20', async () => {
+      transactionsService.getPaginated.mockResolvedValue({
+        transactions: [],
+        total: 0,
+      });
+
+      await service.getTransactionsList(mockCtx, { page: 1, limit: 100 });
+
+      expect(transactionsService.getPaginated).toHaveBeenCalledWith(
+        mockCtx,
+        1,
+        20,
+        undefined,
+      );
+    });
+  });
+
+  describe('getTransactionsPendingSummary', () => {
+    it('should return pending confirmations count', async () => {
+      paymentConfirmationsService.getPendingCount.mockResolvedValue(5);
+      transactionsService.countByStatuses.mockResolvedValue(3);
+
+      const result = await service.getTransactionsPendingSummary(mockCtx);
+
+      expect(result.pendingConfirmationsCount).toBe(5);
+      expect(result.pendingTransactionsCount).toBe(3);
+      expect(paymentConfirmationsService.getPendingCount).toHaveBeenCalledWith(
+        mockCtx,
+      );
+      expect(transactionsService.countByStatuses).toHaveBeenCalledWith(mockCtx, [
+        TransactionStatus.PendingPayment,
+      ]);
+    });
+
+    it('should return zero when no pending confirmations', async () => {
+      paymentConfirmationsService.getPendingCount.mockResolvedValue(0);
+      transactionsService.countByStatuses.mockResolvedValue(0);
+
+      const result = await service.getTransactionsPendingSummary(mockCtx);
+
+      expect(result.pendingConfirmationsCount).toBe(0);
+      expect(result.pendingTransactionsCount).toBe(0);
+    });
+  });
+
+  describe('getTransactionById', () => {
+    const mockListingWithEvent = {
+      id: 'listing_123',
+      eventName: 'Test Concert',
+      eventDate: new Date('2025-06-01'),
+      sectionName: 'VIP Section',
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+    };
+
+    it('should return transaction detail with enriched data', async () => {
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.id).toBe('txn_123');
+      expect(result.seller.name).toBe('Jane');
+      expect(result.buyer.name).toBe('John');
+      expect(result.listing.eventName).toBe('Test Concert');
+      expect(result.status).toBe(TransactionStatus.PendingPayment);
+    });
+
+    it('should throw NotFoundException when transaction not found', async () => {
+      transactionsService.findById.mockResolvedValue(null);
+
+      await expect(
+        service.getTransactionById(mockCtx, 'non_existent'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should include payment confirmation when present', async () => {
+      const mockConfirmation = {
+        id: 'pc_123',
+        transactionId: 'txn_123',
+        status: 'Pending',
+        originalFilename: 'receipt.png',
+        createdAt: new Date(),
+        uploadedBy: 'buyer_123',
+        contentType: 'image/png',
+      };
+
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([
+        mockConfirmation as any,
+      ]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.paymentConfirmations).toHaveLength(1);
+      expect(result.paymentConfirmations[0].id).toBe('pc_123');
+      expect(result.paymentConfirmations[0].originalFilename).toBe('receipt.png');
     });
   });
 });

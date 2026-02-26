@@ -461,6 +461,32 @@ export class TransactionsService {
   }
 
   /**
+   * Get paginated transactions with optional filters (admin use).
+   */
+  async getPaginated(
+    ctx: Ctx,
+    page: number,
+    limit: number,
+    filters?: {
+      transactionId?: string;
+      buyerIds?: string[];
+      sellerIds?: string[];
+    },
+  ): Promise<{ transactions: Transaction[]; total: number }> {
+    return this.transactionsRepository.getPaginated(ctx, page, limit, filters);
+  }
+
+  /**
+   * Count transactions by status values (admin use).
+   */
+  async countByStatuses(
+    ctx: Ctx,
+    statuses: TransactionStatus[],
+  ): Promise<number> {
+    return this.transactionsRepository.countByStatuses(ctx, statuses);
+  }
+
+  /**
    * Enrich transaction with details
    */
   private async enrichTransaction(

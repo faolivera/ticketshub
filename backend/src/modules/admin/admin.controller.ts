@@ -23,7 +23,6 @@ import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
 import type { ApiResponse } from '../../common/types/api';
 import type { Ctx } from '../../common/types/context';
 import type {
-  AdminPaymentsResponse,
   AdminPendingEventsResponse,
   AdminUpdateEventRequest,
   AdminUpdateEventResponse,
@@ -36,9 +35,11 @@ import type {
   AdminUpdateSectionResponse,
   AdminAllEventsResponse,
   AdminEventListingsResponse,
+  AdminTransactionsResponse,
+  AdminTransactionsPendingSummaryResponse,
+  AdminTransactionDetailResponse,
 } from './admin.api';
 import {
-  AdminPaymentsResponseSchema,
   AdminPendingEventsResponseSchema,
   AdminUpdateEventResponseSchema,
   AdminApproveSectionResponseSchema,
@@ -47,6 +48,9 @@ import {
   AdminUpdateSectionResponseSchema,
   AdminAllEventsResponseSchema,
   AdminEventListingsResponseSchema,
+  AdminTransactionsResponseSchema,
+  AdminTransactionsPendingSummaryResponseSchema,
+  AdminTransactionDetailResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { SeatingType } from '../tickets/tickets.domain';
@@ -61,19 +65,6 @@ export class AdminController {
     @Inject(EventsService)
     private readonly eventsService: EventsService,
   ) {}
-
-  /**
-   * Get enriched payment confirmations for admin approval page.
-   * Returns pending confirmations with additional transaction details.
-   */
-  @Get('payments')
-  @ValidateResponse(AdminPaymentsResponseSchema)
-  async getAdminPayments(
-    @Context() ctx: Ctx,
-  ): Promise<ApiResponse<AdminPaymentsResponse>> {
-    const data = await this.adminService.getAdminPayments(ctx);
-    return { success: true, data };
-  }
 
   /**
    * Get pending events and event dates for admin approval page.
@@ -105,6 +96,53 @@ export class AdminController {
       limit: limit ? parseInt(limit, 10) : undefined,
       search,
     });
+    return { success: true, data };
+  }
+
+  /**
+   * Get paginated transactions list with optional search.
+   * Search supports transaction id, buyer email, seller email.
+   */
+  @Get('transactions')
+  @ValidateResponse(AdminTransactionsResponseSchema)
+  async getTransactions(
+    @Context() ctx: Ctx,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ApiResponse<AdminTransactionsResponse>> {
+    const data = await this.adminService.getTransactionsList(ctx, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      search,
+    });
+    return { success: true, data };
+  }
+
+  /**
+   * Get pending payment confirmations summary.
+   * Route must be registered before /:id to avoid shadowing.
+   */
+  @Get('transactions/pending-summary')
+  @ValidateResponse(AdminTransactionsPendingSummaryResponseSchema)
+  async getTransactionsPendingSummary(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<AdminTransactionsPendingSummaryResponse>> {
+    const data =
+      await this.adminService.getTransactionsPendingSummary(ctx);
+    return { success: true, data };
+  }
+
+  /**
+   * Get transaction detail by ID.
+   */
+  @Get('transactions/:id')
+  @ValidateResponse(AdminTransactionDetailResponseSchema)
+  async getTransactionById(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+  ): Promise<ApiResponse<AdminTransactionDetailResponse>> {
+    const data = await this.adminService.getTransactionById(ctx, id);
     return { success: true, data };
   }
 

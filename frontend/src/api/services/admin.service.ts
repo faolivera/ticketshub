@@ -14,6 +14,10 @@ import type {
   AdminAllEventsQuery,
   AdminAllEventsResponse,
   AdminEventListingsResponse,
+  AdminTransactionsQuery,
+  AdminTransactionsResponse,
+  AdminTransactionDetailResponse,
+  AdminTransactionsPendingSummaryResponse,
 } from '../types/admin';
 
 /**
@@ -128,6 +132,45 @@ export const adminService = {
   async getEventListings(eventId: string): Promise<AdminEventListingsResponse> {
     const response = await apiClient.get<AdminEventListingsResponse>(
       `/admin/events/${eventId}/listings`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get paginated transactions for admin
+   */
+  async getTransactions(
+    query: AdminTransactionsQuery = {}
+  ): Promise<AdminTransactionsResponse> {
+    const params = new URLSearchParams();
+    if (query.page !== undefined) params.append('page', String(query.page));
+    if (query.limit !== undefined) params.append('limit', String(query.limit));
+    if (query.search) params.append('search', query.search);
+
+    const queryString = params.toString();
+    const url = `/admin/transactions${queryString ? `?${queryString}` : ''}`;
+    const response = await apiClient.get<AdminTransactionsResponse>(url);
+    return response.data;
+  },
+
+  /**
+   * Get single transaction detail for admin
+   */
+  async getTransactionById(
+    transactionId: string
+  ): Promise<AdminTransactionDetailResponse> {
+    const response = await apiClient.get<AdminTransactionDetailResponse>(
+      `/admin/transactions/${transactionId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get pending transactions/confirmations summary for admin
+   */
+  async getTransactionsPendingSummary(): Promise<AdminTransactionsPendingSummaryResponse> {
+    const response = await apiClient.get<AdminTransactionsPendingSummaryResponse>(
+      '/admin/transactions/pending-summary'
     );
     return response.data;
   },

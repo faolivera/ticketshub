@@ -63,6 +63,22 @@ export class UsersRepository implements OnModuleInit {
   }
 
   /**
+   * Find users whose email contains the search term (case-insensitive).
+   * Used for admin transaction search.
+   */
+  async findByEmailContaining(
+    ctx: Ctx,
+    searchTerm: string,
+  ): Promise<User[]> {
+    if (!searchTerm?.trim()) return [];
+    const term = searchTerm.trim().toLowerCase();
+    const allUsers = await this.storage.getAll(ctx);
+    return allUsers
+      .filter((u) => u.email?.toLowerCase().includes(term))
+      .map((u) => this.ensureUserStatus(u));
+  }
+
+  /**
    * Get all sellers (users with Seller or VerifiedSeller level)
    */
   async getSellers(ctx: Ctx): Promise<User[]> {

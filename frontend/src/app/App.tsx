@@ -24,7 +24,7 @@ import { MyTicket } from '@/app/pages/MyTicket';
 import { EditListing } from '@/app/pages/EditListing';
 import { AdminDashboard } from '@/app/pages/admin/AdminDashboard';
 import { EventManagement } from '@/app/pages/admin/EventManagement';
-import { PaymentApproval } from '@/app/pages/admin/PaymentApproval';
+import TransactionManagement from '@/app/pages/admin/TransactionManagement';
 
 export default function App() {
   return (
@@ -59,7 +59,7 @@ export default function App() {
               <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="events" element={<EventManagement />} />
-                <Route path="payments" element={<PaymentApproval />} />
+                <Route path="transactions" element={<TransactionManagement />} />
               </Route>
             </Routes>
           </main>

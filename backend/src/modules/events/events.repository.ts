@@ -56,6 +56,40 @@ export class EventsRepository implements OnModuleInit {
   }
 
   /**
+   * Find events by IDs (batch).
+   */
+  async findEventsByIds(ctx: Ctx, ids: string[]): Promise<Event[]> {
+    if (ids.length === 0) return [];
+    return await this.eventStorage.getMany(ctx, ids);
+  }
+
+  /**
+   * Get dates for multiple events (batch).
+   */
+  async getDatesByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<EventDate[]> {
+    if (eventIds.length === 0) return [];
+    const idSet = new Set(eventIds);
+    const all = await this.dateStorage.getAll(ctx);
+    return all.filter((d) => idSet.has(d.eventId));
+  }
+
+  /**
+   * Get sections for multiple events (batch).
+   */
+  async getSectionsByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<EventSection[]> {
+    if (eventIds.length === 0) return [];
+    const idSet = new Set(eventIds);
+    const all = await this.sectionStorage.getAll(ctx);
+    return all.filter((s) => idSet.has(s.eventId));
+  }
+
+  /**
    * Get approved events
    */
   async getApprovedEvents(ctx: Ctx): Promise<Event[]> {

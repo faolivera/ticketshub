@@ -296,3 +296,144 @@ export interface AdminEventListingsResponse {
   listings: AdminEventListingItem[];
   total: number;
 }
+
+// === Admin Transactions (GET /admin/transactions) ===
+
+/**
+ * Query parameters for GET /api/admin/transactions
+ */
+export interface AdminTransactionsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+/**
+ * Transaction list item for admin transactions table
+ */
+export interface AdminTransactionListItem {
+  id: string;
+  seller: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  buyer: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  status: string;
+  listing: {
+    id: string;
+    eventName: string;
+    eventDate: string;
+    sectionName: string;
+    quantity: number;
+    pricePerTicket: Money;
+  };
+  totalPaid: Money;
+  createdAt: string;
+  paymentConfirmation?: {
+    id: string;
+    status: string;
+    originalFilename: string;
+    createdAt: string;
+    reviewedAt?: string;
+    adminNotes?: string;
+  };
+}
+
+/**
+ * Response for GET /api/admin/transactions (paginated)
+ */
+export interface AdminTransactionsResponse {
+  transactions: AdminTransactionListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * Payment confirmation item for admin transaction detail
+ */
+export interface AdminTransactionPaymentConfirmation {
+  id: string;
+  transactionId: string;
+  originalFilename: string;
+  contentType: string;
+  status: string;
+  createdAt: string;
+  reviewedAt?: string;
+  adminNotes?: string;
+}
+
+/**
+ * Transaction detail for admin (single transaction with confirmations)
+ */
+export interface AdminTransactionDetail {
+  id: string;
+  seller: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  buyer: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  status: string;
+  listing: {
+    id: string;
+    eventName: string;
+    eventDate: string;
+    sectionName: string;
+    quantity: number;
+    pricePerTicket: Money;
+  };
+  quantity: number;
+  ticketPrice: Money;
+  buyerFee: Money;
+  sellerFee: Money;
+  totalPaid: Money;
+  sellerReceives: Money;
+  createdAt: string;
+  paymentReceivedAt?: string;
+  ticketTransferredAt?: string;
+  buyerConfirmedAt?: string;
+  completedAt?: string;
+  paymentConfirmations: AdminTransactionPaymentConfirmation[];
+}
+
+/**
+ * Response for GET /api/admin/transactions/:id
+ */
+export interface AdminTransactionDetailResponse {
+  id: string;
+  seller: AdminTransactionDetail['seller'];
+  buyer: AdminTransactionDetail['buyer'];
+  status: string;
+  listing: AdminTransactionDetail['listing'];
+  quantity: number;
+  ticketPrice: Money;
+  buyerFee: Money;
+  sellerFee: Money;
+  totalPaid: Money;
+  sellerReceives: Money;
+  createdAt: string;
+  paymentReceivedAt?: string;
+  ticketTransferredAt?: string;
+  buyerConfirmedAt?: string;
+  completedAt?: string;
+  paymentConfirmations: AdminTransactionPaymentConfirmation[];
+}
+
+/**
+ * Response for GET /api/admin/transactions/pending-summary
+ */
+export interface AdminTransactionsPendingSummaryResponse {
+  pendingConfirmationsCount: number;
+  pendingTransactionsCount: number;
+}

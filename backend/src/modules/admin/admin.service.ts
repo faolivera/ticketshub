@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventsService } from '../events/events.service';
@@ -21,9 +21,19 @@ import type {
   AdminAllEventItem,
   AdminEventListingsResponse,
   AdminEventListingItem,
+  AdminTransactionsQuery,
+  AdminTransactionsResponse,
+  AdminTransactionListItem,
+  AdminTransactionsPendingSummaryResponse,
+  AdminTransactionDetailResponse,
+  AdminTransactionUserRef,
+  AdminTransactionListingRef,
+  AdminTransactionPaymentConfirmationRef,
   Money,
 } from './admin.api';
 import { EventDateStatus, EventSectionStatus } from '../events/events.domain';
+import type { Transaction } from '../transactions/transactions.domain';
+import { TransactionStatus } from '../transactions/transactions.domain';
 
 @Injectable()
 export class AdminService {
@@ -379,5 +389,274 @@ export class AdminService {
       listings: enrichedListings,
       total: enrichedListings.length,
     };
+  }
+
+  /**
+   * Get paginated transactions list for admin.
+   * Search supports transaction id, buyer email, seller email.
+   */
+  async getTransactionsList(
+    ctx: Ctx,
+    query: AdminTransactionsQuery,
+  ): Promise<AdminTransactionsResponse> {
+    const page = query.page ?? 1;
+    const limit = Math.min(query.limit ?? 20, 20);
+
+    this.logger.log(
+      ctx,
+      `Getting transactions - page: ${page}, limit: ${limit}, search: ${query.search || 'none'}`,
+    );
+
+    const filters = await this.resolveTransactionSearchFilters(ctx, query.search);
+
+    const { transactions, total } =
+      await this.transactionsService.getPaginated(ctx, page, limit, filters);
+
+    if (transactions.length === 0) {
+      return {
+        transactions: [],
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
+
+    const enriched = await this.enrichTransactionsForList(
+      ctx,
+      transactions,
+    );
+
+    this.logger.log(
+      ctx,
+      `Found ${total} transactions, returning page ${page}`,
+    );
+
+    return {
+      transactions: enriched,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /**
+   * Get pending payment confirmations summary.
+   */
+  async getTransactionsPendingSummary(
+    ctx: Ctx,
+  ): Promise<AdminTransactionsPendingSummaryResponse> {
+    const [pendingConfirmationsCount, pendingTransactionsCount] =
+      await Promise.all([
+        this.paymentConfirmationsService.getPendingCount(ctx),
+        this.transactionsService.countByStatuses(ctx, [
+          TransactionStatus.PendingPayment,
+        ]),
+      ]);
+
+    return { pendingConfirmationsCount, pendingTransactionsCount };
+  }
+
+  /**
+   * Get transaction detail by ID.
+   */
+  async getTransactionById(
+    ctx: Ctx,
+    id: string,
+  ): Promise<AdminTransactionDetailResponse> {
+    const transaction = await this.transactionsService.findById(ctx, id);
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const [buyers, sellers] = await Promise.all([
+      this.usersService.findByIds(ctx, [transaction.buyerId]),
+      this.usersService.findByIds(ctx, [transaction.sellerId]),
+    ]);
+    const buyer = buyers[0];
+    const seller = sellers[0];
+
+    const listing = await this.ticketsService.getListingById(
+      ctx,
+      transaction.listingId,
+    );
+
+    const confirmations =
+      await this.paymentConfirmationsService.findByTransactionIds(ctx, [
+        transaction.id,
+      ]);
+    const paymentConfirmations = confirmations.map((confirmation) => ({
+      id: confirmation.id,
+      transactionId: confirmation.transactionId,
+      status: confirmation.status,
+      originalFilename: confirmation.originalFilename,
+      createdAt: confirmation.createdAt,
+      reviewedAt: confirmation.reviewedAt,
+      adminNotes: confirmation.adminNotes,
+      uploadedBy: confirmation.uploadedBy,
+      contentType: confirmation.contentType,
+    }));
+
+    const sellerRef: AdminTransactionUserRef = {
+      id: transaction.sellerId,
+      name: seller?.publicName ?? 'Unknown',
+      email: seller?.email ?? '',
+    };
+    const buyerRef: AdminTransactionUserRef = {
+      id: transaction.buyerId,
+      name: buyer?.publicName ?? 'Unknown',
+      email: buyer?.email ?? '',
+    };
+    const listingRef: AdminTransactionListingRef = {
+      id: listing.id,
+      eventName: listing.eventName,
+      eventDate: listing.eventDate,
+      sectionName: listing.sectionName,
+      quantity: transaction.quantity,
+      pricePerTicket: listing.pricePerTicket,
+    };
+
+    return {
+      id: transaction.id,
+      seller: sellerRef,
+      buyer: buyerRef,
+      status: transaction.status,
+      listing: listingRef,
+      quantity: transaction.quantity,
+      ticketPrice: transaction.ticketPrice,
+      buyerFee: transaction.buyerFee,
+      sellerFee: transaction.sellerFee,
+      totalPaid: transaction.totalPaid,
+      sellerReceives: transaction.sellerReceives,
+      createdAt: transaction.createdAt,
+      paymentReceivedAt: transaction.paymentReceivedAt,
+      ticketTransferredAt: transaction.ticketTransferredAt,
+      buyerConfirmedAt: transaction.buyerConfirmedAt,
+      completedAt: transaction.completedAt,
+      paymentConfirmations,
+    };
+  }
+
+  private async resolveTransactionSearchFilters(
+    ctx: Ctx,
+    search?: string,
+  ): Promise<
+    | {
+        transactionId?: string;
+        buyerIds?: string[];
+        sellerIds?: string[];
+      }
+    | undefined
+  > {
+    if (!search?.trim()) return undefined;
+
+    const term = search.trim();
+
+    const filters: {
+      transactionId?: string;
+      buyerIds?: string[];
+      sellerIds?: string[];
+    } = {};
+
+    // Always try exact transaction-id matching as part of search.
+    filters.transactionId = term;
+
+    const usersByEmail =
+      await this.usersService.findByEmailContaining(ctx, term);
+    if (usersByEmail.length > 0) {
+      const userIds = usersByEmail.map((u) => u.id);
+      filters.buyerIds = userIds;
+      filters.sellerIds = userIds;
+    }
+
+    if (!filters.buyerIds && !filters.sellerIds && !filters.transactionId) {
+      return { transactionId: '__no_match__' };
+    }
+
+    const hasEmailMatches =
+      (filters.buyerIds?.length ?? 0) > 0 || (filters.sellerIds?.length ?? 0) > 0;
+    const hasTransactionId = Boolean(filters.transactionId);
+    if (!hasEmailMatches && hasTransactionId && !term.startsWith('txn_')) {
+      // For non transaction-id text (e.g. random keyword) with no email matches,
+      // avoid returning all rows by forcing a no-match filter.
+      return { transactionId: '__no_match__' };
+    }
+
+    return filters;
+  }
+
+  private async enrichTransactionsForList(
+    ctx: Ctx,
+    transactions: Transaction[],
+  ): Promise<AdminTransactionListItem[]> {
+    const buyerIds = [...new Set(transactions.map((t) => t.buyerId))];
+    const sellerIds = [...new Set(transactions.map((t) => t.sellerId))];
+    const listingIds = [...new Set(transactions.map((t) => t.listingId))];
+    const transactionIds = transactions.map((t) => t.id);
+
+    const [users, listings, confirmations] = await Promise.all([
+      this.usersService.findByIds(ctx, [...buyerIds, ...sellerIds]),
+      this.ticketsService.getListingsByIds(ctx, listingIds),
+      this.paymentConfirmationsService.findByTransactionIds(ctx, transactionIds),
+    ]);
+
+    const usersMap = new Map(users.map((u) => [u.id, u]));
+    const listingsMap = new Map(listings.map((l) => [l.id, l]));
+    const confirmationsByTxn = new Map(
+      confirmations.map((c) => [c.transactionId, c]),
+    );
+
+    return transactions.map((t) => {
+      const buyer = usersMap.get(t.buyerId);
+      const seller = usersMap.get(t.sellerId);
+      const listing = listingsMap.get(t.listingId);
+      const confirmation = confirmationsByTxn.get(t.id);
+
+      const sellerRef: AdminTransactionUserRef = {
+        id: t.sellerId,
+        name: seller?.publicName ?? 'Unknown',
+        email: seller?.email ?? '',
+      };
+      const buyerRef: AdminTransactionUserRef = {
+        id: t.buyerId,
+        name: buyer?.publicName ?? 'Unknown',
+        email: buyer?.email ?? '',
+      };
+      const listingRef: AdminTransactionListingRef = {
+        id: t.listingId,
+        eventName: listing?.eventName ?? 'Unknown Event',
+        eventDate: listing?.eventDate ?? new Date(),
+        sectionName: listing?.sectionName ?? 'Unknown',
+        quantity: t.quantity,
+        pricePerTicket: listing?.pricePerTicket ?? {
+          amount: 0,
+          currency: 'USD',
+        },
+      };
+
+      const paymentConfirmation: AdminTransactionPaymentConfirmationRef | undefined =
+        confirmation
+          ? {
+              id: confirmation.id,
+              status: confirmation.status,
+              originalFilename: confirmation.originalFilename,
+              createdAt: confirmation.createdAt,
+              reviewedAt: confirmation.reviewedAt,
+              adminNotes: confirmation.adminNotes,
+            }
+          : undefined;
+
+      return {
+        id: t.id,
+        seller: sellerRef,
+        buyer: buyerRef,
+        status: t.status,
+        listing: listingRef,
+        totalPaid: t.totalPaid,
+        createdAt: t.createdAt,
+        paymentConfirmation,
+      };
+    });
   }
 }

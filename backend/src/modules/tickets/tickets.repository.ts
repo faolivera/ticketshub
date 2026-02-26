@@ -35,6 +35,17 @@ export class TicketsRepository implements OnModuleInit {
   }
 
   /**
+   * Get listings by IDs (batch).
+   */
+  async getByIds(
+    ctx: Ctx,
+    ids: string[],
+  ): Promise<TicketListing[]> {
+    if (ids.length === 0) return [];
+    return await this.storage.getMany(ctx, ids);
+  }
+
+  /**
    * Get all listings
    */
   async getAll(ctx: Ctx): Promise<TicketListing[]> {

@@ -87,6 +87,17 @@ export class UsersService {
   }
 
   /**
+   * Find users whose email contains the search term (case-insensitive).
+   * Used for admin transaction search.
+   */
+  async findByEmailContaining(
+    ctx: Ctx,
+    searchTerm: string,
+  ): Promise<User[]> {
+    return await this.usersRepository.findByEmailContaining(ctx, searchTerm);
+  }
+
+  /**
    * Get all sellers (users with Seller or VerifiedSeller level)
    */
   async getSellers(ctx: Ctx): Promise<User[]> {

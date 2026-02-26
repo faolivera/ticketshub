@@ -308,6 +308,58 @@ export class TicketsService {
   }
 
   /**
+   * Get listings by IDs with event info (batch).
+   * Returns only found listings; does not throw for missing IDs.
+   */
+  async getListingsByIds(
+    ctx: Ctx,
+    ids: string[],
+  ): Promise<TicketListingWithEvent[]> {
+    if (ids.length === 0) return [];
+    const listings = await this.ticketsRepository.getByIds(ctx, ids);
+    if (listings.length === 0) return [];
+
+    const eventIds = [...new Set(listings.map((l) => l.eventId))];
+    const events = await this.eventsService.getEventsByIds(ctx, eventIds);
+    const eventMap = new Map(events.map((e) => [e.id, e]));
+
+    return listings.map((listing) => {
+      const event = eventMap.get(listing.eventId);
+      const eventDate = event?.dates.find((d) => d.id === listing.eventDateId);
+      const eventSection = event?.sections.find(
+        (s) => s.id === listing.eventSectionId,
+      );
+
+      let pendingReason: string[] | undefined;
+      if (listing.status === ListingStatus.Pending && event) {
+        const reasons: string[] = [];
+        if (event.status !== EventStatus.Approved) {
+          reasons.push('event');
+        }
+        if (eventDate?.status !== EventDateStatus.Approved) {
+          reasons.push('date');
+        }
+        if (eventSection?.status !== EventSectionStatus.Approved) {
+          reasons.push('section');
+        }
+        if (reasons.length > 0) {
+          pendingReason = reasons;
+        }
+      }
+
+      return {
+        ...listing,
+        seatingType: eventSection?.seatingType ?? SeatingType.Unnumbered,
+        eventName: event?.name ?? 'Unknown Event',
+        eventDate: eventDate?.date ?? new Date(),
+        venue: event?.venue ?? 'Unknown',
+        sectionName: eventSection?.name ?? 'Unknown',
+        pendingReason,
+      };
+    });
+  }
+
+  /**
    * Enrich listing with event information
    */
   private async enrichListingWithEvent(
