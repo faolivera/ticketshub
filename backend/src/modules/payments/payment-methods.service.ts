@@ -59,7 +59,7 @@ export class PaymentMethodsService {
     const enabled = await this.repository.findEnabled(ctx);
     return enabled.map((pm) => ({
       id: pm.id,
-      name: pm.name,
+      name: pm.publicName,
       type: pm.type,
       buyerCommissionPercent: pm.buyerCommissionPercent,
       bankTransferConfig: pm.bankTransferConfig,
@@ -75,10 +75,10 @@ export class PaymentMethodsService {
     const paymentMethod: PaymentMethodOption = {
       id: this.generateId(),
       name: data.name,
+      publicName: data.publicName,
       type: data.type,
       status: 'enabled',
       buyerCommissionPercent: data.buyerCommissionPercent,
-      sellerCommissionPercent: data.sellerCommissionPercent,
       gatewayProvider: data.gatewayProvider,
       gatewayConfigEnvPrefix: data.gatewayConfigEnvPrefix,
       bankTransferConfig: data.bankTransferConfig,

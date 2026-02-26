@@ -2,22 +2,22 @@
   "pm_001_mercadopago": {
     "id": "pm_001_mercadopago",
     "name": "MercadoPago",
+    "publicName": "Credit/Debit Card (MercadoPago)",
     "type": "payment_gateway",
     "status": "disabled",
     "buyerCommissionPercent": 12,
-    "sellerCommissionPercent": 0,
     "gatewayProvider": "mercadopago",
     "gatewayConfigEnvPrefix": "MERCADOPAGO_DEFAULT",
     "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2026-02-26T17:38:13.367Z"
+    "updatedAt": "2026-02-26T17:51:41.662Z"
   },
   "pm_002_payway": {
     "id": "pm_002_payway",
     "name": "Payway",
+    "publicName": "Credit/Debit Card (Payway)",
     "type": "payment_gateway",
     "status": "disabled",
     "buyerCommissionPercent": 12,
-    "sellerCommissionPercent": 0,
     "gatewayProvider": "payway",
     "gatewayConfigEnvPrefix": "PAYWAY_DEFAULT",
     "createdAt": "2024-01-01T00:00:00.000Z",
@@ -26,10 +26,10 @@
   "pm_003_uala_bis": {
     "id": "pm_003_uala_bis",
     "name": "Uala Bis",
+    "publicName": "Credit/Debit Card (Ualá)",
     "type": "payment_gateway",
     "status": "disabled",
     "buyerCommissionPercent": 12,
-    "sellerCommissionPercent": 0,
     "gatewayProvider": "uala_bis",
     "gatewayConfigEnvPrefix": "UALA_BIS_DEFAULT",
     "createdAt": "2024-01-01T00:00:00.000Z",
@@ -38,10 +38,10 @@
   "pm_004_bank_transfer": {
     "id": "pm_004_bank_transfer",
     "name": "Transferencia Bancaria",
+    "publicName": "Transferencia Bancaria",
     "type": "manual_approval",
     "status": "enabled",
-    "buyerCommissionPercent": 6,
-    "sellerCommissionPercent": 0,
+    "buyerCommissionPercent": 8,
     "bankTransferConfig": {
       "cbu": "0000000000000000000000",
       "accountHolderName": "TicketsHub SA",
@@ -49,6 +49,6 @@
       "cuitCuil": "30-00000000-0"
     },
     "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2026-02-26T17:37:46.674Z"
+    "updatedAt": "2026-02-26T18:06:33.113Z"
   }
 }

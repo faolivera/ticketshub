@@ -1061,7 +1061,6 @@
         "type": "Tipo",
         "provider": "Proveedor / Banco",
         "buyerCommission": "Comisión Comprador",
-        "sellerCommission": "Comisión Vendedor",
         "status": "Estado",
         "actions": "Acciones"
       },
@@ -1076,9 +1075,11 @@
       "form": {
         "name": "Nombre a Mostrar",
         "namePlaceholder": "ej., MercadoPago - Cuenta Principal",
+        "publicName": "Nombre Público",
+        "publicNamePlaceholder": "ej., Tarjeta de Crédito/Débito",
+        "publicNameHint": "Este nombre se muestra a los compradores en la página de pago",
         "type": "Tipo de Pago",
         "buyerCommission": "Comisión Comprador (%)",
-        "sellerCommission": "Comisión Vendedor (%)",
         "gatewayProvider": "Proveedor de Pasarela",
         "selectProvider": "Seleccionar un proveedor",
         "envPrefix": "Prefijo de Entorno",
@@ -1091,6 +1092,7 @@
       },
       "errors": {
         "nameRequired": "El nombre es obligatorio",
+        "publicNameRequired": "El nombre público es requerido",
         "providerRequired": "El proveedor de pasarela es obligatorio",
         "envPrefixRequired": "El prefijo de entorno es obligatorio",
         "bankConfigRequired": "Todos los campos de cuenta bancaria son obligatorios"

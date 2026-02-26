@@ -14,10 +14,10 @@ describe('PaymentMethodsService', () => {
   const mockPaymentMethod: PaymentMethodOption = {
     id: 'pm_123',
     name: 'MercadoPago Principal',
+    publicName: 'Credit/Debit Card',
     type: 'payment_gateway',
     status: 'enabled',
     buyerCommissionPercent: 12,
-    sellerCommissionPercent: 5,
     gatewayProvider: 'mercadopago',
     gatewayConfigEnvPrefix: 'MERCADOPAGO_MAIN',
     createdAt: new Date('2024-01-01'),
@@ -27,10 +27,10 @@ describe('PaymentMethodsService', () => {
   const mockBankTransferMethod: PaymentMethodOption = {
     id: 'pm_456',
     name: 'Banco Nacion',
+    publicName: 'Bank Transfer',
     type: 'manual_approval',
     status: 'enabled',
     buyerCommissionPercent: 5,
-    sellerCommissionPercent: 0,
     bankTransferConfig: {
       cbu: '0110012345678901234567',
       accountHolderName: 'TicketsHub SA',
@@ -118,7 +118,7 @@ describe('PaymentMethodsService', () => {
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         id: 'pm_123',
-        name: 'MercadoPago Principal',
+        name: 'Credit/Debit Card',
         type: 'payment_gateway',
         buyerCommissionPercent: 12,
         bankTransferConfig: undefined,
@@ -134,14 +134,15 @@ describe('PaymentMethodsService', () => {
 
       const result = await service.create(mockCtx, {
         name: 'New MercadoPago',
+        publicName: 'Credit/Debit Card (New)',
         type: 'payment_gateway',
         buyerCommissionPercent: 10,
-        sellerCommissionPercent: 3,
         gatewayProvider: 'mercadopago',
         gatewayConfigEnvPrefix: 'MERCADOPAGO_NEW',
       });
 
       expect(result.name).toBe('New MercadoPago');
+      expect(result.publicName).toBe('Credit/Debit Card (New)');
       expect(result.status).toBe('enabled');
       expect(result.id).toMatch(/^pm_/);
       expect(repository.create).toHaveBeenCalled();
@@ -152,9 +153,9 @@ describe('PaymentMethodsService', () => {
 
       const result = await service.create(mockCtx, {
         name: 'Banco Galicia',
+        publicName: 'Bank Transfer (Galicia)',
         type: 'manual_approval',
         buyerCommissionPercent: 5,
-        sellerCommissionPercent: 0,
         bankTransferConfig: {
           cbu: '0170123456789012345678',
           accountHolderName: 'TicketsHub SA',
@@ -164,6 +165,7 @@ describe('PaymentMethodsService', () => {
       });
 
       expect(result.name).toBe('Banco Galicia');
+      expect(result.publicName).toBe('Bank Transfer (Galicia)');
       expect(result.bankTransferConfig?.bankName).toBe('Banco Galicia');
     });
 
@@ -171,9 +173,9 @@ describe('PaymentMethodsService', () => {
       await expect(
         service.create(mockCtx, {
           name: 'Bad Gateway',
+          publicName: 'Bad Gateway Public',
           type: 'payment_gateway',
           buyerCommissionPercent: 10,
-          sellerCommissionPercent: 3,
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -182,9 +184,9 @@ describe('PaymentMethodsService', () => {
       await expect(
         service.create(mockCtx, {
           name: 'Bad Bank',
+          publicName: 'Bad Bank Public',
           type: 'manual_approval',
           buyerCommissionPercent: 5,
-          sellerCommissionPercent: 0,
         }),
       ).rejects.toThrow(BadRequestException);
     });

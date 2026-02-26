@@ -61,9 +61,9 @@ export type GetPaymentStatusResponse = PaymentIntent;
  */
 export interface CreatePaymentMethodRequest {
   name: string;
+  publicName: string;
   type: PaymentMethodType;
   buyerCommissionPercent: number | null;
-  sellerCommissionPercent: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;
   bankTransferConfig?: BankTransferConfig;
@@ -74,9 +74,9 @@ export interface CreatePaymentMethodRequest {
  */
 export interface UpdatePaymentMethodRequest {
   name?: string;
+  publicName?: string;
   status?: 'enabled' | 'disabled';
   buyerCommissionPercent?: number | null;
-  sellerCommissionPercent?: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;
   bankTransferConfig?: BankTransferConfig;

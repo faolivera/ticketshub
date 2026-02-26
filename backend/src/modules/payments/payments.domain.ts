@@ -26,10 +26,10 @@ export interface BankTransferConfig {
 export interface PaymentMethodOption {
   id: string;
   name: string;
+  publicName: string;
   type: PaymentMethodType;
   status: PaymentMethodStatus;
   buyerCommissionPercent: number | null;
-  sellerCommissionPercent: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;
   bankTransferConfig?: BankTransferConfig;

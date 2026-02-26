@@ -59,9 +59,9 @@ type FormMode = 'create' | 'edit';
 
 interface FormData {
   name: string;
+  publicName: string;
   type: PaymentMethodType;
   buyerCommissionPercent: string;
-  sellerCommissionPercent: string;
   gatewayProvider: PaymentGatewayProvider | '';
   gatewayConfigEnvPrefix: string;
   bankTransferConfig: BankTransferConfig;
@@ -76,9 +76,9 @@ const emptyBankConfig: BankTransferConfig = {
 
 const initialFormData: FormData = {
   name: '',
+  publicName: '',
   type: 'payment_gateway',
   buyerCommissionPercent: '',
-  sellerCommissionPercent: '',
   gatewayProvider: '',
   gatewayConfigEnvPrefix: '',
   bankTransferConfig: { ...emptyBankConfig },
@@ -134,11 +134,10 @@ export function PaymentMethodsManagement() {
     setEditingId(method.id);
     setFormData({
       name: method.name,
+      publicName: method.publicName,
       type: method.type,
       buyerCommissionPercent:
         method.buyerCommissionPercent?.toString() ?? '',
-      sellerCommissionPercent:
-        method.sellerCommissionPercent?.toString() ?? '',
       gatewayProvider: method.gatewayProvider ?? '',
       gatewayConfigEnvPrefix: method.gatewayConfigEnvPrefix ?? '',
       bankTransferConfig: method.bankTransferConfig ?? { ...emptyBankConfig },
@@ -189,6 +188,11 @@ export function PaymentMethodsManagement() {
       return;
     }
 
+    if (!formData.publicName.trim()) {
+      setFormError(t('admin.paymentMethods.errors.publicNameRequired'));
+      return;
+    }
+
     if (formData.type === 'payment_gateway') {
       if (!formData.gatewayProvider) {
         setFormError(t('admin.paymentMethods.errors.providerRequired'));
@@ -214,16 +218,13 @@ export function PaymentMethodsManagement() {
       const buyerCommission = formData.buyerCommissionPercent
         ? parseFloat(formData.buyerCommissionPercent)
         : null;
-      const sellerCommission = formData.sellerCommissionPercent
-        ? parseFloat(formData.sellerCommissionPercent)
-        : null;
 
       if (formMode === 'create') {
         const request: AdminCreatePaymentMethodRequest = {
           name: formData.name,
+          publicName: formData.publicName,
           type: formData.type,
           buyerCommissionPercent: buyerCommission,
-          sellerCommissionPercent: sellerCommission,
           ...(formData.type === 'payment_gateway' && {
             gatewayProvider: formData.gatewayProvider as PaymentGatewayProvider,
             gatewayConfigEnvPrefix: formData.gatewayConfigEnvPrefix,
@@ -236,8 +237,8 @@ export function PaymentMethodsManagement() {
       } else if (editingId) {
         const request: AdminUpdatePaymentMethodRequest = {
           name: formData.name,
+          publicName: formData.publicName,
           buyerCommissionPercent: buyerCommission,
-          sellerCommissionPercent: sellerCommission,
           ...(formData.type === 'payment_gateway' && {
             gatewayProvider: formData.gatewayProvider as PaymentGatewayProvider,
             gatewayConfigEnvPrefix: formData.gatewayConfigEnvPrefix,
@@ -342,9 +343,6 @@ export function PaymentMethodsManagement() {
                     {t('admin.paymentMethods.table.buyerCommission')}
                   </TableHead>
                   <TableHead>
-                    {t('admin.paymentMethods.table.sellerCommission')}
-                  </TableHead>
-                  <TableHead>
                     {t('admin.paymentMethods.table.status')}
                   </TableHead>
                   <TableHead className="text-right">
@@ -374,11 +372,6 @@ export function PaymentMethodsManagement() {
                     <TableCell>
                       {method.buyerCommissionPercent != null
                         ? `${method.buyerCommissionPercent}%`
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {method.sellerCommissionPercent != null
-                        ? `${method.sellerCommissionPercent}%`
                         : '-'}
                     </TableCell>
                     <TableCell>
@@ -460,6 +453,23 @@ export function PaymentMethodsManagement() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="publicName">
+                {t('admin.paymentMethods.form.publicName')}
+              </Label>
+              <Input
+                id="publicName"
+                value={formData.publicName}
+                onChange={(e) =>
+                  setFormData({ ...formData, publicName: e.target.value })
+                }
+                placeholder={t('admin.paymentMethods.form.publicNamePlaceholder')}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('admin.paymentMethods.form.publicNameHint')}
+              </p>
+            </div>
+
             {formMode === 'create' && (
               <div className="space-y-2">
                 <Label>{t('admin.paymentMethods.form.type')}</Label>
@@ -504,24 +514,6 @@ export function PaymentMethodsManagement() {
                     setFormData({
                       ...formData,
                       buyerCommissionPercent: e.target.value,
-                    })
-                  }
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sellerCommission">
-                  {t('admin.paymentMethods.form.sellerCommission')}
-                </Label>
-                <Input
-                  id="sellerCommission"
-                  type="number"
-                  step="0.1"
-                  value={formData.sellerCommissionPercent}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      sellerCommissionPercent: e.target.value,
                     })
                   }
                   placeholder="0"

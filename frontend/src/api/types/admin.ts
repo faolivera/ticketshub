@@ -474,9 +474,9 @@ import type {
  */
 export interface AdminCreatePaymentMethodRequest {
   name: string;
+  publicName: string;
   type: PaymentMethodType;
   buyerCommissionPercent: number | null;
-  sellerCommissionPercent: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;
   bankTransferConfig?: BankTransferConfig;
@@ -487,9 +487,9 @@ export interface AdminCreatePaymentMethodRequest {
  */
 export interface AdminUpdatePaymentMethodRequest {
   name?: string;
+  publicName?: string;
   status?: 'enabled' | 'disabled';
   buyerCommissionPercent?: number | null;
-  sellerCommissionPercent?: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;
   bankTransferConfig?: BankTransferConfig;

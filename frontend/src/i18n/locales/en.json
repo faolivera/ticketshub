@@ -1094,7 +1094,6 @@
         "type": "Type",
         "provider": "Provider / Bank",
         "buyerCommission": "Buyer Fee",
-        "sellerCommission": "Seller Fee",
         "status": "Status",
         "actions": "Actions"
       },
@@ -1109,9 +1108,11 @@
       "form": {
         "name": "Display Name",
         "namePlaceholder": "e.g., MercadoPago - Main Account",
+        "publicName": "Public Name",
+        "publicNamePlaceholder": "e.g., Credit/Debit Card",
+        "publicNameHint": "This name is shown to buyers on the checkout page",
         "type": "Payment Type",
         "buyerCommission": "Buyer Fee (%)",
-        "sellerCommission": "Seller Fee (%)",
         "gatewayProvider": "Gateway Provider",
         "selectProvider": "Select a provider",
         "envPrefix": "Environment Prefix",
@@ -1124,6 +1125,7 @@
       },
       "errors": {
         "nameRequired": "Name is required",
+        "publicNameRequired": "Public name is required",
         "providerRequired": "Gateway provider is required",
         "envPrefixRequired": "Environment prefix is required",
         "bankConfigRequired": "All bank account fields are required"
