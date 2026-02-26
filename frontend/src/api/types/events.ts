@@ -1,4 +1,5 @@
 import type { Address, Image, PaginationParams } from './common';
+import type { SeatingType } from './tickets';
 
 /**
  * Event approval status
@@ -56,15 +57,13 @@ export interface Event {
 
 /**
  * Event date entity
+ * Single datetime field (date) includes both day and time, stored at minute precision
  */
 export interface EventDate {
   id: string;
   eventId: string;
 
   date: Date;
-  doorsOpenAt?: Date;
-  startTime?: Date;
-  endTime?: Date;
 
   status: EventDateStatus;
   rejectionReason?: string;
@@ -92,6 +91,7 @@ export interface EventSection {
   id: string;
   eventId: string;
   name: string;
+  seatingType: SeatingType;
   status: EventSectionStatus;
   rejectionReason?: string;
   createdBy: string;
@@ -130,12 +130,10 @@ export type CreateEventResponse = Event;
 
 /**
  * Request to add a date to an event
+ * date: ISO datetime string (day+time), normalized to minute precision
  */
 export interface AddEventDateRequest {
-  date: Date;
-  doorsOpenAt?: Date;
-  startTime?: Date;
-  endTime?: Date;
+  date: string;
 }
 
 /**
@@ -174,6 +172,7 @@ export type ApproveEventDateResponse = EventDate;
  */
 export interface AddEventSectionRequest {
   name: string;
+  seatingType: SeatingType;
 }
 
 /**

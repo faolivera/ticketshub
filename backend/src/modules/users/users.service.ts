@@ -295,8 +295,12 @@ export class UsersService {
   /**
    * Mark user phone as verified and upgrade to Buyer level if Basic
    */
-  async markPhoneVerified(ctx: Ctx, userId: string): Promise<void> {
-    await this.usersRepository.updatePhoneVerified(ctx, userId, true);
+  async markPhoneVerified(
+    ctx: Ctx,
+    userId: string,
+    phoneNumber: string,
+  ): Promise<void> {
+    await this.usersRepository.updatePhoneVerified(ctx, userId, true, phoneNumber);
 
     const user = await this.usersRepository.findById(ctx, userId);
     if (user?.level === UserLevel.Basic) {

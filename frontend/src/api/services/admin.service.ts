@@ -6,6 +6,9 @@ import type {
   AdminUpdateEventResponse,
   AdminApproveSectionRequest,
   AdminApproveSectionResponse,
+  AdminAddSectionRequest,
+  AdminAddSectionResponse,
+  AdminDeleteSectionResponse,
 } from '../types/admin';
 
 /**
@@ -55,6 +58,30 @@ export const adminService = {
     const response = await apiClient.patch<AdminApproveSectionResponse>(
       `/admin/events/sections/${sectionId}`,
       data
+    );
+    return response.data;
+  },
+
+  /**
+   * Add a new section to an event (admin only, auto-approved)
+   */
+  async addSection(
+    eventId: string,
+    data: AdminAddSectionRequest
+  ): Promise<AdminAddSectionResponse> {
+    const response = await apiClient.post<AdminAddSectionResponse>(
+      `/admin/events/${eventId}/sections`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Delete an event section (only allowed if no listings exist)
+   */
+  async deleteSection(sectionId: string): Promise<AdminDeleteSectionResponse> {
+    const response = await apiClient.delete<AdminDeleteSectionResponse>(
+      `/admin/events/sections/${sectionId}`
     );
     return response.data;
   },

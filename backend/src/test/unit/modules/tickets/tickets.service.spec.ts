@@ -52,6 +52,7 @@ describe('TicketsService', () => {
         id: 'sec_test_123',
         eventId: 'evt_123',
         name: 'General',
+        seatingType: SeatingType.Unnumbered,
         status: EventSectionStatus.Approved,
         createdBy: 'user_123',
         approvedBy: 'admin_123',
@@ -89,6 +90,7 @@ describe('TicketsService', () => {
         id: 'sec_test_123',
         eventId: 'evt_pending',
         name: 'General',
+        seatingType: SeatingType.Unnumbered,
         status: EventSectionStatus.Approved,
         createdBy: 'user_123',
         approvedBy: 'admin_123',
@@ -105,7 +107,6 @@ describe('TicketsService', () => {
     eventDateId: 'edt_456',
     eventSectionId: 'sec_test_123',
     type: TicketType.DigitalTransferable,
-    seatingType: SeatingType.Unnumbered,
     ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
     sellTogether: false,
     pricePerTicket: { amount: 5000, currency: 'USD' },
@@ -129,7 +130,10 @@ describe('TicketsService', () => {
       restoreUnits: jest.fn(),
       getPendingByEventId: jest.fn(),
       getPendingByEventDateId: jest.fn(),
+      getPendingByEventSectionId: jest.fn(),
       bulkUpdateStatus: jest.fn(),
+      getAllByEventDateId: jest.fn(),
+      getAllByEventSectionId: jest.fn(),
     };
 
     const mockEventsService = {
@@ -162,7 +166,6 @@ describe('TicketsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
-      seatingType: SeatingType.Unnumbered,
       quantity: 2,
       pricePerTicket: { amount: 5000, currency: 'USD' as CurrencyCode },
     };
@@ -294,7 +297,6 @@ describe('TicketsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
-      seatingType: SeatingType.Unnumbered,
       ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
@@ -337,6 +339,117 @@ describe('TicketsService', () => {
       await expect(service.getListingById(mockCtx, 'non_existent')).rejects.toThrow(
         NotFoundException,
       );
+    });
+
+    it('should return pendingReason with event when event is not approved', async () => {
+      const pendingListing: TicketListing = {
+        ...mockListing,
+        status: ListingStatus.Pending,
+      };
+      const pendingEvent = {
+        ...mockApprovedEvent,
+        status: EventStatus.Pending,
+      };
+
+      ticketsRepository.findById.mockResolvedValue(pendingListing);
+      eventsService.getEventById.mockResolvedValue(pendingEvent as any);
+
+      const result = await service.getListingById(mockCtx, 'tkt_123');
+
+      expect(result.pendingReason).toContain('event');
+    });
+
+    it('should return pendingReason with date when event date is not approved', async () => {
+      const pendingListing: TicketListing = {
+        ...mockListing,
+        eventDateId: 'edt_456',
+        status: ListingStatus.Pending,
+      };
+
+      ticketsRepository.findById.mockResolvedValue(pendingListing);
+      eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
+
+      const result = await service.getListingById(mockCtx, 'tkt_123');
+
+      expect(result.pendingReason).toContain('date');
+      expect(result.pendingReason).not.toContain('event');
+    });
+
+    it('should return pendingReason with section when event section is not approved', async () => {
+      const pendingListing: TicketListing = {
+        ...mockListing,
+        eventSectionId: 'sec_pending',
+        status: ListingStatus.Pending,
+      };
+      const eventWithPendingSection = {
+        ...mockApprovedEvent,
+        sections: [
+          ...mockApprovedEvent.sections,
+          {
+            id: 'sec_pending',
+            eventId: 'evt_123',
+            name: 'VIP',
+            seatingType: SeatingType.Unnumbered,
+            status: EventSectionStatus.Pending,
+            createdBy: 'user_123',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      };
+
+      ticketsRepository.findById.mockResolvedValue(pendingListing);
+      eventsService.getEventById.mockResolvedValue(eventWithPendingSection as any);
+
+      const result = await service.getListingById(mockCtx, 'tkt_123');
+
+      expect(result.pendingReason).toContain('section');
+      expect(result.pendingReason).not.toContain('event');
+    });
+
+    it('should return pendingReason with multiple reasons when multiple items are pending', async () => {
+      const pendingListing: TicketListing = {
+        ...mockListing,
+        eventDateId: 'edt_456',
+        eventSectionId: 'sec_pending',
+        status: ListingStatus.Pending,
+      };
+      const eventWithPendingItems = {
+        ...mockApprovedEvent,
+        status: EventStatus.Pending,
+        sections: [
+          ...mockApprovedEvent.sections,
+          {
+            id: 'sec_pending',
+            eventId: 'evt_123',
+            name: 'VIP',
+            seatingType: SeatingType.Unnumbered,
+            status: EventSectionStatus.Pending,
+            createdBy: 'user_123',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      };
+
+      ticketsRepository.findById.mockResolvedValue(pendingListing);
+      eventsService.getEventById.mockResolvedValue(eventWithPendingItems as any);
+
+      const result = await service.getListingById(mockCtx, 'tkt_123');
+
+      expect(result.pendingReason).toContain('event');
+      expect(result.pendingReason).toContain('date');
+      expect(result.pendingReason).toContain('section');
+      expect(result.pendingReason).toHaveLength(3);
+    });
+
+    it('should not include pendingReason for active listings', async () => {
+      ticketsRepository.findById.mockResolvedValue(mockListing);
+      eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
+
+      const result = await service.getListingById(mockCtx, 'tkt_123');
+
+      expect(result.pendingReason).toBeUndefined();
     });
   });
 
@@ -401,6 +514,171 @@ describe('TicketsService', () => {
       );
 
       expect(result).toBe(0);
+      expect(ticketsRepository.bulkUpdateStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getListingsBySectionId', () => {
+    const mockListingsForSection: TicketListing[] = [
+      {
+        id: 'tkt_1',
+        sellerId: 'seller_123',
+        eventId: 'evt_123',
+        eventDateId: 'edt_123',
+        eventSectionId: 'sec_test_123',
+        type: TicketType.DigitalTransferable,
+        ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+        sellTogether: false,
+        pricePerTicket: { amount: 5000, currency: 'USD' },
+        status: ListingStatus.Active,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'tkt_2',
+        sellerId: 'seller_456',
+        eventId: 'evt_123',
+        eventDateId: 'edt_123',
+        eventSectionId: 'sec_test_123',
+        type: TicketType.Physical,
+        ticketUnits: [{ id: 'unit_2', status: TicketUnitStatus.Available }],
+        sellTogether: false,
+        pricePerTicket: { amount: 7500, currency: 'USD' },
+        status: ListingStatus.Pending,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    it('should return listings for the section', async () => {
+      ticketsRepository.getAllByEventSectionId.mockResolvedValue(
+        mockListingsForSection,
+      );
+
+      const result = await service.getListingsBySectionId(
+        mockCtx,
+        'sec_test_123',
+      );
+
+      expect(result).toEqual(mockListingsForSection);
+      expect(result).toHaveLength(2);
+      expect(ticketsRepository.getAllByEventSectionId).toHaveBeenCalledWith(
+        mockCtx,
+        'sec_test_123',
+      );
+    });
+
+    it('should return empty array when no listings exist for section', async () => {
+      ticketsRepository.getAllByEventSectionId.mockResolvedValue([]);
+
+      const result = await service.getListingsBySectionId(
+        mockCtx,
+        'sec_empty',
+      );
+
+      expect(result).toEqual([]);
+      expect(result).toHaveLength(0);
+      expect(ticketsRepository.getAllByEventSectionId).toHaveBeenCalledWith(
+        mockCtx,
+        'sec_empty',
+      );
+    });
+  });
+
+  describe('cancelListingsBySectionId', () => {
+    const mockActiveListingForSection: TicketListing = {
+      id: 'tkt_active',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
+      type: TicketType.DigitalTransferable,
+      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: ListingStatus.Active,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockPendingListingForSection: TicketListing = {
+      id: 'tkt_pending',
+      sellerId: 'seller_456',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
+      type: TicketType.Physical,
+      ticketUnits: [{ id: 'unit_2', status: TicketUnitStatus.Available }],
+      sellTogether: false,
+      pricePerTicket: { amount: 7500, currency: 'USD' },
+      status: ListingStatus.Pending,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockCancelledListing: TicketListing = {
+      ...mockActiveListingForSection,
+      id: 'tkt_cancelled',
+      status: ListingStatus.Cancelled,
+    };
+
+    const mockSoldListing: TicketListing = {
+      ...mockActiveListingForSection,
+      id: 'tkt_sold',
+      status: ListingStatus.Sold,
+    };
+
+    it('should cancel pending and active listings', async () => {
+      const allListings = [
+        mockActiveListingForSection,
+        mockPendingListingForSection,
+        mockCancelledListing,
+        mockSoldListing,
+      ];
+
+      ticketsRepository.getAllByEventSectionId.mockResolvedValue(allListings);
+      ticketsRepository.bulkUpdateStatus.mockResolvedValue(2);
+
+      const result = await service.cancelListingsBySectionId(
+        mockCtx,
+        'sec_test_123',
+      );
+
+      expect(result.cancelledCount).toBe(2);
+      expect(result.listingIds).toEqual(['tkt_active', 'tkt_pending']);
+      expect(ticketsRepository.bulkUpdateStatus).toHaveBeenCalledWith(
+        mockCtx,
+        ['tkt_active', 'tkt_pending'],
+        ListingStatus.Cancelled,
+      );
+    });
+
+    it('should return zero when no listings to cancel', async () => {
+      ticketsRepository.getAllByEventSectionId.mockResolvedValue([
+        mockCancelledListing,
+        mockSoldListing,
+      ]);
+
+      const result = await service.cancelListingsBySectionId(
+        mockCtx,
+        'sec_test_123',
+      );
+
+      expect(result.cancelledCount).toBe(0);
+      expect(result.listingIds).toEqual([]);
+      expect(ticketsRepository.bulkUpdateStatus).not.toHaveBeenCalled();
+    });
+
+    it('should return zero when section has no listings', async () => {
+      ticketsRepository.getAllByEventSectionId.mockResolvedValue([]);
+
+      const result = await service.cancelListingsBySectionId(
+        mockCtx,
+        'sec_empty',
+      );
+
+      expect(result.cancelledCount).toBe(0);
+      expect(result.listingIds).toEqual([]);
       expect(ticketsRepository.bulkUpdateStatus).not.toHaveBeenCalled();
     });
   });

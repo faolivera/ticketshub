@@ -61,28 +61,34 @@ export class TicketsService {
       .map((unit) => unit.id);
   }
 
-  private validateListingSeatingConsistency(listing: TicketListing): void {
-    const hasSeatUnits = listing.ticketUnits.some((unit) => unit.seat);
-    const hasSeatlessUnits = listing.ticketUnits.some((unit) => !unit.seat);
+  private validateListingSeatingConsistency(
+    ticketUnits: TicketUnit[],
+    seatingType: SeatingType,
+  ): void {
+    const hasSeatUnits = ticketUnits.some((unit) => unit.seat);
+    const hasSeatlessUnits = ticketUnits.some((unit) => !unit.seat);
 
     if (hasSeatUnits && hasSeatlessUnits) {
       throw new BadRequestException('Listing ticket units must be homogeneous');
     }
 
-    if (listing.seatingType === SeatingType.Numbered && hasSeatlessUnits) {
+    if (seatingType === SeatingType.Numbered && hasSeatlessUnits) {
       throw new BadRequestException(
         'Numbered listings require seat information for all units',
       );
     }
 
-    if (listing.seatingType === SeatingType.Unnumbered && hasSeatUnits) {
+    if (seatingType === SeatingType.Unnumbered && hasSeatUnits) {
       throw new BadRequestException(
         'Unnumbered listings cannot contain seat information',
       );
     }
   }
 
-  private buildTicketUnits(data: CreateListingRequest): TicketUnit[] {
+  private buildTicketUnits(
+    data: CreateListingRequest,
+    sectionSeatingType: SeatingType,
+  ): TicketUnit[] {
     const hasQuantity = data.quantity !== undefined;
     const hasTicketUnits =
       Array.isArray(data.ticketUnits) && data.ticketUnits.length > 0;
@@ -92,9 +98,9 @@ export class TicketsService {
     }
 
     if (hasQuantity) {
-      if (data.seatingType !== SeatingType.Unnumbered) {
+      if (sectionSeatingType !== SeatingType.Unnumbered) {
         throw new BadRequestException(
-          'Quantity can only be used for unnumbered listings',
+          'Quantity can only be used for unnumbered sections',
         );
       }
       if (!data.quantity || data.quantity < 1) {
@@ -123,9 +129,9 @@ export class TicketsService {
     }
 
     if (hasNumbered) {
-      if (data.seatingType !== SeatingType.Numbered) {
+      if (sectionSeatingType !== SeatingType.Numbered) {
         throw new BadRequestException(
-          'Numbered ticket units require seatingType=numbered',
+          'Numbered ticket units require a numbered section',
         );
       }
       const seatKeySet = new Set<string>();
@@ -147,9 +153,9 @@ export class TicketsService {
         }
         seatKeySet.add(seatKey);
       }
-    } else if (data.seatingType !== SeatingType.Unnumbered) {
+    } else if (sectionSeatingType !== SeatingType.Unnumbered) {
       throw new BadRequestException(
-        'Unnumbered ticket units require seatingType=unnumbered',
+        'Unnumbered ticket units require an unnumbered section',
       );
     }
 
@@ -253,7 +259,7 @@ export class TicketsService {
       }
     }
 
-    const ticketUnits = this.buildTicketUnits(data);
+    const ticketUnits = this.buildTicketUnits(data, eventSection.seatingType);
 
     // Determine listing status based on event, date, and section approval
     const listingStatus = this.determineListingStatus(
@@ -268,7 +274,6 @@ export class TicketsService {
       eventId: data.eventId,
       eventDateId: data.eventDateId,
       type: data.type,
-      seatingType: data.seatingType,
       ticketUnits,
       sellTogether: data.sellTogether || false,
       pricePerTicket: data.pricePerTicket,
@@ -281,9 +286,13 @@ export class TicketsService {
       updatedAt: new Date(),
     };
 
-    this.validateListingSeatingConsistency(listing);
+    this.validateListingSeatingConsistency(
+      ticketUnits,
+      eventSection.seatingType,
+    );
 
-    return await this.ticketsRepository.create(ctx, listing);
+    const created = await this.ticketsRepository.create(ctx, listing);
+    return await this.enrichListingWithEvent(ctx, created);
   }
 
   /**
@@ -311,12 +320,31 @@ export class TicketsService {
       (s) => s.id === listing.eventSectionId,
     );
 
+    let pendingReason: string[] | undefined;
+    if (listing.status === ListingStatus.Pending) {
+      const reasons: string[] = [];
+      if (event.status !== EventStatus.Approved) {
+        reasons.push('event');
+      }
+      if (eventDate?.status !== EventDateStatus.Approved) {
+        reasons.push('date');
+      }
+      if (eventSection?.status !== EventSectionStatus.Approved) {
+        reasons.push('section');
+      }
+      if (reasons.length > 0) {
+        pendingReason = reasons;
+      }
+    }
+
     return {
       ...listing,
+      seatingType: eventSection?.seatingType ?? SeatingType.Unnumbered,
       eventName: event.name,
       eventDate: eventDate?.date || new Date(),
       venue: event.venue,
       sectionName: eventSection?.name || 'Unknown',
+      pendingReason,
     };
   }
 
@@ -395,29 +423,6 @@ export class TicketsService {
       throw new BadRequestException('Can only update active listings');
     }
 
-    if (updates.seatingType && updates.seatingType !== listing.seatingType) {
-      const hasReservedOrSold = listing.ticketUnits.some(
-        (unit) => unit.status !== TicketUnitStatus.Available,
-      );
-      if (hasReservedOrSold) {
-        throw new BadRequestException(
-          'Cannot change seating type when units are already reserved or sold',
-        );
-      }
-
-      const hasSeatUnits = listing.ticketUnits.some((unit) => unit.seat);
-      if (updates.seatingType === SeatingType.Numbered && !hasSeatUnits) {
-        throw new BadRequestException(
-          'Cannot switch to numbered without seat information',
-        );
-      }
-      if (updates.seatingType === SeatingType.Unnumbered && hasSeatUnits) {
-        throw new BadRequestException(
-          'Cannot switch to unnumbered while seat information exists',
-        );
-      }
-    }
-
     const updated = await this.ticketsRepository.update(
       ctx,
       listingId,
@@ -491,7 +496,13 @@ export class TicketsService {
       throw new BadRequestException('Listing is not available');
     }
 
-    this.validateListingSeatingConsistency(listing);
+    const event = await this.eventsService.getEventById(ctx, listing.eventId);
+    const eventSection = event.sections.find(
+      (s) => s.id === listing.eventSectionId,
+    );
+    const seatingType =
+      eventSection?.seatingType ?? SeatingType.Unnumbered;
+    this.validateListingSeatingConsistency(listing.ticketUnits, seatingType);
 
     if (!ticketUnitIds.length) {
       throw new BadRequestException(
@@ -704,6 +715,52 @@ export class TicketsService {
 
     const listingsToCancel = listings.filter(
       (l) => l.status === ListingStatus.Active || l.status === ListingStatus.Pending,
+    );
+
+    if (listingsToCancel.length === 0) {
+      return { cancelledCount: 0, listingIds: [] };
+    }
+
+    const listingIds = listingsToCancel.map((l) => l.id);
+    const cancelledCount = await this.ticketsRepository.bulkUpdateStatus(
+      ctx,
+      listingIds,
+      ListingStatus.Cancelled,
+    );
+
+    return { cancelledCount, listingIds };
+  }
+
+  /**
+   * Get all listings for an event section (including all statuses).
+   * Used for admin operations like section deletion checks.
+   */
+  async getListingsBySectionId(
+    ctx: Ctx,
+    eventSectionId: string,
+  ): Promise<TicketListing[]> {
+    return await this.ticketsRepository.getAllByEventSectionId(
+      ctx,
+      eventSectionId,
+    );
+  }
+
+  /**
+   * Cancel all pending/active listings for an event section.
+   * Returns the number of cancelled listings and their IDs.
+   */
+  async cancelListingsBySectionId(
+    ctx: Ctx,
+    eventSectionId: string,
+  ): Promise<{ cancelledCount: number; listingIds: string[] }> {
+    const listings = await this.ticketsRepository.getAllByEventSectionId(
+      ctx,
+      eventSectionId,
+    );
+
+    const listingsToCancel = listings.filter(
+      (l) =>
+        l.status === ListingStatus.Active || l.status === ListingStatus.Pending,
     );
 
     if (listingsToCancel.length === 0) {

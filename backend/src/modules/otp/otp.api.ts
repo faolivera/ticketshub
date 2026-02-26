@@ -23,6 +23,7 @@ export interface SendOTPResponse {
 export interface VerifyOTPRequest {
   type: OTPType;
   code: string;
+  phoneNumber?: string;
 }
 
 /**

@@ -63,16 +63,22 @@ export class EventsRepository implements OnModuleInit {
 
   /**
    * Get pending events (for admin)
-   * Returns events that are pending OR have pending dates
+   * Returns events that are pending OR have pending dates OR have pending sections
    */
   async getPendingEvents(ctx: Ctx): Promise<Event[]> {
     const allEvents = await this.eventStorage.getAll(ctx);
     const pendingDates = await this.getPendingDates(ctx);
+    const pendingSections = await this.getPendingSections(ctx);
     const eventIdsWithPendingDates = new Set(pendingDates.map((d) => d.eventId));
+    const eventIdsWithPendingSections = new Set(
+      pendingSections.map((s) => s.eventId),
+    );
 
     return allEvents.filter(
       (e) =>
-        e.status === EventStatus.Pending || eventIdsWithPendingDates.has(e.id),
+        e.status === EventStatus.Pending ||
+        eventIdsWithPendingDates.has(e.id) ||
+        eventIdsWithPendingSections.has(e.id),
     );
   }
 
@@ -141,6 +147,22 @@ export class EventsRepository implements OnModuleInit {
   }
 
   /**
+   * Find event date by eventId and date (for deduplication)
+   */
+  async findEventDateByEventIdAndDate(
+    ctx: Ctx,
+    eventId: string,
+    date: Date,
+  ): Promise<EventDate | undefined> {
+    const all = await this.dateStorage.getAll(ctx);
+    const dateMs = date.getTime();
+    return all.find((d) => {
+      const dDate = d.date instanceof Date ? d.date : new Date(d.date);
+      return d.eventId === eventId && dDate.getTime() === dateMs;
+    });
+  }
+
+  /**
    * Get approved dates for an event
    */
   async getApprovedDatesByEventId(
@@ -150,6 +172,20 @@ export class EventsRepository implements OnModuleInit {
     const all = await this.dateStorage.getAll(ctx);
     return all.filter(
       (d) => d.eventId === eventId && d.status === EventDateStatus.Approved,
+    );
+  }
+
+  /**
+   * Get dates for an event filtered by status
+   */
+  async getDatesByEventIdAndStatus(
+    ctx: Ctx,
+    eventId: string,
+    statuses: EventDateStatus[],
+  ): Promise<EventDate[]> {
+    const all = await this.dateStorage.getAll(ctx);
+    return all.filter(
+      (d) => d.eventId === eventId && statuses.includes(d.status),
     );
   }
 
@@ -172,8 +208,18 @@ export class EventsRepository implements OnModuleInit {
     const existing = await this.dateStorage.get(ctx, id);
     if (!existing) return undefined;
 
+    const {
+      doorsOpenAt: _d,
+      startTime: _s,
+      endTime: _e,
+      ...existingWithoutLegacy
+    } = existing as EventDate & {
+      doorsOpenAt?: Date;
+      startTime?: Date;
+      endTime?: Date;
+    };
     const updated: EventDate = {
-      ...existing,
+      ...existingWithoutLegacy,
       ...updates,
       id: existing.id,
       eventId: existing.eventId,
@@ -234,6 +280,20 @@ export class EventsRepository implements OnModuleInit {
     const all = await this.sectionStorage.getAll(ctx);
     return all.filter(
       (s) => s.eventId === eventId && s.status === EventSectionStatus.Approved,
+    );
+  }
+
+  /**
+   * Get sections for an event filtered by status
+   */
+  async getSectionsByEventIdAndStatus(
+    ctx: Ctx,
+    eventId: string,
+    statuses: EventSectionStatus[],
+  ): Promise<EventSection[]> {
+    const all = await this.sectionStorage.getAll(ctx);
+    return all.filter(
+      (s) => s.eventId === eventId && statuses.includes(s.status),
     );
   }
 

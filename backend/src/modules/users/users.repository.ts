@@ -123,6 +123,7 @@ export class UsersRepository implements OnModuleInit {
     ctx: Ctx,
     userId: string,
     phoneVerified: boolean,
+    phone?: string,
   ): Promise<User | undefined> {
     const existing = await this.storage.get(ctx, userId);
     if (!existing) return undefined;
@@ -130,6 +131,7 @@ export class UsersRepository implements OnModuleInit {
     const updatedUser: User = {
       ...existing,
       phoneVerified,
+      ...(phoneVerified && phone !== undefined && { phone }),
       updatedAt: new Date(),
     };
     await this.storage.set(ctx, userId, updatedUser);

@@ -80,6 +80,7 @@ export interface TicketUnit {
 
 /**
  * Ticket listing entity
+ * seatingType is derived from the event section, not stored on the listing
  */
 export interface TicketListing {
   id: string;
@@ -88,7 +89,6 @@ export interface TicketListing {
   eventDateId: string;
 
   type: TicketType;
-  seatingType: SeatingType;
   ticketUnits: TicketUnit[];
   sellTogether: boolean; // true = all or nothing
 
@@ -111,10 +111,13 @@ export interface TicketListing {
 
 /**
  * Listing with event information for display
+ * seatingType is derived from the event section
  */
 export interface TicketListingWithEvent extends TicketListing {
+  seatingType: SeatingType;
   eventName: string;
   eventDate: Date;
   venue: string;
   sectionName: string;
+  pendingReason?: string[];
 }

@@ -1,5 +1,6 @@
 import type { Address } from '../shared/address.domain';
 import type { Image } from '../images/images.domain';
+import type { SeatingType } from '../tickets/tickets.domain';
 import type {
   EventCategory,
   Event,
@@ -27,12 +28,10 @@ export type CreateEventResponse = Event;
 
 /**
  * Request to add a date to an event
+ * date: ISO datetime string (day+time), normalized to minute precision
  */
 export interface AddEventDateRequest {
-  date: Date;
-  doorsOpenAt?: Date;
-  startTime?: Date;
-  endTime?: Date;
+  date: string;
 }
 
 /**
@@ -99,6 +98,7 @@ export interface ListEventsQuery {
  */
 export interface AddEventSectionRequest {
   name: string;
+  seatingType: SeatingType;
 }
 
 /**
@@ -126,6 +126,7 @@ export interface EventSectionResponse {
   id: string;
   eventId: string;
   name: string;
+  seatingType: SeatingType;
   status: string;
   rejectionReason?: string;
   createdBy: string;

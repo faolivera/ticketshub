@@ -42,7 +42,6 @@ export const AdminPendingEventDateItemSchema = z.object({
   eventId: z.string(),
   eventName: z.string(),
   date: z.coerce.date(),
-  startTime: z.coerce.date().optional(),
   status: z.string(),
   pendingListingsCount: z.number(),
   createdAt: z.coerce.date(),
@@ -84,6 +83,7 @@ export const AdminApproveSectionResponseSchema = z.object({
   id: z.string(),
   eventId: z.string(),
   name: z.string(),
+  seatingType: z.enum(['numbered', 'unnumbered']),
   status: z.string(),
   approvedBy: z.string().optional(),
   rejectionReason: z.string().optional(),
@@ -103,31 +103,12 @@ const AdminEventAddressSchema = z.object({
 const AdminEventDateUpdateSchema = z.object({
   id: z.string().optional(),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: 'Invalid ISO date string',
+    message: 'Invalid ISO datetime string',
   }),
-  doorsOpenAt: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: 'Invalid ISO date string',
-    })
-    .optional(),
-  startTime: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: 'Invalid ISO date string',
-    })
-    .optional(),
-  endTime: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: 'Invalid ISO date string',
-    })
-    .optional(),
   status: z.enum(['pending', 'approved', 'rejected', 'cancelled']).optional(),
 });
 
-export const AdminUpdateEventRequestSchema = z
-  .object({
+export const AdminUpdateEventRequestSchema = z.object({
     name: z.string().min(3).max(200).optional(),
     description: z.string().min(10).max(5000).optional(),
     category: z
@@ -146,33 +127,7 @@ export const AdminUpdateEventRequestSchema = z
     imageIds: z.array(z.string()).optional(),
     dates: z.array(AdminEventDateUpdateSchema).optional(),
     datesToDelete: z.array(z.string()).optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.dates) {
-        for (const dateUpdate of data.dates) {
-          const times = [
-            dateUpdate.doorsOpenAt,
-            dateUpdate.startTime,
-            dateUpdate.endTime,
-          ]
-            .filter(Boolean)
-            .map((t) => new Date(t!).getTime());
-
-          for (let i = 0; i < times.length - 1; i++) {
-            if (times[i] >= times[i + 1]) {
-              return false;
-            }
-          }
-        }
-      }
-      return true;
-    },
-    {
-      message:
-        'Time ordering must be: doorsOpenAt < startTime < endTime (when all provided)',
-    },
-  );
+  });
 
 const AdminEventResponseSchema = z.object({
   id: z.string(),
@@ -193,9 +148,6 @@ const AdminEventDateResponseSchema = z.object({
   id: z.string(),
   eventId: z.string(),
   date: z.coerce.date(),
-  doorsOpenAt: z.coerce.date().optional(),
-  startTime: z.coerce.date().optional(),
-  endTime: z.coerce.date().optional(),
   status: z.string(),
   createdBy: z.string(),
   approvedBy: z.string().optional(),
@@ -208,4 +160,26 @@ export const AdminUpdateEventResponseSchema = z.object({
   dates: z.array(AdminEventDateResponseSchema),
   deletedDateIds: z.array(z.string()),
   warnings: z.array(z.string()).optional(),
+});
+
+export const AdminAddSectionRequestSchema = z.object({
+  name: z.string().min(1).max(200),
+  seatingType: z.enum(['numbered', 'unnumbered']),
+});
+
+export const AdminAddSectionResponseSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  name: z.string(),
+  seatingType: z.enum(['numbered', 'unnumbered']),
+  status: z.string(),
+  createdBy: z.string(),
+  approvedBy: z.string(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+
+export const AdminDeleteSectionResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
 });

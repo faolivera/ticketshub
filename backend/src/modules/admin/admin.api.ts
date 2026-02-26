@@ -56,7 +56,6 @@ export interface AdminPendingEventDateItem {
   eventId: string;
   eventName: string;
   date: Date;
-  startTime?: Date;
   status: string;
   pendingListingsCount: number;
   createdAt: Date;
@@ -105,6 +104,7 @@ export interface AdminApproveSectionResponse {
   id: string;
   eventId: string;
   name: string;
+  seatingType: 'numbered' | 'unnumbered';
   status: string;
   approvedBy?: string;
   rejectionReason?: string;
@@ -135,10 +135,7 @@ export interface AdminEventAddress {
  */
 export interface AdminEventDateUpdate {
   id?: string; // If provided, update existing. If omitted, create new
-  date: string; // ISO date string
-  doorsOpenAt?: string;
-  startTime?: string;
-  endTime?: string;
+  date: string; // ISO datetime string (day+time), normalized to minute precision
   status?: string; // Admin can set status directly
 }
 
@@ -178,9 +175,6 @@ export interface AdminUpdateEventResponse {
     id: string;
     eventId: string;
     date: Date;
-    doorsOpenAt?: Date;
-    startTime?: Date;
-    endTime?: Date;
     status: string;
     createdBy: string;
     approvedBy?: string;
@@ -189,4 +183,35 @@ export interface AdminUpdateEventResponse {
   }[];
   deletedDateIds: string[];
   warnings?: string[];
+}
+
+/**
+ * Request for POST /api/admin/events/:eventId/sections
+ */
+export interface AdminAddSectionRequest {
+  name: string;
+  seatingType: 'numbered' | 'unnumbered';
+}
+
+/**
+ * Response for POST /api/admin/events/:eventId/sections
+ */
+export interface AdminAddSectionResponse {
+  id: string;
+  eventId: string;
+  name: string;
+  seatingType: 'numbered' | 'unnumbered';
+  status: string;
+  createdBy: string;
+  approvedBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Response for DELETE /api/admin/events/sections/:id
+ */
+export interface AdminDeleteSectionResponse {
+  success: boolean;
+  message: string;
 }

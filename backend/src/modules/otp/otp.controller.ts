@@ -72,7 +72,7 @@ export class OTPController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: VerifyOTPRequest,
   ): Promise<ApiResponse<VerifyOTPResponse>> {
-    const { type, code } = body;
+    const { type, code, phoneNumber } = body;
 
     if (!type || !Object.values(OTPType).includes(type)) {
       throw new BadRequestException('Valid OTP type is required');
@@ -82,12 +82,16 @@ export class OTPController {
       throw new BadRequestException('Valid 6-digit code is required');
     }
 
+    if (type === OTPType.PhoneVerification && !phoneNumber) {
+      throw new BadRequestException('Phone number is required for phone verification');
+    }
+
     await this.otpService.verifyOTP(ctx, user.id, type, code);
 
     if (type === OTPType.EmailVerification) {
       await this.usersService.markEmailVerified(ctx, user.id);
     } else if (type === OTPType.PhoneVerification) {
-      await this.usersService.markPhoneVerified(ctx, user.id);
+      await this.usersService.markPhoneVerified(ctx, user.id, phoneNumber!);
     }
 
     return {

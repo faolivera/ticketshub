@@ -115,5 +115,18 @@
     "requiresAction": false,
     "actionDeadline": null,
     "updatedAt": "2026-02-26T11:48:23.355Z"
+  },
+  "8-seller": {
+    "id": "state-8-seller",
+    "userId": "8",
+    "userType": "seller",
+    "currentTermsVersionId": "terms-seller-v001",
+    "lastAcceptedVersionId": "terms-seller-v001",
+    "lastAcceptedAt": "2026-02-26T13:30:08.094Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-26T13:30:08.094Z"
   }
 }

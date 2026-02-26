@@ -96,7 +96,7 @@ export function PhoneVerification() {
     setIsLoading(true);
     setError(null);
     try {
-      await otpService.verifyOTP({ type: OTPType.PhoneVerification, code });
+      await otpService.verifyOTP({ type: OTPType.PhoneVerification, code, phoneNumber });
       await refreshUser();
       navigate(returnTo);
     } catch (err) {

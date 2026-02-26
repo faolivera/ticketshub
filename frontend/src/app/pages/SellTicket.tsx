@@ -24,6 +24,8 @@ interface TicketListingForm {
   eventDate: string;
   eventTime: string;
   eventSectionId: string;
+  /** Derived from selected section.seatingType; used for UI (quantity vs seats) */
+  seatingType: 'numbered' | 'unnumbered';
   deliveryMethod: 'digital' | 'physical';
   digitallyTransferable: boolean;
   physicalDeliveryMethod: 'pickup' | 'arrange' | '';
@@ -31,7 +33,6 @@ interface TicketListingForm {
   quantity: number;
   sellTogether: boolean;
   pricePerTicket: number;
-  seatingType: 'numbered' | 'unnumbered';
   numberedSeats: NumberedSeat[];
   description?: string;
 }
@@ -54,15 +55,14 @@ export function SellTicket() {
   const [isCreatingDate, setIsCreatingDate] = useState(false);
   const [newDateForm, setNewDateForm] = useState({
     date: '',
-    startTime: '',
-    endTime: '',
-    doorsOpenAt: '',
+    time: '',
   });
   
   // Create section modal state
   const [showCreateSectionModal, setShowCreateSectionModal] = useState(false);
   const [isCreatingSection, setIsCreatingSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
+  const [newSectionSeatingType, setNewSectionSeatingType] = useState<'numbered' | 'unnumbered'>('unnumbered');
   
   // Track if selected event/date/section is pending
   const [isPendingListing, setIsPendingListing] = useState(false);
@@ -96,7 +96,7 @@ export function SellTicket() {
     async function fetchEvents() {
       setIsLoadingEvents(true);
       try {
-        // Fetch approved events for public listing
+        // Fetch approved events (includes pending and approved dates/sections)
         const approvedData = await eventsService.listEvents({ status: 'approved' });
         // Also fetch user's own events which may include pending
         let myEvents: EventWithDates[] = [];
@@ -106,7 +106,7 @@ export function SellTicket() {
           // User may not have any events, ignore error
         }
         
-        // Merge events, removing duplicates
+        // Merge events, removing duplicates (prefer approvedData which includes pending sections)
         const eventMap = new Map<string, EventWithDates>();
         for (const event of approvedData) {
           eventMap.set(event.id, event);
@@ -165,7 +165,6 @@ export function SellTicket() {
     }
 
     const isNumberedListing = formData.seatingType === 'numbered';
-    const seatingType = isNumberedListing ? SeatingType.Numbered : SeatingType.Unnumbered;
 
     if (isNumberedListing) {
       const validSeats = formData.numberedSeats.filter(s => s.row.trim() && s.seatNumber.trim());
@@ -202,7 +201,6 @@ export function SellTicket() {
         eventId: formData.eventId,
         eventDateId: formData.eventDateId,
         type: ticketType,
-        seatingType,
         quantity: isNumberedListing ? undefined : formData.quantity,
         ticketUnits: isNumberedListing
           ? formData.numberedSeats
@@ -263,12 +261,20 @@ export function SellTicket() {
       setShowTicketTypeSuggestions(false);
       return;
     }
-    
-    setFormData({ ...formData, eventSectionId: section.id });
+
+    const seatingType = section.seatingType === SeatingType.Numbered ? 'numbered' : 'unnumbered';
+    setFormData({
+      ...formData,
+      eventSectionId: section.id,
+      seatingType,
+      quantity: seatingType === 'unnumbered' ? formData.quantity || 1 : formData.quantity,
+      numberedSeats: seatingType === 'numbered' && formData.numberedSeats.length > 0
+        ? formData.numberedSeats
+        : [{ row: '', seatNumber: '' }],
+    });
     setTicketTypeSearchTerm(section.name);
     setShowTicketTypeSuggestions(false);
-    
-    // Update pending status based on section
+
     updatePendingStatus(section.status === EventSectionStatus.Pending);
   };
   
@@ -292,8 +298,10 @@ export function SellTicket() {
     setError(null);
 
     try {
+      const seatingType = newSectionSeatingType === 'numbered' ? SeatingType.Numbered : SeatingType.Unnumbered;
       const newSection = await eventsService.addEventSection(selectedEvent.id, {
         name: newSectionName.trim(),
+        seatingType,
       });
 
       // Update the selected event with the new section
@@ -306,16 +314,21 @@ export function SellTicket() {
       // Update events list
       setEvents(events.map(e => e.id === selectedEvent.id ? updatedEvent : e));
 
-      // Select the new section
-      setFormData({ ...formData, eventSectionId: newSection.id });
+      const sectionSeatingType = newSection.seatingType === SeatingType.Numbered ? 'numbered' : 'unnumbered';
+      setFormData({
+        ...formData,
+        eventSectionId: newSection.id,
+        seatingType: sectionSeatingType,
+        numberedSeats: sectionSeatingType === 'numbered' ? [{ row: '', seatNumber: '' }] : formData.numberedSeats,
+      });
       setTicketTypeSearchTerm(newSection.name);
       
       // Update pending status
       updatePendingStatus(newSection.status === EventSectionStatus.Pending);
       
-      // Close modal and reset form
       setShowCreateSectionModal(false);
       setNewSectionName('');
+      setNewSectionSeatingType('unnumbered');
     } catch (err) {
       console.error('Failed to create section:', err);
       setError(err instanceof Error ? err.message : t('sellTicket.createSectionFailed'));
@@ -333,7 +346,7 @@ export function SellTicket() {
   };
 
   const handleCreateDate = async () => {
-    if (!selectedEvent || !newDateForm.date || !newDateForm.startTime) {
+    if (!selectedEvent || !newDateForm.date || !newDateForm.time) {
       setError(t('sellTicket.dateTimeRequired'));
       return;
     }
@@ -342,15 +355,15 @@ export function SellTicket() {
     setError(null);
 
     try {
-      const dateTime = new Date(`${newDateForm.date}T${newDateForm.startTime}`);
-      const endDateTime = newDateForm.endTime ? new Date(`${newDateForm.date}T${newDateForm.endTime}`) : undefined;
-      const doorsOpenDateTime = newDateForm.doorsOpenAt ? new Date(`${newDateForm.date}T${newDateForm.doorsOpenAt}`) : undefined;
+      const dateTime = new Date(`${newDateForm.date}T${newDateForm.time}`);
+      if (Number.isNaN(dateTime.getTime())) {
+        setError(t('sellTicket.dateTimeRequired'));
+        setIsCreatingDate(false);
+        return;
+      }
 
       const newEventDate = await eventsService.addEventDate(selectedEvent.id, {
-        date: dateTime,
-        startTime: dateTime,
-        endTime: endDateTime,
-        doorsOpenAt: doorsOpenDateTime,
+        date: dateTime.toISOString(),
       });
 
       // Update the selected event with the new date
@@ -366,9 +379,8 @@ export function SellTicket() {
       // Select the new date
       handleDateSelect(newEventDate.id);
       
-      // Close modal and reset form
       setShowCreateDateModal(false);
-      setNewDateForm({ date: '', startTime: '', endTime: '', doorsOpenAt: '' });
+      setNewDateForm({ date: '', time: '' });
     } catch (err) {
       console.error('Failed to create event date:', err);
       setError(err instanceof Error ? err.message : t('sellTicket.createDateFailed'));
@@ -379,7 +391,7 @@ export function SellTicket() {
 
   const handleSectionInputChange = (value: string) => {
     setTicketTypeSearchTerm(value);
-    setFormData({ ...formData, eventSectionId: '' });
+    setFormData({ ...formData, eventSectionId: '', seatingType: 'unnumbered' });
     setShowTicketTypeSuggestions(value.length > 0);
   };
 
@@ -394,13 +406,12 @@ export function SellTicket() {
     const eventDate = selectedEvent.dates.find(d => d.id === dateId);
     if (eventDate) {
       const date = new Date(eventDate.date);
-      const time = eventDate.startTime ? new Date(eventDate.startTime) : date;
       
       setFormData({
         ...formData,
         eventDateId: dateId,
         eventDate: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-        eventTime: time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        eventTime: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       });
       
       // Check if this creates a pending listing
@@ -494,41 +505,14 @@ export function SellTicket() {
                   min={new Date().toISOString().split('T')[0]}
                 />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    {t('sellTicket.startTime')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="time"
-                    value={newDateForm.startTime}
-                    onChange={(e) => setNewDateForm({ ...newDateForm, startTime: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    {t('sellTicket.endTime')}
-                  </label>
-                  <input
-                    type="time"
-                    value={newDateForm.endTime}
-                    onChange={(e) => setNewDateForm({ ...newDateForm, endTime: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  {t('sellTicket.doorsOpen')}
+                  {t('sellTicket.dateTime')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="time"
-                  value={newDateForm.doorsOpenAt}
-                  onChange={(e) => setNewDateForm({ ...newDateForm, doorsOpenAt: e.target.value })}
+                  value={newDateForm.time}
+                  onChange={(e) => setNewDateForm({ ...newDateForm, time: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -554,7 +538,7 @@ export function SellTicket() {
               <button
                 type="button"
                 onClick={handleCreateDate}
-                disabled={isCreatingDate || !newDateForm.date || !newDateForm.startTime}
+                disabled={isCreatingDate || !newDateForm.date || !newDateForm.time}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isCreatingDate ? (
@@ -603,7 +587,37 @@ export function SellTicket() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('sellTicket.seatingType')} <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setNewSectionSeatingType('unnumbered')}
+                    className={`p-4 border-2 rounded-lg transition-colors text-left ${
+                      newSectionSeatingType === 'unnumbered'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
+                  >
+                    <p className="font-semibold text-gray-900">{t('sellTicket.generalAdmission')}</p>
+                    <p className="text-sm text-gray-600">{t('sellTicket.generalAdmissionDesc')}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewSectionSeatingType('numbered')}
+                    className={`p-4 border-2 rounded-lg transition-colors text-left ${
+                      newSectionSeatingType === 'numbered'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
+                  >
+                    <p className="font-semibold text-gray-900">{t('sellTicket.numberedSeating')}</p>
+                    <p className="text-sm text-gray-600">{t('sellTicket.numberedSeatingDesc')}</p>
+                  </button>
+                </div>
+              </div>
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-start gap-2">
                   <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -748,12 +762,11 @@ export function SellTicket() {
                       .filter(d => d.status === EventDateStatus.Approved)
                       .map((eventDate) => {
                         const date = new Date(eventDate.date);
-                        const time = eventDate.startTime ? new Date(eventDate.startTime) : date;
                         return (
                           <option key={eventDate.id} value={eventDate.id}>
                             {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                             {' '}at{' '}
-                            {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            {date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                           </option>
                         );
                       })}
@@ -763,12 +776,11 @@ export function SellTicket() {
                       .filter(d => d.status === EventDateStatus.Pending)
                       .map((eventDate) => {
                         const date = new Date(eventDate.date);
-                        const time = eventDate.startTime ? new Date(eventDate.startTime) : date;
                         return (
                           <option key={eventDate.id} value={eventDate.id}>
                             ⏳ {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                             {' '}at{' '}
-                            {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            {date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                             {' '}({t('sellTicket.pendingApproval')})
                           </option>
                         );
@@ -856,42 +868,14 @@ export function SellTicket() {
                 </div>
               )}
 
-              {/* Seating Type Selector */}
+              {/* Seats / Quantity (derived from selected section) */}
+              {formData.eventSectionId && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('sellTicket.seatingType')} <span className="text-red-500">*</span>
+                  {formData.seatingType === 'unnumbered'
+                    ? t('sellTicket.generalAdmission')
+                    : t('sellTicket.numberedSeating')}
                 </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, seatingType: 'unnumbered', quantity: formData.quantity || 1 })}
-                    className={`p-4 border-2 rounded-lg transition-colors ${
-                      formData.seatingType === 'unnumbered'
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-blue-400'
-                    }`}
-                  >
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-900">{t('sellTicket.generalAdmission')}</p>
-                      <p className="text-sm text-gray-600">{t('sellTicket.generalAdmissionDesc')}</p>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, seatingType: 'numbered', numberedSeats: formData.numberedSeats.length > 0 ? formData.numberedSeats : [{ row: '', seatNumber: '' }] })}
-                    className={`p-4 border-2 rounded-lg transition-colors ${
-                      formData.seatingType === 'numbered'
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-blue-400'
-                    }`}
-                  >
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-900">{t('sellTicket.numberedSeating')}</p>
-                      <p className="text-sm text-gray-600">{t('sellTicket.numberedSeatingDesc')}</p>
-                    </div>
-                  </button>
-                </div>
 
                 {/* Quantity field for unnumbered seating */}
                 {formData.seatingType === 'unnumbered' && (
@@ -988,8 +972,11 @@ export function SellTicket() {
                   </div>
                 )}
 
-                {/* Price Per Ticket */}
-                <div className="mt-4">
+              </div>
+              )}
+
+              {/* Price Per Ticket */}
+              <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('sellTicket.pricePerTicket')} <span className="text-red-500">*</span>
                   </label>
@@ -1019,7 +1006,6 @@ export function SellTicket() {
                     ) : null;
                   })()}
                 </div>
-              </div>
 
               {/* Delivery Method */}
               <div>

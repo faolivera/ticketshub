@@ -1,4 +1,5 @@
 import type { Address } from '../shared/address.domain';
+import type { SeatingType } from '../tickets/tickets.domain';
 
 /**
  * Event approval status
@@ -65,15 +66,13 @@ export interface Event {
 
 /**
  * Event date entity - an event can have multiple dates
+ * Single datetime field (date) includes both day and time, stored at minute precision
  */
 export interface EventDate {
   id: string;
   eventId: string;
 
   date: Date;
-  doorsOpenAt?: Date;
-  startTime?: Date;
-  endTime?: Date;
 
   status: EventDateStatus;
   rejectionReason?: string;
@@ -92,6 +91,7 @@ export interface EventSection {
   id: string;
   eventId: string;
   name: string;
+  seatingType: SeatingType;
 
   status: EventSectionStatus;
   rejectionReason?: string;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye } from 'lucide-react';
+import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -9,7 +9,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import type { BuyPageData, PaymentMethodOption } from '../../api/types';
-import { SeatingType, TicketUnitStatus } from '../../api/types';
+import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 
 function getBadgeIcon(badge: string) {
@@ -36,6 +36,16 @@ function getBadgeLabel(badge: string, t: (key: string) => string) {
   return badge;
 }
 
+const PENDING_REASON_I18N: Record<string, string> = {
+  event: 'sellTicket.pendingEvent',
+  date: 'sellTicket.pendingDate',
+  section: 'sellTicket.pendingSection',
+};
+
+function getPendingReasonI18nKey(reason: string): string | null {
+  return PENDING_REASON_I18N[reason.toLowerCase()] ?? null;
+}
+
 export function BuyTicketPage() {
   const { t } = useTranslation();
   const { ticketId } = useParams<{ ticketId: string }>();
@@ -56,6 +66,14 @@ export function BuyTicketPage() {
   const paymentMethods = buyPageData?.paymentMethods ?? [];
 
   const isOwnListing = user?.id === listing?.sellerId;
+  const isPendingOwnListing = isOwnListing && listing?.status === ListingStatus.Pending;
+  const pendingReasonI18nKeys =
+    listing?.status === ListingStatus.Pending && listing?.pendingReason
+      ? listing.pendingReason
+          .map((r) => getPendingReasonI18nKey(r))
+          .filter((key): key is string => key != null)
+      : [];
+  const hasSpecificPendingReasons = pendingReasonI18nKeys.length > 0;
 
   // Fetch buy page data from BFF
   useEffect(() => {
@@ -236,19 +254,43 @@ export function BuyTicketPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {isOwnListing && listing && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <Eye className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-amber-800 mb-1">
-                  {t('buyTicket.ownListingPreview')}
-                </p>
-                <p className="text-sm text-amber-700">
-                  {t('buyTicket.ownListingPreviewDescription')}
-                </p>
+          <>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <Eye className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-amber-800 mb-1">
+                    {t('buyTicket.ownListingPreview')}
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    {t('buyTicket.ownListingPreviewDescription')}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+            {isPendingOwnListing && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-yellow-800">
+                    <p className="font-semibold mb-1">{t('sellTicket.pendingListingWarningTitle')}</p>
+                    <p className="mb-2">
+                      {hasSpecificPendingReasons
+                        ? t('sellTicket.pendingListingWarningDescSpecific')
+                        : t('sellTicket.pendingListingWarningDesc')}
+                    </p>
+                    {hasSpecificPendingReasons && (
+                      <ul className="list-disc list-inside space-y-1">
+                        {pendingReasonI18nKeys.map((key) => (
+                          <li key={key}>{t(key)}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         <Link

@@ -54,9 +54,7 @@ interface EditEventModalProps {
 interface DateFormState {
   id?: string;
   date: string;
-  doorsOpenAt: string;
-  startTime: string;
-  endTime: string;
+  time: string;
   status: EventDateStatus;
   isNew?: boolean;
   isDeleted?: boolean;
@@ -108,9 +106,7 @@ export function EditEventModal({
         eventDates.map((d) => ({
           id: d.id,
           date: formatDateForInput(d.date),
-          doorsOpenAt: formatTimeForInput(d.doorsOpenAt),
-          startTime: formatTimeForInput(d.startTime),
-          endTime: formatTimeForInput(d.endTime),
+          time: formatTimeForInput(d.date),
           status: d.status,
           isNew: false,
           isDeleted: false,
@@ -126,9 +122,7 @@ export function EditEventModal({
       ...dates,
       {
         date: '',
-        doorsOpenAt: '',
-        startTime: '',
-        endTime: '',
+        time: '',
         status: EventDateStatus.Pending,
         isNew: true,
         isDeleted: false,
@@ -181,10 +175,7 @@ export function EditEventModal({
         .filter((d) => !d.isDeleted)
         .map((d) => ({
           id: d.isNew ? undefined : d.id,
-          date: buildDateISO(d.date, '00:00'),
-          doorsOpenAt: d.doorsOpenAt ? buildDateISO(d.date, d.doorsOpenAt) : undefined,
-          startTime: d.startTime ? buildDateISO(d.date, d.startTime) : undefined,
-          endTime: d.endTime ? buildDateISO(d.date, d.endTime) : undefined,
+          date: buildDateISO(d.date, d.time || '00:00'),
           status: d.status,
         }));
 
@@ -441,7 +432,7 @@ export function EditEventModal({
                             </Button>
                           </div>
 
-                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                          <div className="grid gap-3 sm:grid-cols-2">
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">
                                 {t('admin.events.edit.date')}
@@ -456,37 +447,13 @@ export function EditEventModal({
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">
-                                {t('admin.events.edit.doorsOpenAt')}
+                                {t('admin.events.edit.time')}
                               </Label>
                               <Input
                                 type="time"
-                                value={dateItem.doorsOpenAt}
+                                value={dateItem.time}
                                 onChange={(e) =>
-                                  handleDateChange(index, 'doorsOpenAt', e.target.value)
-                                }
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">
-                                {t('admin.events.edit.startTime')}
-                              </Label>
-                              <Input
-                                type="time"
-                                value={dateItem.startTime}
-                                onChange={(e) =>
-                                  handleDateChange(index, 'startTime', e.target.value)
-                                }
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">
-                                {t('admin.events.edit.endTime')}
-                              </Label>
-                              <Input
-                                type="time"
-                                value={dateItem.endTime}
-                                onChange={(e) =>
-                                  handleDateChange(index, 'endTime', e.target.value)
+                                  handleDateChange(index, 'time', e.target.value)
                                 }
                               />
                             </div>

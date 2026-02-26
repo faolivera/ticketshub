@@ -142,7 +142,6 @@ export class AdminService {
             eventId: event.id,
             eventName: event.name,
             date: eventDate.date,
-            startTime: eventDate.startTime,
             status: eventDate.status,
             pendingListingsCount: dateListings.length,
             createdAt: eventDate.createdAt,

@@ -124,5 +124,19 @@
     "respondedAt": "2026-02-26T11:48:23.355Z",
     "expiresAt": null,
     "createdAt": "2026-02-26T11:48:23.355Z"
+  },
+  "8-terms-seller-v001": {
+    "id": "acceptance-8-terms-seller-v001-1772112608094",
+    "userId": "8",
+    "termsVersionId": "terms-seller-v001",
+    "userType": "seller",
+    "status": "accepted",
+    "acceptanceMethod": "checkbox",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "notifiedAt": "2026-02-26T13:30:08.094Z",
+    "respondedAt": "2026-02-26T13:30:08.094Z",
+    "expiresAt": null,
+    "createdAt": "2026-02-26T13:30:08.094Z"
   }
 }

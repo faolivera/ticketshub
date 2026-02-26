@@ -39,6 +39,7 @@ export enum DeliveryMethod {
  * Listing status
  */
 export enum ListingStatus {
+  Pending = 'Pending',
   Active = 'Active',
   Sold = 'Sold',
   Cancelled = 'Cancelled',
@@ -106,19 +107,20 @@ export interface TicketListingWithEvent extends TicketListing {
   eventDate: Date;
   venue: string;
   sectionName?: string;
+  pendingReason?: string[];
 }
 
 // === API Types ===
 
 /**
  * Request to create a new listing
+ * seatingType is derived from the event section
  */
 export interface CreateListingRequest {
   eventId: string;
   eventDateId: string;
 
   type: TicketType;
-  seatingType: SeatingType;
   quantity?: number;
   ticketUnits?: CreateListingTicketUnitInput[];
   sellTogether?: boolean;
@@ -151,7 +153,6 @@ export interface UpdateListingRequest {
   description?: string;
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
-  seatingType?: SeatingType;
 }
 
 /**

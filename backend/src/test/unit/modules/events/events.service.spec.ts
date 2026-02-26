@@ -1,13 +1,13 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from '../../../../modules/events/events.service';
 import { EventsRepository } from '../../../../modules/events/events.repository';
 import { ImagesRepository } from '../../../../modules/images/images.repository';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
-import { EventStatus, EventDateStatus, EventCategory } from '../../../../modules/events/events.domain';
-import { ListingStatus, SeatingType, TicketType } from '../../../../modules/tickets/tickets.domain';
-import type { Event, EventDate } from '../../../../modules/events/events.domain';
+import { EventStatus, EventDateStatus, EventCategory, EventSectionStatus } from '../../../../modules/events/events.domain';
+import { ListingStatus, SeatingType, TicketType, TicketUnitStatus } from '../../../../modules/tickets/tickets.domain';
+import type { Event, EventDate, EventSection } from '../../../../modules/events/events.domain';
 import type { TicketListing } from '../../../../modules/tickets/tickets.domain';
 import type { Ctx } from '../../../../common/types/context';
 
@@ -48,17 +48,24 @@ describe('EventsService', () => {
     const mockEventsRepository = {
       findEventById: jest.fn(),
       findEventDateById: jest.fn(),
+      findEventSectionById: jest.fn(),
+      findEventDateByEventIdAndDate: jest.fn(),
       createEvent: jest.fn(),
       createEventDate: jest.fn(),
       updateEvent: jest.fn(),
       updateEventDate: jest.fn(),
       deleteEventDate: jest.fn(),
+      deleteEventSection: jest.fn(),
       getApprovedEvents: jest.fn(),
       getAllEvents: jest.fn(),
       getPendingEvents: jest.fn(),
       getEventsByCreator: jest.fn(),
       getDatesByEventId: jest.fn(),
       getApprovedDatesByEventId: jest.fn(),
+      getSectionsByEventId: jest.fn(),
+      getApprovedSectionsByEventId: jest.fn(),
+      getDatesByEventIdAndStatus: jest.fn(),
+      getSectionsByEventIdAndStatus: jest.fn(),
     };
 
     const mockImagesRepository = {
@@ -73,6 +80,7 @@ describe('EventsService', () => {
       listListings: jest.fn(),
       getListingsByDateId: jest.fn(),
       cancelListingsByDateId: jest.fn(),
+      getListingsBySectionId: jest.fn(),
     };
 
     const mockTransactionsService = {
@@ -94,6 +102,109 @@ describe('EventsService', () => {
     imagesRepository = module.get(ImagesRepository);
     ticketsService = module.get(TicketsService);
     transactionsService = module.get(TransactionsService);
+  });
+
+  describe('listEvents', () => {
+    const mockApprovedEvent: Event = {
+      id: 'evt_123',
+      name: 'Test Event',
+      description: 'Test description',
+      category: EventCategory.Concert,
+      venue: 'Test Venue',
+      location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+      imageIds: [],
+      status: EventStatus.Approved,
+      createdBy: 'user_1',
+      approvedBy: 'admin_1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockApprovedSection: EventSection = {
+      id: 'sec_approved',
+      eventId: 'evt_123',
+      name: 'VIP',
+      seatingType: SeatingType.Numbered,
+      status: EventSectionStatus.Approved,
+      createdBy: 'user_1',
+      approvedBy: 'admin_1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockPendingSection: EventSection = {
+      id: 'sec_pending',
+      eventId: 'evt_123',
+      name: 'Campo Delantero',
+      seatingType: SeatingType.Unnumbered,
+      status: EventSectionStatus.Pending,
+      createdBy: 'user_3',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockApprovedEventDate: EventDate = {
+      id: 'edt_123',
+      eventId: 'evt_123',
+      date: new Date(),
+      status: EventDateStatus.Approved,
+      createdBy: 'user_1',
+      approvedBy: 'admin_1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockPendingEventDate: EventDate = {
+      id: 'edt_pending',
+      eventId: 'evt_123',
+      date: new Date(),
+      status: EventDateStatus.Pending,
+      createdBy: 'user_3',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should return pending and approved dates/sections by default (excludes rejected)', async () => {
+      eventsRepository.getApprovedEvents.mockResolvedValue([mockApprovedEvent]);
+      eventsRepository.getDatesByEventIdAndStatus.mockResolvedValue([mockApprovedEventDate, mockPendingEventDate]);
+      eventsRepository.getSectionsByEventIdAndStatus.mockResolvedValue([mockApprovedSection, mockPendingSection]);
+      imagesRepository.getByIds.mockResolvedValue([]);
+
+      const result = await service.listEvents(mockCtx, {}, false);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].dates).toHaveLength(2);
+      expect(result[0].sections).toHaveLength(2);
+      expect(result[0].sections.map(s => s.name)).toContain('VIP');
+      expect(result[0].sections.map(s => s.name)).toContain('Campo Delantero');
+      expect(eventsRepository.getDatesByEventIdAndStatus).toHaveBeenCalledWith(
+        mockCtx,
+        'evt_123',
+        [EventDateStatus.Pending, EventDateStatus.Approved],
+      );
+      expect(eventsRepository.getSectionsByEventIdAndStatus).toHaveBeenCalledWith(
+        mockCtx,
+        'evt_123',
+        [EventSectionStatus.Pending, EventSectionStatus.Approved],
+      );
+    });
+
+    it('should include all statuses when includeAllStatuses is true', async () => {
+      eventsRepository.getAllEvents.mockResolvedValue([mockApprovedEvent]);
+      eventsRepository.getDatesByEventId.mockResolvedValue([mockApprovedEventDate, mockPendingEventDate]);
+      eventsRepository.getSectionsByEventId.mockResolvedValue([mockApprovedSection, mockPendingSection]);
+      imagesRepository.getByIds.mockResolvedValue([]);
+
+      const result = await service.listEvents(mockCtx, {}, true);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].dates).toHaveLength(2);
+      expect(result[0].sections).toHaveLength(2);
+      expect(eventsRepository.getDatesByEventId).toHaveBeenCalled();
+      expect(eventsRepository.getSectionsByEventId).toHaveBeenCalled();
+      expect(eventsRepository.getDatesByEventIdAndStatus).not.toHaveBeenCalled();
+      expect(eventsRepository.getSectionsByEventIdAndStatus).not.toHaveBeenCalled();
+    });
   });
 
   describe('approveEvent', () => {
@@ -271,7 +382,6 @@ describe('EventsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
-      seatingType: SeatingType.Unnumbered,
       ticketUnits: [{ id: 'unit_1', status: 'available' as any }],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
@@ -317,11 +427,12 @@ describe('EventsService', () => {
     });
 
     it('should update existing event date', async () => {
-      const updatedDate = { ...mockApprovedEventDate, date: new Date('2025-07-01') };
+      const updatedDate = { ...mockApprovedEventDate, date: new Date('2025-07-01T19:00:00.000Z') };
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
       eventsRepository.findEventDateById.mockResolvedValue(mockApprovedEventDate);
+      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(undefined);
       eventsRepository.updateEventDate.mockResolvedValue(updatedDate);
       eventsRepository.getDatesByEventId.mockResolvedValue([updatedDate]);
 
@@ -342,7 +453,7 @@ describe('EventsService', () => {
       const newDate: EventDate = {
         id: 'edt_new',
         eventId: 'evt_123',
-        date: new Date('2025-08-01'),
+        date: new Date('2025-08-01T19:00:00.000Z'),
         status: EventDateStatus.Approved,
         createdBy: 'admin_123',
         approvedBy: 'admin_123',
@@ -353,6 +464,7 @@ describe('EventsService', () => {
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
+      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(undefined);
       eventsRepository.createEventDate.mockResolvedValue(newDate);
       eventsRepository.getDatesByEventId.mockResolvedValue([mockApprovedEventDate, newDate]);
 
@@ -449,6 +561,29 @@ describe('EventsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw ConflictException when creating duplicate event date', async () => {
+      const existingWithSameDate: EventDate = {
+        ...mockApprovedEventDate,
+        id: 'edt_other',
+        date: new Date('2025-06-01T19:00:00.000Z'),
+      };
+      eventsRepository.findEventById.mockResolvedValue(mockApprovedEvent);
+      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(
+        existingWithSameDate,
+      );
+
+      await expect(
+        service.adminUpdateEventWithDates(
+          mockCtx,
+          'evt_123',
+          { dates: [{ date: '2025-06-01T19:00:00Z' }] },
+          'admin_123',
+        ),
+      ).rejects.toThrow(ConflictException);
+
+      expect(eventsRepository.createEventDate).not.toHaveBeenCalled();
+    });
+
     it('should handle multiple updates in single request', async () => {
       const updatedEvent = {
         ...mockApprovedEvent,
@@ -461,6 +596,7 @@ describe('EventsService', () => {
         .mockResolvedValueOnce(updatedEvent);
       eventsRepository.updateEvent.mockResolvedValue(updatedEvent);
       eventsRepository.findEventDateById.mockResolvedValue(mockApprovedEventDate);
+      eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(undefined);
       eventsRepository.updateEventDate.mockResolvedValue(mockApprovedEventDate);
       eventsRepository.createEventDate.mockResolvedValue({
         ...mockApprovedEventDate,
@@ -488,6 +624,95 @@ describe('EventsService', () => {
       expect(result.event.name).toBe('New Event Name');
       expect(result.event.venue).toBe('New Venue');
       expect(result.dates).toHaveLength(2);
+    });
+  });
+
+  describe('deleteEventSection', () => {
+    const mockSection: EventSection = {
+      id: 'sec_123',
+      eventId: 'evt_123',
+      name: 'VIP Section',
+      seatingType: SeatingType.Numbered,
+      status: EventSectionStatus.Approved,
+      createdBy: 'user_123',
+      approvedBy: 'admin_123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockListingForSection: TicketListing = {
+      id: 'tkt_123',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_123',
+      type: TicketType.DigitalTransferable,
+      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: ListingStatus.Active,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should successfully delete section when no listings exist', async () => {
+      eventsRepository.findEventSectionById.mockResolvedValue(mockSection);
+      ticketsService.getListingsBySectionId.mockResolvedValue([]);
+      eventsRepository.deleteEventSection.mockResolvedValue();
+
+      await service.deleteEventSection(mockCtx, 'sec_123');
+
+      expect(eventsRepository.findEventSectionById).toHaveBeenCalledWith(
+        mockCtx,
+        'sec_123',
+      );
+      expect(ticketsService.getListingsBySectionId).toHaveBeenCalledWith(
+        mockCtx,
+        'sec_123',
+      );
+      expect(eventsRepository.deleteEventSection).toHaveBeenCalledWith(
+        mockCtx,
+        'sec_123',
+      );
+    });
+
+    it('should throw NotFoundException when section does not exist', async () => {
+      eventsRepository.findEventSectionById.mockResolvedValue(undefined);
+
+      await expect(
+        service.deleteEventSection(mockCtx, 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(eventsRepository.findEventSectionById).toHaveBeenCalledWith(
+        mockCtx,
+        'nonexistent',
+      );
+      expect(ticketsService.getListingsBySectionId).not.toHaveBeenCalled();
+      expect(eventsRepository.deleteEventSection).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when section has listings with count in error message', async () => {
+      const multipleListings = [
+        mockListingForSection,
+        { ...mockListingForSection, id: 'tkt_456' },
+        { ...mockListingForSection, id: 'tkt_789' },
+      ];
+
+      eventsRepository.findEventSectionById.mockResolvedValue(mockSection);
+      ticketsService.getListingsBySectionId.mockResolvedValue(multipleListings);
+
+      await expect(
+        service.deleteEventSection(mockCtx, 'sec_123'),
+      ).rejects.toThrow(BadRequestException);
+
+      try {
+        await service.deleteEventSection(mockCtx, 'sec_123');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestException);
+        expect((error as BadRequestException).message).toContain('3 listing(s)');
+      }
+
+      expect(eventsRepository.deleteEventSection).not.toHaveBeenCalled();
     });
   });
 });

@@ -105,8 +105,7 @@ export function CreateEvent() {
       });
 
       await eventsService.addEventDate(createdEvent.id, {
-        date: eventDateTime,
-        startTime: eventDateTime,
+        date: eventDateTime.toISOString(),
       });
 
       alert(t('createEvent.eventCreatedSuccess'));

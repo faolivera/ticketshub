@@ -47,7 +47,6 @@ export interface AdminPendingEventDateItem {
   eventId: string;
   eventName: string;
   date: string;
-  startTime?: string;
   status: string;
   pendingListingsCount: number;
   createdAt: string;
@@ -111,13 +110,11 @@ export interface AdminPendingEventsResponse {
 
 /**
  * Event date update for admin event editing
+ * date: ISO datetime string (day+time), minute precision
  */
 export interface AdminEventDateUpdate {
   id?: string;
   date: string;
-  doorsOpenAt?: string;
-  startTime?: string;
-  endTime?: string;
   status?: EventDateStatus;
 }
 
@@ -143,4 +140,35 @@ export interface AdminUpdateEventResponse {
   dates: EventDate[];
   deletedDateIds: string[];
   warnings?: string[];
+}
+
+/**
+ * Request for POST /api/admin/events/:eventId/sections
+ */
+export interface AdminAddSectionRequest {
+  name: string;
+  seatingType: 'numbered' | 'unnumbered';
+}
+
+/**
+ * Response for POST /api/admin/events/:eventId/sections
+ */
+export interface AdminAddSectionResponse {
+  id: string;
+  eventId: string;
+  name: string;
+  seatingType: 'numbered' | 'unnumbered';
+  status: string;
+  createdBy: string;
+  approvedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Response for DELETE /api/admin/events/sections/:sectionId
+ */
+export interface AdminDeleteSectionResponse {
+  success: boolean;
+  message: string;
 }

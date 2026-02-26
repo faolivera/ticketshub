@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
   forwardRef,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
@@ -67,6 +68,17 @@ export class EventsService {
   }
 
   /**
+   * Normalize datetime to minute precision (strip seconds and milliseconds).
+   * Preserves timezone semantics from ISO input.
+   */
+  private normalizeDatetimeToMinute(isoOrDate: string | Date): Date {
+    const d = new Date(isoOrDate);
+    const ms = d.getTime();
+    const truncated = Math.floor(ms / 60000) * 60000;
+    return new Date(truncated);
+  }
+
+  /**
    * Create a new event
    */
   async createEvent(
@@ -126,6 +138,7 @@ export class EventsService {
 
   /**
    * List events with optional filters
+   * Always includes pending and approved dates/sections (excludes rejected)
    */
   async listEvents(
     ctx: Ctx,
@@ -165,16 +178,25 @@ export class EventsService {
     events = events.slice(offset, offset + limit);
 
     // Add dates and sections to each event
+    // Always include pending and approved (exclude rejected)
     const eventsWithDates: EventWithDates[] = await Promise.all(
       events.map(async (event) => {
         const [dates, sections] = await Promise.all([
           includeAllStatuses
             ? this.eventsRepository.getDatesByEventId(ctx, event.id)
-            : this.eventsRepository.getApprovedDatesByEventId(ctx, event.id),
+            : this.eventsRepository.getDatesByEventIdAndStatus(ctx, event.id, [
+                EventDateStatus.Pending,
+                EventDateStatus.Approved,
+              ]),
           includeAllStatuses
             ? this.eventsRepository.getSectionsByEventId(ctx, event.id)
-            : this.eventsRepository.getApprovedSectionsByEventId(ctx, event.id),
+            : this.eventsRepository.getSectionsByEventIdAndStatus(
+                ctx,
+                event.id,
+                [EventSectionStatus.Pending, EventSectionStatus.Approved],
+              ),
         ]);
+
         return { ...event, dates, sections };
       }),
     );
@@ -197,16 +219,25 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
+    const normalizedDate = this.normalizeDatetimeToMinute(data.date);
+    const existing = await this.eventsRepository.findEventDateByEventIdAndDate(
+      ctx,
+      eventId,
+      normalizedDate,
+    );
+    if (existing) {
+      throw new ConflictException(
+        'An event date with this date already exists for this event',
+      );
+    }
+
     // Only event creator or admin can add dates
     const isAdmin = userRole === Role.Admin;
 
     const eventDate: EventDate = {
       id: this.generateId('edt'),
       eventId,
-      date: new Date(data.date),
-      doorsOpenAt: data.doorsOpenAt ? new Date(data.doorsOpenAt) : undefined,
-      startTime: data.startTime ? new Date(data.startTime) : undefined,
-      endTime: data.endTime ? new Date(data.endTime) : undefined,
+      date: normalizedDate,
       status: isAdmin ? EventDateStatus.Approved : EventDateStatus.Pending,
       createdBy: userId,
       approvedBy: isAdmin ? userId : undefined,
@@ -385,6 +416,7 @@ export class EventsService {
       id: this.generateId('sec'),
       eventId,
       name: data.name,
+      seatingType: data.seatingType,
       status: isAdmin
         ? EventSectionStatus.Approved
         : EventSectionStatus.Pending,
@@ -489,6 +521,34 @@ export class EventsService {
     sectionId: string,
   ): Promise<EventSection | undefined> {
     return await this.eventsRepository.findEventSectionById(ctx, sectionId);
+  }
+
+  /**
+   * Delete an event section (admin only).
+   * Throws if section has any listings.
+   */
+  async deleteEventSection(ctx: Ctx, sectionId: string): Promise<void> {
+    const section = await this.eventsRepository.findEventSectionById(
+      ctx,
+      sectionId,
+    );
+    if (!section) {
+      throw new NotFoundException('Event section not found');
+    }
+
+    const listings = await this.ticketsService.getListingsBySectionId(
+      ctx,
+      sectionId,
+    );
+
+    if (listings.length > 0) {
+      throw new BadRequestException(
+        `Cannot delete section: has ${listings.length} listing(s). Remove listings first.`,
+      );
+    }
+
+    await this.eventsRepository.deleteEventSection(ctx, sectionId);
+    this.logger.log(ctx, `Deleted event section ${sectionId}`);
   }
 
   private async attachImages(
@@ -641,17 +701,26 @@ export class EventsService {
             );
           }
 
+          const normalizedDate = this.normalizeDatetimeToMinute(
+            dateUpdate.date,
+          );
+          const existingWithDate =
+            await this.eventsRepository.findEventDateByEventIdAndDate(
+              ctx,
+              eventId,
+              normalizedDate,
+            );
+          if (
+            existingWithDate &&
+            existingWithDate.id !== dateUpdate.id
+          ) {
+            throw new ConflictException(
+              'An event date with this date already exists for this event',
+            );
+          }
+
           const dateUpdates: Partial<EventDate> = {
-            date: new Date(dateUpdate.date),
-            doorsOpenAt: dateUpdate.doorsOpenAt
-              ? new Date(dateUpdate.doorsOpenAt)
-              : existingDate.doorsOpenAt,
-            startTime: dateUpdate.startTime
-              ? new Date(dateUpdate.startTime)
-              : existingDate.startTime,
-            endTime: dateUpdate.endTime
-              ? new Date(dateUpdate.endTime)
-              : existingDate.endTime,
+            date: normalizedDate,
           };
 
           if (dateUpdate.status !== undefined) {
@@ -671,19 +740,24 @@ export class EventsService {
           );
         } else {
           // Create new date
+          const normalizedDate = this.normalizeDatetimeToMinute(
+            dateUpdate.date,
+          );
+          const existing = await this.eventsRepository.findEventDateByEventIdAndDate(
+            ctx,
+            eventId,
+            normalizedDate,
+          );
+          if (existing) {
+            throw new ConflictException(
+              'An event date with this date already exists for this event',
+            );
+          }
+
           const newDate: EventDate = {
             id: this.generateId('edt'),
             eventId,
-            date: new Date(dateUpdate.date),
-            doorsOpenAt: dateUpdate.doorsOpenAt
-              ? new Date(dateUpdate.doorsOpenAt)
-              : undefined,
-            startTime: dateUpdate.startTime
-              ? new Date(dateUpdate.startTime)
-              : undefined,
-            endTime: dateUpdate.endTime
-              ? new Date(dateUpdate.endTime)
-              : undefined,
+            date: normalizedDate,
             status:
               (dateUpdate.status as EventDateStatus) ||
               EventDateStatus.Approved,
@@ -732,9 +806,6 @@ export class EventsService {
         id: d.id,
         eventId: d.eventId,
         date: d.date,
-        doorsOpenAt: d.doorsOpenAt,
-        startTime: d.startTime,
-        endTime: d.endTime,
         status: d.status,
         createdBy: d.createdBy,
         approvedBy: d.approvedBy,

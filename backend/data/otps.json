@@ -128,5 +128,15 @@
     "expiresAt": "2026-02-26T11:08:18.229Z",
     "createdAt": "2026-02-26T10:58:18.229Z",
     "verifiedAt": "2026-02-26T10:58:20.369Z"
+  },
+  "otp_1772106972740_9c557dc1": {
+    "id": "otp_1772106972740_9c557dc1",
+    "userId": "8",
+    "type": "PhoneVerification",
+    "code": "222222",
+    "status": "Verified",
+    "expiresAt": "2026-02-26T12:06:12.740Z",
+    "createdAt": "2026-02-26T11:56:12.740Z",
+    "verifiedAt": "2026-02-26T11:56:26.413Z"
   }
 }

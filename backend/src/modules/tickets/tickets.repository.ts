@@ -91,8 +91,10 @@ export class TicketsRepository implements OnModuleInit {
     const existing = await this.storage.get(ctx, id);
     if (!existing) return undefined;
 
+    const { seatingType: _omit, ...existingWithoutSeatingType } =
+      existing as TicketListing & { seatingType?: string };
     const updated: TicketListing = {
-      ...existing,
+      ...existingWithoutSeatingType,
       ...updates,
       id: existing.id, // Ensure ID can't be changed
       sellerId: existing.sellerId, // Seller can't be changed
@@ -142,8 +144,11 @@ export class TicketsRepository implements OnModuleInit {
     );
     const nextStatus = hasAvailable ? ListingStatus.Active : ListingStatus.Sold;
 
+    const { seatingType: _s, ...rest } = existing as TicketListing & {
+      seatingType?: string;
+    };
     const updated: TicketListing = {
-      ...existing,
+      ...rest,
       ticketUnits: updatedUnits,
       status: nextStatus,
       updatedAt: new Date(),
@@ -184,8 +189,11 @@ export class TicketsRepository implements OnModuleInit {
       (unit) => unit.status === TicketUnitStatus.Available,
     );
 
+    const { seatingType: _s, ...rest } = existing as TicketListing & {
+      seatingType?: string;
+    };
     const updated: TicketListing = {
-      ...existing,
+      ...rest,
       ticketUnits: updatedUnits,
       status: hasAvailable ? ListingStatus.Active : ListingStatus.Sold,
       updatedAt: new Date(),
@@ -234,8 +242,11 @@ export class TicketsRepository implements OnModuleInit {
     for (const id of listingIds) {
       const existing = await this.storage.get(ctx, id);
       if (existing) {
+        const { seatingType: _s, ...rest } = existing as TicketListing & {
+          seatingType?: string;
+        };
         const updated: TicketListing = {
-          ...existing,
+          ...rest,
           status,
           updatedAt: new Date(),
         };
@@ -271,5 +282,16 @@ export class TicketsRepository implements OnModuleInit {
         l.eventSectionId === eventSectionId &&
         l.status === ListingStatus.Pending,
     );
+  }
+
+  /**
+   * Get all listings for an event section (including all statuses)
+   */
+  async getAllByEventSectionId(
+    ctx: Ctx,
+    eventSectionId: string,
+  ): Promise<TicketListing[]> {
+    const all = await this.storage.getAll(ctx);
+    return all.filter((l) => l.eventSectionId === eventSectionId);
   }
 }

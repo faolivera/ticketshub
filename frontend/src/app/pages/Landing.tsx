@@ -18,14 +18,13 @@ function transformEventForCard(event: EventWithDates) {
     .filter(d => d.status === 'approved')
     .map(d => {
       const date = new Date(d.date);
-      const startTime = d.startTime ? new Date(d.startTime) : date;
       return {
         date: date.toLocaleDateString('en-US', { 
           month: 'long', 
           day: 'numeric', 
           year: 'numeric' 
         }),
-        time: startTime.toLocaleTimeString('en-US', { 
+        time: date.toLocaleTimeString('en-US', { 
           hour: 'numeric', 
           minute: '2-digit',
           hour12: true 

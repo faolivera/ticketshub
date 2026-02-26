@@ -173,7 +173,7 @@ export class SupportSeedService {
         admin.id,
         Role.Admin,
         {
-          date,
+          date: date.toISOString(),
         },
       );
       createdDateIds.push(created.id);
@@ -187,7 +187,11 @@ export class SupportSeedService {
     }
 
     // Create event sections if they don't exist
-    const sectionNames = ['Platea', 'Campo', 'Platea Alta'];
+    const sectionSpecs: { name: string; seatingType: SeatingType }[] = [
+      { name: 'Platea', seatingType: SeatingType.Numbered },
+      { name: 'Campo', seatingType: SeatingType.Unnumbered },
+      { name: 'Platea Alta', seatingType: SeatingType.Unnumbered },
+    ];
     const existingSections = refreshedEvent.sections || [];
     const existingSectionNames = new Set(
       existingSections.map((s) => s.name.toLowerCase()),
@@ -198,16 +202,16 @@ export class SupportSeedService {
       sectionMap[section.name] = section.id;
     }
 
-    for (const sectionName of sectionNames) {
-      if (existingSectionNames.has(sectionName.toLowerCase())) continue;
+    for (const spec of sectionSpecs) {
+      if (existingSectionNames.has(spec.name.toLowerCase())) continue;
       const createdSection = await this.eventsService.addEventSection(
         ctx,
         event.id,
         admin.id,
         Role.Admin,
-        { name: sectionName },
+        { name: spec.name, seatingType: spec.seatingType },
       );
-      sectionMap[sectionName] = createdSection.id;
+      sectionMap[spec.name] = createdSection.id;
     }
 
     // Tickets: 3 listings from seller
@@ -323,7 +327,6 @@ export class SupportSeedService {
         eventId,
         eventDateId,
         type: TicketType.DigitalTransferable,
-        seatingType: SeatingType.Numbered,
         sellTogether: false,
         pricePerTicket: { amount: 15000, currency: 'EUR' },
         description,
@@ -340,7 +343,6 @@ export class SupportSeedService {
         eventId,
         eventDateId,
         type: TicketType.Physical,
-        seatingType: SeatingType.Unnumbered,
         quantity: 1,
         sellTogether: true,
         pricePerTicket: { amount: 17500, currency: 'EUR' },
@@ -360,7 +362,6 @@ export class SupportSeedService {
       eventId,
       eventDateId,
       type: TicketType.DigitalNonTransferable,
-      seatingType: SeatingType.Unnumbered,
       quantity: 1,
       sellTogether: true,
       pricePerTicket: { amount: 12000, currency: 'EUR' },

@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Param, Body, Inject, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Inject,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { User } from '../../common/decorators/user.decorator';
@@ -17,12 +27,17 @@ import type {
   AdminUpdateEventResponse,
   AdminApproveSectionRequest,
   AdminApproveSectionResponse,
+  AdminAddSectionRequest,
+  AdminAddSectionResponse,
+  AdminDeleteSectionResponse,
 } from './admin.api';
 import {
   AdminPaymentsResponseSchema,
   AdminPendingEventsResponseSchema,
   AdminUpdateEventResponseSchema,
   AdminApproveSectionResponseSchema,
+  AdminAddSectionResponseSchema,
+  AdminDeleteSectionResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 
@@ -108,9 +123,64 @@ export class AdminController {
         id: section.id,
         eventId: section.eventId,
         name: section.name,
+        seatingType: section.seatingType,
         status: section.status,
         approvedBy: section.approvedBy,
         rejectionReason: section.rejectionReason,
+      },
+    };
+  }
+
+  /**
+   * Add a section to an event (auto-approved when admin creates).
+   */
+  @Post('events/:eventId/sections')
+  @ValidateResponse(AdminAddSectionResponseSchema)
+  async addSection(
+    @Context() ctx: Ctx,
+    @Param('eventId') eventId: string,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Body() body: AdminAddSectionRequest,
+  ): Promise<ApiResponse<AdminAddSectionResponse>> {
+    const section = await this.eventsService.addEventSection(
+      ctx,
+      eventId,
+      user.id,
+      Role.Admin,
+      { name: body.name, seatingType: body.seatingType },
+    );
+    return {
+      success: true,
+      data: {
+        id: section.id,
+        eventId: section.eventId,
+        name: section.name,
+        seatingType: section.seatingType,
+        status: section.status,
+        createdBy: section.createdBy,
+        approvedBy: section.approvedBy!,
+        createdAt: section.createdAt,
+        updatedAt: section.updatedAt,
+      },
+    };
+  }
+
+  /**
+   * Delete an event section.
+   * Fails if section has any listings.
+   */
+  @Delete('events/sections/:id')
+  @ValidateResponse(AdminDeleteSectionResponseSchema)
+  async deleteSection(
+    @Context() ctx: Ctx,
+    @Param('id') sectionId: string,
+  ): Promise<ApiResponse<AdminDeleteSectionResponse>> {
+    await this.eventsService.deleteEventSection(ctx, sectionId);
+    return {
+      success: true,
+      data: {
+        success: true,
+        message: 'Section deleted successfully',
       },
     };
   }

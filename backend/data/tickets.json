@@ -5,7 +5,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_s2_un_t_1",
@@ -36,7 +35,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_s2_un_s_1",
@@ -67,7 +65,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_s2_un_1",
@@ -90,7 +87,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "numbered",
     "ticketUnits": [
       {
         "id": "unit_s2_num_t_1",
@@ -133,7 +129,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "numbered",
     "ticketUnits": [
       {
         "id": "unit_s2_num_s_1",
@@ -176,7 +171,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "numbered",
     "ticketUnits": [
       {
         "id": "unit_s2_num_1",
@@ -203,7 +197,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "numbered",
     "ticketUnits": [
       {
         "id": "unit_1771986888670_559691c8",
@@ -238,7 +231,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_1771986888673_bbc5f8be",
@@ -269,7 +261,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_1772014177633_4506d535",
@@ -328,7 +319,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "numbered",
     "ticketUnits": [
       {
         "id": "unit_1772019043848_e5c012cc",
@@ -371,7 +361,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_1772020615668_c1ab354b",
@@ -438,7 +427,6 @@
     "eventId": "evt_1772072297395_db322c92",
     "eventDateId": "edt_1772072297409_f1d274fc",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_1772072337296_48fc5fec",
@@ -473,7 +461,6 @@
     "eventId": "evt_1772072297395_db322c92",
     "eventDateId": "edt_1772072571303_8538b651",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_1772072599033_dba6bd27",
@@ -504,7 +491,6 @@
     "eventId": "evt_1770297832516_6914364f",
     "eventDateId": "edt_1770297832517_8ab73b15",
     "type": "DigitalTransferable",
-    "seatingType": "unnumbered",
     "ticketUnits": [
       {
         "id": "unit_1772106572406_15777f73",
@@ -553,8 +539,67 @@
       "currency": "USD"
     },
     "eventSectionId": "sec_1772106540443_20b67b98",
-    "status": "Pending",
+    "status": "Active",
     "createdAt": "2026-02-26T11:49:32.406Z",
-    "updatedAt": "2026-02-26T11:49:32.406Z"
+    "updatedAt": "2026-02-26T12:35:16.302Z"
+  },
+  "tkt_1772109045432_cc564492": {
+    "id": "tkt_1772109045432_cc564492",
+    "sellerId": "2",
+    "eventId": "evt_1770297832516_6914364f",
+    "eventDateId": "edt_1772108955856_493374c9",
+    "type": "DigitalTransferable",
+    "ticketUnits": [
+      {
+        "id": "unit_1772109045432_4e5b1bd8",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_e19bfe4e",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_64d1adb7",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_aca8bfb3",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_1cfe9eff",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_afc8d966",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_639206b8",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_8dc65390",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_20bf397f",
+        "status": "available"
+      },
+      {
+        "id": "unit_1772109045432_46b98747",
+        "status": "available"
+      }
+    ],
+    "sellTogether": false,
+    "pricePerTicket": {
+      "amount": 10000,
+      "currency": "USD"
+    },
+    "description": "Prueba aprobar fecha y seccion",
+    "eventSectionId": "sec_1772103088072_283cbbe6",
+    "status": "Active",
+    "createdAt": "2026-02-26T12:30:45.432Z",
+    "updatedAt": "2026-02-26T12:35:34.965Z"
   }
 }

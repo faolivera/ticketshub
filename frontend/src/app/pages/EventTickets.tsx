@@ -46,7 +46,6 @@ interface TransformedTicket {
 function transformListing(listing: ListingWithSeller, eventDates: EventWithDates['dates']): TransformedTicket {
   const eventDate = eventDates.find(d => d.id === listing.eventDateId);
   const dateObj = eventDate ? new Date(eventDate.date) : new Date(listing.eventDate);
-  const startTime = eventDate?.startTime ? new Date(eventDate.startTime) : dateObj;
 
   const typeDisplay = listing.type === 'Physical' ? 'Physical'
     : listing.type === 'DigitalTransferable' ? 'Digital'
@@ -71,7 +70,7 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
         day: 'numeric',
         year: 'numeric',
       }),
-      time: startTime.toLocaleTimeString('en-US', {
+      time: dateObj.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
@@ -342,13 +341,11 @@ export function EventTickets() {
                     .slice(0, 3)
                     .map((eventDate) => {
                       const date = new Date(eventDate.date);
-                      const time = eventDate.startTime 
-                        ? new Date(eventDate.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-                        : '';
+                      const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
                       return (
                         <p key={eventDate.id} className="text-sm text-gray-900">
                           {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                          {time && ` at ${time}`}
+                          {' '}at {time}
                         </p>
                       );
                     })}

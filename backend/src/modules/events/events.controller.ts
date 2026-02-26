@@ -66,6 +66,7 @@ export class EventsController {
 
   /**
    * List approved events (public)
+   * Always includes pending and approved dates/sections (excludes rejected)
    */
   @Get()
   async listEvents(

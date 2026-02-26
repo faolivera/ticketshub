@@ -32,7 +32,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../components/ui/collapsible';
-import { Calendar, Check, X, Plus, Clock, MapPin, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
+import { Calendar, Check, X, Plus, Clock, MapPin, ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { Input } from '../../components/ui/input';
 import { eventsService } from '../../../api/services/events.service';
 import { adminService } from '../../../api/services/admin.service';
 import type { AdminPendingEventItem, AdminPendingEventDateItem, AdminPendingSectionItem } from '../../../api/types/admin';
@@ -44,6 +45,12 @@ type RejectTarget =
   | { type: 'event'; event: AdminPendingEventItem } 
   | { type: 'date'; event: AdminPendingEventItem; date: AdminPendingEventDateItem }
   | { type: 'section'; event: AdminPendingEventItem; section: AdminPendingSectionItem };
+
+interface DeleteSectionTarget {
+  sectionId: string;
+  sectionName: string;
+  eventName: string;
+}
 
 export function EventManagement() {
   const { t } = useTranslation();
@@ -59,6 +66,17 @@ export function EventManagement() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingEventDates, setEditingEventDates] = useState<EventDate[]>([]);
+  
+  // Add Section state
+  const [isAddSectionDialogOpen, setIsAddSectionDialogOpen] = useState(false);
+  const [addSectionEventId, setAddSectionEventId] = useState<string | null>(null);
+  const [addSectionEventName, setAddSectionEventName] = useState<string>('');
+  const [newSectionName, setNewSectionName] = useState('');
+  const [newSectionSeatingType, setNewSectionSeatingType] = useState<'numbered' | 'unnumbered'>('unnumbered');
+  
+  // Delete Section state
+  const [isDeleteSectionDialogOpen, setIsDeleteSectionDialogOpen] = useState(false);
+  const [deleteSectionTarget, setDeleteSectionTarget] = useState<DeleteSectionTarget | null>(null);
 
   const fetchPendingEvents = async () => {
     try {
@@ -174,6 +192,62 @@ export function EventManagement() {
     fetchPendingEvents();
   };
 
+  const handleOpenAddSectionDialog = (event: AdminPendingEventItem) => {
+    setAddSectionEventId(event.id);
+    setAddSectionEventName(event.name);
+    setNewSectionName('');
+    setNewSectionSeatingType('unnumbered');
+    setIsAddSectionDialogOpen(true);
+  };
+
+  const handleAddSection = async () => {
+    if (!addSectionEventId || !newSectionName.trim()) return;
+    try {
+      setActionLoading(`add-section-${addSectionEventId}`);
+      await adminService.addSection(addSectionEventId, {
+        name: newSectionName.trim(),
+        seatingType: newSectionSeatingType,
+      });
+      setIsAddSectionDialogOpen(false);
+      setNewSectionName('');
+      setNewSectionSeatingType('unnumbered');
+      setAddSectionEventId(null);
+      setAddSectionEventName('');
+      await fetchPendingEvents();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add section');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleOpenDeleteSectionDialog = (
+    event: AdminPendingEventItem,
+    section: AdminPendingSectionItem
+  ) => {
+    setDeleteSectionTarget({
+      sectionId: section.id,
+      sectionName: section.name,
+      eventName: event.name,
+    });
+    setIsDeleteSectionDialogOpen(true);
+  };
+
+  const handleDeleteSection = async () => {
+    if (!deleteSectionTarget) return;
+    try {
+      setActionLoading(`delete-section-${deleteSectionTarget.sectionId}`);
+      await adminService.deleteSection(deleteSectionTarget.sectionId);
+      setIsDeleteSectionDialogOpen(false);
+      setDeleteSectionTarget(null);
+      await fetchPendingEvents();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete section');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const toggleEventExpanded = (eventId: string) => {
     const newExpanded = new Set(expandedEvents);
     if (newExpanded.has(eventId)) {
@@ -192,18 +266,15 @@ export function EventManagement() {
     });
   };
 
-  const formatDateTime = (dateString: string, timeString?: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     const dateFormatted = date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
-    if (timeString) {
-      const time = new Date(timeString);
-      return `${dateFormatted} at ${time.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
-    }
-    return dateFormatted;
+    const timeFormatted = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return `${dateFormatted} at ${timeFormatted}`;
   };
 
   const getStatusBadge = (status: string) => {
@@ -354,6 +425,15 @@ export function EventManagement() {
                                 <Pencil className="w-4 h-4 mr-1" />
                                 {t('common.edit')}
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenAddSectionDialog(event)}
+                                disabled={actionLoading === `add-section-${event.id}`}
+                              >
+                                <Plus className="w-4 h-4 mr-1" />
+                                {t('admin.events.addSection')}
+                              </Button>
                               {event.status === 'pending' && (
                                 <>
                                   <Button
@@ -403,7 +483,7 @@ export function EventManagement() {
                                   {event.pendingDates.map((eventDate) => (
                                       <TableRow key={eventDate.id}>
                                         <TableCell className="font-medium">
-                                          {formatDateTime(eventDate.date, eventDate.startTime)}
+                                          {formatDateTime(eventDate.date)}
                                         </TableCell>
                                         <TableCell>{getStatusBadge(eventDate.status)}</TableCell>
                                         <TableCell>{formatDate(eventDate.createdAt)}</TableCell>
@@ -464,25 +544,41 @@ export function EventManagement() {
                                         <TableCell>{formatDate(section.createdAt)}</TableCell>
                                         <TableCell className="text-right">
                                           <div className="flex justify-end gap-2">
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                              onClick={() => handleApproveSection(section.id)}
-                                              disabled={actionLoading === section.id}
-                                            >
-                                              <Check className="w-4 h-4 mr-1" />
-                                              {t('admin.events.approveSection')}
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                              onClick={() => openRejectSectionDialog(event, section)}
-                                            >
-                                              <X className="w-4 h-4 mr-1" />
-                                              {t('admin.events.rejectSection')}
-                                            </Button>
+                                            {section.status === 'pending' && (
+                                              <>
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                  onClick={() => handleApproveSection(section.id)}
+                                                  disabled={actionLoading === section.id}
+                                                >
+                                                  <Check className="w-4 h-4 mr-1" />
+                                                  {t('admin.events.approveSection')}
+                                                </Button>
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                  onClick={() => openRejectSectionDialog(event, section)}
+                                                >
+                                                  <X className="w-4 h-4 mr-1" />
+                                                  {t('admin.events.rejectSection')}
+                                                </Button>
+                                              </>
+                                            )}
+                                            {section.pendingListingsCount === 0 && (
+                                              <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                onClick={() => handleOpenDeleteSectionDialog(event, section)}
+                                                disabled={actionLoading === `delete-section-${section.id}`}
+                                              >
+                                                <Trash2 className="w-4 h-4 mr-1" />
+                                                {t('admin.events.deleteSection')}
+                                              </Button>
+                                            )}
                                           </div>
                                         </TableCell>
                                       </TableRow>
@@ -560,6 +656,96 @@ export function EventManagement() {
         eventDates={editingEventDates}
         onSuccess={handleEditSuccess}
       />
+
+      {/* Add Section Dialog */}
+      <Dialog open={isAddSectionDialogOpen} onOpenChange={setIsAddSectionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.events.addSectionTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('admin.events.addSectionDescription', { eventName: addSectionEventName })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="sectionName">{t('admin.events.sectionNameLabel')}</Label>
+              <Input
+                id="sectionName"
+                placeholder={t('admin.events.sectionNamePlaceholder')}
+                value={newSectionName}
+                onChange={(e) => setNewSectionName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('admin.events.sectionSeatingType')}</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setNewSectionSeatingType('unnumbered')}
+                  className={`p-4 border-2 rounded-lg transition-colors text-left ${
+                    newSectionSeatingType === 'unnumbered'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900">{t('sellTicket.generalAdmission')}</p>
+                  <p className="text-sm text-gray-600">{t('sellTicket.generalAdmissionDesc')}</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewSectionSeatingType('numbered')}
+                  className={`p-4 border-2 rounded-lg transition-colors text-left ${
+                    newSectionSeatingType === 'numbered'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900">{t('sellTicket.numberedSeating')}</p>
+                  <p className="text-sm text-gray-600">{t('sellTicket.numberedSeatingDesc')}</p>
+                </button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddSectionDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              onClick={handleAddSection}
+              disabled={!newSectionName.trim() || actionLoading === `add-section-${addSectionEventId}`}
+            >
+              {t('admin.events.addSection')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Section Confirmation Dialog */}
+      <Dialog open={isDeleteSectionDialogOpen} onOpenChange={setIsDeleteSectionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.events.deleteSectionTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('admin.events.deleteSectionDescription', { 
+                sectionName: deleteSectionTarget?.sectionName,
+                eventName: deleteSectionTarget?.eventName,
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteSectionDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteSection}
+              disabled={actionLoading === `delete-section-${deleteSectionTarget?.sectionId}`}
+            >
+              {t('admin.events.confirmDeleteSection')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
