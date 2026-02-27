@@ -208,4 +208,32 @@ export class TransactionsRepository implements OnModuleInit {
       .filter((transaction) => statusSet.has(transaction.status))
       .map((transaction) => transaction.id);
   }
+
+  /**
+   * Find transactions with expired payment window
+   */
+  async findExpiredPendingPayments(ctx: Ctx): Promise<Transaction[]> {
+    const now = new Date();
+    const all = await this.storage.getAll(ctx);
+    return all.filter(
+      (t) =>
+        t.status === TransactionStatus.PendingPayment &&
+        t.paymentExpiresAt &&
+        new Date(t.paymentExpiresAt) < now,
+    );
+  }
+
+  /**
+   * Find transactions with expired admin review window
+   */
+  async findExpiredAdminReviews(ctx: Ctx): Promise<Transaction[]> {
+    const now = new Date();
+    const all = await this.storage.getAll(ctx);
+    return all.filter(
+      (t) =>
+        t.status === TransactionStatus.PaymentPendingVerification &&
+        t.adminReviewExpiresAt &&
+        new Date(t.adminReviewExpiresAt) < now,
+    );
+  }
 }
