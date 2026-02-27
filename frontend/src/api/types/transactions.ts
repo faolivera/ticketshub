@@ -57,6 +57,17 @@ export enum RequiredActor {
 }
 
 /**
+ * Reason why a transaction was cancelled
+ */
+export enum CancellationReason {
+  BuyerCancelled = 'BuyerCancelled',
+  PaymentFailed = 'PaymentFailed',
+  PaymentTimeout = 'PaymentTimeout',
+  AdminRejected = 'AdminRejected',
+  AdminReviewTimeout = 'AdminReviewTimeout',
+}
+
+/**
  * Transaction entity - represents a purchase
  */
 export interface Transaction {
@@ -92,7 +103,13 @@ export interface Transaction {
   buyerConfirmedAt?: Date;
   completedAt?: Date;
   cancelledAt?: Date;
+  cancelledBy?: RequiredActor;
+  cancellationReason?: CancellationReason;
   refundedAt?: Date;
+
+  // Expiration timers
+  paymentExpiresAt: string;
+  adminReviewExpiresAt?: string;
 
   // For Digital Non-Transferable tickets
   eventDateTime?: Date;
