@@ -103,7 +103,10 @@ export class SupportSeedService {
       phoneVerified: true,
       identityVerification: {
         status: IdentityVerificationStatus.Approved,
-        documentUrls: ['https://example.com/document.png'],
+        legalFirstName: 'Verified',
+        legalLastName: 'Seller',
+        dateOfBirth: '1990-05-15',
+        governmentIdNumber: '30123456',
         submittedAt: new Date(),
         reviewedAt: new Date(),
         reviewedBy: admin.id,

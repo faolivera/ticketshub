@@ -24,8 +24,9 @@ export class LocalFileStorageProvider implements FileStorageProvider {
     content: Buffer,
     metadata: FileMetadata,
   ): Promise<StoredFile> {
-    await fs.mkdir(this.basePath, { recursive: true });
     const filePath = path.join(this.basePath, key);
+    const fileDir = path.dirname(filePath);
+    await fs.mkdir(fileDir, { recursive: true });
     await fs.writeFile(filePath, content);
 
     return {

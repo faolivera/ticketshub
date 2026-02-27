@@ -1,33 +1,148 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Shield, User, CreditCard, CheckCircle, Camera } from 'lucide-react';
+import { ArrowLeft, Shield, User, CheckCircle, Upload, X, Clock, AlertCircle } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
-
-type VerificationStep = 1 | 2 | 3;
+import { identityVerificationService } from '@/api/services';
+import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
 
 export function SellerVerification() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { user, updateUser, upgradeToLevel2 } = useUser();
+  const { user, refetchUser } = useUser();
 
-  const [currentStep, setCurrentStep] = useState<VerificationStep>(1);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [existingVerification, setExistingVerification] = useState<IdentityVerificationRequest | null>(null);
+
   const [identityData, setIdentityData] = useState({
     legalFirstName: user?.firstName || '',
     legalLastName: user?.lastName || '',
     dateOfBirth: '',
-    governmentIdNumber: ''
+    governmentIdNumber: '',
   });
 
-  const [payoutData, setPayoutData] = useState({
-    bankAccountNumber: '',
-    accountHolderName: ''
-  });
+  const [documentFront, setDocumentFront] = useState<File | null>(null);
+  const [documentBack, setDocumentBack] = useState<File | null>(null);
+  const [documentFrontPreview, setDocumentFrontPreview] = useState<string | null>(null);
+  const [documentBackPreview, setDocumentBackPreview] = useState<string | null>(null);
 
-  const [selfieVerification, setSelfieVerification] = useState(false);
+  const frontInputRef = useRef<HTMLInputElement>(null);
+  const backInputRef = useRef<HTMLInputElement>(null);
 
-  // Redirect if not Level 1
-  if (!user || user.level === 0) {
+  useEffect(() => {
+    loadExistingVerification();
+  }, []);
+
+  const loadExistingVerification = async () => {
+    try {
+      setLoading(true);
+      const response = await identityVerificationService.getMyVerification();
+      setExistingVerification(response.verification);
+    } catch (err) {
+      console.error('Failed to load verification status:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileSelect = (
+    file: File | null,
+    type: 'front' | 'back',
+  ) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      setError(t('verification.invalidFileType'));
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError(t('verification.fileTooLarge'));
+      return;
+    }
+
+    setError(null);
+    const previewUrl = URL.createObjectURL(file);
+
+    if (type === 'front') {
+      if (documentFrontPreview) URL.revokeObjectURL(documentFrontPreview);
+      setDocumentFront(file);
+      setDocumentFrontPreview(previewUrl);
+    } else {
+      if (documentBackPreview) URL.revokeObjectURL(documentBackPreview);
+      setDocumentBack(file);
+      setDocumentBackPreview(previewUrl);
+    }
+  };
+
+  const removeFile = (type: 'front' | 'back') => {
+    if (type === 'front') {
+      if (documentFrontPreview) URL.revokeObjectURL(documentFrontPreview);
+      setDocumentFront(null);
+      setDocumentFrontPreview(null);
+      if (frontInputRef.current) frontInputRef.current.value = '';
+    } else {
+      if (documentBackPreview) URL.revokeObjectURL(documentBackPreview);
+      setDocumentBack(null);
+      setDocumentBackPreview(null);
+      if (backInputRef.current) backInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (
+      !identityData.legalFirstName ||
+      !identityData.legalLastName ||
+      !identityData.dateOfBirth ||
+      !identityData.governmentIdNumber
+    ) {
+      setError(t('verification.pleaseCompleteAllFields'));
+      return;
+    }
+
+    if (!documentFront || !documentBack) {
+      setError(t('verification.pleaseUploadBothDocuments'));
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await identityVerificationService.submitVerification({
+        legalFirstName: identityData.legalFirstName,
+        legalLastName: identityData.legalLastName,
+        dateOfBirth: identityData.dateOfBirth,
+        governmentIdNumber: identityData.governmentIdNumber,
+        documentFront,
+        documentBack,
+      });
+
+      setExistingVerification(response.verification);
+      await refetchUser();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('verification.submitFailed'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.level === 'Basic') {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-2xl mx-auto px-4">
@@ -51,59 +166,103 @@ export function SellerVerification() {
     );
   }
 
-  const handleStep1Submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!identityData.legalFirstName || !identityData.legalLastName || 
-        !identityData.dateOfBirth || !identityData.governmentIdNumber) {
-      alert(t('verification.pleaseCompleteAllFields'));
-      return;
-    }
+  if (existingVerification) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <Link
+            to="/user-profile"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('verification.backToProfile')}
+          </Link>
 
-    setCurrentStep(2);
-  };
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <Shield className="w-8 h-8 text-blue-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {t('verification.title')}
+                </h1>
+              </div>
+            </div>
 
-  const handleStep2Submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!payoutData.bankAccountNumber || !payoutData.accountHolderName) {
-      alert(t('verification.pleaseCompleteAllFields'));
-      return;
-    }
+            {existingVerification.status === 'pending' && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <Clock className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                  {t('verification.pendingTitle')}
+                </h3>
+                <p className="text-yellow-700">
+                  {t('verification.pendingMessage')}
+                </p>
+              </div>
+            )}
 
-    // Check if names match
-    const fullLegalName = `${identityData.legalFirstName} ${identityData.legalLastName}`.toLowerCase();
-    if (payoutData.accountHolderName.toLowerCase() !== fullLegalName) {
-      const confirmProceed = window.confirm(t('verification.namesMismatchWarning'));
-      if (!confirmProceed) return;
-    }
+            {existingVerification.status === 'approved' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-green-800 mb-2">
+                  {t('verification.approvedTitle')}
+                </h3>
+                <p className="text-green-700">
+                  {t('verification.approvedMessage')}
+                </p>
+              </div>
+            )}
 
-    setCurrentStep(3);
-  };
+            {existingVerification.status === 'rejected' && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-red-800 mb-2">
+                  {t('verification.rejectedTitle')}
+                </h3>
+                <p className="text-red-700 mb-2">
+                  {t('verification.rejectedMessage')}
+                </p>
+                {existingVerification.adminNotes && (
+                  <p className="text-red-600 text-sm mt-2">
+                    <strong>{t('verification.reason')}:</strong>{' '}
+                    {existingVerification.adminNotes}
+                  </p>
+                )}
+                <button
+                  onClick={() => setExistingVerification(null)}
+                  className="mt-4 px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  {t('verification.tryAgain')}
+                </button>
+              </div>
+            )}
 
-  const handleFinalSubmit = () => {
-    // Update user with verification data
-    updateUser({
-      legalFirstName: identityData.legalFirstName,
-      legalLastName: identityData.legalLastName,
-      dateOfBirth: identityData.dateOfBirth,
-      governmentIdNumber: identityData.governmentIdNumber,
-      bankAccountNumber: payoutData.bankAccountNumber,
-      accountHolderName: payoutData.accountHolderName,
-      verificationStatus: 'pending'
-    });
-
-    // Simulate instant approval (in production, this would be pending)
-    setTimeout(() => {
-      upgradeToLevel2();
-      alert(t('verification.verificationSuccess'));
-      navigate('/sell-ticket');
-    }, 1000);
-  };
+            <div className="mt-6 bg-gray-50 rounded-lg p-4 space-y-2">
+              <p className="text-sm text-gray-600">
+                <strong>{t('verification.legalName')}:</strong>{' '}
+                {existingVerification.legalFirstName} {existingVerification.legalLastName}
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>{t('verification.dateOfBirth')}:</strong>{' '}
+                {existingVerification.dateOfBirth}
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>{t('verification.governmentId')}:</strong>{' '}
+                ••••••{existingVerification.governmentIdNumber.slice(-4)}
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>{t('verification.submittedAt')}:</strong>{' '}
+                {new Date(existingVerification.submittedAt).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-2xl mx-auto px-4">
         <Link
           to="/sell-ticket"
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
@@ -113,299 +272,220 @@ export function SellerVerification() {
         </Link>
 
         <div className="bg-white rounded-lg shadow-md p-8">
-          {/* Header */}
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-8 h-8 text-blue-600" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('verification.title')}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {t('verification.title')}
+              </h1>
               <p className="text-gray-600">{t('verification.subtitle')}</p>
             </div>
           </div>
 
-          {/* Progress Steps */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                {currentStep > 1 ? <CheckCircle className="w-5 h-5" /> : '1'}
-              </div>
-              <span className={`text-sm font-semibold ${
-                currentStep >= 1 ? 'text-gray-900' : 'text-gray-500'
-              }`}>
-                {t('verification.step1')}
-              </span>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-2 text-red-700">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <p>{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex items-center gap-3 mb-4">
+              <User className="w-6 h-6 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900">
+                {t('verification.identityTitle')}
+              </h2>
             </div>
 
-            <div className="flex-1 h-1 bg-gray-200 mx-4">
-              <div 
-                className="h-full bg-blue-600 transition-all duration-300"
-                style={{ width: currentStep >= 2 ? '100%' : '0%' }}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                {t('verification.identityInfo')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('verification.legalFirstName')}{' '}
+                  <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={identityData.legalFirstName}
+                  onChange={(e) =>
+                    setIdentityData({ ...identityData, legalFirstName: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('verification.legalLastName')}{' '}
+                  <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={identityData.legalLastName}
+                  onChange={(e) =>
+                    setIdentityData({ ...identityData, legalLastName: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t('verification.dateOfBirth')}{' '}
+                <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={identityData.dateOfBirth}
+                onChange={(e) =>
+                  setIdentityData({ ...identityData, dateOfBirth: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                {currentStep > 2 ? <CheckCircle className="w-5 h-5" /> : '2'}
-              </div>
-              <span className={`text-sm font-semibold ${
-                currentStep >= 2 ? 'text-gray-900' : 'text-gray-500'
-              }`}>
-                {t('verification.step2')}
-              </span>
-            </div>
-
-            <div className="flex-1 h-1 bg-gray-200 mx-4">
-              <div 
-                className="h-full bg-blue-600 transition-all duration-300"
-                style={{ width: currentStep >= 3 ? '100%' : '0%' }}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t('verification.governmentId')}{' '}
+                <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={identityData.governmentIdNumber}
+                onChange={(e) =>
+                  setIdentityData({ ...identityData, governmentIdNumber: e.target.value })
+                }
+                placeholder={t('verification.governmentIdPlaceholder')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
+              <p className="text-sm text-gray-500 mt-1">
+                {t('verification.governmentIdHint')}
+              </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                3
-              </div>
-              <span className={`text-sm font-semibold ${
-                currentStep >= 3 ? 'text-gray-900' : 'text-gray-500'
-              }`}>
-                {t('verification.step3')}
-              </span>
-            </div>
-          </div>
-
-          {/* Step 1: Identity */}
-          {currentStep === 1 && (
-            <form onSubmit={handleStep1Submit} className="space-y-6">
-              <div className="flex items-center gap-3 mb-4">
-                <User className="w-6 h-6 text-blue-600" />
-                <h2 className="text-xl font-bold text-gray-900">{t('verification.identityTitle')}</h2>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-800">
-                  {t('verification.identityInfo')}
-                </p>
-              </div>
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {t('verification.documentPhotos')}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {t('verification.documentPhotosHint')}
+              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('verification.legalFirstName')} <span className="text-red-500">*</span>
+                    {t('verification.documentFront')}{' '}
+                    <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={identityData.legalFirstName}
-                    onChange={(e) => setIdentityData({ ...identityData, legalFirstName: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  {documentFrontPreview ? (
+                    <div className="relative">
+                      <img
+                        src={documentFrontPreview}
+                        alt="Front of ID"
+                        className="w-full h-40 object-cover rounded-lg border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeFile('front')}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-500">
+                        {t('verification.uploadFront')}
+                      </span>
+                      <input
+                        ref={frontInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleFileSelect(e.target.files?.[0] || null, 'front')
+                        }
+                      />
+                    </label>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('verification.legalLastName')} <span className="text-red-500">*</span>
+                    {t('verification.documentBack')}{' '}
+                    <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={identityData.legalLastName}
-                    onChange={(e) => setIdentityData({ ...identityData, legalLastName: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  {documentBackPreview ? (
+                    <div className="relative">
+                      <img
+                        src={documentBackPreview}
+                        alt="Back of ID"
+                        className="w-full h-40 object-cover rounded-lg border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeFile('back')}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-500">
+                        {t('verification.uploadBack')}
+                      </span>
+                      <input
+                        ref={backInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleFileSelect(e.target.files?.[0] || null, 'back')
+                        }
+                      />
+                    </label>
+                  )}
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('verification.dateOfBirth')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={identityData.dateOfBirth}
-                  onChange={(e) => setIdentityData({ ...identityData, dateOfBirth: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('verification.governmentId')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={identityData.governmentIdNumber}
-                  onChange={(e) => setIdentityData({ ...identityData, governmentIdNumber: e.target.value })}
-                  placeholder={t('verification.governmentIdPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                <p className="text-sm text-gray-500 mt-1">{t('verification.governmentIdHint')}</p>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {t('verification.continue')}
-              </button>
-            </form>
-          )}
-
-          {/* Step 2: Payout Details */}
-          {currentStep === 2 && (
-            <form onSubmit={handleStep2Submit} className="space-y-6">
-              <div className="flex items-center gap-3 mb-4">
-                <CreditCard className="w-6 h-6 text-blue-600" />
-                <h2 className="text-xl font-bold text-gray-900">{t('verification.payoutTitle')}</h2>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-800">
-                  {t('verification.payoutInfo')}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('verification.bankAccount')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={payoutData.bankAccountNumber}
-                  onChange={(e) => setPayoutData({ ...payoutData, bankAccountNumber: e.target.value })}
-                  placeholder={t('verification.bankAccountPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                <p className="text-sm text-gray-500 mt-1">{t('verification.bankAccountHint')}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('verification.accountHolder')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={payoutData.accountHolderName}
-                  onChange={(e) => setPayoutData({ ...payoutData, accountHolderName: e.target.value })}
-                  placeholder={`${identityData.legalFirstName} ${identityData.legalLastName}`}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                <p className="text-sm text-amber-600 mt-1">{t('verification.accountHolderHint')}</p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="flex-1 px-6 py-4 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  {t('verification.back')}
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {t('verification.continue')}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Step 3: Review & Submit */}
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle className="w-6 h-6 text-blue-600" />
-                <h2 className="text-xl font-bold text-gray-900">{t('verification.reviewTitle')}</h2>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600">{t('verification.legalName')}</p>
-                  <p className="font-semibold text-gray-900">
-                    {identityData.legalFirstName} {identityData.legalLastName}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600">{t('verification.dateOfBirth')}</p>
-                  <p className="font-semibold text-gray-900">{identityData.dateOfBirth}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600">{t('verification.governmentId')}</p>
-                  <p className="font-semibold text-gray-900">
-                    ••••••{identityData.governmentIdNumber.slice(-4)}
-                  </p>
-                </div>
-
-                <div className="border-t border-gray-200 pt-4">
-                  <p className="text-sm text-gray-600">{t('verification.bankAccount')}</p>
-                  <p className="font-semibold text-gray-900">
-                    ••••••{payoutData.bankAccountNumber.slice(-4)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600">{t('verification.accountHolder')}</p>
-                  <p className="font-semibold text-gray-900">{payoutData.accountHolderName}</p>
-                </div>
-              </div>
-
-              {/* Optional Selfie Verification */}
-              <div className="border border-gray-300 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <Camera className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 mb-1">
-                      {t('verification.selfieTitle')} ({t('verification.optional')})
-                    </p>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {t('verification.selfieDesc')}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setSelfieVerification(true)}
-                      className="px-4 py-2 border border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                    >
-                      {selfieVerification ? t('verification.selfieAdded') : t('verification.addSelfie')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800 text-center">
-                  {t('verification.securityMessage')}
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(2)}
-                  className="flex-1 px-6 py-4 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  {t('verification.back')}
-                </button>
-                <button
-                  onClick={handleFinalSubmit}
-                  className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Shield className="w-5 h-5" />
-                  {t('verification.submitVerification')}
-                </button>
               </div>
             </div>
-          )}
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800 text-center">
+                {t('verification.securityMessage')}
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  {t('verification.submitting')}
+                </>
+              ) : (
+                <>
+                  <Shield className="w-5 h-5" />
+                  {t('verification.submitVerification')}
+                </>
+              )}
+            </button>
+          </form>
         </div>
       </div>
     </div>

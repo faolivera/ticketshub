@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
 import type { Ctx } from '../../common/types/context';
 import type { User, UserAddress } from './users.domain';
-import { UserStatus, UserLevel } from './users.domain';
+import { UserStatus, UserLevel, IdentityVerificationStatus } from './users.domain';
 
 @Injectable()
 export class UsersRepository implements OnModuleInit {
@@ -200,6 +200,41 @@ export class UsersRepository implements OnModuleInit {
       ...existing,
       level,
       updatedAt: new Date(),
+    };
+    await this.storage.set(ctx, userId, updatedUser);
+    return updatedUser;
+  }
+
+  /**
+   * Upgrade user to verified seller with identity verification data
+   */
+  async updateToVerifiedSeller(
+    ctx: Ctx,
+    userId: string,
+    identityData: {
+      legalFirstName: string;
+      legalLastName: string;
+      dateOfBirth: string;
+      governmentIdNumber: string;
+    },
+  ): Promise<User | undefined> {
+    const existing = await this.storage.get(ctx, userId);
+    if (!existing) return undefined;
+
+    const now = new Date();
+    const updatedUser: User = {
+      ...existing,
+      level: UserLevel.VerifiedSeller,
+      identityVerification: {
+        status: IdentityVerificationStatus.Approved,
+        legalFirstName: identityData.legalFirstName,
+        legalLastName: identityData.legalLastName,
+        dateOfBirth: identityData.dateOfBirth,
+        governmentIdNumber: identityData.governmentIdNumber,
+        submittedAt: now,
+        reviewedAt: now,
+      },
+      updatedAt: now,
     };
     await this.storage.set(ctx, userId, updatedUser);
     return updatedUser;

@@ -16,6 +16,7 @@ import { StorageModule } from './common/storage/storage.module';
 import { PaymentConfirmationsModule } from './modules/payment-confirmations/payment-confirmations.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { IdentityVerificationModule } from './modules/identity-verification/identity-verification.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { AdminModule } from './modules/admin/admin.module';
     PaymentsModule,
     TransactionsModule,
     PaymentConfirmationsModule,
+    IdentityVerificationModule,
     ReviewsModule,
     SupportModule,
     BffModule,

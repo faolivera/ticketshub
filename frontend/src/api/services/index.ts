@@ -12,3 +12,4 @@ export { paymentConfirmationsService } from './payment-confirmations.service';
 export { reviewsService } from './reviews.service';
 export { bffService } from './bff.service';
 export { adminService } from './admin.service';
+export { identityVerificationService } from './identity-verification.service';

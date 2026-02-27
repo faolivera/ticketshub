@@ -449,4 +449,25 @@ export class UsersService {
 
     return updatedUserInfo;
   }
+
+  /**
+   * Upgrade user to verified seller (called by identity verification service)
+   */
+  async upgradeToVerifiedSeller(
+    ctx: Ctx,
+    userId: string,
+    identityData: {
+      legalFirstName: string;
+      legalLastName: string;
+      dateOfBirth: string;
+      governmentIdNumber: string;
+    },
+  ): Promise<void> {
+    const user = await this.usersRepository.findById(ctx, userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    await this.usersRepository.updateToVerifiedSeller(ctx, userId, identityData);
+  }
 }

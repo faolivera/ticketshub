@@ -6,6 +6,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
 import { TicketsModule } from '../tickets/tickets.module';
 import { EventsModule } from '../events/events.module';
+import { IdentityVerificationModule } from '../identity-verification/identity-verification.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { EventsModule } from '../events/events.module';
     UsersModule,
     TicketsModule,
     EventsModule,
+    IdentityVerificationModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

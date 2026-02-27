@@ -6,6 +6,7 @@ import {
   CreditCard,
   Wallet,
   Ticket,
+  Shield,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -45,6 +46,11 @@ const navItems: NavItem[] = [
     to: '/admin/payment-methods',
     icon: <Wallet className="w-4 h-4" />,
     labelKey: 'admin.sidebar.paymentMethods',
+  },
+  {
+    to: '/admin/identity-verifications',
+    icon: <Shield className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.identityVerifications',
   },
 ];
 

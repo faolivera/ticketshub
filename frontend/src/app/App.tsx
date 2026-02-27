@@ -26,6 +26,7 @@ import { AdminDashboard } from '@/app/pages/admin/AdminDashboard';
 import { EventManagement } from '@/app/pages/admin/EventManagement';
 import TransactionManagement from '@/app/pages/admin/TransactionManagement';
 import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManagement';
+import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerificationManagement';
 
 export default function App() {
   return (
@@ -62,6 +63,7 @@ export default function App() {
                 <Route path="events" element={<EventManagement />} />
                 <Route path="transactions" element={<TransactionManagement />} />
                 <Route path="payment-methods" element={<PaymentMethodsManagement />} />
+                <Route path="identity-verifications" element={<IdentityVerificationManagement />} />
               </Route>
             </Routes>
           </main>

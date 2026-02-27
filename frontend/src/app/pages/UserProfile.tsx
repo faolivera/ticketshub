@@ -1,11 +1,13 @@
-import { User, Mail, MapPin, Calendar, Ticket, Shield, Phone, CheckCircle, AlertCircle } from 'lucide-react';
+import { User, Mail, MapPin, Calendar, Ticket, Shield, Phone, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
 import { SellerBadge } from '@/app/components/SellerBadge';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
 import { UserLevel } from '@/api/types/users';
+import { identityVerificationService } from '@/api/services';
+import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
 
 const mockActivity = [
   {
@@ -38,6 +40,26 @@ export function UserProfile() {
   const { user, logout } = useUser();
   const { t } = useTranslation();
   const [showSellerModal, setShowSellerModal] = useState(false);
+  const [identityVerification, setIdentityVerification] = useState<IdentityVerificationRequest | null>(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+
+  useEffect(() => {
+    if (user?.level === UserLevel.Seller) {
+      loadIdentityVerification();
+    }
+  }, [user?.level]);
+
+  const loadIdentityVerification = async () => {
+    try {
+      setVerificationLoading(true);
+      const response = await identityVerificationService.getMyVerification();
+      setIdentityVerification(response.verification);
+    } catch (err) {
+      console.error('Failed to load verification status:', err);
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
 
   if (!user) {
     return null;
@@ -201,28 +223,68 @@ export function UserProfile() {
             </div>
           )}
 
-          {/* Seller Level 1 - Verification CTA */}
-          {user.level === UserLevel.Seller && (
+          {/* Seller Level 1 - Verification CTA, Pending, or Rejected Status */}
+          {user.level === UserLevel.Seller && !verificationLoading && (
             <div className="border-t pt-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-blue-900 mb-1">
-                      {t('userProfile.identityVerificationRequired')}
-                    </p>
-                    <p className="text-sm text-blue-800">
-                      {t('userProfile.identityVerificationNotice')}
-                    </p>
+              {identityVerification?.status === 'pending' ? (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-yellow-900 mb-1">
+                        {t('userProfile.identityVerificationPending')}
+                      </p>
+                      <p className="text-sm text-yellow-800">
+                        {t('userProfile.identityVerificationPendingNotice')}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <Link
-                to="/seller-verification"
-                className="block w-full px-6 py-4 bg-blue-600 text-white font-bold text-center rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {t('userProfile.verifyIdentity')}
-              </Link>
+              ) : identityVerification?.status === 'rejected' ? (
+                <>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-red-900 mb-1">
+                          {t('userProfile.identityVerificationRejected')}
+                        </p>
+                        <p className="text-sm text-red-800">
+                          {t('userProfile.identityVerificationRejectedNotice')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    to="/seller-verification"
+                    className="block w-full px-6 py-4 bg-red-600 text-white font-bold text-center rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    {t('userProfile.retryVerification')}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-blue-900 mb-1">
+                          {t('userProfile.identityVerificationRequired')}
+                        </p>
+                        <p className="text-sm text-blue-800">
+                          {t('userProfile.identityVerificationNotice')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    to="/seller-verification"
+                    className="block w-full px-6 py-4 bg-blue-600 text-white font-bold text-center rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {t('userProfile.verifyIdentity')}
+                  </Link>
+                </>
+              )}
             </div>
           )}
 

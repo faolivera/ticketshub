@@ -1,0 +1,35 @@
+{
+  "idv_1772184580763_853b1499": {
+    "id": "idv_1772184580763_853b1499",
+    "userId": "10",
+    "legalFirstName": "Mica",
+    "legalLastName": "Linda",
+    "dateOfBirth": "1997-08-08",
+    "governmentIdNumber": "123456",
+    "documentFrontStorageKey": "identity-docs/10_front_1772184580761_5026511b57a3.png",
+    "documentFrontFilename": "Screenshot 2026-02-26 at 16.32.31.png",
+    "documentBackStorageKey": "identity-docs/10_back_1772184580762_f9e9075e1940.png",
+    "documentBackFilename": "Screenshot 2026-02-25 at 00.55.09.png",
+    "status": "rejected",
+    "submittedAt": "2026-02-27T09:29:40.763Z",
+    "adminNotes": "fotos no validas",
+    "reviewedBy": "8",
+    "reviewedAt": "2026-02-27T09:33:40.805Z"
+  },
+  "idv_1772185079556_4f77ce45": {
+    "id": "idv_1772185079556_4f77ce45",
+    "userId": "10",
+    "legalFirstName": "Mica",
+    "legalLastName": "Linda",
+    "dateOfBirth": "1996-01-22",
+    "governmentIdNumber": "1111",
+    "documentFrontStorageKey": "identity-docs/10_front_1772185079554_1cb781623a8a.png",
+    "documentFrontFilename": "Screenshot 2026-02-26 at 16.32.31.png",
+    "documentBackStorageKey": "identity-docs/10_back_1772185079554_2507250f850e.png",
+    "documentBackFilename": "Screenshot 2026-02-25 at 00.55.09.png",
+    "status": "approved",
+    "submittedAt": "2026-02-27T09:37:59.556Z",
+    "reviewedBy": "8",
+    "reviewedAt": "2026-02-27T09:38:11.490Z"
+  }
+}

@@ -39,7 +39,14 @@ export enum IdentityVerificationStatus {
  */
 export interface IdentityVerification {
   status: IdentityVerificationStatus;
-  documentUrls: string[];
+  /** Legal first name as appears on government ID */
+  legalFirstName: string;
+  /** Legal last name as appears on government ID */
+  legalLastName: string;
+  /** Date of birth (YYYY-MM-DD format) */
+  dateOfBirth: string;
+  /** Government ID number (DNI, passport, etc.) */
+  governmentIdNumber: string;
   submittedAt: Date;
   reviewedAt?: Date;
   reviewedBy?: string;
