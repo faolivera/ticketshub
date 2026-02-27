@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star, Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,20 @@ import { TicketChat } from '@/app/components/TicketChat';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { UserReviewsCard } from '@/app/components/UserReviewsCard';
+import { EventBanner } from '@/app/components/EventBanner';
+import { PaymentCountdown } from '@/app/components/PaymentCountdown';
+import { Button } from '@/app/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/app/components/ui/alert-dialog';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService } from '@/api/services';
 import { useUser } from '../contexts/UserContext';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
@@ -37,6 +51,20 @@ export function MyTicket() {
   const [copiedCbu, setCopiedCbu] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const refetch = useCallback(async () => {
+    if (!transactionId) return;
+    try {
+      const data = await bffService.getTransactionDetails(transactionId);
+      setTransaction(data.transaction);
+      setPaymentConfirmation(data.paymentConfirmation);
+      setReviewData(data.reviews);
+      setBankTransferConfig(data.bankTransferConfig);
+    } catch (err) {
+      console.error('Failed to refetch transaction:', err);
+    }
+  }, [transactionId]);
 
   const handleCopyCbu = async (cbu: string) => {
     try {
@@ -333,28 +361,38 @@ export function MyTicket() {
           <div className="lg:col-span-2 space-y-6">
             {/* Event Card */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h1 className="text-2xl font-bold mb-1">{transaction.eventName}</h1>
-                    <div className="flex items-center gap-2 text-blue-100">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        {eventDate.toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
+              <div className="relative">
+                <EventBanner
+                  variant="rectangle"
+                  squareUrl={transaction.bannerUrls?.square}
+                  rectangleUrl={transaction.bannerUrls?.rectangle}
+                  alt={transaction.eventName}
+                  className="h-48 md:h-64"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h1 className="text-2xl font-bold mb-1 drop-shadow-lg">{transaction.eventName}</h1>
+                      <div className="flex items-center gap-2 text-white/90">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {eventDate.toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg">
+                      <span className="text-xs font-semibold">{transaction.ticketType}</span>
                     </div>
                   </div>
-                  <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg">
-                    <span className="text-xs font-semibold">{transaction.ticketType}</span>
+                  <div className="flex items-center gap-2 text-white/90">
+                    <MapPin className="w-4 h-4" />
+                    <span>{transaction.venue}</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 text-blue-100">
-                  <MapPin className="w-4 h-4" />
-                  <span>{transaction.venue}</span>
                 </div>
               </div>
 
@@ -505,6 +543,64 @@ export function MyTicket() {
                       </p>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Countdown Timer - Show when status is PendingPayment */}
+              {transaction.status === TransactionStatus.PendingPayment && (
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg mb-4">
+                  <PaymentCountdown
+                    expiresAt={transaction.paymentExpiresAt}
+                    onExpired={() => void refetch()}
+                  />
+                </div>
+              )}
+
+              {/* Cancellation Reason - Show when transaction is cancelled */}
+              {transaction.status === TransactionStatus.Cancelled && transaction.cancellationReason && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                  <div className="text-red-600 font-medium">
+                    {t(`transaction.cancelled.${transaction.cancellationReason}`)}
+                  </div>
+                </div>
+              )}
+
+              {/* Cancel Button - Show when buyer is viewing and status is PendingPayment */}
+              {isBuyer && transaction.status === TransactionStatus.PendingPayment && (
+                <div className="mb-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" disabled={isCancelling}>
+                        {t('transaction.cancelButton')}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t('transaction.cancelButton')}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t('transaction.cancelConfirm')}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t('myTicket.cancel')}</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            setIsCancelling(true);
+                            try {
+                              await transactionsService.cancelTransaction(transaction.id);
+                              await refetch();
+                            } catch (err) {
+                              console.error('Failed to cancel transaction:', err);
+                            } finally {
+                              setIsCancelling(false);
+                            }
+                          }}
+                        >
+                          {t('myTicket.confirm')}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               )}
 
