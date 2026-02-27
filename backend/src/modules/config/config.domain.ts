@@ -26,6 +26,16 @@ export interface PlatformConfig {
    * Maximum days a listing can remain active
    */
   maxListingDurationDays: number;
+
+  /**
+   * Minutes before payment expires (transaction auto-cancels)
+   */
+  paymentTimeoutMinutes: number;
+
+  /**
+   * Hours before admin review expires (transaction auto-cancels)
+   */
+  adminReviewTimeoutHours: number;
 }
 
 /**
@@ -37,4 +47,6 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   sellerPlatformFeePercentage: 5,
   defaultCurrency: 'EUR',
   maxListingDurationDays: 90,
+  paymentTimeoutMinutes: 10,
+  adminReviewTimeoutHours: 24,
 };

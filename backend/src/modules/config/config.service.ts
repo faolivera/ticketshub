@@ -51,6 +51,20 @@ export class ConfigService {
   }
 
   /**
+   * Get payment timeout in minutes
+   */
+  getPaymentTimeoutMinutes(): number {
+    return this.config.paymentTimeoutMinutes;
+  }
+
+  /**
+   * Get admin review timeout in hours
+   */
+  getAdminReviewTimeoutHours(): number {
+    return this.config.adminReviewTimeoutHours;
+  }
+
+  /**
    * Update platform configuration (for admin use)
    */
   updateConfig(updates: Partial<PlatformConfig>): PlatformConfig {
