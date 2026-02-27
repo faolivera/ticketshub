@@ -208,6 +208,11 @@ export function MyTicket() {
     try {
       const result = await paymentConfirmationsService.uploadConfirmation(transactionId, file);
       setPaymentConfirmation(result.confirmation);
+      setTransaction(prev => prev ? {
+        ...prev,
+        status: TransactionStatus.PaymentPendingVerification,
+        requiredActor: 'Platform' as const,
+      } : null);
     } catch (err: unknown) {
       console.error('Failed to upload confirmation:', err);
       const errorMessage = err instanceof Error ? err.message : t('myTicket.uploadFailed');
@@ -227,6 +232,9 @@ export function MyTicket() {
       const updated = await transactionsService.confirmReceipt(transactionId, { confirmed: true });
       setTransaction(prev => prev ? { ...prev, ...updated } : null);
       setShowConfirmModal(false);
+      
+      const updatedReviews = await reviewsService.getTransactionReviews(transactionId);
+      setReviewData(updatedReviews);
     } catch (err) {
       console.error('Failed to confirm receipt:', err);
     }
@@ -459,44 +467,46 @@ export function MyTicket() {
                 </div>
               </div>
 
-              {/* Current Status Description */}
-              <div className={`p-4 rounded-lg mb-4 ${
-                statusInfo.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
-                statusInfo.color === 'blue' ? 'bg-blue-50 border border-blue-200' :
-                statusInfo.color === 'green' ? 'bg-green-50 border border-green-200' :
-                statusInfo.color === 'red' ? 'bg-red-50 border border-red-200' :
-                'bg-gray-50 border border-gray-200'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <StatusIcon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                    statusInfo.color === 'yellow' ? 'text-yellow-600' :
-                    statusInfo.color === 'blue' ? 'text-blue-600' :
-                    statusInfo.color === 'green' ? 'text-green-600' :
-                    statusInfo.color === 'red' ? 'text-red-600' :
-                    'text-gray-600'
-                  }`} />
-                  <div>
-                    <p className={`font-semibold mb-1 ${
-                      statusInfo.color === 'yellow' ? 'text-yellow-900' :
-                      statusInfo.color === 'blue' ? 'text-blue-900' :
-                      statusInfo.color === 'green' ? 'text-green-900' :
-                      statusInfo.color === 'red' ? 'text-red-900' :
-                      'text-gray-900'
-                    }`}>
-                      {statusInfo.label}
-                    </p>
-                    <p className={`text-sm ${
-                      statusInfo.color === 'yellow' ? 'text-yellow-800' :
-                      statusInfo.color === 'blue' ? 'text-blue-800' :
-                      statusInfo.color === 'green' ? 'text-green-800' :
-                      statusInfo.color === 'red' ? 'text-red-800' :
-                      'text-gray-800'
-                    }`}>
-                      {statusInfo.description}
-                    </p>
+              {/* Current Status Description - Hide when buyer has pending payment confirmation */}
+              {!(isBuyer && paymentConfirmation?.status === 'Pending' && transaction.status === TransactionStatus.PaymentPendingVerification) && (
+                <div className={`p-4 rounded-lg mb-4 ${
+                  statusInfo.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
+                  statusInfo.color === 'blue' ? 'bg-blue-50 border border-blue-200' :
+                  statusInfo.color === 'green' ? 'bg-green-50 border border-green-200' :
+                  statusInfo.color === 'red' ? 'bg-red-50 border border-red-200' :
+                  'bg-gray-50 border border-gray-200'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <StatusIcon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                      statusInfo.color === 'yellow' ? 'text-yellow-600' :
+                      statusInfo.color === 'blue' ? 'text-blue-600' :
+                      statusInfo.color === 'green' ? 'text-green-600' :
+                      statusInfo.color === 'red' ? 'text-red-600' :
+                      'text-gray-600'
+                    }`} />
+                    <div>
+                      <p className={`font-semibold mb-1 ${
+                        statusInfo.color === 'yellow' ? 'text-yellow-900' :
+                        statusInfo.color === 'blue' ? 'text-blue-900' :
+                        statusInfo.color === 'green' ? 'text-green-900' :
+                        statusInfo.color === 'red' ? 'text-red-900' :
+                        'text-gray-900'
+                      }`}>
+                        {statusInfo.label}
+                      </p>
+                      <p className={`text-sm ${
+                        statusInfo.color === 'yellow' ? 'text-yellow-800' :
+                        statusInfo.color === 'blue' ? 'text-blue-800' :
+                        statusInfo.color === 'green' ? 'text-green-800' :
+                        statusInfo.color === 'red' ? 'text-red-800' :
+                        'text-gray-800'
+                      }`}>
+                        {statusInfo.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Bank Transfer Details - Show when pending payment for bank transfer and no confirmation uploaded yet */}
               {transaction.status === TransactionStatus.PendingPayment && 

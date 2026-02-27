@@ -16,5 +16,59 @@
     },
     "createdAt": "2026-02-27T10:36:05.368Z",
     "updatedAt": "2026-02-27T10:36:05.368Z"
+  },
+  "pi_1772189050858_f5f0cf88": {
+    "id": "pi_1772189050858_f5f0cf88",
+    "transactionId": "txn_1772189050853_82270b5c",
+    "amount": {
+      "amount": 35400,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772189050858_c806cbaf",
+    "metadata": {
+      "buyerId": "4",
+      "sellerId": "2",
+      "listingId": "tkt_s2_un_together",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-27T10:44:10.858Z",
+    "updatedAt": "2026-02-27T10:44:10.858Z"
+  },
+  "pi_1772189525959_f24ed85e": {
+    "id": "pi_1772189525959_f24ed85e",
+    "transactionId": "txn_1772189525955_685f54eb",
+    "amount": {
+      "amount": 29500,
+      "currency": "USD"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772189525959_f8447517",
+    "metadata": {
+      "buyerId": "4",
+      "sellerId": "6",
+      "listingId": "tkt_1772072599033_abd147d8",
+      "eventName": "Chayanne"
+    },
+    "createdAt": "2026-02-27T10:52:05.959Z",
+    "updatedAt": "2026-02-27T10:52:05.959Z"
+  },
+  "pi_1772189714062_903ec90d": {
+    "id": "pi_1772189714062_903ec90d",
+    "transactionId": "txn_1772189714051_43dac7f9",
+    "amount": {
+      "amount": 23600,
+      "currency": "USD"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772189714062_0f3c6ebd",
+    "metadata": {
+      "buyerId": "4",
+      "sellerId": "3",
+      "listingId": "tkt_1772106572406_8746e293",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-27T10:55:14.062Z",
+    "updatedAt": "2026-02-27T10:55:14.062Z"
   }
 }

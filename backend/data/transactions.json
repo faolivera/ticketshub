@@ -46,5 +46,145 @@
     "ticketTransferredAt": "2026-02-27T10:39:17.102Z",
     "buyerConfirmedAt": "2026-02-27T10:39:29.334Z",
     "completedAt": "2026-02-27T10:39:29.334Z"
+  },
+  "txn_1772189050853_82270b5c": {
+    "id": "txn_1772189050853_82270b5c",
+    "listingId": "tkt_s2_un_together",
+    "buyerId": "4",
+    "sellerId": "2",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_s2_un_t_1",
+      "unit_s2_un_t_2",
+      "unit_s2_un_t_3"
+    ],
+    "quantity": 3,
+    "ticketPrice": {
+      "amount": 30000,
+      "currency": "EUR"
+    },
+    "buyerPlatformFee": {
+      "amount": 3000,
+      "currency": "EUR"
+    },
+    "sellerPlatformFee": {
+      "amount": 1500,
+      "currency": "EUR"
+    },
+    "paymentMethodCommission": {
+      "amount": 2400,
+      "currency": "EUR"
+    },
+    "totalPaid": {
+      "amount": 35400,
+      "currency": "EUR"
+    },
+    "sellerReceives": {
+      "amount": 28500,
+      "currency": "EUR"
+    },
+    "pricingSnapshotId": "ps_1772189047920_8e72dc0f03ed",
+    "status": "PaymentReceived",
+    "requiredActor": "Seller",
+    "createdAt": "2026-02-27T10:44:10.854Z",
+    "updatedAt": "2026-02-27T10:56:18.400Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer",
+    "paymentReceivedAt": "2026-02-27T10:56:18.400Z",
+    "paymentApprovedBy": "8",
+    "paymentApprovedAt": "2026-02-27T10:56:18.400Z"
+  },
+  "txn_1772189525955_685f54eb": {
+    "id": "txn_1772189525955_685f54eb",
+    "listingId": "tkt_1772072599033_abd147d8",
+    "buyerId": "4",
+    "sellerId": "6",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_1772072599033_dba6bd27"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 25000,
+      "currency": "USD"
+    },
+    "buyerPlatformFee": {
+      "amount": 2500,
+      "currency": "USD"
+    },
+    "sellerPlatformFee": {
+      "amount": 1250,
+      "currency": "USD"
+    },
+    "paymentMethodCommission": {
+      "amount": 2000,
+      "currency": "USD"
+    },
+    "totalPaid": {
+      "amount": 29500,
+      "currency": "USD"
+    },
+    "sellerReceives": {
+      "amount": 23750,
+      "currency": "USD"
+    },
+    "pricingSnapshotId": "ps_1772189520021_6fb79a42a69b",
+    "status": "PaymentReceived",
+    "requiredActor": "Seller",
+    "createdAt": "2026-02-27T10:52:05.957Z",
+    "updatedAt": "2026-02-27T10:56:21.856Z",
+    "eventDateTime": "2026-03-02T21:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer",
+    "paymentReceivedAt": "2026-02-27T10:56:21.856Z",
+    "paymentApprovedBy": "8",
+    "paymentApprovedAt": "2026-02-27T10:56:21.856Z"
+  },
+  "txn_1772189714051_43dac7f9": {
+    "id": "txn_1772189714051_43dac7f9",
+    "listingId": "tkt_1772106572406_8746e293",
+    "buyerId": "4",
+    "sellerId": "3",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_1772106572406_15777f73"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 20000,
+      "currency": "USD"
+    },
+    "buyerPlatformFee": {
+      "amount": 2000,
+      "currency": "USD"
+    },
+    "sellerPlatformFee": {
+      "amount": 1000,
+      "currency": "USD"
+    },
+    "paymentMethodCommission": {
+      "amount": 1600,
+      "currency": "USD"
+    },
+    "totalPaid": {
+      "amount": 23600,
+      "currency": "USD"
+    },
+    "sellerReceives": {
+      "amount": 19000,
+      "currency": "USD"
+    },
+    "pricingSnapshotId": "ps_1772189712803_264f001bc7a5",
+    "status": "Completed",
+    "requiredActor": "None",
+    "createdAt": "2026-02-27T10:55:14.059Z",
+    "updatedAt": "2026-02-27T10:57:41.992Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer",
+    "paymentReceivedAt": "2026-02-27T10:56:24.629Z",
+    "paymentApprovedBy": "8",
+    "paymentApprovedAt": "2026-02-27T10:56:24.629Z",
+    "ticketTransferredAt": "2026-02-27T10:57:34.247Z",
+    "buyerConfirmedAt": "2026-02-27T10:57:41.991Z",
+    "completedAt": "2026-02-27T10:57:41.991Z"
   }
 }
