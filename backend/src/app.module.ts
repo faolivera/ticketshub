@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { UsersModule } from './modules/users/users.module';
@@ -27,6 +28,9 @@ import { IdentityVerificationModule } from './modules/identity-verification/iden
       rootPath: join(process.cwd(), 'data', 'public'),
       serveRoot: '/public',
     }),
+
+    // Scheduling support for cron jobs
+    ScheduleModule.forRoot(),
 
     // Global modules (must be first)
     PlatformConfigModule,
