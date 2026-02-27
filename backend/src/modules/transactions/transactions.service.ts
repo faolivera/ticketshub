@@ -321,12 +321,16 @@ export class TransactionsService {
     }
 
     const newStatus = TransactionStatus.PaymentPendingVerification;
+    const adminReviewExpiresAt = new Date(
+      Date.now() + this.configService.getAdminReviewTimeoutHours() * 60 * 60 * 1000,
+    );
     const updated = await this.transactionsRepository.update(
       ctx,
       transactionId,
       {
         status: newStatus,
         requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+        adminReviewExpiresAt,
       },
     );
 
