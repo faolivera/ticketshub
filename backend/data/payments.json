@@ -70,5 +70,23 @@
     },
     "createdAt": "2026-02-27T10:55:14.062Z",
     "updatedAt": "2026-02-27T10:55:14.062Z"
+  },
+  "pi_1772191655645_de20f74e": {
+    "id": "pi_1772191655645_de20f74e",
+    "transactionId": "txn_1772191655639_d98dd6cb",
+    "amount": {
+      "amount": 23600,
+      "currency": "USD"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772191655645_027b62a9",
+    "metadata": {
+      "buyerId": "4",
+      "sellerId": "3",
+      "listingId": "tkt_1772106572406_8746e293",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-27T11:27:35.645Z",
+    "updatedAt": "2026-02-27T11:27:35.645Z"
   }
 }

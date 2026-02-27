@@ -110,6 +110,14 @@ export interface TicketListing {
 }
 
 /**
+ * Banner URLs for display
+ */
+export interface BannerUrls {
+  square?: string;
+  rectangle?: string;
+}
+
+/**
  * Listing with event information for display
  * seatingType is derived from the event section
  */
@@ -120,4 +128,5 @@ export interface TicketListingWithEvent extends TicketListing {
   venue: string;
   sectionName: string;
   pendingReason?: string[];
+  bannerUrls?: BannerUrls;
 }

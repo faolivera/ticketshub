@@ -51,6 +51,7 @@ function transformEventForCard(event: EventWithDates) {
     showTimes,
     ticketTypes: ['General'], // Will be updated when we fetch listings
     labels,
+    bannerUrls: event.bannerUrls,
     image: event.images?.[0]?.src,
     price: undefined, // Will be updated when we fetch listings
   };

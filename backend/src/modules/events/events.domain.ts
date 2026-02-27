@@ -53,6 +53,7 @@ export interface Event {
   venue: string;
   location: Address;
   imageIds: string[];
+  banners?: EventBanners;
 
   status: EventStatus;
   rejectionReason?: string;
@@ -109,4 +110,59 @@ export interface EventSection {
 export interface EventWithDates extends Event {
   dates: EventDate[];
   sections: EventSection[];
+}
+
+/**
+ * Event banner types
+ */
+export type EventBannerType = 'square' | 'rectangle';
+
+export type EventBannerMimeType = 'image/png' | 'image/jpeg' | 'image/webp';
+
+export const ALLOWED_BANNER_MIME_TYPES: EventBannerMimeType[] = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+];
+
+/**
+ * Banner constraints
+ */
+export const BANNER_CONSTRAINTS = {
+  maxSizeBytes: 5 * 1024 * 1024, // 5MB
+  square: {
+    minWidth: 300,
+    minHeight: 300,
+    aspectRatio: 1,
+    aspectTolerance: 0.01,
+  },
+  rectangle: {
+    minWidth: 640,
+    minHeight: 360,
+    aspectRatio: 16 / 9,
+    aspectTolerance: 0.02,
+  },
+} as const;
+
+/**
+ * Event banner metadata
+ */
+export interface EventBanner {
+  type: EventBannerType;
+  filename: string;
+  originalFilename: string;
+  contentType: string;
+  sizeBytes: number;
+  width: number;
+  height: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+}
+
+/**
+ * Event banners container
+ */
+export interface EventBanners {
+  square?: EventBanner;
+  rectangle?: EventBanner;
 }

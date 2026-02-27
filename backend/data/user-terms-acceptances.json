@@ -166,5 +166,33 @@
     "respondedAt": "2026-02-26T16:39:37.573Z",
     "expiresAt": null,
     "createdAt": "2026-02-26T16:39:37.573Z"
+  },
+  "11-terms-buyer-v001": {
+    "id": "acceptance-11-terms-buyer-v001-1772206091120",
+    "userId": "11",
+    "termsVersionId": "terms-buyer-v001",
+    "userType": "buyer",
+    "status": "accepted",
+    "acceptanceMethod": "checkbox",
+    "ipAddress": null,
+    "userAgent": null,
+    "notifiedAt": "2026-02-27T15:28:11.120Z",
+    "respondedAt": "2026-02-27T15:28:11.120Z",
+    "expiresAt": null,
+    "createdAt": "2026-02-27T15:28:11.120Z"
+  },
+  "11-terms-seller-v001": {
+    "id": "acceptance-11-terms-seller-v001-1772206110027",
+    "userId": "11",
+    "termsVersionId": "terms-seller-v001",
+    "userType": "seller",
+    "status": "accepted",
+    "acceptanceMethod": "checkbox",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "notifiedAt": "2026-02-27T15:28:30.027Z",
+    "respondedAt": "2026-02-27T15:28:30.027Z",
+    "expiresAt": null,
+    "createdAt": "2026-02-27T15:28:30.027Z"
   }
 }

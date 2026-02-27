@@ -251,6 +251,42 @@ export const adminService = {
     );
     return response.data;
   },
+
+  // === Event Banner Management ===
+
+  /**
+   * Upload a banner for an event (admin)
+   */
+  async uploadEventBanner(
+    eventId: string,
+    bannerType: 'square' | 'rectangle',
+    file: File
+  ): Promise<{ success: true; data: { eventId: string; bannerType: string; url: string } }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<{
+      success: true;
+      data: { eventId: string; bannerType: string; url: string };
+    }>(`/admin/events/${eventId}/banners/${bannerType}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Delete a banner for an event (admin)
+   */
+  async deleteEventBanner(
+    eventId: string,
+    bannerType: 'square' | 'rectangle'
+  ): Promise<{ success: true }> {
+    const response = await apiClient.delete<{ success: true }>(
+      `/admin/events/${eventId}/banners/${bannerType}`
+    );
+    return response.data;
+  },
 };
 
 export default adminService;

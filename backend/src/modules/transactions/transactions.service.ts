@@ -625,6 +625,7 @@ export class TransactionsService {
       venue: listing.venue,
       buyerName: buyerInfo?.publicName ?? 'Unknown',
       sellerName: sellerInfo?.publicName ?? 'Unknown',
+      bannerUrls: listing.bannerUrls,
     };
   }
 

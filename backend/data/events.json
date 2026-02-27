@@ -19,7 +19,31 @@
     "createdBy": "1",
     "approvedBy": "1",
     "createdAt": "2026-02-05T13:23:52.516Z",
-    "updatedAt": "2026-02-05T13:23:52.516Z"
+    "updatedAt": "2026-02-05T13:23:52.516Z",
+    "banners": {
+      "rectangle": {
+        "type": "rectangle",
+        "filename": "rectangle.png",
+        "originalFilename": "rectangle.png",
+        "contentType": "image/png",
+        "sizeBytes": 1231175,
+        "width": 1463,
+        "height": 804,
+        "uploadedBy": "1",
+        "uploadedAt": "2026-02-27T11:43:49.165Z"
+      },
+      "square": {
+        "type": "square",
+        "filename": "square.png",
+        "originalFilename": "square.png",
+        "contentType": "image/png",
+        "sizeBytes": 244329,
+        "width": 640,
+        "height": 640,
+        "uploadedBy": "1",
+        "uploadedAt": "2026-02-27T11:41:33.065Z"
+      }
+    }
   },
   "evt_1772072297395_db322c92": {
     "id": "evt_1772072297395_db322c92",
@@ -37,6 +61,19 @@
     "createdBy": "6",
     "createdAt": "2026-02-26T02:18:17.396Z",
     "updatedAt": "2026-02-26T02:20:07.798Z",
-    "approvedBy": "8"
+    "approvedBy": "8",
+    "banners": {
+      "square": {
+        "type": "square",
+        "filename": "square.png",
+        "originalFilename": "square.png",
+        "contentType": "image/png",
+        "sizeBytes": 59926,
+        "width": 200,
+        "height": 201,
+        "uploadedBy": "6",
+        "uploadedAt": "2026-02-27T11:46:43.168Z"
+      }
+    }
   }
 }

@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
 import { PlatformConfigModule } from './modules/config/config.module';
@@ -20,6 +22,12 @@ import { IdentityVerificationModule } from './modules/identity-verification/iden
 
 @Module({
   imports: [
+    // Static file serving for public files (event banners, etc.)
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'data', 'public'),
+      serveRoot: '/public',
+    }),
+
     // Global modules (must be first)
     PlatformConfigModule,
     NotificationsModule,

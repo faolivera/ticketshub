@@ -120,6 +120,14 @@ export interface Transaction {
 }
 
 /**
+ * Banner URLs for display
+ */
+export interface BannerUrls {
+  square?: string;
+  rectangle?: string;
+}
+
+/**
  * Transaction with additional display info
  */
 export interface TransactionWithDetails extends Transaction {
@@ -128,6 +136,7 @@ export interface TransactionWithDetails extends Transaction {
   venue: string;
   buyerName: string;
   sellerName: string;
+  bannerUrls?: BannerUrls;
 }
 
 // === API Types ===

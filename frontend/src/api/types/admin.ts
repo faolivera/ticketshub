@@ -100,6 +100,10 @@ export interface AdminPendingEventItem {
   pendingDates: AdminPendingEventDateItem[];
   pendingSections: AdminPendingSectionItem[];
   pendingListingsCount: number;
+  bannerUrls?: {
+    square?: string;
+    rectangle?: string;
+  };
 }
 
 /**

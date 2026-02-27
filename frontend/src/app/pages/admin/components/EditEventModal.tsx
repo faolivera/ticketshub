@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -31,8 +31,11 @@ import {
   Loader2,
   MapPin,
   Pencil,
+  Image as ImageIcon,
+  Upload,
 } from 'lucide-react';
 import { adminService } from '../../../../api/services/admin.service';
+import { EventBanner } from '../../../components/EventBanner';
 import type {
   AdminUpdateEventRequest,
   AdminEventDateUpdate,
@@ -115,6 +118,15 @@ export function EditEventModal({
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
 
+  // Banner state
+  const [bannerUrls, setBannerUrls] = useState<{ square?: string; rectangle?: string }>({});
+  const [bannerUploading, setBannerUploading] = useState<'square' | 'rectangle' | null>(null);
+  const [bannerDeleting, setBannerDeleting] = useState<'square' | 'rectangle' | null>(null);
+  const [isDeleteBannerDialogOpen, setIsDeleteBannerDialogOpen] = useState(false);
+  const [deleteBannerType, setDeleteBannerType] = useState<'square' | 'rectangle' | null>(null);
+  const squareBannerInputRef = useRef<HTMLInputElement>(null);
+  const rectangleBannerInputRef = useRef<HTMLInputElement>(null);
+
   const toSeatingType = (v: string): 'numbered' | 'unnumbered' =>
     v === 'numbered' ? 'numbered' : 'unnumbered';
 
@@ -145,6 +157,7 @@ export function EditEventModal({
           isDeleted: false,
         }))
       );
+      setBannerUrls(event.bannerUrls || {});
       setError(null);
       setWarnings([]);
       setEditingSectionId(null);
@@ -269,6 +282,69 @@ export function EditEventModal({
     const updated = [...sections];
     updated[index] = { ...updated[index], [field]: value };
     setSections(updated);
+  };
+
+  const handleBannerUpload = async (bannerType: 'square' | 'rectangle', file: File) => {
+    if (!event) return;
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError(t('createEvent.fileTooLarge'));
+      return;
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError(t('createEvent.invalidFileType'));
+      return;
+    }
+
+    try {
+      setBannerUploading(bannerType);
+      setError(null);
+      const response = await adminService.uploadEventBanner(event.id, bannerType, file);
+      setBannerUrls((prev) => ({ ...prev, [bannerType]: response.data.url }));
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('createEvent.bannerUploadFailed'));
+    } finally {
+      setBannerUploading(null);
+    }
+  };
+
+  const handleBannerFileChange = (bannerType: 'square' | 'rectangle') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleBannerUpload(bannerType, file);
+    }
+    e.target.value = '';
+  };
+
+  const openDeleteBannerDialog = (bannerType: 'square' | 'rectangle') => {
+    setDeleteBannerType(bannerType);
+    setIsDeleteBannerDialogOpen(true);
+  };
+
+  const handleDeleteBanner = async () => {
+    if (!event || !deleteBannerType) return;
+    try {
+      setBannerDeleting(deleteBannerType);
+      setError(null);
+      await adminService.deleteEventBanner(event.id, deleteBannerType);
+      setBannerUrls((prev) => {
+        const updated = { ...prev };
+        delete updated[deleteBannerType];
+        return updated;
+      });
+      setIsDeleteBannerDialogOpen(false);
+      setDeleteBannerType(null);
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('admin.eventBanners.deleteBannerError'));
+    } finally {
+      setBannerDeleting(null);
+    }
   };
 
   const buildDateISO = (dateStr: string, timeStr: string): string => {
@@ -493,6 +569,182 @@ export function EditEventModal({
                         }
                       />
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Event Banners Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  {t('admin.eventBanners.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!bannerUrls.square && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>{t('common.error')}</AlertTitle>
+                    <AlertDescription>
+                      {t('admin.eventBanners.squareBannerRequired')}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Square Banner */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      {t('createEvent.squareBanner')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t('createEvent.squareBannerHint')}
+                    </p>
+                    <input
+                      ref={squareBannerInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleBannerFileChange('square')}
+                      className="hidden"
+                    />
+                    {bannerUrls.square ? (
+                      <div className="space-y-2">
+                        <div className="aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border">
+                          <EventBanner
+                            variant="square"
+                            squareUrl={bannerUrls.square}
+                            alt={name}
+                            className="w-full h-full"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => squareBannerInputRef.current?.click()}
+                            disabled={bannerUploading === 'square'}
+                          >
+                            {bannerUploading === 'square' ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4 mr-1" />
+                            )}
+                            {t('admin.eventBanners.uploadOrReplace')}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => openDeleteBannerDialog('square')}
+                            disabled={bannerDeleting === 'square'}
+                          >
+                            {bannerDeleting === 'square' ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 mr-1" />
+                            )}
+                            {t('admin.eventBanners.deleteBanner')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => squareBannerInputRef.current?.click()}
+                        className="aspect-square w-full max-w-[200px] border-2 border-dashed rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 bg-muted/30 hover:bg-muted/50 hover:border-primary/50"
+                      >
+                        {bannerUploading === 'square' ? (
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        ) : (
+                          <>
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              {t('admin.eventBanners.noBannerUploaded')}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rectangle Banner */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      {t('createEvent.rectangleBanner')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t('createEvent.rectangleBannerHint')}
+                    </p>
+                    <input
+                      ref={rectangleBannerInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleBannerFileChange('rectangle')}
+                      className="hidden"
+                    />
+                    {bannerUrls.rectangle ? (
+                      <div className="space-y-2">
+                        <div className="aspect-video w-full max-w-[300px] overflow-hidden rounded-lg border">
+                          <EventBanner
+                            variant="rectangle"
+                            squareUrl={bannerUrls.square}
+                            rectangleUrl={bannerUrls.rectangle}
+                            alt={name}
+                            className="w-full h-full"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => rectangleBannerInputRef.current?.click()}
+                            disabled={bannerUploading === 'rectangle'}
+                          >
+                            {bannerUploading === 'rectangle' ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4 mr-1" />
+                            )}
+                            {t('admin.eventBanners.uploadOrReplace')}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => openDeleteBannerDialog('rectangle')}
+                            disabled={bannerDeleting === 'rectangle'}
+                          >
+                            {bannerDeleting === 'rectangle' ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 mr-1" />
+                            )}
+                            {t('admin.eventBanners.deleteBanner')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => rectangleBannerInputRef.current?.click()}
+                        className="aspect-video w-full max-w-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 bg-muted/30 hover:bg-muted/50 hover:border-primary/50"
+                      >
+                        {bannerUploading === 'rectangle' ? (
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        ) : (
+                          <>
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              {t('admin.eventBanners.noBannerUploaded')}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -856,6 +1108,37 @@ export function EditEventModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Delete Banner Confirmation Dialog */}
+      <Dialog open={isDeleteBannerDialogOpen} onOpenChange={setIsDeleteBannerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.eventBanners.deleteBanner')}</DialogTitle>
+            <DialogDescription>
+              {t('admin.eventBanners.confirmDeleteBanner')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteBannerDialogOpen(false)}
+              disabled={bannerDeleting !== null}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteBanner}
+              disabled={bannerDeleting !== null}
+            >
+              {bannerDeleting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {t('common.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

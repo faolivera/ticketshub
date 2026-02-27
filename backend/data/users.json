@@ -201,5 +201,24 @@
       "submittedAt": "2026-02-27T09:38:11.492Z",
       "reviewedAt": "2026-02-27T09:38:11.492Z"
     }
+  },
+  "11": {
+    "id": "11",
+    "country": "Canada",
+    "currency": "EUR",
+    "status": "Enabled",
+    "email": "as@as.com",
+    "password": "111111111",
+    "firstName": "aaa",
+    "lastName": "sss",
+    "publicName": "aaa sss",
+    "role": "User",
+    "level": "Seller",
+    "imageId": "default",
+    "emailVerified": true,
+    "phoneVerified": true,
+    "createdAt": "2026-02-27T15:28:11.117Z",
+    "updatedAt": "2026-02-27T15:28:30.039Z",
+    "phone": "12345678"
   }
 }

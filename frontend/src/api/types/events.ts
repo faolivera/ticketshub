@@ -34,6 +34,37 @@ export enum EventCategory {
 }
 
 /**
+ * Event banner metadata
+ */
+export interface EventBanner {
+  type: 'square' | 'rectangle';
+  filename: string;
+  originalFilename: string;
+  contentType: string;
+  sizeBytes: number;
+  width: number;
+  height: number;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
+/**
+ * Event banners container (stored on event entity)
+ */
+export interface EventBanners {
+  square?: EventBanner;
+  rectangle?: EventBanner;
+}
+
+/**
+ * Banner URLs returned by API
+ */
+export interface EventBannerUrls {
+  square?: string;
+  rectangle?: string;
+}
+
+/**
  * Event entity
  */
 export interface Event {
@@ -44,6 +75,7 @@ export interface Event {
   venue: string;
   location: Address;
   imageIds: string[];
+  banners?: EventBanners;
 
   status: EventStatus;
   rejectionReason?: string;
@@ -107,6 +139,7 @@ export interface EventWithDates extends Event {
   dates: EventDate[];
   sections: EventSection[];
   images: Image[];
+  bannerUrls?: EventBannerUrls;
 }
 
 // === API Types ===

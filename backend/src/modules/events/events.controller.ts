@@ -3,12 +3,19 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   Inject,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import type { Multer } from 'multer';
 import { EventsService } from './events.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -33,8 +40,17 @@ import type {
   ListEventsQuery,
   AddEventSectionRequest,
   AddEventSectionResponse,
+  UploadEventBannerResponse,
+  GetEventBannersResponse,
+  DeleteEventBannerResponse,
 } from './events.api';
-import { EventCategory } from './events.domain';
+import {
+  EventCategory,
+  BANNER_CONSTRAINTS,
+  ALLOWED_BANNER_MIME_TYPES,
+  type EventBannerType,
+  type EventBannerMimeType,
+} from './events.domain';
 import type { EventSection } from './events.domain';
 
 @Controller('api/events')
@@ -225,5 +241,102 @@ export class EventsController {
       eventId,
     );
     return { success: true, data: sections };
+  }
+
+  // ==================== Event Banners ====================
+
+  /**
+   * Upload a banner for an event.
+   * Only event creator or admin can upload.
+   */
+  @Post(':id/banners/:type')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: BANNER_CONSTRAINTS.maxSizeBytes },
+      fileFilter: (_req, file, cb) => {
+        if (
+          ALLOWED_BANNER_MIME_TYPES.includes(file.mimetype as EventBannerMimeType)
+        ) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException('Invalid file type. Allowed: PNG, JPEG, WebP'),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async uploadBanner(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') eventId: string,
+    @Param('type') bannerType: string,
+    @UploadedFile() file: Multer.File,
+  ): Promise<ApiResponse<UploadEventBannerResponse>> {
+    if (bannerType !== 'square' && bannerType !== 'rectangle') {
+      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const result = await this.eventsService.uploadBanner(
+      ctx,
+      eventId,
+      user.id,
+      user.role,
+      bannerType as EventBannerType,
+      {
+        buffer: file.buffer,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      },
+    );
+
+    return { success: true, data: result };
+  }
+
+  /**
+   * Get banners for an event (public).
+   */
+  @Get(':id/banners')
+  async getBanners(
+    @Context() ctx: Ctx,
+    @Param('id') eventId: string,
+  ): Promise<ApiResponse<GetEventBannersResponse>> {
+    const result = await this.eventsService.getBanners(ctx, eventId);
+    return { success: true, data: result };
+  }
+
+  /**
+   * Delete a banner from an event.
+   * Only event creator or admin can delete.
+   */
+  @Delete(':id/banners/:type')
+  @UseGuards(JwtAuthGuard)
+  async deleteBanner(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') eventId: string,
+    @Param('type') bannerType: string,
+  ): Promise<ApiResponse<DeleteEventBannerResponse>> {
+    if (bannerType !== 'square' && bannerType !== 'rectangle') {
+      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+    }
+
+    const result = await this.eventsService.deleteBanner(
+      ctx,
+      eventId,
+      user.id,
+      user.role,
+      bannerType as EventBannerType,
+    );
+
+    return { success: true, data: result };
   }
 }

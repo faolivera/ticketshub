@@ -67,6 +67,15 @@ export interface FileStorageProvider {
 }
 
 /**
- * Injection token for FileStorageProvider
+ * Injection token for private file storage (authenticated access only)
+ * Base path: data/private/
+ * Use for: payment confirmations, identity documents, etc.
  */
-export const FILE_STORAGE_PROVIDER = 'FILE_STORAGE_PROVIDER';
+export const PRIVATE_STORAGE_PROVIDER = 'PRIVATE_STORAGE_PROVIDER';
+
+/**
+ * Injection token for public file storage (static serving, no auth)
+ * Base path: data/public/
+ * Use for: event banners, public images, etc.
+ */
+export const PUBLIC_STORAGE_PROVIDER = 'PUBLIC_STORAGE_PROVIDER';

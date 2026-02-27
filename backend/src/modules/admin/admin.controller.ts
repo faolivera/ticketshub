@@ -10,7 +10,13 @@ import {
   Query,
   Inject,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import type { Multer } from 'multer';
 import { AdminService } from './admin.service';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { User } from '../../common/decorators/user.decorator';
@@ -54,6 +60,16 @@ import {
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { SeatingType } from '../tickets/tickets.domain';
+import {
+  BANNER_CONSTRAINTS,
+  ALLOWED_BANNER_MIME_TYPES,
+  type EventBannerType,
+  type EventBannerMimeType,
+} from '../events/events.domain';
+import type {
+  UploadEventBannerResponse,
+  DeleteEventBannerResponse,
+} from '../events/events.api';
 
 @Controller('api/admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -299,5 +315,86 @@ export class AdminController {
         message: 'Section deleted successfully',
       },
     };
+  }
+
+  // ==================== Event Banners (Admin) ====================
+
+  /**
+   * Admin upload/replace a banner for an event.
+   */
+  @Post('events/:id/banners/:type')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: BANNER_CONSTRAINTS.maxSizeBytes },
+      fileFilter: (_req, file, cb) => {
+        if (
+          ALLOWED_BANNER_MIME_TYPES.includes(file.mimetype as EventBannerMimeType)
+        ) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException('Invalid file type. Allowed: PNG, JPEG, WebP'),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async adminUploadBanner(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') eventId: string,
+    @Param('type') bannerType: string,
+    @UploadedFile() file: Multer.File,
+  ): Promise<ApiResponse<UploadEventBannerResponse>> {
+    if (bannerType !== 'square' && bannerType !== 'rectangle') {
+      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const result = await this.eventsService.uploadBanner(
+      ctx,
+      eventId,
+      user.id,
+      Role.Admin,
+      bannerType as EventBannerType,
+      {
+        buffer: file.buffer,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      },
+    );
+
+    return { success: true, data: result };
+  }
+
+  /**
+   * Admin delete a banner from an event.
+   */
+  @Delete('events/:id/banners/:type')
+  async adminDeleteBanner(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') eventId: string,
+    @Param('type') bannerType: string,
+  ): Promise<ApiResponse<DeleteEventBannerResponse>> {
+    if (bannerType !== 'square' && bannerType !== 'rectangle') {
+      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+    }
+
+    const result = await this.eventsService.deleteBanner(
+      ctx,
+      eventId,
+      user.id,
+      Role.Admin,
+      bannerType as EventBannerType,
+    );
+
+    return { success: true, data: result };
   }
 }

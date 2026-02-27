@@ -165,7 +165,20 @@
     "copied": "¡Copiado!",
     "startSelling": "Empezar a Vender",
     "available": "disponibles",
-    "pendingPayment": "Pago Pendiente"
+    "pendingPayment": "Pago Pendiente",
+    "pendingTickets": "Entradas Pendientes",
+    "pendingAwaitingMyAction": "Requiere tu acción",
+    "pendingAwaitingOtherAction": "En espera",
+    "completedTickets": "Entradas Completadas",
+    "waitingForBuyer": "Esperando al Comprador",
+    "waitingForSeller": "Esperando al Vendedor",
+    "waitingForPlatform": "Esperando a {{brand}}",
+    "disputed": "En Disputa",
+    "refunded": "Reembolsado",
+    "expired": "Expirado",
+    "noPendingAwaitingMyAction": "No hay entradas esperando tu acción",
+    "noPendingAwaitingOther": "No hay entradas esperando acción de otros",
+    "noCompletedTickets": "Aún no hay entradas completadas"
   },
   "ditListing": {
     "description": "Descripción"
@@ -644,7 +657,21 @@
       "festival": "Festival",
       "conference": "Conferencia",
       "other": "Otro"
-    }
+    },
+    "banners": "Imágenes del Evento",
+    "squareBanner": "Imagen Cuadrada (1:1)",
+    "squareBannerHint": "Tamaño recomendado: 640x640 a 1024x1024 píxeles. Se usa en móviles y miniaturas.",
+    "rectangleBanner": "Imagen Rectangular (16:9)",
+    "rectangleBannerHint": "Opcional. Tamaño recomendado: 1280x720 a 1920x1080 píxeles. Se usa en tarjetas de escritorio.",
+    "uploadBanner": "Subir Imagen",
+    "dragDropHint": "o arrastra y suelta",
+    "maxFileSize": "Tamaño máximo: 5MB",
+    "allowedFormats": "PNG, JPG o WebP",
+    "remove": "Eliminar",
+    "uploadingBanners": "Subiendo imágenes...",
+    "bannerUploadFailed": "Error al subir imagen",
+    "fileTooLarge": "El archivo es muy grande. El tamaño máximo es 5MB.",
+    "invalidFileType": "Tipo de archivo inválido. Por favor sube archivos PNG, JPG o WebP."
   },
   "sellTicket": {
     "title": "Vender Entradas",
@@ -810,6 +837,16 @@
   },
   "admin": {
     "title": "Panel de Administración",
+    "eventBanners": {
+      "title": "Imágenes del Evento",
+      "currentBanners": "Imágenes Actuales",
+      "noBannerUploaded": "Sin imagen",
+      "uploadOrReplace": "Subir / Reemplazar",
+      "squareBannerRequired": "La imagen cuadrada es obligatoria para aprobar",
+      "deleteBanner": "Eliminar Imagen",
+      "confirmDeleteBanner": "¿Estás seguro de que quieres eliminar esta imagen?",
+      "deleteBannerError": "Error al eliminar la imagen"
+    },
     "sidebar": {
       "navigation": "Navegación",
       "dashboard": "Panel Principal",

@@ -9,7 +9,7 @@ import { randomBytes } from 'crypto';
 import { IdentityVerificationRepository } from './identity-verification.repository';
 import { UsersService } from '../users/users.service';
 import {
-  FILE_STORAGE_PROVIDER,
+  PRIVATE_STORAGE_PROVIDER,
   type FileStorageProvider,
 } from '../../common/storage/file-storage-provider.interface';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -36,7 +36,7 @@ export class IdentityVerificationService {
     private readonly repository: IdentityVerificationRepository,
     @Inject(UsersService)
     private readonly usersService: UsersService,
-    @Inject(FILE_STORAGE_PROVIDER)
+    @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly storageProvider: FileStorageProvider,
   ) {}
 

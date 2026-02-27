@@ -8,10 +8,12 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import * as sharp from 'sharp';
 import { EventsRepository } from './events.repository';
 import { ImagesRepository } from '../images/images.repository';
 import { TicketsService } from '../tickets/tickets.service';
 import { TransactionsService } from '../transactions/transactions.service';
+import { EventBannerStorageService } from './event-banner-storage.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type { Image } from '../images/images.domain';
@@ -20,12 +22,17 @@ import type {
   EventDate,
   EventSection,
   EventWithDates,
+  EventBanner,
+  EventBannerType,
+  EventBanners,
 } from './events.domain';
 import {
   EventStatus,
   EventDateStatus,
   EventSectionStatus,
   EventCategory,
+  BANNER_CONSTRAINTS,
+  ALLOWED_BANNER_MIME_TYPES,
 } from './events.domain';
 import type {
   CreateEventRequest,
@@ -33,6 +40,9 @@ import type {
   AddEventSectionRequest,
   ListEventsQuery,
   EventWithDatesResponse,
+  UploadEventBannerResponse,
+  GetEventBannersResponse,
+  DeleteEventBannerResponse,
 } from './events.api';
 import type {
   AdminUpdateEventRequest,
@@ -60,6 +70,8 @@ export class EventsService {
     private readonly ticketsService: TicketsService,
     @Inject(forwardRef(() => TransactionsService))
     private readonly transactionsService: TransactionsService,
+    @Inject(EventBannerStorageService)
+    private readonly bannerStorage: EventBannerStorageService,
   ) {}
 
   /**
@@ -291,6 +303,7 @@ export class EventsService {
   /**
    * Approve or reject an event (admin only)
    * When approved, activates pending listings for this event
+   * Requires square banner to be uploaded for approval
    */
   async approveEvent(
     ctx: Ctx,
@@ -310,6 +323,10 @@ export class EventsService {
 
     if (!approved && !rejectionReason) {
       throw new BadRequestException('Rejection reason is required');
+    }
+
+    if (approved && !event.banners?.square) {
+      throw new BadRequestException('Square banner is required for event approval');
     }
 
     const updated = await this.eventsRepository.updateEvent(ctx, eventId, {
@@ -667,10 +684,33 @@ export class EventsService {
       images.map((image) => [image.id, image]),
     );
 
-    return events.map((event) => ({
-      ...event,
-      images: this.resolveImages(event.imageIds || [], imagesMap),
-    }));
+    return events.map((event) => {
+      const result: EventWithDatesResponse = {
+        ...event,
+        images: this.resolveImages(event.imageIds || [], imagesMap),
+      };
+
+      if (event.banners) {
+        const bannerUrls: { square?: string; rectangle?: string } = {};
+        if (event.banners.square) {
+          bannerUrls.square = this.bannerStorage.getPublicUrl(
+            event.id,
+            event.banners.square.filename,
+          );
+        }
+        if (event.banners.rectangle) {
+          bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
+            event.id,
+            event.banners.rectangle.filename,
+          );
+        }
+        if (Object.keys(bannerUrls).length > 0) {
+          result.bannerUrls = bannerUrls;
+        }
+      }
+
+      return result;
+    });
   }
 
   private resolveImages(
@@ -926,5 +966,236 @@ export class EventsService {
     options: { page: number; limit: number; search?: string },
   ): Promise<{ events: Event[]; total: number }> {
     return await this.eventsRepository.getAllEventsPaginated(ctx, options);
+  }
+
+  // ==================== Event Banners ====================
+
+  /**
+   * Upload a banner for an event.
+   * Only event creator or admin can upload.
+   */
+  async uploadBanner(
+    ctx: Ctx,
+    eventId: string,
+    userId: string,
+    userRole: Role,
+    bannerType: EventBannerType,
+    file: {
+      buffer: Buffer;
+      originalname: string;
+      mimetype: string;
+      size: number;
+    },
+  ): Promise<UploadEventBannerResponse> {
+    this.logger.log(ctx, `Uploading ${bannerType} banner for event ${eventId}`);
+
+    const event = await this.eventsRepository.findEventById(ctx, eventId);
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const isAdmin = userRole === Role.Admin;
+    const isCreator = event.createdBy === userId;
+    if (!isAdmin && !isCreator) {
+      throw new ForbiddenException('Only event creator or admin can upload banners');
+    }
+
+    if (!ALLOWED_BANNER_MIME_TYPES.includes(file.mimetype as any)) {
+      throw new BadRequestException('Invalid file type. Allowed: PNG, JPEG, WebP');
+    }
+
+    if (file.size > BANNER_CONSTRAINTS.maxSizeBytes) {
+      throw new BadRequestException('File exceeds maximum size (5MB)');
+    }
+
+    const metadata = await sharp(file.buffer).metadata();
+    if (!metadata.width || !metadata.height) {
+      throw new BadRequestException('Could not read image dimensions');
+    }
+
+    const constraints = BANNER_CONSTRAINTS[bannerType];
+    const actualRatio = metadata.width / metadata.height;
+    const ratioDiff = Math.abs(actualRatio - constraints.aspectRatio);
+
+    if (ratioDiff > constraints.aspectTolerance) {
+      if (bannerType === 'square') {
+        throw new BadRequestException(
+          'Square banner must have 1:1 aspect ratio (min 300x300)',
+        );
+      } else {
+        throw new BadRequestException(
+          'Rectangle banner must have 16:9 aspect ratio (min 640x360)',
+        );
+      }
+    }
+
+    if (metadata.width < constraints.minWidth || metadata.height < constraints.minHeight) {
+      if (bannerType === 'square') {
+        throw new BadRequestException(
+          'Square banner must have 1:1 aspect ratio (min 300x300)',
+        );
+      } else {
+        throw new BadRequestException(
+          'Rectangle banner must have 16:9 aspect ratio (min 640x360)',
+        );
+      }
+    }
+
+    const existingBanner = event.banners?.[bannerType];
+    if (existingBanner) {
+      await this.bannerStorage.deleteByFilename(eventId, existingBanner.filename);
+    }
+
+    const filename = await this.bannerStorage.store(
+      eventId,
+      bannerType,
+      file.buffer,
+      file.mimetype,
+    );
+
+    const banner: EventBanner = {
+      type: bannerType,
+      filename,
+      originalFilename: file.originalname,
+      contentType: file.mimetype,
+      sizeBytes: file.size,
+      width: metadata.width,
+      height: metadata.height,
+      uploadedBy: userId,
+      uploadedAt: new Date(),
+    };
+
+    const updatedBanners: EventBanners = {
+      ...event.banners,
+      [bannerType]: banner,
+    };
+
+    await this.eventsRepository.updateEvent(ctx, eventId, {
+      banners: updatedBanners,
+    });
+
+    const url = this.bannerStorage.getPublicUrl(eventId, filename);
+
+    this.logger.log(
+      ctx,
+      `${bannerType} banner uploaded for event ${eventId}: ${filename}`,
+    );
+
+    return {
+      eventId,
+      bannerType,
+      url,
+      banner,
+    };
+  }
+
+  /**
+   * Delete a banner from an event.
+   * Only event creator or admin can delete.
+   */
+  async deleteBanner(
+    ctx: Ctx,
+    eventId: string,
+    userId: string,
+    userRole: Role,
+    bannerType: EventBannerType,
+  ): Promise<DeleteEventBannerResponse> {
+    this.logger.log(ctx, `Deleting ${bannerType} banner for event ${eventId}`);
+
+    const event = await this.eventsRepository.findEventById(ctx, eventId);
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const isAdmin = userRole === Role.Admin;
+    const isCreator = event.createdBy === userId;
+    if (!isAdmin && !isCreator) {
+      throw new ForbiddenException('Only event creator or admin can delete banners');
+    }
+
+    const existingBanner = event.banners?.[bannerType];
+    if (!existingBanner) {
+      throw new NotFoundException(`No ${bannerType} banner exists for this event`);
+    }
+
+    await this.bannerStorage.deleteByFilename(eventId, existingBanner.filename);
+
+    const updatedBanners: EventBanners = { ...event.banners };
+    delete updatedBanners[bannerType];
+
+    await this.eventsRepository.updateEvent(ctx, eventId, {
+      banners: Object.keys(updatedBanners).length > 0 ? updatedBanners : undefined,
+    });
+
+    this.logger.log(ctx, `${bannerType} banner deleted for event ${eventId}`);
+
+    return {
+      eventId,
+      bannerType,
+      deleted: true,
+    };
+  }
+
+  /**
+   * Get banners for an event with URLs.
+   */
+  async getBanners(ctx: Ctx, eventId: string): Promise<GetEventBannersResponse> {
+    const event = await this.eventsRepository.findEventById(ctx, eventId);
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const response: GetEventBannersResponse = { eventId };
+
+    if (event.banners?.square) {
+      response.square = {
+        url: this.bannerStorage.getPublicUrl(eventId, event.banners.square.filename),
+        banner: event.banners.square,
+      };
+    }
+
+    if (event.banners?.rectangle) {
+      response.rectangle = {
+        url: this.bannerStorage.getPublicUrl(eventId, event.banners.rectangle.filename),
+        banner: event.banners.rectangle,
+      };
+    }
+
+    return response;
+  }
+
+  /**
+   * Internal method to add banner URLs to an event response.
+   */
+  private addBannerUrlsToEvent(event: EventWithDates): EventWithDatesResponse & {
+    bannerUrls?: { square?: string; rectangle?: string };
+  } {
+    const result: EventWithDatesResponse & {
+      bannerUrls?: { square?: string; rectangle?: string };
+    } = {
+      ...event,
+      images: [],
+    };
+
+    if (event.banners) {
+      const bannerUrls: { square?: string; rectangle?: string } = {};
+      if (event.banners.square) {
+        bannerUrls.square = this.bannerStorage.getPublicUrl(
+          event.id,
+          event.banners.square.filename,
+        );
+      }
+      if (event.banners.rectangle) {
+        bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
+          event.id,
+          event.banners.rectangle.filename,
+        );
+      }
+      if (Object.keys(bannerUrls).length > 0) {
+        result.bannerUrls = bannerUrls;
+      }
+    }
+
+    return result;
   }
 }

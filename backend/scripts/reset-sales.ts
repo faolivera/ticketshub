@@ -91,10 +91,10 @@ function resetTickets(): void {
 }
 
 function deleteTransactionDocs(): void {
-  const docsDir = path.join(DATA_DIR, 'uploaded/docs');
+  const docsDir = path.join(DATA_DIR, 'private', 'payment-confirmations');
 
   if (!fs.existsSync(docsDir)) {
-    console.log('No uploaded/docs directory found');
+    console.log('No payment-confirmations directory found');
     return;
   }
 
@@ -109,7 +109,7 @@ function deleteTransactionDocs(): void {
     }
   }
 
-  console.log(`Deleted transaction docs: ${deletedCount} files`);
+  console.log(`Deleted payment confirmation docs: ${deletedCount} files`);
 }
 
 function main(): void {

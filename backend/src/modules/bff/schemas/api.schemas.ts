@@ -49,6 +49,11 @@ const TicketSeatSchema = z.object({
   seatNumber: z.string(),
 });
 
+const BannerUrlsSchema = z.object({
+  square: z.string().optional(),
+  rectangle: z.string().optional(),
+});
+
 const TicketUnitSchema = z.object({
   id: z.string(),
   status: TicketUnitStatusSchema,
@@ -117,6 +122,7 @@ export const ListingWithSellerSchema = z.object({
   eventDate: z.coerce.date(),
   venue: z.string(),
   sectionName: z.string(),
+  bannerUrls: BannerUrlsSchema.optional(),
   sellerPublicName: z.string(),
   sellerPic: ImageSchema,
   commissionPercentRange: CommissionPercentRangeSchema,
@@ -159,6 +165,7 @@ const TransactionWithDetailsSchema = z.object({
   venue: z.string(),
   buyerName: z.string(),
   sellerName: z.string(),
+  bannerUrls: BannerUrlsSchema.optional(),
 });
 
 const TicketListingWithEventSchema = ListingWithSellerSchema.omit({

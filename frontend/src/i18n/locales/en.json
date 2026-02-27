@@ -177,7 +177,20 @@
     "errorLoading": "Failed to load tickets. Please try again.",
     "cancelled": "Cancelled",
     "available": "available",
-    "pendingPayment": "Pending Payment"
+    "pendingPayment": "Pending Payment",
+    "pendingTickets": "Pending Tickets",
+    "pendingAwaitingMyAction": "Action Required",
+    "pendingAwaitingOtherAction": "Waiting",
+    "completedTickets": "Completed Tickets",
+    "waitingForBuyer": "Waiting for Buyer",
+    "waitingForSeller": "Waiting for Seller",
+    "waitingForPlatform": "Waiting for {{brand}}",
+    "disputed": "Disputed",
+    "refunded": "Refunded",
+    "expired": "Expired",
+    "noPendingAwaitingMyAction": "No tickets awaiting your action",
+    "noPendingAwaitingOther": "No tickets awaiting other's action",
+    "noCompletedTickets": "No completed tickets yet"
   },
   "ditListing": {
     "description": "Description"
@@ -670,7 +683,21 @@
       "festival": "Festival",
       "conference": "Conference",
       "other": "Other"
-    }
+    },
+    "banners": "Event Banners",
+    "squareBanner": "Square Banner (1:1)",
+    "squareBannerHint": "Recommended size: 640x640 to 1024x1024 pixels. Used on mobile and thumbnails.",
+    "rectangleBanner": "Rectangle Banner (16:9)",
+    "rectangleBannerHint": "Optional. Recommended size: 1280x720 to 1920x1080 pixels. Used on desktop cards.",
+    "uploadBanner": "Upload Image",
+    "dragDropHint": "or drag and drop",
+    "maxFileSize": "Max file size: 5MB",
+    "allowedFormats": "PNG, JPG, or WebP",
+    "remove": "Remove",
+    "uploadingBanners": "Uploading banners...",
+    "bannerUploadFailed": "Failed to upload banner",
+    "fileTooLarge": "File is too large. Maximum size is 5MB.",
+    "invalidFileType": "Invalid file type. Please upload PNG, JPG, or WebP files."
   },
   "sellTicket": {
     "title": "Sell Tickets",
@@ -843,6 +870,16 @@
   },
   "admin": {
     "title": "Admin Panel",
+    "eventBanners": {
+      "title": "Event Banners",
+      "currentBanners": "Current Banners",
+      "noBannerUploaded": "No banner uploaded",
+      "uploadOrReplace": "Upload / Replace",
+      "squareBannerRequired": "Square banner is required before approval",
+      "deleteBanner": "Delete Banner",
+      "confirmDeleteBanner": "Are you sure you want to delete this banner?",
+      "deleteBannerError": "Failed to delete banner"
+    },
     "sidebar": {
       "navigation": "Navigation",
       "dashboard": "Dashboard",

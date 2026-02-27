@@ -1,16 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Ticket, CheckCircle, Clock, Calendar, User, DollarSign, Edit, AlertCircle, Eye, Link as LinkIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorAlert } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
-import type { TransactionWithDetails, TicketListingWithEvent, TransactionStatus } from '../../api/types';
-import { TicketUnitStatus } from '../../api/types';
+import { EventBanner, useEventBannerVariant } from '../components/EventBanner';
+import type { TransactionWithDetails, TicketListingWithEvent } from '../../api/types';
+import { TicketUnitStatus, RequiredActor, TransactionStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
+import { BRAND_NAME } from '../../constants/brand';
 
 type TabType = 'bought' | 'sold' | 'listed';
+
+const VALID_TABS: TabType[] = ['bought', 'sold', 'listed'];
+
+function isValidTab(tab: string | null): tab is TabType {
+  return tab !== null && VALID_TABS.includes(tab as TabType);
+}
+
+/**
+ * Terminal statuses - transactions that are "completed" (no more actions needed)
+ */
+const TERMINAL_STATUSES: TransactionStatus[] = [
+  TransactionStatus.Completed,
+  TransactionStatus.Cancelled,
+  TransactionStatus.Refunded,
+];
+
+/**
+ * Get the "waiting for" label based on requiredActor
+ */
+function getWaitingForLabel(
+  requiredActor: RequiredActor,
+  t: (key: string, options?: Record<string, string>) => string
+): string {
+  switch (requiredActor) {
+    case RequiredActor.Buyer:
+      return t('boughtTickets.waitingForBuyer');
+    case RequiredActor.Seller:
+      return t('boughtTickets.waitingForSeller');
+    case RequiredActor.Platform:
+      return t('boughtTickets.waitingForPlatform', { brand: BRAND_NAME });
+    default:
+      return '';
+  }
+}
+
+/**
+ * Determine if the current user is the required actor for a transaction
+ */
+function isUserRequiredActor(
+  transaction: TransactionWithDetails,
+  userId: string | undefined,
+  activeTab: 'bought' | 'sold'
+): boolean {
+  if (!userId) return false;
+
+  const isBuyer = transaction.buyerId === userId;
+  const isSeller = transaction.sellerId === userId;
+
+  switch (transaction.requiredActor) {
+    case RequiredActor.Buyer:
+      return activeTab === 'bought' && isBuyer;
+    case RequiredActor.Seller:
+      return activeTab === 'sold' && isSeller;
+    default:
+      return false;
+  }
+}
 
 /**
  * Map API transaction status to display info
@@ -106,19 +165,328 @@ function getListedStatusInfo(status: string, t: (key: string) => string) {
   }
 }
 
+interface TransactionCardProps {
+  transaction: TransactionWithDetails;
+  userId: string | undefined;
+  showWaitingFor: boolean;
+  t: (key: string, options?: Record<string, string>) => string;
+}
+
+function TransactionCard({ transaction, userId, showWaitingFor, t }: TransactionCardProps) {
+  const statusInfo = getTransactionStatusInfo(transaction.status, t);
+  const StatusIcon = statusInfo.icon;
+  const eventDate = new Date(transaction.eventDate);
+  const isSellerRole = transaction.sellerId === userId;
+  const counterparty = isSellerRole ? transaction.buyerName : transaction.sellerName;
+  const waitingForLabel = showWaitingFor ? getWaitingForLabel(transaction.requiredActor, t) : '';
+  const bannerVariant = useEventBannerVariant();
+
+  return (
+    <Link
+      to={`/transaction/${transaction.id}`}
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+    >
+      {/* Event Image */}
+      <div className="relative h-48">
+        <EventBanner
+          variant={bannerVariant}
+          alt={transaction.eventName}
+          className="h-full"
+        />
+        {/* Status Badge */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
+            <StatusIcon className="w-3.5 h-3.5" />
+            {statusInfo.label}
+          </span>
+          {showWaitingFor && waitingForLabel && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/90 text-gray-700 backdrop-blur-sm">
+              <Clock className="w-3 h-3" />
+              {waitingForLabel}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Card Content */}
+      <div className="p-5">
+        {/* Event Name */}
+        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
+          {transaction.eventName}
+        </h3>
+
+        {/* Ticket Type */}
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
+          <Ticket className="w-3.5 h-3.5" />
+          {transaction.ticketType}
+        </div>
+
+        {/* Date and Time */}
+        <div className="flex items-center gap-2 text-gray-600 mb-3">
+          <Calendar className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">
+            {eventDate.toLocaleDateString('en-US', { 
+              month: 'long', 
+              day: 'numeric', 
+              year: 'numeric' 
+            })}
+          </span>
+        </div>
+
+        {/* Seller/Buyer Info */}
+        <div className="flex items-center gap-2 text-gray-600 pt-3 border-t border-gray-100">
+          <User className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">
+            {isSellerRole ? t('boughtTickets.to') : t('boughtTickets.soldBy')}{' '}
+            <span className="font-medium text-gray-900">{counterparty}</span>
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+interface TransactionSectionsProps {
+  groupedTransactions: {
+    pendingMyAction: TransactionWithDetails[];
+    pendingOtherAction: TransactionWithDetails[];
+    completed: TransactionWithDetails[];
+  };
+  activeTab: 'bought' | 'sold';
+  userId: string | undefined;
+  t: (key: string, options?: Record<string, string>) => string;
+}
+
+function TransactionSections({ groupedTransactions, activeTab, userId, t }: TransactionSectionsProps) {
+  const { pendingMyAction, pendingOtherAction, completed } = groupedTransactions;
+  const hasAnyTransactions = pendingMyAction.length > 0 || pendingOtherAction.length > 0 || completed.length > 0;
+
+  if (!hasAnyTransactions) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-12">
+        <EmptyState
+          icon={Ticket}
+          title={t('boughtTickets.noTicketsYet')}
+          description={activeTab === 'bought' 
+            ? t('boughtTickets.purchasedTicketsWillAppear')
+            : t('boughtTickets.soldTicketsWillAppear')
+          }
+          action={activeTab === 'bought' ? {
+            label: t('landing.upcomingEvents'),
+            to: '/',
+          } : undefined}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Pending Tickets Header */}
+      {(pendingMyAction.length > 0 || pendingOtherAction.length > 0) && (
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold text-gray-900">{t('boughtTickets.pendingTickets')}</h2>
+
+          {/* Awaiting My Action */}
+          {pendingMyAction.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-orange-700 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                {t('boughtTickets.pendingAwaitingMyAction')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pendingMyAction.map((tx) => (
+                  <TransactionCard
+                    key={tx.id}
+                    transaction={tx}
+                    userId={userId}
+                    showWaitingFor={false}
+                    t={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Awaiting Other's Action */}
+          {pendingOtherAction.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-600 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                {t('boughtTickets.pendingAwaitingOtherAction')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pendingOtherAction.map((tx) => (
+                  <TransactionCard
+                    key={tx.id}
+                    transaction={tx}
+                    userId={userId}
+                    showWaitingFor={true}
+                    t={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Completed Tickets */}
+      {completed.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">{t('boughtTickets.completedTickets')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {completed.map((tx) => (
+              <TransactionCard
+                key={tx.id}
+                transaction={tx}
+                userId={userId}
+                showWaitingFor={false}
+                t={t}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ListedTicketsGridProps {
+  listed: TicketListingWithEvent[];
+  t: (key: string, options?: Record<string, string>) => string;
+  onCopyLink: (listingId: string) => void;
+  copiedListingId: string | null;
+}
+
+function ListedTicketsGrid({ listed, t, onCopyLink, copiedListingId }: ListedTicketsGridProps) {
+  const bannerVariant = useEventBannerVariant();
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {listed.map((listing) => {
+        const statusInfo = getListedStatusInfo(listing.status, t);
+        const StatusIcon = statusInfo.icon;
+        const eventDate = new Date(listing.eventDate);
+        const priceDisplay = listing.pricePerTicket.amount / 100;
+        const availableCount = listing.ticketUnits.filter(
+          (unit) => unit.status === TicketUnitStatus.Available,
+        ).length;
+
+        return (
+          <div
+            key={listing.id}
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+          >
+            {/* Event Image */}
+            <div className="relative h-48">
+              <EventBanner
+                variant={bannerVariant}
+                alt={listing.eventName}
+                className="h-full"
+              />
+              {/* Status Badge */}
+              <div className="absolute top-3 right-3">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
+                  <StatusIcon className="w-3.5 h-3.5" />
+                  {statusInfo.label}
+                </span>
+              </div>
+            </div>
+
+            {/* Card Content */}
+            <div className="p-5">
+              {/* Event Name */}
+              <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
+                {listing.eventName}
+              </h3>
+
+              {/* Ticket Type */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
+                <Ticket className="w-3.5 h-3.5" />
+                {listing.sectionName || listing.type}
+              </div>
+
+              {/* Date and Time */}
+              <div className="flex items-center gap-2 text-gray-600 mb-3">
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm">
+                  {eventDate.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })}
+                </span>
+              </div>
+
+              {/* Price and Quantity */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-3">
+                <div className="flex items-center gap-1.5 text-gray-900">
+                  <DollarSign className="w-4 h-4" />
+                  <span className="text-lg font-bold">{priceDisplay.toFixed(2)}</span>
+                </div>
+                <span className="text-sm text-gray-500">
+                  {availableCount} {t('boughtTickets.available')}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              {listing.status === 'Active' && (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    to={`/edit-listing/${listing.id}`}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    {t('boughtTickets.editListing')}
+                  </Link>
+                  <Link
+                    to={`/buy/${listing.id}`}
+                    className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {t('boughtTickets.viewListing')}
+                  </Link>
+                  <button
+                    onClick={() => onCopyLink(listing.id)}
+                    className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    {copiedListingId === listing.id
+                      ? t('boughtTickets.copied')
+                      : t('boughtTickets.copyLink')}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function BoughtTicketManager() {
   const { t } = useTranslation();
   const { user, isAuthenticated, canSell } = useUser();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [bought, setBought] = useState<TransactionWithDetails[]>([]);
   const [sold, setSold] = useState<TransactionWithDetails[]>([]);
   const [listed, setListed] = useState<TicketListingWithEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('bought');
   const [copiedListingId, setCopiedListingId] = useState<string | null>(null);
 
   const isSeller = canSell();
+
+  // Get active tab from query string, default to 'bought'
+  const tabFromUrl = searchParams.get('tab');
+  const activeTab: TabType = isValidTab(tabFromUrl) ? tabFromUrl : 'bought';
+
+  const setActiveTab = (tab: TabType) => {
+    setSearchParams({ tab });
+  };
 
   // Fetch all tickets once when authenticated
   useEffect(() => {
@@ -144,7 +512,26 @@ export function BoughtTicketManager() {
     fetchData();
   }, [isAuthenticated, t]);
 
-  const displayedTransactions = activeTab === 'bought' ? bought : sold;
+  // Group transactions into pending (my action, other's action) and completed
+  const groupedTransactions = useMemo(() => {
+    const transactions = activeTab === 'bought' ? bought : sold;
+    
+    const pendingMyAction: TransactionWithDetails[] = [];
+    const pendingOtherAction: TransactionWithDetails[] = [];
+    const completed: TransactionWithDetails[] = [];
+
+    for (const tx of transactions) {
+      if (TERMINAL_STATUSES.includes(tx.status)) {
+        completed.push(tx);
+      } else if (isUserRequiredActor(tx, user?.id, activeTab as 'bought' | 'sold')) {
+        pendingMyAction.push(tx);
+      } else {
+        pendingOtherAction.push(tx);
+      }
+    }
+
+    return { pendingMyAction, pendingOtherAction, completed };
+  }, [bought, sold, activeTab, user?.id]);
 
   const handleCopyLink = async (listingId: string) => {
     const url = `${window.location.origin}/buy/${listingId}`;
@@ -237,104 +624,7 @@ export function BoughtTicketManager() {
             {activeTab === 'listed' ? (
               // Listed Tickets View
               listed.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {listed.map((listing) => {
-                    const statusInfo = getListedStatusInfo(listing.status, t);
-                    const StatusIcon = statusInfo.icon;
-                    const eventDate = new Date(listing.eventDate);
-                    const priceDisplay = listing.pricePerTicket.amount / 100;
-                    const availableCount = listing.ticketUnits.filter(
-                      (unit) => unit.status === TicketUnitStatus.Available,
-                    ).length;
-
-                    return (
-                      <div
-                        key={listing.id}
-                        className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-                      >
-                        {/* Event Image */}
-                        <div className="relative h-48 bg-gray-200">
-                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                            <Ticket className="w-16 h-16 text-white opacity-50" />
-                          </div>
-                          {/* Status Badge */}
-                          <div className="absolute top-3 right-3">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
-                              <StatusIcon className="w-3.5 h-3.5" />
-                              {statusInfo.label}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Card Content */}
-                        <div className="p-5">
-                          {/* Event Name */}
-                          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
-                            {listing.eventName}
-                          </h3>
-
-                          {/* Ticket Type */}
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
-                            <Ticket className="w-3.5 h-3.5" />
-                            {listing.sectionName || listing.type}
-                          </div>
-
-                          {/* Date and Time */}
-                          <div className="flex items-center gap-2 text-gray-600 mb-3">
-                            <Calendar className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-sm">
-                              {eventDate.toLocaleDateString('en-US', { 
-                                month: 'long', 
-                                day: 'numeric', 
-                                year: 'numeric' 
-                              })}
-                            </span>
-                          </div>
-
-                          {/* Price and Quantity */}
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-3">
-                            <div className="flex items-center gap-1.5 text-gray-900">
-                              <DollarSign className="w-4 h-4" />
-                              <span className="text-lg font-bold">{priceDisplay.toFixed(2)}</span>
-                            </div>
-                            <span className="text-sm text-gray-500">
-                              {availableCount} {t('boughtTickets.available')}
-                            </span>
-                          </div>
-
-                          {/* Action Buttons */}
-                          {listing.status === 'Active' && (
-                            <div className="flex flex-col gap-2">
-                              <Link
-                                to={`/edit-listing/${listing.id}`}
-                                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                              >
-                                <Edit className="w-4 h-4" />
-                                {t('boughtTickets.editListing')}
-                              </Link>
-                              <Link
-                                to={`/buy/${listing.id}`}
-                                className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                              >
-                                <Eye className="w-4 h-4" />
-                                {t('boughtTickets.viewListing')}
-                              </Link>
-                              <button
-                                onClick={() => handleCopyLink(listing.id)}
-                                className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                              >
-                                <LinkIcon className="w-4 h-4" />
-                                {copiedListingId === listing.id
-                                  ? t('boughtTickets.copied')
-                                  : t('boughtTickets.copyLink')}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ListedTicketsGrid listed={listed} t={t} onCopyLink={handleCopyLink} copiedListingId={copiedListingId} />
               ) : (
                 <div className="bg-white rounded-lg shadow-md p-12">
                   <EmptyState
@@ -349,90 +639,13 @@ export function BoughtTicketManager() {
                 </div>
               )
             ) : (
-              // Bought/Sold Tickets View
-              displayedTransactions.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {displayedTransactions.map((transaction) => {
-                    const statusInfo = getTransactionStatusInfo(transaction.status, t);
-                    const StatusIcon = statusInfo.icon;
-                    const eventDate = new Date(transaction.eventDate);
-                    const isSeller = transaction.sellerId === user?.id;
-                    const counterparty = isSeller ? transaction.buyerName : transaction.sellerName;
-
-                    return (
-                      <Link
-                        key={transaction.id}
-                        to={`/transaction/${transaction.id}`}
-                        className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-                      >
-                        {/* Event Image */}
-                        <div className="relative h-48 bg-gray-200">
-                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                            <Ticket className="w-16 h-16 text-white opacity-50" />
-                          </div>
-                          {/* Status Badge */}
-                          <div className="absolute top-3 right-3">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusInfo.color} backdrop-blur-sm bg-opacity-95`}>
-                              <StatusIcon className="w-3.5 h-3.5" />
-                              {statusInfo.label}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Card Content */}
-                        <div className="p-5">
-                          {/* Event Name */}
-                          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
-                            {transaction.eventName}
-                          </h3>
-
-                          {/* Ticket Type */}
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-medium mb-3">
-                            <Ticket className="w-3.5 h-3.5" />
-                            {transaction.ticketType}
-                          </div>
-
-                          {/* Date and Time */}
-                          <div className="flex items-center gap-2 text-gray-600 mb-3">
-                            <Calendar className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-sm">
-                              {eventDate.toLocaleDateString('en-US', { 
-                                month: 'long', 
-                                day: 'numeric', 
-                                year: 'numeric' 
-                              })}
-                            </span>
-                          </div>
-
-                          {/* Seller/Buyer Info */}
-                          <div className="flex items-center gap-2 text-gray-600 pt-3 border-t border-gray-100">
-                            <User className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-sm">
-                              {isSeller ? t('boughtTickets.to') : t('boughtTickets.soldBy')}{' '}
-                              <span className="font-medium text-gray-900">{counterparty}</span>
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow-md p-12">
-                  <EmptyState
-                    icon={Ticket}
-                    title={t('boughtTickets.noTicketsYet')}
-                    description={activeTab === 'bought' 
-                      ? t('boughtTickets.purchasedTicketsWillAppear')
-                      : t('boughtTickets.soldTicketsWillAppear')
-                    }
-                    action={activeTab === 'bought' ? {
-                      label: t('landing.upcomingEvents'),
-                      to: '/',
-                    } : undefined}
-                  />
-                </div>
-              )
+              // Bought/Sold Tickets View - Grouped by pending status
+              <TransactionSections
+                groupedTransactions={groupedTransactions}
+                activeTab={activeTab as 'bought' | 'sold'}
+                userId={user?.id}
+                t={t}
+              />
             )}
           </>
         )}

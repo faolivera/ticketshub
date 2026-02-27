@@ -154,5 +154,31 @@
     "requiresAction": false,
     "actionDeadline": null,
     "updatedAt": "2026-02-26T16:39:37.573Z"
+  },
+  "11-buyer": {
+    "id": "state-11-buyer",
+    "userId": "11",
+    "userType": "buyer",
+    "currentTermsVersionId": "terms-buyer-v001",
+    "lastAcceptedVersionId": "terms-buyer-v001",
+    "lastAcceptedAt": "2026-02-27T15:28:11.120Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-27T15:28:11.120Z"
+  },
+  "11-seller": {
+    "id": "state-11-seller",
+    "userId": "11",
+    "userType": "seller",
+    "currentTermsVersionId": "terms-seller-v001",
+    "lastAcceptedVersionId": "terms-seller-v001",
+    "lastAcceptedAt": "2026-02-27T15:28:30.027Z",
+    "isCompliant": true,
+    "canOperate": true,
+    "requiresAction": false,
+    "actionDeadline": null,
+    "updatedAt": "2026-02-27T15:28:30.027Z"
   }
 }

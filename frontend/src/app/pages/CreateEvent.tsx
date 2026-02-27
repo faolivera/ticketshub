@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, FileText, Tag, Image as ImageIcon, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, FileText, Tag, Image as ImageIcon, Plus, Loader2, Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { eventsService } from '@/api/services/events.service';
@@ -14,7 +14,161 @@ interface EventData {
   location: string;
   description: string;
   category: string;
-  imageUrl: string;
+}
+
+interface BannerState {
+  file: File | null;
+  preview: string | null;
+}
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+interface BannerUploadProps {
+  label: string;
+  hint: string;
+  file: File | null;
+  preview: string | null;
+  onChange: (file: File | null) => void;
+  aspectRatio: 'square' | 'rectangle';
+  t: (key: string) => string;
+}
+
+function BannerUpload({ label, hint, file, preview, onChange, aspectRatio, t }: BannerUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateAndSetFile = (selected: File) => {
+    setError(null);
+    
+    if (selected.size > MAX_FILE_SIZE) {
+      setError(t('createEvent.fileTooLarge'));
+      return;
+    }
+    
+    if (!ALLOWED_TYPES.includes(selected.type)) {
+      setError(t('createEvent.invalidFileType'));
+      return;
+    }
+    
+    onChange(selected);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (selected) {
+      validateAndSetFile(selected);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const selected = e.dataTransfer.files[0];
+    if (selected) {
+      validateAndSetFile(selected);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleRemove = () => {
+    onChange(null);
+    setError(null);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const handleClick = () => {
+    inputRef.current?.click();
+  };
+
+  const aspectRatioClass = aspectRatio === 'square' ? 'aspect-square' : 'aspect-video';
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-semibold text-gray-700">
+        {label}
+      </label>
+      <p className="text-sm text-gray-500">{hint}</p>
+      
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {preview ? (
+        <div className="relative">
+          <div className={`${aspectRatioClass} w-full max-w-md overflow-hidden rounded-lg border border-gray-200`}>
+            <img
+              src={preview}
+              alt="Banner preview"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="mt-2 flex items-center justify-between max-w-md">
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">{file?.name}</span>
+              <span className="ml-2 text-gray-400">({file ? formatFileSize(file.size) : ''})</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4" />
+              {t('createEvent.remove')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={handleClick}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          className={`${aspectRatioClass} w-full max-w-md border-2 border-dashed rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 ${
+            isDragging
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
+          }`}
+        >
+          <div className="p-3 bg-white rounded-full shadow-sm">
+            <Upload className="w-6 h-6 text-gray-400" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-blue-600">{t('createEvent.uploadBanner')}</p>
+            <p className="text-xs text-gray-500 mt-1">{t('createEvent.dragDropHint')}</p>
+          </div>
+          <div className="text-xs text-gray-400">
+            <p>{t('createEvent.allowedFormats')}</p>
+            <p>{t('createEvent.maxFileSize')}</p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
+    </div>
+  );
 }
 
 const eventCategories = [
@@ -70,13 +224,46 @@ export function CreateEvent() {
     location: '',
     description: '',
     category: '',
-    imageUrl: ''
   });
+
+  const [squareBanner, setSquareBanner] = useState<BannerState>({ file: null, preview: null });
+  const [rectangleBanner, setRectangleBanner] = useState<BannerState>({ file: null, preview: null });
 
   const [customCategory, setCustomCategory] = useState('');
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingBanners, setIsUploadingBanners] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle banner file changes and create object URLs for previews
+  const handleSquareBannerChange = (file: File | null) => {
+    // Revoke old preview URL to prevent memory leaks
+    if (squareBanner.preview) {
+      URL.revokeObjectURL(squareBanner.preview);
+    }
+    setSquareBanner({
+      file,
+      preview: file ? URL.createObjectURL(file) : null,
+    });
+  };
+
+  const handleRectangleBannerChange = (file: File | null) => {
+    if (rectangleBanner.preview) {
+      URL.revokeObjectURL(rectangleBanner.preview);
+    }
+    setRectangleBanner({
+      file,
+      preview: file ? URL.createObjectURL(file) : null,
+    });
+  };
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (squareBanner.preview) URL.revokeObjectURL(squareBanner.preview);
+      if (rectangleBanner.preview) URL.revokeObjectURL(rectangleBanner.preview);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +295,32 @@ export function CreateEvent() {
         date: eventDateTime.toISOString(),
       });
 
+      // Upload banners in parallel if provided
+      const bannerUploads: Promise<unknown>[] = [];
+      if (squareBanner.file) {
+        bannerUploads.push(
+          eventsService.uploadEventBanner(createdEvent.id, 'square', squareBanner.file)
+        );
+      }
+      if (rectangleBanner.file) {
+        bannerUploads.push(
+          eventsService.uploadEventBanner(createdEvent.id, 'rectangle', rectangleBanner.file)
+        );
+      }
+
+      if (bannerUploads.length > 0) {
+        setIsUploadingBanners(true);
+        try {
+          await Promise.all(bannerUploads);
+        } catch (bannerError) {
+          console.error('Failed to upload banners:', bannerError);
+          // Show warning but don't block event creation since event was created successfully
+          alert(t('createEvent.bannerUploadFailed'));
+        } finally {
+          setIsUploadingBanners(false);
+        }
+      }
+
       alert(t('createEvent.eventCreatedSuccess'));
 
       // If coming from sell ticket page, redirect back with the event info
@@ -135,6 +348,7 @@ export function CreateEvent() {
       );
     } finally {
       setIsSubmitting(false);
+      setIsUploadingBanners(false);
     }
   };
 
@@ -342,36 +556,34 @@ export function CreateEvent() {
               />
             </div>
 
-            {/* Event Image URL */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" />
-                  {t('createEvent.imageUrl')}
-                </div>
-              </label>
-              <input
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                placeholder={t('createEvent.imageUrlPlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-sm text-gray-500 mt-1">{t('createEvent.imageUrlHint')}</p>
-              
-              {formData.imageUrl && (
-                <div className="mt-3 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">{t('createEvent.imagePreview')}</p>
-                  <img 
-                    src={formData.imageUrl} 
-                    alt="Event preview" 
-                    className="w-full max-w-md h-48 object-cover rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
+            {/* Event Banners */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-gray-700" />
+                <h3 className="text-sm font-semibold text-gray-700">{t('createEvent.banners')}</h3>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <BannerUpload
+                  label={t('createEvent.squareBanner')}
+                  hint={t('createEvent.squareBannerHint')}
+                  file={squareBanner.file}
+                  preview={squareBanner.preview}
+                  onChange={handleSquareBannerChange}
+                  aspectRatio="square"
+                  t={t}
+                />
+
+                <BannerUpload
+                  label={t('createEvent.rectangleBanner')}
+                  hint={t('createEvent.rectangleBannerHint')}
+                  file={rectangleBanner.file}
+                  preview={rectangleBanner.preview}
+                  onChange={handleRectangleBannerChange}
+                  aspectRatio="rectangle"
+                  t={t}
+                />
+              </div>
             </div>
 
             {/* Preview Summary */}
@@ -418,15 +630,19 @@ export function CreateEvent() {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploadingBanners}
                 className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? (
+                {(isSubmitting || isUploadingBanners) ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Plus className="w-5 h-5" />
                 )}
-                {isSubmitting ? t('common.saving') : t('createEvent.createEvent')}
+                {isUploadingBanners 
+                  ? t('createEvent.uploadingBanners') 
+                  : isSubmitting 
+                    ? t('common.saving') 
+                    : t('createEvent.createEvent')}
               </button>
             </div>
           </form>

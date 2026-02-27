@@ -8,16 +8,10 @@ import type {
 } from './file-storage-provider.interface';
 
 /**
- * Local filesystem storage provider.
- * Stores files in backend/data/uploaded/docs/
+ * Base class for local filesystem storage providers.
  */
-@Injectable()
-export class LocalFileStorageProvider implements FileStorageProvider {
-  private readonly basePath: string;
-
-  constructor() {
-    this.basePath = path.join(process.cwd(), 'data', 'uploaded', 'docs');
-  }
+abstract class BaseLocalStorageProvider implements FileStorageProvider {
+  protected abstract readonly basePath: string;
 
   async store(
     key: string,
@@ -64,4 +58,29 @@ export class LocalFileStorageProvider implements FileStorageProvider {
       return false;
     }
   }
+
+  getFilePath(key: string): string {
+    return path.join(this.basePath, key);
+  }
 }
+
+/**
+ * Private file storage provider for authenticated-only files.
+ * Stores files in data/private/
+ * Use for: payment confirmations, identity documents, etc.
+ */
+@Injectable()
+export class PrivateFileStorageProvider extends BaseLocalStorageProvider {
+  protected readonly basePath = path.join(process.cwd(), 'data', 'private');
+}
+
+/**
+ * Public file storage provider for statically-served files.
+ * Stores files in data/public/
+ * Use for: event banners, public images, etc.
+ */
+@Injectable()
+export class PublicFileStorageProvider extends BaseLocalStorageProvider {
+  protected readonly basePath = path.join(process.cwd(), 'data', 'public');
+}
+

@@ -8,7 +8,7 @@ import { IdentityVerificationService } from '../../../../modules/identity-verifi
 import { IdentityVerificationRepository } from '../../../../modules/identity-verification/identity-verification.repository';
 import { UsersService } from '../../../../modules/users/users.service';
 import {
-  FILE_STORAGE_PROVIDER,
+  PRIVATE_STORAGE_PROVIDER,
   type FileStorageProvider,
 } from '../../../../common/storage/file-storage-provider.interface';
 import { IdentityVerificationStatus } from '../../../../modules/identity-verification/identity-verification.domain';
@@ -94,7 +94,7 @@ describe('IdentityVerificationService', () => {
         IdentityVerificationService,
         { provide: IdentityVerificationRepository, useValue: mockRepository },
         { provide: UsersService, useValue: mockUsersService },
-        { provide: FILE_STORAGE_PROVIDER, useValue: mockStorageProvider },
+        { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockStorageProvider },
       ],
     }).compile();
 
@@ -103,7 +103,7 @@ describe('IdentityVerificationService', () => {
     );
     repository = module.get(IdentityVerificationRepository);
     usersService = module.get(UsersService);
-    storageProvider = module.get(FILE_STORAGE_PROVIDER);
+    storageProvider = module.get(PRIVATE_STORAGE_PROVIDER);
   });
 
   describe('submitVerification', () => {

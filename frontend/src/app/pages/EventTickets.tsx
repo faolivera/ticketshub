@@ -1,12 +1,13 @@
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Calendar, Clock, Ticket, ArrowLeft, ThumbsUp, ThumbsDown, Minus, Award, ShieldCheck, Trophy } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '../../api/services/events.service';
 import { ticketsService } from '../../api/services/tickets.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import { EventBanner } from '../components/EventBanner';
 import type { EventWithDates, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
@@ -306,17 +307,13 @@ export function EventTickets() {
         </Link>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-          <div className="h-64 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            {event.images?.[0]?.src ? (
-              <img 
-                src={event.images[0].src}
-                alt={event.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Ticket className="w-32 h-32 text-white opacity-50" />
-            )}
-          </div>
+          <EventBanner
+            variant="rectangle"
+            squareUrl={event.bannerUrls?.square || event.images?.[0]?.src}
+            rectangleUrl={event.bannerUrls?.rectangle}
+            alt={event.name}
+            className="h-64"
+          />
 
           <div className="p-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">{event.name}</h1>

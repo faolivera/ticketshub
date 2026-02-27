@@ -33,6 +33,11 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      // Public assets (event banners, etc.)
+      '/public': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
 })

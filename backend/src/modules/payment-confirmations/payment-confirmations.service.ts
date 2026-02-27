@@ -12,7 +12,7 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
 import { TicketsService } from '../tickets/tickets.service';
 import {
-  FILE_STORAGE_PROVIDER,
+  PRIVATE_STORAGE_PROVIDER,
   type FileStorageProvider,
 } from '../../common/storage/file-storage-provider.interface';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -44,7 +44,7 @@ export class PaymentConfirmationsService {
     private readonly usersService: UsersService,
     @Inject(TicketsService)
     private readonly ticketsService: TicketsService,
-    @Inject(FILE_STORAGE_PROVIDER)
+    @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly storageProvider: FileStorageProvider,
   ) {}
 
@@ -59,7 +59,7 @@ export class PaymentConfirmationsService {
     const timestamp = Date.now();
     const uuid = randomBytes(6).toString('hex');
     const ext = originalFilename.split('.').pop() || 'bin';
-    return `${transactionId}_${timestamp}_${uuid}.${ext}`;
+    return `payment-confirmations/${transactionId}_${timestamp}_${uuid}.${ext}`;
   }
 
   /**

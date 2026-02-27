@@ -46,5 +46,17 @@
       "currency": "EUR"
     },
     "updatedAt": "2026-02-27T10:32:14.230Z"
+  },
+  "11": {
+    "userId": "11",
+    "balance": {
+      "amount": 0,
+      "currency": "EUR"
+    },
+    "pendingBalance": {
+      "amount": 0,
+      "currency": "EUR"
+    },
+    "updatedAt": "2026-02-27T15:28:55.720Z"
   }
 }

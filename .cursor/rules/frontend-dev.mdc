@@ -107,6 +107,47 @@ const { t } = useTranslation();
 return <h1>{t('welcome.title')}</h1>;
 ```
 
+## Mobile-First Design
+
+Todos los componentes y páginas deben ser **mobile-friendly**. Diseña primero para móvil y luego adapta para pantallas más grandes.
+
+### Principios
+
+1. **Mobile-first**: Escribe estilos base para móvil, usa breakpoints para pantallas mayores
+2. **Touch-friendly**: Botones y elementos interactivos con tamaño mínimo de 44x44px
+3. **Responsive layouts**: Usa flexbox/grid con `flex-col` en móvil, `md:flex-row` en desktop
+4. **Spacing adaptativo**: Padding/margin más compacto en móvil
+
+### Breakpoints de Tailwind
+
+```tsx
+// ✅ Mobile-first: estilos base son para móvil
+<div className="flex flex-col gap-2 p-4 md:flex-row md:gap-4 md:p-6 lg:p-8">
+
+// ✅ Grid responsive
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+// ✅ Texto responsive
+<h1 className="text-xl md:text-2xl lg:text-3xl">
+```
+
+### Hook para detectar móvil
+
+```tsx
+import { useIsMobile } from '@/hooks/use-mobile';
+
+const isMobile = useIsMobile();
+// Usa para lógica condicional, NO para estilos (usa Tailwind para eso)
+```
+
+### Checklist Mobile
+
+- [ ] ¿Se ve bien en 375px de ancho? (iPhone SE)
+- [ ] ¿Los botones son fáciles de tocar?
+- [ ] ¿El texto es legible sin zoom?
+- [ ] ¿Los formularios son usables en móvil?
+- [ ] ¿La navegación funciona en pantallas pequeñas?
+
 ## Al Desarrollar
 
 1. Reutiliza componentes de `components/ui/`
@@ -114,3 +155,4 @@ return <h1>{t('welcome.title')}</h1>;
 3. Usa TypeScript estricto para props
 4. Implementa estados de carga y error
 5. Soporta ambos idiomas (en/es)
+6. **Diseña mobile-first**: Todos los cambios deben verse bien en móvil

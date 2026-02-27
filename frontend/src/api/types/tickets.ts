@@ -100,6 +100,14 @@ export interface TicketListing {
 }
 
 /**
+ * Banner URLs for display
+ */
+export interface BannerUrls {
+  square?: string;
+  rectangle?: string;
+}
+
+/**
  * Listing with event information for display
  */
 export interface TicketListingWithEvent extends TicketListing {
@@ -108,6 +116,7 @@ export interface TicketListingWithEvent extends TicketListing {
   venue: string;
   sectionName?: string;
   pendingReason?: string[];
+  bannerUrls?: BannerUrls;
 }
 
 // === API Types ===

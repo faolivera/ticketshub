@@ -91,6 +91,27 @@ export const eventsService = {
     const response = await apiClient.get<EventSection[]>(`/events/${eventId}/sections`);
     return response.data;
   },
+
+  /**
+   * Upload a banner for an event
+   */
+  async uploadEventBanner(
+    eventId: string,
+    bannerType: 'square' | 'rectangle',
+    file: File
+  ): Promise<{ success: true; data: { eventId: string; bannerType: string; url: string } }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<{
+      success: true;
+      data: { eventId: string; bannerType: string; url: string };
+    }>(`/events/${eventId}/banners/${bannerType}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };
 
 export default eventsService;

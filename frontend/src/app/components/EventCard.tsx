@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Calendar, Ticket, Clock } from 'lucide-react';
+import { MapPin, Calendar, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { EventBanner, useEventBannerVariant } from './EventBanner';
 
 interface ShowTime {
   date: string;
@@ -16,6 +17,10 @@ interface EventCardProps {
   showTimes: ShowTime[];
   ticketTypes: string[];
   labels?: string[];
+  bannerUrls?: {
+    square?: string;
+    rectangle?: string;
+  };
   image?: string;
   price?: number;
 }
@@ -29,10 +34,12 @@ export function EventCard({
   showTimes,
   ticketTypes,
   labels = [],
+  bannerUrls,
   image,
   price
 }: EventCardProps) {
   const { t } = useTranslation();
+  const bannerVariant = useEventBannerVariant();
   const maxDatesToShow = 2;
   const hasMoreDates = showTimes.length > maxDatesToShow;
   const displayDates = showTimes.slice(0, maxDatesToShow);
@@ -50,18 +57,14 @@ export function EventCard({
       to={`/event/${id}`}
       className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden group flex flex-col h-full"
     >
-      <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600 overflow-hidden flex-shrink-0">
-        {image ? (
-          <img 
-            src={image} 
-            alt={name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Ticket className="w-16 h-16 text-white opacity-50" />
-          </div>
-        )}
+      <div className="relative h-48 overflow-hidden flex-shrink-0">
+        <EventBanner
+          variant={bannerVariant}
+          squareUrl={bannerUrls?.square || image}
+          rectangleUrl={bannerUrls?.rectangle}
+          alt={name}
+          className="h-full group-hover:scale-105 transition-transform duration-300"
+        />
         {labels.length > 0 && (
           <div className="absolute top-3 right-3 flex flex-col gap-2">
             {labels.map((label, index) => (

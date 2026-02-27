@@ -355,6 +355,7 @@ export class TicketsService {
         venue: event?.venue ?? 'Unknown',
         sectionName: eventSection?.name ?? 'Unknown',
         pendingReason,
+        bannerUrls: event?.bannerUrls,
       };
     });
   }
@@ -397,6 +398,7 @@ export class TicketsService {
       venue: event.venue,
       sectionName: eventSection?.name || 'Unknown',
       pendingReason,
+      bannerUrls: event.bannerUrls,
     };
   }
 

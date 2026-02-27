@@ -7,6 +7,8 @@ import type {
   EventDate,
   EventSection,
   EventWithDates,
+  EventBanner,
+  EventBannerType,
 } from './events.domain';
 
 /**
@@ -76,10 +78,19 @@ export type GetEventResponse = EventWithDatesResponse;
 export type ListEventsResponse = EventWithDatesResponse[];
 
 /**
+ * Banner URLs for API responses
+ */
+export interface EventBannerUrls {
+  square?: string;
+  rectangle?: string;
+}
+
+/**
  * Event with dates and resolved images
  */
 export type EventWithDatesResponse = EventWithDates & {
   images: Image[];
+  bannerUrls?: EventBannerUrls;
 };
 
 /**
@@ -133,4 +144,40 @@ export interface EventSectionResponse {
   approvedBy?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Response after uploading a banner
+ */
+export interface UploadEventBannerResponse {
+  eventId: string;
+  bannerType: EventBannerType;
+  url: string;
+  banner: EventBanner;
+}
+
+/**
+ * Banner with URL for API responses
+ */
+export interface EventBannerWithUrl {
+  url: string;
+  banner: EventBanner;
+}
+
+/**
+ * Response for getting banner URLs
+ */
+export interface GetEventBannersResponse {
+  eventId: string;
+  square?: EventBannerWithUrl;
+  rectangle?: EventBannerWithUrl;
+}
+
+/**
+ * Response for deleting a banner
+ */
+export interface DeleteEventBannerResponse {
+  eventId: string;
+  bannerType: EventBannerType;
+  deleted: boolean;
 }
