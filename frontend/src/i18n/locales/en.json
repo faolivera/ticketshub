@@ -312,7 +312,12 @@
     "recentActivity": "Recent Activity",
     "purchased": "Purchased",
     "sold": "Sold",
-    "viewAllTickets": "View All Tickets"
+    "viewAllTickets": "View All Tickets",
+    "changePhoto": "Change Photo",
+    "uploadingPhoto": "Uploading...",
+    "uploadError": "Failed to upload photo",
+    "invalidFileType": "Invalid file type. Use JPG, PNG, WebP or GIF",
+    "fileTooLarge": "File too large. Maximum size is 5MB"
   },
   "sellerProfile": {
     "title": "Seller Profile",
@@ -553,6 +558,20 @@
     "viewConfirmation": "View Confirmation",
     "adminNotes": "Admin Notes",
     "paymentConfirmation": "Payment Confirmation"
+  },
+  "transaction": {
+    "timeRemaining": "Time remaining: {{time}}",
+    "paymentExpired": "Payment time expired",
+    "cancelButton": "Cancel Transaction",
+    "cancelConfirm": "Are you sure you want to cancel this transaction? This action cannot be undone.",
+    "cancelSuccess": "Transaction cancelled",
+    "cancelled": {
+      "BuyerCancelled": "You cancelled this transaction",
+      "PaymentFailed": "Payment failed",
+      "PaymentTimeout": "Payment time expired",
+      "AdminRejected": "Payment confirmation was rejected",
+      "AdminReviewTimeout": "Payment review timed out"
+    }
   },
   "sellerIntro": {
     "sellerLevels": "Seller Levels",

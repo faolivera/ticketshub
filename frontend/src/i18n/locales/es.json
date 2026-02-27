@@ -286,7 +286,12 @@
     "recentActivity": "Actividad Reciente",
     "purchased": "Comprado",
     "sold": "Vendido",
-    "viewAllTickets": "Ver Todas las Entradas"
+    "viewAllTickets": "Ver Todas las Entradas",
+    "changePhoto": "Cambiar Foto",
+    "uploadingPhoto": "Subiendo...",
+    "uploadError": "Error al subir foto",
+    "invalidFileType": "Tipo de archivo inválido. Usa JPG, PNG, WebP o GIF",
+    "fileTooLarge": "Archivo demasiado grande. El tamaño máximo es 5MB"
   },
   "sellerProfile": {
     "title": "Perfil del Vendedor",
@@ -527,6 +532,20 @@
     "viewConfirmation": "Ver Comprobante",
     "adminNotes": "Notas del Admin",
     "paymentConfirmation": "Comprobante de Pago"
+  },
+  "transaction": {
+    "timeRemaining": "Tiempo restante: {{time}}",
+    "paymentExpired": "El tiempo de pago expiró",
+    "cancelButton": "Cancelar Transacción",
+    "cancelConfirm": "¿Estás seguro de que quieres cancelar esta transacción? Esta acción no se puede deshacer.",
+    "cancelSuccess": "Transacción cancelada",
+    "cancelled": {
+      "BuyerCancelled": "Cancelaste esta transacción",
+      "PaymentFailed": "El pago falló",
+      "PaymentTimeout": "El tiempo de pago expiró",
+      "AdminRejected": "La confirmación de pago fue rechazada",
+      "AdminReviewTimeout": "La revisión de pago expiró"
+    }
   },
   "sellerIntro": {
     "sellerLevels": "Niveles de Vendedor",
