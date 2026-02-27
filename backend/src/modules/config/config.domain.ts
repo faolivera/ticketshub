@@ -8,14 +8,14 @@ export interface PlatformConfig {
   digitalNonTransferableReleaseMinutes: number;
 
   /**
-   * Buyer fee percentage (e.g., 10 = 10%)
+   * Buyer platform fee percentage (e.g., 10 = 10%)
    */
-  buyerFeePercentage: number;
+  buyerPlatformFeePercentage: number;
 
   /**
-   * Seller fee percentage (e.g., 5 = 5%)
+   * Seller platform fee percentage (e.g., 5 = 5%)
    */
-  sellerFeePercentage: number;
+  sellerPlatformFeePercentage: number;
 
   /**
    * Default currency for the platform
@@ -33,8 +33,8 @@ export interface PlatformConfig {
  */
 export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   digitalNonTransferableReleaseMinutes: 30,
-  buyerFeePercentage: 10,
-  sellerFeePercentage: 5,
+  buyerPlatformFeePercentage: 10,
+  sellerPlatformFeePercentage: 5,
   defaultCurrency: 'EUR',
   maxListingDurationDays: 90,
 };

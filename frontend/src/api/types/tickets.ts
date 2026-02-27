@@ -241,11 +241,26 @@ export interface BuyPageSellerInfo {
   totalReviews: number;
 }
 
-/** Full buy page data (listing + seller + payment methods) from BFF */
+/** Pricing snapshot summary for buy page (minimal data for UI) */
+export interface BuyPagePricingSnapshot {
+  id: string;
+  expiresAt: Date;
+  buyerPlatformFeePercentage: number;
+}
+
+/** Payment method option for buy page (minimal data for UI) */
+export interface BuyPagePaymentMethodOption {
+  id: string;
+  name: string;
+  buyerCommissionPercent: number | null;
+}
+
+/** Full buy page data (listing + seller + payment methods + pricing snapshot) from BFF */
 export interface BuyPageData {
   listing: TicketListingWithEvent;
   seller: BuyPageSellerInfo;
-  paymentMethods: PublicPaymentMethodOption[];
+  paymentMethods: BuyPagePaymentMethodOption[];
+  pricingSnapshot: BuyPagePricingSnapshot;
 }
 
 /** Response from GET /api/buy/:ticketId */

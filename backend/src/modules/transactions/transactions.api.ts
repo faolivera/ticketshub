@@ -10,6 +10,7 @@ export interface InitiatePurchaseRequest {
   listingId: string;
   ticketUnitIds: string[];
   paymentMethodId: string;
+  pricingSnapshotId: string;
 }
 
 /**

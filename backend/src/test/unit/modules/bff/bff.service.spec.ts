@@ -6,21 +6,37 @@ import { TransactionsService } from '../../../../modules/transactions/transactio
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { ReviewsService } from '../../../../modules/reviews/reviews.service';
 import { PaymentConfirmationsService } from '../../../../modules/payment-confirmations/payment-confirmations.service';
+import { PaymentMethodsService } from '../../../../modules/payments/payment-methods.service';
+import { PricingService } from '../../../../modules/payments/pricing/pricing.service';
 import {
   TransactionStatus,
   type TransactionWithDetails,
 } from '../../../../modules/transactions/transactions.domain';
-import { TicketType } from '../../../../modules/tickets/tickets.domain';
-import { Role } from '../../../../modules/users/users.domain';
+import {
+  TicketType,
+  TicketUnitStatus,
+  ListingStatus,
+  SeatingType,
+  type TicketListingWithEvent,
+} from '../../../../modules/tickets/tickets.domain';
+import { Role, UserLevel, UserStatus } from '../../../../modules/users/users.domain';
+import type { User } from '../../../../modules/users/users.domain';
+import type { UserReviewMetrics } from '../../../../modules/reviews/reviews.domain';
+import type { PublicPaymentMethodOption } from '../../../../modules/payments/payments.domain';
 import type { PaymentConfirmation } from '../../../../modules/payment-confirmations/payment-confirmations.domain';
 import { PaymentConfirmationStatus } from '../../../../modules/payment-confirmations/payment-confirmations.domain';
 import type { Ctx } from '../../../../common/types/context';
+import type { PricingSnapshot } from '../../../../modules/payments/pricing/pricing.domain';
 
 describe('BffService', () => {
   let service: BffService;
+  let usersService: jest.Mocked<UsersService>;
   let transactionsService: jest.Mocked<TransactionsService>;
+  let ticketsService: jest.Mocked<TicketsService>;
   let paymentConfirmationsService: jest.Mocked<PaymentConfirmationsService>;
   let reviewsService: jest.Mocked<ReviewsService>;
+  let paymentMethodsService: jest.Mocked<PaymentMethodsService>;
+  let pricingService: jest.Mocked<PricingService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -33,10 +49,12 @@ describe('BffService', () => {
     ticketUnitIds: ['unit_1'],
     quantity: 1,
     ticketPrice: { amount: 10000, currency: 'USD' },
-    buyerFee: { amount: 1000, currency: 'USD' },
-    sellerFee: { amount: 500, currency: 'USD' },
-    totalPaid: { amount: 11000, currency: 'USD' },
+    buyerPlatformFee: { amount: 1000, currency: 'USD' },
+    sellerPlatformFee: { amount: 500, currency: 'USD' },
+    paymentMethodCommission: { amount: 1200, currency: 'USD' },
+    totalPaid: { amount: 12200, currency: 'USD' },
     sellerReceives: { amount: 9500, currency: 'USD' },
+    pricingSnapshotId: 'ps_123',
     status: TransactionStatus.Completed,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -93,6 +111,14 @@ describe('BffService', () => {
       getConfirmationByTransaction: jest.fn(),
     };
 
+    const mockPaymentMethodsService = {
+      getPublicPaymentMethods: jest.fn(),
+    };
+
+    const mockPricingService = {
+      createSnapshot: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BffService,
@@ -104,13 +130,19 @@ describe('BffService', () => {
           provide: PaymentConfirmationsService,
           useValue: mockPaymentConfirmationsService,
         },
+        { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
+        { provide: PricingService, useValue: mockPricingService },
       ],
     }).compile();
 
     service = module.get<BffService>(BffService);
+    usersService = module.get(UsersService);
     transactionsService = module.get(TransactionsService);
+    ticketsService = module.get(TicketsService);
     paymentConfirmationsService = module.get(PaymentConfirmationsService);
     reviewsService = module.get(ReviewsService);
+    paymentMethodsService = module.get(PaymentMethodsService);
+    pricingService = module.get(PricingService);
   });
 
   describe('getTransactionDetails', () => {
@@ -340,6 +372,113 @@ describe('BffService', () => {
       );
 
       expect(result.reviews).toBeNull();
+    });
+  });
+
+  describe('getBuyPageData', () => {
+    const mockListing: TicketListingWithEvent = {
+      id: 'listing_123',
+      sellerId: 'seller_123',
+      eventId: 'event_123',
+      eventDateId: 'date_123',
+      type: TicketType.DigitalTransferable,
+      seatingType: SeatingType.Unnumbered,
+      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      sellTogether: false,
+      pricePerTicket: { amount: 10000, currency: 'USD' },
+      eventSectionId: 'section_123',
+      status: ListingStatus.Active,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      eventName: 'Test Event',
+      eventDate: new Date(),
+      venue: 'Test Venue',
+      sectionName: 'VIP Section',
+    };
+
+    const mockPublicUserInfo = {
+      id: 'seller_123',
+      publicName: 'Jane Seller',
+      pic: { id: 'pic_123', src: '/images/seller.png' },
+    };
+
+    const mockUser: User = {
+      id: 'seller_123',
+      email: 'seller@example.com',
+      firstName: 'Jane',
+      lastName: 'Seller',
+      role: Role.User,
+      level: UserLevel.VerifiedSeller,
+      status: UserStatus.Enabled,
+      publicName: 'Jane Seller',
+      imageId: 'img_123',
+      password: 'hashed',
+      country: 'US',
+      currency: 'USD',
+      emailVerified: true,
+      phoneVerified: false,
+      tosAcceptedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockPricingSnapshot: PricingSnapshot = {
+      id: 'ps_123',
+      listingId: 'listing_123',
+      pricePerTicket: { amount: 10000, currency: 'USD' },
+      buyerPlatformFeePercentage: 10,
+      sellerPlatformFeePercentage: 5,
+      paymentMethodCommissions: [],
+      pricingModel: 'fixed',
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    };
+
+    const mockPaymentMethods: PublicPaymentMethodOption[] = [
+      { id: 'pm_1', name: 'Credit Card', type: 'payment_gateway', buyerCommissionPercent: 3 },
+      { id: 'pm_2', name: 'Bank Transfer', type: 'manual_approval', buyerCommissionPercent: null },
+    ];
+
+    const mockSellerMetrics: UserReviewMetrics = {
+      userId: 'seller_123',
+      role: 'seller',
+      totalTransactions: 50,
+      totalReviews: 20,
+      positiveReviews: 19,
+      negativeReviews: 0,
+      neutralReviews: 1,
+      positivePercent: 95,
+      badges: ['verified'],
+    };
+
+    it('should return buy page data with buyerPlatformFeePercentage in pricing snapshot', async () => {
+      ticketsService.getListingById.mockResolvedValue(mockListing);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
+      usersService.findById.mockResolvedValue(mockUser);
+      transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(50);
+      reviewsService.getSellerMetrics.mockResolvedValue(mockSellerMetrics);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(
+        mockPaymentMethods,
+      );
+      pricingService.createSnapshot.mockResolvedValue(mockPricingSnapshot);
+
+      const result = await service.getBuyPageData(mockCtx, 'listing_123');
+
+      expect(result.listing).toEqual(mockListing);
+      expect(result.seller.id).toBe('seller_123');
+      expect(result.seller.publicName).toBe('Jane Seller');
+      expect(result.seller.badges).toContain('verified');
+      expect(result.pricingSnapshot.id).toBe('ps_123');
+      expect(result.pricingSnapshot.expiresAt).toEqual(
+        mockPricingSnapshot.expiresAt,
+      );
+      expect(result.pricingSnapshot.buyerPlatformFeePercentage).toBe(10);
+      expect(result.paymentMethods).toHaveLength(2);
+      expect(pricingService.createSnapshot).toHaveBeenCalledWith(
+        mockCtx,
+        'listing_123',
+        mockListing.pricePerTicket,
+      );
     });
   });
 });

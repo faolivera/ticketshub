@@ -23,17 +23,17 @@ export class ConfigService {
   }
 
   /**
-   * Get buyer fee percentage
+   * Get buyer platform fee percentage
    */
-  getBuyerFeePercentage(): number {
-    return this.config.buyerFeePercentage;
+  getBuyerPlatformFeePercentage(): number {
+    return this.config.buyerPlatformFeePercentage;
   }
 
   /**
-   * Get seller fee percentage
+   * Get seller platform fee percentage
    */
-  getSellerFeePercentage(): number {
-    return this.config.sellerFeePercentage;
+  getSellerPlatformFeePercentage(): number {
+    return this.config.sellerPlatformFeePercentage;
   }
 
   /**

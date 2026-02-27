@@ -110,13 +110,13 @@ export class AdminService {
         listingId: transaction.listingId,
         quantity: transaction.quantity,
         pricePerUnit,
-        sellerFee: {
-          amount: transaction.sellerFee.amount,
-          currency: transaction.sellerFee.currency,
+        sellerPlatformFee: {
+          amount: transaction.sellerPlatformFee.amount,
+          currency: transaction.sellerPlatformFee.currency,
         },
-        buyerFee: {
-          amount: transaction.buyerFee.amount,
-          currency: transaction.buyerFee.currency,
+        buyerPlatformFee: {
+          amount: transaction.buyerPlatformFee.amount,
+          currency: transaction.buyerPlatformFee.currency,
         },
       };
 
@@ -540,8 +540,9 @@ export class AdminService {
       listing: listingRef,
       quantity: transaction.quantity,
       ticketPrice: transaction.ticketPrice,
-      buyerFee: transaction.buyerFee,
-      sellerFee: transaction.sellerFee,
+      buyerPlatformFee: transaction.buyerPlatformFee,
+      sellerPlatformFee: transaction.sellerPlatformFee,
+      paymentMethodCommission: transaction.paymentMethodCommission,
       totalPaid: transaction.totalPaid,
       sellerReceives: transaction.sellerReceives,
       paymentMethodId: transaction.paymentMethodId,

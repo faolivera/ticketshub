@@ -743,18 +743,26 @@ export function MyTicket() {
                   </span>
                 </div>
                 {isBuyer && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{t('myTicket.buyerFee')}</span>
-                    <span className="text-gray-900">
-                      ${(transaction.buyerFee.amount / 100).toFixed(2)}
-                    </span>
-                  </div>
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">{t('myTicket.buyerPlatformFee')}</span>
+                      <span className="text-gray-900">
+                        ${(transaction.buyerPlatformFee.amount / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">{t('myTicket.paymentMethodCommission')}</span>
+                      <span className="text-gray-900">
+                        ${(transaction.paymentMethodCommission.amount / 100).toFixed(2)}
+                      </span>
+                    </div>
+                  </>
                 )}
                 {isSeller && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{t('myTicket.sellerFee')}</span>
+                    <span className="text-gray-600">{t('myTicket.sellerPlatformFee')}</span>
                     <span className="text-gray-900">
-                      -${(transaction.sellerFee.amount / 100).toFixed(2)}
+                      -${(transaction.sellerPlatformFee.amount / 100).toFixed(2)}
                     </span>
                   </div>
                 )}

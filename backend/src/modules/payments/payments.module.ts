@@ -5,6 +5,8 @@ import { PaymentsService } from './payments.service';
 import { PaymentMethodsService } from './payment-methods.service';
 import { PaymentsRepository } from './payments.repository';
 import { PaymentMethodsRepository } from './payment-methods.repository';
+import { PricingService } from './pricing/pricing.service';
+import { PricingRepository } from './pricing/pricing.repository';
 import { UsersModule } from '../users/users.module';
 
 @Module({
@@ -15,7 +17,9 @@ import { UsersModule } from '../users/users.module';
     PaymentMethodsService,
     PaymentsRepository,
     PaymentMethodsRepository,
+    PricingService,
+    PricingRepository,
   ],
-  exports: [PaymentsService, PaymentMethodsService],
+  exports: [PaymentsService, PaymentMethodsService, PricingService],
 })
 export class PaymentsModule {}

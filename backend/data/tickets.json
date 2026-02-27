@@ -494,11 +494,11 @@
     "ticketUnits": [
       {
         "id": "unit_1772106572406_15777f73",
-        "status": "available"
+        "status": "reserved"
       },
       {
         "id": "unit_1772106572406_cc54b6d9",
-        "status": "available"
+        "status": "reserved"
       },
       {
         "id": "unit_1772106572406_c736d2b6",
@@ -541,7 +541,7 @@
     "eventSectionId": "sec_1772106540443_20b67b98",
     "status": "Active",
     "createdAt": "2026-02-26T11:49:32.406Z",
-    "updatedAt": "2026-02-26T12:35:16.302Z"
+    "updatedAt": "2026-02-27T01:48:42.087Z"
   },
   "tkt_1772109045432_cc564492": {
     "id": "tkt_1772109045432_cc564492",

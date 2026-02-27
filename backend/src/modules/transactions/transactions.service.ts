@@ -12,6 +12,7 @@ import { PaymentsService } from '../payments/payments.service';
 import { WalletService } from '../wallet/wallet.service';
 import { ConfigService } from '../config/config.service';
 import { UsersService } from '../users/users.service';
+import { PricingService } from '../payments/pricing/pricing.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -27,6 +28,7 @@ import type {
   TransactionWithPaymentInfo,
 } from './transactions.api';
 import { PaymentMethodsService } from '../payments/payment-methods.service';
+import type { PricingSnapshot } from '../payments/pricing/pricing.domain';
 
 @Injectable()
 export class TransactionsService {
@@ -47,6 +49,8 @@ export class TransactionsService {
     private readonly usersService: UsersService,
     @Inject(PaymentMethodsService)
     private readonly paymentMethodsService: PaymentMethodsService,
+    @Inject(PricingService)
+    private readonly pricingService: PricingService,
   ) {}
 
   /**
@@ -57,22 +61,34 @@ export class TransactionsService {
   }
 
   /**
-   * Calculate fees
+   * Calculate fees from pricing snapshot
    */
-  private calculateFees(ticketPrice: Money): {
-    buyerFee: Money;
-    sellerFee: Money;
+  private calculateFeesFromSnapshot(
+    ticketPrice: Money,
+    snapshot: PricingSnapshot,
+    selectedCommissionPercent: number,
+  ): {
+    buyerPlatformFee: Money;
+    sellerPlatformFee: Money;
+    paymentMethodCommission: Money;
   } {
-    const buyerFeePercentage = this.configService.getBuyerFeePercentage();
-    const sellerFeePercentage = this.configService.getSellerFeePercentage();
-
     return {
-      buyerFee: {
-        amount: Math.round(ticketPrice.amount * (buyerFeePercentage / 100)),
+      buyerPlatformFee: {
+        amount: Math.round(
+          ticketPrice.amount * (snapshot.buyerPlatformFeePercentage / 100),
+        ),
         currency: ticketPrice.currency,
       },
-      sellerFee: {
-        amount: Math.round(ticketPrice.amount * (sellerFeePercentage / 100)),
+      sellerPlatformFee: {
+        amount: Math.round(
+          ticketPrice.amount * (snapshot.sellerPlatformFeePercentage / 100),
+        ),
+        currency: ticketPrice.currency,
+      },
+      paymentMethodCommission: {
+        amount: Math.round(
+          ticketPrice.amount * (selectedCommissionPercent / 100),
+        ),
         currency: ticketPrice.currency,
       },
     };
@@ -87,6 +103,7 @@ export class TransactionsService {
     listingId: string,
     ticketUnitIds: string[],
     paymentMethodId: string,
+    pricingSnapshotId: string,
   ): Promise<{ transaction: Transaction; paymentIntentId: string }> {
     this.logger.log(ctx, `Initiating purchase for listing ${listingId}`);
 
@@ -105,21 +122,42 @@ export class TransactionsService {
 
     const quantity = ticketUnitIds.length;
 
-    // Calculate prices
+    // Generate transaction ID first so we can use it when consuming the snapshot
+    const transactionId = this.generateId();
+
+    // Validate and consume pricing snapshot
+    const { snapshot, selectedCommissionPercent } =
+      await this.pricingService.validateAndConsume(
+        ctx,
+        pricingSnapshotId,
+        listingId,
+        paymentMethodId,
+        transactionId,
+      );
+
+    // Calculate prices using snapshotted values
     const ticketPriceTotal: Money = {
-      amount: listing.pricePerTicket.amount * quantity,
-      currency: listing.pricePerTicket.currency,
+      amount: snapshot.pricePerTicket.amount * quantity,
+      currency: snapshot.pricePerTicket.currency,
     };
 
-    const { buyerFee, sellerFee } = this.calculateFees(ticketPriceTotal);
+    const { buyerPlatformFee, sellerPlatformFee, paymentMethodCommission } =
+      this.calculateFeesFromSnapshot(
+        ticketPriceTotal,
+        snapshot,
+        selectedCommissionPercent,
+      );
 
     const totalPaid: Money = {
-      amount: ticketPriceTotal.amount + buyerFee.amount,
+      amount:
+        ticketPriceTotal.amount +
+        buyerPlatformFee.amount +
+        paymentMethodCommission.amount,
       currency: ticketPriceTotal.currency,
     };
 
     const sellerReceives: Money = {
-      amount: ticketPriceTotal.amount - sellerFee.amount,
+      amount: ticketPriceTotal.amount - sellerPlatformFee.amount,
       currency: ticketPriceTotal.currency,
     };
 
@@ -136,7 +174,7 @@ export class TransactionsService {
 
     // Create transaction
     const transaction: Transaction = {
-      id: this.generateId(),
+      id: transactionId,
       listingId,
       buyerId,
       sellerId: listing.sellerId,
@@ -144,10 +182,12 @@ export class TransactionsService {
       ticketUnitIds,
       quantity,
       ticketPrice: ticketPriceTotal,
-      buyerFee,
-      sellerFee,
+      buyerPlatformFee,
+      sellerPlatformFee,
+      paymentMethodCommission,
       totalPaid,
       sellerReceives,
+      pricingSnapshotId,
       status: TransactionStatus.PendingPayment,
       createdAt: new Date(),
       updatedAt: new Date(),

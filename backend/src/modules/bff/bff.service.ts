@@ -10,6 +10,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { ReviewsService } from '../reviews/reviews.service';
 import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
 import { PaymentMethodsService } from '../payments/payment-methods.service';
+import { PricingService } from '../payments/pricing/pricing.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import { UserLevel, Role } from '../users/users.domain';
@@ -24,6 +25,8 @@ import type {
   ListingWithSeller,
   BuyPageData,
   BuyPageSellerInfo,
+  BuyPagePricingSnapshot,
+  BuyPagePaymentMethodOption,
 } from './bff.domain';
 
 @Injectable()
@@ -41,6 +44,8 @@ export class BffService {
     private readonly paymentConfirmationsService: PaymentConfirmationsService,
     @Inject(PaymentMethodsService)
     private readonly paymentMethodsService: PaymentMethodsService,
+    @Inject(PricingService)
+    private readonly pricingService: PricingService,
   ) {}
 
   /**
@@ -124,15 +129,15 @@ export class BffService {
   }
 
   /**
-   * Get buy page data: listing, seller info, and payment methods.
+   * Get buy page data: listing, seller info, payment methods, and pricing snapshot.
    */
   async getBuyPageData(ctx: Ctx, ticketId: string): Promise<BuyPageData> {
     const listing = await this.ticketsService.getListingById(ctx, ticketId);
     const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [
       listing.sellerId,
     ]);
-    const [user, totalSales, sellerMetrics, paymentMethods] = await Promise.all(
-      [
+    const [user, totalSales, sellerMetrics, paymentMethods, snapshot] =
+      await Promise.all([
         this.usersService.findById(ctx, listing.sellerId),
         this.transactionsService.getSellerCompletedSalesTotal(
           ctx,
@@ -140,8 +145,12 @@ export class BffService {
         ),
         this.reviewsService.getSellerMetrics(ctx, listing.sellerId),
         this.paymentMethodsService.getPublicPaymentMethods(ctx),
-      ],
-    );
+        this.pricingService.createSnapshot(
+          ctx,
+          ticketId,
+          listing.pricePerTicket,
+        ),
+      ]);
 
     const seller: BuyPageSellerInfo = {
       id: listing.sellerId,
@@ -156,10 +165,25 @@ export class BffService {
       totalReviews: sellerMetrics.totalReviews,
     };
 
+    const pricingSnapshot: BuyPagePricingSnapshot = {
+      id: snapshot.id,
+      expiresAt: snapshot.expiresAt,
+      buyerPlatformFeePercentage: snapshot.buyerPlatformFeePercentage,
+    };
+
+    const buyPagePaymentMethods: BuyPagePaymentMethodOption[] = paymentMethods.map(
+      (pm) => ({
+        id: pm.id,
+        name: pm.name,
+        buyerCommissionPercent: pm.buyerCommissionPercent,
+      }),
+    );
+
     return {
       listing,
       seller,
-      paymentMethods,
+      paymentMethods: buyPagePaymentMethods,
+      pricingSnapshot,
     };
   }
 

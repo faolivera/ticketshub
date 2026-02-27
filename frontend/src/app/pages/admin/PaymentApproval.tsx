@@ -192,8 +192,8 @@ export function PaymentApproval() {
                   <TableHead>{t('admin.payments.listing')}</TableHead>
                   <TableHead>{t('admin.payments.quantity')}</TableHead>
                   <TableHead>{t('admin.payments.pricePerUnit')}</TableHead>
-                  <TableHead>{t('admin.payments.buyerFee')}</TableHead>
-                  <TableHead>{t('admin.payments.sellerFee')}</TableHead>
+                  <TableHead>{t('admin.payments.buyerPlatformFee')}</TableHead>
+                  <TableHead>{t('admin.payments.sellerPlatformFee')}</TableHead>
                   <TableHead>{t('admin.payments.confirmation')}</TableHead>
                   <TableHead>{t('admin.payments.uploadedAt')}</TableHead>
                   <TableHead className="text-right">{t('admin.payments.actions')}</TableHead>
@@ -238,10 +238,10 @@ export function PaymentApproval() {
                       {formatAmount(confirmation.pricePerUnit.amount, confirmation.pricePerUnit.currency)}
                     </TableCell>
                     <TableCell className="text-orange-600">
-                      {formatAmount(confirmation.buyerFee.amount, confirmation.buyerFee.currency)}
+                      {formatAmount(confirmation.buyerPlatformFee.amount, confirmation.buyerPlatformFee.currency)}
                     </TableCell>
                     <TableCell className="text-orange-600">
-                      {formatAmount(confirmation.sellerFee.amount, confirmation.sellerFee.currency)}
+                      {formatAmount(confirmation.sellerPlatformFee.amount, confirmation.sellerPlatformFee.currency)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -350,15 +350,15 @@ export function PaymentApproval() {
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('admin.payments.buyerFee')}:</span>
+                      <span className="text-muted-foreground">{t('admin.payments.buyerPlatformFee')}:</span>
                       <span className="ml-2 text-orange-600">
-                        {formatAmount(selectedConfirmation.buyerFee.amount, selectedConfirmation.buyerFee.currency)}
+                        {formatAmount(selectedConfirmation.buyerPlatformFee.amount, selectedConfirmation.buyerPlatformFee.currency)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('admin.payments.sellerFee')}:</span>
+                      <span className="text-muted-foreground">{t('admin.payments.sellerPlatformFee')}:</span>
                       <span className="ml-2 text-orange-600">
-                        {formatAmount(selectedConfirmation.sellerFee.amount, selectedConfirmation.sellerFee.currency)}
+                        {formatAmount(selectedConfirmation.sellerPlatformFee.amount, selectedConfirmation.sellerPlatformFee.currency)}
                       </span>
                     </div>
                   </div>

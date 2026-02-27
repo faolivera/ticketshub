@@ -243,5 +243,87 @@
     "ticketTransferredAt": "2026-02-26T16:27:29.613Z",
     "buyerConfirmedAt": "2026-02-26T16:30:43.061Z",
     "completedAt": "2026-02-26T16:30:43.061Z"
+  },
+  "txn_1772156137755_b8e227d7": {
+    "id": "txn_1772156137755_b8e227d7",
+    "listingId": "tkt_1772106572406_8746e293",
+    "buyerId": "4",
+    "sellerId": "3",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_1772106572406_15777f73"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 20000,
+      "currency": "USD"
+    },
+    "buyerPlatformFee": {
+      "amount": 2000,
+      "currency": "USD"
+    },
+    "sellerPlatformFee": {
+      "amount": 1000,
+      "currency": "USD"
+    },
+    "paymentMethodCommission": {
+      "amount": 1600,
+      "currency": "USD"
+    },
+    "totalPaid": {
+      "amount": 23600,
+      "currency": "USD"
+    },
+    "sellerReceives": {
+      "amount": 19000,
+      "currency": "USD"
+    },
+    "pricingSnapshotId": "ps_1772155675146_3d7d3d76ff74",
+    "status": "PendingPayment",
+    "createdAt": "2026-02-27T01:35:37.756Z",
+    "updatedAt": "2026-02-27T01:35:37.756Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer"
+  },
+  "txn_1772156922082_ee3b2f9e": {
+    "id": "txn_1772156922082_ee3b2f9e",
+    "listingId": "tkt_1772106572406_8746e293",
+    "buyerId": "4",
+    "sellerId": "3",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_1772106572406_cc54b6d9"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 20000,
+      "currency": "USD"
+    },
+    "buyerPlatformFee": {
+      "amount": 2000,
+      "currency": "USD"
+    },
+    "sellerPlatformFee": {
+      "amount": 1000,
+      "currency": "USD"
+    },
+    "paymentMethodCommission": {
+      "amount": 1600,
+      "currency": "USD"
+    },
+    "totalPaid": {
+      "amount": 23600,
+      "currency": "USD"
+    },
+    "sellerReceives": {
+      "amount": 19000,
+      "currency": "USD"
+    },
+    "pricingSnapshotId": "ps_1772156857747_d397820bdf71",
+    "status": "PendingPayment",
+    "createdAt": "2026-02-27T01:48:42.085Z",
+    "updatedAt": "2026-02-27T01:48:42.085Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer"
   }
 }

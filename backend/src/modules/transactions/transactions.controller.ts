@@ -53,6 +53,7 @@ export class TransactionsController {
       body.listingId,
       body.ticketUnitIds,
       body.paymentMethodId,
+      body.pricingSnapshotId,
     );
     return { success: true, data: result };
   }

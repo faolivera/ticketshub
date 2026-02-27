@@ -8,7 +8,7 @@ import { transactionsService } from '../../api/services/transactions.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import type { BuyPageData, PaymentMethodOption } from '../../api/types';
+import type { BuyPageData, PublicPaymentMethodOption } from '../../api/types';
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 
@@ -46,6 +46,10 @@ function getPendingReasonI18nKey(reason: string): string | null {
   return PENDING_REASON_I18N[reason.toLowerCase()] ?? null;
 }
 
+function isPricingSnapshotError(errorCode: string | undefined): boolean {
+  return errorCode?.startsWith('PRICING_SNAPSHOT_') ?? false;
+}
+
 export function BuyTicketPage() {
   const { t } = useTranslation();
   const { ticketId } = useParams<{ ticketId: string }>();
@@ -57,13 +61,14 @@ export function BuyTicketPage() {
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodOption | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PublicPaymentMethodOption | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
   const listing = buyPageData?.listing ?? null;
   const seller = buyPageData?.seller ?? null;
   const paymentMethods = buyPageData?.paymentMethods ?? [];
+  const pricingSnapshot = buyPageData?.pricingSnapshot ?? null;
 
   const isOwnListing = user?.id === listing?.sellerId;
   const isPendingOwnListing = isOwnListing && listing?.status === ListingStatus.Pending;
@@ -143,8 +148,28 @@ export function BuyTicketPage() {
     );
   };
 
+  const refreshBuyPageData = async () => {
+    if (!ticketId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const data = await ticketsService.getBuyPage(ticketId);
+      setBuyPageData(data);
+      if (data.paymentMethods.length > 0) {
+        setSelectedPaymentMethod(data.paymentMethods[0]);
+      }
+    } catch (err) {
+      console.error('Failed to refresh buy page:', err);
+      setError(t('buyTicket.errorLoading'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePurchase = async () => {
-    if (!listing || !ticketId) return;
+    if (!listing || !ticketId || !pricingSnapshot) return;
 
     if (!isAuthenticated) {
       navigate('/login', { state: { from: `/buy/${ticketId}` } });
@@ -176,14 +201,22 @@ export function BuyTicketPage() {
         listingId: ticketId,
         ticketUnitIds: unitsToPurchase,
         paymentMethodId: selectedPaymentMethod?.id ?? 'payway',
+        pricingSnapshotId: pricingSnapshot.id,
       });
 
       navigate(`/transaction/${response.transaction.id}`);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Purchase failed:', err);
-      setPurchaseError(
-        err instanceof Error ? err.message : t('buyTicket.purchaseFailed')
-      );
+      
+      const errorCode = (err as { code?: string })?.code;
+      if (isPricingSnapshotError(errorCode)) {
+        setPurchaseError(t('buyTicket.pricesChanged'));
+        await refreshBuyPageData();
+      } else {
+        setPurchaseError(
+          err instanceof Error ? err.message : t('buyTicket.purchaseFailed')
+        );
+      }
     } finally {
       setIsPurchasing(false);
     }
@@ -213,9 +246,11 @@ export function BuyTicketPage() {
       ? selectedUnitIds.length
       : quantity;
   const subtotal = pricePerTicket * selectedQuantity;
+  const buyerPlatformFeePercent = pricingSnapshot?.buyerPlatformFeePercentage ?? 0;
+  const buyerPlatformFee = subtotal * (buyerPlatformFeePercent / 100);
   const commissionPercent = selectedPaymentMethod?.buyerCommissionPercent ?? 0;
-  const buyerFee = subtotal * (commissionPercent / 100);
-  const grandTotal = subtotal + buyerFee;
+  const paymentMethodCommission = subtotal * (commissionPercent / 100);
+  const grandTotal = subtotal + buyerPlatformFee + paymentMethodCommission;
 
   const eventDate = new Date(listing.eventDate);
   const formattedDate = eventDate.toLocaleDateString('en-US', {
@@ -477,13 +512,20 @@ export function BuyTicketPage() {
 
               <div className="flex justify-between">
                 <span className="text-gray-700">
+                  {t('buyTicket.buyerPlatformFee', { percent: buyerPlatformFeePercent })}
+                </span>
+                <span className="font-semibold text-gray-900">${buyerPlatformFee.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-700">
                   {selectedPaymentMethod?.buyerCommissionPercent != null
-                    ? t('buyTicket.buyerFee', {
+                    ? t('buyTicket.paymentMethodCommission', {
                         percent: selectedPaymentMethod.buyerCommissionPercent,
                       })
-                    : t('buyTicket.buyerFeeManual')}
+                    : t('buyTicket.paymentMethodCommissionManual')}
                 </span>
-                <span className="font-semibold text-gray-900">${buyerFee.toFixed(2)}</span>
+                <span className="font-semibold text-gray-900">${paymentMethodCommission.toFixed(2)}</span>
               </div>
 
               <div className="pt-4 border-t border-gray-200 flex justify-between">

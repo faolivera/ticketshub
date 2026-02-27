@@ -45,10 +45,12 @@ describe('AdminService', () => {
     ticketUnitIds: ['unit_1', 'unit_2'],
     quantity: 2,
     ticketPrice: { amount: 20000, currency: 'USD' },
-    buyerFee: { amount: 2000, currency: 'USD' },
-    sellerFee: { amount: 1000, currency: 'USD' },
-    totalPaid: { amount: 22000, currency: 'USD' },
+    buyerPlatformFee: { amount: 2000, currency: 'USD' },
+    sellerPlatformFee: { amount: 1000, currency: 'USD' },
+    paymentMethodCommission: { amount: 2400, currency: 'USD' },
+    totalPaid: { amount: 24400, currency: 'USD' },
     sellerReceives: { amount: 19000, currency: 'USD' },
+    pricingSnapshotId: 'ps_123',
     status: TransactionStatus.PendingPayment,
     paymentMethodId: 'bank_transfer',
     createdAt: new Date(),
@@ -153,8 +155,8 @@ describe('AdminService', () => {
       expect(payment.listingId).toBe('listing_123');
       expect(payment.quantity).toBe(2);
       expect(payment.pricePerUnit).toEqual({ amount: 10000, currency: 'USD' });
-      expect(payment.sellerFee).toEqual({ amount: 1000, currency: 'USD' });
-      expect(payment.buyerFee).toEqual({ amount: 2000, currency: 'USD' });
+      expect(payment.sellerPlatformFee).toEqual({ amount: 1000, currency: 'USD' });
+      expect(payment.buyerPlatformFee).toEqual({ amount: 2000, currency: 'USD' });
     });
 
     it('should calculate pricePerUnit correctly', async () => {
@@ -1050,7 +1052,7 @@ describe('AdminService', () => {
       expect(result.paymentMethodId).toBe('bank_transfer');
     });
 
-    it('should include full price breakdown (ticketPrice, buyerFee, sellerFee, totalPaid, sellerReceives)', async () => {
+    it('should include full price breakdown (ticketPrice, buyerPlatformFee, sellerPlatformFee, totalPaid, sellerReceives)', async () => {
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
         .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
@@ -1061,9 +1063,9 @@ describe('AdminService', () => {
       const result = await service.getTransactionById(mockCtx, 'txn_123');
 
       expect(result.ticketPrice).toEqual({ amount: 20000, currency: 'USD' });
-      expect(result.buyerFee).toEqual({ amount: 2000, currency: 'USD' });
-      expect(result.sellerFee).toEqual({ amount: 1000, currency: 'USD' });
-      expect(result.totalPaid).toEqual({ amount: 22000, currency: 'USD' });
+      expect(result.buyerPlatformFee).toEqual({ amount: 2000, currency: 'USD' });
+      expect(result.sellerPlatformFee).toEqual({ amount: 1000, currency: 'USD' });
+      expect(result.totalPaid).toEqual({ amount: 24400, currency: 'USD' });
       expect(result.sellerReceives).toEqual({ amount: 19000, currency: 'USD' });
     });
 

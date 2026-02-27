@@ -27,8 +27,8 @@ export interface AdminPaymentItem {
   listingId: string;
   quantity: number;
   pricePerUnit: Money;
-  sellerFee: Money;
-  buyerFee: Money;
+  sellerPlatformFee: Money;
+  buyerPlatformFee: Money;
 }
 
 /**
@@ -395,8 +395,9 @@ export interface AdminTransactionDetail {
   };
   quantity: number;
   ticketPrice: Money;
-  buyerFee: Money;
-  sellerFee: Money;
+  buyerPlatformFee: Money;
+  sellerPlatformFee: Money;
+  paymentMethodCommission: Money;
   totalPaid: Money;
   sellerReceives: Money;
   createdAt: string;
@@ -427,8 +428,9 @@ export interface AdminTransactionDetailResponse {
   listing: AdminTransactionDetail['listing'];
   quantity: number;
   ticketPrice: Money;
-  buyerFee: Money;
-  sellerFee: Money;
+  buyerPlatformFee: Money;
+  sellerPlatformFee: Money;
+  paymentMethodCommission: Money;
   totalPaid: Money;
   sellerReceives: Money;
   createdAt: string;

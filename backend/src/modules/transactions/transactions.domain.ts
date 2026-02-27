@@ -65,10 +65,14 @@ export interface Transaction {
 
   // Pricing breakdown
   ticketPrice: Money; // Price per ticket * quantity
-  buyerFee: Money; // Platform fee from buyer
-  sellerFee: Money; // Platform fee from seller
-  totalPaid: Money; // ticketPrice + buyerFee
-  sellerReceives: Money; // ticketPrice - sellerFee
+  buyerPlatformFee: Money; // Platform fee charged to buyer
+  sellerPlatformFee: Money; // Platform fee charged to seller
+  paymentMethodCommission: Money; // Commission from selected payment method
+  totalPaid: Money; // ticketPrice + buyerPlatformFee + paymentMethodCommission
+  sellerReceives: Money; // ticketPrice - sellerPlatformFee
+
+  // Pricing snapshot reference
+  pricingSnapshotId: string;
 
   status: TransactionStatus;
 

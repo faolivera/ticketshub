@@ -36,8 +36,8 @@ export interface AdminPaymentItem {
   listingId: string;
   quantity: number;
   pricePerUnit: Money;
-  sellerFee: Money;
-  buyerFee: Money;
+  sellerPlatformFee: Money;
+  buyerPlatformFee: Money;
 }
 
 /**
@@ -428,8 +428,9 @@ export interface AdminTransactionDetailResponse {
   listing: AdminTransactionListingRef;
   quantity: number;
   ticketPrice: Money;
-  buyerFee: Money;
-  sellerFee: Money;
+  buyerPlatformFee: Money;
+  sellerPlatformFee: Money;
+  paymentMethodCommission: Money;
   totalPaid: Money;
   sellerReceives: Money;
   /** Payment method ID used for this transaction (optional if absent) */

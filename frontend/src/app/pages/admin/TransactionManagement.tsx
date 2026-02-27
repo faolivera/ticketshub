@@ -441,15 +441,21 @@ export default function TransactionManagement() {
               </p>
             </div>
             <div>
-              <span className="text-muted-foreground">{t('admin.transactions.buyerFee')}:</span>
+              <span className="text-muted-foreground">{t('admin.transactions.buyerPlatformFee')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.buyerFee.amount, detail.buyerFee.currency)}
+                {formatAmount(detail.buyerPlatformFee.amount, detail.buyerPlatformFee.currency)}
               </p>
             </div>
             <div>
-              <span className="text-muted-foreground">{t('admin.transactions.sellerFee')}:</span>
+              <span className="text-muted-foreground">{t('admin.transactions.sellerPlatformFee')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.sellerFee.amount, detail.sellerFee.currency)}
+                {formatAmount(detail.sellerPlatformFee.amount, detail.sellerPlatformFee.currency)}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.paymentMethodCommission')}:</span>
+              <p className="font-medium">
+                {formatAmount(detail.paymentMethodCommission.amount, detail.paymentMethodCommission.currency)}
               </p>
             </div>
             <div>

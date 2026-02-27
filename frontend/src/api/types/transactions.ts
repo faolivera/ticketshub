@@ -56,10 +56,14 @@ export interface Transaction {
 
   // Pricing breakdown
   ticketPrice: Money;
-  buyerFee: Money;
-  sellerFee: Money;
+  buyerPlatformFee: Money;
+  sellerPlatformFee: Money;
+  paymentMethodCommission: Money;
   totalPaid: Money;
   sellerReceives: Money;
+
+  // Pricing snapshot reference
+  pricingSnapshotId: string;
 
   status: TransactionStatus;
 
@@ -117,6 +121,7 @@ export interface InitiatePurchaseRequest {
   listingId: string;
   ticketUnitIds: string[];
   paymentMethodId: string;
+  pricingSnapshotId: string;
 }
 
 /**

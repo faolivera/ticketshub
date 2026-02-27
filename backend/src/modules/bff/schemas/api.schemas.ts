@@ -118,8 +118,9 @@ const TransactionWithDetailsSchema = z.object({
   ticketUnitIds: z.array(z.string()),
   quantity: z.number(),
   ticketPrice: MoneySchema,
-  buyerFee: MoneySchema,
-  sellerFee: MoneySchema,
+  buyerPlatformFee: MoneySchema,
+  sellerPlatformFee: MoneySchema,
+  paymentMethodCommission: MoneySchema,
   totalPaid: MoneySchema,
   sellerReceives: MoneySchema,
   status: TransactionStatusSchema,
@@ -156,23 +157,16 @@ export const GetMyTicketsResponseSchema = z.object({
   listed: z.array(TicketListingWithEventSchema),
 });
 
-const PaymentMethodTypeSchema = z.enum(['payment_gateway', 'manual_approval']);
-
-const BankTransferConfigSchema = z
-  .object({
-    cbu: z.string(),
-    accountHolderName: z.string(),
-    bankName: z.string(),
-    cuitCuil: z.string(),
-  })
-  .optional();
-
-const PublicPaymentMethodOptionSchema = z.object({
+const BuyPagePaymentMethodOptionSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: PaymentMethodTypeSchema,
   buyerCommissionPercent: z.number().nullable(),
-  bankTransferConfig: BankTransferConfigSchema,
+});
+
+const BuyPagePricingSnapshotSchema = z.object({
+  id: z.string(),
+  expiresAt: z.coerce.date(),
+  buyerPlatformFeePercentage: z.number(),
 });
 
 const BuyPageSellerInfoSchema = z.object({
@@ -188,7 +182,8 @@ const BuyPageSellerInfoSchema = z.object({
 export const GetBuyPageResponseSchema = z.object({
   listing: TicketListingWithEventSchema,
   seller: BuyPageSellerInfoSchema,
-  paymentMethods: z.array(PublicPaymentMethodOptionSchema),
+  paymentMethods: z.array(BuyPagePaymentMethodOptionSchema),
+  pricingSnapshot: BuyPagePricingSnapshotSchema,
 });
 
 const PaymentConfirmationStatusSchema = z.enum([

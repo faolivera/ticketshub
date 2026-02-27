@@ -28,8 +28,8 @@ export const AdminPaymentItemSchema = z.object({
   listingId: z.string(),
   quantity: z.number(),
   pricePerUnit: MoneySchema,
-  sellerFee: MoneySchema,
-  buyerFee: MoneySchema,
+  sellerPlatformFee: MoneySchema,
+  buyerPlatformFee: MoneySchema,
 });
 
 export const AdminPaymentsResponseSchema = z.object({
@@ -357,8 +357,9 @@ export const AdminTransactionDetailResponseSchema = z.object({
   listing: AdminTransactionListingRefSchema,
   quantity: z.number(),
   ticketPrice: MoneySchema,
-  buyerFee: MoneySchema,
-  sellerFee: MoneySchema,
+  buyerPlatformFee: MoneySchema,
+  sellerPlatformFee: MoneySchema,
+  paymentMethodCommission: MoneySchema,
   totalPaid: MoneySchema,
   sellerReceives: MoneySchema,
   paymentMethodId: z.string().optional(),
