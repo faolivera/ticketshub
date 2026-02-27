@@ -60,6 +60,7 @@ describe('BffService', () => {
     requiredActor: RequiredActor.None,
     createdAt: new Date(),
     updatedAt: new Date(),
+    paymentExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     eventName: 'Test Event',
     eventDate: new Date(),
     venue: 'Test Venue',

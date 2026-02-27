@@ -56,6 +56,7 @@ describe('AdminService', () => {
     paymentMethodId: 'bank_transfer',
     createdAt: new Date(),
     updatedAt: new Date(),
+    paymentExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
   };
 
   const mockConfirmationWithTransaction: PaymentConfirmationWithTransaction = {

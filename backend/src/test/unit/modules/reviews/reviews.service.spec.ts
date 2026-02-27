@@ -44,6 +44,7 @@ describe('ReviewsService', () => {
     requiredActor: RequiredActor.None,
     createdAt: new Date(),
     updatedAt: new Date(),
+    paymentExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
   };
 
   const mockReview: Review = {
