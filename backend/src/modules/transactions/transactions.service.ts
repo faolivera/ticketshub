@@ -553,6 +553,72 @@ export class TransactionsService {
   }
 
   /**
+   * Cancel all transactions with expired payment window (called by scheduler)
+   */
+  async cancelExpiredPendingPayments(ctx: Ctx): Promise<number> {
+    this.logger.log(ctx, 'Cancelling expired pending payments');
+
+    const expired =
+      await this.transactionsRepository.findExpiredPendingPayments(ctx);
+    let cancelled = 0;
+
+    for (const transaction of expired) {
+      try {
+        await this.cancelTransaction(
+          ctx,
+          transaction.id,
+          RequiredActor.Platform,
+          CancellationReason.PaymentTimeout,
+        );
+        cancelled++;
+      } catch (error) {
+        this.logger.error(
+          ctx,
+          `Failed to cancel expired transaction ${transaction.id}: ${error}`,
+        );
+      }
+    }
+
+    if (cancelled > 0) {
+      this.logger.log(ctx, `Cancelled ${cancelled} expired pending payments`);
+    }
+    return cancelled;
+  }
+
+  /**
+   * Cancel all transactions with expired admin review window (called by scheduler)
+   */
+  async cancelExpiredAdminReviews(ctx: Ctx): Promise<number> {
+    this.logger.log(ctx, 'Cancelling expired admin reviews');
+
+    const expired =
+      await this.transactionsRepository.findExpiredAdminReviews(ctx);
+    let cancelled = 0;
+
+    for (const transaction of expired) {
+      try {
+        await this.cancelTransaction(
+          ctx,
+          transaction.id,
+          RequiredActor.Platform,
+          CancellationReason.AdminReviewTimeout,
+        );
+        cancelled++;
+      } catch (error) {
+        this.logger.error(
+          ctx,
+          `Failed to cancel expired admin review ${transaction.id}: ${error}`,
+        );
+      }
+    }
+
+    if (cancelled > 0) {
+      this.logger.log(ctx, `Cancelled ${cancelled} expired admin reviews`);
+    }
+    return cancelled;
+  }
+
+  /**
    * Get transaction by ID with details
    */
   async getTransactionById(
