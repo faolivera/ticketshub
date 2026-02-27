@@ -20,7 +20,12 @@ import type {
   TransactionWithDetails,
   Money,
 } from './transactions.domain';
-import { TransactionStatus, RequiredActor, STATUS_REQUIRED_ACTOR } from './transactions.domain';
+import {
+  TransactionStatus,
+  RequiredActor,
+  STATUS_REQUIRED_ACTOR,
+  CancellationReason,
+} from './transactions.domain';
 import { TicketType } from '../tickets/tickets.domain';
 import type {
   ListTransactionsQuery,
@@ -483,12 +488,13 @@ export class TransactionsService {
   }
 
   /**
-   * Cancel transaction (before payment)
+   * Cancel transaction and restore tickets
    */
   async cancelTransaction(
     ctx: Ctx,
     transactionId: string,
-    userId: string,
+    cancelledBy: RequiredActor,
+    cancellationReason: CancellationReason,
   ): Promise<Transaction> {
     const transaction = await this.transactionsRepository.findById(
       ctx,
@@ -498,13 +504,13 @@ export class TransactionsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    if (transaction.buyerId !== userId) {
-      throw new ForbiddenException('Only buyer can cancel');
-    }
-
-    if (transaction.status !== TransactionStatus.PendingPayment) {
+    const cancellableStatuses = [
+      TransactionStatus.PendingPayment,
+      TransactionStatus.PaymentPendingVerification,
+    ];
+    if (!cancellableStatuses.includes(transaction.status)) {
       throw new BadRequestException(
-        'Can only cancel pending payment transactions',
+        'Transaction cannot be cancelled in current status',
       );
     }
 
@@ -523,6 +529,8 @@ export class TransactionsService {
         status: newStatus,
         requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         cancelledAt: new Date(),
+        cancelledBy,
+        cancellationReason,
       },
     );
 
@@ -530,7 +538,10 @@ export class TransactionsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    this.logger.log(ctx, `Transaction ${transactionId} - cancelled`);
+    this.logger.log(
+      ctx,
+      `Transaction ${transactionId} cancelled by ${cancelledBy}: ${cancellationReason}`,
+    );
     return updated;
   }
 
