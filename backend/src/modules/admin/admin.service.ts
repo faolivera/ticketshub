@@ -453,7 +453,7 @@ export class AdminService {
     ] = await Promise.all([
       this.paymentConfirmationsService.getPendingTransactionIds(ctx),
       this.transactionsService.getIdsByStatuses(ctx, [
-        TransactionStatus.PendingPayment,
+        TransactionStatus.PaymentPendingVerification,
       ]),
     ]);
 

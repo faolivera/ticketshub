@@ -8,15 +8,15 @@
     "ticketUnits": [
       {
         "id": "unit_s2_un_t_1",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_s2_un_t_2",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_s2_un_t_3",
-        "status": "reserved"
+        "status": "available"
       }
     ],
     "sellTogether": true,
@@ -24,9 +24,9 @@
       "amount": 10000,
       "currency": "EUR"
     },
-    "status": "Sold",
+    "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-26T00:48:04.012Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_998a7761"
   },
   "tkt_s2_un_separate": {
@@ -42,7 +42,7 @@
       },
       {
         "id": "unit_s2_un_s_2",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_s2_un_s_3",
@@ -56,7 +56,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T17:29:33.242Z",
+    "updatedAt": "2026-02-27T10:36:05.367Z",
     "eventSectionId": "sec_1772074566371_998a7761"
   },
   "tkt_s2_un_single": {
@@ -78,7 +78,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T14:24:46.700Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_998a7761"
   },
   "tkt_s2_num_together": {
@@ -120,7 +120,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T15:19:40.266Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_4ddbc87c"
   },
   "tkt_s2_num_separate": {
@@ -132,7 +132,7 @@
     "ticketUnits": [
       {
         "id": "unit_s2_num_s_1",
-        "status": "reserved",
+        "status": "available",
         "seat": {
           "row": "B",
           "seatNumber": "1"
@@ -140,7 +140,7 @@
       },
       {
         "id": "unit_s2_num_s_2",
-        "status": "reserved",
+        "status": "available",
         "seat": {
           "row": "B",
           "seatNumber": "2"
@@ -162,7 +162,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T18:23:11.487Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_4ddbc87c"
   },
   "tkt_s2_num_single": {
@@ -188,7 +188,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T10:00:00.000Z",
-    "updatedAt": "2026-02-25T10:00:00.000Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_4ddbc87c"
   },
   "tkt_1771986888670_d70607e7": {
@@ -222,7 +222,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T02:34:48.670Z",
-    "updatedAt": "2026-02-25T12:13:32.035Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_3f015245"
   },
   "tkt_1771986888673_145f5314": {
@@ -252,7 +252,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T02:34:48.673Z",
-    "updatedAt": "2026-02-25T02:34:48.673Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_84eec75e"
   },
   "tkt_1772014177633_5ab16f4d": {
@@ -310,7 +310,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T10:09:37.633Z",
-    "updatedAt": "2026-02-25T10:09:37.633Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_0fff4a76"
   },
   "tkt_1772019043848_10873abd": {
@@ -352,7 +352,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T11:30:43.849Z",
-    "updatedAt": "2026-02-25T15:15:33.360Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_2af6fb43"
   },
   "tkt_1772020615668_6d8ee400": {
@@ -418,7 +418,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-25T11:56:55.668Z",
-    "updatedAt": "2026-02-25T11:56:55.668Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_0fff4a76"
   },
   "tkt_1772072337297_72bc30e5": {
@@ -452,7 +452,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-26T02:18:57.297Z",
-    "updatedAt": "2026-02-26T02:20:07.801Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_e157e241"
   },
   "tkt_1772072599033_abd147d8": {
@@ -464,7 +464,7 @@
     "ticketUnits": [
       {
         "id": "unit_1772072599033_dba6bd27",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_1772072599033_2b4be34e",
@@ -482,7 +482,7 @@
     },
     "status": "Active",
     "createdAt": "2026-02-26T02:23:19.033Z",
-    "updatedAt": "2026-02-26T02:30:05.760Z",
+    "updatedAt": "2026-02-27T10:32:14.231Z",
     "eventSectionId": "sec_1772074566371_8aa5e984"
   },
   "tkt_1772106572406_8746e293": {
@@ -494,11 +494,11 @@
     "ticketUnits": [
       {
         "id": "unit_1772106572406_15777f73",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_1772106572406_cc54b6d9",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_1772106572406_c736d2b6",
@@ -541,7 +541,7 @@
     "eventSectionId": "sec_1772106540443_20b67b98",
     "status": "Active",
     "createdAt": "2026-02-26T11:49:32.406Z",
-    "updatedAt": "2026-02-27T01:48:42.087Z"
+    "updatedAt": "2026-02-27T10:32:14.231Z"
   },
   "tkt_1772109045432_cc564492": {
     "id": "tkt_1772109045432_cc564492",
@@ -552,11 +552,11 @@
     "ticketUnits": [
       {
         "id": "unit_1772109045432_4e5b1bd8",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_1772109045432_e19bfe4e",
-        "status": "reserved"
+        "status": "available"
       },
       {
         "id": "unit_1772109045432_64d1adb7",
@@ -600,7 +600,7 @@
     "eventSectionId": "sec_1772103088072_283cbbe6",
     "status": "Active",
     "createdAt": "2026-02-26T12:30:45.432Z",
-    "updatedAt": "2026-02-26T16:14:28.264Z"
+    "updatedAt": "2026-02-27T10:32:14.231Z"
   },
   "tkt_1772124016990_987434c1": {
     "id": "tkt_1772124016990_987434c1",
@@ -634,7 +634,7 @@
     "eventSectionId": "sec_1772074566371_8aa5e984",
     "status": "Active",
     "createdAt": "2026-02-26T16:40:16.990Z",
-    "updatedAt": "2026-02-26T16:40:16.990Z"
+    "updatedAt": "2026-02-27T10:32:14.231Z"
   },
   "tkt_1772124161921_29c391d0": {
     "id": "tkt_1772124161921_29c391d0",
@@ -684,6 +684,6 @@
     "eventSectionId": "sec_1772074566371_e157e241",
     "status": "Active",
     "createdAt": "2026-02-26T16:42:41.921Z",
-    "updatedAt": "2026-02-26T16:48:08.269Z"
+    "updatedAt": "2026-02-27T10:32:14.231Z"
   }
 }

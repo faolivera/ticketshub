@@ -6,17 +6,22 @@ import type { TicketType, DeliveryMethod, TicketListingWithEvent } from './ticke
  */
 export enum TransactionStatus {
   /**
-   * Transaction created, waiting for payment
+   * Transaction created, waiting for buyer to make payment
    */
   PendingPayment = 'PendingPayment',
 
   /**
-   * Payment received, funds in escrow
+   * Payment submitted by buyer, waiting for platform verification (manual payments only)
+   */
+  PaymentPendingVerification = 'PaymentPendingVerification',
+
+  /**
+   * Payment received and verified, funds in escrow, waiting for seller to transfer ticket
    */
   PaymentReceived = 'PaymentReceived',
 
   /**
-   * Seller has transferred the ticket
+   * Seller has transferred the ticket, waiting for buyer confirmation
    */
   TicketTransferred = 'TicketTransferred',
 
@@ -39,6 +44,16 @@ export enum TransactionStatus {
    * Transaction cancelled
    */
   Cancelled = 'Cancelled',
+}
+
+/**
+ * Actor required to advance the transaction to the next status
+ */
+export enum RequiredActor {
+  Buyer = 'Buyer',
+  Seller = 'Seller',
+  Platform = 'Platform',
+  None = 'None',
 }
 
 /**
@@ -66,6 +81,9 @@ export interface Transaction {
   pricingSnapshotId: string;
 
   status: TransactionStatus;
+
+  /** Actor required to advance the transaction to the next status */
+  requiredActor: RequiredActor;
 
   // Timeline
   createdAt: Date;

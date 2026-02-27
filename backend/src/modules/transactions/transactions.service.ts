@@ -20,7 +20,7 @@ import type {
   TransactionWithDetails,
   Money,
 } from './transactions.domain';
-import { TransactionStatus } from './transactions.domain';
+import { TransactionStatus, RequiredActor, STATUS_REQUIRED_ACTOR } from './transactions.domain';
 import { TicketType } from '../tickets/tickets.domain';
 import type {
   ListTransactionsQuery,
@@ -173,6 +173,7 @@ export class TransactionsService {
     }
 
     // Create transaction
+    const initialStatus = TransactionStatus.PendingPayment;
     const transaction: Transaction = {
       id: transactionId,
       listingId,
@@ -188,7 +189,8 @@ export class TransactionsService {
       totalPaid,
       sellerReceives,
       pricingSnapshotId,
-      status: TransactionStatus.PendingPayment,
+      status: initialStatus,
+      requiredActor: STATUS_REQUIRED_ACTOR[initialStatus],
       createdAt: new Date(),
       updatedAt: new Date(),
       eventDateTime: new Date(listing.eventDate),
@@ -246,7 +248,11 @@ export class TransactionsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    if (transaction.status !== TransactionStatus.PendingPayment) {
+    const validStatuses = [
+      TransactionStatus.PendingPayment,
+      TransactionStatus.PaymentPendingVerification,
+    ];
+    if (!validStatuses.includes(transaction.status)) {
       throw new BadRequestException('Invalid transaction status');
     }
 
@@ -260,11 +266,13 @@ export class TransactionsService {
     );
 
     // Update transaction status
+    const newStatus = TransactionStatus.PaymentReceived;
     const updated = await this.transactionsRepository.update(
       ctx,
       transactionId,
       {
-        status: TransactionStatus.PaymentReceived,
+        status: newStatus,
+        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         paymentReceivedAt: new Date(),
       },
     );
@@ -276,6 +284,52 @@ export class TransactionsService {
     // TODO: Send notifications to buyer and seller
 
     this.logger.log(ctx, `Transaction ${transactionId} - payment received`);
+    return updated;
+  }
+
+  /**
+   * Handle payment confirmation uploaded (for manual payments).
+   * Transitions from PendingPayment to PaymentPendingVerification.
+   */
+  async handlePaymentConfirmationUploaded(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<Transaction> {
+    this.logger.log(
+      ctx,
+      `Payment confirmation uploaded for transaction ${transactionId}`,
+    );
+
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    if (transaction.status !== TransactionStatus.PendingPayment) {
+      throw new BadRequestException('Invalid transaction status');
+    }
+
+    const newStatus = TransactionStatus.PaymentPendingVerification;
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      {
+        status: newStatus,
+        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+      },
+    );
+
+    if (!updated) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    this.logger.log(
+      ctx,
+      `Transaction ${transactionId} - payment pending verification`,
+    );
     return updated;
   }
 
@@ -308,11 +362,13 @@ export class TransactionsService {
       throw new BadRequestException('Invalid transaction status');
     }
 
+    const newStatus = TransactionStatus.TicketTransferred;
     const updated = await this.transactionsRepository.update(
       ctx,
       transactionId,
       {
-        status: TransactionStatus.TicketTransferred,
+        status: newStatus,
+        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         ticketTransferredAt: new Date(),
       },
     );
@@ -363,11 +419,13 @@ export class TransactionsService {
       `Payment released for ticket sale`,
     );
 
+    const newStatus = TransactionStatus.Completed;
     const updated = await this.transactionsRepository.update(
       ctx,
       transactionId,
       {
-        status: TransactionStatus.Completed,
+        status: newStatus,
+        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         buyerConfirmedAt: new Date(),
         completedAt: new Date(),
       },
@@ -404,8 +462,10 @@ export class TransactionsService {
           `Auto-release for digital ticket`,
         );
 
+        const newStatus = TransactionStatus.Completed;
         await this.transactionsRepository.update(ctx, transaction.id, {
-          status: TransactionStatus.Completed,
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
           completedAt: new Date(),
         });
 
@@ -455,11 +515,13 @@ export class TransactionsService {
       transaction.ticketUnitIds,
     );
 
+    const newStatus = TransactionStatus.Cancelled;
     const updated = await this.transactionsRepository.update(
       ctx,
       transactionId,
       {
-        status: TransactionStatus.Cancelled,
+        status: newStatus,
+        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         cancelledAt: new Date(),
       },
     );
@@ -645,11 +707,13 @@ export class TransactionsService {
     transactionId: string,
     disputeId: string,
   ): Promise<Transaction> {
+    const newStatus = TransactionStatus.Disputed;
     const updated = await this.transactionsRepository.update(
       ctx,
       transactionId,
       {
-        status: TransactionStatus.Disputed,
+        status: newStatus,
+        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         disputeId,
       },
     );
@@ -694,11 +758,13 @@ export class TransactionsService {
       await this.paymentsService.refundPayment(ctx, payment.id);
     }
 
+    const newStatus = TransactionStatus.Refunded;
     const updated = await this.transactionsRepository.update(
       ctx,
       transactionId,
       {
-        status: TransactionStatus.Refunded,
+        status: newStatus,
+        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         refundedAt: new Date(),
       },
     );
@@ -728,7 +794,7 @@ export class TransactionsService {
 
     const pendingManual = allTransactions.filter(
       (t) =>
-        t.status === TransactionStatus.PendingPayment &&
+        t.status === TransactionStatus.PaymentPendingVerification &&
         t.paymentMethodId &&
         manualPaymentMethodIds.includes(t.paymentMethodId),
     );
@@ -777,9 +843,9 @@ export class TransactionsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    if (transaction.status !== TransactionStatus.PendingPayment) {
+    if (transaction.status !== TransactionStatus.PaymentPendingVerification) {
       throw new BadRequestException(
-        'Transaction is not pending payment approval',
+        'Transaction is not pending payment verification',
       );
     }
 
@@ -793,11 +859,13 @@ export class TransactionsService {
         `Payment for ticket sale (manual approval)`,
       );
 
+      const newStatus = TransactionStatus.PaymentReceived;
       const updated = await this.transactionsRepository.update(
         ctx,
         transactionId,
         {
-          status: TransactionStatus.PaymentReceived,
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
           paymentReceivedAt: new Date(),
           paymentApprovedBy: adminId,
           paymentApprovedAt: new Date(),
@@ -821,12 +889,13 @@ export class TransactionsService {
         transaction.ticketUnitIds,
       );
 
+      const newStatus = TransactionStatus.PendingPayment;
       const updated = await this.transactionsRepository.update(
         ctx,
         transactionId,
         {
-          status: TransactionStatus.Cancelled,
-          cancelledAt: new Date(),
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
         },
       );
 

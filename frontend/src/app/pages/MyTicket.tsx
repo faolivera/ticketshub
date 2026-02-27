@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star, Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
@@ -8,7 +8,7 @@ import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { UserReviewsCard } from '@/app/components/UserReviewsCard';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService } from '@/api/services';
 import { useUser } from '../contexts/UserContext';
-import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData } from '@/api/types';
+import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import { TransactionStatus } from '@/api/types';
 
 export function MyTicket() {
@@ -18,6 +18,7 @@ export function MyTicket() {
   
   const [transaction, setTransaction] = useState<TransactionWithDetails | null>(null);
   const [paymentConfirmation, setPaymentConfirmation] = useState<PaymentConfirmation | null>(null);
+  const [bankTransferConfig, setBankTransferConfig] = useState<BankTransferConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -33,8 +34,19 @@ export function MyTicket() {
   const [reviewComment, setReviewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [copiedCbu, setCopiedCbu] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCopyCbu = async (cbu: string) => {
+    try {
+      await navigator.clipboard.writeText(cbu);
+      setCopiedCbu(true);
+      setTimeout(() => setCopiedCbu(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy CBU:', err);
+    }
+  };
 
   const isBuyer = transaction?.buyerId === user?.id;
   const isSeller = transaction?.sellerId === user?.id;
@@ -51,6 +63,7 @@ export function MyTicket() {
         setTransaction(data.transaction);
         setPaymentConfirmation(data.paymentConfirmation);
         setReviewData(data.reviews);
+        setBankTransferConfig(data.bankTransferConfig);
       } catch (err) {
         console.error('Failed to fetch transaction:', err);
         setError(t('common.errorLoading'));
@@ -72,6 +85,13 @@ export function MyTicket() {
           color: 'yellow',
           icon: Clock,
           description: t(`myTicket.statusPendingPaymentDesc${suffix}`)
+        };
+      case TransactionStatus.PaymentPendingVerification:
+        return {
+          label: t(`myTicket.statusPaymentPendingVerification${suffix}`),
+          color: 'blue',
+          icon: Clock,
+          description: t(`myTicket.statusPaymentPendingVerificationDesc${suffix}`)
         };
       case TransactionStatus.PaymentReceived:
         return {
@@ -128,6 +148,8 @@ export function MyTicket() {
   const getStatusStep = (status: TransactionStatus): number => {
     switch (status) {
       case TransactionStatus.PendingPayment:
+        return 0;
+      case TransactionStatus.PaymentPendingVerification:
         return 0;
       case TransactionStatus.PaymentReceived:
         return 1;
@@ -476,6 +498,65 @@ export function MyTicket() {
                 </div>
               </div>
 
+              {/* Bank Transfer Details - Show when pending payment for bank transfer and no confirmation uploaded yet */}
+              {transaction.status === TransactionStatus.PendingPayment && 
+               isBuyer && 
+               bankTransferConfig &&
+               !paymentConfirmation && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-blue-900 mb-3">
+                        {t('myTicket.bankTransferDetails')}
+                      </p>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-700">{t('myTicket.bankName')}</span>
+                          <span className="font-medium text-blue-900">{bankTransferConfig.bankName}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-700">{t('myTicket.accountHolder')}</span>
+                          <span className="font-medium text-blue-900">{bankTransferConfig.accountHolderName}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-700">{t('myTicket.cuitCuil')}</span>
+                          <span className="font-medium text-blue-900">{bankTransferConfig.cuitCuil}</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2 pt-2 border-t border-blue-200">
+                          <span className="text-blue-700">{t('myTicket.cbu')}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-medium text-blue-900">{bankTransferConfig.cbu}</span>
+                            <button
+                              onClick={() => handleCopyCbu(bankTransferConfig.cbu)}
+                              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                copiedCbu
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 active:scale-95'
+                              }`}
+                              title={t('myTicket.copyCbu')}
+                            >
+                              {copiedCbu ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  {t('myTicket.copied')}
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  {t('myTicket.copy')}
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Payment Confirmation Upload - Manual Payments */}
               {needsPaymentConfirmation && (
                 <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg mb-4">
@@ -523,8 +604,8 @@ export function MyTicket() {
                 </div>
               )}
 
-              {/* Payment Confirmation Uploaded */}
-              {paymentConfirmation && (
+              {/* Payment Confirmation Uploaded - Only visible to buyer while pending or rejected */}
+              {paymentConfirmation && isBuyer && paymentConfirmation.status !== 'Accepted' && (
                 <div className={`p-4 rounded-lg mb-4 ${
                   paymentConfirmation.status === 'Pending' ? 'bg-blue-50 border border-blue-200' :
                   paymentConfirmation.status === 'Accepted' ? 'bg-green-50 border border-green-200' :
@@ -568,6 +649,12 @@ export function MyTicket() {
                       }`}>
                         {paymentConfirmation.originalFilename}
                       </p>
+
+                      {paymentConfirmation.status === 'Pending' && (
+                        <p className="text-sm text-blue-700 mt-2">
+                          {t('myTicket.confirmationPendingDesc')}
+                        </p>
+                      )}
                       
                       <button
                         onClick={openPreviewModal}

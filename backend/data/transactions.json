@@ -1,8 +1,8 @@
 {
-  "txn_1772033769899_420c5738": {
-    "id": "txn_1772033769899_420c5738",
+  "txn_1772188565361_f3ca8b3e": {
+    "id": "txn_1772188565361_f3ca8b3e",
     "listingId": "tkt_s2_un_separate",
-    "buyerId": "3",
+    "buyerId": "4",
     "sellerId": "2",
     "ticketType": "DigitalTransferable",
     "ticketUnitIds": [
@@ -13,317 +13,38 @@
       "amount": 10000,
       "currency": "EUR"
     },
-    "buyerFee": {
+    "buyerPlatformFee": {
       "amount": 1000,
       "currency": "EUR"
     },
-    "sellerFee": {
+    "sellerPlatformFee": {
       "amount": 500,
       "currency": "EUR"
     },
+    "paymentMethodCommission": {
+      "amount": 800,
+      "currency": "EUR"
+    },
     "totalPaid": {
-      "amount": 11000,
+      "amount": 11800,
       "currency": "EUR"
     },
     "sellerReceives": {
       "amount": 9500,
       "currency": "EUR"
     },
-    "status": "TicketTransferred",
-    "createdAt": "2026-02-25T15:36:09.899Z",
-    "updatedAt": "2026-02-25T15:38:18.250Z",
-    "eventDateTime": "2026-02-13T00:00:00.000Z",
-    "paymentMethodId": "bank_transfer",
-    "paymentReceivedAt": "2026-02-25T15:36:38.775Z",
-    "paymentApprovedBy": "8",
-    "paymentApprovedAt": "2026-02-25T15:36:38.775Z",
-    "ticketTransferredAt": "2026-02-25T15:38:18.250Z"
-  },
-  "txn_1772040573237_bc515e4d": {
-    "id": "txn_1772040573237_bc515e4d",
-    "listingId": "tkt_s2_un_separate",
-    "buyerId": "3",
-    "sellerId": "2",
-    "ticketType": "DigitalTransferable",
-    "ticketUnitIds": [
-      "unit_s2_un_s_2"
-    ],
-    "quantity": 1,
-    "ticketPrice": {
-      "amount": 10000,
-      "currency": "EUR"
-    },
-    "buyerFee": {
-      "amount": 1000,
-      "currency": "EUR"
-    },
-    "sellerFee": {
-      "amount": 500,
-      "currency": "EUR"
-    },
-    "totalPaid": {
-      "amount": 11000,
-      "currency": "EUR"
-    },
-    "sellerReceives": {
-      "amount": 9500,
-      "currency": "EUR"
-    },
+    "pricingSnapshotId": "ps_1772188508311_c42a40b43800",
     "status": "Completed",
-    "createdAt": "2026-02-25T17:29:33.241Z",
-    "updatedAt": "2026-02-25T17:42:28.524Z",
+    "requiredActor": "None",
+    "createdAt": "2026-02-27T10:36:05.365Z",
+    "updatedAt": "2026-02-27T10:39:29.334Z",
     "eventDateTime": "2026-02-13T00:00:00.000Z",
-    "paymentMethodId": "bank_transfer",
-    "paymentReceivedAt": "2026-02-25T17:36:57.820Z",
+    "paymentMethodId": "pm_004_bank_transfer",
+    "paymentReceivedAt": "2026-02-27T10:38:28.684Z",
     "paymentApprovedBy": "8",
-    "paymentApprovedAt": "2026-02-25T17:36:57.820Z",
-    "ticketTransferredAt": "2026-02-25T17:42:18.311Z",
-    "buyerConfirmedAt": "2026-02-25T17:42:28.524Z",
-    "completedAt": "2026-02-25T17:42:28.524Z"
-  },
-  "txn_1772043791484_ae692888": {
-    "id": "txn_1772043791484_ae692888",
-    "listingId": "tkt_s2_num_separate",
-    "buyerId": "6",
-    "sellerId": "2",
-    "ticketType": "DigitalTransferable",
-    "ticketUnitIds": [
-      "unit_s2_num_s_1",
-      "unit_s2_num_s_2"
-    ],
-    "quantity": 2,
-    "ticketPrice": {
-      "amount": 30000,
-      "currency": "EUR"
-    },
-    "buyerFee": {
-      "amount": 3000,
-      "currency": "EUR"
-    },
-    "sellerFee": {
-      "amount": 1500,
-      "currency": "EUR"
-    },
-    "totalPaid": {
-      "amount": 33000,
-      "currency": "EUR"
-    },
-    "sellerReceives": {
-      "amount": 28500,
-      "currency": "EUR"
-    },
-    "status": "Completed",
-    "createdAt": "2026-02-25T18:23:11.485Z",
-    "updatedAt": "2026-02-25T18:24:11.191Z",
-    "eventDateTime": "2026-02-13T00:00:00.000Z",
-    "paymentMethodId": "bank_transfer",
-    "paymentReceivedAt": "2026-02-25T18:23:37.092Z",
-    "paymentApprovedBy": "8",
-    "paymentApprovedAt": "2026-02-25T18:23:37.092Z",
-    "ticketTransferredAt": "2026-02-25T18:24:05.773Z",
-    "buyerConfirmedAt": "2026-02-25T18:24:11.191Z",
-    "completedAt": "2026-02-25T18:24:11.191Z"
-  },
-  "txn_1772066884008_e12d41ee": {
-    "id": "txn_1772066884008_e12d41ee",
-    "listingId": "tkt_s2_un_together",
-    "buyerId": "6",
-    "sellerId": "2",
-    "ticketType": "DigitalTransferable",
-    "ticketUnitIds": [
-      "unit_s2_un_t_1",
-      "unit_s2_un_t_2",
-      "unit_s2_un_t_3"
-    ],
-    "quantity": 3,
-    "ticketPrice": {
-      "amount": 30000,
-      "currency": "EUR"
-    },
-    "buyerFee": {
-      "amount": 3000,
-      "currency": "EUR"
-    },
-    "sellerFee": {
-      "amount": 1500,
-      "currency": "EUR"
-    },
-    "totalPaid": {
-      "amount": 33000,
-      "currency": "EUR"
-    },
-    "sellerReceives": {
-      "amount": 28500,
-      "currency": "EUR"
-    },
-    "status": "PendingPayment",
-    "createdAt": "2026-02-26T00:48:04.009Z",
-    "updatedAt": "2026-02-26T00:48:04.009Z",
-    "eventDateTime": "2026-02-13T00:00:00.000Z",
-    "paymentMethodId": "bank_transfer"
-  },
-  "txn_1772073005757_874dd765": {
-    "id": "txn_1772073005757_874dd765",
-    "listingId": "tkt_1772072599033_abd147d8",
-    "buyerId": "3",
-    "sellerId": "6",
-    "ticketType": "DigitalTransferable",
-    "ticketUnitIds": [
-      "unit_1772072599033_dba6bd27"
-    ],
-    "quantity": 1,
-    "ticketPrice": {
-      "amount": 25000,
-      "currency": "USD"
-    },
-    "buyerFee": {
-      "amount": 2500,
-      "currency": "USD"
-    },
-    "sellerFee": {
-      "amount": 1250,
-      "currency": "USD"
-    },
-    "totalPaid": {
-      "amount": 27500,
-      "currency": "USD"
-    },
-    "sellerReceives": {
-      "amount": 23750,
-      "currency": "USD"
-    },
-    "status": "PaymentReceived",
-    "createdAt": "2026-02-26T02:30:05.757Z",
-    "updatedAt": "2026-02-26T02:30:27.370Z",
-    "eventDateTime": "2026-03-02T21:00:00.000Z",
-    "paymentMethodId": "bank_transfer",
-    "paymentReceivedAt": "2026-02-26T02:30:27.370Z",
-    "paymentApprovedBy": "8",
-    "paymentApprovedAt": "2026-02-26T02:30:27.370Z"
-  },
-  "txn_1772122468261_b30835e5": {
-    "id": "txn_1772122468261_b30835e5",
-    "listingId": "tkt_1772109045432_cc564492",
-    "buyerId": "10",
-    "sellerId": "2",
-    "ticketType": "DigitalTransferable",
-    "ticketUnitIds": [
-      "unit_1772109045432_4e5b1bd8",
-      "unit_1772109045432_e19bfe4e"
-    ],
-    "quantity": 2,
-    "ticketPrice": {
-      "amount": 20000,
-      "currency": "USD"
-    },
-    "buyerFee": {
-      "amount": 2000,
-      "currency": "USD"
-    },
-    "sellerFee": {
-      "amount": 1000,
-      "currency": "USD"
-    },
-    "totalPaid": {
-      "amount": 22000,
-      "currency": "USD"
-    },
-    "sellerReceives": {
-      "amount": 19000,
-      "currency": "USD"
-    },
-    "status": "Completed",
-    "createdAt": "2026-02-26T16:14:28.261Z",
-    "updatedAt": "2026-02-26T16:30:43.062Z",
-    "eventDateTime": "2026-03-02T21:00:00.000Z",
-    "paymentMethodId": "bank_transfer",
-    "paymentReceivedAt": "2026-02-26T16:23:44.895Z",
-    "paymentApprovedBy": "8",
-    "paymentApprovedAt": "2026-02-26T16:23:44.895Z",
-    "ticketTransferredAt": "2026-02-26T16:27:29.613Z",
-    "buyerConfirmedAt": "2026-02-26T16:30:43.061Z",
-    "completedAt": "2026-02-26T16:30:43.061Z"
-  },
-  "txn_1772156137755_b8e227d7": {
-    "id": "txn_1772156137755_b8e227d7",
-    "listingId": "tkt_1772106572406_8746e293",
-    "buyerId": "4",
-    "sellerId": "3",
-    "ticketType": "DigitalTransferable",
-    "ticketUnitIds": [
-      "unit_1772106572406_15777f73"
-    ],
-    "quantity": 1,
-    "ticketPrice": {
-      "amount": 20000,
-      "currency": "USD"
-    },
-    "buyerPlatformFee": {
-      "amount": 2000,
-      "currency": "USD"
-    },
-    "sellerPlatformFee": {
-      "amount": 1000,
-      "currency": "USD"
-    },
-    "paymentMethodCommission": {
-      "amount": 1600,
-      "currency": "USD"
-    },
-    "totalPaid": {
-      "amount": 23600,
-      "currency": "USD"
-    },
-    "sellerReceives": {
-      "amount": 19000,
-      "currency": "USD"
-    },
-    "pricingSnapshotId": "ps_1772155675146_3d7d3d76ff74",
-    "status": "PendingPayment",
-    "createdAt": "2026-02-27T01:35:37.756Z",
-    "updatedAt": "2026-02-27T01:35:37.756Z",
-    "eventDateTime": "2026-02-13T00:00:00.000Z",
-    "paymentMethodId": "pm_004_bank_transfer"
-  },
-  "txn_1772156922082_ee3b2f9e": {
-    "id": "txn_1772156922082_ee3b2f9e",
-    "listingId": "tkt_1772106572406_8746e293",
-    "buyerId": "4",
-    "sellerId": "3",
-    "ticketType": "DigitalTransferable",
-    "ticketUnitIds": [
-      "unit_1772106572406_cc54b6d9"
-    ],
-    "quantity": 1,
-    "ticketPrice": {
-      "amount": 20000,
-      "currency": "USD"
-    },
-    "buyerPlatformFee": {
-      "amount": 2000,
-      "currency": "USD"
-    },
-    "sellerPlatformFee": {
-      "amount": 1000,
-      "currency": "USD"
-    },
-    "paymentMethodCommission": {
-      "amount": 1600,
-      "currency": "USD"
-    },
-    "totalPaid": {
-      "amount": 23600,
-      "currency": "USD"
-    },
-    "sellerReceives": {
-      "amount": 19000,
-      "currency": "USD"
-    },
-    "pricingSnapshotId": "ps_1772156857747_d397820bdf71",
-    "status": "PendingPayment",
-    "createdAt": "2026-02-27T01:48:42.085Z",
-    "updatedAt": "2026-02-27T01:48:42.085Z",
-    "eventDateTime": "2026-02-13T00:00:00.000Z",
-    "paymentMethodId": "pm_004_bank_transfer"
+    "paymentApprovedAt": "2026-02-27T10:38:28.684Z",
+    "ticketTransferredAt": "2026-02-27T10:39:17.102Z",
+    "buyerConfirmedAt": "2026-02-27T10:39:29.334Z",
+    "completedAt": "2026-02-27T10:39:29.334Z"
   }
 }

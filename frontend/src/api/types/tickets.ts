@@ -239,6 +239,7 @@ export interface BuyPageSellerInfo {
   totalSales: number;
   percentPositiveReviews: number | null;
   totalReviews: number;
+  memberSince: string;
 }
 
 /** Pricing snapshot summary for buy page (minimal data for UI) */

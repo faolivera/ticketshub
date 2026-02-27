@@ -28,7 +28,7 @@ import type {
   PaymentConfirmationWithTransaction,
   ListPaymentConfirmationsResponse,
 } from './payment-confirmations.api';
-import { TransactionStatus } from '../transactions/transactions.domain';
+import { TransactionStatus, RequiredActor, STATUS_REQUIRED_ACTOR } from '../transactions/transactions.domain';
 import { Role } from '../users/users.domain';
 
 @Injectable()
@@ -160,6 +160,12 @@ export class PaymentConfirmationsService {
     };
 
     await this.repository.save(ctx, confirmation);
+
+    // Transition transaction to PaymentPendingVerification
+    await this.transactionsService.handlePaymentConfirmationUploaded(
+      ctx,
+      transactionId,
+    );
 
     this.logger.log(
       ctx,

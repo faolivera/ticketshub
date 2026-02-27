@@ -163,6 +163,7 @@ export class BffService {
       totalSales,
       percentPositiveReviews: sellerMetrics.positivePercent,
       totalReviews: sellerMetrics.totalReviews,
+      memberSince: user?.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
     };
 
     const pricingSnapshot: BuyPagePricingSnapshot = {
@@ -230,7 +231,10 @@ export class BffService {
     }
 
     let paymentConfirmation = null;
-    if (transaction.paymentMethodId?.includes('bank_transfer')) {
+    const shouldShowPaymentConfirmation =
+      transaction.paymentMethodId?.includes('bank_transfer') &&
+      (isBuyer || isAdmin);
+    if (shouldShowPaymentConfirmation) {
       try {
         paymentConfirmation =
           await this.paymentConfirmationsService.getConfirmationByTransaction(
@@ -257,10 +261,24 @@ export class BffService {
       }
     }
 
+    let bankTransferConfig = null;
+    if (transaction.paymentMethodId?.includes('bank_transfer') && isBuyer) {
+      try {
+        const paymentMethod = await this.paymentMethodsService.findById(
+          ctx,
+          transaction.paymentMethodId,
+        );
+        bankTransferConfig = paymentMethod?.bankTransferConfig ?? null;
+      } catch {
+        // Failed to load payment method config, buyer can still view transaction
+      }
+    }
+
     return {
       transaction,
       paymentConfirmation,
       reviews,
+      bankTransferConfig,
     };
   }
 }

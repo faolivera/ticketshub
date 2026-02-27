@@ -8,7 +8,7 @@ import { TicketsRepository } from '../../../../modules/tickets/tickets.repositor
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { UsersService } from '../../../../modules/users/users.service';
 import { PaymentConfirmationStatus } from '../../../../modules/payment-confirmations/payment-confirmations.domain';
-import { TransactionStatus } from '../../../../modules/transactions/transactions.domain';
+import { TransactionStatus, RequiredActor } from '../../../../modules/transactions/transactions.domain';
 import { TicketType } from '../../../../modules/tickets/tickets.domain';
 import {
   EventStatus,
@@ -52,6 +52,7 @@ describe('AdminService', () => {
     sellerReceives: { amount: 19000, currency: 'USD' },
     pricingSnapshotId: 'ps_123',
     status: TransactionStatus.PendingPayment,
+    requiredActor: RequiredActor.Buyer,
     paymentMethodId: 'bank_transfer',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -961,7 +962,7 @@ describe('AdminService', () => {
         mockCtx,
       );
       expect(transactionsService.getIdsByStatuses).toHaveBeenCalledWith(mockCtx, [
-        TransactionStatus.PendingPayment,
+        TransactionStatus.PaymentPendingVerification,
       ]);
     });
 

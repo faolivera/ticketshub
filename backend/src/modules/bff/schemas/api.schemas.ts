@@ -10,6 +10,13 @@ const MoneySchema = z.object({
   currency: CurrencyCodeSchema,
 });
 
+const BankTransferConfigSchema = z.object({
+  cbu: z.string(),
+  accountHolderName: z.string(),
+  bankName: z.string(),
+  cuitCuil: z.string(),
+});
+
 const TicketTypeSchema = z.enum([
   'Physical',
   'DigitalTransferable',
@@ -18,12 +25,20 @@ const TicketTypeSchema = z.enum([
 const DeliveryMethodSchema = z.enum(['Pickup', 'ArrangeWithSeller']);
 const TransactionStatusSchema = z.enum([
   'PendingPayment',
+  'PaymentPendingVerification',
   'PaymentReceived',
   'TicketTransferred',
   'Completed',
   'Disputed',
   'Refunded',
   'Cancelled',
+]);
+
+const RequiredActorSchema = z.enum([
+  'Buyer',
+  'Seller',
+  'Platform',
+  'None',
 ]);
 const ListingStatusSchema = z.enum(['Active', 'Sold', 'Cancelled', 'Expired']);
 const TicketUnitStatusSchema = z.enum(['available', 'reserved', 'sold']);
@@ -124,6 +139,7 @@ const TransactionWithDetailsSchema = z.object({
   totalPaid: MoneySchema,
   sellerReceives: MoneySchema,
   status: TransactionStatusSchema,
+  requiredActor: RequiredActorSchema,
   createdAt: z.coerce.date(),
   paymentReceivedAt: z.coerce.date().optional(),
   ticketTransferredAt: z.coerce.date().optional(),
@@ -235,4 +251,5 @@ export const GetTransactionDetailsResponseSchema = z.object({
   transaction: TransactionWithDetailsSchema,
   paymentConfirmation: PaymentConfirmationSchema.nullable(),
   reviews: TransactionReviewsDataSchema.nullable(),
+  bankTransferConfig: BankTransferConfigSchema.nullable(),
 });

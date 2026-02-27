@@ -492,6 +492,14 @@ export function BuyTicketPage() {
                         <span>{t('eventTickets.noReviewsYet')}</span>
                       )}
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t('buyTicket.sellerMemberSince', {
+                        date: new Date(seller.memberSince).toLocaleDateString(undefined, {
+                          month: 'short',
+                          year: 'numeric',
+                        }),
+                      })}
+                    </p>
                   </div>
                 </Link>
               </div>

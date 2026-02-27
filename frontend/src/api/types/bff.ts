@@ -1,6 +1,7 @@
 import type { TransactionWithDetails } from './transactions';
 import type { PaymentConfirmation } from './payment-confirmations';
 import type { Review } from './reviews';
+import type { BankTransferConfig } from './tickets';
 
 /**
  * Transaction reviews data for the transaction details page
@@ -19,4 +20,5 @@ export interface GetTransactionDetailsResponse {
   transaction: TransactionWithDetails;
   paymentConfirmation: PaymentConfirmation | null;
   reviews: TransactionReviewsData | null;
+  bankTransferConfig: BankTransferConfig | null;
 }

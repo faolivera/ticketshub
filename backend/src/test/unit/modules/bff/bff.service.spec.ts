@@ -10,6 +10,7 @@ import { PaymentMethodsService } from '../../../../modules/payments/payment-meth
 import { PricingService } from '../../../../modules/payments/pricing/pricing.service';
 import {
   TransactionStatus,
+  RequiredActor,
   type TransactionWithDetails,
 } from '../../../../modules/transactions/transactions.domain';
 import {
@@ -56,6 +57,7 @@ describe('BffService', () => {
     sellerReceives: { amount: 9500, currency: 'USD' },
     pricingSnapshotId: 'ps_123',
     status: TransactionStatus.Completed,
+    requiredActor: RequiredActor.None,
     createdAt: new Date(),
     updatedAt: new Date(),
     eventName: 'Test Event',

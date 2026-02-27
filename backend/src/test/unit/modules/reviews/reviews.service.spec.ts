@@ -10,7 +10,7 @@ import { ReviewsRepository } from '../../../../modules/reviews/reviews.repositor
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
 import { UsersService } from '../../../../modules/users/users.service';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
-import { TransactionStatus } from '../../../../modules/transactions/transactions.domain';
+import { TransactionStatus, RequiredActor } from '../../../../modules/transactions/transactions.domain';
 import { TicketType } from '../../../../modules/tickets/tickets.domain';
 import type { Review } from '../../../../modules/reviews/reviews.domain';
 import type { Transaction } from '../../../../modules/transactions/transactions.domain';
@@ -41,6 +41,7 @@ describe('ReviewsService', () => {
     sellerReceives: { amount: 9500, currency: 'USD' },
     pricingSnapshotId: 'ps_123',
     status: TransactionStatus.Completed,
+    requiredActor: RequiredActor.None,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
