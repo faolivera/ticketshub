@@ -296,6 +296,32 @@ export class TransactionsService {
   }
 
   /**
+   * Handle payment failure from gateway webhook
+   */
+  async handlePaymentFailed(ctx: Ctx, transactionId: string): Promise<Transaction> {
+    this.logger.log(ctx, `Payment failed for transaction ${transactionId}`);
+
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    if (transaction.status !== TransactionStatus.PendingPayment) {
+      throw new BadRequestException('Invalid transaction status for payment failure');
+    }
+
+    return this.cancelTransaction(
+      ctx,
+      transactionId,
+      RequiredActor.Platform,
+      CancellationReason.PaymentFailed,
+    );
+  }
+
+  /**
    * Handle payment confirmation uploaded (for manual payments).
    * Transitions from PendingPayment to PaymentPendingVerification.
    */
