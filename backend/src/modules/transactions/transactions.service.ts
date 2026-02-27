@@ -197,6 +197,9 @@ export class TransactionsService {
       status: initialStatus,
       requiredActor: STATUS_REQUIRED_ACTOR[initialStatus],
       createdAt: new Date(),
+      paymentExpiresAt: new Date(
+        Date.now() + this.configService.getPaymentTimeoutMinutes() * 60 * 1000,
+      ),
       updatedAt: new Date(),
       eventDateTime: new Date(listing.eventDate),
       releaseAfterMinutes:
