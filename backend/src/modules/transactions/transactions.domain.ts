@@ -66,6 +66,22 @@ export enum RequiredActor {
 }
 
 /**
+ * Reason why a transaction was cancelled
+ */
+export enum CancellationReason {
+  /** Buyer manually cancelled the transaction */
+  BuyerCancelled = 'BuyerCancelled',
+  /** Payment gateway returned a failure */
+  PaymentFailed = 'PaymentFailed',
+  /** Payment window (10 min) expired */
+  PaymentTimeout = 'PaymentTimeout',
+  /** Admin rejected the payment confirmation */
+  AdminRejected = 'AdminRejected',
+  /** Admin did not review within 24 hours */
+  AdminReviewTimeout = 'AdminReviewTimeout',
+}
+
+/**
  * Mapping of transaction status to required actor
  */
 export const STATUS_REQUIRED_ACTOR: Record<TransactionStatus, RequiredActor> = {
@@ -115,6 +131,19 @@ export interface Transaction {
   buyerConfirmedAt?: Date;
   completedAt?: Date;
   cancelledAt?: Date;
+
+  /** Who cancelled the transaction */
+  cancelledBy?: RequiredActor;
+
+  /** Why the transaction was cancelled */
+  cancellationReason?: CancellationReason;
+
+  /** When the payment window expires (createdAt + 10 min) */
+  paymentExpiresAt: Date;
+
+  /** When admin review expires (set when confirmation uploaded, +24h) */
+  adminReviewExpiresAt?: Date;
+
   refundedAt?: Date;
 
   // For Digital Non-Transferable tickets
