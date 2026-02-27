@@ -993,26 +993,13 @@ export class TransactionsService {
       );
       return updated;
     } else {
-      // Restore tickets to listing
-      await this.ticketsService.restoreTickets(
-        ctx,
-        transaction.listingId,
-        transaction.ticketUnitIds,
-      );
-
-      const newStatus = TransactionStatus.PendingPayment;
-      const updated = await this.transactionsRepository.update(
+      // Admin rejected - cancel the transaction
+      const updated = await this.cancelTransaction(
         ctx,
         transactionId,
-        {
-          status: newStatus,
-          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-        },
+        RequiredActor.Platform,
+        CancellationReason.AdminRejected,
       );
-
-      if (!updated) {
-        throw new NotFoundException('Transaction not found');
-      }
 
       this.logger.log(
         ctx,
