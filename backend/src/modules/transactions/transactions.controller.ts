@@ -7,6 +7,8 @@ import {
   Body,
   UseGuards,
   Inject,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -18,6 +20,7 @@ import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
 import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
 import { Role } from '../users/users.domain';
+import { RequiredActor, CancellationReason } from './transactions.domain';
 import type {
   InitiatePurchaseRequest,
   InitiatePurchaseResponse,
@@ -123,10 +126,24 @@ export class TransactionsController {
   @UseGuards(JwtAuthGuard)
   async cancelTransaction(
     @Context() ctx: Ctx,
-    @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
+    @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<{ cancelled: boolean }>> {
-    await this.transactionsService.cancelTransaction(ctx, id, user.id);
+    // Verify user is the buyer
+    const transaction = await this.transactionsService.findById(ctx, id);
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+    if (transaction.buyerId !== user.id) {
+      throw new ForbiddenException('Only buyer can cancel transaction');
+    }
+
+    await this.transactionsService.cancelTransaction(
+      ctx,
+      id,
+      RequiredActor.Buyer,
+      CancellationReason.BuyerCancelled,
+    );
     return { success: true, data: { cancelled: true } };
   }
 
