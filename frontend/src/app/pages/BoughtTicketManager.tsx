@@ -190,6 +190,8 @@ function TransactionCard({ transaction, userId, showWaitingFor, t }: Transaction
       <div className="relative h-48">
         <EventBanner
           variant={bannerVariant}
+          squareUrl={transaction.bannerUrls?.square}
+          rectangleUrl={transaction.bannerUrls?.rectangle}
           alt={transaction.eventName}
           className="h-full"
         />
@@ -382,6 +384,8 @@ function ListedTicketsGrid({ listed, t, onCopyLink, copiedListingId }: ListedTic
             <div className="relative h-48">
               <EventBanner
                 variant={bannerVariant}
+                squareUrl={listing.bannerUrls?.square}
+                rectangleUrl={listing.bannerUrls?.rectangle}
                 alt={listing.eventName}
                 className="h-full"
               />

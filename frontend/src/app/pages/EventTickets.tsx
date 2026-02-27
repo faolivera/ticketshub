@@ -8,6 +8,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { EventBanner } from '../components/EventBanner';
+import { UserAvatar } from '../components/UserAvatar';
 import type { EventWithDates, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
@@ -509,18 +510,7 @@ export function EventTickets() {
                             <div className="border-t border-gray-200 pt-4 mt-auto">
                               <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">{t('eventTickets.soldBy')}</h4>
                               <div className="flex items-start gap-3 mb-4">
-                                {/* Seller Picture */}
-                                {ticket.sellerPicture ? (
-                                  <img
-                                    src={ticket.sellerPicture}
-                                    alt={ticket.sellerName}
-                                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                                  />
-                                ) : (
-                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                                    {ticket.sellerName.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                                  </div>
-                                )}
+                                <UserAvatar name={ticket.sellerName} src={ticket.sellerPicture} className="h-12 w-12" />
 
                                 <div className="flex-1 min-w-0">
                                   <Link 

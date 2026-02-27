@@ -7,7 +7,7 @@ import { ticketsService } from '../../api/services/tickets.service';
 import { transactionsService } from '../../api/services/transactions.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
-import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
+import { UserAvatar } from '../components/UserAvatar';
 import type { BuyPageData, PublicPaymentMethodOption } from '../../api/types';
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
@@ -450,16 +450,7 @@ export function BuyTicketPage() {
                   to={`/seller/${seller.id}`}
                   className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-gray-50 transition-colors"
                 >
-                  <Avatar className="h-12 w-12 flex-shrink-0">
-                    <AvatarImage src={seller.pic.src} alt={seller.publicName} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
-                      {seller.publicName
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .substring(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar name={seller.publicName} src={seller.pic.src} className="h-12 w-12" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 truncate">{seller.publicName}</p>
                     {seller.badges.length > 0 && (

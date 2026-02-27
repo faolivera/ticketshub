@@ -5,7 +5,7 @@ import { sellersService } from '../../api/services/sellers.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { UserAvatar } from '../components/UserAvatar';
 import type { SellerProfile as SellerProfileData } from '../../api/types';
 
 export function SellerProfile() {
@@ -81,11 +81,6 @@ export function SellerProfile() {
     }
   };
 
-  const getInitials = (name: string) => {
-    const parts = name.split(' ').filter(Boolean);
-    return parts.slice(0, 2).map((part) => part[0].toUpperCase()).join('') || '?';
-  };
-
   const totalReviews = seller.reviewStats.positive + seller.reviewStats.neutral + seller.reviewStats.negative;
   const positivePercentage = totalReviews > 0 ? Math.round((seller.reviewStats.positive / totalReviews) * 100) : 0;
   const memberSinceDate = new Date(seller.memberSince);
@@ -106,17 +101,7 @@ export function SellerProfile() {
 
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
           <div className="flex items-start gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0 overflow-hidden">
-              {seller.pic?.src ? (
-                <ImageWithFallback
-                  src={seller.pic.src}
-                  alt={`${seller.publicName} profile`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span>{getInitials(seller.publicName)}</span>
-              )}
-            </div>
+            <UserAvatar name={seller.publicName} src={seller.pic?.src} className="h-24 w-24" />
 
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{seller.publicName}</h1>

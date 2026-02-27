@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Award, Trophy } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { UserAvatar } from './UserAvatar';
 import { Skeleton } from './ui/skeleton';
 import { reviewsService } from '../../api/services/reviews.service';
 import type { UserReviewMetrics, UserBadge } from '../../api/types';
@@ -34,15 +34,6 @@ function getBadgeLabel(badge: UserBadge, t: (key: string) => string) {
   if (badge === 'verified') return t('eventTickets.badgeVerified');
   if (badge === 'best_seller') return t('eventTickets.badgeBestSeller');
   return badge;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
 }
 
 export const UserReviewsCard: FC<UserReviewsCardProps> = ({
@@ -95,12 +86,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
   if (error || !metrics) {
     return (
       <div className="flex items-start gap-4">
-        <Avatar className="h-14 w-14">
-          <AvatarImage src={avatarUrl} alt={publicName} />
-          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-bold">
-            {getInitials(publicName)}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14" />
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900">{publicName}</h3>
         </div>
@@ -123,12 +109,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
 
   const content = (
     <div className="flex items-start gap-4">
-      <Avatar className="h-14 w-14 flex-shrink-0">
-        <AvatarImage src={avatarUrl} alt={publicName} />
-        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-bold">
-          {getInitials(publicName)}
-        </AvatarFallback>
-      </Avatar>
+      <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14" />
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-gray-900 truncate">{publicName}</h3>
 

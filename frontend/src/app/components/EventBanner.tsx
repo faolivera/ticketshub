@@ -66,7 +66,7 @@ export const EventBanner: FC<EventBannerProps> = ({
     return (
       <div
         className={cn(
-          'bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center',
+          'w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-start justify-center',
           variant === 'square' ? 'aspect-square' : 'aspect-video',
           className
         )}
@@ -80,7 +80,7 @@ export const EventBanner: FC<EventBannerProps> = ({
     return (
       <div
         className={cn(
-          'relative overflow-hidden aspect-video',
+          'w-full relative overflow-hidden aspect-video',
           className
         )}
       >
@@ -109,7 +109,7 @@ export const EventBanner: FC<EventBannerProps> = ({
   return (
     <div
       className={cn(
-        'overflow-hidden',
+        'w-full overflow-hidden flex items-start justify-center',
         variant === 'square' ? 'aspect-square' : 'aspect-video',
         className
       )}
