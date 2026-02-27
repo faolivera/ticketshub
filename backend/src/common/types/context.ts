@@ -4,7 +4,7 @@
 /**
  * Source of the context - indicates where the request/event originated
  */
-export type ContextSource = 'HTTP' | 'event' | 'app-init';
+export type ContextSource = 'HTTP' | 'event' | 'app-init' | 'CRON';
 
 export interface Ctx {
   /**
