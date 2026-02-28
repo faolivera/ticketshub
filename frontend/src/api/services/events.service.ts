@@ -14,6 +14,8 @@ import type {
   AddEventSectionRequest,
   AddEventSectionResponse,
   EventSection,
+  EventSelectQuery,
+  EventSelectResponse,
 } from '../types';
 
 /**
@@ -89,6 +91,14 @@ export const eventsService = {
    */
   async getEventSections(eventId: string): Promise<EventSection[]> {
     const response = await apiClient.get<EventSection[]>(`/events/${eventId}/sections`);
+    return response.data;
+  },
+
+  /**
+   * Get events for selection (paginated, minimal data)
+   */
+  async getEventsForSelection(query?: EventSelectQuery): Promise<EventSelectResponse> {
+    const response = await apiClient.get<EventSelectResponse>('/events/select', { params: query });
     return response.data;
   },
 

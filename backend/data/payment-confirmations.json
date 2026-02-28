@@ -59,7 +59,9 @@
     "originalFilename": "Screenshot 2026-01-30 at 22.44.52.png",
     "contentType": "image/png",
     "sizeBytes": 79778,
-    "status": "Pending",
-    "createdAt": "2026-02-27T11:34:11.627Z"
+    "status": "Rejected",
+    "createdAt": "2026-02-27T11:34:11.627Z",
+    "reviewedBy": "8",
+    "reviewedAt": "2026-02-28T18:57:57.760Z"
   }
 }

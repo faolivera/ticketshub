@@ -43,6 +43,9 @@ import type {
   UploadEventBannerResponse,
   GetEventBannersResponse,
   DeleteEventBannerResponse,
+  EventSelectQuery,
+  EventSelectResponse,
+  EventSelectItem,
 } from './events.api';
 import type {
   AdminUpdateEventRequest,
@@ -966,6 +969,61 @@ export class EventsService {
     options: { page: number; limit: number; search?: string },
   ): Promise<{ events: Event[]; total: number }> {
     return await this.eventsRepository.getAllEventsPaginated(ctx, options);
+  }
+
+  /**
+   * Get approved events for selection UI with pagination.
+   * Returns minimal event data optimized for grid display.
+   */
+  async getEventsForSelection(
+    ctx: Ctx,
+    query: EventSelectQuery,
+  ): Promise<EventSelectResponse> {
+    const limit = query.limit ?? 12;
+    const offset = query.offset ?? 0;
+
+    const { events, total } = await this.eventsRepository.getApprovedEventsForSelection(
+      ctx,
+      {
+        limit: limit + 1,
+        offset,
+        search: query.search,
+      },
+    );
+
+    const hasMore = events.length > limit;
+    const resultEvents = hasMore ? events.slice(0, limit) : events;
+
+    const selectItems: EventSelectItem[] = resultEvents.map((event) => {
+      const item: EventSelectItem = {
+        id: event.id,
+        name: event.name,
+        venue: event.venue,
+        category: event.category,
+      };
+
+      if (event.banners?.square) {
+        item.squareBannerUrl = this.bannerStorage.getPublicUrl(
+          event.id,
+          event.banners.square.filename,
+        );
+      }
+
+      if (event.banners?.rectangle) {
+        item.rectangleBannerUrl = this.bannerStorage.getPublicUrl(
+          event.id,
+          event.banners.rectangle.filename,
+        );
+      }
+
+      return item;
+    });
+
+    return {
+      events: selectItems,
+      total,
+      hasMore,
+    };
   }
 
   // ==================== Event Banners ====================

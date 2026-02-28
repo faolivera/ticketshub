@@ -181,3 +181,33 @@ export interface DeleteEventBannerResponse {
   bannerType: EventBannerType;
   deleted: boolean;
 }
+
+/**
+ * Minimal event data for selection UI (optimized for grid display)
+ */
+export interface EventSelectItem {
+  id: string;
+  name: string;
+  venue: string;
+  category: EventCategory;
+  squareBannerUrl?: string;
+  rectangleBannerUrl?: string;
+}
+
+/**
+ * Query params for event selection endpoint
+ */
+export interface EventSelectQuery {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Response for event selection endpoint with pagination
+ */
+export interface EventSelectResponse {
+  events: EventSelectItem[];
+  total: number;
+  hasMore: boolean;
+}

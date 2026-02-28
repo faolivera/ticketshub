@@ -410,4 +410,39 @@ export class EventsRepository implements OnModuleInit {
 
     return { events: paginatedEvents, total };
   }
+
+  /**
+   * Get approved events for selection UI with pagination.
+   * Filters by status === Approved and applies case-insensitive search on name and venue.
+   */
+  async getApprovedEventsForSelection(
+    ctx: Ctx,
+    options: { limit: number; offset: number; search?: string },
+  ): Promise<{ events: Event[]; total: number }> {
+    let events = await this.eventStorage.getAll(ctx);
+
+    events = events.filter((e) => e.status === EventStatus.Approved);
+
+    if (options.search) {
+      const searchLower = options.search.toLowerCase();
+      events = events.filter(
+        (e) =>
+          e.name.toLowerCase().includes(searchLower) ||
+          e.venue.toLowerCase().includes(searchLower),
+      );
+    }
+
+    events.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    const total = events.length;
+    const paginatedEvents = events.slice(
+      options.offset,
+      options.offset + options.limit,
+    );
+
+    return { events: paginatedEvents, total };
+  }
 }

@@ -43,6 +43,7 @@ import type {
   UploadEventBannerResponse,
   GetEventBannersResponse,
   DeleteEventBannerResponse,
+  EventSelectResponse,
 } from './events.api';
 import {
   EventCategory,
@@ -102,6 +103,25 @@ export class EventsController {
     };
     const events = await this.eventsService.listEvents(ctx, query, false);
     return { success: true, data: events };
+  }
+
+  /**
+   * Get paginated events for selection UI (public).
+   * Returns minimal event data optimized for infinite scroll grid.
+   */
+  @Get('select')
+  async getEventsForSelection(
+    @Context() ctx: Ctx,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ): Promise<ApiResponse<EventSelectResponse>> {
+    const result = await this.eventsService.getEventsForSelection(ctx, {
+      search,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      offset: offset ? parseInt(offset, 10) : undefined,
+    });
+    return { success: true, data: result };
   }
 
   /**

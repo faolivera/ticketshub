@@ -722,6 +722,13 @@
   "sellTicket": {
     "title": "Sell Tickets",
     "subtitle": "List your tickets for sale on our secure marketplace",
+    "selectEvent": "Select an Event",
+    "selectEventDescription": "Choose the event you want to sell tickets for",
+    "searchEvents": "Search events by name or venue...",
+    "noEventsFoundSearch": "No events found for your search",
+    "loadingEvents": "Loading events...",
+    "loadingMore": "Loading more...",
+    "backToEvents": "Back to event selection",
     "description": "Provide your listing details to start selling your tickets.",
     "descriptionPlaceholder": "Add details buyers should know about these tickets.",
     "backToTickets": "Back to My Tickets",

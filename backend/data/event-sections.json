@@ -156,5 +156,15 @@
     "createdBy": "2",
     "createdAt": "2026-02-26T13:57:42.674Z",
     "updatedAt": "2026-02-26T13:57:42.674Z"
+  },
+  "sec_1772307467503_54f88fef": {
+    "id": "sec_1772307467503_54f88fef",
+    "eventId": "evt_1772307447382_116c58fe",
+    "name": "General",
+    "seatingType": "unnumbered",
+    "status": "pending",
+    "createdBy": "3",
+    "createdAt": "2026-02-28T19:37:47.503Z",
+    "updatedAt": "2026-02-28T19:37:47.503Z"
   }
 }

@@ -75,5 +75,22 @@
         "uploadedAt": "2026-02-27T11:46:43.168Z"
       }
     }
+  },
+  "evt_1772307447382_116c58fe": {
+    "id": "evt_1772307447382_116c58fe",
+    "name": "la konga",
+    "description": "",
+    "category": "Concert",
+    "venue": "lalalaa",
+    "location": {
+      "line1": "Mendoza",
+      "city": "Mendoza",
+      "countryCode": "US"
+    },
+    "imageIds": [],
+    "status": "pending",
+    "createdBy": "3",
+    "createdAt": "2026-02-28T19:37:27.382Z",
+    "updatedAt": "2026-02-28T19:37:27.382Z"
   }
 }

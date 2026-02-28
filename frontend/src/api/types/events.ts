@@ -231,3 +231,27 @@ export interface ListEventsQuery extends PaginationParams {
   category?: EventCategory;
   search?: string;
 }
+
+/** Minimal event for selection UI */
+export interface EventSelectItem {
+  id: string;
+  name: string;
+  venue: string;
+  category: EventCategory;
+  squareBannerUrl?: string;
+  rectangleBannerUrl?: string;
+}
+
+/** Query params for event selection */
+export interface EventSelectQuery {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/** Response for event selection endpoint */
+export interface EventSelectResponse {
+  events: EventSelectItem[];
+  total: number;
+  hasMore: boolean;
+}

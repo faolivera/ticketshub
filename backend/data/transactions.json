@@ -222,12 +222,15 @@
       "currency": "USD"
     },
     "pricingSnapshotId": "ps_1772191654069_2505ce60322c",
-    "status": "PaymentPendingVerification",
-    "requiredActor": "Platform",
+    "status": "Cancelled",
+    "requiredActor": "None",
     "createdAt": "2026-02-27T11:27:35.640Z",
-    "updatedAt": "2026-02-27T11:34:11.627Z",
+    "updatedAt": "2026-02-28T18:57:57.759Z",
     "eventDateTime": "2026-02-13T00:00:00.000Z",
-    "paymentMethodId": "pm_004_bank_transfer"
+    "paymentMethodId": "pm_004_bank_transfer",
+    "cancelledAt": "2026-02-28T18:57:57.759Z",
+    "cancelledBy": "Platform",
+    "cancellationReason": "AdminRejected"
   },
   "txn_1772217391954_b6df7a9e": {
     "id": "txn_1772217391954_b6df7a9e",

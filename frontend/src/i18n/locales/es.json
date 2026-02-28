@@ -697,6 +697,13 @@
   "sellTicket": {
     "title": "Vender Entradas",
     "subtitle": "Publica tus entradas a la venta en nuestro mercado seguro",
+    "selectEvent": "Selecciona un Evento",
+    "selectEventDescription": "Elige el evento para el que quieres vender entradas",
+    "searchEvents": "Buscar eventos por nombre o lugar...",
+    "noEventsFoundSearch": "No se encontraron eventos para tu búsqueda",
+    "loadingEvents": "Cargando eventos...",
+    "loadingMore": "Cargando más...",
+    "backToEvents": "Volver a selección de evento",
     "description": "Completa los detalles del anuncio para comenzar a vender tus entradas.",
     "descriptionPlaceholder": "Agrega detalles que los compradores deban saber sobre estas entradas.",
     "backToTickets": "Volver a Mis Entradas",
