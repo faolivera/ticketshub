@@ -228,5 +228,141 @@
     "updatedAt": "2026-02-27T11:34:11.627Z",
     "eventDateTime": "2026-02-13T00:00:00.000Z",
     "paymentMethodId": "pm_004_bank_transfer"
+  },
+  "txn_1772217391954_b6df7a9e": {
+    "id": "txn_1772217391954_b6df7a9e",
+    "listingId": "tkt_s2_un_separate",
+    "buyerId": "3",
+    "sellerId": "2",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_s2_un_s_2"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
+    "buyerPlatformFee": {
+      "amount": 1000,
+      "currency": "EUR"
+    },
+    "sellerPlatformFee": {
+      "amount": 500,
+      "currency": "EUR"
+    },
+    "paymentMethodCommission": {
+      "amount": 800,
+      "currency": "EUR"
+    },
+    "totalPaid": {
+      "amount": 11800,
+      "currency": "EUR"
+    },
+    "sellerReceives": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "pricingSnapshotId": "ps_1772217386888_6a489f8a0bfe",
+    "status": "Cancelled",
+    "requiredActor": "None",
+    "createdAt": "2026-02-27T18:36:31.955Z",
+    "updatedAt": "2026-02-27T19:44:59.551Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer",
+    "cancelledAt": "2026-02-27T19:44:59.551Z",
+    "cancelledBy": "Buyer",
+    "cancellationReason": "BuyerCancelled"
+  },
+  "txn_1772217404310_ead42450": {
+    "id": "txn_1772217404310_ead42450",
+    "listingId": "tkt_s2_un_separate",
+    "buyerId": "3",
+    "sellerId": "2",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_s2_un_s_3"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
+    "buyerPlatformFee": {
+      "amount": 1000,
+      "currency": "EUR"
+    },
+    "sellerPlatformFee": {
+      "amount": 500,
+      "currency": "EUR"
+    },
+    "paymentMethodCommission": {
+      "amount": 800,
+      "currency": "EUR"
+    },
+    "totalPaid": {
+      "amount": 11800,
+      "currency": "EUR"
+    },
+    "sellerReceives": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "pricingSnapshotId": "ps_1772217402034_ce5f330220da",
+    "status": "Cancelled",
+    "requiredActor": "None",
+    "createdAt": "2026-02-27T18:36:44.311Z",
+    "updatedAt": "2026-02-27T19:45:09.089Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer",
+    "cancelledAt": "2026-02-27T19:45:09.089Z",
+    "cancelledBy": "Buyer",
+    "cancellationReason": "BuyerCancelled"
+  },
+  "txn_1772221532907_3a0542f8": {
+    "id": "txn_1772221532907_3a0542f8",
+    "listingId": "tkt_s2_un_separate",
+    "buyerId": "3",
+    "sellerId": "2",
+    "ticketType": "DigitalTransferable",
+    "ticketUnitIds": [
+      "unit_s2_un_s_2"
+    ],
+    "quantity": 1,
+    "ticketPrice": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
+    "buyerPlatformFee": {
+      "amount": 1000,
+      "currency": "EUR"
+    },
+    "sellerPlatformFee": {
+      "amount": 500,
+      "currency": "EUR"
+    },
+    "paymentMethodCommission": {
+      "amount": 800,
+      "currency": "EUR"
+    },
+    "totalPaid": {
+      "amount": 11800,
+      "currency": "EUR"
+    },
+    "sellerReceives": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "pricingSnapshotId": "ps_1772221529551_8d2bf23aae25",
+    "status": "Cancelled",
+    "requiredActor": "None",
+    "createdAt": "2026-02-27T19:45:32.907Z",
+    "paymentExpiresAt": "2026-02-27T19:55:32.907Z",
+    "updatedAt": "2026-02-27T19:56:00.005Z",
+    "eventDateTime": "2026-02-13T00:00:00.000Z",
+    "paymentMethodId": "pm_004_bank_transfer",
+    "cancelledAt": "2026-02-27T19:56:00.005Z",
+    "cancelledBy": "Platform",
+    "cancellationReason": "PaymentTimeout"
   }
 }

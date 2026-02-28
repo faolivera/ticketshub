@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star, Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
@@ -23,12 +23,14 @@ import {
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService } from '@/api/services';
 import { useUser } from '../contexts/UserContext';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
-import { TransactionStatus } from '@/api/types';
+import { TransactionStatus, CancellationReason } from '@/api/types';
 
 export function MyTicket() {
   const { t } = useTranslation();
   const { transactionId } = useParams();
   const { user } = useUser();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const [transaction, setTransaction] = useState<TransactionWithDetails | null>(null);
   const [paymentConfirmation, setPaymentConfirmation] = useState<PaymentConfirmation | null>(null);
@@ -52,6 +54,7 @@ export function MyTicket() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isPaymentExpiredLocally, setIsPaymentExpiredLocally] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!transactionId) return;
@@ -78,6 +81,14 @@ export function MyTicket() {
 
   const isBuyer = transaction?.buyerId === user?.id;
   const isSeller = transaction?.sellerId === user?.id;
+
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else {
+      navigate(`/my-tickets?tab=${isBuyer ? 'bought' : 'sold'}`);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -319,6 +330,7 @@ export function MyTicket() {
   const isManualPayment = transaction?.paymentMethodId?.includes('bank_transfer');
   const needsPaymentConfirmation = isManualPayment && 
     transaction?.status === TransactionStatus.PendingPayment && 
+    !isPaymentExpiredLocally &&
     isBuyer && 
     !paymentConfirmation;
 
@@ -340,21 +352,29 @@ export function MyTicket() {
     );
   }
 
-  const statusInfo = getStatusInfo(transaction.status, isBuyer ? 'buyer' : 'seller');
+  // When payment expires locally, treat as cancelled with PaymentTimeout reason
+  const effectiveStatus = isPaymentExpiredLocally && transaction.status === TransactionStatus.PendingPayment
+    ? TransactionStatus.Cancelled
+    : transaction.status;
+  const effectiveCancellationReason = isPaymentExpiredLocally && transaction.status === TransactionStatus.PendingPayment
+    ? CancellationReason.PaymentTimeout
+    : transaction.cancellationReason;
+
+  const statusInfo = getStatusInfo(effectiveStatus, isBuyer ? 'buyer' : 'seller');
   const StatusIcon = statusInfo.icon;
-  const statusStep = getStatusStep(transaction.status);
+  const statusStep = getStatusStep(effectiveStatus);
   const eventDate = new Date(transaction.eventDate);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <Link 
-          to="/my-tickets"
+        <button 
+          onClick={handleBack}
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           {t('myTicket.backToMyTickets')}
-        </Link>
+        </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Transaction Information */}
@@ -522,7 +542,7 @@ export function MyTicket() {
                       statusInfo.color === 'red' ? 'text-red-600' :
                       'text-gray-600'
                     }`} />
-                    <div>
+                    <div className="flex-1">
                       <p className={`font-semibold mb-1 ${
                         statusInfo.color === 'yellow' ? 'text-yellow-900' :
                         statusInfo.color === 'blue' ? 'text-blue-900' :
@@ -541,32 +561,32 @@ export function MyTicket() {
                       }`}>
                         {statusInfo.description}
                       </p>
+                      {/* Countdown Timer - Show inside disclaimer when status is PendingPayment and not expired */}
+                      {effectiveStatus === TransactionStatus.PendingPayment && (
+                        <div className="mt-3 pt-3 border-t border-yellow-200">
+                          <PaymentCountdown
+                            expiresAt={transaction.paymentExpiresAt}
+                            onExpired={() => setIsPaymentExpiredLocally(true)}
+                            className="text-yellow-800"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Countdown Timer - Show when status is PendingPayment */}
-              {transaction.status === TransactionStatus.PendingPayment && (
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg mb-4">
-                  <PaymentCountdown
-                    expiresAt={transaction.paymentExpiresAt}
-                    onExpired={() => void refetch()}
-                  />
-                </div>
-              )}
-
               {/* Cancellation Reason - Show when transaction is cancelled */}
-              {transaction.status === TransactionStatus.Cancelled && transaction.cancellationReason && (
+              {effectiveStatus === TransactionStatus.Cancelled && effectiveCancellationReason && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
                   <div className="text-red-600 font-medium">
-                    {t(`transaction.cancelled.${transaction.cancellationReason}`)}
+                    {t(`transaction.cancelled.${effectiveCancellationReason}`)}
                   </div>
                 </div>
               )}
 
-              {/* Cancel Button - Show when buyer is viewing and status is PendingPayment */}
-              {isBuyer && transaction.status === TransactionStatus.PendingPayment && (
+              {/* Cancel Button - Show when buyer is viewing and status is PendingPayment (not expired) */}
+              {isBuyer && effectiveStatus === TransactionStatus.PendingPayment && (
                 <div className="mb-4">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -605,7 +625,7 @@ export function MyTicket() {
               )}
 
               {/* Bank Transfer Details - Show when pending payment for bank transfer and no confirmation uploaded yet */}
-              {transaction.status === TransactionStatus.PendingPayment && 
+              {effectiveStatus === TransactionStatus.PendingPayment && 
                isBuyer && 
                bankTransferConfig &&
                !paymentConfirmation && (

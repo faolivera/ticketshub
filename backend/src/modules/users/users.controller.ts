@@ -5,12 +5,17 @@ import {
   Put,
   Body,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   HttpCode,
   HttpStatus,
   BadRequestException,
   UnauthorizedException,
   Inject,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import type { Multer } from 'multer';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { User } from '../../common/decorators/user.decorator';
@@ -25,11 +30,20 @@ import type {
   RegisterRequest,
   RegisterResponse,
   UpgradeToSellerResponse,
+  UploadAvatarResponse,
 } from './users.api';
 import {
   LoginResponseSchema,
   GetMeResponseSchema,
 } from './schemas/api.schemas';
+
+const ALLOWED_AVATAR_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 
 @Controller('api/users')
 export class UsersController {
@@ -118,6 +132,49 @@ export class UsersController {
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<UpgradeToSellerResponse>> {
     const updatedUser = await this.usersService.upgradeToSeller(ctx, user.id);
+
+    return {
+      success: true,
+      data: updatedUser,
+    };
+  }
+
+  @Post('profile/avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_AVATAR_SIZE_BYTES },
+      fileFilter: (_req, file, cb) => {
+        if (ALLOWED_AVATAR_MIME_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              `Invalid file type. Allowed: ${ALLOWED_AVATAR_MIME_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @HttpCode(HttpStatus.OK)
+  async uploadAvatar(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @UploadedFile() file: Multer.File,
+  ): Promise<ApiResponse<UploadAvatarResponse>> {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+
+    const updatedUser = await this.usersService.uploadAvatar(ctx, user.id, {
+      buffer: file.buffer,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
 
     return {
       success: true,

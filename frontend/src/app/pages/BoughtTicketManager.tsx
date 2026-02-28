@@ -169,10 +169,11 @@ interface TransactionCardProps {
   transaction: TransactionWithDetails;
   userId: string | undefined;
   showWaitingFor: boolean;
+  activeTab: 'bought' | 'sold';
   t: (key: string, options?: Record<string, string>) => string;
 }
 
-function TransactionCard({ transaction, userId, showWaitingFor, t }: TransactionCardProps) {
+function TransactionCard({ transaction, userId, showWaitingFor, activeTab, t }: TransactionCardProps) {
   const statusInfo = getTransactionStatusInfo(transaction.status, t);
   const StatusIcon = statusInfo.icon;
   const eventDate = new Date(transaction.eventDate);
@@ -184,6 +185,7 @@ function TransactionCard({ transaction, userId, showWaitingFor, t }: Transaction
   return (
     <Link
       to={`/transaction/${transaction.id}`}
+      state={{ from: `/my-tickets?tab=${activeTab}` }}
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
     >
       {/* Event Image */}
@@ -303,6 +305,7 @@ function TransactionSections({ groupedTransactions, activeTab, userId, t }: Tran
                     transaction={tx}
                     userId={userId}
                     showWaitingFor={false}
+                    activeTab={activeTab}
                     t={t}
                   />
                 ))}
@@ -324,6 +327,7 @@ function TransactionSections({ groupedTransactions, activeTab, userId, t }: Tran
                     transaction={tx}
                     userId={userId}
                     showWaitingFor={true}
+                    activeTab={activeTab}
                     t={t}
                   />
                 ))}
@@ -344,6 +348,7 @@ function TransactionSections({ groupedTransactions, activeTab, userId, t }: Tran
                 transaction={tx}
                 userId={userId}
                 showWaitingFor={false}
+                activeTab={activeTab}
                 t={t}
               />
             ))}

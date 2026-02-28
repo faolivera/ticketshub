@@ -74,6 +74,7 @@
   },
   "buyTicket": {
     "backToEvent": "Volver al evento",
+    "backToMyListings": "Volver a tus entradas publicadas",
     "ticketNotFound": "Entrada no encontrada",
     "returnToHome": "Volver al inicio",
     "ticketDetails": "Detalles de la Entrada",
@@ -178,7 +179,8 @@
     "expired": "Expirado",
     "noPendingAwaitingMyAction": "No hay entradas esperando tu acción",
     "noPendingAwaitingOther": "No hay entradas esperando acción de otros",
-    "noCompletedTickets": "Aún no hay entradas completadas"
+    "noCompletedTickets": "Aún no hay entradas completadas",
+    "cancelled": "Cancelada"
   },
   "ditListing": {
     "description": "Descripción"

@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 import { UsersRepository } from './users.repository';
 import { ImagesRepository } from '../images/images.repository';
 import { OTPService } from '../otp/otp.service';
@@ -21,10 +22,27 @@ import type { JWTPayload, LoginResponse } from './users.domain';
 import { OTPType } from '../otp/otp.domain';
 import type { TermsAcceptanceData } from './users.api';
 import { TermsUserType } from '../terms/terms.domain';
+import {
+  PUBLIC_STORAGE_PROVIDER,
+  type FileStorageProvider,
+} from '../../common/storage/file-storage-provider.interface';
 
 const JWT_SECRET =
   process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+/** Allowed MIME types for avatar uploads */
+const ALLOWED_AVATAR_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+] as const;
+
+type AvatarMimeType = (typeof ALLOWED_AVATAR_MIME_TYPES)[number];
+
+/** Maximum avatar file size in bytes (5MB) */
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 
 @Injectable()
 export class UsersService {
@@ -37,6 +55,8 @@ export class UsersService {
     private readonly otpService: OTPService,
     @Inject(TermsService)
     private readonly termsService: TermsService,
+    @Inject(PUBLIC_STORAGE_PROVIDER)
+    private readonly publicStorageProvider: FileStorageProvider,
   ) {}
 
   /**
@@ -255,7 +275,7 @@ export class UsersService {
     }
 
     // Create new user
-    const publicName = `${data.firstName} ${data.lastName}`.trim();
+    const publicName = `${data.firstName} ${data.lastName[0]}.`;
     const now = new Date();
     const newUser = await this.usersRepository.add(ctx, {
       email: data.email,
@@ -469,5 +489,93 @@ export class UsersService {
     }
 
     await this.usersRepository.updateToVerifiedSeller(ctx, userId, identityData);
+  }
+
+  /**
+   * Upload user avatar image
+   */
+  async uploadAvatar(
+    ctx: Ctx,
+    userId: string,
+    file: {
+      buffer: Buffer;
+      originalname: string;
+      mimetype: string;
+      size: number;
+    },
+  ): Promise<AuthenticatedUserPublicInfo> {
+    const user = await this.usersRepository.findById(ctx, userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Validate file type
+    if (!ALLOWED_AVATAR_MIME_TYPES.includes(file.mimetype as AvatarMimeType)) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed: ${ALLOWED_AVATAR_MIME_TYPES.join(', ')}`,
+      );
+    }
+
+    // Validate file size
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      throw new BadRequestException(
+        `File too large. Maximum size: ${MAX_AVATAR_SIZE_BYTES / 1024 / 1024}MB`,
+      );
+    }
+
+    // Generate unique key for the avatar
+    const extension = this.getExtensionFromMimeType(file.mimetype);
+    const imageId = randomUUID();
+    const storageKey = `avatars/${userId}/${imageId}.${extension}`;
+
+    // Store file using public storage provider
+    await this.publicStorageProvider.store(storageKey, file.buffer, {
+      contentType: file.mimetype,
+      contentLength: file.size,
+      originalFilename: file.originalname,
+    });
+
+    // Delete old avatar if not default
+    const oldImageId = user.imageId;
+    if (oldImageId && oldImageId !== 'default') {
+      const oldImage = await this.imagesRepository.getById(ctx, oldImageId);
+      if (oldImage && oldImage.src.startsWith('/public/avatars/')) {
+        const oldKey = oldImage.src.replace('/public/', '');
+        await this.publicStorageProvider.delete(oldKey);
+      }
+    }
+
+    // Create new image record
+    const publicUrl = `/public/${storageKey}`;
+    await this.imagesRepository.set(ctx, {
+      id: imageId,
+      src: publicUrl,
+    });
+
+    // Update user's imageId
+    await this.usersRepository.updateBasicInfo(ctx, userId, {
+      imageId: imageId,
+    });
+
+    // Return updated user info
+    const updatedUserInfo = await this.getAuthenticatedUserInfo(ctx, userId);
+    if (!updatedUserInfo) {
+      throw new BadRequestException('Failed to get updated user info');
+    }
+
+    return updatedUserInfo;
+  }
+
+  /**
+   * Get file extension from MIME type
+   */
+  private getExtensionFromMimeType(mimeType: string): string {
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    return mimeToExt[mimeType] || 'jpg';
   }
 }

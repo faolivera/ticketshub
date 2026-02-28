@@ -103,6 +103,12 @@ export class PaymentConfirmationsService {
       );
     }
 
+    if (new Date(transaction.paymentExpiresAt) < new Date()) {
+      throw new BadRequestException(
+        'Payment time has expired. This transaction can no longer accept payment confirmations.',
+      );
+    }
+
     if (
       !transaction.paymentMethodId ||
       !transaction.paymentMethodId.includes('bank_transfer')

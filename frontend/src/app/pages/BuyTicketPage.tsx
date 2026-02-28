@@ -204,7 +204,7 @@ export function BuyTicketPage() {
         pricingSnapshotId: pricingSnapshot.id,
       });
 
-      navigate(`/transaction/${response.transaction.id}`);
+      navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets?tab=bought' } });
     } catch (err: unknown) {
       console.error('Purchase failed:', err);
       
@@ -329,11 +329,11 @@ export function BuyTicketPage() {
         )}
 
         <Link
-          to={`/event/${listing.eventId}`}
+          to={isOwnListing ? '/my-tickets?tab=listed' : `/event/${listing.eventId}`}
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t('buyTicket.backToEvent')}
+          {isOwnListing ? t('buyTicket.backToMyListings') : t('buyTicket.backToEvent')}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

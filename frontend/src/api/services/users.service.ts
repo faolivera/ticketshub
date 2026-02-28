@@ -14,6 +14,25 @@ export const usersService = {
     );
     return response.data;
   },
+
+  /**
+   * Upload user avatar image
+   */
+  async uploadAvatar(file: File): Promise<AuthenticatedUserPublicInfo> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post<AuthenticatedUserPublicInfo>(
+      '/users/profile/avatar',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
 };
 
 export default usersService;

@@ -1,13 +1,14 @@
-import { User, Mail, MapPin, Calendar, Ticket, Shield, Phone, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { User, Mail, MapPin, Calendar, Ticket, Shield, Phone, CheckCircle, AlertCircle, Clock, Camera, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
 import { SellerBadge } from '@/app/components/SellerBadge';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
 import { UserLevel } from '@/api/types/users';
-import { identityVerificationService } from '@/api/services';
+import { identityVerificationService, usersService } from '@/api/services';
 import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
+import { UserAvatar } from '@/app/components/UserAvatar';
 
 const mockActivity = [
   {
@@ -36,12 +37,18 @@ const mockActivity = [
   }
 ];
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_FILE_SIZE_MB = 5;
+
 export function UserProfile() {
-  const { user, logout } = useUser();
+  const { user, logout, refreshUser } = useUser();
   const { t } = useTranslation();
   const [showSellerModal, setShowSellerModal] = useState(false);
   const [identityVerification, setIdentityVerification] = useState<IdentityVerificationRequest | null>(null);
   const [verificationLoading, setVerificationLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user?.level === UserLevel.Seller) {
@@ -58,6 +65,43 @@ export function UserProfile() {
       console.error('Failed to load verification status:', err);
     } finally {
       setVerificationLoading(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset file input so same file can be selected again
+    e.target.value = '';
+
+    // Validate file type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setAvatarError(t('userProfile.invalidFileType'));
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setAvatarError(t('userProfile.fileTooLarge'));
+      return;
+    }
+
+    setAvatarError(null);
+    setAvatarUploading(true);
+
+    try {
+      await usersService.uploadAvatar(file);
+      await refreshUser();
+    } catch (err) {
+      console.error('Failed to upload avatar:', err);
+      setAvatarError(t('userProfile.uploadError'));
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -89,8 +133,41 @@ export function UserProfile() {
         {/* Main Profile Card */}
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
           <div className="flex items-start gap-6 mb-8">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
-              {user.firstName[0]}{user.lastName[0]}
+            {/* Avatar with upload functionality */}
+            <div className="relative flex-shrink-0">
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                disabled={avatarUploading}
+                className="relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full disabled:cursor-not-allowed"
+                aria-label={t('userProfile.changePhoto')}
+              >
+                <UserAvatar
+                  name={`${user.firstName} ${user.lastName}`}
+                  src={user.pic?.src}
+                  className="w-24 h-24 text-3xl"
+                />
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {avatarUploading ? (
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-white" />
+                  )}
+                </div>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleFileChange}
+                className="hidden"
+                aria-hidden="true"
+              />
+              {avatarError && (
+                <p className="absolute -bottom-6 left-0 right-0 text-xs text-red-600 text-center whitespace-nowrap">
+                  {avatarError}
+                </p>
+              )}
             </div>
 
             <div className="flex-1">

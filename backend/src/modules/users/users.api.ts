@@ -47,3 +47,8 @@ export type { LoginResponse };
  * Response data for PUT /users/upgrade-to-seller
  */
 export type UpgradeToSellerResponse = AuthenticatedUserPublicInfo;
+
+/**
+ * Response data for POST /users/profile/avatar
+ */
+export type UploadAvatarResponse = AuthenticatedUserPublicInfo;
