@@ -21,6 +21,8 @@ import {
   MAX_DOCUMENT_SIZE_BYTES,
   type IdentityDocumentMimeType,
 } from './identity-verification.domain';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationEventType } from '../notifications/notifications.domain';
 import type {
   IdentityVerificationWithUser,
   ListIdentityVerificationsResponse,
@@ -38,6 +40,7 @@ export class IdentityVerificationService {
     private readonly usersService: UsersService,
     @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly storageProvider: FileStorageProvider,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private generateId(): string {
@@ -319,6 +322,14 @@ export class IdentityVerificationService {
           governmentIdNumber: verification.governmentIdNumber,
         },
       );
+
+      // Emit identity verified notification
+      this.notificationsService
+        .emit(ctx, NotificationEventType.IDENTITY_VERIFIED, {
+          userId: verification.userId,
+          userName: `${verification.legalFirstName} ${verification.legalLastName}`,
+        })
+        .catch((err) => this.logger.error(ctx, `Failed to emit IDENTITY_VERIFIED: ${err}`));
     }
 
     this.logger.log(

@@ -1,143 +1,581 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
+import { NotificationsRepository } from './notifications.repository';
 import type {
-  InAppNotification,
-  EmailResult,
-  SMSResult,
+  NotificationEvent,
+  Notification,
+  NotificationTemplate,
+  NotificationChannelConfig,
+  NotificationRecipient,
 } from './notifications.domain';
-import { EmailTemplate, InAppNotificationType } from './notifications.domain';
+import {
+  NotificationEventType,
+  NotificationEventStatus,
+  NotificationStatus,
+  NotificationChannel,
+  NotificationPriority,
+  generateNotificationEventId,
+  generateNotificationId,
+  generateNotificationTemplateId,
+  generateNotificationChannelConfigId,
+  NOTIFICATION_RETRY_CONFIG,
+} from './notifications.domain';
+import type { NotificationContextMap } from './notifications.contexts';
+import type {
+  GetNotificationsResponse,
+  NotificationListItem,
+  GetUnreadCountResponse,
+  MarkAsReadResponse,
+  MarkAllAsReadResponse,
+  GetTemplatesResponse,
+  UpdateTemplateRequest,
+  CreateTemplateRequest,
+  GetChannelConfigsResponse,
+  UpdateChannelConfigRequest,
+  GetEventsResponse,
+} from './notifications.api';
 
-/**
- * Abstract notification service interface
- * In production, implement specific providers (SendGrid, Twilio, etc.)
- */
 @Injectable()
 export class NotificationsService {
   private readonly logger = new ContextLogger(NotificationsService.name);
 
+  constructor(private readonly repository: NotificationsRepository) {}
+
+  // ==========================================================================
+  // EVENT EMISSION (called by other services)
+  // ==========================================================================
+
   /**
-   * Send email notification
-   * TODO: Integrate with email provider (SendGrid, SES, etc.)
+   * Emit a notification event. This creates the event in PENDING status
+   * for the worker to process asynchronously.
    */
-  async sendEmail(
+  async emit<T extends NotificationEventType>(
     ctx: Ctx,
-    to: string,
-    template: EmailTemplate,
-    data: Record<string, unknown>,
-  ): Promise<EmailResult> {
-    this.logger.log(
-      ctx,
-      `[MOCK] Sending email to ${to} with template ${template}`,
-    );
-    this.logger.debug(ctx, `Email data: ${JSON.stringify(data)}`);
+    type: T,
+    context: NotificationContextMap[T],
+    triggeredBy?: string,
+  ): Promise<NotificationEvent> {
+    this.logger.log(ctx, `Emitting notification event: ${type}`);
 
-    // Mock implementation - always succeeds
-    return {
-      success: true,
-      messageId: `mock_email_${Date.now()}`,
+    const event: NotificationEvent = {
+      id: generateNotificationEventId(),
+      type,
+      context: context as unknown as Record<string, unknown>,
+      triggeredBy,
+      triggeredAt: new Date(),
+      status: NotificationEventStatus.PENDING,
     };
+
+    const created = await this.repository.createEvent(ctx, event);
+    this.logger.log(ctx, `Created notification event: ${created.id}`);
+    return created;
   }
 
-  /**
-   * Send SMS notification
-   * TODO: Integrate with SMS provider (Twilio, etc.)
-   */
-  async sendSMS(ctx: Ctx, to: string, message: string): Promise<SMSResult> {
-    this.logger.log(ctx, `[MOCK] Sending SMS to ${to}`);
-    this.logger.debug(ctx, `SMS message: ${message}`);
-
-    // Mock implementation - always succeeds
-    return {
-      success: true,
-      messageId: `mock_sms_${Date.now()}`,
-    };
-  }
+  // ==========================================================================
+  // USER-FACING API
+  // ==========================================================================
 
   /**
-   * Send in-app notification
-   * TODO: Implement with WebSocket or push notification system
+   * Get paginated in-app notifications for a user
    */
-  async sendInApp(
+  async getNotifications(
     ctx: Ctx,
     userId: string,
-    type: InAppNotificationType,
-    title: string,
-    message: string,
-    actionUrl?: string,
-  ): Promise<InAppNotification> {
-    this.logger.log(
+    page: number = 1,
+    limit: number = 20,
+    unreadOnly: boolean = false,
+  ): Promise<GetNotificationsResponse> {
+    this.logger.debug(
       ctx,
-      `[MOCK] Sending in-app notification to user ${userId}`,
+      `Getting notifications for user ${userId}, page=${page}, limit=${limit}, unreadOnly=${unreadOnly}`,
     );
 
-    const notification: InAppNotification = {
-      id: `notif_${Date.now()}`,
+    const { notifications, total } =
+      await this.repository.findUserInAppNotifications(
+        ctx,
+        userId,
+        page,
+        limit,
+        unreadOnly,
+      );
+
+    const unreadCount = await this.repository.countUnreadNotifications(
+      ctx,
       userId,
-      type,
-      title,
-      message,
-      actionUrl,
-      read: false,
+    );
+
+    const items: NotificationListItem[] = notifications.map((n) => ({
+      id: n.id,
+      eventType: n.eventType,
+      title: n.title,
+      body: n.body,
+      actionUrl: n.actionUrl,
+      read: n.read,
+      createdAt: n.createdAt,
+    }));
+
+    return {
+      notifications: items,
+      total,
+      unreadCount,
+    };
+  }
+
+  /**
+   * Get unread notification count for header badge
+   */
+  async getUnreadCount(ctx: Ctx, userId: string): Promise<GetUnreadCountResponse> {
+    const count = await this.repository.countUnreadNotifications(ctx, userId);
+    return { count };
+  }
+
+  /**
+   * Mark a notification as read
+   */
+  async markAsRead(
+    ctx: Ctx,
+    userId: string,
+    notificationId: string,
+  ): Promise<MarkAsReadResponse> {
+    const notification = await this.repository.findNotificationById(
+      ctx,
+      notificationId,
+    );
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    if (notification.recipientId !== userId) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    const now = new Date();
+    const updated = await this.repository.updateNotification(
+      ctx,
+      notificationId,
+      {
+        read: true,
+        readAt: now,
+      },
+    );
+
+    if (!updated) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    return {
+      id: updated.id,
+      eventType: updated.eventType,
+      title: updated.title,
+      body: updated.body,
+      actionUrl: updated.actionUrl,
+      read: updated.read,
+      createdAt: updated.createdAt,
+    };
+  }
+
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllAsRead(ctx: Ctx, userId: string): Promise<MarkAllAsReadResponse> {
+    const markedCount = await this.repository.markAllAsRead(ctx, userId);
+    this.logger.log(ctx, `Marked ${markedCount} notifications as read for user ${userId}`);
+    return { markedCount };
+  }
+
+  // ==========================================================================
+  // ADMIN - TEMPLATES
+  // ==========================================================================
+
+  /**
+   * Get all notification templates
+   */
+  async getAllTemplates(ctx: Ctx): Promise<GetTemplatesResponse> {
+    const templates = await this.repository.findAllTemplates(ctx);
+    return { templates };
+  }
+
+  /**
+   * Get a template by ID
+   */
+  async getTemplateById(
+    ctx: Ctx,
+    id: string,
+  ): Promise<NotificationTemplate> {
+    const template = await this.repository.findTemplateById(ctx, id);
+    if (!template) {
+      throw new NotFoundException('Template not found');
+    }
+    return template;
+  }
+
+  /**
+   * Create a new template
+   */
+  async createTemplate(
+    ctx: Ctx,
+    data: CreateTemplateRequest,
+    adminId: string,
+  ): Promise<NotificationTemplate> {
+    const template: NotificationTemplate = {
+      id: generateNotificationTemplateId(),
+      eventType: data.eventType,
+      channel: data.channel as NotificationChannel,
+      locale: data.locale,
+      titleTemplate: data.titleTemplate,
+      bodyTemplate: data.bodyTemplate,
+      actionUrlTemplate: data.actionUrlTemplate,
+      isActive: true,
       createdAt: new Date(),
+      updatedAt: new Date(),
+      updatedBy: adminId,
     };
 
-    // TODO: Store notification and emit via WebSocket
-
-    return notification;
+    return await this.repository.createTemplate(ctx, template);
   }
 
   /**
-   * Helper: Send OTP via email
+   * Update a template
    */
-  async sendOTPEmail(
+  async updateTemplate(
     ctx: Ctx,
-    email: string,
-    code: string,
-  ): Promise<EmailResult> {
-    return this.sendEmail(ctx, email, EmailTemplate.EmailVerification, {
-      code,
-      expiresInMinutes: 10,
+    id: string,
+    data: UpdateTemplateRequest,
+    adminId: string,
+  ): Promise<NotificationTemplate> {
+    const updated = await this.repository.updateTemplate(ctx, id, {
+      titleTemplate: data.titleTemplate,
+      bodyTemplate: data.bodyTemplate,
+      actionUrlTemplate: data.actionUrlTemplate,
+      isActive: data.isActive,
+      updatedBy: adminId,
+    });
+
+    if (!updated) {
+      throw new NotFoundException('Template not found');
+    }
+
+    return updated;
+  }
+
+  // ==========================================================================
+  // ADMIN - CHANNEL CONFIG
+  // ==========================================================================
+
+  /**
+   * Get all channel configs
+   */
+  async getAllChannelConfigs(ctx: Ctx): Promise<GetChannelConfigsResponse> {
+    const configs = await this.repository.findAllChannelConfigs(ctx);
+    return { configs };
+  }
+
+  /**
+   * Get channel config for an event type
+   */
+  async getChannelConfig(
+    ctx: Ctx,
+    eventType: NotificationEventType,
+  ): Promise<NotificationChannelConfig> {
+    const config = await this.repository.findChannelConfig(ctx, eventType);
+    if (!config) {
+      throw new NotFoundException('Channel config not found');
+    }
+    return config;
+  }
+
+  /**
+   * Update channel config for an event type
+   */
+  async updateChannelConfig(
+    ctx: Ctx,
+    eventType: NotificationEventType,
+    data: UpdateChannelConfigRequest,
+    adminId: string,
+  ): Promise<NotificationChannelConfig> {
+    const updated = await this.repository.updateChannelConfig(ctx, eventType, {
+      inAppEnabled: data.inAppEnabled,
+      emailEnabled: data.emailEnabled,
+      priority: data.priority,
+      updatedBy: adminId,
+    });
+
+    if (!updated) {
+      throw new NotFoundException('Channel config not found');
+    }
+
+    return updated;
+  }
+
+  // ==========================================================================
+  // ADMIN - EVENTS (AUDIT)
+  // ==========================================================================
+
+  /**
+   * Get paginated notification events for audit
+   */
+  async getEvents(
+    ctx: Ctx,
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+      type?: NotificationEventType;
+      status?: NotificationEventStatus;
+      from?: string;
+      to?: string;
+    },
+  ): Promise<GetEventsResponse> {
+    const parsedFilters = filters
+      ? {
+          type: filters.type,
+          status: filters.status,
+          from: filters.from ? new Date(filters.from) : undefined,
+          to: filters.to ? new Date(filters.to) : undefined,
+        }
+      : undefined;
+
+    const { events, total } = await this.repository.getEventsPaginated(
+      ctx,
+      page,
+      limit,
+      parsedFilters,
+    );
+
+    return { events, total };
+  }
+
+  /**
+   * Get a specific event by ID
+   */
+  async getEventById(ctx: Ctx, id: string): Promise<NotificationEvent> {
+    const event = await this.repository.findEventById(ctx, id);
+    if (!event) {
+      throw new NotFoundException('Notification event not found');
+    }
+    return event;
+  }
+
+  /**
+   * Get notifications created from an event
+   */
+  async getEventNotifications(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<Notification[]> {
+    return await this.repository.findNotificationsByEventId(ctx, eventId);
+  }
+
+  // ==========================================================================
+  // INTERNAL - WORKER METHODS
+  // ==========================================================================
+
+  /**
+   * Get pending events to process
+   */
+  async getPendingEvents(ctx: Ctx): Promise<NotificationEvent[]> {
+    return await this.repository.findPendingEvents(ctx);
+  }
+
+  /**
+   * Mark an event as processing
+   */
+  async markEventProcessing(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<NotificationEvent | undefined> {
+    return await this.repository.updateEvent(ctx, eventId, {
+      status: NotificationEventStatus.PROCESSING,
     });
   }
 
   /**
-   * Helper: Send OTP via SMS
+   * Mark an event as completed
    */
-  async sendOTPSMS(ctx: Ctx, phone: string, code: string): Promise<SMSResult> {
-    const message = `Your TicketsHub verification code is: ${code}. Valid for 10 minutes.`;
-    return this.sendSMS(ctx, phone, message);
-  }
-
-  /**
-   * Helper: Notify seller of payment received
-   */
-  async notifyPaymentReceived(
+  async markEventCompleted(
     ctx: Ctx,
-    sellerEmail: string,
-    buyerName: string,
-    eventName: string,
-    amount: string,
-  ): Promise<EmailResult> {
-    return this.sendEmail(ctx, sellerEmail, EmailTemplate.PaymentReceived, {
-      buyerName,
-      eventName,
-      amount,
+    eventId: string,
+  ): Promise<NotificationEvent | undefined> {
+    return await this.repository.updateEvent(ctx, eventId, {
+      status: NotificationEventStatus.COMPLETED,
+      processedAt: new Date(),
     });
   }
 
   /**
-   * Helper: Notify buyer of ticket purchase
+   * Mark an event as failed
    */
-  async notifyTicketPurchased(
+  async markEventFailed(
     ctx: Ctx,
-    buyerEmail: string,
-    eventName: string,
-    ticketDetails: string,
-  ): Promise<EmailResult> {
-    return this.sendEmail(ctx, buyerEmail, EmailTemplate.TicketPurchased, {
-      eventName,
-      ticketDetails,
+    eventId: string,
+    error: string,
+  ): Promise<NotificationEvent | undefined> {
+    return await this.repository.updateEvent(ctx, eventId, {
+      status: NotificationEventStatus.FAILED,
+      processedAt: new Date(),
+      error,
     });
+  }
+
+  /**
+   * Create a notification record
+   */
+  async createNotification(
+    ctx: Ctx,
+    data: {
+      eventId: string;
+      eventType: NotificationEventType;
+      recipientId: string;
+      channel: NotificationChannel;
+      title: string;
+      body: string;
+      actionUrl?: string;
+    },
+  ): Promise<Notification> {
+    const notification: Notification = {
+      id: generateNotificationId(),
+      eventId: data.eventId,
+      eventType: data.eventType,
+      recipientId: data.recipientId,
+      channel: data.channel,
+      title: data.title,
+      body: data.body,
+      actionUrl: data.actionUrl,
+      status:
+        data.channel === NotificationChannel.IN_APP
+          ? NotificationStatus.DELIVERED
+          : NotificationStatus.PENDING,
+      read: false,
+      retryCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return await this.repository.createNotification(ctx, notification);
+  }
+
+  /**
+   * Get template for rendering
+   */
+  async getTemplate(
+    ctx: Ctx,
+    eventType: NotificationEventType,
+    channel: NotificationChannel,
+    locale: string,
+  ): Promise<NotificationTemplate | undefined> {
+    // Try exact locale first
+    let template = await this.repository.findTemplate(
+      ctx,
+      eventType,
+      channel,
+      locale,
+    );
+
+    // Fall back to Spanish if not found
+    if (!template && locale !== 'es') {
+      template = await this.repository.findTemplate(
+        ctx,
+        eventType,
+        channel,
+        'es',
+      );
+    }
+
+    return template;
+  }
+
+  /**
+   * Get channel config for an event type
+   */
+  async getChannelConfigForEvent(
+    ctx: Ctx,
+    eventType: NotificationEventType,
+  ): Promise<NotificationChannelConfig | undefined> {
+    return await this.repository.findChannelConfig(ctx, eventType);
+  }
+
+  /**
+   * Get pending email notifications
+   */
+  async getPendingEmailNotifications(ctx: Ctx): Promise<Notification[]> {
+    return await this.repository.findPendingEmailNotifications(ctx);
+  }
+
+  /**
+   * Get retryable failed email notifications
+   */
+  async getRetryableEmailNotifications(ctx: Ctx): Promise<Notification[]> {
+    return await this.repository.findRetryableEmailNotifications(ctx);
+  }
+
+  /**
+   * Mark notification as sent
+   */
+  async markNotificationSent(
+    ctx: Ctx,
+    notificationId: string,
+  ): Promise<Notification | undefined> {
+    return await this.repository.updateNotification(ctx, notificationId, {
+      status: NotificationStatus.SENT,
+      sentAt: new Date(),
+    });
+  }
+
+  /**
+   * Mark notification as delivered
+   */
+  async markNotificationDelivered(
+    ctx: Ctx,
+    notificationId: string,
+  ): Promise<Notification | undefined> {
+    return await this.repository.updateNotification(ctx, notificationId, {
+      status: NotificationStatus.DELIVERED,
+      deliveredAt: new Date(),
+    });
+  }
+
+  /**
+   * Mark notification as failed with retry scheduling
+   */
+  async markNotificationFailed(
+    ctx: Ctx,
+    notificationId: string,
+    reason: string,
+  ): Promise<Notification | undefined> {
+    const notification = await this.repository.findNotificationById(
+      ctx,
+      notificationId,
+    );
+    if (!notification) return undefined;
+
+    const newRetryCount = notification.retryCount + 1;
+    let nextRetryAt: Date | undefined;
+
+    if (newRetryCount < NOTIFICATION_RETRY_CONFIG.maxRetries) {
+      const backoffMinutes =
+        NOTIFICATION_RETRY_CONFIG.backoffMinutes[newRetryCount - 1] || 15;
+      nextRetryAt = new Date();
+      nextRetryAt.setMinutes(nextRetryAt.getMinutes() + backoffMinutes);
+    }
+
+    return await this.repository.updateNotification(ctx, notificationId, {
+      status: NotificationStatus.FAILED,
+      failedAt: new Date(),
+      failureReason: reason,
+      retryCount: newRetryCount,
+      nextRetryAt,
+    });
+  }
+
+  /**
+   * Cleanup old notifications (retention policy)
+   */
+  async cleanupOldNotifications(ctx: Ctx): Promise<number> {
+    const deletedCount = await this.repository.deleteOldNotifications(ctx);
+    if (deletedCount > 0) {
+      this.logger.log(ctx, `Cleaned up ${deletedCount} old notifications`);
+    }
+    return deletedCount;
   }
 }

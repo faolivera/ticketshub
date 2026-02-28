@@ -20,7 +20,7 @@ import {
   SeatingType,
   type TicketListingWithEvent,
 } from '../../../../modules/tickets/tickets.domain';
-import { Role, UserLevel, UserStatus } from '../../../../modules/users/users.domain';
+import { Language, Role, UserLevel, UserStatus } from '../../../../modules/users/users.domain';
 import type { User } from '../../../../modules/users/users.domain';
 import type { UserReviewMetrics } from '../../../../modules/reviews/reviews.domain';
 import type { PublicPaymentMethodOption } from '../../../../modules/payments/payments.domain';
@@ -418,6 +418,7 @@ describe('BffService', () => {
       password: 'hashed',
       country: 'US',
       currency: 'USD',
+      language: Language.ES,
       emailVerified: true,
       phoneVerified: false,
       tosAcceptedAt: new Date(),

@@ -23,7 +23,7 @@ import type { PaymentConfirmationWithTransaction } from '../../../../modules/pay
 import type { AdminUpdateEventResponse } from '../../../../modules/admin/admin.api';
 import type { Event } from '../../../../modules/events/events.domain';
 import type { User } from '../../../../modules/users/users.domain';
-import { Role, UserLevel, UserStatus } from '../../../../modules/users/users.domain';
+import { Language, Role, UserLevel, UserStatus } from '../../../../modules/users/users.domain';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -490,6 +490,7 @@ describe('AdminService', () => {
       imageId: 'img_123',
       country: 'US',
       currency: 'USD',
+      language: Language.ES,
       emailVerified: true,
       phoneVerified: false,
       createdAt: new Date(),
@@ -716,6 +717,7 @@ describe('AdminService', () => {
       imageId: 'img_123',
       country: 'US',
       currency: 'USD',
+      language: Language.ES,
       emailVerified: true,
       phoneVerified: false,
       createdAt: new Date(),
@@ -1143,6 +1145,7 @@ describe('AdminService', () => {
         imageId: '',
         country: 'ES',
         currency: 'EUR',
+        language: Language.ES,
         emailVerified: true,
         phoneVerified: false,
         createdAt: new Date(),
@@ -1186,6 +1189,7 @@ describe('AdminService', () => {
         imageId: '',
         country: 'ES',
         currency: 'EUR',
+        language: Language.ES,
         emailVerified: true,
         phoneVerified: false,
         createdAt: new Date(),
@@ -1218,6 +1222,7 @@ describe('AdminService', () => {
         imageId: '',
         country: 'ES',
         currency: 'EUR',
+        language: Language.ES,
         emailVerified: true,
         phoneVerified: false,
         createdAt: new Date(),

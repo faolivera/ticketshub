@@ -14,7 +14,7 @@ import {
 import { IdentityVerificationStatus } from '../../../../modules/identity-verification/identity-verification.domain';
 import type { IdentityVerificationRequest } from '../../../../modules/identity-verification/identity-verification.domain';
 import type { User } from '../../../../modules/users/users.domain';
-import { UserLevel, Role, UserStatus } from '../../../../modules/users/users.domain';
+import { Language, UserLevel, Role, UserStatus } from '../../../../modules/users/users.domain';
 import type { Ctx } from '../../../../common/types/context';
 
 describe('IdentityVerificationService', () => {
@@ -38,6 +38,7 @@ describe('IdentityVerificationService', () => {
     password: 'hashed',
     country: 'ES',
     currency: 'EUR',
+    language: Language.ES,
     emailVerified: true,
     phoneVerified: true,
     createdAt: new Date(),

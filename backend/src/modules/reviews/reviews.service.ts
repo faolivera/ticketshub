@@ -27,6 +27,8 @@ import type {
   GetTransactionReviewsResponse,
   SellerProfileReview,
 } from './reviews.api';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
 export class ReviewsService {
@@ -41,6 +43,7 @@ export class ReviewsService {
     private readonly usersService: UsersService,
     @Inject(TicketsService)
     private readonly ticketsService: TicketsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -117,6 +120,20 @@ export class ReviewsService {
     };
 
     await this.reviewsRepository.create(ctx, review);
+
+    // Emit notification for review received
+    const reviewer = await this.usersService.findById(ctx, userId);
+    this.notificationsService
+      .emit(ctx, NotificationEventType.REVIEW_RECEIVED, {
+        transactionId: request.transactionId,
+        reviewId: review.id,
+        rating: review.rating,
+        reviewerId: userId,
+        reviewerName: reviewer?.publicName || 'User',
+        revieweeId,
+        comment: review.comment,
+      })
+      .catch((err) => this.logger.error(ctx, `Failed to emit REVIEW_RECEIVED: ${err}`));
 
     this.logger.log(
       ctx,

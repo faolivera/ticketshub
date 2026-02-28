@@ -7,6 +7,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { TicketsRepository } from '../tickets/tickets.repository';
 import {
   IdentityVerificationStatus,
+  Language,
   Role,
   UserLevel,
   UserStatus,
@@ -85,6 +86,7 @@ export class SupportSeedService {
       level: UserLevel.Basic,
       status: UserStatus.Enabled,
       imageId: imageIds.admin,
+      language: Language.ES,
       emailVerified: true,
       phoneVerified: true,
     });
@@ -99,6 +101,7 @@ export class SupportSeedService {
       level: UserLevel.VerifiedSeller,
       status: UserStatus.Enabled,
       imageId: imageIds.seller,
+      language: Language.ES,
       emailVerified: true,
       phoneVerified: true,
       identityVerification: {
@@ -130,6 +133,7 @@ export class SupportSeedService {
       level: UserLevel.Buyer,
       status: UserStatus.Enabled,
       imageId: imageIds.buyer,
+      language: Language.ES,
       emailVerified: true,
       phoneVerified: true,
     });

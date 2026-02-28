@@ -882,7 +882,8 @@
       "payments": "Aprobación de Pagos",
       "transactions": "Gestión de Transacciones",
       "paymentMethods": "Métodos de Pago",
-      "identityVerifications": "Verificación de Identidad"
+      "identityVerifications": "Verificación de Identidad",
+      "notifications": "Notificaciones"
     },
     "dashboard": {
       "title": "Panel Principal",
@@ -1188,6 +1189,65 @@
         "bankConfigRequired": "Todos los campos de cuenta bancaria son obligatorios"
       }
     },
+    "notifications": {
+      "title": "Gestión de Notificaciones",
+      "subtitle": "Configura los canales y plantillas de notificación",
+      "tabs": {
+        "channels": "Canales",
+        "templates": "Plantillas"
+      },
+      "channels": {
+        "title": "Configuración de Canales",
+        "description": "Habilita o deshabilita canales por tipo de evento",
+        "table": {
+          "eventType": "Tipo de Evento",
+          "inApp": "In-App",
+          "email": "Email",
+          "priority": "Prioridad"
+        }
+      },
+      "templates": {
+        "title": "Plantillas de Notificación",
+        "description": "Edita el contenido de las notificaciones",
+        "editTitle": "Editar Plantilla",
+        "editDescription": "Modifica el título y cuerpo de la notificación",
+        "form": {
+          "title": "Título",
+          "body": "Cuerpo",
+          "actionUrl": "URL de Acción",
+          "active": "Activa",
+          "variables": "Variables disponibles"
+        },
+        "noTemplates": "No hay plantillas configuradas",
+        "errors": {
+          "titleRequired": "El título es requerido",
+          "bodyRequired": "El cuerpo es requerido"
+        }
+      },
+      "eventTypes": {
+        "PAYMENT_REQUIRED": "Pago Requerido",
+        "BUYER_PAYMENT_SUBMITTED": "Pago Enviado",
+        "BUYER_PAYMENT_APPROVED": "Pago Aprobado",
+        "BUYER_PAYMENT_REJECTED": "Pago Rechazado",
+        "TICKET_TRANSFERRED": "Ticket Transferido",
+        "TRANSACTION_COMPLETED": "Transacción Completada",
+        "TRANSACTION_CANCELLED": "Transacción Cancelada",
+        "TRANSACTION_EXPIRED": "Transacción Expirada",
+        "DISPUTE_OPENED": "Disputa Abierta",
+        "DISPUTE_RESOLVED": "Disputa Resuelta",
+        "IDENTITY_VERIFIED": "Identidad Verificada",
+        "IDENTITY_REJECTED": "Identidad Rechazada",
+        "EVENT_APPROVED": "Evento Aprobado",
+        "EVENT_REJECTED": "Evento Rechazado",
+        "REVIEW_RECEIVED": "Reseña Recibida"
+      },
+      "priority": {
+        "LOW": "Baja",
+        "NORMAL": "Normal",
+        "HIGH": "Alta",
+        "URGENT": "Urgente"
+      }
+    },
     "identityVerification": {
       "title": "Verificación de Identidad",
       "subtitle": "Revisar y aprobar solicitudes de verificación de identidad de vendedores",
@@ -1219,5 +1279,21 @@
       "rejectionReasonPlaceholder": "Explica por qué se está rechazando esta verificación...",
       "confirmReject": "Rechazar Verificación"
     }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No tienes notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "viewAll": "Ver todas las notificaciones",
+    "justNow": "Ahora mismo",
+    "minutesAgo": "Hace {{count}} min",
+    "minutesAgo_one": "Hace {{count}} min",
+    "minutesAgo_other": "Hace {{count}} min",
+    "hoursAgo": "Hace {{count}} hora",
+    "hoursAgo_one": "Hace {{count}} hora",
+    "hoursAgo_other": "Hace {{count}} horas",
+    "daysAgo": "Hace {{count}} día",
+    "daysAgo_one": "Hace {{count}} día",
+    "daysAgo_other": "Hace {{count}} días"
   }
 }

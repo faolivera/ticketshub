@@ -914,7 +914,8 @@
       "payments": "Payment Approval",
       "transactions": "Transaction Management",
       "paymentMethods": "Payment Methods",
-      "identityVerifications": "Identity Verification"
+      "identityVerifications": "Identity Verification",
+      "notifications": "Notifications"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -1220,6 +1221,65 @@
         "bankConfigRequired": "All bank account fields are required"
       }
     },
+    "notifications": {
+      "title": "Notification Management",
+      "subtitle": "Configure notification channels and templates",
+      "tabs": {
+        "channels": "Channels",
+        "templates": "Templates"
+      },
+      "channels": {
+        "title": "Channel Configuration",
+        "description": "Enable or disable channels per event type",
+        "table": {
+          "eventType": "Event Type",
+          "inApp": "In-App",
+          "email": "Email",
+          "priority": "Priority"
+        }
+      },
+      "templates": {
+        "title": "Notification Templates",
+        "description": "Edit notification content",
+        "editTitle": "Edit Template",
+        "editDescription": "Modify the notification title and body",
+        "form": {
+          "title": "Title",
+          "body": "Body",
+          "actionUrl": "Action URL",
+          "active": "Active",
+          "variables": "Available variables"
+        },
+        "noTemplates": "No templates configured",
+        "errors": {
+          "titleRequired": "Title is required",
+          "bodyRequired": "Body is required"
+        }
+      },
+      "eventTypes": {
+        "PAYMENT_REQUIRED": "Payment Required",
+        "BUYER_PAYMENT_SUBMITTED": "Payment Submitted",
+        "BUYER_PAYMENT_APPROVED": "Payment Approved",
+        "BUYER_PAYMENT_REJECTED": "Payment Rejected",
+        "TICKET_TRANSFERRED": "Ticket Transferred",
+        "TRANSACTION_COMPLETED": "Transaction Completed",
+        "TRANSACTION_CANCELLED": "Transaction Cancelled",
+        "TRANSACTION_EXPIRED": "Transaction Expired",
+        "DISPUTE_OPENED": "Dispute Opened",
+        "DISPUTE_RESOLVED": "Dispute Resolved",
+        "IDENTITY_VERIFIED": "Identity Verified",
+        "IDENTITY_REJECTED": "Identity Rejected",
+        "EVENT_APPROVED": "Event Approved",
+        "EVENT_REJECTED": "Event Rejected",
+        "REVIEW_RECEIVED": "Review Received"
+      },
+      "priority": {
+        "LOW": "Low",
+        "NORMAL": "Normal",
+        "HIGH": "High",
+        "URGENT": "Urgent"
+      }
+    },
     "identityVerification": {
       "title": "Identity Verification",
       "subtitle": "Review and approve seller identity verification requests",
@@ -1251,5 +1311,21 @@
       "rejectionReasonPlaceholder": "Explain why this verification is being rejected...",
       "confirmReject": "Reject Verification"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You have no notifications",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View all notifications",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo": "{{count}} hour ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo": "{{count}} day ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
   }
 }

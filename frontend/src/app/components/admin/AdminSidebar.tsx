@@ -7,6 +7,7 @@ import {
   Wallet,
   Ticket,
   Shield,
+  Bell,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -51,6 +52,11 @@ const navItems: NavItem[] = [
     to: '/admin/identity-verifications',
     icon: <Shield className="w-4 h-4" />,
     labelKey: 'admin.sidebar.identityVerifications',
+  },
+  {
+    to: '/admin/notifications',
+    icon: <Bell className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.notifications',
   },
 ];
 

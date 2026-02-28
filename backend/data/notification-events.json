@@ -1,0 +1,120 @@
+{
+  "ne_1772313065319_111efcb7": {
+    "id": "ne_1772313065319_111efcb7",
+    "type": "PAYMENT_REQUIRED",
+    "context": {
+      "transactionId": "txn_1772313065313_802bf4c6",
+      "ticketId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY",
+      "amount": 11800,
+      "currency": "EUR",
+      "expiresAt": "2026-02-28T21:21:05.314Z",
+      "buyerId": "3",
+      "sellerId": "2",
+      "sellerName": "Venito V."
+    },
+    "triggeredAt": "2026-02-28T21:11:05.319Z",
+    "status": "COMPLETED",
+    "processedAt": "2026-02-28T21:11:10.009Z"
+  },
+  "ne_1772313086219_c65f41a0": {
+    "id": "ne_1772313086219_c65f41a0",
+    "type": "BUYER_PAYMENT_SUBMITTED",
+    "context": {
+      "transactionId": "txn_1772313065313_802bf4c6",
+      "ticketId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY",
+      "amount": 11800,
+      "currency": "EUR",
+      "buyerId": "3",
+      "buyerName": "Pepito",
+      "sellerId": "2"
+    },
+    "triggeredAt": "2026-02-28T21:11:26.219Z",
+    "status": "COMPLETED",
+    "processedAt": "2026-02-28T21:11:30.010Z"
+  },
+  "ne_1772313142566_c6e17a1d": {
+    "id": "ne_1772313142566_c6e17a1d",
+    "type": "TICKET_TRANSFERRED",
+    "context": {
+      "transactionId": "txn_1772189050853_82270b5c",
+      "ticketId": "tkt_s2_un_together",
+      "eventName": "BAD BUNNY",
+      "eventDate": "2026-02-13T00:00:00.000Z",
+      "venue": "Estadio River Plate",
+      "buyerId": "4",
+      "sellerId": "2"
+    },
+    "triggeredAt": "2026-02-28T21:12:22.566Z",
+    "status": "COMPLETED",
+    "processedAt": "2026-02-28T21:12:30.025Z"
+  },
+  "ne_1772313212441_7657fbe4": {
+    "id": "ne_1772313212441_7657fbe4",
+    "type": "TICKET_TRANSFERRED",
+    "context": {
+      "transactionId": "txn_1772313065313_802bf4c6",
+      "ticketId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY",
+      "eventDate": "2026-02-13T00:00:00.000Z",
+      "venue": "Estadio River Plate",
+      "buyerId": "3",
+      "sellerId": "2"
+    },
+    "triggeredAt": "2026-02-28T21:13:32.441Z",
+    "status": "COMPLETED",
+    "processedAt": "2026-02-28T21:13:40.008Z"
+  },
+  "ne_1772313236819_ce0998d2": {
+    "id": "ne_1772313236819_ce0998d2",
+    "type": "TRANSACTION_COMPLETED",
+    "context": {
+      "transactionId": "txn_1772313065313_802bf4c6",
+      "ticketId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY",
+      "amount": 9500,
+      "currency": "EUR",
+      "buyerId": "3",
+      "sellerId": "2"
+    },
+    "triggeredAt": "2026-02-28T21:13:56.819Z",
+    "status": "COMPLETED",
+    "processedAt": "2026-02-28T21:14:00.012Z"
+  },
+  "ne_1772313286367_8b2e5838": {
+    "id": "ne_1772313286367_8b2e5838",
+    "type": "PAYMENT_REQUIRED",
+    "context": {
+      "transactionId": "txn_1772313286364_4ec6e0f3",
+      "ticketId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY",
+      "amount": 11800,
+      "currency": "EUR",
+      "expiresAt": "2026-02-28T21:24:46.365Z",
+      "buyerId": "3",
+      "sellerId": "2",
+      "sellerName": "Venito V."
+    },
+    "triggeredAt": "2026-02-28T21:14:46.367Z",
+    "status": "COMPLETED",
+    "processedAt": "2026-02-28T21:14:50.008Z"
+  },
+  "ne_1772313301287_dd1623c0": {
+    "id": "ne_1772313301287_dd1623c0",
+    "type": "BUYER_PAYMENT_SUBMITTED",
+    "context": {
+      "transactionId": "txn_1772313286364_4ec6e0f3",
+      "ticketId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY",
+      "amount": 11800,
+      "currency": "EUR",
+      "buyerId": "3",
+      "buyerName": "Pepito",
+      "sellerId": "2"
+    },
+    "triggeredAt": "2026-02-28T21:15:01.287Z",
+    "status": "COMPLETED",
+    "processedAt": "2026-02-28T21:15:10.007Z"
+  }
+}

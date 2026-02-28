@@ -34,6 +34,8 @@ import type {
 } from './transactions.api';
 import { PaymentMethodsService } from '../payments/payment-methods.service';
 import type { PricingSnapshot } from '../payments/pricing/pricing.domain';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
 export class TransactionsService {
@@ -56,6 +58,7 @@ export class TransactionsService {
     private readonly paymentMethodsService: PaymentMethodsService,
     @Inject(PricingService)
     private readonly pricingService: PricingService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -233,6 +236,22 @@ export class TransactionsService {
 
     this.logger.log(ctx, `Transaction ${transaction.id} created`);
 
+    // Emit notification for payment required
+    const seller = await this.usersService.findById(ctx, listing.sellerId);
+    this.notificationsService
+      .emit(ctx, NotificationEventType.PAYMENT_REQUIRED, {
+        transactionId: transaction.id,
+        ticketId: listing.id,
+        eventName: listing.eventName,
+        amount: totalPaid.amount,
+        currency: totalPaid.currency,
+        expiresAt: transaction.paymentExpiresAt?.toISOString() || '',
+        buyerId,
+        sellerId: listing.sellerId,
+        sellerName: seller?.publicName || 'Seller',
+      })
+      .catch((err) => this.logger.error(ctx, `Failed to emit PAYMENT_REQUIRED: ${err}`));
+
     return {
       transaction,
       paymentIntentId: paymentIntent.id,
@@ -289,7 +308,19 @@ export class TransactionsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    // TODO: Send notifications to buyer and seller
+    // Emit notification for payment approved
+    const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
+    const seller = await this.usersService.findById(ctx, updated.sellerId);
+    this.notificationsService
+      .emit(ctx, NotificationEventType.BUYER_PAYMENT_APPROVED, {
+        transactionId: updated.id,
+        ticketId: listing.id,
+        eventName: listing.eventName,
+        buyerId: updated.buyerId,
+        sellerId: updated.sellerId,
+        sellerName: seller?.publicName || 'Seller',
+      })
+      .catch((err) => this.logger.error(ctx, `Failed to emit BUYER_PAYMENT_APPROVED: ${err}`));
 
     this.logger.log(ctx, `Transaction ${transactionId} - payment received`);
     return updated;
@@ -416,6 +447,24 @@ export class TransactionsService {
     }
 
     this.logger.log(ctx, `Transaction ${transactionId} - ticket transferred`);
+
+    // Emit notification for ticket transferred
+    const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
+    const eventDateStr = listing.eventDate instanceof Date 
+      ? listing.eventDate.toISOString() 
+      : listing.eventDate;
+    this.notificationsService
+      .emit(ctx, NotificationEventType.TICKET_TRANSFERRED, {
+        transactionId: updated.id,
+        ticketId: listing.id,
+        eventName: listing.eventName,
+        eventDate: eventDateStr,
+        venue: listing.venue || '',
+        buyerId: updated.buyerId,
+        sellerId: updated.sellerId,
+      })
+      .catch((err) => this.logger.error(ctx, `Failed to emit TICKET_TRANSFERRED: ${err}`));
+
     return updated;
   }
 
@@ -473,7 +522,19 @@ export class TransactionsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    // TODO: Send completion notifications
+    // Emit transaction completed notification
+    const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
+    this.notificationsService
+      .emit(ctx, NotificationEventType.TRANSACTION_COMPLETED, {
+        transactionId: updated.id,
+        ticketId: listing.id,
+        eventName: listing.eventName,
+        amount: updated.sellerReceives.amount,
+        currency: updated.sellerReceives.currency,
+        buyerId: updated.buyerId,
+        sellerId: updated.sellerId,
+      })
+      .catch((err) => this.logger.error(ctx, `Failed to emit TRANSACTION_COMPLETED: ${err}`));
 
     this.logger.log(ctx, `Transaction ${transactionId} - completed`);
     return updated;

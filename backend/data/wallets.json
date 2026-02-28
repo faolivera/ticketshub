@@ -2,14 +2,14 @@
   "2": {
     "userId": "2",
     "balance": {
-      "amount": 9500,
+      "amount": 19000,
       "currency": "EUR"
     },
     "pendingBalance": {
       "amount": 28500,
       "currency": "EUR"
     },
-    "updatedAt": "2026-02-27T10:56:18.396Z"
+    "updatedAt": "2026-02-28T21:13:56.816Z"
   },
   "3": {
     "userId": "3",

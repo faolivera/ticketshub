@@ -70,5 +70,29 @@
     "reference": "txn_1772189714051_43dac7f9",
     "description": "Payment released for ticket sale",
     "createdAt": "2026-02-27T10:57:41.989Z"
+  },
+  "wtx_1772313181474_19546a65": {
+    "id": "wtx_1772313181474_19546a65",
+    "walletUserId": "2",
+    "type": "hold",
+    "amount": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772313065313_802bf4c6",
+    "description": "Payment for ticket sale (manual approval)",
+    "createdAt": "2026-02-28T21:13:01.474Z"
+  },
+  "wtx_1772313236817_8e2cafa5": {
+    "id": "wtx_1772313236817_8e2cafa5",
+    "walletUserId": "2",
+    "type": "release",
+    "amount": {
+      "amount": 9500,
+      "currency": "EUR"
+    },
+    "reference": "txn_1772313065313_802bf4c6",
+    "description": "Payment released for ticket sale",
+    "createdAt": "2026-02-28T21:13:56.817Z"
   }
 }

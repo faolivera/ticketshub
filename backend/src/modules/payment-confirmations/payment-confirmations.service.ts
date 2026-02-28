@@ -30,6 +30,8 @@ import type {
 } from './payment-confirmations.api';
 import { TransactionStatus, RequiredActor, STATUS_REQUIRED_ACTOR } from '../transactions/transactions.domain';
 import { Role } from '../users/users.domain';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
 export class PaymentConfirmationsService {
@@ -46,6 +48,7 @@ export class PaymentConfirmationsService {
     private readonly ticketsService: TicketsService,
     @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly storageProvider: FileStorageProvider,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private generateId(): string {
@@ -172,6 +175,24 @@ export class PaymentConfirmationsService {
       ctx,
       transactionId,
     );
+
+    // Get listing and buyer for notification
+    const listing = await this.ticketsService.getListingById(ctx, transaction.listingId);
+    const buyer = await this.usersService.findById(ctx, userId);
+
+    // Emit notification for payment submitted
+    this.notificationsService
+      .emit(ctx, NotificationEventType.BUYER_PAYMENT_SUBMITTED, {
+        transactionId,
+        ticketId: transaction.listingId,
+        eventName: listing.eventName,
+        amount: transaction.totalPaid.amount,
+        currency: transaction.totalPaid.currency,
+        buyerId: userId,
+        buyerName: buyer?.publicName || 'Buyer',
+        sellerId: transaction.sellerId,
+      })
+      .catch((err) => this.logger.error(ctx, `Failed to emit BUYER_PAYMENT_SUBMITTED: ${err}`));
 
     this.logger.log(
       ctx,

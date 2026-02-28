@@ -24,6 +24,8 @@ import {
 import { TransactionStatus } from '../transactions/transactions.domain';
 import type { ListSupportTicketsQuery } from './support.api';
 import { Role } from '../users/users.domain';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
 export class SupportService {
@@ -34,6 +36,7 @@ export class SupportService {
     private readonly supportRepository: SupportRepository,
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -99,13 +102,30 @@ export class SupportService {
 
     await this.supportRepository.createTicket(ctx, ticket);
 
-    // If it's a dispute, mark the transaction as disputed
+    // If it's a dispute, mark the transaction as disputed and notify
     if (data.category === SupportCategory.TicketDispute && data.transactionId) {
       await this.transactionsService.markDisputed(
         ctx,
         data.transactionId,
         ticket.id,
       );
+
+      // Get transaction details for notification
+      const transaction = await this.transactionsService.findById(ctx, data.transactionId);
+      if (transaction) {
+        const openedBy: 'buyer' | 'seller' = transaction.buyerId === userId ? 'buyer' : 'seller';
+        this.notificationsService
+          .emit(ctx, NotificationEventType.DISPUTE_OPENED, {
+            transactionId: data.transactionId,
+            disputeId: ticket.id,
+            eventName: data.subject,
+            buyerId: transaction.buyerId,
+            sellerId: transaction.sellerId,
+            openedBy,
+            reason: data.disputeReason || DisputeReason.Other,
+          })
+          .catch((err) => this.logger.error(ctx, `Failed to emit DISPUTE_OPENED: ${err}`));
+      }
     }
 
     // Create initial message with description
@@ -235,6 +255,25 @@ export class SupportService {
 
     if (!updated) {
       throw new NotFoundException('Support ticket not found');
+    }
+
+    // Emit dispute resolved notification
+    if (ticket.transactionId) {
+      const transaction = await this.transactionsService.findById(ctx, ticket.transactionId);
+      if (transaction) {
+        const resolvedInFavorOf: 'buyer' | 'seller' = resolution === DisputeResolution.BuyerWins ? 'buyer' : 'seller';
+        this.notificationsService
+          .emit(ctx, NotificationEventType.DISPUTE_RESOLVED, {
+            transactionId: ticket.transactionId,
+            disputeId: ticketId,
+            eventName: ticket.subject,
+            buyerId: transaction.buyerId,
+            sellerId: transaction.sellerId,
+            resolution,
+            resolvedInFavorOf,
+          })
+          .catch((err) => this.logger.error(ctx, `Failed to emit DISPUTE_RESOLVED: ${err}`));
+      }
     }
 
     this.logger.log(ctx, `Dispute ${ticketId} resolved: ${resolution}`);

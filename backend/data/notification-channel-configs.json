@@ -1,0 +1,248 @@
+{
+  "ncc_1772312281319_1ba6f2bb": {
+    "eventType": "PAYMENT_REQUIRED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:57.587Z",
+    "id": "ncc_1772312281319_1ba6f2bb",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281319_09b84c6b": {
+    "eventType": "BUYER_PAYMENT_SUBMITTED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:58.487Z",
+    "id": "ncc_1772312281319_09b84c6b",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281320_e89e3bf5": {
+    "eventType": "BUYER_PAYMENT_APPROVED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:21:59.084Z",
+    "id": "ncc_1772312281320_e89e3bf5",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281320_a7a6ee8d": {
+    "eventType": "BUYER_PAYMENT_REJECTED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:59.971Z",
+    "id": "ncc_1772312281320_a7a6ee8d",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281320_ba5739ea": {
+    "eventType": "TICKET_TRANSFERRED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:22:02.298Z",
+    "id": "ncc_1772312281320_ba5739ea",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281320_21ebb078": {
+    "eventType": "TRANSACTION_COMPLETED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:22:02.804Z",
+    "id": "ncc_1772312281320_21ebb078",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281320_57590199": {
+    "eventType": "TRANSACTION_CANCELLED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:22:03.513Z",
+    "id": "ncc_1772312281320_57590199",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281320_9e442dd1": {
+    "eventType": "TRANSACTION_EXPIRED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:22:06.859Z",
+    "id": "ncc_1772312281320_9e442dd1",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281321_162117be": {
+    "eventType": "DISPUTE_OPENED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "URGENT",
+    "updatedAt": "2026-02-28T21:22:07.502Z",
+    "id": "ncc_1772312281321_162117be",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281321_da75b2a4": {
+    "eventType": "DISPUTE_RESOLVED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:22:08.038Z",
+    "id": "ncc_1772312281321_da75b2a4",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281321_60092758": {
+    "eventType": "IDENTITY_VERIFIED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:22:08.608Z",
+    "id": "ncc_1772312281321_60092758",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281321_ac49722c": {
+    "eventType": "IDENTITY_REJECTED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:22:09.557Z",
+    "id": "ncc_1772312281321_ac49722c",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281321_fe445c64": {
+    "eventType": "EVENT_APPROVED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:22:10.047Z",
+    "id": "ncc_1772312281321_fe445c64",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281321_f477c54c": {
+    "eventType": "EVENT_REJECTED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:22:11.794Z",
+    "id": "ncc_1772312281321_f477c54c",
+    "updatedBy": "8"
+  },
+  "ncc_1772312281322_4e158a88": {
+    "eventType": "REVIEW_RECEIVED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "LOW",
+    "updatedAt": "2026-02-28T20:58:01.319Z",
+    "id": "ncc_1772312281322_4e158a88"
+  },
+  "ncc_1772313693985_81a29fad": {
+    "eventType": "BUYER_PAYMENT_SUBMITTED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693985_81a29fad"
+  },
+  "ncc_1772313693985_9e40e8b4": {
+    "eventType": "BUYER_PAYMENT_APPROVED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693985_9e40e8b4"
+  },
+  "ncc_1772313693985_a78f6970": {
+    "eventType": "BUYER_PAYMENT_REJECTED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693985_a78f6970"
+  },
+  "ncc_1772313693986_91bfb950": {
+    "eventType": "TICKET_TRANSFERRED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693986_91bfb950"
+  },
+  "ncc_1772313693986_59fc8edf": {
+    "eventType": "TRANSACTION_COMPLETED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693986_59fc8edf"
+  },
+  "ncc_1772313693986_20b70dd1": {
+    "eventType": "TRANSACTION_CANCELLED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693986_20b70dd1"
+  },
+  "ncc_1772313693986_d0a7ad53": {
+    "eventType": "TRANSACTION_EXPIRED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693986_d0a7ad53"
+  },
+  "ncc_1772313693986_f83c0e10": {
+    "eventType": "DISPUTE_OPENED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "URGENT",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693986_f83c0e10"
+  },
+  "ncc_1772313693987_742dbeb9": {
+    "eventType": "DISPUTE_RESOLVED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693987_742dbeb9"
+  },
+  "ncc_1772313693987_32def17d": {
+    "eventType": "IDENTITY_VERIFIED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693987_32def17d"
+  },
+  "ncc_1772313693987_139d10aa": {
+    "eventType": "IDENTITY_REJECTED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693987_139d10aa"
+  },
+  "ncc_1772313693987_345bb42a": {
+    "eventType": "EVENT_APPROVED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "NORMAL",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693987_345bb42a"
+  },
+  "ncc_1772313693987_a7b16300": {
+    "eventType": "EVENT_REJECTED",
+    "inAppEnabled": true,
+    "emailEnabled": true,
+    "priority": "HIGH",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693987_a7b16300"
+  },
+  "ncc_1772313693987_8c4bde3f": {
+    "eventType": "REVIEW_RECEIVED",
+    "inAppEnabled": true,
+    "emailEnabled": false,
+    "priority": "LOW",
+    "updatedAt": "2026-02-28T21:21:33.984Z",
+    "id": "ncc_1772313693987_8c4bde3f"
+  }
+}

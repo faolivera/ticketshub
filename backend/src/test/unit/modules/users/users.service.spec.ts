@@ -10,7 +10,7 @@ import {
   type FileStorageProvider,
 } from '../../../../common/storage/file-storage-provider.interface';
 import type { User } from '../../../../modules/users/users.domain';
-import { UserLevel, Role, UserStatus } from '../../../../modules/users/users.domain';
+import { Language, UserLevel, Role, UserStatus } from '../../../../modules/users/users.domain';
 import type { Image } from '../../../../modules/images/images.domain';
 import type { Ctx } from '../../../../common/types/context';
 
@@ -35,6 +35,7 @@ describe('UsersService', () => {
     password: 'hashed',
     country: 'ES',
     currency: 'EUR',
+    language: Language.ES,
     emailVerified: true,
     phoneVerified: true,
     createdAt: new Date(),

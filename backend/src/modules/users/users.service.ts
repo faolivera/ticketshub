@@ -16,7 +16,7 @@ import type {
   UserPublicInfo,
   AuthenticatedUserPublicInfo,
 } from './users.domain';
-import { Role, UserLevel, UserStatus } from './users.domain';
+import { Role, UserLevel, UserStatus, Language } from './users.domain';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
 import { OTPType } from '../otp/otp.domain';
@@ -289,6 +289,7 @@ export class UsersService {
       imageId: 'default',
       country: data.country,
       currency: 'EUR',
+      language: Language.ES,
       emailVerified: false,
       phoneVerified: false,
       createdAt: now,

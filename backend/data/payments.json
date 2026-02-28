@@ -142,5 +142,41 @@
     },
     "createdAt": "2026-02-27T19:45:32.909Z",
     "updatedAt": "2026-02-27T19:45:32.909Z"
+  },
+  "pi_1772313065317_3b5e627c": {
+    "id": "pi_1772313065317_3b5e627c",
+    "transactionId": "txn_1772313065313_802bf4c6",
+    "amount": {
+      "amount": 11800,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772313065317_434d692b",
+    "metadata": {
+      "buyerId": "3",
+      "sellerId": "2",
+      "listingId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-28T21:11:05.317Z",
+    "updatedAt": "2026-02-28T21:11:05.317Z"
+  },
+  "pi_1772313286366_37dde0fe": {
+    "id": "pi_1772313286366_37dde0fe",
+    "transactionId": "txn_1772313286364_4ec6e0f3",
+    "amount": {
+      "amount": 11800,
+      "currency": "EUR"
+    },
+    "status": "pending",
+    "providerPaymentId": "mock_pi_1772313286366_1fc0d52a",
+    "metadata": {
+      "buyerId": "3",
+      "sellerId": "2",
+      "listingId": "tkt_s2_un_separate",
+      "eventName": "BAD BUNNY"
+    },
+    "createdAt": "2026-02-28T21:14:46.366Z",
+    "updatedAt": "2026-02-28T21:14:46.366Z"
   }
 }

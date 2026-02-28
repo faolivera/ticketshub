@@ -3,6 +3,7 @@ import { User, Ticket, ChevronDown, Wallet, LogOut, Languages, Plus, Shield } fr
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
+import { NotificationBell } from './NotificationBell';
 
 export function Header() {
   const { t, i18n } = useTranslation();
@@ -62,6 +63,9 @@ export function Header() {
               <span className="hidden sm:inline">{t('header.sellTickets')}</span>
             </Link>
           )}
+
+          {/* Notifications Bell */}
+          {isAuthenticated && <NotificationBell />}
 
           {/* Language Selector */}
           <div className="relative" ref={langDropdownRef}>

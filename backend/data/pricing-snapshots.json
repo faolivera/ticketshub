@@ -542,5 +542,51 @@
     "pricingModel": "fixed",
     "createdAt": "2026-02-28T13:28:37.561Z",
     "expiresAt": "2026-02-28T13:43:37.561Z"
+  },
+  "ps_1772313062529_4f566b6e1588": {
+    "id": "ps_1772313062529_4f566b6e1588",
+    "listingId": "tkt_s2_un_separate",
+    "pricePerTicket": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
+    "buyerPlatformFeePercentage": 10,
+    "sellerPlatformFeePercentage": 5,
+    "paymentMethodCommissions": [
+      {
+        "paymentMethodId": "pm_004_bank_transfer",
+        "paymentMethodName": "Transferencia Bancaria",
+        "commissionPercent": 8
+      }
+    ],
+    "pricingModel": "fixed",
+    "createdAt": "2026-02-28T21:11:02.529Z",
+    "expiresAt": "2026-02-28T21:26:02.529Z",
+    "consumedAt": "2026-02-28T21:11:05.313Z",
+    "consumedByTransactionId": "txn_1772313065313_802bf4c6",
+    "selectedPaymentMethodId": "pm_004_bank_transfer"
+  },
+  "ps_1772313285434_3e035a93095b": {
+    "id": "ps_1772313285434_3e035a93095b",
+    "listingId": "tkt_s2_un_separate",
+    "pricePerTicket": {
+      "amount": 10000,
+      "currency": "EUR"
+    },
+    "buyerPlatformFeePercentage": 10,
+    "sellerPlatformFeePercentage": 5,
+    "paymentMethodCommissions": [
+      {
+        "paymentMethodId": "pm_004_bank_transfer",
+        "paymentMethodName": "Transferencia Bancaria",
+        "commissionPercent": 8
+      }
+    ],
+    "pricingModel": "fixed",
+    "createdAt": "2026-02-28T21:14:45.434Z",
+    "expiresAt": "2026-02-28T21:29:45.434Z",
+    "consumedAt": "2026-02-28T21:14:46.364Z",
+    "consumedByTransactionId": "txn_1772313286364_4ec6e0f3",
+    "selectedPaymentMethodId": "pm_004_bank_transfer"
   }
 }

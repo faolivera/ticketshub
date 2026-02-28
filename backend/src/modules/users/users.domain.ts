@@ -21,6 +21,14 @@ export enum UserLevel {
 }
 
 /**
+ * Supported languages for user interface and notifications
+ */
+export enum Language {
+  ES = 'es',
+  EN = 'en',
+}
+
+/**
  * User address with geographic point
  */
 export type UserAddress = AddressWithGeoPoint;
@@ -78,6 +86,7 @@ export interface User {
   password: string;
   country: string;
   currency: CurrencyCode;
+  language: Language;
   address?: UserAddress;
 
   // Verification fields
