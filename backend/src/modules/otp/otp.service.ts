@@ -1,6 +1,7 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { OTPRepository } from './otp.repository';
+import type { IOTPRepository } from './otp.repository.interface';
+import { OTP_REPOSITORY } from './otp.repository.interface';
 import type { Ctx } from '../../common/types/context';
 import type { OTP } from './otp.domain';
 import { OTPType, OTPStatus, OTP_CONFIG } from './otp.domain';
@@ -8,8 +9,8 @@ import { OTPType, OTPStatus, OTP_CONFIG } from './otp.domain';
 @Injectable()
 export class OTPService {
   constructor(
-    @Inject(OTPRepository)
-    private readonly otpRepository: OTPRepository,
+    @Inject(OTP_REPOSITORY)
+    private readonly otpRepository: IOTPRepository,
   ) {}
 
   /**
