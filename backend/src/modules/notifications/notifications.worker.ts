@@ -2,7 +2,10 @@ import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import { NotificationsService } from './notifications.service';
-import { NotificationsRepository } from './notifications.repository';
+import {
+  INotificationsRepository,
+  NOTIFICATIONS_REPOSITORY,
+} from './notifications.repository.interface';
 import { ProcessorRegistry } from './processors';
 import { TemplateService } from './templates';
 import { InAppChannel } from './channels/in-app.channel';
@@ -26,7 +29,8 @@ export class NotificationsWorker {
 
   constructor(
     private readonly service: NotificationsService,
-    private readonly repository: NotificationsRepository,
+    @Inject(NOTIFICATIONS_REPOSITORY)
+    private readonly repository: INotificationsRepository,
     private readonly processorRegistry: ProcessorRegistry,
     private readonly templateService: TemplateService,
     private readonly inAppChannel: InAppChannel,
