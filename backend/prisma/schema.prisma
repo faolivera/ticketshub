@@ -1,14 +1,751 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum Role {
+  User
+  Admin
+}
+
+enum UserStatus {
+  Enabled
+  Disabled
+  Suspended
+}
+
+enum UserLevel {
+  Basic
+  Buyer
+  Seller
+  VerifiedSeller
+}
+
+enum Language {
+  es
+  en
+}
+
+enum IdentityVerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum EventStatus {
+  pending
+  approved
+  rejected
+}
+
+enum EventDateStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+enum EventSectionStatus {
+  pending
+  approved
+  rejected
+}
+
+enum EventCategory {
+  Concert
+  Sports
+  Theater
+  Festival
+  Conference
+  Comedy
+  Other
+}
+
+enum TicketType {
+  Physical
+  DigitalTransferable
+  DigitalNonTransferable
+}
+
+enum DeliveryMethod {
+  Pickup
+  ArrangeWithSeller
+}
+
+enum ListingStatus {
+  Pending
+  Active
+  Sold
+  Cancelled
+  Expired
+}
+
+enum TicketUnitStatus {
+  available
+  reserved
+  sold
+}
+
+enum SeatingType {
+  numbered
+  unnumbered
+}
+
+enum TransactionStatus {
+  PendingPayment
+  PaymentPendingVerification
+  PaymentReceived
+  TicketTransferred
+  Completed
+  Disputed
+  Refunded
+  Cancelled
+}
+
+enum RequiredActor {
+  Buyer
+  Seller
+  Platform
+  None
+}
+
+enum CancellationReason {
+  BuyerCancelled
+  PaymentFailed
+  PaymentTimeout
+  AdminRejected
+  AdminReviewTimeout
+}
+
+enum PaymentIntentStatus {
+  pending
+  processing
+  succeeded
+  failed
+  cancelled
+}
+
+enum PaymentConfirmationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum WalletTransactionType {
+  credit
+  debit
+  pending_credit
+  pending_release
+  payout
+}
+
+enum OTPType {
+  email_verification
+  phone_verification
+  password_reset
+}
+
+enum OTPStatus {
+  pending
+  verified
+  expired
+}
+
+enum SupportTicketStatus {
+  open
+  in_progress
+  waiting_for_customer
+  resolved
+  closed
+}
+
+enum SupportTicketCategory {
+  transaction
+  account
+  technical
+  other
+}
+
+enum SupportMessageSender {
+  user
+  admin
+}
+
+enum ReviewRole {
+  buyer
+  seller
+}
+
+enum TermsUserType {
+  buyer
+  seller
+}
+
+enum TermsStatus {
+  draft
+  active
+  archived
+}
+
+enum NotificationEventType {
+  PAYMENT_REQUIRED
+  BUYER_PAYMENT_SUBMITTED
+  BUYER_PAYMENT_APPROVED
+  BUYER_PAYMENT_REJECTED
+  TICKET_TRANSFERRED
+  TRANSACTION_COMPLETED
+  TRANSACTION_CANCELLED
+  TRANSACTION_EXPIRED
+  DISPUTE_OPENED
+  DISPUTE_RESOLVED
+  IDENTITY_VERIFIED
+  IDENTITY_REJECTED
+  EVENT_APPROVED
+  EVENT_REJECTED
+  REVIEW_RECEIVED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum NotificationEventStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationStatus {
+  PENDING
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// =============================================================================
+// MODELS
+// =============================================================================
+
+model User {
+  id                    String     @id @default(uuid())
+  email                 String     @unique
+  firstName             String
+  lastName              String
+  role                  Role       @default(User)
+  level                 UserLevel  @default(Basic)
+  status                UserStatus @default(Enabled)
+  publicName            String
+  imageId               String?
+  phone                 String?
+  password              String
+  country               String     @default("Germany")
+  currency              String     @default("EUR")
+  language              Language   @default(en)
+  address               Json?
+  emailVerified         Boolean    @default(false)
+  phoneVerified         Boolean    @default(false)
+  tosAcceptedAt         DateTime?
+  identityVerification  Json?
+  bankAccount           Json?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  // Relations
+  createdEvents         Event[]         @relation("EventCreator")
+  approvedEvents        Event[]         @relation("EventApprover")
+  createdDates          EventDate[]     @relation("DateCreator")
+  approvedDates         EventDate[]     @relation("DateApprover")
+  createdSections       EventSection[]  @relation("SectionCreator")
+  approvedSections      EventSection[]  @relation("SectionApprover")
+  listings              TicketListing[]
+  buyerTransactions     Transaction[]   @relation("TransactionBuyer")
+  sellerTransactions    Transaction[]   @relation("TransactionSeller")
+  wallet                Wallet?
+  reviewsGiven          Review[]        @relation("ReviewReviewer")
+  reviewsReceived       Review[]        @relation("ReviewReviewee")
+  supportTickets        SupportTicket[]
+  otps                  Otp[]
+  identityVerifications IdentityVerificationRequest[]
+  notifications         Notification[]
+
+  @@map("users")
+}
+
+model Image {
+  id          String   @id @default(uuid())
+  filename    String
+  contentType String
+  sizeBytes   Int
+  width       Int?
+  height      Int?
+  uploadedBy  String
+  uploadedAt  DateTime @default(now())
+
+  @@map("images")
+}
+
+model Event {
+  id              String        @id @default(uuid())
+  name            String
+  description     String
+  category        EventCategory
+  venue           String
+  location        Json
+  imageIds        String[]
+  banners         Json?
+  status          EventStatus   @default(pending)
+  rejectionReason String?
+  createdById     String
+  approvedById    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  createdBy       User          @relation("EventCreator", fields: [createdById], references: [id])
+  approvedBy      User?         @relation("EventApprover", fields: [approvedById], references: [id])
+  dates           EventDate[]
+  sections        EventSection[]
+  listings        TicketListing[]
+
+  @@map("events")
+}
+
+model EventDate {
+  id              String          @id @default(uuid())
+  eventId         String
+  date            DateTime
+  status          EventDateStatus @default(pending)
+  rejectionReason String?
+  createdById     String
+  approvedById    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  event           Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdBy       User            @relation("DateCreator", fields: [createdById], references: [id])
+  approvedBy      User?           @relation("DateApprover", fields: [approvedById], references: [id])
+  listings        TicketListing[]
+
+  @@map("event_dates")
+}
+
+model EventSection {
+  id              String             @id @default(uuid())
+  eventId         String
+  name            String
+  seatingType     SeatingType
+  status          EventSectionStatus @default(pending)
+  rejectionReason String?
+  createdById     String
+  approvedById    String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Relations
+  event           Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdBy       User               @relation("SectionCreator", fields: [createdById], references: [id])
+  approvedBy      User?              @relation("SectionApprover", fields: [approvedById], references: [id])
+  listings        TicketListing[]
+
+  @@unique([eventId, name])
+  @@map("event_sections")
+}
+
+model TicketListing {
+  id              String        @id @default(uuid())
+  sellerId        String
+  eventId         String
+  eventDateId     String
+  eventSectionId  String
+  type            TicketType
+  ticketUnits     Json
+  sellTogether    Boolean       @default(false)
+  pricePerTicket  Json
+  deliveryMethod  DeliveryMethod?
+  pickupAddress   Json?
+  description     String?
+  status          ListingStatus @default(Pending)
+  expiresAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  seller          User          @relation(fields: [sellerId], references: [id])
+  event           Event         @relation(fields: [eventId], references: [id])
+  eventDate       EventDate     @relation(fields: [eventDateId], references: [id])
+  eventSection    EventSection  @relation(fields: [eventSectionId], references: [id])
+  transactions    Transaction[]
+
+  @@map("ticket_listings")
+}
+
+model Transaction {
+  id                        String            @id @default(uuid())
+  listingId                 String
+  buyerId                   String
+  sellerId                  String
+  ticketType                TicketType
+  ticketUnitIds             String[]
+  quantity                  Int
+  ticketPrice               Json
+  buyerPlatformFee          Json
+  sellerPlatformFee         Json
+  paymentMethodCommission   Json
+  totalPaid                 Json
+  sellerReceives            Json
+  pricingSnapshotId         String
+  status                    TransactionStatus @default(PendingPayment)
+  requiredActor             RequiredActor     @default(Buyer)
+  paymentExpiresAt          DateTime
+  adminReviewExpiresAt      DateTime?
+  deliveryMethod            DeliveryMethod?
+  pickupAddress             Json?
+  eventDateTime             DateTime?
+  releaseAfterMinutes       Int?
+  autoReleaseAt             DateTime?
+  disputeId                 String?
+  paymentMethodId           String?
+  paymentConfirmationId     String?
+  paymentApprovedBy         String?
+  paymentApprovedAt         DateTime?
+  cancelledBy               RequiredActor?
+  cancellationReason        CancellationReason?
+  paymentReceivedAt         DateTime?
+  ticketTransferredAt       DateTime?
+  buyerConfirmedAt          DateTime?
+  completedAt               DateTime?
+  cancelledAt               DateTime?
+  refundedAt                DateTime?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  // Relations
+  listing                   TicketListing     @relation(fields: [listingId], references: [id])
+  buyer                     User              @relation("TransactionBuyer", fields: [buyerId], references: [id])
+  seller                    User              @relation("TransactionSeller", fields: [sellerId], references: [id])
+  paymentIntent             PaymentIntent?
+  paymentConfirmation       PaymentConfirmation?
+  reviews                   Review[]
+
+  @@map("transactions")
+}
+
+model PaymentIntent {
+  id                String              @id @default(uuid())
+  transactionId     String              @unique
+  amount            Json
+  status            PaymentIntentStatus @default(pending)
+  provider          String
+  providerPaymentId String?
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // Relations
+  transaction       Transaction         @relation(fields: [transactionId], references: [id])
+
+  @@map("payment_intents")
+}
+
+model PaymentMethod {
+  id                  String   @id @default(uuid())
+  name                String
+  type                String
+  status              String   @default("enabled")
+  commissionPercent   Float
+  commissionFixed     Int      @default(0)
+  instructions        Json?
+  requiredFields      String[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("payment_methods")
+}
+
+model PaymentConfirmation {
+  id                  String                    @id @default(uuid())
+  transactionId       String                    @unique
+  paymentMethodId     String
+  uploadedBy          String
+  status              PaymentConfirmationStatus @default(pending)
+  imageIds            String[]
+  fields              Json?
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  rejectionReason     String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  // Relations
+  transaction         Transaction               @relation(fields: [transactionId], references: [id])
+
+  @@map("payment_confirmations")
+}
+
+model PricingSnapshot {
+  id                      String   @id @default(uuid())
+  listingId               String
+  quantity                Int
+  ticketPrice             Json
+  buyerPlatformFee        Json
+  sellerPlatformFee       Json
+  paymentMethodCommission Json
+  totalPaid               Json
+  sellerReceives          Json
+  paymentMethodId         String?
+  expiresAt               DateTime
+  consumedByTransactionId String?
+  createdAt               DateTime @default(now())
+
+  @@map("pricing_snapshots")
+}
+
+model Wallet {
+  id             String              @id @default(uuid())
+  userId         String              @unique
+  balance        Json
+  pendingBalance Json
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  // Relations
+  user           User                @relation(fields: [userId], references: [id])
+  transactions   WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id                  String                @id @default(uuid())
+  walletUserId        String
+  type                WalletTransactionType
+  amount              Json
+  description         String
+  referenceType       String?
+  referenceId         String?
+  createdAt           DateTime              @default(now())
+
+  // Relations
+  wallet              Wallet                @relation(fields: [walletUserId], references: [userId])
+
+  @@map("wallet_transactions")
+}
+
+model Otp {
+  id         String    @id @default(uuid())
+  userId     String
+  type       OTPType
+  code       String
+  status     OTPStatus @default(pending)
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  // Relations
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@map("otps")
+}
+
+model Review {
+  id            String     @id @default(uuid())
+  transactionId String
+  reviewerId    String
+  revieweeId    String
+  reviewerRole  ReviewRole
+  revieweeRole  ReviewRole
+  rating        Int
+  comment       String?
+  createdAt     DateTime   @default(now())
+
+  // Relations
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  reviewer      User        @relation("ReviewReviewer", fields: [reviewerId], references: [id])
+  reviewee      User        @relation("ReviewReviewee", fields: [revieweeId], references: [id])
+
+  @@unique([transactionId, reviewerId])
+  @@map("reviews")
+}
+
+model TermsVersion {
+  id          String        @id @default(uuid())
+  userType    TermsUserType
+  version     String
+  content     String
+  status      TermsStatus   @default(draft)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("terms_versions")
+}
+
+model UserTermsAcceptance {
+  id              String        @id @default(uuid())
+  userId          String
+  termsVersionId  String
+  userType        TermsUserType
+  acceptedAt      DateTime      @default(now())
+
+  @@unique([userId, termsVersionId])
+  @@map("user_terms_acceptances")
+}
+
+model UserTermsState {
+  id                      String        @id @default(uuid())
+  userId                  String
+  userType                TermsUserType
+  currentTermsVersionId   String?
+  acceptedTermsVersionId  String?
+  needsAcceptance         Boolean       @default(true)
+  updatedAt               DateTime      @updatedAt
+
+  @@unique([userId, userType])
+  @@map("user_terms_states")
+}
+
+model IdentityVerificationRequest {
+  id                   String                     @id @default(uuid())
+  userId               String
+  status               IdentityVerificationStatus @default(pending)
+  legalFirstName       String
+  legalLastName        String
+  dateOfBirth          String
+  governmentIdNumber   String
+  documentImageIds     String[]
+  selfieImageId        String?
+  submittedAt          DateTime                   @default(now())
+  reviewedAt           DateTime?
+  reviewedBy           String?
+  rejectionReason      String?
+
+  // Relations
+  user                 User                       @relation(fields: [userId], references: [id])
+
+  @@map("identity_verification_requests")
+}
+
+model SupportTicket {
+  id            String                @id @default(uuid())
+  userId        String
+  transactionId String?
+  category      SupportTicketCategory
+  subject       String
+  status        SupportTicketStatus   @default(open)
+  assignedTo    String?
+  resolvedAt    DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  // Relations
+  user          User                  @relation(fields: [userId], references: [id])
+  messages      SupportMessage[]
+
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id        String               @id @default(uuid())
+  ticketId  String
+  senderId  String
+  sender    SupportMessageSender
+  content   String
+  createdAt DateTime             @default(now())
+
+  // Relations
+  ticket    SupportTicket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("support_messages")
+}
+
+model NotificationEvent {
+  id          String                  @id @default(uuid())
+  type        NotificationEventType
+  context     Json
+  triggeredBy String?
+  triggeredAt DateTime                @default(now())
+  status      NotificationEventStatus @default(PENDING)
+  processedAt DateTime?
+  error       String?
+
+  // Relations
+  notifications Notification[]
+
+  @@map("notification_events")
+}
+
+model Notification {
+  id            String               @id @default(uuid())
+  eventId       String
+  eventType     NotificationEventType
+  recipientId   String
+  channel       NotificationChannel
+  title         String
+  body          String
+  actionUrl     String?
+  status        NotificationStatus   @default(PENDING)
+  read          Boolean              @default(false)
+  readAt        DateTime?
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  failedAt      DateTime?
+  failureReason String?
+  retryCount    Int                  @default(0)
+  nextRetryAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  // Relations
+  event         NotificationEvent    @relation(fields: [eventId], references: [id])
+  recipient     User                 @relation(fields: [recipientId], references: [id])
+
+  @@map("notifications")
+}
+
+model NotificationTemplate {
+  id                String                @id @default(uuid())
+  eventType         NotificationEventType
+  channel           NotificationChannel
+  locale            String
+  titleTemplate     String
+  bodyTemplate      String
+  actionUrlTemplate String?
+  isActive          Boolean               @default(true)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  updatedBy         String?
+
+  @@unique([eventType, channel, locale])
+  @@map("notification_templates")
+}
+
+model NotificationChannelConfig {
+  id            String                @id @default(uuid())
+  eventType     NotificationEventType @unique
+  inAppEnabled  Boolean               @default(true)
+  emailEnabled  Boolean               @default(true)
+  priority      NotificationPriority  @default(NORMAL)
+  updatedAt     DateTime              @updatedAt
+  updatedBy     String?
+
+  @@map("notification_channel_configs")
 }
