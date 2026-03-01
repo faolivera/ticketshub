@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { TermsRepository } from './terms.repository';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -24,14 +23,16 @@ import type {
   GetTermsStatusResponse,
   TermsComplianceStatus,
 } from './terms.api';
+import type { ITermsRepository } from './terms.repository.interface';
+import { TERMS_REPOSITORY } from './terms.repository.interface';
 
 @Injectable()
 export class TermsService {
   private readonly logger: ContextLogger = new ContextLogger(TermsService.name);
 
   constructor(
-    @Inject(TermsRepository)
-    private readonly termsRepository: TermsRepository,
+    @Inject(TERMS_REPOSITORY)
+    private readonly termsRepository: ITermsRepository,
   ) {}
 
   async getCurrentTerms(
