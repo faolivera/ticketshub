@@ -7,7 +7,10 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { ReviewsRepository } from './reviews.repository';
+import {
+  REVIEWS_REPOSITORY,
+  type IReviewsRepository,
+} from './reviews.repository.interface';
 import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
 import { TicketsService } from '../tickets/tickets.service';
@@ -35,8 +38,8 @@ export class ReviewsService {
   private readonly logger = new ContextLogger(ReviewsService.name);
 
   constructor(
-    @Inject(ReviewsRepository)
-    private readonly reviewsRepository: ReviewsRepository,
+    @Inject(REVIEWS_REPOSITORY)
+    private readonly reviewsRepository: IReviewsRepository,
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
     @Inject(UsersService)
