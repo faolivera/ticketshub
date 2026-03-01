@@ -7,7 +7,10 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { PaymentConfirmationsRepository } from './payment-confirmations.repository';
+import {
+  PAYMENT_CONFIRMATIONS_REPOSITORY,
+  type IPaymentConfirmationsRepository,
+} from './payment-confirmations.repository.interface';
 import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
 import { TicketsService } from '../tickets/tickets.service';
@@ -28,7 +31,7 @@ import type {
   PaymentConfirmationWithTransaction,
   ListPaymentConfirmationsResponse,
 } from './payment-confirmations.api';
-import { TransactionStatus, RequiredActor, STATUS_REQUIRED_ACTOR } from '../transactions/transactions.domain';
+import { TransactionStatus } from '../transactions/transactions.domain';
 import { Role } from '../users/users.domain';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
@@ -38,8 +41,8 @@ export class PaymentConfirmationsService {
   private readonly logger = new ContextLogger(PaymentConfirmationsService.name);
 
   constructor(
-    @Inject(PaymentConfirmationsRepository)
-    private readonly repository: PaymentConfirmationsRepository,
+    @Inject(PAYMENT_CONFIRMATIONS_REPOSITORY)
+    private readonly repository: IPaymentConfirmationsRepository,
     @Inject(forwardRef(() => TransactionsService))
     private readonly transactionsService: TransactionsService,
     @Inject(UsersService)
