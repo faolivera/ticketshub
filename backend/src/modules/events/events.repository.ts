@@ -1,448 +1,704 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import type {
+  Event as PrismaEvent,
+  EventDate as PrismaEventDate,
+  EventSection as PrismaEventSection,
+} from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
-import type { Event, EventDate, EventSection } from './events.domain';
+import type { Event, EventDate, EventSection, EventBanners } from './events.domain';
 import {
   EventStatus,
   EventDateStatus,
   EventSectionStatus,
+  EventCategory,
 } from './events.domain';
+import type { IEventsRepository } from './events.repository.interface';
+import type { Address } from '../shared/address.domain';
+import { SeatingType } from '../tickets/tickets.domain';
 
 @Injectable()
-export class EventsRepository implements OnModuleInit {
-  private readonly eventStorage: KeyValueFileStorage<Event>;
-  private readonly dateStorage: KeyValueFileStorage<EventDate>;
-  private readonly sectionStorage: KeyValueFileStorage<EventSection>;
-
-  constructor() {
-    this.eventStorage = new KeyValueFileStorage<Event>('events');
-    this.dateStorage = new KeyValueFileStorage<EventDate>('event-dates');
-    this.sectionStorage = new KeyValueFileStorage<EventSection>(
-      'event-sections',
-    );
-  }
-
-  /**
-   * Load data from file storage when module initializes
-   */
-  async onModuleInit(): Promise<void> {
-    await this.eventStorage.onModuleInit();
-    await this.dateStorage.onModuleInit();
-    await this.sectionStorage.onModuleInit();
-  }
+export class EventsRepository implements IEventsRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
   // ==================== Events ====================
 
-  /**
-   * Create a new event
-   */
-  async createEvent(ctx: Ctx, event: Event): Promise<Event> {
-    await this.eventStorage.set(ctx, event.id, event);
-    return event;
+  async createEvent(_ctx: Ctx, event: Event): Promise<Event> {
+    const created = await this.prisma.event.create({
+      data: {
+        id: event.id,
+        name: event.name,
+        description: event.description,
+        category: this.mapEventCategoryToDb(event.category),
+        venue: event.venue,
+        location: event.location as object,
+        imageIds: event.imageIds,
+        banners: event.banners ? (event.banners as object) : undefined,
+        status: this.mapEventStatusToDb(event.status),
+        rejectionReason: event.rejectionReason,
+        createdById: event.createdBy,
+        approvedById: event.approvedBy,
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt,
+      },
+    });
+    return this.mapToEvent(created);
   }
 
-  /**
-   * Find event by ID
-   */
-  async findEventById(ctx: Ctx, id: string): Promise<Event | undefined> {
-    return await this.eventStorage.get(ctx, id);
+  async findEventById(_ctx: Ctx, id: string): Promise<Event | undefined> {
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+    });
+    return event ? this.mapToEvent(event) : undefined;
   }
 
-  /**
-   * Get all events
-   */
-  async getAllEvents(ctx: Ctx): Promise<Event[]> {
-    return await this.eventStorage.getAll(ctx);
+  async getAllEvents(_ctx: Ctx): Promise<Event[]> {
+    const events = await this.prisma.event.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return events.map((e) => this.mapToEvent(e));
   }
 
-  /**
-   * Find events by IDs (batch).
-   */
-  async findEventsByIds(ctx: Ctx, ids: string[]): Promise<Event[]> {
+  async findEventsByIds(_ctx: Ctx, ids: string[]): Promise<Event[]> {
     if (ids.length === 0) return [];
-    return await this.eventStorage.getMany(ctx, ids);
+    const events = await this.prisma.event.findMany({
+      where: { id: { in: ids } },
+    });
+    return events.map((e) => this.mapToEvent(e));
   }
 
-  /**
-   * Get dates for multiple events (batch).
-   */
-  async getDatesByEventIds(
-    ctx: Ctx,
-    eventIds: string[],
-  ): Promise<EventDate[]> {
+  async getDatesByEventIds(_ctx: Ctx, eventIds: string[]): Promise<EventDate[]> {
     if (eventIds.length === 0) return [];
-    const idSet = new Set(eventIds);
-    const all = await this.dateStorage.getAll(ctx);
-    return all.filter((d) => idSet.has(d.eventId));
+    const dates = await this.prisma.eventDate.findMany({
+      where: { eventId: { in: eventIds } },
+      orderBy: { date: 'asc' },
+    });
+    return dates.map((d) => this.mapToEventDate(d));
   }
 
-  /**
-   * Get sections for multiple events (batch).
-   */
   async getSectionsByEventIds(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventIds: string[],
   ): Promise<EventSection[]> {
     if (eventIds.length === 0) return [];
-    const idSet = new Set(eventIds);
-    const all = await this.sectionStorage.getAll(ctx);
-    return all.filter((s) => idSet.has(s.eventId));
+    const sections = await this.prisma.eventSection.findMany({
+      where: { eventId: { in: eventIds } },
+      orderBy: { name: 'asc' },
+    });
+    return sections.map((s) => this.mapToEventSection(s));
   }
 
-  /**
-   * Get approved events
-   */
-  async getApprovedEvents(ctx: Ctx): Promise<Event[]> {
-    const all = await this.eventStorage.getAll(ctx);
-    return all.filter((e) => e.status === EventStatus.Approved);
+  async getApprovedEvents(_ctx: Ctx): Promise<Event[]> {
+    const events = await this.prisma.event.findMany({
+      where: { status: 'approved' },
+      orderBy: { createdAt: 'desc' },
+    });
+    return events.map((e) => this.mapToEvent(e));
   }
 
-  /**
-   * Get pending events (for admin)
-   * Returns events that are pending OR have pending dates OR have pending sections
-   */
-  async getPendingEvents(ctx: Ctx): Promise<Event[]> {
-    const allEvents = await this.eventStorage.getAll(ctx);
-    const pendingDates = await this.getPendingDates(ctx);
-    const pendingSections = await this.getPendingSections(ctx);
-    const eventIdsWithPendingDates = new Set(
-      pendingDates.map((d) => d.eventId),
-    );
+  async getPendingEvents(_ctx: Ctx): Promise<Event[]> {
+    const [pendingEvents, pendingDates, pendingSections] = await Promise.all([
+      this.prisma.event.findMany({
+        where: { status: 'pending' },
+      }),
+      this.prisma.eventDate.findMany({
+        where: { status: 'pending' },
+        select: { eventId: true },
+      }),
+      this.prisma.eventSection.findMany({
+        where: { status: 'pending' },
+        select: { eventId: true },
+      }),
+    ]);
+
+    const eventIdsWithPendingDates = new Set(pendingDates.map((d) => d.eventId));
     const eventIdsWithPendingSections = new Set(
       pendingSections.map((s) => s.eventId),
     );
+    const pendingEventIds = new Set(pendingEvents.map((e) => e.id));
 
-    return allEvents.filter(
-      (e) =>
-        e.status === EventStatus.Pending ||
-        eventIdsWithPendingDates.has(e.id) ||
-        eventIdsWithPendingSections.has(e.id),
-    );
+    const additionalEventIds = [
+      ...eventIdsWithPendingDates,
+      ...eventIdsWithPendingSections,
+    ].filter((id) => !pendingEventIds.has(id));
+
+    let allEvents = pendingEvents;
+    if (additionalEventIds.length > 0) {
+      const additionalEvents = await this.prisma.event.findMany({
+        where: { id: { in: additionalEventIds } },
+      });
+      allEvents = [...pendingEvents, ...additionalEvents];
+    }
+
+    return allEvents.map((e) => this.mapToEvent(e));
   }
 
-  /**
-   * Get events by creator
-   */
-  async getEventsByCreator(ctx: Ctx, userId: string): Promise<Event[]> {
-    const all = await this.eventStorage.getAll(ctx);
-    return all.filter((e) => e.createdBy === userId);
+  async getEventsByCreator(_ctx: Ctx, userId: string): Promise<Event[]> {
+    const events = await this.prisma.event.findMany({
+      where: { createdById: userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return events.map((e) => this.mapToEvent(e));
   }
 
-  /**
-   * Update event
-   */
   async updateEvent(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     updates: Partial<Event>,
   ): Promise<Event | undefined> {
-    const existing = await this.eventStorage.get(ctx, id);
-    if (!existing) return undefined;
+    try {
+      const data: Record<string, unknown> = {};
 
-    const updated: Event = {
-      ...existing,
-      ...updates,
-      id: existing.id, // Ensure ID can't be changed
-      updatedAt: new Date(),
-    };
-    await this.eventStorage.set(ctx, id, updated);
-    return updated;
+      if (updates.name !== undefined) data.name = updates.name;
+      if (updates.description !== undefined) data.description = updates.description;
+      if (updates.category !== undefined) {
+        data.category = this.mapEventCategoryToDb(updates.category);
+      }
+      if (updates.venue !== undefined) data.venue = updates.venue;
+      if (updates.location !== undefined) data.location = updates.location as object;
+      if (updates.imageIds !== undefined) data.imageIds = updates.imageIds;
+      if (updates.banners !== undefined) {
+        data.banners = updates.banners ? (updates.banners as object) : null;
+      }
+      if (updates.status !== undefined) {
+        data.status = this.mapEventStatusToDb(updates.status);
+      }
+      if (updates.rejectionReason !== undefined) {
+        data.rejectionReason = updates.rejectionReason;
+      }
+      if (updates.approvedBy !== undefined) data.approvedById = updates.approvedBy;
+
+      const updated = await this.prisma.event.update({
+        where: { id },
+        data,
+      });
+      return this.mapToEvent(updated);
+    } catch {
+      return undefined;
+    }
   }
 
-  /**
-   * Delete event
-   */
-  async deleteEvent(ctx: Ctx, id: string): Promise<void> {
-    await this.eventStorage.delete(ctx, id);
+  async deleteEvent(_ctx: Ctx, id: string): Promise<void> {
+    await this.prisma.event.delete({
+      where: { id },
+    });
+  }
+
+  async getAllEventsPaginated(
+    _ctx: Ctx,
+    options: { page: number; limit: number; search?: string },
+  ): Promise<{ events: Event[]; total: number }> {
+    const where = options.search
+      ? {
+          name: {
+            contains: options.search,
+            mode: 'insensitive' as const,
+          },
+        }
+      : {};
+
+    const [events, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (options.page - 1) * options.limit,
+        take: options.limit,
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    return {
+      events: events.map((e) => this.mapToEvent(e)),
+      total,
+    };
+  }
+
+  async getApprovedEventsForSelection(
+    _ctx: Ctx,
+    options: { limit: number; offset: number; search?: string },
+  ): Promise<{ events: Event[]; total: number }> {
+    const where = {
+      status: 'approved' as const,
+      ...(options.search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: options.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                venue: {
+                  contains: options.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const [events, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: options.offset,
+        take: options.limit,
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    return {
+      events: events.map((e) => this.mapToEvent(e)),
+      total,
+    };
   }
 
   // ==================== Event Dates ====================
 
-  /**
-   * Create a new event date
-   */
-  async createEventDate(ctx: Ctx, date: EventDate): Promise<EventDate> {
-    await this.dateStorage.set(ctx, date.id, date);
-    return date;
+  async createEventDate(_ctx: Ctx, date: EventDate): Promise<EventDate> {
+    const created = await this.prisma.eventDate.create({
+      data: {
+        id: date.id,
+        eventId: date.eventId,
+        date: date.date,
+        status: this.mapEventDateStatusToDb(date.status),
+        rejectionReason: date.rejectionReason,
+        createdById: date.createdBy,
+        approvedById: date.approvedBy,
+        createdAt: date.createdAt,
+        updatedAt: date.updatedAt,
+      },
+    });
+    return this.mapToEventDate(created);
   }
 
-  /**
-   * Find event date by ID
-   */
-  async findEventDateById(
-    ctx: Ctx,
-    id: string,
-  ): Promise<EventDate | undefined> {
-    return await this.dateStorage.get(ctx, id);
+  async findEventDateById(_ctx: Ctx, id: string): Promise<EventDate | undefined> {
+    const date = await this.prisma.eventDate.findUnique({
+      where: { id },
+    });
+    return date ? this.mapToEventDate(date) : undefined;
   }
 
-  /**
-   * Get dates for an event
-   */
-  async getDatesByEventId(ctx: Ctx, eventId: string): Promise<EventDate[]> {
-    const all = await this.dateStorage.getAll(ctx);
-    return all.filter((d) => d.eventId === eventId);
+  async getDatesByEventId(_ctx: Ctx, eventId: string): Promise<EventDate[]> {
+    const dates = await this.prisma.eventDate.findMany({
+      where: { eventId },
+      orderBy: { date: 'asc' },
+    });
+    return dates.map((d) => this.mapToEventDate(d));
   }
 
-  /**
-   * Find event date by eventId and date (for deduplication)
-   */
   async findEventDateByEventIdAndDate(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
     date: Date,
   ): Promise<EventDate | undefined> {
-    const all = await this.dateStorage.getAll(ctx);
-    const dateMs = date.getTime();
-    return all.find((d) => {
-      const dDate = d.date instanceof Date ? d.date : new Date(d.date);
-      return d.eventId === eventId && dDate.getTime() === dateMs;
+    const found = await this.prisma.eventDate.findFirst({
+      where: {
+        eventId,
+        date,
+      },
     });
+    return found ? this.mapToEventDate(found) : undefined;
   }
 
-  /**
-   * Get approved dates for an event
-   */
   async getApprovedDatesByEventId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
   ): Promise<EventDate[]> {
-    const all = await this.dateStorage.getAll(ctx);
-    return all.filter(
-      (d) => d.eventId === eventId && d.status === EventDateStatus.Approved,
-    );
+    const dates = await this.prisma.eventDate.findMany({
+      where: {
+        eventId,
+        status: 'approved',
+      },
+      orderBy: { date: 'asc' },
+    });
+    return dates.map((d) => this.mapToEventDate(d));
   }
 
-  /**
-   * Get dates for an event filtered by status
-   */
   async getDatesByEventIdAndStatus(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
     statuses: EventDateStatus[],
   ): Promise<EventDate[]> {
-    const all = await this.dateStorage.getAll(ctx);
-    return all.filter(
-      (d) => d.eventId === eventId && statuses.includes(d.status),
-    );
+    const dbStatuses = statuses.map((s) => this.mapEventDateStatusToDb(s));
+    const dates = await this.prisma.eventDate.findMany({
+      where: {
+        eventId,
+        status: { in: dbStatuses },
+      },
+      orderBy: { date: 'asc' },
+    });
+    return dates.map((d) => this.mapToEventDate(d));
   }
 
-  /**
-   * Get pending dates (for admin)
-   */
-  async getPendingDates(ctx: Ctx): Promise<EventDate[]> {
-    const all = await this.dateStorage.getAll(ctx);
-    return all.filter((d) => d.status === EventDateStatus.Pending);
+  async getPendingDates(_ctx: Ctx): Promise<EventDate[]> {
+    const dates = await this.prisma.eventDate.findMany({
+      where: { status: 'pending' },
+      orderBy: { date: 'asc' },
+    });
+    return dates.map((d) => this.mapToEventDate(d));
   }
 
-  /**
-   * Update event date
-   */
   async updateEventDate(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     updates: Partial<EventDate>,
   ): Promise<EventDate | undefined> {
-    const existing = await this.dateStorage.get(ctx, id);
-    if (!existing) return undefined;
+    try {
+      const data: Record<string, unknown> = {};
 
-    const {
-      doorsOpenAt: _d,
-      startTime: _s,
-      endTime: _e,
-      ...existingWithoutLegacy
-    } = existing as EventDate & {
-      doorsOpenAt?: Date;
-      startTime?: Date;
-      endTime?: Date;
-    };
-    const updated: EventDate = {
-      ...existingWithoutLegacy,
-      ...updates,
-      id: existing.id,
-      eventId: existing.eventId,
-      updatedAt: new Date(),
-    };
-    await this.dateStorage.set(ctx, id, updated);
-    return updated;
+      if (updates.date !== undefined) data.date = updates.date;
+      if (updates.status !== undefined) {
+        data.status = this.mapEventDateStatusToDb(updates.status);
+      }
+      if (updates.rejectionReason !== undefined) {
+        data.rejectionReason = updates.rejectionReason;
+      }
+      if (updates.approvedBy !== undefined) data.approvedById = updates.approvedBy;
+
+      const updated = await this.prisma.eventDate.update({
+        where: { id },
+        data,
+      });
+      return this.mapToEventDate(updated);
+    } catch {
+      return undefined;
+    }
   }
 
-  /**
-   * Delete event date
-   */
-  async deleteEventDate(ctx: Ctx, id: string): Promise<void> {
-    await this.dateStorage.delete(ctx, id);
+  async deleteEventDate(_ctx: Ctx, id: string): Promise<void> {
+    await this.prisma.eventDate.delete({
+      where: { id },
+    });
   }
 
   // ==================== Event Sections ====================
 
-  /**
-   * Create a new event section
-   */
-  async createEventSection(
-    ctx: Ctx,
-    section: EventSection,
-  ): Promise<EventSection> {
-    await this.sectionStorage.set(ctx, section.id, section);
-    return section;
+  async createEventSection(_ctx: Ctx, section: EventSection): Promise<EventSection> {
+    const created = await this.prisma.eventSection.create({
+      data: {
+        id: section.id,
+        eventId: section.eventId,
+        name: section.name,
+        seatingType: this.mapSeatingTypeToDb(section.seatingType),
+        status: this.mapEventSectionStatusToDb(section.status),
+        rejectionReason: section.rejectionReason,
+        createdById: section.createdBy,
+        approvedById: section.approvedBy,
+        createdAt: section.createdAt,
+        updatedAt: section.updatedAt,
+      },
+    });
+    return this.mapToEventSection(created);
   }
 
-  /**
-   * Find event section by ID
-   */
   async findEventSectionById(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
   ): Promise<EventSection | undefined> {
-    return await this.sectionStorage.get(ctx, id);
+    const section = await this.prisma.eventSection.findUnique({
+      where: { id },
+    });
+    return section ? this.mapToEventSection(section) : undefined;
   }
 
-  /**
-   * Get sections for an event
-   */
   async getSectionsByEventId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
   ): Promise<EventSection[]> {
-    const all = await this.sectionStorage.getAll(ctx);
-    return all.filter((s) => s.eventId === eventId);
+    const sections = await this.prisma.eventSection.findMany({
+      where: { eventId },
+      orderBy: { name: 'asc' },
+    });
+    return sections.map((s) => this.mapToEventSection(s));
   }
 
-  /**
-   * Get approved sections for an event
-   */
   async getApprovedSectionsByEventId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
   ): Promise<EventSection[]> {
-    const all = await this.sectionStorage.getAll(ctx);
-    return all.filter(
-      (s) => s.eventId === eventId && s.status === EventSectionStatus.Approved,
-    );
+    const sections = await this.prisma.eventSection.findMany({
+      where: {
+        eventId,
+        status: 'approved',
+      },
+      orderBy: { name: 'asc' },
+    });
+    return sections.map((s) => this.mapToEventSection(s));
   }
 
-  /**
-   * Get sections for an event filtered by status
-   */
   async getSectionsByEventIdAndStatus(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
     statuses: EventSectionStatus[],
   ): Promise<EventSection[]> {
-    const all = await this.sectionStorage.getAll(ctx);
-    return all.filter(
-      (s) => s.eventId === eventId && statuses.includes(s.status),
-    );
+    const dbStatuses = statuses.map((s) => this.mapEventSectionStatusToDb(s));
+    const sections = await this.prisma.eventSection.findMany({
+      where: {
+        eventId,
+        status: { in: dbStatuses },
+      },
+      orderBy: { name: 'asc' },
+    });
+    return sections.map((s) => this.mapToEventSection(s));
   }
 
-  /**
-   * Get pending sections (for admin)
-   */
-  async getPendingSections(ctx: Ctx): Promise<EventSection[]> {
-    const all = await this.sectionStorage.getAll(ctx);
-    return all.filter((s) => s.status === EventSectionStatus.Pending);
+  async getPendingSections(_ctx: Ctx): Promise<EventSection[]> {
+    const sections = await this.prisma.eventSection.findMany({
+      where: { status: 'pending' },
+      orderBy: { name: 'asc' },
+    });
+    return sections.map((s) => this.mapToEventSection(s));
   }
 
-  /**
-   * Find section by event ID and name (for uniqueness validation)
-   */
   async findSectionByEventAndName(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
     name: string,
   ): Promise<EventSection | undefined> {
-    const all = await this.sectionStorage.getAll(ctx);
-    return all.find((s) => s.eventId === eventId && s.name === name);
+    const section = await this.prisma.eventSection.findFirst({
+      where: {
+        eventId,
+        name: {
+          equals: name,
+          mode: 'insensitive',
+        },
+      },
+    });
+    return section ? this.mapToEventSection(section) : undefined;
   }
 
-  /**
-   * Update event section
-   */
   async updateEventSection(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     updates: Partial<EventSection>,
   ): Promise<EventSection | undefined> {
-    const existing = await this.sectionStorage.get(ctx, id);
-    if (!existing) return undefined;
+    try {
+      const data: Record<string, unknown> = {};
 
-    const updated: EventSection = {
-      ...existing,
-      ...updates,
-      id: existing.id,
-      eventId: existing.eventId,
-      updatedAt: new Date(),
+      if (updates.name !== undefined) data.name = updates.name;
+      if (updates.seatingType !== undefined) {
+        data.seatingType = this.mapSeatingTypeToDb(updates.seatingType);
+      }
+      if (updates.status !== undefined) {
+        data.status = this.mapEventSectionStatusToDb(updates.status);
+      }
+      if (updates.rejectionReason !== undefined) {
+        data.rejectionReason = updates.rejectionReason;
+      }
+      if (updates.approvedBy !== undefined) data.approvedById = updates.approvedBy;
+
+      const updated = await this.prisma.eventSection.update({
+        where: { id },
+        data,
+      });
+      return this.mapToEventSection(updated);
+    } catch {
+      return undefined;
+    }
+  }
+
+  async deleteEventSection(_ctx: Ctx, id: string): Promise<void> {
+    await this.prisma.eventSection.delete({
+      where: { id },
+    });
+  }
+
+  // ==================== Mappers ====================
+
+  private mapToEvent(prismaEvent: PrismaEvent): Event {
+    return {
+      id: prismaEvent.id,
+      name: prismaEvent.name,
+      description: prismaEvent.description,
+      category: this.mapEventCategoryFromDb(prismaEvent.category),
+      venue: prismaEvent.venue,
+      location: prismaEvent.location as unknown as Address,
+      imageIds: prismaEvent.imageIds,
+      banners: prismaEvent.banners
+        ? (prismaEvent.banners as unknown as EventBanners)
+        : undefined,
+      status: this.mapEventStatusFromDb(prismaEvent.status),
+      rejectionReason: prismaEvent.rejectionReason ?? undefined,
+      createdBy: prismaEvent.createdById,
+      approvedBy: prismaEvent.approvedById ?? undefined,
+      createdAt: prismaEvent.createdAt,
+      updatedAt: prismaEvent.updatedAt,
     };
-    await this.sectionStorage.set(ctx, id, updated);
-    return updated;
   }
 
-  /**
-   * Delete event section
-   */
-  async deleteEventSection(ctx: Ctx, id: string): Promise<void> {
-    await this.sectionStorage.delete(ctx, id);
+  private mapToEventDate(prismaDate: PrismaEventDate): EventDate {
+    return {
+      id: prismaDate.id,
+      eventId: prismaDate.eventId,
+      date: prismaDate.date,
+      status: this.mapEventDateStatusFromDb(prismaDate.status),
+      rejectionReason: prismaDate.rejectionReason ?? undefined,
+      createdBy: prismaDate.createdById,
+      approvedBy: prismaDate.approvedById ?? undefined,
+      createdAt: prismaDate.createdAt,
+      updatedAt: prismaDate.updatedAt,
+    };
   }
 
-  /**
-   * Get all events with optional search filter, returning paginated results.
-   * Search is case-insensitive on event name.
-   */
-  async getAllEventsPaginated(
-    ctx: Ctx,
-    options: { page: number; limit: number; search?: string },
-  ): Promise<{ events: Event[]; total: number }> {
-    let events = await this.eventStorage.getAll(ctx);
+  private mapToEventSection(prismaSection: PrismaEventSection): EventSection {
+    return {
+      id: prismaSection.id,
+      eventId: prismaSection.eventId,
+      name: prismaSection.name,
+      seatingType: this.mapSeatingTypeFromDb(prismaSection.seatingType),
+      status: this.mapEventSectionStatusFromDb(prismaSection.status),
+      rejectionReason: prismaSection.rejectionReason ?? undefined,
+      createdBy: prismaSection.createdById,
+      approvedBy: prismaSection.approvedById ?? undefined,
+      createdAt: prismaSection.createdAt,
+      updatedAt: prismaSection.updatedAt,
+    };
+  }
 
-    if (options.search) {
-      const searchLower = options.search.toLowerCase();
-      events = events.filter((e) => e.name.toLowerCase().includes(searchLower));
+  // ==================== Enum Mappers ====================
+
+  private mapEventStatusToDb(
+    status: EventStatus,
+  ): 'pending' | 'approved' | 'rejected' {
+    switch (status) {
+      case EventStatus.Pending:
+        return 'pending';
+      case EventStatus.Approved:
+        return 'approved';
+      case EventStatus.Rejected:
+        return 'rejected';
     }
-
-    events.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-
-    const total = events.length;
-    const offset = (options.page - 1) * options.limit;
-    const paginatedEvents = events.slice(offset, offset + options.limit);
-
-    return { events: paginatedEvents, total };
   }
 
-  /**
-   * Get approved events for selection UI with pagination.
-   * Filters by status === Approved and applies case-insensitive search on name and venue.
-   */
-  async getApprovedEventsForSelection(
-    ctx: Ctx,
-    options: { limit: number; offset: number; search?: string },
-  ): Promise<{ events: Event[]; total: number }> {
-    let events = await this.eventStorage.getAll(ctx);
-
-    events = events.filter((e) => e.status === EventStatus.Approved);
-
-    if (options.search) {
-      const searchLower = options.search.toLowerCase();
-      events = events.filter(
-        (e) =>
-          e.name.toLowerCase().includes(searchLower) ||
-          e.venue.toLowerCase().includes(searchLower),
-      );
+  private mapEventStatusFromDb(
+    status: 'pending' | 'approved' | 'rejected',
+  ): EventStatus {
+    switch (status) {
+      case 'pending':
+        return EventStatus.Pending;
+      case 'approved':
+        return EventStatus.Approved;
+      case 'rejected':
+        return EventStatus.Rejected;
     }
+  }
 
-    events.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+  private mapEventDateStatusToDb(
+    status: EventDateStatus,
+  ): 'pending' | 'approved' | 'rejected' | 'cancelled' {
+    switch (status) {
+      case EventDateStatus.Pending:
+        return 'pending';
+      case EventDateStatus.Approved:
+        return 'approved';
+      case EventDateStatus.Rejected:
+        return 'rejected';
+      case EventDateStatus.Cancelled:
+        return 'cancelled';
+    }
+  }
 
-    const total = events.length;
-    const paginatedEvents = events.slice(
-      options.offset,
-      options.offset + options.limit,
-    );
+  private mapEventDateStatusFromDb(
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled',
+  ): EventDateStatus {
+    switch (status) {
+      case 'pending':
+        return EventDateStatus.Pending;
+      case 'approved':
+        return EventDateStatus.Approved;
+      case 'rejected':
+        return EventDateStatus.Rejected;
+      case 'cancelled':
+        return EventDateStatus.Cancelled;
+    }
+  }
 
-    return { events: paginatedEvents, total };
+  private mapEventSectionStatusToDb(
+    status: EventSectionStatus,
+  ): 'pending' | 'approved' | 'rejected' {
+    switch (status) {
+      case EventSectionStatus.Pending:
+        return 'pending';
+      case EventSectionStatus.Approved:
+        return 'approved';
+      case EventSectionStatus.Rejected:
+        return 'rejected';
+    }
+  }
+
+  private mapEventSectionStatusFromDb(
+    status: 'pending' | 'approved' | 'rejected',
+  ): EventSectionStatus {
+    switch (status) {
+      case 'pending':
+        return EventSectionStatus.Pending;
+      case 'approved':
+        return EventSectionStatus.Approved;
+      case 'rejected':
+        return EventSectionStatus.Rejected;
+    }
+  }
+
+  private mapEventCategoryToDb(
+    category: EventCategory,
+  ): 'Concert' | 'Sports' | 'Theater' | 'Festival' | 'Conference' | 'Comedy' | 'Other' {
+    switch (category) {
+      case EventCategory.Concert:
+        return 'Concert';
+      case EventCategory.Sports:
+        return 'Sports';
+      case EventCategory.Theater:
+        return 'Theater';
+      case EventCategory.Festival:
+        return 'Festival';
+      case EventCategory.Conference:
+        return 'Conference';
+      case EventCategory.Comedy:
+        return 'Comedy';
+      case EventCategory.Other:
+        return 'Other';
+    }
+  }
+
+  private mapEventCategoryFromDb(
+    category: 'Concert' | 'Sports' | 'Theater' | 'Festival' | 'Conference' | 'Comedy' | 'Other',
+  ): EventCategory {
+    switch (category) {
+      case 'Concert':
+        return EventCategory.Concert;
+      case 'Sports':
+        return EventCategory.Sports;
+      case 'Theater':
+        return EventCategory.Theater;
+      case 'Festival':
+        return EventCategory.Festival;
+      case 'Conference':
+        return EventCategory.Conference;
+      case 'Comedy':
+        return EventCategory.Comedy;
+      case 'Other':
+        return EventCategory.Other;
+    }
+  }
+
+  private mapSeatingTypeToDb(seatingType: SeatingType): 'numbered' | 'unnumbered' {
+    switch (seatingType) {
+      case SeatingType.Numbered:
+        return 'numbered';
+      case SeatingType.Unnumbered:
+        return 'unnumbered';
+    }
+  }
+
+  private mapSeatingTypeFromDb(seatingType: 'numbered' | 'unnumbered'): SeatingType {
+    switch (seatingType) {
+      case 'numbered':
+        return SeatingType.Numbered;
+      case 'unnumbered':
+        return SeatingType.Unnumbered;
+    }
   }
 }

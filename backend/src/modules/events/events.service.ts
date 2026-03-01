@@ -9,7 +9,8 @@ import {
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as sharp from 'sharp';
-import { EventsRepository } from './events.repository';
+import type { IEventsRepository } from './events.repository.interface';
+import { EVENTS_REPOSITORY } from './events.repository.interface';
 import type { IImagesRepository } from '../images/images.repository.interface';
 import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
 import { TicketsService } from '../tickets/tickets.service';
@@ -66,8 +67,8 @@ export class EventsService {
   private readonly logger = new ContextLogger(EventsService.name);
 
   constructor(
-    @Inject(EventsRepository)
-    private readonly eventsRepository: EventsRepository,
+    @Inject(EVENTS_REPOSITORY)
+    private readonly eventsRepository: IEventsRepository,
     @Inject(IMAGES_REPOSITORY)
     private readonly imagesRepository: IImagesRepository,
     @Inject(forwardRef(() => TicketsService))
