@@ -2,13 +2,17 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TicketsController } from './tickets.controller';
 import { TicketsService } from './tickets.service';
 import { TicketsRepository } from './tickets.repository';
+import { TICKETS_REPOSITORY } from './tickets.repository.interface';
 import { EventsModule } from '../events/events.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [forwardRef(() => EventsModule), UsersModule],
   controllers: [TicketsController],
-  providers: [TicketsService, TicketsRepository],
-  exports: [TicketsService, TicketsRepository],
+  providers: [
+    TicketsService,
+    { provide: TICKETS_REPOSITORY, useClass: TicketsRepository },
+  ],
+  exports: [TicketsService, TICKETS_REPOSITORY],
 })
 export class TicketsModule {}

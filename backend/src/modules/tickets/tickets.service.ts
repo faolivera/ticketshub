@@ -7,7 +7,8 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { TicketsRepository } from './tickets.repository';
+import type { ITicketsRepository } from './tickets.repository.interface';
+import { TICKETS_REPOSITORY } from './tickets.repository.interface';
 import { EventsService } from '../events/events.service';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -38,8 +39,8 @@ import {
 @Injectable()
 export class TicketsService {
   constructor(
-    @Inject(TicketsRepository)
-    private readonly ticketsRepository: TicketsRepository,
+    @Inject(TICKETS_REPOSITORY)
+    private readonly ticketsRepository: ITicketsRepository,
     @Inject(forwardRef(() => EventsService))
     private readonly eventsService: EventsService,
   ) {}

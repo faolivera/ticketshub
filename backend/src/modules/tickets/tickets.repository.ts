@@ -1,133 +1,362 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import type { TicketListing as PrismaTicketListing } from '@prisma/client';
+import {
+  TicketType as PrismaTicketType,
+  DeliveryMethod as PrismaDeliveryMethod,
+  ListingStatus as PrismaListingStatus,
+  TicketUnitStatus as PrismaTicketUnitStatus,
+} from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
-import type { TicketListing } from './tickets.domain';
-import { ListingStatus, TicketUnitStatus } from './tickets.domain';
+import type { TicketListing, TicketUnit, Money } from './tickets.domain';
+import {
+  TicketType,
+  DeliveryMethod,
+  ListingStatus,
+  TicketUnitStatus,
+} from './tickets.domain';
+import type { ITicketsRepository } from './tickets.repository.interface';
+import type { Address } from '../shared/address.domain';
 
 @Injectable()
-export class TicketsRepository implements OnModuleInit {
-  private readonly storage: KeyValueFileStorage<TicketListing>;
+export class TicketsRepository implements ITicketsRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor() {
-    this.storage = new KeyValueFileStorage<TicketListing>('tickets');
+  // ==================== Enum Mappers ====================
+
+  private mapTicketTypeToDb(type: TicketType): PrismaTicketType {
+    switch (type) {
+      case TicketType.Physical:
+        return PrismaTicketType.Physical;
+      case TicketType.DigitalTransferable:
+        return PrismaTicketType.DigitalTransferable;
+      case TicketType.DigitalNonTransferable:
+        return PrismaTicketType.DigitalNonTransferable;
+      default:
+        return PrismaTicketType.Physical;
+    }
   }
 
-  /**
-   * Load data from file storage when module initializes
-   */
-  async onModuleInit(): Promise<void> {
-    await this.storage.onModuleInit();
+  private mapTicketTypeFromDb(type: PrismaTicketType): TicketType {
+    switch (type) {
+      case PrismaTicketType.Physical:
+        return TicketType.Physical;
+      case PrismaTicketType.DigitalTransferable:
+        return TicketType.DigitalTransferable;
+      case PrismaTicketType.DigitalNonTransferable:
+        return TicketType.DigitalNonTransferable;
+      default:
+        return TicketType.Physical;
+    }
   }
 
-  /**
-   * Create a new listing
-   */
-  async create(ctx: Ctx, listing: TicketListing): Promise<TicketListing> {
-    await this.storage.set(ctx, listing.id, listing);
-    return listing;
+  private mapDeliveryMethodToDb(
+    method: DeliveryMethod | undefined,
+  ): PrismaDeliveryMethod | null {
+    if (!method) return null;
+    switch (method) {
+      case DeliveryMethod.Pickup:
+        return PrismaDeliveryMethod.Pickup;
+      case DeliveryMethod.ArrangeWithSeller:
+        return PrismaDeliveryMethod.ArrangeWithSeller;
+      default:
+        return null;
+    }
   }
 
-  /**
-   * Find listing by ID
-   */
-  async findById(ctx: Ctx, id: string): Promise<TicketListing | undefined> {
-    return await this.storage.get(ctx, id);
+  private mapDeliveryMethodFromDb(
+    method: PrismaDeliveryMethod | null,
+  ): DeliveryMethod | undefined {
+    if (!method) return undefined;
+    switch (method) {
+      case PrismaDeliveryMethod.Pickup:
+        return DeliveryMethod.Pickup;
+      case PrismaDeliveryMethod.ArrangeWithSeller:
+        return DeliveryMethod.ArrangeWithSeller;
+      default:
+        return undefined;
+    }
   }
 
-  /**
-   * Get listings by IDs (batch).
-   */
-  async getByIds(
-    ctx: Ctx,
-    ids: string[],
-  ): Promise<TicketListing[]> {
+  private mapListingStatusToDb(status: ListingStatus): PrismaListingStatus {
+    switch (status) {
+      case ListingStatus.Pending:
+        return PrismaListingStatus.Pending;
+      case ListingStatus.Active:
+        return PrismaListingStatus.Active;
+      case ListingStatus.Sold:
+        return PrismaListingStatus.Sold;
+      case ListingStatus.Cancelled:
+        return PrismaListingStatus.Cancelled;
+      case ListingStatus.Expired:
+        return PrismaListingStatus.Expired;
+      default:
+        return PrismaListingStatus.Pending;
+    }
+  }
+
+  private mapListingStatusFromDb(status: PrismaListingStatus): ListingStatus {
+    switch (status) {
+      case PrismaListingStatus.Pending:
+        return ListingStatus.Pending;
+      case PrismaListingStatus.Active:
+        return ListingStatus.Active;
+      case PrismaListingStatus.Sold:
+        return ListingStatus.Sold;
+      case PrismaListingStatus.Cancelled:
+        return ListingStatus.Cancelled;
+      case PrismaListingStatus.Expired:
+        return ListingStatus.Expired;
+      default:
+        return ListingStatus.Pending;
+    }
+  }
+
+  private mapTicketUnitStatusToDb(
+    status: TicketUnitStatus,
+  ): PrismaTicketUnitStatus {
+    switch (status) {
+      case TicketUnitStatus.Available:
+        return PrismaTicketUnitStatus.available;
+      case TicketUnitStatus.Reserved:
+        return PrismaTicketUnitStatus.reserved;
+      case TicketUnitStatus.Sold:
+        return PrismaTicketUnitStatus.sold;
+      default:
+        return PrismaTicketUnitStatus.available;
+    }
+  }
+
+  private mapTicketUnitStatusFromDb(
+    status: string,
+  ): TicketUnitStatus {
+    switch (status) {
+      case 'available':
+        return TicketUnitStatus.Available;
+      case 'reserved':
+        return TicketUnitStatus.Reserved;
+      case 'sold':
+        return TicketUnitStatus.Sold;
+      default:
+        return TicketUnitStatus.Available;
+    }
+  }
+
+  // ==================== JSON Serialization ====================
+
+  private serializeTicketUnits(units: TicketUnit[]): object[] {
+    return units.map((unit) => ({
+      id: unit.id,
+      status: this.mapTicketUnitStatusToDb(unit.status),
+      seat: unit.seat,
+    }));
+  }
+
+  private deserializeTicketUnits(json: unknown): TicketUnit[] {
+    if (!Array.isArray(json)) return [];
+    return json.map((unit: { id: string; status: string; seat?: { row: string; seatNumber: string } }) => ({
+      id: unit.id,
+      status: this.mapTicketUnitStatusFromDb(unit.status),
+      seat: unit.seat,
+    }));
+  }
+
+  private serializeMoney(money: Money): object {
+    return {
+      amount: money.amount,
+      currency: money.currency,
+    };
+  }
+
+  private deserializeMoney(json: unknown): Money {
+    const data = json as { amount: number; currency: string };
+    return {
+      amount: data.amount,
+      currency: data.currency as Money['currency'],
+    };
+  }
+
+  // ==================== Domain Mapper ====================
+
+  private mapToListing(record: PrismaTicketListing): TicketListing {
+    return {
+      id: record.id,
+      sellerId: record.sellerId,
+      eventId: record.eventId,
+      eventDateId: record.eventDateId,
+      eventSectionId: record.eventSectionId,
+      type: this.mapTicketTypeFromDb(record.type),
+      ticketUnits: this.deserializeTicketUnits(record.ticketUnits),
+      sellTogether: record.sellTogether,
+      pricePerTicket: this.deserializeMoney(record.pricePerTicket),
+      deliveryMethod: this.mapDeliveryMethodFromDb(record.deliveryMethod),
+      pickupAddress: record.pickupAddress
+        ? (record.pickupAddress as unknown as Address)
+        : undefined,
+      description: record.description ?? undefined,
+      status: this.mapListingStatusFromDb(record.status),
+      expiresAt: record.expiresAt ?? undefined,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    };
+  }
+
+  // ==================== Repository Methods ====================
+
+  async create(_ctx: Ctx, listing: TicketListing): Promise<TicketListing> {
+    const created = await this.prisma.ticketListing.create({
+      data: {
+        id: listing.id,
+        sellerId: listing.sellerId,
+        eventId: listing.eventId,
+        eventDateId: listing.eventDateId,
+        eventSectionId: listing.eventSectionId,
+        type: this.mapTicketTypeToDb(listing.type),
+        ticketUnits: this.serializeTicketUnits(listing.ticketUnits),
+        sellTogether: listing.sellTogether,
+        pricePerTicket: this.serializeMoney(listing.pricePerTicket),
+        deliveryMethod: this.mapDeliveryMethodToDb(listing.deliveryMethod),
+        pickupAddress: listing.pickupAddress
+          ? (listing.pickupAddress as object)
+          : undefined,
+        description: listing.description,
+        status: this.mapListingStatusToDb(listing.status),
+        expiresAt: listing.expiresAt,
+        createdAt: listing.createdAt,
+        updatedAt: listing.updatedAt,
+      },
+    });
+    return this.mapToListing(created);
+  }
+
+  async findById(_ctx: Ctx, id: string): Promise<TicketListing | undefined> {
+    const listing = await this.prisma.ticketListing.findUnique({
+      where: { id },
+    });
+    return listing ? this.mapToListing(listing) : undefined;
+  }
+
+  async getByIds(_ctx: Ctx, ids: string[]): Promise<TicketListing[]> {
     if (ids.length === 0) return [];
-    return await this.storage.getMany(ctx, ids);
+    const listings = await this.prisma.ticketListing.findMany({
+      where: { id: { in: ids } },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get all listings
-   */
-  async getAll(ctx: Ctx): Promise<TicketListing[]> {
-    return await this.storage.getAll(ctx);
+  async getAll(_ctx: Ctx): Promise<TicketListing[]> {
+    const listings = await this.prisma.ticketListing.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get active listings
-   */
-  async getActiveListings(ctx: Ctx): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter((l) => l.status === ListingStatus.Active);
+  async getActiveListings(_ctx: Ctx): Promise<TicketListing[]> {
+    const listings = await this.prisma.ticketListing.findMany({
+      where: { status: PrismaListingStatus.Active },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get listings by event
-   */
-  async getByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter(
-      (l) => l.eventId === eventId && l.status === ListingStatus.Active,
-    );
+  async getByEventId(_ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    const listings = await this.prisma.ticketListing.findMany({
+      where: {
+        eventId,
+        status: PrismaListingStatus.Active,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get listings by event date
-   */
   async getByEventDateId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter(
-      (l) => l.eventDateId === eventDateId && l.status === ListingStatus.Active,
-    );
+    const listings = await this.prisma.ticketListing.findMany({
+      where: {
+        eventDateId,
+        status: PrismaListingStatus.Active,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get listings by seller
-   */
-  async getBySellerId(ctx: Ctx, sellerId: string): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter((l) => l.sellerId === sellerId);
+  async getBySellerId(_ctx: Ctx, sellerId: string): Promise<TicketListing[]> {
+    const listings = await this.prisma.ticketListing.findMany({
+      where: { sellerId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Update listing
-   */
   async update(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     updates: Partial<TicketListing>,
   ): Promise<TicketListing | undefined> {
-    const existing = await this.storage.get(ctx, id);
+    const existing = await this.prisma.ticketListing.findUnique({
+      where: { id },
+    });
     if (!existing) return undefined;
 
-    const { seatingType: _omit, ...existingWithoutSeatingType } =
-      existing as TicketListing & { seatingType?: string };
-    const updated: TicketListing = {
-      ...existingWithoutSeatingType,
-      ...updates,
-      id: existing.id, // Ensure ID can't be changed
-      sellerId: existing.sellerId, // Seller can't be changed
-      updatedAt: new Date(),
-    };
-    await this.storage.set(ctx, id, updated);
-    return updated;
+    const data: Record<string, unknown> = {};
+
+    if (updates.type !== undefined) {
+      data.type = this.mapTicketTypeToDb(updates.type);
+    }
+    if (updates.ticketUnits !== undefined) {
+      data.ticketUnits = this.serializeTicketUnits(updates.ticketUnits);
+    }
+    if (updates.sellTogether !== undefined) {
+      data.sellTogether = updates.sellTogether;
+    }
+    if (updates.pricePerTicket !== undefined) {
+      data.pricePerTicket = this.serializeMoney(updates.pricePerTicket);
+    }
+    if (updates.deliveryMethod !== undefined) {
+      data.deliveryMethod = this.mapDeliveryMethodToDb(updates.deliveryMethod);
+    }
+    if (updates.pickupAddress !== undefined) {
+      data.pickupAddress = updates.pickupAddress
+        ? (updates.pickupAddress as object)
+        : null;
+    }
+    if (updates.description !== undefined) {
+      data.description = updates.description;
+    }
+    if (updates.status !== undefined) {
+      data.status = this.mapListingStatusToDb(updates.status);
+    }
+    if (updates.expiresAt !== undefined) {
+      data.expiresAt = updates.expiresAt;
+    }
+
+    data.updatedAt = new Date();
+
+    const updated = await this.prisma.ticketListing.update({
+      where: { id },
+      data,
+    });
+    return this.mapToListing(updated);
   }
 
-  /**
-   * Delete listing
-   */
-  async delete(ctx: Ctx, id: string): Promise<void> {
-    await this.storage.delete(ctx, id);
+  async delete(_ctx: Ctx, id: string): Promise<void> {
+    await this.prisma.ticketListing.delete({
+      where: { id },
+    });
   }
 
   async reserveUnits(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
-    const existing = await this.storage.get(ctx, id);
+    const existing = await this.prisma.ticketListing.findUnique({
+      where: { id },
+    });
     if (!existing) return undefined;
 
     const idSet = new Set(ticketUnitIds);
@@ -135,9 +364,9 @@ export class TicketsRepository implements OnModuleInit {
       return undefined;
     }
 
-    const unitsById = new Map(
-      existing.ticketUnits.map((unit) => [unit.id, unit]),
-    );
+    const currentUnits = this.deserializeTicketUnits(existing.ticketUnits);
+    const unitsById = new Map(currentUnits.map((unit) => [unit.id, unit]));
+
     for (const unitId of ticketUnitIds) {
       const unit = unitsById.get(unitId);
       if (!unit || unit.status !== TicketUnitStatus.Available) {
@@ -145,35 +374,37 @@ export class TicketsRepository implements OnModuleInit {
       }
     }
 
-    const updatedUnits = existing.ticketUnits.map((unit) =>
+    const updatedUnits = currentUnits.map((unit) =>
       idSet.has(unit.id)
         ? { ...unit, status: TicketUnitStatus.Reserved }
         : unit,
     );
+
     const hasAvailable = updatedUnits.some(
       (unit) => unit.status === TicketUnitStatus.Available,
     );
     const nextStatus = hasAvailable ? ListingStatus.Active : ListingStatus.Sold;
 
-    const { seatingType: _s, ...rest } = existing as TicketListing & {
-      seatingType?: string;
-    };
-    const updated: TicketListing = {
-      ...rest,
-      ticketUnits: updatedUnits,
-      status: nextStatus,
-      updatedAt: new Date(),
-    };
-    await this.storage.set(ctx, id, updated);
-    return updated;
+    const updated = await this.prisma.ticketListing.update({
+      where: { id },
+      data: {
+        ticketUnits: this.serializeTicketUnits(updatedUnits),
+        status: this.mapListingStatusToDb(nextStatus),
+        updatedAt: new Date(),
+      },
+    });
+
+    return this.mapToListing(updated);
   }
 
   async restoreUnits(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
-    const existing = await this.storage.get(ctx, id);
+    const existing = await this.prisma.ticketListing.findUnique({
+      where: { id },
+    });
     if (!existing) return undefined;
 
     const idSet = new Set(ticketUnitIds);
@@ -181,9 +412,9 @@ export class TicketsRepository implements OnModuleInit {
       return undefined;
     }
 
-    const unitsById = new Map(
-      existing.ticketUnits.map((unit) => [unit.id, unit]),
-    );
+    const currentUnits = this.deserializeTicketUnits(existing.ticketUnits);
+    const unitsById = new Map(currentUnits.map((unit) => [unit.id, unit]));
+
     for (const unitId of ticketUnitIds) {
       const unit = unitsById.get(unitId);
       if (!unit || unit.status !== TicketUnitStatus.Reserved) {
@@ -191,142 +422,126 @@ export class TicketsRepository implements OnModuleInit {
       }
     }
 
-    const updatedUnits = existing.ticketUnits.map((unit) =>
+    const updatedUnits = currentUnits.map((unit) =>
       idSet.has(unit.id)
         ? { ...unit, status: TicketUnitStatus.Available }
         : unit,
     );
+
     const hasAvailable = updatedUnits.some(
       (unit) => unit.status === TicketUnitStatus.Available,
     );
 
-    const { seatingType: _s, ...rest } = existing as TicketListing & {
-      seatingType?: string;
-    };
-    const updated: TicketListing = {
-      ...rest,
-      ticketUnits: updatedUnits,
-      status: hasAvailable ? ListingStatus.Active : ListingStatus.Sold,
-      updatedAt: new Date(),
-    };
-    await this.storage.set(ctx, id, updated);
-    return updated;
+    const updated = await this.prisma.ticketListing.update({
+      where: { id },
+      data: {
+        ticketUnits: this.serializeTicketUnits(updatedUnits),
+        status: hasAvailable
+          ? this.mapListingStatusToDb(ListingStatus.Active)
+          : this.mapListingStatusToDb(ListingStatus.Sold),
+        updatedAt: new Date(),
+      },
+    });
+
+    return this.mapToListing(updated);
   }
 
-  /**
-   * Get pending listings by event ID
-   */
   async getPendingByEventId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventId: string,
   ): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter(
-      (l) => l.eventId === eventId && l.status === ListingStatus.Pending,
-    );
+    const listings = await this.prisma.ticketListing.findMany({
+      where: {
+        eventId,
+        status: PrismaListingStatus.Pending,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get pending listings by event date ID
-   */
   async getPendingByEventDateId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter(
-      (l) =>
-        l.eventDateId === eventDateId && l.status === ListingStatus.Pending,
-    );
+    const listings = await this.prisma.ticketListing.findMany({
+      where: {
+        eventDateId,
+        status: PrismaListingStatus.Pending,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Bulk update status for multiple listings
-   */
   async bulkUpdateStatus(
-    ctx: Ctx,
+    _ctx: Ctx,
     listingIds: string[],
     status: ListingStatus,
   ): Promise<number> {
-    let updatedCount = 0;
+    if (listingIds.length === 0) return 0;
 
-    for (const id of listingIds) {
-      const existing = await this.storage.get(ctx, id);
-      if (existing) {
-        const { seatingType: _s, ...rest } = existing as TicketListing & {
-          seatingType?: string;
-        };
-        const updated: TicketListing = {
-          ...rest,
-          status,
-          updatedAt: new Date(),
-        };
-        await this.storage.set(ctx, id, updated);
-        updatedCount++;
-      }
-    }
+    const result = await this.prisma.ticketListing.updateMany({
+      where: { id: { in: listingIds } },
+      data: {
+        status: this.mapListingStatusToDb(status),
+        updatedAt: new Date(),
+      },
+    });
 
-    return updatedCount;
+    return result.count;
   }
 
-  /**
-   * Get all listings for an event date (including all statuses)
-   */
   async getAllByEventDateId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter((l) => l.eventDateId === eventDateId);
+    const listings = await this.prisma.ticketListing.findMany({
+      where: { eventDateId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get pending listings by event section ID
-   */
   async getPendingByEventSectionId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventSectionId: string,
   ): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter(
-      (l) =>
-        l.eventSectionId === eventSectionId &&
-        l.status === ListingStatus.Pending,
-    );
+    const listings = await this.prisma.ticketListing.findMany({
+      where: {
+        eventSectionId,
+        status: PrismaListingStatus.Pending,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get all listings for an event section (including all statuses)
-   */
   async getAllByEventSectionId(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventSectionId: string,
   ): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter((l) => l.eventSectionId === eventSectionId);
+    const listings = await this.prisma.ticketListing.findMany({
+      where: { eventSectionId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get all listings for an event (including all statuses)
-   */
-  async getAllByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
-    const all = await this.storage.getAll(ctx);
-    return all.filter((l) => l.eventId === eventId);
+  async getAllByEventId(_ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    const listings = await this.prisma.ticketListing.findMany({
+      where: { eventId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l) => this.mapToListing(l));
   }
 
-  /**
-   * Get listing stats (count and available tickets) for multiple event IDs.
-   * Returns a map of eventId -> { listingsCount, availableTicketsCount }
-   */
   async getListingStatsByEventIds(
-    ctx: Ctx,
+    _ctx: Ctx,
     eventIds: string[],
   ): Promise<
     Map<string, { listingsCount: number; availableTicketsCount: number }>
   > {
-    const all = await this.storage.getAll(ctx);
-    const eventIdSet = new Set(eventIds);
-
     const statsMap = new Map<
       string,
       { listingsCount: number; availableTicketsCount: number }
@@ -336,16 +551,21 @@ export class TicketsRepository implements OnModuleInit {
       statsMap.set(eventId, { listingsCount: 0, availableTicketsCount: 0 });
     }
 
-    for (const listing of all) {
-      if (!eventIdSet.has(listing.eventId)) continue;
+    if (eventIds.length === 0) return statsMap;
 
+    const listings = await this.prisma.ticketListing.findMany({
+      where: { eventId: { in: eventIds } },
+    });
+
+    for (const listing of listings) {
       const stats = statsMap.get(listing.eventId);
       if (!stats) continue;
 
       stats.listingsCount++;
 
-      if (listing.status === ListingStatus.Active) {
-        const availableUnits = listing.ticketUnits.filter(
+      if (listing.status === PrismaListingStatus.Active) {
+        const units = this.deserializeTicketUnits(listing.ticketUnits);
+        const availableUnits = units.filter(
           (unit) => unit.status === TicketUnitStatus.Available,
         ).length;
         stats.availableTicketsCount += availableUnits;
