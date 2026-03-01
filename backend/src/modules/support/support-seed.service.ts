@@ -5,7 +5,10 @@ import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
 import { UsersService } from '../users/users.service';
 import { EventsService } from '../events/events.service';
 import { TicketsService } from '../tickets/tickets.service';
-import { TicketsRepository } from '../tickets/tickets.repository';
+import {
+  ITicketsRepository,
+  TICKETS_REPOSITORY,
+} from '../tickets/tickets.repository.interface';
 import {
   IdentityVerificationStatus,
   Language,
@@ -35,8 +38,8 @@ export class SupportSeedService {
     private readonly eventsService: EventsService,
     @Inject(TicketsService)
     private readonly ticketsService: TicketsService,
-    @Inject(TicketsRepository)
-    private readonly ticketsRepository: TicketsRepository,
+    @Inject(TICKETS_REPOSITORY)
+    private readonly ticketsRepository: ITicketsRepository,
   ) {}
 
   async seedDemoData(ctx: Ctx): Promise<SeedDemoResponse> {
