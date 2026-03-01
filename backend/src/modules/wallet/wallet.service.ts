@@ -1,6 +1,7 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { WalletRepository } from './wallet.repository';
+import type { IWalletRepository } from './wallet.repository.interface';
+import { WALLET_REPOSITORY } from './wallet.repository.interface';
 import type { Ctx } from '../../common/types/context';
 import type { Wallet, WalletTransaction, Money } from './wallet.domain';
 import { WalletTransactionType } from './wallet.domain';
@@ -9,8 +10,8 @@ import type { CurrencyCode } from '../shared/money.domain';
 @Injectable()
 export class WalletService {
   constructor(
-    @Inject(WalletRepository)
-    private readonly walletRepository: WalletRepository,
+    @Inject(WALLET_REPOSITORY)
+    private readonly walletRepository: IWalletRepository,
   ) {}
 
   /**
