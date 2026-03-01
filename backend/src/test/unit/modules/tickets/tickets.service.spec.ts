@@ -1,7 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
-import { TicketsRepository } from '../../../../modules/tickets/tickets.repository';
+import { TICKETS_REPOSITORY } from '../../../../modules/tickets/tickets.repository.interface';
+import type { ITicketsRepository } from '../../../../modules/tickets/tickets.repository.interface';
 import { EventsService } from '../../../../modules/events/events.service';
 import {
   ListingStatus,
@@ -21,7 +22,7 @@ import type { Ctx } from '../../../../common/types/context';
 
 describe('TicketsService', () => {
   let service: TicketsService;
-  let ticketsRepository: jest.Mocked<TicketsRepository>;
+  let ticketsRepository: jest.Mocked<ITicketsRepository>;
   let eventsService: jest.Mocked<EventsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
@@ -154,13 +155,13 @@ describe('TicketsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
-        { provide: TicketsRepository, useValue: mockTicketsRepository },
+        { provide: TICKETS_REPOSITORY, useValue: mockTicketsRepository },
         { provide: EventsService, useValue: mockEventsService },
       ],
     }).compile();
 
     service = module.get<TicketsService>(TicketsService);
-    ticketsRepository = module.get(TicketsRepository);
+    ticketsRepository = module.get(TICKETS_REPOSITORY);
     eventsService = module.get(EventsService);
   });
 

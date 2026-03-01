@@ -4,7 +4,8 @@ import { AdminService } from '../../../../modules/admin/admin.service';
 import { PaymentConfirmationsService } from '../../../../modules/payment-confirmations/payment-confirmations.service';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
 import { EventsService } from '../../../../modules/events/events.service';
-import { TicketsRepository } from '../../../../modules/tickets/tickets.repository';
+import { TICKETS_REPOSITORY } from '../../../../modules/tickets/tickets.repository.interface';
+import type { ITicketsRepository } from '../../../../modules/tickets/tickets.repository.interface';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { UsersService } from '../../../../modules/users/users.service';
 import { PaymentConfirmationStatus } from '../../../../modules/payment-confirmations/payment-confirmations.domain';
@@ -30,7 +31,7 @@ describe('AdminService', () => {
   let paymentConfirmationsService: jest.Mocked<PaymentConfirmationsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let eventsService: jest.Mocked<EventsService>;
-  let ticketsRepository: jest.Mocked<TicketsRepository>;
+  let ticketsRepository: jest.Mocked<ITicketsRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let usersService: jest.Mocked<UsersService>;
 
@@ -123,7 +124,7 @@ describe('AdminService', () => {
         },
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: EventsService, useValue: mockEventsService },
-        { provide: TicketsRepository, useValue: mockTicketsRepository },
+        { provide: TICKETS_REPOSITORY, useValue: mockTicketsRepository },
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: UsersService, useValue: mockUsersService },
       ],
@@ -133,7 +134,7 @@ describe('AdminService', () => {
     paymentConfirmationsService = module.get(PaymentConfirmationsService);
     transactionsService = module.get(TransactionsService);
     eventsService = module.get(EventsService);
-    ticketsRepository = module.get(TicketsRepository);
+    ticketsRepository = module.get(TICKETS_REPOSITORY);
     ticketsService = module.get(TicketsService);
     usersService = module.get(UsersService);
   });

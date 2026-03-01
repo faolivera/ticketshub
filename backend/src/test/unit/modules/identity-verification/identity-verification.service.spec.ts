@@ -5,8 +5,10 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IdentityVerificationService } from '../../../../modules/identity-verification/identity-verification.service';
-import { IdentityVerificationRepository } from '../../../../modules/identity-verification/identity-verification.repository';
+import { IDENTITY_VERIFICATION_REPOSITORY } from '../../../../modules/identity-verification/identity-verification.repository.interface';
+import type { IIdentityVerificationRepository } from '../../../../modules/identity-verification/identity-verification.repository.interface';
 import { UsersService } from '../../../../modules/users/users.service';
+import { NotificationsService } from '../../../../modules/notifications/notifications.service';
 import {
   PRIVATE_STORAGE_PROVIDER,
   type FileStorageProvider,
@@ -19,7 +21,7 @@ import type { Ctx } from '../../../../common/types/context';
 
 describe('IdentityVerificationService', () => {
   let service: IdentityVerificationService;
-  let repository: jest.Mocked<IdentityVerificationRepository>;
+  let repository: jest.Mocked<IIdentityVerificationRepository>;
   let usersService: jest.Mocked<UsersService>;
   let storageProvider: jest.Mocked<FileStorageProvider>;
 
@@ -90,19 +92,24 @@ describe('IdentityVerificationService', () => {
       exists: jest.fn(),
     };
 
+    const mockNotificationsService = {
+      emit: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IdentityVerificationService,
-        { provide: IdentityVerificationRepository, useValue: mockRepository },
+        { provide: IDENTITY_VERIFICATION_REPOSITORY, useValue: mockRepository },
         { provide: UsersService, useValue: mockUsersService },
         { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockStorageProvider },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
     service = module.get<IdentityVerificationService>(
       IdentityVerificationService,
     );
-    repository = module.get(IdentityVerificationRepository);
+    repository = module.get(IDENTITY_VERIFICATION_REPOSITORY);
     usersService = module.get(UsersService);
     storageProvider = module.get(PRIVATE_STORAGE_PROVIDER);
   });

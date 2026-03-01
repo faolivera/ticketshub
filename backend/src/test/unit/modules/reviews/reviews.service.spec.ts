@@ -6,10 +6,12 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReviewsService } from '../../../../modules/reviews/reviews.service';
-import { ReviewsRepository } from '../../../../modules/reviews/reviews.repository';
+import { REVIEWS_REPOSITORY } from '../../../../modules/reviews/reviews.repository.interface';
+import type { IReviewsRepository } from '../../../../modules/reviews/reviews.repository.interface';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
 import { UsersService } from '../../../../modules/users/users.service';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
+import { NotificationsService } from '../../../../modules/notifications/notifications.service';
 import { TransactionStatus, RequiredActor } from '../../../../modules/transactions/transactions.domain';
 import { TicketType } from '../../../../modules/tickets/tickets.domain';
 import type { Review } from '../../../../modules/reviews/reviews.domain';
@@ -18,7 +20,7 @@ import type { Ctx } from '../../../../common/types/context';
 
 describe('ReviewsService', () => {
   let service: ReviewsService;
-  let reviewsRepository: jest.Mocked<ReviewsRepository>;
+  let reviewsRepository: jest.Mocked<IReviewsRepository>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let usersService: jest.Mocked<UsersService>;
   let ticketsService: jest.Mocked<TicketsService>;
@@ -87,18 +89,23 @@ describe('ReviewsService', () => {
       getListingById: jest.fn(),
     };
 
+    const mockNotificationsService = {
+      emit: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReviewsService,
-        { provide: ReviewsRepository, useValue: mockReviewsRepository },
+        { provide: REVIEWS_REPOSITORY, useValue: mockReviewsRepository },
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: TicketsService, useValue: mockTicketsService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
     service = module.get<ReviewsService>(ReviewsService);
-    reviewsRepository = module.get(ReviewsRepository);
+    reviewsRepository = module.get(REVIEWS_REPOSITORY);
     transactionsService = module.get(TransactionsService);
     usersService = module.get(UsersService);
     ticketsService = module.get(TicketsService);

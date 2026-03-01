@@ -4,7 +4,8 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
-import { TransactionsRepository } from '../../../../modules/transactions/transactions.repository';
+import { TRANSACTIONS_REPOSITORY } from '../../../../modules/transactions/transactions.repository.interface';
+import type { ITransactionsRepository } from '../../../../modules/transactions/transactions.repository.interface';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { PaymentsService } from '../../../../modules/payments/payments.service';
 import { WalletService } from '../../../../modules/wallet/wallet.service';
@@ -12,6 +13,7 @@ import { ConfigService } from '../../../../modules/config/config.service';
 import { UsersService } from '../../../../modules/users/users.service';
 import { PaymentMethodsService } from '../../../../modules/payments/payment-methods.service';
 import { PricingService } from '../../../../modules/payments/pricing/pricing.service';
+import { NotificationsService } from '../../../../modules/notifications/notifications.service';
 import {
   TransactionStatus,
   RequiredActor,
@@ -24,7 +26,7 @@ import type { Ctx } from '../../../../common/types/context';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
-  let transactionsRepository: jest.Mocked<TransactionsRepository>;
+  let transactionsRepository: jest.Mocked<ITransactionsRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let walletService: jest.Mocked<WalletService>;
 
@@ -96,6 +98,7 @@ describe('TransactionsService', () => {
     };
 
     const mockUsersService = {
+      findById: jest.fn(),
       getPublicUserInfoByIds: jest.fn(),
     };
 
@@ -107,10 +110,14 @@ describe('TransactionsService', () => {
       validateAndConsume: jest.fn(),
     };
 
+    const mockNotificationsService = {
+      emit: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
-        { provide: TransactionsRepository, useValue: mockTransactionsRepository },
+        { provide: TRANSACTIONS_REPOSITORY, useValue: mockTransactionsRepository },
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: PaymentsService, useValue: mockPaymentsService },
         { provide: WalletService, useValue: mockWalletService },
@@ -118,11 +125,12 @@ describe('TransactionsService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
         { provide: PricingService, useValue: mockPricingService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
     service = module.get<TransactionsService>(TransactionsService);
-    transactionsRepository = module.get(TransactionsRepository);
+    transactionsRepository = module.get(TRANSACTIONS_REPOSITORY);
     ticketsService = module.get(TicketsService);
     walletService = module.get(WalletService);
   });
@@ -448,6 +456,10 @@ describe('TransactionsService', () => {
         requiredActor: RequiredActor.Seller,
         paymentReceivedAt: expect.any(Date),
       });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+      } as never);
 
       const result = await service.handlePaymentReceived(mockCtx, 'txn_123');
 
@@ -471,6 +483,10 @@ describe('TransactionsService', () => {
         ...transaction,
         status: TransactionStatus.PaymentReceived,
       });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+      } as never);
 
       const result = await service.handlePaymentReceived(mockCtx, 'txn_123');
 
@@ -576,7 +592,7 @@ describe('TransactionsService', () => {
 
       const result = await service.findById(mockCtx, 'invalid_id');
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
     });
   });
 

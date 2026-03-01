@@ -2,7 +2,10 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventsService } from '../events/events.service';
-import { TicketsRepository } from '../tickets/tickets.repository';
+import {
+  TICKETS_REPOSITORY,
+  type ITicketsRepository,
+} from '../tickets/tickets.repository.interface';
 import { TicketsService } from '../tickets/tickets.service';
 import { UsersService } from '../users/users.service';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -46,8 +49,8 @@ export class AdminService {
     private readonly transactionsService: TransactionsService,
     @Inject(EventsService)
     private readonly eventsService: EventsService,
-    @Inject(TicketsRepository)
-    private readonly ticketsRepository: TicketsRepository,
+    @Inject(TICKETS_REPOSITORY)
+    private readonly ticketsRepository: ITicketsRepository,
     @Inject(TicketsService)
     private readonly ticketsService: TicketsService,
     @Inject(UsersService)

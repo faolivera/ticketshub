@@ -1,7 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PricingService } from '../../../../../modules/payments/pricing/pricing.service';
-import { PricingRepository } from '../../../../../modules/payments/pricing/pricing.repository';
+import { PRICING_REPOSITORY } from '../../../../../modules/payments/pricing/pricing.repository.interface';
+import type { IPricingRepository } from '../../../../../modules/payments/pricing/pricing.repository.interface';
 import { ConfigService } from '../../../../../modules/config/config.service';
 import { PaymentMethodsService } from '../../../../../modules/payments/payment-methods.service';
 import {
@@ -13,7 +14,7 @@ import type { Ctx } from '../../../../../common/types/context';
 
 describe('PricingService', () => {
   let service: PricingService;
-  let repository: jest.Mocked<PricingRepository>;
+  let repository: jest.Mocked<IPricingRepository>;
   let configService: jest.Mocked<ConfigService>;
   let paymentMethodsService: jest.Mocked<PaymentMethodsService>;
 
@@ -83,14 +84,14 @@ describe('PricingService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PricingService,
-        { provide: PricingRepository, useValue: mockRepository },
+        { provide: PRICING_REPOSITORY, useValue: mockRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
       ],
     }).compile();
 
     service = module.get<PricingService>(PricingService);
-    repository = module.get(PricingRepository);
+    repository = module.get(PRICING_REPOSITORY);
     configService = module.get(ConfigService);
     paymentMethodsService = module.get(PaymentMethodsService);
   });

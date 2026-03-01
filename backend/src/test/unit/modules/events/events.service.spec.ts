@@ -6,7 +6,8 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from '../../../../modules/events/events.service';
-import { EventsRepository } from '../../../../modules/events/events.repository';
+import { EVENTS_REPOSITORY } from '../../../../modules/events/events.repository.interface';
+import type { IEventsRepository } from '../../../../modules/events/events.repository.interface';
 import { IMAGES_REPOSITORY } from '../../../../modules/images/images.repository.interface';
 import type { IImagesRepository } from '../../../../modules/images/images.repository.interface';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
@@ -36,7 +37,7 @@ import type { Ctx } from '../../../../common/types/context';
 
 describe('EventsService', () => {
   let service: EventsService;
-  let eventsRepository: jest.Mocked<EventsRepository>;
+  let eventsRepository: jest.Mocked<IEventsRepository>;
   let imagesRepository: jest.Mocked<IImagesRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
@@ -126,7 +127,7 @@ describe('EventsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventsService,
-        { provide: EventsRepository, useValue: mockEventsRepository },
+        { provide: EVENTS_REPOSITORY, useValue: mockEventsRepository },
         { provide: IMAGES_REPOSITORY, useValue: mockImagesRepository },
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: TransactionsService, useValue: mockTransactionsService },
@@ -135,7 +136,7 @@ describe('EventsService', () => {
     }).compile();
 
     service = module.get<EventsService>(EventsService);
-    eventsRepository = module.get(EventsRepository);
+    eventsRepository = module.get(EVENTS_REPOSITORY);
     imagesRepository = module.get(IMAGES_REPOSITORY);
     ticketsService = module.get(TicketsService);
     transactionsService = module.get(TransactionsService);

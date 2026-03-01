@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { PaymentMethodsService } from '../../../../modules/payments/payment-methods.service';
-import { PaymentMethodsRepository } from '../../../../modules/payments/payment-methods.repository';
+import { PAYMENT_METHODS_REPOSITORY } from '../../../../modules/payments/payment-methods.repository.interface';
+import type { IPaymentMethodsRepository } from '../../../../modules/payments/payment-methods.repository.interface';
 import type { PaymentMethodOption } from '../../../../modules/payments/payments.domain';
 import type { Ctx } from '../../../../common/types/context';
 
 describe('PaymentMethodsService', () => {
   let service: PaymentMethodsService;
-  let repository: jest.Mocked<PaymentMethodsRepository>;
+  let repository: jest.Mocked<IPaymentMethodsRepository>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -54,12 +55,12 @@ describe('PaymentMethodsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentMethodsService,
-        { provide: PaymentMethodsRepository, useValue: mockRepository },
+        { provide: PAYMENT_METHODS_REPOSITORY, useValue: mockRepository },
       ],
     }).compile();
 
     service = module.get<PaymentMethodsService>(PaymentMethodsService);
-    repository = module.get(PaymentMethodsRepository);
+    repository = module.get(PAYMENT_METHODS_REPOSITORY);
   });
 
   describe('findAll', () => {
