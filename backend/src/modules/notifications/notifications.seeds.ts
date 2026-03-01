@@ -1,8 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import { ON_APP_INIT_CTX } from '../../common/types/context';
-import { NotificationsRepository } from './notifications.repository';
+import {
+  INotificationsRepository,
+  NOTIFICATIONS_REPOSITORY,
+} from './notifications.repository.interface';
 import type {
   NotificationTemplate,
   NotificationChannelConfig,
@@ -23,7 +26,10 @@ import {
 export class NotificationsSeeder implements OnModuleInit {
   private readonly logger = new ContextLogger(NotificationsSeeder.name);
 
-  constructor(private readonly repository: NotificationsRepository) {}
+  constructor(
+    @Inject(NOTIFICATIONS_REPOSITORY)
+    private readonly repository: INotificationsRepository,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     await this.seedChannelConfigs(ON_APP_INIT_CTX);

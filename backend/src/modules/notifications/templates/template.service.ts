@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ContextLogger } from '../../../common/logger/context-logger';
 import type { Ctx } from '../../../common/types/context';
-import { NotificationsRepository } from '../notifications.repository';
+import {
+  INotificationsRepository,
+  NOTIFICATIONS_REPOSITORY,
+} from '../notifications.repository.interface';
 import { TemplateRenderer } from './template.renderer';
 import type { NotificationTemplate, ChannelContent } from '../notifications.domain';
 import { NotificationEventType, NotificationChannel } from '../notifications.domain';
@@ -12,7 +15,8 @@ export class TemplateService {
   private readonly defaultLocale = 'es';
 
   constructor(
-    private readonly repository: NotificationsRepository,
+    @Inject(NOTIFICATIONS_REPOSITORY)
+    private readonly repository: INotificationsRepository,
     private readonly renderer: TemplateRenderer,
   ) {}
 
