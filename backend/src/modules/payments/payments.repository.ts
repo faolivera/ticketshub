@@ -1,78 +1,147 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import type { PaymentIntent as PrismaPaymentIntent } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
-import type { PaymentIntent } from './payments.domain';
+import type { PaymentIntent, Money, PaymentMetadata } from './payments.domain';
+import { PaymentStatus } from './payments.domain';
+import type { IPaymentsRepository } from './payments.repository.interface';
 
 @Injectable()
-export class PaymentsRepository implements OnModuleInit {
-  private readonly storage: KeyValueFileStorage<PaymentIntent>;
+export class PaymentsRepository implements IPaymentsRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor() {
-    this.storage = new KeyValueFileStorage<PaymentIntent>('payments');
+  async create(_ctx: Ctx, payment: PaymentIntent): Promise<PaymentIntent> {
+    const created = await this.prisma.paymentIntent.create({
+      data: {
+        id: payment.id,
+        transactionId: payment.transactionId,
+        amount: payment.amount as object,
+        status: this.mapStatusToDb(payment.status),
+        provider: 'mock',
+        providerPaymentId: payment.providerPaymentId,
+        metadata: payment.metadata as object,
+        createdAt: payment.createdAt,
+        updatedAt: payment.updatedAt,
+      },
+    });
+    return this.mapToPaymentIntent(created);
   }
 
-  /**
-   * Load data from file storage when module initializes
-   */
-  async onModuleInit(): Promise<void> {
-    await this.storage.onModuleInit();
+  async findById(_ctx: Ctx, id: string): Promise<PaymentIntent | undefined> {
+    const payment = await this.prisma.paymentIntent.findUnique({
+      where: { id },
+    });
+    return payment ? this.mapToPaymentIntent(payment) : undefined;
   }
 
-  /**
-   * Create payment intent
-   */
-  async create(ctx: Ctx, payment: PaymentIntent): Promise<PaymentIntent> {
-    await this.storage.set(ctx, payment.id, payment);
-    return payment;
-  }
-
-  /**
-   * Get payment intent by ID
-   */
-  async findById(ctx: Ctx, id: string): Promise<PaymentIntent | undefined> {
-    return await this.storage.get(ctx, id);
-  }
-
-  /**
-   * Get payment intent by transaction ID
-   */
   async findByTransactionId(
-    ctx: Ctx,
+    _ctx: Ctx,
     transactionId: string,
   ): Promise<PaymentIntent | undefined> {
-    const all = await this.storage.getAll(ctx);
-    return all.find((p) => p.transactionId === transactionId);
+    const payment = await this.prisma.paymentIntent.findUnique({
+      where: { transactionId },
+    });
+    return payment ? this.mapToPaymentIntent(payment) : undefined;
   }
 
-  /**
-   * Get payment intent by provider ID
-   */
   async findByProviderPaymentId(
-    ctx: Ctx,
+    _ctx: Ctx,
     providerPaymentId: string,
   ): Promise<PaymentIntent | undefined> {
-    const all = await this.storage.getAll(ctx);
-    return all.find((p) => p.providerPaymentId === providerPaymentId);
+    const payment = await this.prisma.paymentIntent.findFirst({
+      where: { providerPaymentId },
+    });
+    return payment ? this.mapToPaymentIntent(payment) : undefined;
   }
 
-  /**
-   * Update payment intent
-   */
   async update(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     updates: Partial<PaymentIntent>,
   ): Promise<PaymentIntent | undefined> {
-    const existing = await this.storage.get(ctx, id);
-    if (!existing) return undefined;
+    try {
+      const data: Record<string, unknown> = {};
 
-    const updated: PaymentIntent = {
-      ...existing,
-      ...updates,
-      id: existing.id,
-      updatedAt: new Date(),
+      if (updates.transactionId !== undefined) {
+        data.transactionId = updates.transactionId;
+      }
+      if (updates.amount !== undefined) {
+        data.amount = updates.amount as object;
+      }
+      if (updates.status !== undefined) {
+        data.status = this.mapStatusToDb(updates.status);
+      }
+      if (updates.providerPaymentId !== undefined) {
+        data.providerPaymentId = updates.providerPaymentId;
+      }
+      if (updates.metadata !== undefined) {
+        data.metadata = updates.metadata as object;
+      }
+
+      const updated = await this.prisma.paymentIntent.update({
+        where: { id },
+        data,
+      });
+      return this.mapToPaymentIntent(updated);
+    } catch {
+      return undefined;
+    }
+  }
+
+  // ==================== Mappers ====================
+
+  private mapToPaymentIntent(prisma: PrismaPaymentIntent): PaymentIntent {
+    return {
+      id: prisma.id,
+      transactionId: prisma.transactionId,
+      amount: prisma.amount as unknown as Money,
+      status: this.mapStatusFromDb(prisma.status),
+      providerPaymentId: prisma.providerPaymentId ?? undefined,
+      metadata: (prisma.metadata as unknown as PaymentMetadata) ?? {
+        buyerId: '',
+        sellerId: '',
+        listingId: '',
+      },
+      createdAt: prisma.createdAt,
+      updatedAt: prisma.updatedAt,
     };
-    await this.storage.set(ctx, id, updated);
-    return updated;
+  }
+
+  // ==================== Enum Mappers ====================
+
+  private mapStatusToDb(
+    status: PaymentStatus,
+  ): 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' {
+    switch (status) {
+      case PaymentStatus.Pending:
+        return 'pending';
+      case PaymentStatus.Processing:
+        return 'processing';
+      case PaymentStatus.Succeeded:
+        return 'succeeded';
+      case PaymentStatus.Failed:
+        return 'failed';
+      case PaymentStatus.Cancelled:
+        return 'cancelled';
+      case PaymentStatus.Refunded:
+        return 'succeeded';
+    }
+  }
+
+  private mapStatusFromDb(
+    status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled',
+  ): PaymentStatus {
+    switch (status) {
+      case 'pending':
+        return PaymentStatus.Pending;
+      case 'processing':
+        return PaymentStatus.Processing;
+      case 'succeeded':
+        return PaymentStatus.Succeeded;
+      case 'failed':
+        return PaymentStatus.Failed;
+      case 'cancelled':
+        return PaymentStatus.Cancelled;
+    }
   }
 }

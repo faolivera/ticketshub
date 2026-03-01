@@ -1,6 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { PaymentsRepository } from './payments.repository';
+import type { IPaymentsRepository } from './payments.repository.interface';
+import { PAYMENTS_REPOSITORY } from './payments.repository.interface';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -23,8 +24,8 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
   private readonly logger = new ContextLogger(PaymentsService.name);
 
   constructor(
-    @Inject(PaymentsRepository)
-    private readonly paymentsRepository: PaymentsRepository,
+    @Inject(PAYMENTS_REPOSITORY)
+    private readonly paymentsRepository: IPaymentsRepository,
   ) {}
 
   /**

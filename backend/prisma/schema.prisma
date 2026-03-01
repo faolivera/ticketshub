@@ -501,19 +501,19 @@ model PaymentConfirmation {
 }
 
 model PricingSnapshot {
-  id                      String   @id @default(uuid())
-  listingId               String
-  quantity                Int
-  ticketPrice             Json
-  buyerPlatformFee        Json
-  sellerPlatformFee       Json
-  paymentMethodCommission Json
-  totalPaid               Json
-  sellerReceives          Json
-  paymentMethodId         String?
-  expiresAt               DateTime
-  consumedByTransactionId String?
-  createdAt               DateTime @default(now())
+  id                         String   @id
+  listingId                  String
+  pricePerTicket             Json
+  buyerPlatformFeePercentage Float
+  sellerPlatformFeePercentage Float
+  paymentMethodCommissions   Json
+  pricingModel               String   @default("fixed")
+  bestOfferConfig            Json?
+  expiresAt                  DateTime
+  consumedAt                 DateTime?
+  consumedByTransactionId    String?
+  selectedPaymentMethodId    String?
+  createdAt                  DateTime @default(now())
 
   @@map("pricing_snapshots")
 }

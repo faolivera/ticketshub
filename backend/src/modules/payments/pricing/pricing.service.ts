@@ -1,6 +1,6 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { PricingRepository } from './pricing.repository';
+import { PRICING_REPOSITORY, type IPricingRepository } from './pricing.repository.interface';
 import { ConfigService } from '../../config/config.service';
 import { PaymentMethodsService } from '../payment-methods.service';
 import { ContextLogger } from '../../../common/logger/context-logger';
@@ -20,8 +20,8 @@ export class PricingService {
   private readonly logger = new ContextLogger(PricingService.name);
 
   constructor(
-    @Inject(PricingRepository)
-    private readonly repository: PricingRepository,
+    @Inject(PRICING_REPOSITORY)
+    private readonly repository: IPricingRepository,
     @Inject(ConfigService)
     private readonly configService: ConfigService,
     @Inject(PaymentMethodsService)

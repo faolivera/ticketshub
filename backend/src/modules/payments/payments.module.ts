@@ -27,7 +27,7 @@ import { UsersModule } from '../users/users.module';
       useClass: PaymentMethodsRepository,
     },
     PricingService,
-    PricingRepository,
+    { provide: PRICING_REPOSITORY, useClass: PricingRepository },
   ],
   exports: [PaymentsService, PaymentMethodsService, PricingService],
 })
