@@ -5,7 +5,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { PaymentMethodsRepository } from './payment-methods.repository';
+import { PAYMENT_METHODS_REPOSITORY } from './payment-methods.repository.interface';
+import type { IPaymentMethodsRepository } from './payment-methods.repository.interface';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -31,8 +32,8 @@ export class PaymentMethodsService {
   private readonly logger = new ContextLogger(PaymentMethodsService.name);
 
   constructor(
-    @Inject(PaymentMethodsRepository)
-    private readonly repository: PaymentMethodsRepository,
+    @Inject(PAYMENT_METHODS_REPOSITORY)
+    private readonly repository: IPaymentMethodsRepository,
   ) {}
 
   private generateId(): string {
