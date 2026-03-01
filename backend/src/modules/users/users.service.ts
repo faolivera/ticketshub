@@ -6,7 +6,8 @@ import {
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
-import { UsersRepository } from './users.repository';
+import type { IUsersRepository } from './users.repository.interface';
+import { USERS_REPOSITORY } from './users.repository.interface';
 import { ImagesRepository } from '../images/images.repository';
 import { OTPService } from '../otp/otp.service';
 import { TermsService } from '../terms/terms.service';
@@ -47,8 +48,8 @@ const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 @Injectable()
 export class UsersService {
   constructor(
-    @Inject(UsersRepository)
-    private readonly usersRepository: UsersRepository,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
     @Inject(ImagesRepository)
     private readonly imagesRepository: ImagesRepository,
     @Inject(OTPService)
