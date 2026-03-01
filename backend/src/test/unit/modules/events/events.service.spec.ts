@@ -7,7 +7,8 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from '../../../../modules/events/events.service';
 import { EventsRepository } from '../../../../modules/events/events.repository';
-import { ImagesRepository } from '../../../../modules/images/images.repository';
+import { IMAGES_REPOSITORY } from '../../../../modules/images/images.repository.interface';
+import type { IImagesRepository } from '../../../../modules/images/images.repository.interface';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
 import { EventBannerStorageService } from '../../../../modules/events/event-banner-storage.service';
@@ -36,7 +37,7 @@ import type { Ctx } from '../../../../common/types/context';
 describe('EventsService', () => {
   let service: EventsService;
   let eventsRepository: jest.Mocked<EventsRepository>;
-  let imagesRepository: jest.Mocked<ImagesRepository>;
+  let imagesRepository: jest.Mocked<IImagesRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let bannerStorage: jest.Mocked<EventBannerStorageService>;
@@ -126,7 +127,7 @@ describe('EventsService', () => {
       providers: [
         EventsService,
         { provide: EventsRepository, useValue: mockEventsRepository },
-        { provide: ImagesRepository, useValue: mockImagesRepository },
+        { provide: IMAGES_REPOSITORY, useValue: mockImagesRepository },
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: EventBannerStorageService, useValue: mockBannerStorage },
@@ -135,7 +136,7 @@ describe('EventsService', () => {
 
     service = module.get<EventsService>(EventsService);
     eventsRepository = module.get(EventsRepository);
-    imagesRepository = module.get(ImagesRepository);
+    imagesRepository = module.get(IMAGES_REPOSITORY);
     ticketsService = module.get(TicketsService);
     transactionsService = module.get(TransactionsService);
     bannerStorage = module.get(EventBannerStorageService);

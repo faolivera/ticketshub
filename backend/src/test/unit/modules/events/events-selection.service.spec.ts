@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from '../../../../modules/events/events.service';
 import { EventsRepository } from '../../../../modules/events/events.repository';
-import { ImagesRepository } from '../../../../modules/images/images.repository';
+import { IMAGES_REPOSITORY } from '../../../../modules/images/images.repository.interface';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
 import { EventBannerStorageService } from '../../../../modules/events/event-banner-storage.service';
@@ -97,7 +97,7 @@ describe('EventsService - getEventsForSelection', () => {
       providers: [
         EventsService,
         { provide: EventsRepository, useValue: mockEventsRepository },
-        { provide: ImagesRepository, useValue: mockImagesRepository },
+        { provide: IMAGES_REPOSITORY, useValue: mockImagesRepository },
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: EventBannerStorageService, useValue: mockBannerStorage },

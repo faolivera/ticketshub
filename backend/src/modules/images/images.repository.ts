@@ -1,29 +1,49 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import type { Image as PrismaImage } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
 import type { Image } from './images.domain';
+import type { IImagesRepository } from './images.repository.interface';
 
 @Injectable()
-export class ImagesRepository implements OnModuleInit {
-  private readonly storage: KeyValueFileStorage<Image>;
+export class ImagesRepository implements IImagesRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor() {
-    this.storage = new KeyValueFileStorage<Image>('images');
+  async getById(_ctx: Ctx, id: string): Promise<Image | undefined> {
+    const image = await this.prisma.image.findUnique({
+      where: { id },
+    });
+    return image ? this.mapToImage(image) : undefined;
   }
 
-  async onModuleInit(): Promise<void> {
-    await this.storage.onModuleInit();
+  async getByIds(_ctx: Ctx, ids: string[]): Promise<Image[]> {
+    if (ids.length === 0) return [];
+    const images = await this.prisma.image.findMany({
+      where: { id: { in: ids } },
+    });
+    return images.map((img) => this.mapToImage(img));
   }
 
-  async getById(ctx: Ctx, id: string): Promise<Image | undefined> {
-    return await this.storage.get(ctx, id);
+  async set(_ctx: Ctx, image: Image): Promise<void> {
+    await this.prisma.image.upsert({
+      where: { id: image.id },
+      update: {
+        filename: image.src,
+      },
+      create: {
+        id: image.id,
+        filename: image.src,
+        contentType: 'image/png',
+        sizeBytes: 0,
+        uploadedBy: 'system',
+      },
+    });
   }
 
-  async getByIds(ctx: Ctx, ids: string[]): Promise<Image[]> {
-    return await this.storage.getMany(ctx, ids);
-  }
-
-  async set(ctx: Ctx, image: Image): Promise<void> {
-    await this.storage.set(ctx, image.id, image);
+  private mapToImage(prismaImage: PrismaImage): Image {
+    return {
+      id: prismaImage.id,
+      src: prismaImage.filename,
+    };
   }
 }

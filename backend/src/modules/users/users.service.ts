@@ -8,7 +8,8 @@ import * as jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 import type { IUsersRepository } from './users.repository.interface';
 import { USERS_REPOSITORY } from './users.repository.interface';
-import { ImagesRepository } from '../images/images.repository';
+import type { IImagesRepository } from '../images/images.repository.interface';
+import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
 import { OTPService } from '../otp/otp.service';
 import { TermsService } from '../terms/terms.service';
 import type { Ctx } from '../../common/types/context';
@@ -50,8 +51,8 @@ export class UsersService {
   constructor(
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: IUsersRepository,
-    @Inject(ImagesRepository)
-    private readonly imagesRepository: ImagesRepository,
+    @Inject(IMAGES_REPOSITORY)
+    private readonly imagesRepository: IImagesRepository,
     @Inject(OTPService)
     private readonly otpService: OTPService,
     @Inject(TermsService)

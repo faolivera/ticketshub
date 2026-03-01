@@ -10,7 +10,8 @@ import {
 import { randomBytes } from 'crypto';
 import * as sharp from 'sharp';
 import { EventsRepository } from './events.repository';
-import { ImagesRepository } from '../images/images.repository';
+import type { IImagesRepository } from '../images/images.repository.interface';
+import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
 import { TicketsService } from '../tickets/tickets.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventBannerStorageService } from './event-banner-storage.service';
@@ -67,8 +68,8 @@ export class EventsService {
   constructor(
     @Inject(EventsRepository)
     private readonly eventsRepository: EventsRepository,
-    @Inject(ImagesRepository)
-    private readonly imagesRepository: ImagesRepository,
+    @Inject(IMAGES_REPOSITORY)
+    private readonly imagesRepository: IImagesRepository,
     @Inject(forwardRef(() => TicketsService))
     private readonly ticketsService: TicketsService,
     @Inject(forwardRef(() => TransactionsService))

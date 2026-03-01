@@ -1,6 +1,7 @@
 import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
 import type { Ctx } from '../../common/types/context';
-import { ImagesRepository } from '../images/images.repository';
+import type { IImagesRepository } from '../images/images.repository.interface';
+import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
 import { UsersService } from '../users/users.service';
 import { EventsService } from '../events/events.service';
 import { TicketsService } from '../tickets/tickets.service';
@@ -26,8 +27,8 @@ import type { CreateListingRequest } from '../tickets/tickets.api';
 @Injectable()
 export class SupportSeedService {
   constructor(
-    @Inject(ImagesRepository)
-    private readonly imagesRepository: ImagesRepository,
+    @Inject(IMAGES_REPOSITORY)
+    private readonly imagesRepository: IImagesRepository,
     @Inject(UsersService)
     private readonly usersService: UsersService,
     @Inject(EventsService)

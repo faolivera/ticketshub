@@ -1,8 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../../../../modules/users/users.service';
-import { UsersRepository } from '../../../../modules/users/users.repository';
-import { ImagesRepository } from '../../../../modules/images/images.repository';
+import { USERS_REPOSITORY } from '../../../../modules/users/users.repository.interface';
+import type { IUsersRepository } from '../../../../modules/users/users.repository.interface';
+import { IMAGES_REPOSITORY } from '../../../../modules/images/images.repository.interface';
+import type { IImagesRepository } from '../../../../modules/images/images.repository.interface';
 import { OTPService } from '../../../../modules/otp/otp.service';
 import { TermsService } from '../../../../modules/terms/terms.service';
 import {
@@ -16,8 +18,8 @@ import type { Ctx } from '../../../../common/types/context';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let usersRepository: jest.Mocked<UsersRepository>;
-  let imagesRepository: jest.Mocked<ImagesRepository>;
+  let usersRepository: jest.Mocked<IUsersRepository>;
+  let imagesRepository: jest.Mocked<IImagesRepository>;
   let storageProvider: jest.Mocked<FileStorageProvider>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
@@ -96,8 +98,8 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        { provide: UsersRepository, useValue: mockUsersRepository },
-        { provide: ImagesRepository, useValue: mockImagesRepository },
+        { provide: USERS_REPOSITORY, useValue: mockUsersRepository },
+        { provide: IMAGES_REPOSITORY, useValue: mockImagesRepository },
         { provide: OTPService, useValue: mockOTPService },
         { provide: TermsService, useValue: mockTermsService },
         { provide: PUBLIC_STORAGE_PROVIDER, useValue: mockStorageProvider },
@@ -105,8 +107,8 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    usersRepository = module.get(UsersRepository);
-    imagesRepository = module.get(ImagesRepository);
+    usersRepository = module.get(USERS_REPOSITORY);
+    imagesRepository = module.get(IMAGES_REPOSITORY);
     storageProvider = module.get(PUBLIC_STORAGE_PROVIDER);
   });
 
