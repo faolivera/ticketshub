@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
-import { NotificationsRepository } from './notifications.repository';
+import type { INotificationsRepository } from './notifications.repository.interface';
+import { NOTIFICATIONS_REPOSITORY } from './notifications.repository.interface';
 import type {
   NotificationEvent,
   Notification,
@@ -40,7 +41,10 @@ import type {
 export class NotificationsService {
   private readonly logger = new ContextLogger(NotificationsService.name);
 
-  constructor(private readonly repository: NotificationsRepository) {}
+  constructor(
+    @Inject(NOTIFICATIONS_REPOSITORY)
+    private readonly repository: INotificationsRepository,
+  ) {}
 
   // ==========================================================================
   // EVENT EMISSION (called by other services)
