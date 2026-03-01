@@ -1,147 +1,242 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { KeyValueFileStorage } from '../../common/storage/key-value-file-storage';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import type {
+  SupportTicket as PrismaSupportTicket,
+  SupportMessage as PrismaSupportMessage,
+  SupportTicketStatus as PrismaSupportTicketStatus,
+  SupportTicketCategory as PrismaSupportTicketCategory,
+  SupportMessageSender as PrismaSupportMessageSender,
+} from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
 import type { SupportTicket, SupportMessage } from './support.domain';
-import { SupportTicketStatus } from './support.domain';
+import { SupportTicketStatus, SupportCategory } from './support.domain';
+import type { ISupportRepository } from './support.repository.interface';
 
 @Injectable()
-export class SupportRepository implements OnModuleInit {
-  private readonly ticketStorage: KeyValueFileStorage<SupportTicket>;
-  private readonly messageStorage: KeyValueFileStorage<SupportMessage>;
-
-  constructor() {
-    this.ticketStorage = new KeyValueFileStorage<SupportTicket>(
-      'support-tickets',
-    );
-    this.messageStorage = new KeyValueFileStorage<SupportMessage>(
-      'support-messages',
-    );
-  }
-
-  /**
-   * Load data from file storage when module initializes
-   */
-  async onModuleInit(): Promise<void> {
-    await this.ticketStorage.onModuleInit();
-    await this.messageStorage.onModuleInit();
-  }
+export class SupportRepository implements ISupportRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
   // ==================== Tickets ====================
 
-  /**
-   * Create a new support ticket
-   */
-  async createTicket(ctx: Ctx, ticket: SupportTicket): Promise<SupportTicket> {
-    await this.ticketStorage.set(ctx, ticket.id, ticket);
-    return ticket;
+  async createTicket(_ctx: Ctx, ticket: SupportTicket): Promise<SupportTicket> {
+    const prismaTicket = await this.prisma.supportTicket.create({
+      data: {
+        id: ticket.id,
+        userId: ticket.userId,
+        transactionId: ticket.transactionId,
+        category: this.mapCategoryToDb(ticket.category),
+        subject: ticket.subject,
+        status: this.mapStatusToDb(ticket.status),
+        assignedTo: ticket.resolvedBy,
+        resolvedAt: ticket.resolvedAt,
+        closedAt:
+          ticket.status === SupportTicketStatus.Closed
+            ? ticket.updatedAt
+            : undefined,
+      },
+    });
+    return this.mapToTicket(prismaTicket, ticket);
   }
 
-  /**
-   * Find ticket by ID
-   */
   async findTicketById(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
   ): Promise<SupportTicket | undefined> {
-    return await this.ticketStorage.get(ctx, id);
+    const ticket = await this.prisma.supportTicket.findUnique({
+      where: { id },
+    });
+    return ticket ? this.mapToTicket(ticket) : undefined;
   }
 
-  /**
-   * Get all tickets
-   */
-  async getAllTickets(ctx: Ctx): Promise<SupportTicket[]> {
-    return await this.ticketStorage.getAll(ctx);
+  async getAllTickets(_ctx: Ctx): Promise<SupportTicket[]> {
+    const tickets = await this.prisma.supportTicket.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return tickets.map((t) => this.mapToTicket(t));
   }
 
-  /**
-   * Get tickets by user
-   */
-  async getTicketsByUserId(ctx: Ctx, userId: string): Promise<SupportTicket[]> {
-    const all = await this.ticketStorage.getAll(ctx);
-    return all
-      .filter((t) => t.userId === userId)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+  async getTicketsByUserId(
+    _ctx: Ctx,
+    userId: string,
+  ): Promise<SupportTicket[]> {
+    const tickets = await this.prisma.supportTicket.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return tickets.map((t) => this.mapToTicket(t));
   }
 
-  /**
-   * Get open/in-progress tickets (for admin)
-   */
-  async getActiveTickets(ctx: Ctx): Promise<SupportTicket[]> {
-    const all = await this.ticketStorage.getAll(ctx);
-    return all
-      .filter(
-        (t) =>
-          t.status === SupportTicketStatus.Open ||
-          t.status === SupportTicketStatus.InProgress ||
-          t.status === SupportTicketStatus.WaitingForCustomer,
-      )
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+  async getActiveTickets(_ctx: Ctx): Promise<SupportTicket[]> {
+    const tickets = await this.prisma.supportTicket.findMany({
+      where: {
+        status: {
+          in: [
+            this.mapStatusToDb(SupportTicketStatus.Open),
+            this.mapStatusToDb(SupportTicketStatus.InProgress),
+            this.mapStatusToDb(SupportTicketStatus.WaitingForCustomer),
+          ],
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return tickets.map((t) => this.mapToTicket(t));
   }
 
-  /**
-   * Get ticket by transaction ID
-   */
   async getTicketByTransactionId(
-    ctx: Ctx,
+    _ctx: Ctx,
     transactionId: string,
   ): Promise<SupportTicket | undefined> {
-    const all = await this.ticketStorage.getAll(ctx);
-    return all.find((t) => t.transactionId === transactionId);
+    const ticket = await this.prisma.supportTicket.findFirst({
+      where: { transactionId },
+    });
+    return ticket ? this.mapToTicket(ticket) : undefined;
   }
 
-  /**
-   * Update ticket
-   */
   async updateTicket(
-    ctx: Ctx,
+    _ctx: Ctx,
     id: string,
     updates: Partial<SupportTicket>,
   ): Promise<SupportTicket | undefined> {
-    const existing = await this.ticketStorage.get(ctx, id);
+    const existing = await this.prisma.supportTicket.findUnique({
+      where: { id },
+    });
     if (!existing) return undefined;
 
-    const updated: SupportTicket = {
-      ...existing,
-      ...updates,
-      id: existing.id,
-      updatedAt: new Date(),
-    };
-    await this.ticketStorage.set(ctx, id, updated);
-    return updated;
+    const prismaTicket = await this.prisma.supportTicket.update({
+      where: { id },
+      data: {
+        ...(updates.status && { status: this.mapStatusToDb(updates.status) }),
+        ...(updates.category && {
+          category: this.mapCategoryToDb(updates.category),
+        }),
+        ...(updates.subject && { subject: updates.subject }),
+        ...(updates.resolvedBy && { assignedTo: updates.resolvedBy }),
+        ...(updates.resolvedAt && { resolvedAt: updates.resolvedAt }),
+        ...(updates.status === SupportTicketStatus.Closed && {
+          closedAt: new Date(),
+        }),
+      },
+    });
+    return this.mapToTicket(prismaTicket, updates);
   }
 
   // ==================== Messages ====================
 
-  /**
-   * Create a message
-   */
   async createMessage(
-    ctx: Ctx,
+    _ctx: Ctx,
     message: SupportMessage,
   ): Promise<SupportMessage> {
-    await this.messageStorage.set(ctx, message.id, message);
-    return message;
+    const prismaMessage = await this.prisma.supportMessage.create({
+      data: {
+        id: message.id,
+        ticketId: message.ticketId,
+        senderId: message.userId,
+        sender: this.mapSenderToDb(message.isAdmin),
+        content: message.message,
+      },
+    });
+    return this.mapToMessage(prismaMessage);
   }
 
-  /**
-   * Get messages for a ticket
-   */
   async getMessagesByTicketId(
-    ctx: Ctx,
+    _ctx: Ctx,
     ticketId: string,
   ): Promise<SupportMessage[]> {
-    const all = await this.messageStorage.getAll(ctx);
-    return all
-      .filter((m) => m.ticketId === ticketId)
-      .sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
+    const messages = await this.prisma.supportMessage.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return messages.map((m) => this.mapToMessage(m));
+  }
+
+  // ==================== Mapping Helpers ====================
+
+  private mapToTicket(
+    prismaTicket: PrismaSupportTicket,
+    domainOverrides?: Partial<SupportTicket>,
+  ): SupportTicket {
+    return {
+      id: prismaTicket.id,
+      userId: prismaTicket.userId,
+      transactionId: prismaTicket.transactionId ?? undefined,
+      category: domainOverrides?.category ?? this.mapCategoryFromDb(prismaTicket.category),
+      disputeReason: domainOverrides?.disputeReason,
+      subject: prismaTicket.subject,
+      description: domainOverrides?.description ?? '',
+      status: this.mapStatusFromDb(prismaTicket.status),
+      priority: domainOverrides?.priority ?? 'medium',
+      resolution: domainOverrides?.resolution,
+      resolutionNotes: domainOverrides?.resolutionNotes,
+      resolvedBy: prismaTicket.assignedTo ?? undefined,
+      createdAt: prismaTicket.createdAt,
+      updatedAt: prismaTicket.updatedAt,
+      resolvedAt: prismaTicket.resolvedAt ?? undefined,
+    };
+  }
+
+  private mapToMessage(prismaMessage: PrismaSupportMessage): SupportMessage {
+    return {
+      id: prismaMessage.id,
+      ticketId: prismaMessage.ticketId,
+      userId: prismaMessage.senderId,
+      isAdmin: prismaMessage.sender === 'admin',
+      message: prismaMessage.content,
+      attachmentUrls: undefined,
+      createdAt: prismaMessage.createdAt,
+    };
+  }
+
+  private mapStatusToDb(
+    status: SupportTicketStatus,
+  ): PrismaSupportTicketStatus {
+    const map: Record<SupportTicketStatus, PrismaSupportTicketStatus> = {
+      [SupportTicketStatus.Open]: 'open',
+      [SupportTicketStatus.InProgress]: 'in_progress',
+      [SupportTicketStatus.WaitingForCustomer]: 'waiting_for_customer',
+      [SupportTicketStatus.Resolved]: 'resolved',
+      [SupportTicketStatus.Closed]: 'closed',
+    };
+    return map[status];
+  }
+
+  private mapStatusFromDb(
+    status: PrismaSupportTicketStatus,
+  ): SupportTicketStatus {
+    const map: Record<PrismaSupportTicketStatus, SupportTicketStatus> = {
+      open: SupportTicketStatus.Open,
+      in_progress: SupportTicketStatus.InProgress,
+      waiting_for_customer: SupportTicketStatus.WaitingForCustomer,
+      resolved: SupportTicketStatus.Resolved,
+      closed: SupportTicketStatus.Closed,
+    };
+    return map[status];
+  }
+
+  private mapCategoryToDb(
+    category: SupportCategory,
+  ): PrismaSupportTicketCategory {
+    const map: Record<SupportCategory, PrismaSupportTicketCategory> = {
+      [SupportCategory.TicketDispute]: 'transaction',
+      [SupportCategory.PaymentIssue]: 'transaction',
+      [SupportCategory.AccountIssue]: 'account',
+      [SupportCategory.Other]: 'other',
+    };
+    return map[category];
+  }
+
+  private mapCategoryFromDb(
+    category: PrismaSupportTicketCategory,
+  ): SupportCategory {
+    const map: Record<PrismaSupportTicketCategory, SupportCategory> = {
+      transaction: SupportCategory.TicketDispute,
+      account: SupportCategory.AccountIssue,
+      technical: SupportCategory.Other,
+      other: SupportCategory.Other,
+    };
+    return map[category];
+  }
+
+  private mapSenderToDb(isAdmin: boolean): PrismaSupportMessageSender {
+    return isAdmin ? 'admin' : 'user';
   }
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { SupportController } from './support.controller';
 import { SupportService } from './support.service';
 import { SupportRepository } from './support.repository';
+import { SUPPORT_REPOSITORY } from './support.repository.interface';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
 import { EventsModule } from '../events/events.module';
@@ -18,7 +19,11 @@ import { SupportSeedService } from './support-seed.service';
     ImagesModule,
   ],
   controllers: [SupportController],
-  providers: [SupportService, SupportRepository, SupportSeedService],
-  exports: [SupportService],
+  providers: [
+    SupportService,
+    { provide: SUPPORT_REPOSITORY, useClass: SupportRepository },
+    SupportSeedService,
+  ],
+  exports: [SupportService, SUPPORT_REPOSITORY],
 })
 export class SupportModule {}

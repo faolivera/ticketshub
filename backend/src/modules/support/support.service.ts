@@ -6,7 +6,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { SupportRepository } from './support.repository';
+import type { ISupportRepository } from './support.repository.interface';
+import { SUPPORT_REPOSITORY } from './support.repository.interface';
 import { TransactionsService } from '../transactions/transactions.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
@@ -32,8 +33,8 @@ export class SupportService {
   private readonly logger = new ContextLogger(SupportService.name);
 
   constructor(
-    @Inject(SupportRepository)
-    private readonly supportRepository: SupportRepository,
+    @Inject(SUPPORT_REPOSITORY)
+    private readonly supportRepository: ISupportRepository,
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
     private readonly notificationsService: NotificationsService,
