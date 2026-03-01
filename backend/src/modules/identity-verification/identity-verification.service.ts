@@ -6,7 +6,10 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { IdentityVerificationRepository } from './identity-verification.repository';
+import {
+  IDENTITY_VERIFICATION_REPOSITORY,
+  type IIdentityVerificationRepository,
+} from './identity-verification.repository.interface';
 import { UsersService } from '../users/users.service';
 import {
   PRIVATE_STORAGE_PROVIDER,
@@ -34,8 +37,8 @@ export class IdentityVerificationService {
   private readonly logger = new ContextLogger(IdentityVerificationService.name);
 
   constructor(
-    @Inject(IdentityVerificationRepository)
-    private readonly repository: IdentityVerificationRepository,
+    @Inject(IDENTITY_VERIFICATION_REPOSITORY)
+    private readonly repository: IIdentityVerificationRepository,
     @Inject(UsersService)
     private readonly usersService: UsersService,
     @Inject(PRIVATE_STORAGE_PROVIDER)
