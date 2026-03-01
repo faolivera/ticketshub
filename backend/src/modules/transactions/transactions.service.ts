@@ -6,7 +6,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { TransactionsRepository } from './transactions.repository';
+import type { ITransactionsRepository } from './transactions.repository.interface';
+import { TRANSACTIONS_REPOSITORY } from './transactions.repository.interface';
 import { TicketsService } from '../tickets/tickets.service';
 import { PaymentsService } from '../payments/payments.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -42,8 +43,8 @@ export class TransactionsService {
   private readonly logger = new ContextLogger(TransactionsService.name);
 
   constructor(
-    @Inject(TransactionsRepository)
-    private readonly transactionsRepository: TransactionsRepository,
+    @Inject(TRANSACTIONS_REPOSITORY)
+    private readonly transactionsRepository: ITransactionsRepository,
     @Inject(TicketsService)
     private readonly ticketsService: TicketsService,
     @Inject(PaymentsService)
@@ -731,7 +732,8 @@ export class TransactionsService {
    * Use this for service-to-service communication.
    */
   async findById(ctx: Ctx, id: string): Promise<Transaction | null> {
-    return this.transactionsRepository.findById(ctx, id);
+    const transaction = await this.transactionsRepository.findById(ctx, id);
+    return transaction ?? null;
   }
 
   /**
