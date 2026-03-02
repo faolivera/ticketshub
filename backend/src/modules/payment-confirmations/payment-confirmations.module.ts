@@ -6,6 +6,7 @@ import { PAYMENT_CONFIRMATIONS_REPOSITORY } from './payment-confirmations.reposi
 import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
 import { TicketsModule } from '../tickets/tickets.module';
+import { PaymentsModule } from '../payments/payments.module';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 
 @Module({
@@ -14,6 +15,7 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
     forwardRef(() => TransactionsModule),
     UsersModule,
     TicketsModule,
+    PaymentsModule,
   ],
   controllers: [PaymentConfirmationsController],
   providers: [

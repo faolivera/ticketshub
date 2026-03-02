@@ -14,6 +14,7 @@ import {
 import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
 import { TicketsService } from '../tickets/tickets.service';
+import { PaymentMethodsService } from '../payments/payment-methods.service';
 import {
   PRIVATE_STORAGE_PROVIDER,
   type FileStorageProvider,
@@ -49,6 +50,8 @@ export class PaymentConfirmationsService {
     private readonly usersService: UsersService,
     @Inject(TicketsService)
     private readonly ticketsService: TicketsService,
+    @Inject(PaymentMethodsService)
+    private readonly paymentMethodsService: PaymentMethodsService,
     @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly storageProvider: FileStorageProvider,
     private readonly notificationsService: NotificationsService,
@@ -115,10 +118,17 @@ export class PaymentConfirmationsService {
       );
     }
 
-    if (
-      !transaction.paymentMethodId ||
-      !transaction.paymentMethodId.includes('bank_transfer')
-    ) {
+    if (!transaction.paymentMethodId) {
+      throw new BadRequestException(
+        'Payment confirmation is only required for manual payment methods',
+      );
+    }
+
+    const paymentMethod = await this.paymentMethodsService.findById(
+      ctx,
+      transaction.paymentMethodId,
+    );
+    if (paymentMethod.type !== 'manual_approval') {
       throw new BadRequestException(
         'Payment confirmation is only required for manual payment methods',
       );
