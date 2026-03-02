@@ -40,7 +40,8 @@ export class NotificationsWorker {
   ) {}
 
   /**
-   * Process a single notification event.
+   * Process a single notification event that has already been claimed.
+   * Assumes the event status is already PROCESSING.
    * 1. Find the processor for the event type
    * 2. Get recipients from the processor
    * 3. Get channel config
@@ -50,20 +51,15 @@ export class NotificationsWorker {
    *    - Create notification
    *    - Send through channel (for EMAIL)
    */
-  async processEvent(ctx: Ctx, event: NotificationEvent): Promise<void> {
-    this.logger.log(ctx, `Processing notification event: ${event.id} (${event.type})`);
+  async processClaimedEvent(ctx: Ctx, event: NotificationEvent): Promise<void> {
+    this.logger.log(ctx, `Processing claimed event: ${event.id} (${event.type})`);
 
     try {
-      // Mark as processing
-      await this.service.markEventProcessing(ctx, event.id);
-
-      // Get processor
       const processor = this.processorRegistry.getProcessor(event.type);
       if (!processor) {
         throw new Error(`No processor found for event type: ${event.type}`);
       }
 
-      // Get channel config
       const channelConfig = await this.service.getChannelConfigForEvent(
         ctx,
         event.type,
@@ -74,7 +70,6 @@ export class NotificationsWorker {
         return;
       }
 
-      // Get recipients
       const recipients = await processor.getRecipients(ctx, event.context);
       if (recipients.length === 0) {
         this.logger.debug(ctx, `No recipients for event ${event.id}`);
@@ -82,7 +77,6 @@ export class NotificationsWorker {
         return;
       }
 
-      // Process each recipient
       for (const recipient of recipients) {
         await this.processRecipient(
           ctx,
@@ -93,7 +87,6 @@ export class NotificationsWorker {
         );
       }
 
-      // Mark as completed
       await this.service.markEventCompleted(ctx, event.id);
       this.logger.log(ctx, `Successfully processed event ${event.id}`);
     } catch (error) {
@@ -101,6 +94,19 @@ export class NotificationsWorker {
       this.logger.error(ctx, `Failed to process event ${event.id}: ${errorMessage}`);
       await this.service.markEventFailed(ctx, event.id, errorMessage);
     }
+  }
+
+  /**
+   * Process a single notification event (legacy method).
+   * Attempts atomic claim before processing.
+   */
+  async processEvent(ctx: Ctx, event: NotificationEvent): Promise<void> {
+    const claimed = await this.service.claimEvent(ctx, event.id);
+    if (!claimed) {
+      this.logger.debug(ctx, `Event ${event.id} already claimed by another worker`);
+      return;
+    }
+    await this.processClaimedEvent(ctx, claimed);
   }
 
   private async processRecipient(
@@ -177,30 +183,35 @@ export class NotificationsWorker {
   }
 
   /**
-   * Send pending email notifications
+   * Send pending email notifications using atomic batch claiming.
    */
   async sendPendingEmails(ctx: Ctx): Promise<void> {
-    const pending = await this.service.getPendingEmailNotifications(ctx);
-    if (pending.length === 0) return;
+    const claimed = await this.service.claimPendingEmails(ctx, 10);
+    if (claimed.length === 0) return;
 
-    this.logger.log(ctx, `Sending ${pending.length} pending email notifications`);
+    this.logger.log(ctx, `Sending ${claimed.length} claimed email notifications`);
 
-    for (const notification of pending) {
+    for (const notification of claimed) {
       await this.sendEmail(ctx, notification);
     }
   }
 
   /**
-   * Retry failed email notifications
+   * Retry failed email notifications using atomic per-notification claiming.
    */
   async retryFailedEmails(ctx: Ctx): Promise<void> {
     const retryable = await this.service.getRetryableEmailNotifications(ctx);
     if (retryable.length === 0) return;
 
-    this.logger.log(ctx, `Retrying ${retryable.length} failed email notifications`);
+    this.logger.log(ctx, `Found ${retryable.length} retryable email notifications`);
 
     for (const notification of retryable) {
-      await this.sendEmail(ctx, notification);
+      const claimed = await this.service.claimRetryableEmail(ctx, notification.id);
+      if (!claimed) {
+        this.logger.debug(ctx, `Notification ${notification.id} already claimed by another worker`);
+        continue;
+      }
+      await this.sendEmail(ctx, claimed);
     }
   }
 
@@ -224,7 +235,7 @@ export class NotificationsWorker {
   }
 
   /**
-   * Process all pending events
+   * Process all pending events with atomic claiming.
    */
   async processPendingEvents(ctx: Ctx): Promise<void> {
     const events = await this.service.getPendingEvents(ctx);
@@ -233,7 +244,12 @@ export class NotificationsWorker {
     this.logger.log(ctx, `Processing ${events.length} pending notification events`);
 
     for (const event of events) {
-      await this.processEvent(ctx, event);
+      const claimed = await this.service.claimEvent(ctx, event.id);
+      if (!claimed) {
+        this.logger.debug(ctx, `Event ${event.id} already claimed by another worker`);
+        continue;
+      }
+      await this.processClaimedEvent(ctx, claimed);
     }
   }
 }

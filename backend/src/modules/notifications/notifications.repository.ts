@@ -11,6 +11,7 @@ import {
   NotificationPriority as PrismaNotificationPriority,
 } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Ctx } from '../../common/types/context';
 import type {
   NotificationEvent,
@@ -29,18 +30,21 @@ import {
 import type { INotificationsRepository } from './notifications.repository.interface';
 
 @Injectable()
-export class NotificationsRepository implements INotificationsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class NotificationsRepository extends BaseRepository implements INotificationsRepository {
+  constructor(prisma: PrismaService) {
+    super(prisma);
+  }
 
   // ==========================================================================
   // NOTIFICATION EVENTS
   // ==========================================================================
 
   async createEvent(
-    _ctx: Ctx,
+    ctx: Ctx,
     event: NotificationEvent,
   ): Promise<NotificationEvent> {
-    const created = await this.prisma.notificationEvent.create({
+    const client = this.getClient(ctx);
+    const created = await client.notificationEvent.create({
       data: {
         id: event.id,
         type: this.mapEventTypeToDb(event.type),
@@ -56,17 +60,19 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   async findEventById(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
   ): Promise<NotificationEvent | undefined> {
-    const event = await this.prisma.notificationEvent.findUnique({
+    const client = this.getClient(ctx);
+    const event = await client.notificationEvent.findUnique({
       where: { id },
     });
     return event ? this.mapToNotificationEvent(event) : undefined;
   }
 
-  async findPendingEvents(_ctx: Ctx): Promise<NotificationEvent[]> {
-    const events = await this.prisma.notificationEvent.findMany({
+  async findPendingEvents(ctx: Ctx): Promise<NotificationEvent[]> {
+    const client = this.getClient(ctx);
+    const events = await client.notificationEvent.findMany({
       where: { status: 'PENDING' },
       orderBy: { triggeredAt: 'asc' },
     });
@@ -74,16 +80,17 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   async updateEvent(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     updates: Partial<NotificationEvent>,
   ): Promise<NotificationEvent | undefined> {
-    const existing = await this.prisma.notificationEvent.findUnique({
+    const client = this.getClient(ctx);
+    const existing = await client.notificationEvent.findUnique({
       where: { id },
     });
     if (!existing) return undefined;
 
-    const updated = await this.prisma.notificationEvent.update({
+    const updated = await client.notificationEvent.update({
       where: { id },
       data: {
         ...(updates.status !== undefined && {
@@ -99,7 +106,7 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   async getEventsPaginated(
-    _ctx: Ctx,
+    ctx: Ctx,
     page: number,
     limit: number,
     filters?: {
@@ -109,6 +116,7 @@ export class NotificationsRepository implements INotificationsRepository {
       to?: Date;
     },
   ): Promise<{ events: NotificationEvent[]; total: number }> {
+    const client = this.getClient(ctx);
     const where: Parameters<typeof this.prisma.notificationEvent.findMany>[0]['where'] = {};
 
     if (filters?.type) {
@@ -128,13 +136,13 @@ export class NotificationsRepository implements INotificationsRepository {
     }
 
     const [events, total] = await Promise.all([
-      this.prisma.notificationEvent.findMany({
+      client.notificationEvent.findMany({
         where,
         orderBy: { triggeredAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.notificationEvent.count({ where }),
+      client.notificationEvent.count({ where }),
     ]);
 
     return {
@@ -148,10 +156,11 @@ export class NotificationsRepository implements INotificationsRepository {
   // ==========================================================================
 
   async createNotification(
-    _ctx: Ctx,
+    ctx: Ctx,
     notification: Notification,
   ): Promise<Notification> {
-    const created = await this.prisma.notification.create({
+    const client = this.getClient(ctx);
+    const created = await client.notification.create({
       data: {
         id: notification.id,
         eventId: notification.eventId,
@@ -178,32 +187,35 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   async findNotificationById(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
   ): Promise<Notification | undefined> {
-    const notification = await this.prisma.notification.findUnique({
+    const client = this.getClient(ctx);
+    const notification = await client.notification.findUnique({
       where: { id },
     });
     return notification ? this.mapToNotification(notification) : undefined;
   }
 
   async findNotificationsByEventId(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventId: string,
   ): Promise<Notification[]> {
-    const notifications = await this.prisma.notification.findMany({
+    const client = this.getClient(ctx);
+    const notifications = await client.notification.findMany({
       where: { eventId },
     });
     return notifications.map((n) => this.mapToNotification(n));
   }
 
   async findUserInAppNotifications(
-    _ctx: Ctx,
+    ctx: Ctx,
     userId: string,
     page: number,
     limit: number,
     unreadOnly: boolean,
   ): Promise<{ notifications: Notification[]; total: number }> {
+    const client = this.getClient(ctx);
     const where: Parameters<typeof this.prisma.notification.findMany>[0]['where'] = {
       recipientId: userId,
       channel: 'IN_APP',
@@ -214,13 +226,13 @@ export class NotificationsRepository implements INotificationsRepository {
     }
 
     const [notifications, total] = await Promise.all([
-      this.prisma.notification.findMany({
+      client.notification.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.notification.count({ where }),
+      client.notification.count({ where }),
     ]);
 
     return {
@@ -229,8 +241,9 @@ export class NotificationsRepository implements INotificationsRepository {
     };
   }
 
-  async countUnreadNotifications(_ctx: Ctx, userId: string): Promise<number> {
-    return await this.prisma.notification.count({
+  async countUnreadNotifications(ctx: Ctx, userId: string): Promise<number> {
+    const client = this.getClient(ctx);
+    return await client.notification.count({
       where: {
         recipientId: userId,
         channel: 'IN_APP',
@@ -240,16 +253,17 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   async updateNotification(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     updates: Partial<Notification>,
   ): Promise<Notification | undefined> {
-    const existing = await this.prisma.notification.findUnique({
+    const client = this.getClient(ctx);
+    const existing = await client.notification.findUnique({
       where: { id },
     });
     if (!existing) return undefined;
 
-    const updated = await this.prisma.notification.update({
+    const updated = await client.notification.update({
       where: { id },
       data: {
         ...(updates.status !== undefined && {
@@ -277,9 +291,10 @@ export class NotificationsRepository implements INotificationsRepository {
     return this.mapToNotification(updated);
   }
 
-  async markAllAsRead(_ctx: Ctx, userId: string): Promise<number> {
+  async markAllAsRead(ctx: Ctx, userId: string): Promise<number> {
+    const client = this.getClient(ctx);
     const now = new Date();
-    const result = await this.prisma.notification.updateMany({
+    const result = await client.notification.updateMany({
       where: {
         recipientId: userId,
         channel: 'IN_APP',
@@ -294,8 +309,9 @@ export class NotificationsRepository implements INotificationsRepository {
     return result.count;
   }
 
-  async findPendingEmailNotifications(_ctx: Ctx): Promise<Notification[]> {
-    const notifications = await this.prisma.notification.findMany({
+  async findPendingEmailNotifications(ctx: Ctx): Promise<Notification[]> {
+    const client = this.getClient(ctx);
+    const notifications = await client.notification.findMany({
       where: {
         channel: 'EMAIL',
         status: 'PENDING',
@@ -304,9 +320,10 @@ export class NotificationsRepository implements INotificationsRepository {
     return notifications.map((n) => this.mapToNotification(n));
   }
 
-  async findRetryableEmailNotifications(_ctx: Ctx): Promise<Notification[]> {
+  async findRetryableEmailNotifications(ctx: Ctx): Promise<Notification[]> {
+    const client = this.getClient(ctx);
     const now = new Date();
-    const notifications = await this.prisma.notification.findMany({
+    const notifications = await client.notification.findMany({
       where: {
         channel: 'EMAIL',
         status: 'FAILED',
@@ -317,11 +334,12 @@ export class NotificationsRepository implements INotificationsRepository {
     return notifications.map((n) => this.mapToNotification(n));
   }
 
-  async deleteOldNotifications(_ctx: Ctx): Promise<number> {
+  async deleteOldNotifications(ctx: Ctx): Promise<number> {
+    const client = this.getClient(ctx);
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - NOTIFICATION_RETENTION_DAYS);
 
-    const result = await this.prisma.notification.deleteMany({
+    const result = await client.notification.deleteMany({
       where: {
         createdAt: { lt: cutoffDate },
       },
@@ -330,14 +348,121 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   // ==========================================================================
+  // ATOMIC CLAIM METHODS
+  // ==========================================================================
+
+  async claimPendingEvent(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<NotificationEvent | undefined> {
+    const client = this.getClient(ctx);
+
+    const result = await client.notificationEvent.updateMany({
+      where: {
+        id: eventId,
+        status: 'PENDING',
+      },
+      data: {
+        status: 'PROCESSING',
+      },
+    });
+
+    if (result.count === 0) {
+      return undefined;
+    }
+
+    const event = await client.notificationEvent.findUnique({
+      where: { id: eventId },
+    });
+    return event ? this.mapToNotificationEvent(event) : undefined;
+  }
+
+  async claimPendingEmailNotifications(
+    ctx: Ctx,
+    limit: number,
+  ): Promise<Notification[]> {
+    const client = this.getClient(ctx);
+
+    const pending = await client.notification.findMany({
+      where: {
+        channel: 'EMAIL',
+        status: 'PENDING',
+      },
+      take: limit,
+      select: { id: true },
+    });
+
+    if (pending.length === 0) {
+      return [];
+    }
+
+    const ids = pending.map((n) => n.id);
+    const now = new Date();
+
+    await client.notification.updateMany({
+      where: {
+        id: { in: ids },
+        status: 'PENDING',
+      },
+      data: {
+        status: 'QUEUED',
+        updatedAt: now,
+      },
+    });
+
+    const claimed = await client.notification.findMany({
+      where: {
+        id: { in: ids },
+        status: 'QUEUED',
+      },
+    });
+
+    return claimed.map((n) => this.mapToNotification(n));
+  }
+
+  async claimRetryableEmailNotification(
+    ctx: Ctx,
+    notificationId: string,
+  ): Promise<Notification | undefined> {
+    const client = this.getClient(ctx);
+    const now = new Date();
+    const nextRetryAt = new Date(now.getTime() + 5 * 60 * 1000);
+
+    const result = await client.notification.updateMany({
+      where: {
+        id: notificationId,
+        channel: 'EMAIL',
+        status: 'FAILED',
+        retryCount: { lt: 3 },
+        nextRetryAt: { lte: now },
+      },
+      data: {
+        status: 'QUEUED',
+        nextRetryAt: nextRetryAt,
+        updatedAt: now,
+      },
+    });
+
+    if (result.count === 0) {
+      return undefined;
+    }
+
+    const notification = await client.notification.findUnique({
+      where: { id: notificationId },
+    });
+    return notification ? this.mapToNotification(notification) : undefined;
+  }
+
+  // ==========================================================================
   // TEMPLATES
   // ==========================================================================
 
   async createTemplate(
-    _ctx: Ctx,
+    ctx: Ctx,
     template: NotificationTemplate,
   ): Promise<NotificationTemplate> {
-    const created = await this.prisma.notificationTemplate.create({
+    const client = this.getClient(ctx);
+    const created = await client.notificationTemplate.create({
       data: {
         id: template.id,
         eventType: this.mapEventTypeToDb(template.eventType),
@@ -356,22 +481,24 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   async findTemplateById(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
   ): Promise<NotificationTemplate | undefined> {
-    const template = await this.prisma.notificationTemplate.findUnique({
+    const client = this.getClient(ctx);
+    const template = await client.notificationTemplate.findUnique({
       where: { id },
     });
     return template ? this.mapToNotificationTemplate(template) : undefined;
   }
 
   async findTemplate(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventType: NotificationEventType,
     channel: NotificationChannel,
     locale: string,
   ): Promise<NotificationTemplate | undefined> {
-    const template = await this.prisma.notificationTemplate.findFirst({
+    const client = this.getClient(ctx);
+    const template = await client.notificationTemplate.findFirst({
       where: {
         eventType: this.mapEventTypeToDb(eventType),
         channel: this.mapChannelToDb(channel),
@@ -382,22 +509,24 @@ export class NotificationsRepository implements INotificationsRepository {
     return template ? this.mapToNotificationTemplate(template) : undefined;
   }
 
-  async findAllTemplates(_ctx: Ctx): Promise<NotificationTemplate[]> {
-    const templates = await this.prisma.notificationTemplate.findMany();
+  async findAllTemplates(ctx: Ctx): Promise<NotificationTemplate[]> {
+    const client = this.getClient(ctx);
+    const templates = await client.notificationTemplate.findMany();
     return templates.map((t) => this.mapToNotificationTemplate(t));
   }
 
   async updateTemplate(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     updates: Partial<NotificationTemplate>,
   ): Promise<NotificationTemplate | undefined> {
-    const existing = await this.prisma.notificationTemplate.findUnique({
+    const client = this.getClient(ctx);
+    const existing = await client.notificationTemplate.findUnique({
       where: { id },
     });
     if (!existing) return undefined;
 
-    const updated = await this.prisma.notificationTemplate.update({
+    const updated = await client.notificationTemplate.update({
       where: { id },
       data: {
         ...(updates.titleTemplate !== undefined && {
@@ -422,10 +551,11 @@ export class NotificationsRepository implements INotificationsRepository {
   // ==========================================================================
 
   async createChannelConfig(
-    _ctx: Ctx,
+    ctx: Ctx,
     config: NotificationChannelConfig,
   ): Promise<NotificationChannelConfig> {
-    const created = await this.prisma.notificationChannelConfig.create({
+    const client = this.getClient(ctx);
+    const created = await client.notificationChannelConfig.create({
       data: {
         id: config.id,
         eventType: this.mapEventTypeToDb(config.eventType),
@@ -440,33 +570,36 @@ export class NotificationsRepository implements INotificationsRepository {
   }
 
   async findChannelConfig(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventType: NotificationEventType,
   ): Promise<NotificationChannelConfig | undefined> {
-    const config = await this.prisma.notificationChannelConfig.findUnique({
+    const client = this.getClient(ctx);
+    const config = await client.notificationChannelConfig.findUnique({
       where: { eventType: this.mapEventTypeToDb(eventType) },
     });
     return config ? this.mapToNotificationChannelConfig(config) : undefined;
   }
 
   async findAllChannelConfigs(
-    _ctx: Ctx,
+    ctx: Ctx,
   ): Promise<NotificationChannelConfig[]> {
-    const configs = await this.prisma.notificationChannelConfig.findMany();
+    const client = this.getClient(ctx);
+    const configs = await client.notificationChannelConfig.findMany();
     return configs.map((c) => this.mapToNotificationChannelConfig(c));
   }
 
   async updateChannelConfig(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventType: NotificationEventType,
     updates: Partial<NotificationChannelConfig>,
   ): Promise<NotificationChannelConfig | undefined> {
-    const existing = await this.prisma.notificationChannelConfig.findUnique({
+    const client = this.getClient(ctx);
+    const existing = await client.notificationChannelConfig.findUnique({
       where: { eventType: this.mapEventTypeToDb(eventType) },
     });
     if (!existing) return undefined;
 
-    const updated = await this.prisma.notificationChannelConfig.update({
+    const updated = await client.notificationChannelConfig.update({
       where: { eventType: this.mapEventTypeToDb(eventType) },
       data: {
         ...(updates.inAppEnabled !== undefined && {

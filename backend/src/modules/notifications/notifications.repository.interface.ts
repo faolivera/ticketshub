@@ -123,6 +123,33 @@ export interface INotificationsRepository {
   deleteOldNotifications(ctx: Ctx): Promise<number>;
 
   // ==========================================================================
+  // ATOMIC CLAIM METHODS
+  // ==========================================================================
+
+  /**
+   * Atomically claim a pending event for processing.
+   * Uses WHERE conditions to prevent duplicate claiming:
+   * - status = PENDING
+   * Returns the event if claimed, undefined if already claimed by another worker.
+   */
+  claimPendingEvent(ctx: Ctx, eventId: string): Promise<NotificationEvent | undefined>;
+
+  /**
+   * Atomically claim pending email notifications (batch).
+   * Sets status to QUEUED and returns only the ones claimed.
+   */
+  claimPendingEmailNotifications(ctx: Ctx, limit: number): Promise<Notification[]>;
+
+  /**
+   * Atomically claim a retryable email notification.
+   * Updates nextRetryAt to prevent re-claim and returns the notification if claimed.
+   */
+  claimRetryableEmailNotification(
+    ctx: Ctx,
+    notificationId: string,
+  ): Promise<Notification | undefined>;
+
+  // ==========================================================================
   // TEMPLATES
   // ==========================================================================
 

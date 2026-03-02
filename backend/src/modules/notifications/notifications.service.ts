@@ -384,6 +384,7 @@ export class NotificationsService {
 
   /**
    * Mark an event as processing
+   * @deprecated Use claimEvent for atomic claiming
    */
   async markEventProcessing(
     ctx: Ctx,
@@ -392,6 +393,37 @@ export class NotificationsService {
     return await this.repository.updateEvent(ctx, eventId, {
       status: NotificationEventStatus.PROCESSING,
     });
+  }
+
+  /**
+   * Atomically claim a pending event for processing.
+   * Returns the event if successfully claimed, undefined if already taken.
+   */
+  async claimEvent(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<NotificationEvent | undefined> {
+    return await this.repository.claimPendingEvent(ctx, eventId);
+  }
+
+  /**
+   * Claim pending email notifications for sending (batch).
+   */
+  async claimPendingEmails(
+    ctx: Ctx,
+    limit: number = 10,
+  ): Promise<Notification[]> {
+    return await this.repository.claimPendingEmailNotifications(ctx, limit);
+  }
+
+  /**
+   * Claim a retryable failed email notification.
+   */
+  async claimRetryableEmail(
+    ctx: Ctx,
+    notificationId: string,
+  ): Promise<Notification | undefined> {
+    return await this.repository.claimRetryableEmailNotification(ctx, notificationId);
   }
 
   /**
