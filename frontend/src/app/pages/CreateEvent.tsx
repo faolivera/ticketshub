@@ -12,7 +12,6 @@ interface EventData {
   time: string;
   venue: string;
   location: string;
-  description: string;
   category: string;
 }
 
@@ -222,7 +221,6 @@ export function CreateEvent() {
     time: '',
     venue: '',
     location: '',
-    description: '',
     category: '',
   });
 
@@ -285,7 +283,6 @@ export function CreateEvent() {
 
       const createdEvent = await eventsService.createEvent({
         name: formData.name.trim(),
-        description: formData.description.trim(),
         category: mapCategoryToApi(formData.category),
         venue: formData.venue.trim(),
         location: mapLocationToAddress(formData.location),
@@ -314,31 +311,23 @@ export function CreateEvent() {
           await Promise.all(bannerUploads);
         } catch (bannerError) {
           console.error('Failed to upload banners:', bannerError);
-          // Show warning but don't block event creation since event was created successfully
-          alert(t('createEvent.bannerUploadFailed'));
         } finally {
           setIsUploadingBanners(false);
         }
       }
 
-      alert(t('createEvent.eventCreatedSuccess'));
-
-      // If coming from sell ticket page, redirect back with the event info
-      if (fromSellTicket) {
-        navigate('/sell-ticket', {
-          state: {
-            newEvent: {
-              id: createdEvent.id,
-              name: createdEvent.name,
-              date: `${formData.date} at ${formData.time}`,
-              venue: createdEvent.venue,
-              location: formData.location,
-            },
+      // Navigate to sell-ticket with the new event data and selected date
+      navigate('/sell-ticket', {
+        state: {
+          newEvent: {
+            id: createdEvent.id,
+            name: createdEvent.name,
+            dateISO: eventDateTime.toISOString(),
+            venue: createdEvent.venue,
+            location: formData.location,
           },
-        });
-      } else {
-        navigate('/');
-      }
+        },
+      });
     } catch (submitError) {
       console.error('Failed to create event:', submitError);
       setError(
@@ -537,23 +526,6 @@ export function CreateEvent() {
                   </button>
                 </div>
               )}
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  {t('createEvent.description')}
-                </div>
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder={t('createEvent.descriptionPlaceholder')}
-                rows={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
             </div>
 
             {/* Event Banners */}

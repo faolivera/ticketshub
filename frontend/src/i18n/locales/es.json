@@ -31,7 +31,9 @@
     "searchPlaceholder": "Buscar eventos, artistas o ubicaciones...",
     "searchResults": "Resultados de Búsqueda",
     "upcomingEvents": "Próximos Eventos",
-    "noEventsFound": "No se encontraron eventos que coincidan con tu búsqueda."
+    "noEventsFound": "No se encontraron eventos que coincidan con tu búsqueda.",
+    "errorLoadingEvents": "Error al cargar eventos. Inténtalo de nuevo.",
+    "checkBackLater": "Vuelve más tarde para ver nuevos eventos"
   },
   "eventCard": {
     "trending": "Tendencia",
@@ -67,6 +69,8 @@
     "badgeVerified": "Verificado",
     "badgeBestSeller": "Mejor Vendedor",
     "buyTicket": "Comprar Entrada",
+    "noTicketsAvailable": "No hay entradas disponibles para este evento",
+    "checkBackLater": "Vuelve más tarde o crea un anuncio si tienes entradas para vender",
     "noReviewsYet": "Aún no hay reseñas",
     "commissionRange": "(+{{min}}% a +{{max}}% comisión)",
     "soldAsBundle": "se vende como paquete",
@@ -653,8 +657,6 @@
     "selectCategory": "Selecciona una categoría",
     "addCustomCategory": "Agregar Categoría Personalizada",
     "enterCustomCategory": "Ingresa categoría personalizada",
-    "description": "Descripción",
-    "descriptionPlaceholder": "Describe tu evento, artistas, horarios, etc.",
     "imageUrl": "URL de Imagen del Evento",
     "imageUrlPlaceholder": "https://ejemplo.com/imagen-evento.jpg",
     "imageUrlHint": "Opcional: Agrega un enlace a una imagen para tu evento",
@@ -667,7 +669,6 @@
     "pleaseCompleteRequiredFields": "Por favor completa todos los campos requeridos",
     "invalidDateTime": "Por favor ingresa una fecha y hora validas",
     "createFailed": "No se pudo crear el evento. Intentalo de nuevo.",
-    "eventCreatedSuccess": "¡Evento creado exitosamente!",
     "categories": {
       "music": "Música",
       "sports": "Deportes",
@@ -812,6 +813,7 @@
     "save": "Guardar",
     "delete": "Eliminar",
     "edit": "Editar",
+    "create": "Crear",
     "close": "Cerrar",
     "back": "Atrás",
     "next": "Siguiente",

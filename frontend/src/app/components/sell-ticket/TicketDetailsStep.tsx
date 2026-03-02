@@ -52,9 +52,10 @@ interface TicketListingForm {
 interface TicketDetailsStepProps {
   event: EventWithDates;
   onBack: () => void;
+  preselectedDateISO?: string;
 }
 
-export function TicketDetailsStep({ event, onBack }: TicketDetailsStepProps) {
+export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketDetailsStepProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -101,6 +102,43 @@ export function TicketDetailsStep({ event, onBack }: TicketDetailsStepProps) {
   useEffect(() => {
     setIsPendingListing(event.status === EventStatus.Pending);
   }, [event]);
+
+  useEffect(() => {
+    if (preselectedDateISO && currentEvent.dates.length > 0) {
+      const preselectedTime = new Date(preselectedDateISO).getTime();
+      const matchingDate = currentEvent.dates.find(
+        (d) => new Date(d.date).getTime() === preselectedTime
+      );
+      if (matchingDate && !formData.eventDateId) {
+        handleDateSelect(matchingDate);
+      }
+    }
+  }, [preselectedDateISO, currentEvent.dates]);
+
+  const isFormValid = (): boolean => {
+    if (!formData.eventDateId) return false;
+    if (!formData.eventSectionId) return false;
+    if (formData.pricePerTicket <= 0) return false;
+
+    const isNumberedListing = formData.seatingType === 'numbered';
+    if (isNumberedListing) {
+      const validSeats = formData.numberedSeats.filter(
+        (s) => s.row.trim() && s.seatNumber.trim()
+      );
+      if (validSeats.length === 0) return false;
+    } else {
+      if (formData.quantity < 1) return false;
+    }
+
+    if (formData.deliveryMethod === 'physical') {
+      if (!formData.physicalDeliveryMethod) return false;
+      if (formData.physicalDeliveryMethod === 'pickup' && !formData.pickupAddress.trim()) {
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1047,7 +1085,7 @@ export function TicketDetailsStep({ event, onBack }: TicketDetailsStepProps) {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isFormValid()}
               className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (

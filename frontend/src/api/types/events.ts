@@ -70,7 +70,6 @@ export interface EventBannerUrls {
 export interface Event {
   id: string;
   name: string;
-  description: string;
   category: EventCategory;
   venue: string;
   location: Address;
@@ -149,7 +148,6 @@ export interface EventWithDates extends Event {
  */
 export interface CreateEventRequest {
   name: string;
-  description: string;
   category: EventCategory;
   venue: string;
   location: Address;

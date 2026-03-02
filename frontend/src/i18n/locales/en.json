@@ -32,7 +32,8 @@
     "searchResults": "Search Results",
     "upcomingEvents": "Upcoming Events",
     "noEventsFound": "No events found matching your search.",
-    "errorLoadingEvents": "Failed to load events. Please try again."
+    "errorLoadingEvents": "Failed to load events. Please try again.",
+    "checkBackLater": "Check back later for new events"
   },
   "eventCard": {
     "trending": "Trending",
@@ -678,8 +679,6 @@
     "selectCategory": "Select a category",
     "addCustomCategory": "Add Custom Category",
     "enterCustomCategory": "Enter custom category",
-    "description": "Description",
-    "descriptionPlaceholder": "Describe your event, performers, schedule, etc.",
     "imageUrl": "Event Image URL",
     "imageUrlPlaceholder": "https://example.com/event-image.jpg",
     "imageUrlHint": "Optional: Add a link to an image for your event",
@@ -692,7 +691,6 @@
     "pleaseCompleteRequiredFields": "Please complete all required fields",
     "invalidDateTime": "Please enter a valid date and time",
     "createFailed": "Failed to create event. Please try again.",
-    "eventCreatedSuccess": "Event created successfully!",
     "categories": {
       "music": "Music",
       "sports": "Sports",
@@ -842,6 +840,7 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
+    "create": "Create",
     "close": "Close",
     "back": "Back",
     "next": "Next",

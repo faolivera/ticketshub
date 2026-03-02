@@ -327,7 +327,7 @@ export function MyTicket() {
     }
   };
 
-  const isManualPayment = transaction?.paymentMethodId?.includes('bank_transfer');
+  const isManualPayment = bankTransferConfig !== null;
   const needsPaymentConfirmation = isManualPayment && 
     transaction?.status === TransactionStatus.PendingPayment && 
     !isPaymentExpiredLocally &&

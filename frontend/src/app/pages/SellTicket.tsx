@@ -126,7 +126,11 @@ export function SellTicket() {
             )}
 
             {step === 'ticket-details' && selectedEvent && (
-              <TicketDetailsStep event={selectedEvent} onBack={handleBack} />
+              <TicketDetailsStep
+                event={selectedEvent}
+                onBack={handleBack}
+                preselectedDateISO={newEvent?.dateISO}
+              />
             )}
           </div>
         </div>
