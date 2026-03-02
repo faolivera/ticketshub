@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { BaseRepository } from '../../../common/repositories/base.repository';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import type { PricingSnapshot as PrismaPricingSnapshot } from '@prisma/client';
@@ -13,11 +14,14 @@ import type { Money } from '../payments.domain';
 import type { IPricingRepository } from './pricing.repository.interface';
 
 @Injectable()
-export class PricingRepository implements IPricingRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class PricingRepository extends BaseRepository implements IPricingRepository {
+  constructor(prisma: PrismaService) {
+    super(prisma);
+  }
 
-  async create(_ctx: Ctx, snapshot: PricingSnapshot): Promise<PricingSnapshot> {
-    const prismaSnapshot = await this.prisma.pricingSnapshot.create({
+  async create(ctx: Ctx, snapshot: PricingSnapshot): Promise<PricingSnapshot> {
+    const client = this.getClient(ctx);
+    const prismaSnapshot = await client.pricingSnapshot.create({
       data: {
         id: snapshot.id,
         listingId: snapshot.listingId,
@@ -40,19 +44,21 @@ export class PricingRepository implements IPricingRepository {
     return this.mapToDomain(prismaSnapshot);
   }
 
-  async findById(_ctx: Ctx, id: string): Promise<PricingSnapshot | undefined> {
-    const snapshot = await this.prisma.pricingSnapshot.findUnique({
+  async findById(ctx: Ctx, id: string): Promise<PricingSnapshot | undefined> {
+    const client = this.getClient(ctx);
+    const snapshot = await client.pricingSnapshot.findUnique({
       where: { id },
     });
     return snapshot ? this.mapToDomain(snapshot) : undefined;
   }
 
   async update(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     updates: Partial<PricingSnapshot>,
   ): Promise<PricingSnapshot | undefined> {
-    const existing = await this.prisma.pricingSnapshot.findUnique({
+    const client = this.getClient(ctx);
+    const existing = await client.pricingSnapshot.findUnique({
       where: { id },
     });
     if (!existing) return undefined;
@@ -96,7 +102,7 @@ export class PricingRepository implements IPricingRepository {
       data.selectedPaymentMethodId = updates.selectedPaymentMethodId;
     }
 
-    const updated = await this.prisma.pricingSnapshot.update({
+    const updated = await client.pricingSnapshot.update({
       where: { id },
       data,
     });
@@ -104,10 +110,11 @@ export class PricingRepository implements IPricingRepository {
     return this.mapToDomain(updated);
   }
 
-  async deleteExpired(_ctx: Ctx): Promise<number> {
+  async deleteExpired(ctx: Ctx): Promise<number> {
+    const client = this.getClient(ctx);
     const now = new Date();
 
-    const result = await this.prisma.pricingSnapshot.deleteMany({
+    const result = await client.pricingSnapshot.deleteMany({
       where: {
         expiresAt: { lt: now },
         consumedByTransactionId: null,
@@ -115,6 +122,37 @@ export class PricingRepository implements IPricingRepository {
     });
 
     return result.count;
+  }
+
+  async consumeAtomic(
+    ctx: Ctx,
+    snapshotId: string,
+    listingId: string,
+    transactionId: string,
+    selectedPaymentMethodId: string,
+  ): Promise<PricingSnapshot | undefined> {
+    const client = this.getClient(ctx);
+    const now = new Date();
+
+    const result = await client.pricingSnapshot.updateMany({
+      where: {
+        id: snapshotId,
+        listingId: listingId,
+        consumedByTransactionId: null,
+        expiresAt: { gt: now },
+      },
+      data: {
+        consumedAt: now,
+        consumedByTransactionId: transactionId,
+        selectedPaymentMethodId: selectedPaymentMethodId,
+      },
+    });
+
+    if (result.count === 0) {
+      return undefined;
+    }
+
+    return await this.findById(ctx, snapshotId);
   }
 
   private mapToDomain(prisma: PrismaPricingSnapshot): PricingSnapshot {

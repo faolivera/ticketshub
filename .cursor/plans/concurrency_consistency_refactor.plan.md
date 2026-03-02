@@ -633,7 +633,7 @@ async handlePaymentReceived(ctx: Ctx, transactionId: string): Promise<Transactio
 
 **Scope:** Pricing snapshot con consumo único  
 **Riesgo:** Medio  
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completado (2026-03-02)
 
 #### Cambios
 

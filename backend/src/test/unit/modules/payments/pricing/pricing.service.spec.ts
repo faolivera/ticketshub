@@ -70,6 +70,8 @@ describe('PricingService', () => {
       create: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
+      consumeAtomic: jest.fn(),
+      deleteExpired: jest.fn(),
     };
 
     const mockConfigService = {
@@ -125,10 +127,11 @@ describe('PricingService', () => {
   });
 
   describe('validateAndConsume', () => {
-    it('should validate and consume a valid snapshot', async () => {
+    it('should validate and consume a valid snapshot using atomic operation', async () => {
       const snapshot = createMockSnapshot();
+      const consumedSnapshot = { ...snapshot, consumedAt: new Date(), consumedByTransactionId: 'txn_123' };
       repository.findById.mockResolvedValue(snapshot);
-      repository.update.mockResolvedValue({ ...snapshot, consumedAt: new Date() });
+      repository.consumeAtomic.mockResolvedValue(consumedSnapshot);
 
       const result = await service.validateAndConsume(
         mockCtx,
@@ -138,19 +141,18 @@ describe('PricingService', () => {
         'txn_123',
       );
 
-      expect(result.snapshot).toEqual(snapshot);
+      expect(result.snapshot).toEqual(consumedSnapshot);
       expect(result.selectedCommissionPercent).toBe(12);
-      expect(repository.update).toHaveBeenCalledWith(
+      expect(repository.consumeAtomic).toHaveBeenCalledWith(
         mockCtx,
         snapshot.id,
-        expect.objectContaining({
-          consumedByTransactionId: 'txn_123',
-          selectedPaymentMethodId: 'pm_payway',
-        }),
+        snapshot.listingId,
+        'txn_123',
+        'pm_payway',
       );
     });
 
-    it('should throw NOT_FOUND if snapshot does not exist', async () => {
+    it('should throw NOT_FOUND if snapshot does not exist on initial lookup', async () => {
       repository.findById.mockResolvedValue(undefined);
 
       await expect(
@@ -167,17 +169,25 @@ describe('PricingService', () => {
       }
     });
 
-    it('should throw ALREADY_CONSUMED if snapshot was already used', async () => {
-      const snapshot = createMockSnapshot({
+    it('should throw ALREADY_CONSUMED when atomic consume fails and snapshot was consumed', async () => {
+      const snapshot = createMockSnapshot();
+      const consumedSnapshot = createMockSnapshot({
         consumedByTransactionId: 'txn_previous',
       });
-      repository.findById.mockResolvedValue(snapshot);
+      repository.findById
+        .mockResolvedValueOnce(snapshot)
+        .mockResolvedValueOnce(consumedSnapshot);
+      repository.consumeAtomic.mockResolvedValue(undefined);
 
       await expect(
         service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123'),
       ).rejects.toThrow(BadRequestException);
 
       try {
+        repository.findById
+          .mockResolvedValueOnce(snapshot)
+          .mockResolvedValueOnce(consumedSnapshot);
+        repository.consumeAtomic.mockResolvedValue(undefined);
         await service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123');
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
@@ -187,17 +197,25 @@ describe('PricingService', () => {
       }
     });
 
-    it('should throw EXPIRED if snapshot has expired', async () => {
-      const snapshot = createMockSnapshot({
-        expiresAt: new Date(Date.now() - 1000), // Expired 1 second ago
+    it('should throw EXPIRED when atomic consume fails due to expiration', async () => {
+      const snapshot = createMockSnapshot();
+      const expiredSnapshot = createMockSnapshot({
+        expiresAt: new Date(Date.now() - 1000),
       });
-      repository.findById.mockResolvedValue(snapshot);
+      repository.findById
+        .mockResolvedValueOnce(snapshot)
+        .mockResolvedValueOnce(expiredSnapshot);
+      repository.consumeAtomic.mockResolvedValue(undefined);
 
       await expect(
         service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123'),
       ).rejects.toThrow(BadRequestException);
 
       try {
+        repository.findById
+          .mockResolvedValueOnce(snapshot)
+          .mockResolvedValueOnce(expiredSnapshot);
+        repository.consumeAtomic.mockResolvedValue(undefined);
         await service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123');
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
@@ -207,15 +225,22 @@ describe('PricingService', () => {
       }
     });
 
-    it('should throw LISTING_MISMATCH if listing ID does not match', async () => {
+    it('should throw LISTING_MISMATCH when atomic consume fails due to listing mismatch', async () => {
       const snapshot = createMockSnapshot();
-      repository.findById.mockResolvedValue(snapshot);
+      repository.findById
+        .mockResolvedValueOnce(snapshot)
+        .mockResolvedValueOnce(snapshot);
+      repository.consumeAtomic.mockResolvedValue(undefined);
 
       await expect(
         service.validateAndConsume(mockCtx, snapshot.id, 'different_listing', 'pm_payway', 'txn_123'),
       ).rejects.toThrow(BadRequestException);
 
       try {
+        repository.findById
+          .mockResolvedValueOnce(snapshot)
+          .mockResolvedValueOnce(snapshot);
+        repository.consumeAtomic.mockResolvedValue(undefined);
         await service.validateAndConsume(mockCtx, snapshot.id, 'different_listing', 'pm_payway', 'txn_123');
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
@@ -249,8 +274,9 @@ describe('PricingService', () => {
           { paymentMethodId: 'pm_null', paymentMethodName: 'No Commission', commissionPercent: null },
         ],
       });
+      const consumedSnapshot = { ...snapshot, consumedAt: new Date() };
       repository.findById.mockResolvedValue(snapshot);
-      repository.update.mockResolvedValue({ ...snapshot, consumedAt: new Date() });
+      repository.consumeAtomic.mockResolvedValue(consumedSnapshot);
 
       const result = await service.validateAndConsume(
         mockCtx,
@@ -261,6 +287,58 @@ describe('PricingService', () => {
       );
 
       expect(result.selectedCommissionPercent).toBe(0);
+    });
+
+    it('should throw NOT_FOUND when atomic consume fails and snapshot no longer exists', async () => {
+      const snapshot = createMockSnapshot();
+      repository.findById
+        .mockResolvedValueOnce(snapshot)
+        .mockResolvedValueOnce(undefined);
+      repository.consumeAtomic.mockResolvedValue(undefined);
+
+      await expect(
+        service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123'),
+      ).rejects.toThrow(BadRequestException);
+
+      try {
+        repository.findById
+          .mockResolvedValueOnce(snapshot)
+          .mockResolvedValueOnce(undefined);
+        repository.consumeAtomic.mockResolvedValue(undefined);
+        await service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123');
+      } catch (error) {
+        expect((error as BadRequestException).getResponse()).toEqual({
+          code: PricingSnapshotError.NOT_FOUND,
+          message: expect.any(String),
+        });
+      }
+    });
+
+    it('should handle concurrent consumption - only first request succeeds', async () => {
+      const snapshot = createMockSnapshot();
+      const consumedSnapshot = { ...snapshot, consumedAt: new Date(), consumedByTransactionId: 'txn_first' };
+
+      repository.findById.mockResolvedValue(snapshot);
+      repository.consumeAtomic
+        .mockResolvedValueOnce(consumedSnapshot)
+        .mockResolvedValueOnce(undefined);
+
+      const result1 = await service.validateAndConsume(
+        mockCtx,
+        snapshot.id,
+        snapshot.listingId,
+        'pm_payway',
+        'txn_first',
+      );
+      expect(result1.snapshot.consumedByTransactionId).toBe('txn_first');
+
+      repository.findById
+        .mockResolvedValueOnce(snapshot)
+        .mockResolvedValueOnce({ ...snapshot, consumedByTransactionId: 'txn_first' });
+
+      await expect(
+        service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_second'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

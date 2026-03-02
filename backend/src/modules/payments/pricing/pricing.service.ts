@@ -97,29 +97,6 @@ export class PricingService {
       });
     }
 
-    if (snapshot.consumedByTransactionId) {
-      throw new BadRequestException({
-        code: PricingSnapshotError.ALREADY_CONSUMED,
-        message: 'Pricing snapshot has already been used. Please refresh to get current prices.',
-      });
-    }
-
-    const now = new Date();
-    const expiresAt = new Date(snapshot.expiresAt);
-    if (expiresAt < now) {
-      throw new BadRequestException({
-        code: PricingSnapshotError.EXPIRED,
-        message: 'Pricing snapshot has expired. Please refresh to get current prices.',
-      });
-    }
-
-    if (snapshot.listingId !== listingId) {
-      throw new BadRequestException({
-        code: PricingSnapshotError.LISTING_MISMATCH,
-        message: 'Pricing snapshot does not match this listing. Please refresh to get current prices.',
-      });
-    }
-
     const paymentMethodSnapshot = snapshot.paymentMethodCommissions.find(
       (pm) => pm.paymentMethodId === paymentMethodId,
     );
@@ -131,11 +108,51 @@ export class PricingService {
       });
     }
 
-    await this.repository.update(ctx, snapshotId, {
-      consumedAt: now,
-      consumedByTransactionId: transactionId,
-      selectedPaymentMethodId: paymentMethodId,
-    });
+    const consumed = await this.repository.consumeAtomic(
+      ctx,
+      snapshotId,
+      listingId,
+      transactionId,
+      paymentMethodId,
+    );
+
+    if (!consumed) {
+      const current = await this.repository.findById(ctx, snapshotId);
+
+      if (!current) {
+        throw new BadRequestException({
+          code: PricingSnapshotError.NOT_FOUND,
+          message: 'Pricing snapshot not found. Please refresh to get current prices.',
+        });
+      }
+
+      if (current.consumedByTransactionId) {
+        throw new BadRequestException({
+          code: PricingSnapshotError.ALREADY_CONSUMED,
+          message: 'Pricing snapshot has already been used. Please refresh to get current prices.',
+        });
+      }
+
+      const now = new Date();
+      if (new Date(current.expiresAt) < now) {
+        throw new BadRequestException({
+          code: PricingSnapshotError.EXPIRED,
+          message: 'Pricing snapshot has expired. Please refresh to get current prices.',
+        });
+      }
+
+      if (current.listingId !== listingId) {
+        throw new BadRequestException({
+          code: PricingSnapshotError.LISTING_MISMATCH,
+          message: 'Pricing snapshot does not match this listing. Please refresh to get current prices.',
+        });
+      }
+
+      throw new BadRequestException({
+        code: PricingSnapshotError.ALREADY_CONSUMED,
+        message: 'Unable to use pricing snapshot. Please refresh to get current prices.',
+      });
+    }
 
     this.logger.log(
       ctx,
@@ -143,7 +160,7 @@ export class PricingService {
     );
 
     return {
-      snapshot,
+      snapshot: consumed,
       selectedCommissionPercent: paymentMethodSnapshot.commissionPercent ?? 0,
     };
   }

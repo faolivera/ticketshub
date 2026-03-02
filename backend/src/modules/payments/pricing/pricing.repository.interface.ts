@@ -29,6 +29,24 @@ export interface IPricingRepository {
    * Returns the number of deleted snapshots
    */
   deleteExpired(ctx: Ctx): Promise<number>;
+
+  /**
+   * Atomically consume a pricing snapshot.
+   * Uses WHERE conditions to ensure single-use:
+   * - id matches
+   * - consumedByTransactionId IS NULL (not yet consumed)
+   * - expiresAt > NOW() (not expired)
+   * - listingId matches
+   *
+   * Returns the snapshot if consumed, undefined if already consumed/expired/mismatch.
+   */
+  consumeAtomic(
+    ctx: Ctx,
+    snapshotId: string,
+    listingId: string,
+    transactionId: string,
+    selectedPaymentMethodId: string,
+  ): Promise<PricingSnapshot | undefined>;
 }
 
 /**
