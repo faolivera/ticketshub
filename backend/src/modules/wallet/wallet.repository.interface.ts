@@ -35,7 +35,8 @@ export interface IWalletRepository {
   ): Promise<Wallet | undefined>;
 
   /**
-   * Atomically update balances with optimistic locking
+   * Atomically update balances with version check (optimistic locking pattern)
+   * Should be used within a transaction after acquiring pessimistic lock
    * @throws OptimisticLockException if version mismatch
    */
   updateBalancesWithVersion(

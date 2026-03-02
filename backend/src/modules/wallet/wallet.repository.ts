@@ -31,6 +31,10 @@ export class WalletRepository
     return wallet ? this.mapToWallet(wallet) : undefined;
   }
 
+  /**
+   * Get wallet by user ID with pessimistic lock (FOR UPDATE)
+   * Blocks other transactions from modifying this row until current transaction commits
+   */
   async findByUserIdForUpdate(
     ctx: Ctx,
     userId: string,
@@ -96,6 +100,12 @@ export class WalletRepository
     return this.mapToWallet(updated);
   }
 
+  /**
+   * Atomically update balances with version check (optimistic locking pattern)
+   * Uses raw SQL with jsonb_set for atomic JSON field updates
+   * Fails if the wallet has been modified since it was read (version mismatch)
+   * @throws OptimisticLockException if version mismatch
+   */
   async updateBalancesWithVersion(
     ctx: Ctx,
     userId: string,
@@ -104,9 +114,6 @@ export class WalletRepository
     expectedVersion: number,
   ): Promise<Wallet> {
     const client = this.getClient(ctx);
-
-    // Atomic update with version check using raw SQL
-    // Uses jsonb_set to atomically update the amount inside the JSON balance objects
     const result = await client.$executeRaw`
       UPDATE wallets
       SET 

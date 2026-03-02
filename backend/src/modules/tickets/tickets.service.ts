@@ -10,6 +10,7 @@ import { randomBytes } from 'crypto';
 import type { ITicketsRepository } from './tickets.repository.interface';
 import { TICKETS_REPOSITORY } from './tickets.repository.interface';
 import { EventsService } from '../events/events.service';
+import { TransactionManager } from '../../common/database';
 import type { Ctx } from '../../common/types/context';
 import type {
   TicketListing,
@@ -43,6 +44,7 @@ export class TicketsService {
     private readonly ticketsRepository: ITicketsRepository,
     @Inject(forwardRef(() => EventsService))
     private readonly eventsService: EventsService,
+    private readonly txManager: TransactionManager,
   ) {}
 
   /**
@@ -305,6 +307,7 @@ export class TicketsService {
       description: data.description,
       eventSectionId: data.eventSectionId,
       status: listingStatus,
+      version: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -480,6 +483,8 @@ export class TicketsService {
 
   /**
    * Update a listing
+   * Uses pessimistic locking (FOR UPDATE) to prevent concurrent modifications,
+   * combined with version check for additional safety
    */
   async updateListing(
     ctx: Ctx,
@@ -487,60 +492,74 @@ export class TicketsService {
     sellerId: string,
     updates: UpdateListingRequest,
   ): Promise<TicketListing> {
-    const listing = await this.ticketsRepository.findById(ctx, listingId);
-    if (!listing) {
-      throw new NotFoundException('Listing not found');
-    }
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const listing = await this.ticketsRepository.findByIdForUpdate(
+        txCtx,
+        listingId,
+      );
+      if (!listing) {
+        throw new NotFoundException('Listing not found');
+      }
 
-    if (listing.sellerId !== sellerId) {
-      throw new ForbiddenException('You can only update your own listings');
-    }
+      if (listing.sellerId !== sellerId) {
+        throw new ForbiddenException('You can only update your own listings');
+      }
 
-    if (listing.status !== ListingStatus.Active) {
-      throw new BadRequestException('Can only update active listings');
-    }
+      if (listing.status !== ListingStatus.Active) {
+        throw new BadRequestException('Can only update active listings');
+      }
 
-    const updated = await this.ticketsRepository.update(
-      ctx,
-      listingId,
-      updates,
-    );
-    if (!updated) {
-      throw new NotFoundException('Listing not found');
-    }
-
-    return updated;
+      return await this.ticketsRepository.updateWithVersion(
+        txCtx,
+        listingId,
+        updates,
+        listing.version,
+      );
+    });
   }
 
   /**
    * Cancel a listing
+   * Uses pessimistic locking to prevent race with purchase
    */
   async cancelListing(
     ctx: Ctx,
     listingId: string,
     sellerId: string,
   ): Promise<TicketListing> {
-    const listing = await this.ticketsRepository.findById(ctx, listingId);
-    if (!listing) {
-      throw new NotFoundException('Listing not found');
-    }
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const listing = await this.ticketsRepository.findByIdForUpdate(
+        txCtx,
+        listingId,
+      );
+      if (!listing) {
+        throw new NotFoundException('Listing not found');
+      }
 
-    if (listing.sellerId !== sellerId) {
-      throw new ForbiddenException('You can only cancel your own listings');
-    }
+      if (listing.sellerId !== sellerId) {
+        throw new ForbiddenException('You can only cancel your own listings');
+      }
 
-    if (listing.status !== ListingStatus.Active) {
-      throw new BadRequestException('Can only cancel active listings');
-    }
+      if (listing.status !== ListingStatus.Active) {
+        throw new BadRequestException('Can only cancel active listings');
+      }
 
-    const updated = await this.ticketsRepository.update(ctx, listingId, {
-      status: ListingStatus.Cancelled,
+      const hasReserved = listing.ticketUnits.some(
+        (u) => u.status === TicketUnitStatus.Reserved,
+      );
+      if (hasReserved) {
+        throw new BadRequestException(
+          'Cannot cancel listing with reserved tickets. Wait for transaction to complete.',
+        );
+      }
+
+      return await this.ticketsRepository.updateWithVersion(
+        txCtx,
+        listingId,
+        { status: ListingStatus.Cancelled },
+        listing.version,
+      );
     });
-    if (!updated) {
-      throw new NotFoundException('Listing not found');
-    }
-
-    return updated;
   }
 
   /**
@@ -558,79 +577,84 @@ export class TicketsService {
 
   /**
    * Reserve tickets for purchase (internal use by Transactions)
+   * Uses pessimistic locking to prevent double-booking
    */
   async reserveTickets(
     ctx: Ctx,
     listingId: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing> {
-    const listing = await this.ticketsRepository.findById(ctx, listingId);
-    if (!listing) {
-      throw new NotFoundException('Listing not found');
-    }
-
-    if (listing.status !== ListingStatus.Active) {
-      throw new BadRequestException('Listing is not available');
-    }
-
-    const event = await this.eventsService.getEventById(ctx, listing.eventId);
-    const eventSection = event.sections.find(
-      (s) => s.id === listing.eventSectionId,
-    );
-    const seatingType = eventSection?.seatingType ?? SeatingType.Unnumbered;
-    this.validateListingSeatingConsistency(listing.ticketUnits, seatingType);
-
-    if (!ticketUnitIds.length) {
-      throw new BadRequestException(
-        'At least one ticket unit must be selected',
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const listing = await this.ticketsRepository.findByIdForUpdate(
+        txCtx,
+        listingId,
       );
-    }
+      if (!listing) {
+        throw new NotFoundException('Listing not found');
+      }
 
-    if (new Set(ticketUnitIds).size !== ticketUnitIds.length) {
-      throw new BadRequestException(
-        'Duplicate ticket unit IDs are not allowed',
+      if (listing.status !== ListingStatus.Active) {
+        throw new BadRequestException('Listing is not available');
+      }
+
+      if (!ticketUnitIds.length) {
+        throw new BadRequestException(
+          'At least one ticket unit must be selected',
+        );
+      }
+
+      if (new Set(ticketUnitIds).size !== ticketUnitIds.length) {
+        throw new BadRequestException(
+          'Duplicate ticket unit IDs are not allowed',
+        );
+      }
+
+      const availableUnitIds = this.getAvailableUnitIds(listing);
+      if (ticketUnitIds.some((id) => !availableUnitIds.includes(id))) {
+        throw new BadRequestException(
+          'One or more ticket units are not available',
+        );
+      }
+
+      if (
+        listing.sellTogether &&
+        ticketUnitIds.length !== availableUnitIds.length
+      ) {
+        throw new BadRequestException('Must purchase all tickets together');
+      }
+
+      return await this.ticketsRepository.reserveUnitsWithLock(
+        txCtx,
+        listingId,
+        ticketUnitIds,
       );
-    }
-
-    const availableUnitIds = this.getAvailableUnitIds(listing);
-    if (ticketUnitIds.some((id) => !availableUnitIds.includes(id))) {
-      throw new BadRequestException(
-        'One or more ticket units are not available',
-      );
-    }
-
-    if (
-      listing.sellTogether &&
-      ticketUnitIds.length !== availableUnitIds.length
-    ) {
-      throw new BadRequestException('Must purchase all tickets together');
-    }
-
-    const updated = await this.ticketsRepository.reserveUnits(
-      ctx,
-      listingId,
-      ticketUnitIds,
-    );
-    if (!updated) {
-      throw new BadRequestException('Unable to reserve selected ticket units');
-    }
-
-    return updated;
+    });
   }
 
   /**
    * Restore tickets (when transaction is cancelled)
+   * Uses pessimistic locking to prevent concurrent collision
    */
   async restoreTickets(
     ctx: Ctx,
     listingId: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
-    return await this.ticketsRepository.restoreUnits(
-      ctx,
-      listingId,
-      ticketUnitIds,
-    );
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const listing = await this.ticketsRepository.findByIdForUpdate(
+        txCtx,
+        listingId,
+      );
+      if (!listing) {
+        return undefined;
+      }
+
+      return await this.ticketsRepository.restoreUnitsWithLock(
+        txCtx,
+        listingId,
+        ticketUnitIds,
+      );
+    });
   }
 
   /**

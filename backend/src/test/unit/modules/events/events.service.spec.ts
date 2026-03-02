@@ -483,6 +483,7 @@ describe('EventsService', () => {
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,
+      version: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -791,6 +792,7 @@ describe('EventsService', () => {
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,
+      version: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

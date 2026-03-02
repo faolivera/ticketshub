@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { OptimisticLockException } from '../../common/exceptions/optimistic-lock.exception';
 import type {
   TicketListing as PrismaTicketListing,
   TicketUnit as PrismaTicketUnit,
@@ -26,8 +28,13 @@ type PrismaTicketListingWithUnits = PrismaTicketListing & {
 };
 
 @Injectable()
-export class TicketsRepository implements ITicketsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class TicketsRepository
+  extends BaseRepository
+  implements ITicketsRepository
+{
+  constructor(prisma: PrismaService) {
+    super(prisma);
+  }
 
   // ==================== Enum Mappers ====================
 
@@ -202,16 +209,53 @@ export class TicketsRepository implements ITicketsRepository {
         : undefined,
       description: record.description ?? undefined,
       status: this.mapListingStatusFromDb(record.status),
+      version: record.version,
       expiresAt: record.expiresAt ?? undefined,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
   }
 
+  // ==================== Update Data Builder ====================
+
+  private buildUpdateData(updates: Partial<TicketListing>): Record<string, unknown> {
+    const data: Record<string, unknown> = {};
+
+    if (updates.type !== undefined) {
+      data.type = this.mapTicketTypeToDb(updates.type);
+    }
+    if (updates.sellTogether !== undefined) {
+      data.sellTogether = updates.sellTogether;
+    }
+    if (updates.pricePerTicket !== undefined) {
+      data.pricePerTicket = this.serializeMoney(updates.pricePerTicket);
+    }
+    if (updates.deliveryMethod !== undefined) {
+      data.deliveryMethod = this.mapDeliveryMethodToDb(updates.deliveryMethod);
+    }
+    if (updates.pickupAddress !== undefined) {
+      data.pickupAddress = updates.pickupAddress
+        ? (updates.pickupAddress as object)
+        : null;
+    }
+    if (updates.description !== undefined) {
+      data.description = updates.description;
+    }
+    if (updates.status !== undefined) {
+      data.status = this.mapListingStatusToDb(updates.status);
+    }
+    if (updates.expiresAt !== undefined) {
+      data.expiresAt = updates.expiresAt;
+    }
+
+    return data;
+  }
+
   // ==================== Repository Methods ====================
 
-  async create(_ctx: Ctx, listing: TicketListing): Promise<TicketListing> {
-    const created = await this.prisma.ticketListing.create({
+  async create(ctx: Ctx, listing: TicketListing): Promise<TicketListing> {
+    const client = this.getClient(ctx);
+    const created = await client.ticketListing.create({
       data: {
         id: listing.id,
         sellerId: listing.sellerId,
@@ -244,33 +288,37 @@ export class TicketsRepository implements ITicketsRepository {
     return this.mapToListing(created);
   }
 
-  async findById(_ctx: Ctx, id: string): Promise<TicketListing | undefined> {
-    const listing = await this.prisma.ticketListing.findUnique({
+  async findById(ctx: Ctx, id: string): Promise<TicketListing | undefined> {
+    const client = this.getClient(ctx);
+    const listing = await client.ticketListing.findUnique({
       where: { id },
       include: { ticketUnits: true },
     });
     return listing ? this.mapToListing(listing) : undefined;
   }
 
-  async getByIds(_ctx: Ctx, ids: string[]): Promise<TicketListing[]> {
+  async getByIds(ctx: Ctx, ids: string[]): Promise<TicketListing[]> {
     if (ids.length === 0) return [];
-    const listings = await this.prisma.ticketListing.findMany({
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: { id: { in: ids } },
       include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
 
-  async getAll(_ctx: Ctx): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+  async getAll(ctx: Ctx): Promise<TicketListing[]> {
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
 
-  async getActiveListings(_ctx: Ctx): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+  async getActiveListings(ctx: Ctx): Promise<TicketListing[]> {
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: { status: PrismaListingStatus.Active },
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
@@ -278,8 +326,9 @@ export class TicketsRepository implements ITicketsRepository {
     return listings.map((l) => this.mapToListing(l));
   }
 
-  async getByEventId(_ctx: Ctx, eventId: string): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+  async getByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: {
         eventId,
         status: PrismaListingStatus.Active,
@@ -291,10 +340,11 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async getByEventDateId(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: {
         eventDateId,
         status: PrismaListingStatus.Active,
@@ -305,8 +355,9 @@ export class TicketsRepository implements ITicketsRepository {
     return listings.map((l) => this.mapToListing(l));
   }
 
-  async getBySellerId(_ctx: Ctx, sellerId: string): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+  async getBySellerId(ctx: Ctx, sellerId: string): Promise<TicketListing[]> {
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: { sellerId },
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
@@ -315,47 +366,20 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async update(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     updates: Partial<TicketListing>,
   ): Promise<TicketListing | undefined> {
-    const existing = await this.prisma.ticketListing.findUnique({
+    const client = this.getClient(ctx);
+    const existing = await client.ticketListing.findUnique({
       where: { id },
     });
     if (!existing) return undefined;
 
-    const data: Record<string, unknown> = {};
-
-    if (updates.type !== undefined) {
-      data.type = this.mapTicketTypeToDb(updates.type);
-    }
-    if (updates.sellTogether !== undefined) {
-      data.sellTogether = updates.sellTogether;
-    }
-    if (updates.pricePerTicket !== undefined) {
-      data.pricePerTicket = this.serializeMoney(updates.pricePerTicket);
-    }
-    if (updates.deliveryMethod !== undefined) {
-      data.deliveryMethod = this.mapDeliveryMethodToDb(updates.deliveryMethod);
-    }
-    if (updates.pickupAddress !== undefined) {
-      data.pickupAddress = updates.pickupAddress
-        ? (updates.pickupAddress as object)
-        : null;
-    }
-    if (updates.description !== undefined) {
-      data.description = updates.description;
-    }
-    if (updates.status !== undefined) {
-      data.status = this.mapListingStatusToDb(updates.status);
-    }
-    if (updates.expiresAt !== undefined) {
-      data.expiresAt = updates.expiresAt;
-    }
-
+    const data = this.buildUpdateData(updates);
     data.updatedAt = new Date();
 
-    const updated = await this.prisma.ticketListing.update({
+    const updated = await client.ticketListing.update({
       where: { id },
       data,
       include: { ticketUnits: true },
@@ -363,23 +387,25 @@ export class TicketsRepository implements ITicketsRepository {
     return this.mapToListing(updated);
   }
 
-  async delete(_ctx: Ctx, id: string): Promise<void> {
-    await this.prisma.ticketListing.delete({
+  async delete(ctx: Ctx, id: string): Promise<void> {
+    const client = this.getClient(ctx);
+    await client.ticketListing.delete({
       where: { id },
     });
   }
 
   async reserveUnits(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
+    const client = this.getClient(ctx);
     const idSet = new Set(ticketUnitIds);
     if (idSet.size !== ticketUnitIds.length) {
       return undefined;
     }
 
-    const units = await this.prisma.ticketUnit.findMany({
+    const units = await client.ticketUnit.findMany({
       where: { id: { in: ticketUnitIds }, listingId: id },
     });
 
@@ -391,12 +417,12 @@ export class TicketsRepository implements ITicketsRepository {
       return undefined;
     }
 
-    await this.prisma.ticketUnit.updateMany({
+    await client.ticketUnit.updateMany({
       where: { id: { in: ticketUnitIds } },
       data: { status: PrismaTicketUnitStatus.reserved, updatedAt: new Date() },
     });
 
-    const remainingAvailable = await this.prisma.ticketUnit.count({
+    const remainingAvailable = await client.ticketUnit.count({
       where: { listingId: id, status: PrismaTicketUnitStatus.available },
     });
 
@@ -405,7 +431,7 @@ export class TicketsRepository implements ITicketsRepository {
         ? PrismaListingStatus.Sold
         : PrismaListingStatus.Active;
 
-    const updated = await this.prisma.ticketListing.update({
+    const updated = await client.ticketListing.update({
       where: { id },
       data: { status: nextStatus, updatedAt: new Date() },
       include: { ticketUnits: true },
@@ -415,16 +441,17 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async restoreUnits(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
+    const client = this.getClient(ctx);
     const idSet = new Set(ticketUnitIds);
     if (idSet.size !== ticketUnitIds.length) {
       return undefined;
     }
 
-    const units = await this.prisma.ticketUnit.findMany({
+    const units = await client.ticketUnit.findMany({
       where: { id: { in: ticketUnitIds }, listingId: id },
     });
 
@@ -436,19 +463,20 @@ export class TicketsRepository implements ITicketsRepository {
       return undefined;
     }
 
-    await this.prisma.ticketUnit.updateMany({
+    await client.ticketUnit.updateMany({
       where: { id: { in: ticketUnitIds } },
       data: { status: PrismaTicketUnitStatus.available, updatedAt: new Date() },
     });
 
-    const hasAvailable = await this.prisma.ticketUnit.count({
+    const hasAvailable = await client.ticketUnit.count({
       where: { listingId: id, status: PrismaTicketUnitStatus.available },
     });
 
-    const updated = await this.prisma.ticketListing.update({
+    const updated = await client.ticketListing.update({
       where: { id },
       data: {
-        status: hasAvailable > 0 ? PrismaListingStatus.Active : PrismaListingStatus.Sold,
+        status:
+          hasAvailable > 0 ? PrismaListingStatus.Active : PrismaListingStatus.Sold,
         updatedAt: new Date(),
       },
       include: { ticketUnits: true },
@@ -457,11 +485,9 @@ export class TicketsRepository implements ITicketsRepository {
     return this.mapToListing(updated);
   }
 
-  async getPendingByEventId(
-    _ctx: Ctx,
-    eventId: string,
-  ): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+  async getPendingByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: {
         eventId,
         status: PrismaListingStatus.Pending,
@@ -473,10 +499,11 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async getPendingByEventDateId(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: {
         eventDateId,
         status: PrismaListingStatus.Pending,
@@ -488,13 +515,14 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async bulkUpdateStatus(
-    _ctx: Ctx,
+    ctx: Ctx,
     listingIds: string[],
     status: ListingStatus,
   ): Promise<number> {
     if (listingIds.length === 0) return 0;
+    const client = this.getClient(ctx);
 
-    const result = await this.prisma.ticketListing.updateMany({
+    const result = await client.ticketListing.updateMany({
       where: { id: { in: listingIds } },
       data: {
         status: this.mapListingStatusToDb(status),
@@ -506,10 +534,11 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async getAllByEventDateId(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: { eventDateId },
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
@@ -518,10 +547,11 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async getPendingByEventSectionId(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventSectionId: string,
   ): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: {
         eventSectionId,
         status: PrismaListingStatus.Pending,
@@ -533,10 +563,11 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async getAllByEventSectionId(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventSectionId: string,
   ): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: { eventSectionId },
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
@@ -544,8 +575,9 @@ export class TicketsRepository implements ITicketsRepository {
     return listings.map((l) => this.mapToListing(l));
   }
 
-  async getAllByEventId(_ctx: Ctx, eventId: string): Promise<TicketListing[]> {
-    const listings = await this.prisma.ticketListing.findMany({
+  async getAllByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: { eventId },
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
@@ -554,7 +586,7 @@ export class TicketsRepository implements ITicketsRepository {
   }
 
   async getListingStatsByEventIds(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventIds: string[],
   ): Promise<
     Map<string, { listingsCount: number; availableTicketsCount: number }>
@@ -570,7 +602,8 @@ export class TicketsRepository implements ITicketsRepository {
 
     if (eventIds.length === 0) return statsMap;
 
-    const listings = await this.prisma.ticketListing.findMany({
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
       where: { eventId: { in: eventIds } },
       include: { ticketUnits: true },
     });
@@ -590,5 +623,165 @@ export class TicketsRepository implements ITicketsRepository {
     }
 
     return statsMap;
+  }
+
+  // ==================== Locking Methods ====================
+
+  /**
+   * Find listing by ID with pessimistic lock (FOR UPDATE)
+   * Blocks other transactions from modifying this row until current transaction commits
+   */
+  async findByIdForUpdate(ctx: Ctx, id: string): Promise<TicketListing | undefined> {
+    const client = this.getClient(ctx);
+
+    const results = await client.$queryRaw<PrismaTicketListingWithUnits[]>`
+      SELECT tl.*
+      FROM ticket_listings tl
+      WHERE tl.id = ${id}
+      FOR UPDATE
+    `;
+
+    if (results.length === 0) {
+      return undefined;
+    }
+
+    const listing = results[0];
+
+    const units = await client.ticketUnit.findMany({
+      where: { listingId: id },
+    });
+
+    return this.mapToListing({ ...listing, ticketUnits: units });
+  }
+
+  /**
+   * Reserve ticket units with pessimistic locking (FOR UPDATE)
+   * Acquires row-level locks on ticket units to prevent double-booking,
+   * then updates their status to 'reserved'
+   * @throws BadRequestException if units not found or not available
+   */
+  async reserveUnitsWithLock(
+    ctx: Ctx,
+    listingId: string,
+    ticketUnitIds: string[],
+  ): Promise<TicketListing> {
+    const client = this.getClient(ctx);
+
+    const units = await client.$queryRaw<PrismaTicketUnit[]>`
+      SELECT * FROM ticket_units
+      WHERE id = ANY(${ticketUnitIds}::text[])
+      AND listing_id = ${listingId}
+      FOR UPDATE
+    `;
+
+    if (units.length !== ticketUnitIds.length) {
+      throw new BadRequestException('Some ticket units not found');
+    }
+
+    const unavailable = units.filter((u) => u.status !== 'available');
+    if (unavailable.length > 0) {
+      throw new BadRequestException('Some tickets are no longer available');
+    }
+
+    await client.$executeRaw`
+      UPDATE ticket_units
+      SET status = 'reserved',
+          version = version + 1,
+          updated_at = NOW()
+      WHERE id = ANY(${ticketUnitIds}::text[])
+    `;
+
+    const remainingAvailable = await client.ticketUnit.count({
+      where: { listingId, status: PrismaTicketUnitStatus.available },
+    });
+
+    const nextStatus =
+      remainingAvailable === 0
+        ? PrismaListingStatus.Sold
+        : PrismaListingStatus.Active;
+
+    await client.ticketListing.update({
+      where: { id: listingId },
+      data: { status: nextStatus, version: { increment: 1 }, updatedAt: new Date() },
+    });
+
+    const updated = await this.findById(ctx, listingId);
+    return updated!;
+  }
+
+  /**
+   * Restore ticket units with pessimistic locking (FOR UPDATE)
+   * Acquires row-level locks on ticket units to prevent concurrent modifications,
+   * then updates their status back to 'available'
+   * @throws BadRequestException if units not found or not in reserved state
+   */
+  async restoreUnitsWithLock(
+    ctx: Ctx,
+    listingId: string,
+    ticketUnitIds: string[],
+  ): Promise<TicketListing> {
+    const client = this.getClient(ctx);
+
+    const units = await client.$queryRaw<PrismaTicketUnit[]>`
+      SELECT * FROM ticket_units
+      WHERE id = ANY(${ticketUnitIds}::text[])
+      AND listing_id = ${listingId}
+      FOR UPDATE
+    `;
+
+    if (units.length !== ticketUnitIds.length) {
+      throw new BadRequestException('Some ticket units not found');
+    }
+
+    const notReserved = units.filter((u) => u.status !== 'reserved');
+    if (notReserved.length > 0) {
+      throw new BadRequestException('Some tickets are not in reserved state');
+    }
+
+    await client.$executeRaw`
+      UPDATE ticket_units
+      SET status = 'available',
+          version = version + 1,
+          updated_at = NOW()
+      WHERE id = ANY(${ticketUnitIds}::text[])
+    `;
+
+    await client.ticketListing.update({
+      where: { id: listingId },
+      data: { status: 'Active', version: { increment: 1 }, updatedAt: new Date() },
+    });
+
+    const updated = await this.findById(ctx, listingId);
+    return updated!;
+  }
+
+  /**
+   * Update listing with version check (optimistic locking pattern)
+   * Fails if the listing has been modified since it was read (version mismatch)
+   * @throws OptimisticLockException on version mismatch
+   */
+  async updateWithVersion(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<TicketListing>,
+    expectedVersion: number,
+  ): Promise<TicketListing> {
+    const client = this.getClient(ctx);
+
+    const data: Record<string, unknown> = { ...this.buildUpdateData(updates) };
+    data.version = { increment: 1 };
+    data.updatedAt = new Date();
+
+    const result = await client.ticketListing.updateMany({
+      where: { id, version: expectedVersion },
+      data,
+    });
+
+    if (result.count === 0) {
+      throw new OptimisticLockException('TicketListing', id);
+    }
+
+    const updated = await this.findById(ctx, id);
+    return updated!;
   }
 }

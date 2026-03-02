@@ -398,6 +398,7 @@ describe('BffService', () => {
       pricePerTicket: { amount: 10000, currency: 'USD' },
       eventSectionId: 'section_123',
       status: ListingStatus.Active,
+      version: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
       eventName: 'Test Event',

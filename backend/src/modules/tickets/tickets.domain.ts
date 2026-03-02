@@ -105,6 +105,7 @@ export interface TicketListing {
   eventSectionId: string;
 
   status: ListingStatus;
+  version: number;
 
   expiresAt?: Date; // Optional expiration
   createdAt: Date;

@@ -1,9 +1,15 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsService } from '../../../../modules/tickets/tickets.service';
 import { TICKETS_REPOSITORY } from '../../../../modules/tickets/tickets.repository.interface';
 import type { ITicketsRepository } from '../../../../modules/tickets/tickets.repository.interface';
 import { EventsService } from '../../../../modules/events/events.service';
+import { TransactionManager } from '../../../../common/database';
+import { OptimisticLockException } from '../../../../common/exceptions/optimistic-lock.exception';
 import {
   ListingStatus,
   TicketType,
@@ -24,6 +30,7 @@ describe('TicketsService', () => {
   let service: TicketsService;
   let ticketsRepository: jest.Mocked<ITicketsRepository>;
   let eventsService: jest.Mocked<EventsService>;
+  let txManager: jest.Mocked<TransactionManager>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -123,6 +130,7 @@ describe('TicketsService', () => {
     sellTogether: false,
     pricePerTicket: { amount: 5000, currency: 'USD' },
     status: ListingStatus.Pending,
+    version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -149,6 +157,10 @@ describe('TicketsService', () => {
       getAllByEventSectionId: jest.fn(),
       getAllByEventId: jest.fn(),
       getListingStatsByEventIds: jest.fn(),
+      findByIdForUpdate: jest.fn(),
+      reserveUnitsWithLock: jest.fn(),
+      restoreUnitsWithLock: jest.fn(),
+      updateWithVersion: jest.fn(),
     };
 
     const mockEventsService = {
@@ -163,17 +175,26 @@ describe('TicketsService', () => {
       getMyEvents: jest.fn(),
     };
 
+    const mockTxManager = {
+      executeInTransaction: jest
+        .fn()
+        .mockImplementation((_ctx, fn) => fn(_ctx)),
+      getClient: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
         { provide: TICKETS_REPOSITORY, useValue: mockTicketsRepository },
         { provide: EventsService, useValue: mockEventsService },
+        { provide: TransactionManager, useValue: mockTxManager },
       ],
     }).compile();
 
     service = module.get<TicketsService>(TicketsService);
     ticketsRepository = module.get(TICKETS_REPOSITORY);
     eventsService = module.get(EventsService);
+    txManager = module.get(TransactionManager);
   });
 
   describe('createListing', () => {
@@ -429,6 +450,7 @@ describe('TicketsService', () => {
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,
+      version: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -672,6 +694,7 @@ describe('TicketsService', () => {
         sellTogether: false,
         pricePerTicket: { amount: 5000, currency: 'USD' },
         status: ListingStatus.Active,
+        version: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -693,6 +716,7 @@ describe('TicketsService', () => {
         sellTogether: false,
         pricePerTicket: { amount: 7500, currency: 'USD' },
         status: ListingStatus.Pending,
+        version: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -749,6 +773,7 @@ describe('TicketsService', () => {
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,
+      version: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -771,6 +796,7 @@ describe('TicketsService', () => {
       sellTogether: false,
       pricePerTicket: { amount: 7500, currency: 'USD' },
       status: ListingStatus.Pending,
+      version: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -839,6 +865,467 @@ describe('TicketsService', () => {
       expect(result.cancelledCount).toBe(0);
       expect(result.listingIds).toEqual([]);
       expect(ticketsRepository.bulkUpdateStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reserveTickets', () => {
+    const mockActiveListing: TicketListing = {
+      id: 'tkt_active',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
+      type: TicketType.DigitalTransferable,
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_active',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+        {
+          id: 'unit_2',
+          listingId: 'tkt_active',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: ListingStatus.Active,
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should reserve units successfully with lock', async () => {
+      const reservedListing = {
+        ...mockActiveListing,
+        ticketUnits: mockActiveListing.ticketUnits.map((u) =>
+          u.id === 'unit_1' ? { ...u, status: TicketUnitStatus.Reserved } : u,
+        ),
+        version: 2,
+      };
+
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+      ticketsRepository.reserveUnitsWithLock.mockResolvedValue(reservedListing);
+
+      const result = await service.reserveTickets(mockCtx, 'tkt_active', [
+        'unit_1',
+      ]);
+
+      expect(result.version).toBe(2);
+      expect(ticketsRepository.findByIdForUpdate).toHaveBeenCalledWith(
+        mockCtx,
+        'tkt_active',
+      );
+      expect(ticketsRepository.reserveUnitsWithLock).toHaveBeenCalledWith(
+        mockCtx,
+        'tkt_active',
+        ['unit_1'],
+      );
+      expect(txManager.executeInTransaction).toHaveBeenCalledWith(
+        mockCtx,
+        expect.any(Function),
+      );
+    });
+
+    it('should throw NotFoundException when listing not found', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(undefined);
+
+      await expect(
+        service.reserveTickets(mockCtx, 'non_existent', ['unit_1']),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(ticketsRepository.reserveUnitsWithLock).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when listing not active', async () => {
+      const soldListing = { ...mockActiveListing, status: ListingStatus.Sold };
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(soldListing);
+
+      await expect(
+        service.reserveTickets(mockCtx, 'tkt_active', ['unit_1']),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.reserveUnitsWithLock).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when no ticket units provided', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+
+      await expect(
+        service.reserveTickets(mockCtx, 'tkt_active', []),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.reserveUnitsWithLock).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException for duplicate ticket unit IDs', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+
+      await expect(
+        service.reserveTickets(mockCtx, 'tkt_active', ['unit_1', 'unit_1']),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.reserveUnitsWithLock).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when units not available', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+
+      await expect(
+        service.reserveTickets(mockCtx, 'tkt_active', ['unit_nonexistent']),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.reserveUnitsWithLock).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException for sellTogether listing with partial selection', async () => {
+      const sellTogetherListing = { ...mockActiveListing, sellTogether: true };
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(sellTogetherListing);
+
+      await expect(
+        service.reserveTickets(mockCtx, 'tkt_active', ['unit_1']),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.reserveUnitsWithLock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('restoreTickets', () => {
+    const mockListingWithReserved: TicketListing = {
+      id: 'tkt_active',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
+      type: TicketType.DigitalTransferable,
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_active',
+          status: TicketUnitStatus.Reserved,
+          version: 2,
+        },
+      ],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: ListingStatus.Active,
+      version: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should restore units successfully with lock', async () => {
+      const restoredListing = {
+        ...mockListingWithReserved,
+        ticketUnits: mockListingWithReserved.ticketUnits.map((u) => ({
+          ...u,
+          status: TicketUnitStatus.Available,
+        })),
+        version: 3,
+      };
+
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(
+        mockListingWithReserved,
+      );
+      ticketsRepository.restoreUnitsWithLock.mockResolvedValue(restoredListing);
+
+      const result = await service.restoreTickets(mockCtx, 'tkt_active', [
+        'unit_1',
+      ]);
+
+      expect(result?.version).toBe(3);
+      expect(ticketsRepository.findByIdForUpdate).toHaveBeenCalledWith(
+        mockCtx,
+        'tkt_active',
+      );
+      expect(ticketsRepository.restoreUnitsWithLock).toHaveBeenCalledWith(
+        mockCtx,
+        'tkt_active',
+        ['unit_1'],
+      );
+    });
+
+    it('should return undefined when listing not found', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(undefined);
+
+      const result = await service.restoreTickets(mockCtx, 'non_existent', [
+        'unit_1',
+      ]);
+
+      expect(result).toBeUndefined();
+      expect(ticketsRepository.restoreUnitsWithLock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('cancelListing', () => {
+    const mockActiveListing: TicketListing = {
+      id: 'tkt_active',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
+      type: TicketType.DigitalTransferable,
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_active',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: ListingStatus.Active,
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should cancel listing successfully when no reserved tickets', async () => {
+      const cancelledListing = {
+        ...mockActiveListing,
+        status: ListingStatus.Cancelled,
+        version: 2,
+      };
+
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+      ticketsRepository.updateWithVersion.mockResolvedValue(cancelledListing);
+
+      const result = await service.cancelListing(
+        mockCtx,
+        'tkt_active',
+        'seller_123',
+      );
+
+      expect(result.status).toBe(ListingStatus.Cancelled);
+      expect(ticketsRepository.updateWithVersion).toHaveBeenCalledWith(
+        mockCtx,
+        'tkt_active',
+        { status: ListingStatus.Cancelled },
+        1,
+      );
+    });
+
+    it('should throw NotFoundException when listing not found', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(undefined);
+
+      await expect(
+        service.cancelListing(mockCtx, 'non_existent', 'seller_123'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException when not the seller', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+
+      await expect(
+        service.cancelListing(mockCtx, 'tkt_active', 'other_seller'),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(ticketsRepository.updateWithVersion).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when listing not active', async () => {
+      const soldListing = { ...mockActiveListing, status: ListingStatus.Sold };
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(soldListing);
+
+      await expect(
+        service.cancelListing(mockCtx, 'tkt_active', 'seller_123'),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.updateWithVersion).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when tickets are reserved', async () => {
+      const listingWithReserved = {
+        ...mockActiveListing,
+        ticketUnits: [
+          {
+            id: 'unit_1',
+            listingId: 'tkt_active',
+            status: TicketUnitStatus.Reserved,
+            version: 1,
+          },
+        ],
+      };
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(listingWithReserved);
+
+      await expect(
+        service.cancelListing(mockCtx, 'tkt_active', 'seller_123'),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.updateWithVersion).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateListing', () => {
+    const mockActiveListing: TicketListing = {
+      id: 'tkt_active',
+      sellerId: 'seller_123',
+      eventId: 'evt_123',
+      eventDateId: 'edt_123',
+      eventSectionId: 'sec_test_123',
+      type: TicketType.DigitalTransferable,
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_active',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'USD' },
+      status: ListingStatus.Active,
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should update listing successfully with version check', async () => {
+      const updatedListing = {
+        ...mockActiveListing,
+        pricePerTicket: { amount: 6000, currency: 'USD' as const },
+        version: 2,
+      };
+
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+      ticketsRepository.updateWithVersion.mockResolvedValue(updatedListing);
+
+      const result = await service.updateListing(
+        mockCtx,
+        'tkt_active',
+        'seller_123',
+        { pricePerTicket: { amount: 6000, currency: 'USD' } },
+      );
+
+      expect(result.pricePerTicket.amount).toBe(6000);
+      expect(result.version).toBe(2);
+      expect(ticketsRepository.updateWithVersion).toHaveBeenCalledWith(
+        mockCtx,
+        'tkt_active',
+        { pricePerTicket: { amount: 6000, currency: 'USD' } },
+        1,
+      );
+    });
+
+    it('should throw NotFoundException when listing not found', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(undefined);
+
+      await expect(
+        service.updateListing(mockCtx, 'non_existent', 'seller_123', {}),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException when not the seller', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+
+      await expect(
+        service.updateListing(mockCtx, 'tkt_active', 'other_seller', {}),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(ticketsRepository.updateWithVersion).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when listing not active', async () => {
+      const soldListing = { ...mockActiveListing, status: ListingStatus.Sold };
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(soldListing);
+
+      await expect(
+        service.updateListing(mockCtx, 'tkt_active', 'seller_123', {}),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(ticketsRepository.updateWithVersion).not.toHaveBeenCalled();
+    });
+
+    it('should propagate OptimisticLockException on version mismatch', async () => {
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockActiveListing);
+      ticketsRepository.updateWithVersion.mockRejectedValue(
+        new OptimisticLockException('TicketListing', 'tkt_active'),
+      );
+
+      await expect(
+        service.updateListing(mockCtx, 'tkt_active', 'seller_123', {
+          pricePerTicket: { amount: 6000, currency: 'USD' },
+        }),
+      ).rejects.toThrow(OptimisticLockException);
+    });
+  });
+
+  describe('transaction context', () => {
+    it('should execute reserveTickets within transaction', async () => {
+      const mockListing: TicketListing = {
+        id: 'tkt_active',
+        sellerId: 'seller_123',
+        eventId: 'evt_123',
+        eventDateId: 'edt_123',
+        eventSectionId: 'sec_test_123',
+        type: TicketType.DigitalTransferable,
+        ticketUnits: [
+          {
+            id: 'unit_1',
+            listingId: 'tkt_active',
+            status: TicketUnitStatus.Available,
+            version: 1,
+          },
+        ],
+        sellTogether: false,
+        pricePerTicket: { amount: 5000, currency: 'USD' },
+        status: ListingStatus.Active,
+        version: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockListing);
+      ticketsRepository.reserveUnitsWithLock.mockResolvedValue(mockListing);
+
+      await service.reserveTickets(mockCtx, 'tkt_active', ['unit_1']);
+
+      expect(txManager.executeInTransaction).toHaveBeenCalledWith(
+        mockCtx,
+        expect.any(Function),
+      );
+    });
+
+    it('should execute cancelListing within transaction', async () => {
+      const mockListing: TicketListing = {
+        id: 'tkt_active',
+        sellerId: 'seller_123',
+        eventId: 'evt_123',
+        eventDateId: 'edt_123',
+        eventSectionId: 'sec_test_123',
+        type: TicketType.DigitalTransferable,
+        ticketUnits: [
+          {
+            id: 'unit_1',
+            listingId: 'tkt_active',
+            status: TicketUnitStatus.Available,
+            version: 1,
+          },
+        ],
+        sellTogether: false,
+        pricePerTicket: { amount: 5000, currency: 'USD' },
+        status: ListingStatus.Active,
+        version: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(mockListing);
+      ticketsRepository.updateWithVersion.mockResolvedValue({
+        ...mockListing,
+        status: ListingStatus.Cancelled,
+      });
+
+      await service.cancelListing(mockCtx, 'tkt_active', 'seller_123');
+
+      expect(txManager.executeInTransaction).toHaveBeenCalledWith(
+        mockCtx,
+        expect.any(Function),
+      );
     });
   });
 });

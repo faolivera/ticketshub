@@ -57,7 +57,8 @@ export class WalletService {
 
   /**
    * Hold funds in escrow (when buyer pays)
-   * Atomically increments pending balance with transaction and optimistic locking
+   * Uses pessimistic locking (FOR UPDATE) to prevent concurrent modifications,
+   * combined with version check for additional safety
    */
   async holdFunds(
     ctx: Ctx,
@@ -132,7 +133,8 @@ export class WalletService {
 
   /**
    * Release funds from escrow to balance (when transaction completes)
-   * Atomically moves funds from pending to available balance
+   * Uses pessimistic locking (FOR UPDATE) to prevent concurrent modifications,
+   * combined with version check for additional safety
    */
   async releaseFunds(
     ctx: Ctx,
@@ -207,7 +209,8 @@ export class WalletService {
 
   /**
    * Refund held funds (when transaction is cancelled/disputed)
-   * Atomically decrements pending balance
+   * Uses pessimistic locking (FOR UPDATE) to prevent concurrent modifications,
+   * combined with version check for additional safety
    */
   async refundHeldFunds(
     ctx: Ctx,
@@ -281,7 +284,8 @@ export class WalletService {
 
   /**
    * Credit funds to wallet (e.g., manual adjustment, bonus)
-   * Atomically increments available balance
+   * Uses pessimistic locking (FOR UPDATE) to prevent concurrent modifications,
+   * combined with version check for additional safety
    */
   async creditFunds(
     ctx: Ctx,
@@ -346,7 +350,8 @@ export class WalletService {
 
   /**
    * Debit funds from wallet (e.g., withdrawal)
-   * Atomically decrements available balance with overdraw protection
+   * Uses pessimistic locking (FOR UPDATE) to prevent concurrent modifications,
+   * combined with version check for additional safety
    * @throws InsufficientFundsException if balance is insufficient
    */
   async debitFunds(

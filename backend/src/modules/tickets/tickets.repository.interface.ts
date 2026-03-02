@@ -1,6 +1,5 @@
 import type { Ctx } from '../../common/types/context';
-import type { TicketListing } from './tickets.domain';
-import type { ListingStatus } from './tickets.domain';
+import type { TicketListing, ListingStatus } from './tickets.domain';
 
 /**
  * Tickets repository interface
@@ -135,6 +134,43 @@ export interface ITicketsRepository {
   ): Promise<
     Map<string, { listingsCount: number; availableTicketsCount: number }>
   >;
+
+  /**
+   * Find listing by ID with pessimistic lock (FOR UPDATE)
+   */
+  findByIdForUpdate(ctx: Ctx, id: string): Promise<TicketListing | undefined>;
+
+  /**
+   * Reserve units with pessimistic locking
+   * @throws BadRequestException if units not available
+   */
+  reserveUnitsWithLock(
+    ctx: Ctx,
+    listingId: string,
+    ticketUnitIds: string[],
+  ): Promise<TicketListing>;
+
+  /**
+   * Restore units with pessimistic locking
+   * @throws BadRequestException if units not reserved
+   */
+  restoreUnitsWithLock(
+    ctx: Ctx,
+    listingId: string,
+    ticketUnitIds: string[],
+  ): Promise<TicketListing>;
+
+  /**
+   * Update listing with version check (optimistic locking pattern)
+   * Should be used within a transaction after acquiring pessimistic lock
+   * @throws OptimisticLockException on version mismatch
+   */
+  updateWithVersion(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<TicketListing>,
+    expectedVersion: number,
+  ): Promise<TicketListing>;
 }
 
 /**

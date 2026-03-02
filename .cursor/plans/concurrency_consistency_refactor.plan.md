@@ -476,7 +476,7 @@ async holdFunds(ctx: Ctx, sellerId: string, amount: Money): Promise<void> {
 
 **Scope:** Ticket reservation con consistencia fuerte  
 **Riesgo:** ALTO (core business)  
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completado (2026-03-02)
 
 #### Cambios
 
