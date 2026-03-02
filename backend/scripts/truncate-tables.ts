@@ -13,6 +13,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const TABLES_TO_TRUNCATE = [
+  'scheduler_locks',
   'notifications',
   'notification_events',
   'notification_templates',

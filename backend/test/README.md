@@ -6,7 +6,8 @@ test/
 │   ├── common/     # Tests for common utilities
 │   └── modules/    # Tests for module services
 ├── integration/    # Integration tests (real database)
-│   └── (empty)     # TODO: Add repository integration tests
+│   ├── setup/      # Global setup, teardown, test utilities
+│   └── modules/    # Repository integration tests per module
 ├── e2e/            # End-to-end tests (full app)
 │   └── *.e2e-spec.ts
 ├── jest-e2e.json
@@ -43,10 +44,25 @@ npm run test:cov
 - **Limitation**: Cannot catch raw SQL errors (column names, syntax)
 
 ### Integration Tests (`test/integration/`)
-- Run against a real test database
+- Run against a real test database (`ticketshubtest` on the same PostgreSQL as dev)
 - Test repository implementations with actual SQL
 - Catch raw SQL errors that unit tests miss
 - Slower execution
+
+**Prerequisites:**
+- Docker Compose Postgres running: `docker-compose up -d postgres`
+- Database runs on port 5433 (default)
+
+**Setup:**
+- **Global setup** (once before all tests): Drops and recreates `ticketshubtest`, runs Prisma migrations
+- **Before each test**: All tables are truncated so each test starts with an empty database
+- Tests use `getTestPrismaClient()` and `truncateAllTables()` from `test/integration/setup/`
+
+**Adding a new repository integration test:**
+- Create `test/integration/modules/<module>/<repository>.spec.ts`
+- Use `beforeAll` to get Prisma client and instantiate the repository
+- Use `beforeEach` to call `truncateAllTables(prisma)` and `createTestContext()`
+- Use `afterAll` to call `disconnectTestPrisma()`
 
 ### E2E Tests (`test/e2e/`)
 - Test complete HTTP flows
