@@ -11,13 +11,21 @@ import {
 import type { ITransactionsRepository } from './transactions.repository.interface';
 import type { Address } from '../shared/address.domain';
 import { TicketType, DeliveryMethod } from '../tickets/tickets.domain';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { OptimisticLockException } from '../../common/exceptions/optimistic-lock.exception';
 
 @Injectable()
-export class TransactionsRepository implements ITransactionsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class TransactionsRepository
+  extends BaseRepository
+  implements ITransactionsRepository
+{
+  constructor(prisma: PrismaService) {
+    super(prisma);
+  }
 
-  async create(_ctx: Ctx, transaction: Transaction): Promise<Transaction> {
-    const created = await this.prisma.transaction.create({
+  async create(ctx: Ctx, transaction: Transaction): Promise<Transaction> {
+    const client = this.getClient(ctx);
+    const created = await client.transaction.create({
       data: {
         id: transaction.id,
         listingId: transaction.listingId,
@@ -70,57 +78,64 @@ export class TransactionsRepository implements ITransactionsRepository {
     return this.mapToTransaction(created);
   }
 
-  async findById(_ctx: Ctx, id: string): Promise<Transaction | undefined> {
-    const transaction = await this.prisma.transaction.findUnique({
+  async findById(ctx: Ctx, id: string): Promise<Transaction | undefined> {
+    const client = this.getClient(ctx);
+    const transaction = await client.transaction.findUnique({
       where: { id },
     });
     return transaction ? this.mapToTransaction(transaction) : undefined;
   }
 
-  async getAll(_ctx: Ctx): Promise<Transaction[]> {
-    const transactions = await this.prisma.transaction.findMany({
+  async getAll(ctx: Ctx): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
+    const transactions = await client.transaction.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
-  async getByBuyerId(_ctx: Ctx, buyerId: string): Promise<Transaction[]> {
-    const transactions = await this.prisma.transaction.findMany({
+  async getByBuyerId(ctx: Ctx, buyerId: string): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
+    const transactions = await client.transaction.findMany({
       where: { buyerId },
       orderBy: { createdAt: 'desc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
-  async getBySellerId(_ctx: Ctx, sellerId: string): Promise<Transaction[]> {
-    const transactions = await this.prisma.transaction.findMany({
+  async getBySellerId(ctx: Ctx, sellerId: string): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
+    const transactions = await client.transaction.findMany({
       where: { sellerId },
       orderBy: { createdAt: 'desc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
-  async getByListingId(_ctx: Ctx, listingId: string): Promise<Transaction[]> {
-    const transactions = await this.prisma.transaction.findMany({
+  async getByListingId(ctx: Ctx, listingId: string): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
+    const transactions = await client.transaction.findMany({
       where: { listingId },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
   async getByListingIds(
-    _ctx: Ctx,
+    ctx: Ctx,
     listingIds: string[],
   ): Promise<Transaction[]> {
     if (listingIds.length === 0) return [];
-    const transactions = await this.prisma.transaction.findMany({
+    const client = this.getClient(ctx);
+    const transactions = await client.transaction.findMany({
       where: { listingId: { in: listingIds } },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
-  async getPendingAutoRelease(_ctx: Ctx): Promise<Transaction[]> {
+  async getPendingAutoRelease(ctx: Ctx): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
     const now = new Date();
-    const transactions = await this.prisma.transaction.findMany({
+    const transactions = await client.transaction.findMany({
       where: {
         status: 'TicketTransferred',
         autoReleaseAt: { lte: now },
@@ -130,120 +145,15 @@ export class TransactionsRepository implements ITransactionsRepository {
   }
 
   async update(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
     updates: Partial<Transaction>,
   ): Promise<Transaction | undefined> {
+    const client = this.getClient(ctx);
     try {
-      const data: Record<string, unknown> = {};
+      const data = this.buildUpdateData(updates);
 
-      if (updates.listingId !== undefined) data.listingId = updates.listingId;
-      if (updates.buyerId !== undefined) data.buyerId = updates.buyerId;
-      if (updates.sellerId !== undefined) data.sellerId = updates.sellerId;
-      if (updates.ticketType !== undefined) {
-        data.ticketType = this.mapTicketTypeToDb(updates.ticketType);
-      }
-      if (updates.ticketUnitIds !== undefined) {
-        data.ticketUnitIds = updates.ticketUnitIds;
-      }
-      if (updates.quantity !== undefined) data.quantity = updates.quantity;
-      if (updates.ticketPrice !== undefined) {
-        data.ticketPrice = updates.ticketPrice as object;
-      }
-      if (updates.buyerPlatformFee !== undefined) {
-        data.buyerPlatformFee = updates.buyerPlatformFee as object;
-      }
-      if (updates.sellerPlatformFee !== undefined) {
-        data.sellerPlatformFee = updates.sellerPlatformFee as object;
-      }
-      if (updates.paymentMethodCommission !== undefined) {
-        data.paymentMethodCommission = updates.paymentMethodCommission as object;
-      }
-      if (updates.totalPaid !== undefined) {
-        data.totalPaid = updates.totalPaid as object;
-      }
-      if (updates.sellerReceives !== undefined) {
-        data.sellerReceives = updates.sellerReceives as object;
-      }
-      if (updates.pricingSnapshotId !== undefined) {
-        data.pricingSnapshotId = updates.pricingSnapshotId;
-      }
-      if (updates.status !== undefined) {
-        data.status = this.mapStatusToDb(updates.status);
-      }
-      if (updates.requiredActor !== undefined) {
-        data.requiredActor = this.mapRequiredActorToDb(updates.requiredActor);
-      }
-      if (updates.paymentExpiresAt !== undefined) {
-        data.paymentExpiresAt = updates.paymentExpiresAt;
-      }
-      if (updates.adminReviewExpiresAt !== undefined) {
-        data.adminReviewExpiresAt = updates.adminReviewExpiresAt;
-      }
-      if (updates.deliveryMethod !== undefined) {
-        data.deliveryMethod = updates.deliveryMethod
-          ? this.mapDeliveryMethodToDb(updates.deliveryMethod)
-          : null;
-      }
-      if (updates.pickupAddress !== undefined) {
-        data.pickupAddress = updates.pickupAddress
-          ? (updates.pickupAddress as object)
-          : null;
-      }
-      if (updates.eventDateTime !== undefined) {
-        data.eventDateTime = updates.eventDateTime;
-      }
-      if (updates.releaseAfterMinutes !== undefined) {
-        data.releaseAfterMinutes = updates.releaseAfterMinutes;
-      }
-      if (updates.autoReleaseAt !== undefined) {
-        data.autoReleaseAt = updates.autoReleaseAt;
-      }
-      if (updates.disputeId !== undefined) {
-        data.disputeId = updates.disputeId;
-      }
-      if (updates.paymentMethodId !== undefined) {
-        data.paymentMethodId = updates.paymentMethodId;
-      }
-      if (updates.paymentConfirmationId !== undefined) {
-        data.paymentConfirmationId = updates.paymentConfirmationId;
-      }
-      if (updates.paymentApprovedBy !== undefined) {
-        data.paymentApprovedBy = updates.paymentApprovedBy;
-      }
-      if (updates.paymentApprovedAt !== undefined) {
-        data.paymentApprovedAt = updates.paymentApprovedAt;
-      }
-      if (updates.cancelledBy !== undefined) {
-        data.cancelledBy = updates.cancelledBy
-          ? this.mapRequiredActorToDb(updates.cancelledBy)
-          : null;
-      }
-      if (updates.cancellationReason !== undefined) {
-        data.cancellationReason = updates.cancellationReason
-          ? this.mapCancellationReasonToDb(updates.cancellationReason)
-          : null;
-      }
-      if (updates.paymentReceivedAt !== undefined) {
-        data.paymentReceivedAt = updates.paymentReceivedAt;
-      }
-      if (updates.ticketTransferredAt !== undefined) {
-        data.ticketTransferredAt = updates.ticketTransferredAt;
-      }
-      if (updates.buyerConfirmedAt !== undefined) {
-        data.buyerConfirmedAt = updates.buyerConfirmedAt;
-      }
-      if (updates.completedAt !== undefined) {
-        data.completedAt = updates.completedAt;
-      }
-      if (updates.cancelledAt !== undefined) {
-        data.cancelledAt = updates.cancelledAt;
-      }
-      if (updates.refundedAt !== undefined) {
-        data.refundedAt = updates.refundedAt;
-      }
-
-      const updated = await this.prisma.transaction.update({
+      const updated = await client.transaction.update({
         where: { id },
         data,
       });
@@ -253,8 +163,120 @@ export class TransactionsRepository implements ITransactionsRepository {
     }
   }
 
+  private buildUpdateData(updates: Partial<Transaction>): Record<string, unknown> {
+    const data: Record<string, unknown> = {};
+
+    if (updates.listingId !== undefined) data.listingId = updates.listingId;
+    if (updates.buyerId !== undefined) data.buyerId = updates.buyerId;
+    if (updates.sellerId !== undefined) data.sellerId = updates.sellerId;
+    if (updates.ticketType !== undefined) {
+      data.ticketType = this.mapTicketTypeToDb(updates.ticketType);
+    }
+    if (updates.ticketUnitIds !== undefined) {
+      data.ticketUnitIds = updates.ticketUnitIds;
+    }
+    if (updates.quantity !== undefined) data.quantity = updates.quantity;
+    if (updates.ticketPrice !== undefined) {
+      data.ticketPrice = updates.ticketPrice as object;
+    }
+    if (updates.buyerPlatformFee !== undefined) {
+      data.buyerPlatformFee = updates.buyerPlatformFee as object;
+    }
+    if (updates.sellerPlatformFee !== undefined) {
+      data.sellerPlatformFee = updates.sellerPlatformFee as object;
+    }
+    if (updates.paymentMethodCommission !== undefined) {
+      data.paymentMethodCommission = updates.paymentMethodCommission as object;
+    }
+    if (updates.totalPaid !== undefined) {
+      data.totalPaid = updates.totalPaid as object;
+    }
+    if (updates.sellerReceives !== undefined) {
+      data.sellerReceives = updates.sellerReceives as object;
+    }
+    if (updates.pricingSnapshotId !== undefined) {
+      data.pricingSnapshotId = updates.pricingSnapshotId;
+    }
+    if (updates.status !== undefined) {
+      data.status = this.mapStatusToDb(updates.status);
+    }
+    if (updates.requiredActor !== undefined) {
+      data.requiredActor = this.mapRequiredActorToDb(updates.requiredActor);
+    }
+    if (updates.paymentExpiresAt !== undefined) {
+      data.paymentExpiresAt = updates.paymentExpiresAt;
+    }
+    if (updates.adminReviewExpiresAt !== undefined) {
+      data.adminReviewExpiresAt = updates.adminReviewExpiresAt;
+    }
+    if (updates.deliveryMethod !== undefined) {
+      data.deliveryMethod = updates.deliveryMethod
+        ? this.mapDeliveryMethodToDb(updates.deliveryMethod)
+        : null;
+    }
+    if (updates.pickupAddress !== undefined) {
+      data.pickupAddress = updates.pickupAddress
+        ? (updates.pickupAddress as object)
+        : null;
+    }
+    if (updates.eventDateTime !== undefined) {
+      data.eventDateTime = updates.eventDateTime;
+    }
+    if (updates.releaseAfterMinutes !== undefined) {
+      data.releaseAfterMinutes = updates.releaseAfterMinutes;
+    }
+    if (updates.autoReleaseAt !== undefined) {
+      data.autoReleaseAt = updates.autoReleaseAt;
+    }
+    if (updates.disputeId !== undefined) {
+      data.disputeId = updates.disputeId;
+    }
+    if (updates.paymentMethodId !== undefined) {
+      data.paymentMethodId = updates.paymentMethodId;
+    }
+    if (updates.paymentConfirmationId !== undefined) {
+      data.paymentConfirmationId = updates.paymentConfirmationId;
+    }
+    if (updates.paymentApprovedBy !== undefined) {
+      data.paymentApprovedBy = updates.paymentApprovedBy;
+    }
+    if (updates.paymentApprovedAt !== undefined) {
+      data.paymentApprovedAt = updates.paymentApprovedAt;
+    }
+    if (updates.cancelledBy !== undefined) {
+      data.cancelledBy = updates.cancelledBy
+        ? this.mapRequiredActorToDb(updates.cancelledBy)
+        : null;
+    }
+    if (updates.cancellationReason !== undefined) {
+      data.cancellationReason = updates.cancellationReason
+        ? this.mapCancellationReasonToDb(updates.cancellationReason)
+        : null;
+    }
+    if (updates.paymentReceivedAt !== undefined) {
+      data.paymentReceivedAt = updates.paymentReceivedAt;
+    }
+    if (updates.ticketTransferredAt !== undefined) {
+      data.ticketTransferredAt = updates.ticketTransferredAt;
+    }
+    if (updates.buyerConfirmedAt !== undefined) {
+      data.buyerConfirmedAt = updates.buyerConfirmedAt;
+    }
+    if (updates.completedAt !== undefined) {
+      data.completedAt = updates.completedAt;
+    }
+    if (updates.cancelledAt !== undefined) {
+      data.cancelledAt = updates.cancelledAt;
+    }
+    if (updates.refundedAt !== undefined) {
+      data.refundedAt = updates.refundedAt;
+    }
+
+    return data;
+  }
+
   async getPaginated(
-    _ctx: Ctx,
+    ctx: Ctx,
     page: number,
     limit: number,
     filters?: {
@@ -263,6 +285,7 @@ export class TransactionsRepository implements ITransactionsRepository {
       sellerIds?: string[];
     },
   ): Promise<{ transactions: Transaction[]; total: number }> {
+    const client = this.getClient(ctx);
     let where = {};
 
     if (filters) {
@@ -285,13 +308,13 @@ export class TransactionsRepository implements ITransactionsRepository {
     }
 
     const [transactions, total] = await Promise.all([
-      this.prisma.transaction.findMany({
+      client.transaction.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.transaction.count({ where }),
+      client.transaction.count({ where }),
     ]);
 
     return {
@@ -300,41 +323,45 @@ export class TransactionsRepository implements ITransactionsRepository {
     };
   }
 
-  async findByIds(_ctx: Ctx, ids: string[]): Promise<Transaction[]> {
+  async findByIds(ctx: Ctx, ids: string[]): Promise<Transaction[]> {
     if (ids.length === 0) return [];
-    const transactions = await this.prisma.transaction.findMany({
+    const client = this.getClient(ctx);
+    const transactions = await client.transaction.findMany({
       where: { id: { in: ids } },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
   async countByStatuses(
-    _ctx: Ctx,
+    ctx: Ctx,
     statuses: TransactionStatus[],
   ): Promise<number> {
     if (statuses.length === 0) return 0;
+    const client = this.getClient(ctx);
     const dbStatuses = statuses.map((s) => this.mapStatusToDb(s));
-    return await this.prisma.transaction.count({
+    return await client.transaction.count({
       where: { status: { in: dbStatuses } },
     });
   }
 
   async getIdsByStatuses(
-    _ctx: Ctx,
+    ctx: Ctx,
     statuses: TransactionStatus[],
   ): Promise<string[]> {
     if (statuses.length === 0) return [];
+    const client = this.getClient(ctx);
     const dbStatuses = statuses.map((s) => this.mapStatusToDb(s));
-    const transactions = await this.prisma.transaction.findMany({
+    const transactions = await client.transaction.findMany({
       where: { status: { in: dbStatuses } },
       select: { id: true },
     });
     return transactions.map((t) => t.id);
   }
 
-  async findExpiredPendingPayments(_ctx: Ctx): Promise<Transaction[]> {
+  async findExpiredPendingPayments(ctx: Ctx): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
     const now = new Date();
-    const transactions = await this.prisma.transaction.findMany({
+    const transactions = await client.transaction.findMany({
       where: {
         status: 'PendingPayment',
         paymentExpiresAt: { lt: now },
@@ -343,15 +370,62 @@ export class TransactionsRepository implements ITransactionsRepository {
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
-  async findExpiredAdminReviews(_ctx: Ctx): Promise<Transaction[]> {
+  async findExpiredAdminReviews(ctx: Ctx): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
     const now = new Date();
-    const transactions = await this.prisma.transaction.findMany({
+    const transactions = await client.transaction.findMany({
       where: {
         status: 'PaymentPendingVerification',
         adminReviewExpiresAt: { lt: now },
       },
     });
     return transactions.map((t) => this.mapToTransaction(t));
+  }
+
+  async findByIdForUpdate(
+    ctx: Ctx,
+    id: string,
+  ): Promise<Transaction | undefined> {
+    const client = this.getClient(ctx);
+
+    const [transaction] = await client.$queryRaw<PrismaTransaction[]>`
+      SELECT * FROM transactions
+      WHERE id = ${id}
+      FOR UPDATE
+    `;
+
+    return transaction ? this.mapToTransaction(transaction) : undefined;
+  }
+
+  async updateWithVersion(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<Transaction>,
+    expectedVersion: number,
+  ): Promise<Transaction> {
+    const client = this.getClient(ctx);
+
+    const updateData = this.buildUpdateData(updates);
+
+    const result = await client.transaction.updateMany({
+      where: { id, version: expectedVersion },
+      data: {
+        ...updateData,
+        version: { increment: 1 },
+        updatedAt: new Date(),
+      },
+    });
+
+    if (result.count === 0) {
+      throw new OptimisticLockException('Transaction', id);
+    }
+
+    const updated = await this.findById(ctx, id);
+    if (!updated) {
+      throw new OptimisticLockException('Transaction', id);
+    }
+
+    return updated;
   }
 
   // ==================== Mappers ====================
@@ -406,6 +480,7 @@ export class TransactionsRepository implements ITransactionsRepository {
       paymentApprovedBy: prismaTransaction.paymentApprovedBy ?? undefined,
       paymentApprovedAt: prismaTransaction.paymentApprovedAt ?? undefined,
       updatedAt: prismaTransaction.updatedAt,
+      version: prismaTransaction.version,
     };
   }
 

@@ -66,6 +66,7 @@ describe('BffService', () => {
     venue: 'Test Venue',
     buyerName: 'John Buyer',
     sellerName: 'Jane Seller',
+    version: 1,
   };
 
   const mockPaymentConfirmation: PaymentConfirmation = {

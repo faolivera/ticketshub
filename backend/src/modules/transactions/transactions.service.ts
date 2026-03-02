@@ -37,6 +37,7 @@ import { PaymentMethodsService } from '../payments/payment-methods.service';
 import type { PricingSnapshot } from '../payments/pricing/pricing.domain';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
+import { TransactionManager } from '../../common/database';
 
 @Injectable()
 export class TransactionsService {
@@ -60,6 +61,7 @@ export class TransactionsService {
     @Inject(PricingService)
     private readonly pricingService: PricingService,
     private readonly notificationsService: NotificationsService,
+    private readonly txManager: TransactionManager,
   ) {}
 
   /**
@@ -104,7 +106,7 @@ export class TransactionsService {
   }
 
   /**
-   * Initiate a purchase
+   * Initiate a purchase (atomic - all-or-nothing)
    */
   async initiatePurchase(
     ctx: Ctx,
@@ -116,7 +118,7 @@ export class TransactionsService {
   ): Promise<{ transaction: Transaction; paymentIntentId: string }> {
     this.logger.log(ctx, `Initiating purchase for listing ${listingId}`);
 
-    // Get listing and validate
+    // Get listing and validate (outside transaction for read performance)
     const listing = await this.ticketsService.getListingById(ctx, listingId);
 
     if (listing.sellerId === buyerId) {
@@ -130,98 +132,106 @@ export class TransactionsService {
     }
 
     const quantity = ticketUnitIds.length;
-
-    // Generate transaction ID first so we can use it when consuming the snapshot
     const transactionId = this.generateId();
 
-    // Validate and consume pricing snapshot
-    const { snapshot, selectedCommissionPercent } =
-      await this.pricingService.validateAndConsume(
-        ctx,
-        pricingSnapshotId,
-        listingId,
-        paymentMethodId,
-        transactionId,
-      );
+    // Atomic: consume pricing, reserve tickets, create transaction
+    const { transaction, totalPaid } = await this.txManager.executeInTransaction(
+      ctx,
+      async (txCtx) => {
+        // Validate and consume pricing snapshot (atomic)
+        const { snapshot, selectedCommissionPercent } =
+          await this.pricingService.validateAndConsume(
+            txCtx,
+            pricingSnapshotId,
+            listingId,
+            paymentMethodId,
+            transactionId,
+          );
 
-    // Calculate prices using snapshotted values
-    const ticketPriceTotal: Money = {
-      amount: snapshot.pricePerTicket.amount * quantity,
-      currency: snapshot.pricePerTicket.currency,
-    };
+        // Calculate prices using snapshotted values
+        const ticketPriceTotal: Money = {
+          amount: snapshot.pricePerTicket.amount * quantity,
+          currency: snapshot.pricePerTicket.currency,
+        };
 
-    const { buyerPlatformFee, sellerPlatformFee, paymentMethodCommission } =
-      this.calculateFeesFromSnapshot(
-        ticketPriceTotal,
-        snapshot,
-        selectedCommissionPercent,
-      );
+        const { buyerPlatformFee, sellerPlatformFee, paymentMethodCommission } =
+          this.calculateFeesFromSnapshot(
+            ticketPriceTotal,
+            snapshot,
+            selectedCommissionPercent,
+          );
 
-    const totalPaid: Money = {
-      amount:
-        ticketPriceTotal.amount +
-        buyerPlatformFee.amount +
-        paymentMethodCommission.amount,
-      currency: ticketPriceTotal.currency,
-    };
+        const calculatedTotalPaid: Money = {
+          amount:
+            ticketPriceTotal.amount +
+            buyerPlatformFee.amount +
+            paymentMethodCommission.amount,
+          currency: ticketPriceTotal.currency,
+        };
 
-    const sellerReceives: Money = {
-      amount: ticketPriceTotal.amount - sellerPlatformFee.amount,
-      currency: ticketPriceTotal.currency,
-    };
+        const sellerReceives: Money = {
+          amount: ticketPriceTotal.amount - sellerPlatformFee.amount,
+          currency: ticketPriceTotal.currency,
+        };
 
-    // Calculate auto-release time for digital non-transferable tickets
-    let autoReleaseAt: Date | undefined;
-    if (listing.type === TicketType.DigitalNonTransferable) {
-      const releaseMinutes =
-        this.configService.getDigitalNonTransferableReleaseMinutes();
-      const eventDate = new Date(listing.eventDate);
-      autoReleaseAt = new Date(
-        eventDate.getTime() + releaseMinutes * 60 * 1000,
-      );
-    }
+        // Calculate auto-release time for digital non-transferable tickets
+        let autoReleaseAt: Date | undefined;
+        if (listing.type === TicketType.DigitalNonTransferable) {
+          const releaseMinutes =
+            this.configService.getDigitalNonTransferableReleaseMinutes();
+          const eventDate = new Date(listing.eventDate);
+          autoReleaseAt = new Date(
+            eventDate.getTime() + releaseMinutes * 60 * 1000,
+          );
+        }
 
-    // Create transaction
-    const initialStatus = TransactionStatus.PendingPayment;
-    const transaction: Transaction = {
-      id: transactionId,
-      listingId,
-      buyerId,
-      sellerId: listing.sellerId,
-      ticketType: listing.type,
-      ticketUnitIds,
-      quantity,
-      ticketPrice: ticketPriceTotal,
-      buyerPlatformFee,
-      sellerPlatformFee,
-      paymentMethodCommission,
-      totalPaid,
-      sellerReceives,
-      pricingSnapshotId,
-      status: initialStatus,
-      requiredActor: STATUS_REQUIRED_ACTOR[initialStatus],
-      createdAt: new Date(),
-      paymentExpiresAt: new Date(
-        Date.now() + this.configService.getPaymentTimeoutMinutes() * 60 * 1000,
-      ),
-      updatedAt: new Date(),
-      eventDateTime: new Date(listing.eventDate),
-      releaseAfterMinutes:
-        listing.type === TicketType.DigitalNonTransferable
-          ? this.configService.getDigitalNonTransferableReleaseMinutes()
-          : undefined,
-      autoReleaseAt,
-      deliveryMethod: listing.deliveryMethod,
-      pickupAddress: listing.pickupAddress,
-      paymentMethodId,
-    };
+        // Reserve tickets (atomic)
+        await this.ticketsService.reserveTickets(txCtx, listingId, ticketUnitIds);
 
-    await this.transactionsRepository.create(ctx, transaction);
+        // Create transaction
+        const initialStatus = TransactionStatus.PendingPayment;
+        const txn: Transaction = {
+          id: transactionId,
+          listingId,
+          buyerId,
+          sellerId: listing.sellerId,
+          ticketType: listing.type,
+          ticketUnitIds,
+          quantity,
+          ticketPrice: ticketPriceTotal,
+          buyerPlatformFee,
+          sellerPlatformFee,
+          paymentMethodCommission,
+          totalPaid: calculatedTotalPaid,
+          sellerReceives,
+          pricingSnapshotId,
+          status: initialStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[initialStatus],
+          createdAt: new Date(),
+          paymentExpiresAt: new Date(
+            Date.now() + this.configService.getPaymentTimeoutMinutes() * 60 * 1000,
+          ),
+          updatedAt: new Date(),
+          eventDateTime: new Date(listing.eventDate),
+          releaseAfterMinutes:
+            listing.type === TicketType.DigitalNonTransferable
+              ? this.configService.getDigitalNonTransferableReleaseMinutes()
+              : undefined,
+          autoReleaseAt,
+          deliveryMethod: listing.deliveryMethod,
+          pickupAddress: listing.pickupAddress,
+          paymentMethodId,
+          version: 1,
+        };
 
-    // Reserve tickets
-    await this.ticketsService.reserveTickets(ctx, listingId, ticketUnitIds);
+        const createdTransaction = await this.transactionsRepository.create(txCtx, txn);
+        return { transaction: createdTransaction, totalPaid: calculatedTotalPaid };
+      },
+      { isolationLevel: 'Serializable' },
+    );
 
-    // Create payment intent
+    // Payment intent creation is outside the DB transaction
+    // (can be retried independently, idempotent by transactionId)
     const paymentIntent = await this.paymentsService.createPaymentIntent(
       ctx,
       transaction.id,
@@ -237,7 +247,7 @@ export class TransactionsService {
 
     this.logger.log(ctx, `Transaction ${transaction.id} created`);
 
-    // Emit notification for payment required
+    // Emit notification (fire-and-forget, outside transaction)
     const seller = await this.usersService.findById(ctx, listing.sellerId);
     this.notificationsService
       .emit(ctx, NotificationEventType.PAYMENT_REQUIRED, {
@@ -261,6 +271,7 @@ export class TransactionsService {
 
   /**
    * Handle payment received (called by payment webhook or after confirmation)
+   * Atomic with pessimistic lock to prevent double escrow hold
    */
   async handlePaymentReceived(
     ctx: Ctx,
@@ -268,48 +279,49 @@ export class TransactionsService {
   ): Promise<Transaction> {
     this.logger.log(ctx, `Payment received for transaction ${transactionId}`);
 
-    const transaction = await this.transactionsRepository.findById(
-      ctx,
-      transactionId,
-    );
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
+    const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      // Lock transaction row first to prevent concurrent processing
+      const transaction = await this.transactionsRepository.findByIdForUpdate(
+        txCtx,
+        transactionId,
+      );
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
 
-    const validStatuses = [
-      TransactionStatus.PendingPayment,
-      TransactionStatus.PaymentPendingVerification,
-    ];
-    if (!validStatuses.includes(transaction.status)) {
-      throw new BadRequestException('Invalid transaction status');
-    }
+      // Validate status (prevents double processing)
+      const validStatuses = [
+        TransactionStatus.PendingPayment,
+        TransactionStatus.PaymentPendingVerification,
+      ];
+      if (!validStatuses.includes(transaction.status)) {
+        throw new BadRequestException('Invalid transaction status');
+      }
 
-    // Hold funds in escrow for seller
-    await this.walletService.holdFunds(
-      ctx,
-      transaction.sellerId,
-      transaction.sellerReceives,
-      transactionId,
-      `Payment for ticket sale`,
-    );
+      // Hold funds in escrow for seller (atomic, same DB transaction)
+      await this.walletService.holdFunds(
+        txCtx,
+        transaction.sellerId,
+        transaction.sellerReceives,
+        transactionId,
+        `Payment for ticket sale`,
+      );
 
-    // Update transaction status
-    const newStatus = TransactionStatus.PaymentReceived;
-    const updated = await this.transactionsRepository.update(
-      ctx,
-      transactionId,
-      {
-        status: newStatus,
-        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-        paymentReceivedAt: new Date(),
-      },
-    );
+      // Update transaction status with version check
+      const newStatus = TransactionStatus.PaymentReceived;
+      return this.transactionsRepository.updateWithVersion(
+        txCtx,
+        transactionId,
+        {
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+          paymentReceivedAt: new Date(),
+        },
+        transaction.version,
+      );
+    });
 
-    if (!updated) {
-      throw new NotFoundException('Transaction not found');
-    }
-
-    // Emit notification for payment approved
+    // Emit notification (fire-and-forget, outside transaction)
     const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
     const seller = await this.usersService.findById(ctx, updated.sellerId);
     this.notificationsService
@@ -404,7 +416,7 @@ export class TransactionsService {
   }
 
   /**
-   * Seller confirms ticket transfer
+   * Seller confirms ticket transfer (atomic)
    */
   async confirmTransfer(
     ctx: Ctx,
@@ -416,40 +428,39 @@ export class TransactionsService {
       `Seller confirming transfer for transaction ${transactionId}`,
     );
 
-    const transaction = await this.transactionsRepository.findById(
-      ctx,
-      transactionId,
-    );
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
+    const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const transaction = await this.transactionsRepository.findByIdForUpdate(
+        txCtx,
+        transactionId,
+      );
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
 
-    if (transaction.sellerId !== sellerId) {
-      throw new ForbiddenException('Only seller can confirm transfer');
-    }
+      if (transaction.sellerId !== sellerId) {
+        throw new ForbiddenException('Only seller can confirm transfer');
+      }
 
-    if (transaction.status !== TransactionStatus.PaymentReceived) {
-      throw new BadRequestException('Invalid transaction status');
-    }
+      if (transaction.status !== TransactionStatus.PaymentReceived) {
+        throw new BadRequestException('Invalid transaction status');
+      }
 
-    const newStatus = TransactionStatus.TicketTransferred;
-    const updated = await this.transactionsRepository.update(
-      ctx,
-      transactionId,
-      {
-        status: newStatus,
-        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-        ticketTransferredAt: new Date(),
-      },
-    );
-
-    if (!updated) {
-      throw new NotFoundException('Transaction not found');
-    }
+      const newStatus = TransactionStatus.TicketTransferred;
+      return this.transactionsRepository.updateWithVersion(
+        txCtx,
+        transactionId,
+        {
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+          ticketTransferredAt: new Date(),
+        },
+        transaction.version,
+      );
+    });
 
     this.logger.log(ctx, `Transaction ${transactionId} - ticket transferred`);
 
-    // Emit notification for ticket transferred
+    // Emit notification (fire-and-forget, outside transaction)
     const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
     const eventDateStr = listing.eventDate instanceof Date 
       ? listing.eventDate.toISOString() 
@@ -471,6 +482,7 @@ export class TransactionsService {
 
   /**
    * Buyer confirms receipt (for Physical and DigitalTransferable tickets)
+   * Atomic with lock to prevent race with auto-release
    */
   async confirmReceipt(
     ctx: Ctx,
@@ -482,48 +494,47 @@ export class TransactionsService {
       `Buyer confirming receipt for transaction ${transactionId}`,
     );
 
-    const transaction = await this.transactionsRepository.findById(
-      ctx,
-      transactionId,
-    );
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
+    const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const transaction = await this.transactionsRepository.findByIdForUpdate(
+        txCtx,
+        transactionId,
+      );
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
 
-    if (transaction.buyerId !== buyerId) {
-      throw new ForbiddenException('Only buyer can confirm receipt');
-    }
+      if (transaction.buyerId !== buyerId) {
+        throw new ForbiddenException('Only buyer can confirm receipt');
+      }
 
-    if (transaction.status !== TransactionStatus.TicketTransferred) {
-      throw new BadRequestException('Invalid transaction status');
-    }
+      if (transaction.status !== TransactionStatus.TicketTransferred) {
+        throw new BadRequestException('Invalid transaction status');
+      }
 
-    // Release payment to seller
-    await this.walletService.releaseFunds(
-      ctx,
-      transaction.sellerId,
-      transaction.sellerReceives,
-      transactionId,
-      `Payment released for ticket sale`,
-    );
+      // Release payment to seller (atomic, same DB transaction)
+      await this.walletService.releaseFunds(
+        txCtx,
+        transaction.sellerId,
+        transaction.sellerReceives,
+        transactionId,
+        `Payment released for ticket sale`,
+      );
 
-    const newStatus = TransactionStatus.Completed;
-    const updated = await this.transactionsRepository.update(
-      ctx,
-      transactionId,
-      {
-        status: newStatus,
-        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-        buyerConfirmedAt: new Date(),
-        completedAt: new Date(),
-      },
-    );
+      const newStatus = TransactionStatus.Completed;
+      return this.transactionsRepository.updateWithVersion(
+        txCtx,
+        transactionId,
+        {
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+          buyerConfirmedAt: new Date(),
+          completedAt: new Date(),
+        },
+        transaction.version,
+      );
+    });
 
-    if (!updated) {
-      throw new NotFoundException('Transaction not found');
-    }
-
-    // Emit transaction completed notification
+    // Emit notification (fire-and-forget, outside transaction)
     const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
     this.notificationsService
       .emit(ctx, NotificationEventType.TRANSACTION_COMPLETED, {
@@ -543,6 +554,7 @@ export class TransactionsService {
 
   /**
    * Auto-release payment for digital non-transferable tickets
+   * Each release is atomic to prevent double payment
    */
   async processAutoReleases(ctx: Ctx): Promise<number> {
     this.logger.log(ctx, 'Processing auto-releases');
@@ -553,22 +565,37 @@ export class TransactionsService {
 
     for (const transaction of pendingReleases) {
       try {
-        // Release payment to seller
-        await this.walletService.releaseFunds(
-          ctx,
-          transaction.sellerId,
-          transaction.sellerReceives,
-          transaction.id,
-          `Auto-release for digital ticket`,
-        );
+        await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+          // Lock and re-verify status to prevent race with confirmReceipt
+          const txn = await this.transactionsRepository.findByIdForUpdate(
+            txCtx,
+            transaction.id,
+          );
+          if (!txn || txn.status !== TransactionStatus.TicketTransferred) {
+            return; // Already processed or invalid
+          }
 
-        const newStatus = TransactionStatus.Completed;
-        await this.transactionsRepository.update(ctx, transaction.id, {
-          status: newStatus,
-          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-          completedAt: new Date(),
+          // Release funds (atomic, same DB transaction)
+          await this.walletService.releaseFunds(
+            txCtx,
+            txn.sellerId,
+            txn.sellerReceives,
+            txn.id,
+            `Auto-release for digital ticket`,
+          );
+
+          const newStatus = TransactionStatus.Completed;
+          await this.transactionsRepository.updateWithVersion(
+            txCtx,
+            txn.id,
+            {
+              status: newStatus,
+              requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+              completedAt: new Date(),
+            },
+            txn.version,
+          );
         });
-
         released++;
         this.logger.log(ctx, `Auto-released transaction ${transaction.id}`);
       } catch (error) {
@@ -583,7 +610,7 @@ export class TransactionsService {
   }
 
   /**
-   * Cancel transaction and restore tickets
+   * Cancel transaction and restore tickets (atomic)
    */
   async cancelTransaction(
     ctx: Ctx,
@@ -591,47 +618,46 @@ export class TransactionsService {
     cancelledBy: RequiredActor,
     cancellationReason: CancellationReason,
   ): Promise<Transaction> {
-    const transaction = await this.transactionsRepository.findById(
-      ctx,
-      transactionId,
-    );
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
-
-    const cancellableStatuses = [
-      TransactionStatus.PendingPayment,
-      TransactionStatus.PaymentPendingVerification,
-    ];
-    if (!cancellableStatuses.includes(transaction.status)) {
-      throw new BadRequestException(
-        'Transaction cannot be cancelled in current status',
+    const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const transaction = await this.transactionsRepository.findByIdForUpdate(
+        txCtx,
+        transactionId,
       );
-    }
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
 
-    // Restore tickets to listing
-    await this.ticketsService.restoreTickets(
-      ctx,
-      transaction.listingId,
-      transaction.ticketUnitIds,
-    );
+      const cancellableStatuses = [
+        TransactionStatus.PendingPayment,
+        TransactionStatus.PaymentPendingVerification,
+      ];
+      if (!cancellableStatuses.includes(transaction.status)) {
+        throw new BadRequestException(
+          'Transaction cannot be cancelled in current status',
+        );
+      }
 
-    const newStatus = TransactionStatus.Cancelled;
-    const updated = await this.transactionsRepository.update(
-      ctx,
-      transactionId,
-      {
-        status: newStatus,
-        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-        cancelledAt: new Date(),
-        cancelledBy,
-        cancellationReason,
-      },
-    );
+      // Restore tickets to listing (atomic)
+      await this.ticketsService.restoreTickets(
+        txCtx,
+        transaction.listingId,
+        transaction.ticketUnitIds,
+      );
 
-    if (!updated) {
-      throw new NotFoundException('Transaction not found');
-    }
+      const newStatus = TransactionStatus.Cancelled;
+      return this.transactionsRepository.updateWithVersion(
+        txCtx,
+        transactionId,
+        {
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+          cancelledAt: new Date(),
+          cancelledBy,
+          cancellationReason,
+        },
+        transaction.version,
+      );
+    });
 
     this.logger.log(
       ctx,
@@ -995,7 +1021,7 @@ export class TransactionsService {
   }
 
   /**
-   * Approve or reject manual payment (admin)
+   * Approve or reject manual payment (admin) - atomic
    */
   async approveManualPayment(
     ctx: Ctx,
@@ -1009,46 +1035,45 @@ export class TransactionsService {
       `Admin ${adminId} ${approved ? 'approving' : 'rejecting'} payment for transaction ${transactionId}`,
     );
 
-    const transaction = await this.transactionsRepository.findById(
-      ctx,
-      transactionId,
-    );
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
-
-    if (transaction.status !== TransactionStatus.PaymentPendingVerification) {
-      throw new BadRequestException(
-        'Transaction is not pending payment verification',
-      );
-    }
-
     if (approved) {
-      // Hold funds in escrow for seller
-      await this.walletService.holdFunds(
-        ctx,
-        transaction.sellerId,
-        transaction.sellerReceives,
-        transactionId,
-        `Payment for ticket sale (manual approval)`,
-      );
+      const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+        const transaction = await this.transactionsRepository.findByIdForUpdate(
+          txCtx,
+          transactionId,
+        );
+        if (!transaction) {
+          throw new NotFoundException('Transaction not found');
+        }
 
-      const newStatus = TransactionStatus.PaymentReceived;
-      const updated = await this.transactionsRepository.update(
-        ctx,
-        transactionId,
-        {
-          status: newStatus,
-          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-          paymentReceivedAt: new Date(),
-          paymentApprovedBy: adminId,
-          paymentApprovedAt: new Date(),
-        },
-      );
+        if (transaction.status !== TransactionStatus.PaymentPendingVerification) {
+          throw new BadRequestException(
+            'Transaction is not pending payment verification',
+          );
+        }
 
-      if (!updated) {
-        throw new NotFoundException('Transaction not found');
-      }
+        // Hold funds in escrow for seller (atomic)
+        await this.walletService.holdFunds(
+          txCtx,
+          transaction.sellerId,
+          transaction.sellerReceives,
+          transactionId,
+          `Payment for ticket sale (manual approval)`,
+        );
+
+        const newStatus = TransactionStatus.PaymentReceived;
+        return this.transactionsRepository.updateWithVersion(
+          txCtx,
+          transactionId,
+          {
+            status: newStatus,
+            requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+            paymentReceivedAt: new Date(),
+            paymentApprovedBy: adminId,
+            paymentApprovedAt: new Date(),
+          },
+          transaction.version,
+        );
+      });
 
       this.logger.log(
         ctx,
@@ -1056,7 +1081,7 @@ export class TransactionsService {
       );
       return updated;
     } else {
-      // Admin rejected - cancel the transaction
+      // Admin rejected - cancel the transaction (already atomic)
       const updated = await this.cancelTransaction(
         ctx,
         transactionId,

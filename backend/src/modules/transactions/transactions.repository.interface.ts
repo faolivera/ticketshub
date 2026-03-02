@@ -94,6 +94,23 @@ export interface ITransactionsRepository {
    * Find transactions with expired admin review window
    */
   findExpiredAdminReviews(ctx: Ctx): Promise<Transaction[]>;
+
+  /**
+   * Find transaction by ID with pessimistic lock (FOR UPDATE).
+   * Must be called within a database transaction.
+   */
+  findByIdForUpdate(ctx: Ctx, id: string): Promise<Transaction | undefined>;
+
+  /**
+   * Update transaction with optimistic locking.
+   * @throws OptimisticLockException on version mismatch
+   */
+  updateWithVersion(
+    ctx: Ctx,
+    id: string,
+    updates: Partial<Transaction>,
+    expectedVersion: number,
+  ): Promise<Transaction>;
 }
 
 /**

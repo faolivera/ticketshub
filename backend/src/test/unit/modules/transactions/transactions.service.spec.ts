@@ -1,6 +1,7 @@
 import {
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionsService } from '../../../../modules/transactions/transactions.service';
@@ -14,6 +15,8 @@ import { UsersService } from '../../../../modules/users/users.service';
 import { PaymentMethodsService } from '../../../../modules/payments/payment-methods.service';
 import { PricingService } from '../../../../modules/payments/pricing/pricing.service';
 import { NotificationsService } from '../../../../modules/notifications/notifications.service';
+import { TransactionManager } from '../../../../common/database';
+import { OptimisticLockException } from '../../../../common/exceptions/optimistic-lock.exception';
 import {
   TransactionStatus,
   RequiredActor,
@@ -23,12 +26,14 @@ import {
 import { TicketType } from '../../../../modules/tickets/tickets.domain';
 import type { Transaction } from '../../../../modules/transactions/transactions.domain';
 import type { Ctx } from '../../../../common/types/context';
+import type { TxCtx } from '../../../../common/database/types';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
   let transactionsRepository: jest.Mocked<ITransactionsRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let walletService: jest.Mocked<WalletService>;
+  let txManager: jest.Mocked<TransactionManager>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -52,6 +57,7 @@ describe('TransactionsService', () => {
     createdAt: new Date(),
     paymentExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     updatedAt: new Date(),
+    version: 1,
     ...overrides,
   });
 
@@ -59,7 +65,9 @@ describe('TransactionsService', () => {
     const mockTransactionsRepository = {
       create: jest.fn(),
       findById: jest.fn(),
+      findByIdForUpdate: jest.fn(),
       update: jest.fn(),
+      updateWithVersion: jest.fn(),
       getAll: jest.fn(),
       getByBuyerId: jest.fn(),
       getBySellerId: jest.fn(),
@@ -71,6 +79,7 @@ describe('TransactionsService', () => {
       getPaginated: jest.fn(),
       countByStatuses: jest.fn(),
       getIdsByStatuses: jest.fn(),
+      findByIds: jest.fn(),
     };
 
     const mockTicketsService = {
@@ -114,6 +123,16 @@ describe('TransactionsService', () => {
       emit: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockTxManager = {
+      executeInTransaction: jest.fn().mockImplementation(
+        async (_ctx: Ctx, fn: (txCtx: TxCtx) => Promise<unknown>) => {
+          const txCtx = { ..._ctx, tx: {} } as TxCtx;
+          return fn(txCtx);
+        },
+      ),
+      getClient: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -126,6 +145,7 @@ describe('TransactionsService', () => {
         { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
         { provide: PricingService, useValue: mockPricingService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: TransactionManager, useValue: mockTxManager },
       ],
     }).compile();
 
@@ -133,19 +153,21 @@ describe('TransactionsService', () => {
     transactionsRepository = module.get(TRANSACTIONS_REPOSITORY);
     ticketsService = module.get(TicketsService);
     walletService = module.get(WalletService);
+    txManager = module.get(TransactionManager);
   });
 
   describe('cancelTransaction', () => {
-    it('should cancel a PendingPayment transaction and restore tickets', async () => {
+    it('should cancel a PendingPayment transaction and restore tickets atomically', async () => {
       const transaction = createMockTransaction();
-      transactionsRepository.findById.mockResolvedValue(transaction);
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
         status: TransactionStatus.Cancelled,
         requiredActor: STATUS_REQUIRED_ACTOR[TransactionStatus.Cancelled],
         cancelledAt: expect.any(Date),
         cancelledBy: RequiredActor.Buyer,
         cancellationReason: CancellationReason.BuyerCancelled,
+        version: 2,
       });
       ticketsService.restoreTickets.mockResolvedValue(undefined);
 
@@ -157,19 +179,21 @@ describe('TransactionsService', () => {
       );
 
       expect(result.status).toBe(TransactionStatus.Cancelled);
+      expect(txManager.executeInTransaction).toHaveBeenCalled();
       expect(ticketsService.restoreTickets).toHaveBeenCalledWith(
-        mockCtx,
+        expect.objectContaining({ tx: expect.anything() }),
         'listing_123',
         ['unit_1', 'unit_2'],
       );
-      expect(transactionsRepository.update).toHaveBeenCalledWith(
-        mockCtx,
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.objectContaining({ tx: expect.anything() }),
         'txn_123',
         expect.objectContaining({
           status: TransactionStatus.Cancelled,
           cancelledBy: RequiredActor.Buyer,
           cancellationReason: CancellationReason.BuyerCancelled,
         }),
+        1,
       );
     });
 
@@ -178,13 +202,14 @@ describe('TransactionsService', () => {
         status: TransactionStatus.PaymentPendingVerification,
         requiredActor: RequiredActor.Platform,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
         status: TransactionStatus.Cancelled,
         requiredActor: STATUS_REQUIRED_ACTOR[TransactionStatus.Cancelled],
         cancelledBy: RequiredActor.Platform,
         cancellationReason: CancellationReason.AdminRejected,
+        version: 2,
       });
       ticketsService.restoreTickets.mockResolvedValue(undefined);
 
@@ -200,7 +225,7 @@ describe('TransactionsService', () => {
     });
 
     it('should throw NotFoundException when transaction not found', async () => {
-      transactionsRepository.findById.mockResolvedValue(undefined);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(undefined);
 
       await expect(
         service.cancelTransaction(
@@ -217,7 +242,7 @@ describe('TransactionsService', () => {
         status: TransactionStatus.Completed,
         requiredActor: RequiredActor.None,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
 
       await expect(
         service.cancelTransaction(
@@ -234,7 +259,7 @@ describe('TransactionsService', () => {
         status: TransactionStatus.PaymentReceived,
         requiredActor: RequiredActor.Seller,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
 
       await expect(
         service.cancelTransaction(
@@ -251,7 +276,7 @@ describe('TransactionsService', () => {
         status: TransactionStatus.Cancelled,
         requiredActor: RequiredActor.None,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
 
       await expect(
         service.cancelTransaction(
@@ -272,15 +297,16 @@ describe('TransactionsService', () => {
       ];
 
       transactionsRepository.findExpiredPendingPayments.mockResolvedValue(expiredTransactions);
-      transactionsRepository.findById.mockImplementation(async (_ctx, id) =>
+      transactionsRepository.findByIdForUpdate.mockImplementation(async (_ctx, id) =>
         expiredTransactions.find((t) => t.id === id),
       );
-      transactionsRepository.update.mockImplementation(async (_ctx, id) => ({
+      transactionsRepository.updateWithVersion.mockImplementation(async (_ctx, id) => ({
         ...expiredTransactions.find((t) => t.id === id)!,
         status: TransactionStatus.Cancelled,
         requiredActor: RequiredActor.None,
         cancelledBy: RequiredActor.Platform,
         cancellationReason: CancellationReason.PaymentTimeout,
+        version: 2,
       }));
       ticketsService.restoreTickets.mockResolvedValue(undefined);
 
@@ -308,13 +334,14 @@ describe('TransactionsService', () => {
       ];
 
       transactionsRepository.findExpiredPendingPayments.mockResolvedValue(expiredTransactions);
-      transactionsRepository.findById.mockImplementation(async (_ctx, id) => {
+      transactionsRepository.findByIdForUpdate.mockImplementation(async (_ctx, id) => {
         if (id === 'txn_2') return undefined;
         return expiredTransactions.find((t) => t.id === id);
       });
-      transactionsRepository.update.mockImplementation(async (_ctx, id) => ({
+      transactionsRepository.updateWithVersion.mockImplementation(async (_ctx, id) => ({
         ...expiredTransactions.find((t) => t.id === id)!,
         status: TransactionStatus.Cancelled,
+        version: 2,
       }));
       ticketsService.restoreTickets.mockResolvedValue(undefined);
 
@@ -336,13 +363,14 @@ describe('TransactionsService', () => {
       ];
 
       transactionsRepository.findExpiredAdminReviews.mockResolvedValue(expiredTransactions);
-      transactionsRepository.findById.mockResolvedValue(expiredTransactions[0]);
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(expiredTransactions[0]);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
         ...expiredTransactions[0],
         status: TransactionStatus.Cancelled,
         requiredActor: RequiredActor.None,
         cancelledBy: RequiredActor.Platform,
         cancellationReason: CancellationReason.AdminReviewTimeout,
+        version: 2,
       });
       ticketsService.restoreTickets.mockResolvedValue(undefined);
 
@@ -365,12 +393,14 @@ describe('TransactionsService', () => {
     it('should cancel transaction on payment failure', async () => {
       const transaction = createMockTransaction();
       transactionsRepository.findById.mockResolvedValue(transaction);
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
         status: TransactionStatus.Cancelled,
         requiredActor: RequiredActor.None,
         cancelledBy: RequiredActor.Platform,
         cancellationReason: CancellationReason.PaymentFailed,
+        version: 2,
       });
       ticketsService.restoreTickets.mockResolvedValue(undefined);
 
@@ -446,15 +476,16 @@ describe('TransactionsService', () => {
   });
 
   describe('handlePaymentReceived', () => {
-    it('should hold funds and transition to PaymentReceived status', async () => {
+    it('should hold funds and transition to PaymentReceived status atomically', async () => {
       const transaction = createMockTransaction();
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
       walletService.holdFunds.mockResolvedValue(undefined);
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
         status: TransactionStatus.PaymentReceived,
         requiredActor: RequiredActor.Seller,
         paymentReceivedAt: expect.any(Date),
+        version: 2,
       });
       ticketsService.getListingById.mockResolvedValue({
         id: 'listing_123',
@@ -464,8 +495,9 @@ describe('TransactionsService', () => {
       const result = await service.handlePaymentReceived(mockCtx, 'txn_123');
 
       expect(result.status).toBe(TransactionStatus.PaymentReceived);
+      expect(txManager.executeInTransaction).toHaveBeenCalled();
       expect(walletService.holdFunds).toHaveBeenCalledWith(
-        mockCtx,
+        expect.objectContaining({ tx: expect.anything() }),
         'seller_123',
         transaction.sellerReceives,
         'txn_123',
@@ -477,11 +509,12 @@ describe('TransactionsService', () => {
       const transaction = createMockTransaction({
         status: TransactionStatus.PaymentPendingVerification,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
       walletService.holdFunds.mockResolvedValue(undefined);
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
         status: TransactionStatus.PaymentReceived,
+        version: 2,
       });
       ticketsService.getListingById.mockResolvedValue({
         id: 'listing_123',
@@ -494,7 +527,7 @@ describe('TransactionsService', () => {
     });
 
     it('should throw NotFoundException when transaction not found', async () => {
-      transactionsRepository.findById.mockResolvedValue(undefined);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(undefined);
 
       await expect(
         service.handlePaymentReceived(mockCtx, 'invalid_id'),
@@ -505,16 +538,39 @@ describe('TransactionsService', () => {
       const transaction = createMockTransaction({
         status: TransactionStatus.PaymentReceived,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
 
       await expect(
         service.handlePaymentReceived(mockCtx, 'txn_123'),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should prevent double escrow hold with pessimistic lock', async () => {
+      const transaction = createMockTransaction();
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      walletService.holdFunds.mockResolvedValue(undefined);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.PaymentReceived,
+        version: 2,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+      } as never);
+
+      await service.handlePaymentReceived(mockCtx, 'txn_123');
+
+      expect(transactionsRepository.findByIdForUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ tx: expect.anything() }),
+        'txn_123',
+      );
+      expect(walletService.holdFunds).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('processAutoReleases', () => {
-    it('should release funds for pending auto-release transactions', async () => {
+    it('should release funds for pending auto-release transactions atomically', async () => {
       const pendingReleases = [
         createMockTransaction({
           id: 'txn_1',
@@ -529,16 +585,21 @@ describe('TransactionsService', () => {
       ];
 
       transactionsRepository.getPendingAutoRelease.mockResolvedValue(pendingReleases);
+      transactionsRepository.findByIdForUpdate.mockImplementation(async (_ctx, id) =>
+        pendingReleases.find((t) => t.id === id),
+      );
       walletService.releaseFunds.mockResolvedValue(undefined);
-      transactionsRepository.update.mockResolvedValue({
-        ...pendingReleases[0],
+      transactionsRepository.updateWithVersion.mockImplementation(async (_ctx, id) => ({
+        ...pendingReleases.find((t) => t.id === id)!,
         status: TransactionStatus.Completed,
-      });
+        version: 2,
+      }));
 
       const result = await service.processAutoReleases(mockCtx);
 
       expect(result).toBe(2);
       expect(walletService.releaseFunds).toHaveBeenCalledTimes(2);
+      expect(txManager.executeInTransaction).toHaveBeenCalledTimes(2);
     });
 
     it('should return 0 when no pending auto-releases', async () => {
@@ -563,10 +624,33 @@ describe('TransactionsService', () => {
       ];
 
       transactionsRepository.getPendingAutoRelease.mockResolvedValue(pendingReleases);
+      transactionsRepository.findByIdForUpdate.mockImplementation(async (_ctx, id) =>
+        pendingReleases.find((t) => t.id === id),
+      );
       walletService.releaseFunds
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error('Wallet error'));
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.updateWithVersion.mockImplementation(async (_ctx, id) => ({
+        ...pendingReleases.find((t) => t.id === id)!,
+        status: TransactionStatus.Completed,
+        version: 2,
+      }));
+
+      const result = await service.processAutoReleases(mockCtx);
+
+      expect(result).toBe(1);
+    });
+
+    it('should skip already processed transactions (status changed)', async () => {
+      const pendingReleases = [
+        createMockTransaction({
+          id: 'txn_1',
+          status: TransactionStatus.TicketTransferred,
+        }),
+      ];
+
+      transactionsRepository.getPendingAutoRelease.mockResolvedValue(pendingReleases);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue({
         ...pendingReleases[0],
         status: TransactionStatus.Completed,
       });
@@ -574,6 +658,7 @@ describe('TransactionsService', () => {
       const result = await service.processAutoReleases(mockCtx);
 
       expect(result).toBe(1);
+      expect(walletService.releaseFunds).not.toHaveBeenCalled();
     });
   });
 
@@ -624,6 +709,223 @@ describe('TransactionsService', () => {
 
       expect(result).toBe(false);
       expect(transactionsRepository.getByListingIds).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('confirmReceipt', () => {
+    it('should release funds and complete transaction atomically', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        requiredActor: RequiredActor.Buyer,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      walletService.releaseFunds.mockResolvedValue(undefined);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.Completed,
+        requiredActor: RequiredActor.None,
+        buyerConfirmedAt: expect.any(Date),
+        completedAt: expect.any(Date),
+        version: 2,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+      } as never);
+
+      const result = await service.confirmReceipt(mockCtx, 'txn_123', 'buyer_123');
+
+      expect(result.status).toBe(TransactionStatus.Completed);
+      expect(txManager.executeInTransaction).toHaveBeenCalled();
+      expect(walletService.releaseFunds).toHaveBeenCalledWith(
+        expect.objectContaining({ tx: expect.anything() }),
+        'seller_123',
+        transaction.sellerReceives,
+        'txn_123',
+        'Payment released for ticket sale',
+      );
+    });
+
+    it('should throw ForbiddenException when called by non-buyer', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+
+      await expect(
+        service.confirmReceipt(mockCtx, 'txn_123', 'other_user'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when status is not TicketTransferred', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+
+      await expect(
+        service.confirmReceipt(mockCtx, 'txn_123', 'buyer_123'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException when transaction not found', async () => {
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(undefined);
+
+      await expect(
+        service.confirmReceipt(mockCtx, 'invalid_id', 'buyer_123'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should use version check to prevent double payment', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        version: 3,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      walletService.releaseFunds.mockResolvedValue(undefined);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.Completed,
+        version: 4,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+      } as never);
+
+      await service.confirmReceipt(mockCtx, 'txn_123', 'buyer_123');
+
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.objectContaining({ tx: expect.anything() }),
+        'txn_123',
+        expect.objectContaining({
+          status: TransactionStatus.Completed,
+        }),
+        3,
+      );
+    });
+  });
+
+  describe('confirmTransfer', () => {
+    it('should transition to TicketTransferred atomically', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        requiredActor: RequiredActor.Seller,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.TicketTransferred,
+        requiredActor: RequiredActor.Buyer,
+        ticketTransferredAt: expect.any(Date),
+        version: 2,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+        eventDate: new Date(),
+        venue: 'Test Venue',
+      } as never);
+
+      const result = await service.confirmTransfer(mockCtx, 'txn_123', 'seller_123');
+
+      expect(result.status).toBe(TransactionStatus.TicketTransferred);
+      expect(txManager.executeInTransaction).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenException when called by non-seller', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+
+      await expect(
+        service.confirmTransfer(mockCtx, 'txn_123', 'other_user'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when status is not PaymentReceived', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PendingPayment,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+
+      await expect(
+        service.confirmTransfer(mockCtx, 'txn_123', 'seller_123'),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('atomic transaction flows', () => {
+    it('confirmReceipt and auto-release race - only one completes (via lock)', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      walletService.releaseFunds.mockResolvedValue(undefined);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.Completed,
+        version: 2,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+      } as never);
+
+      await service.confirmReceipt(mockCtx, 'txn_123', 'buyer_123');
+
+      expect(transactionsRepository.findByIdForUpdate).toHaveBeenCalled();
+      expect(walletService.releaseFunds).toHaveBeenCalledTimes(1);
+    });
+
+    it('status transition uses optimistic locking', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        version: 5,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.TicketTransferred,
+        version: 6,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+        eventDate: new Date(),
+      } as never);
+
+      await service.confirmTransfer(mockCtx, 'txn_123', 'seller_123');
+
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.anything(),
+        'txn_123',
+        expect.anything(),
+        5,
+      );
+    });
+
+    it('cancelTransaction restores tickets atomically', async () => {
+      const transaction = createMockTransaction();
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      ticketsService.restoreTickets.mockResolvedValue(undefined);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.Cancelled,
+        version: 2,
+      });
+
+      await service.cancelTransaction(
+        mockCtx,
+        'txn_123',
+        RequiredActor.Buyer,
+        CancellationReason.BuyerCancelled,
+      );
+
+      expect(txManager.executeInTransaction).toHaveBeenCalled();
+      expect(ticketsService.restoreTickets).toHaveBeenCalled();
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalled();
     });
   });
 });

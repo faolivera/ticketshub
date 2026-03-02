@@ -58,6 +58,7 @@ describe('AdminService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     paymentExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    version: 1,
   };
 
   const mockConfirmationWithTransaction: PaymentConfirmationWithTransaction = {

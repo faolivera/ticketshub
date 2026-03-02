@@ -553,7 +553,7 @@ async reserveUnitsWithLock(
 
 **Scope:** Transaction flows con consistencia fuerte  
 **Riesgo:** ALTO (orquesta todo)  
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completado (2026-03-02)
 
 #### Cambios
 

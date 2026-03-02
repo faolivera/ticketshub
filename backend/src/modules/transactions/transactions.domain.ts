@@ -169,6 +169,9 @@ export interface Transaction {
   paymentApprovedAt?: Date;
 
   updatedAt: Date;
+
+  /** Optimistic locking version for concurrency control */
+  version: number;
 }
 
 /**
