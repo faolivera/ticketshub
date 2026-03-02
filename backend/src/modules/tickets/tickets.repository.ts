@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import type { TicketListing as PrismaTicketListing } from '@prisma/client';
+import type {
+  TicketListing as PrismaTicketListing,
+  TicketUnit as PrismaTicketUnit,
+} from '@prisma/client';
 import {
   TicketType as PrismaTicketType,
   DeliveryMethod as PrismaDeliveryMethod,
@@ -17,6 +20,10 @@ import {
 } from './tickets.domain';
 import type { ITicketsRepository } from './tickets.repository.interface';
 import type { Address } from '../shared/address.domain';
+
+type PrismaTicketListingWithUnits = PrismaTicketListing & {
+  ticketUnits: PrismaTicketUnit[];
+};
 
 @Injectable()
 export class TicketsRepository implements ITicketsRepository {
@@ -142,24 +149,7 @@ export class TicketsRepository implements ITicketsRepository {
     }
   }
 
-  // ==================== JSON Serialization ====================
-
-  private serializeTicketUnits(units: TicketUnit[]): object[] {
-    return units.map((unit) => ({
-      id: unit.id,
-      status: this.mapTicketUnitStatusToDb(unit.status),
-      seat: unit.seat,
-    }));
-  }
-
-  private deserializeTicketUnits(json: unknown): TicketUnit[] {
-    if (!Array.isArray(json)) return [];
-    return json.map((unit: { id: string; status: string; seat?: { row: string; seatNumber: string } }) => ({
-      id: unit.id,
-      status: this.mapTicketUnitStatusFromDb(unit.status),
-      seat: unit.seat,
-    }));
-  }
+  // ==================== Money Serialization ====================
 
   private serializeMoney(money: Money): object {
     return {
@@ -176,9 +166,24 @@ export class TicketsRepository implements ITicketsRepository {
     };
   }
 
+  // ==================== TicketUnit Mapper ====================
+
+  private mapTicketUnitFromDb(unit: PrismaTicketUnit): TicketUnit {
+    return {
+      id: unit.id,
+      listingId: unit.listingId,
+      status: this.mapTicketUnitStatusFromDb(unit.status),
+      seat:
+        unit.seatRow && unit.seatNumber
+          ? { row: unit.seatRow, seatNumber: unit.seatNumber }
+          : undefined,
+      version: unit.version,
+    };
+  }
+
   // ==================== Domain Mapper ====================
 
-  private mapToListing(record: PrismaTicketListing): TicketListing {
+  private mapToListing(record: PrismaTicketListingWithUnits): TicketListing {
     return {
       id: record.id,
       sellerId: record.sellerId,
@@ -186,7 +191,9 @@ export class TicketsRepository implements ITicketsRepository {
       eventDateId: record.eventDateId,
       eventSectionId: record.eventSectionId,
       type: this.mapTicketTypeFromDb(record.type),
-      ticketUnits: this.deserializeTicketUnits(record.ticketUnits),
+      ticketUnits: record.ticketUnits.map((unit) =>
+        this.mapTicketUnitFromDb(unit),
+      ),
       sellTogether: record.sellTogether,
       pricePerTicket: this.deserializeMoney(record.pricePerTicket),
       deliveryMethod: this.mapDeliveryMethodFromDb(record.deliveryMethod),
@@ -212,7 +219,14 @@ export class TicketsRepository implements ITicketsRepository {
         eventDateId: listing.eventDateId,
         eventSectionId: listing.eventSectionId,
         type: this.mapTicketTypeToDb(listing.type),
-        ticketUnits: this.serializeTicketUnits(listing.ticketUnits),
+        ticketUnits: {
+          create: listing.ticketUnits.map((unit) => ({
+            id: unit.id,
+            seatRow: unit.seat?.row,
+            seatNumber: unit.seat?.seatNumber,
+            status: this.mapTicketUnitStatusToDb(unit.status),
+          })),
+        },
         sellTogether: listing.sellTogether,
         pricePerTicket: this.serializeMoney(listing.pricePerTicket),
         deliveryMethod: this.mapDeliveryMethodToDb(listing.deliveryMethod),
@@ -225,6 +239,7 @@ export class TicketsRepository implements ITicketsRepository {
         createdAt: listing.createdAt,
         updatedAt: listing.updatedAt,
       },
+      include: { ticketUnits: true },
     });
     return this.mapToListing(created);
   }
@@ -232,6 +247,7 @@ export class TicketsRepository implements ITicketsRepository {
   async findById(_ctx: Ctx, id: string): Promise<TicketListing | undefined> {
     const listing = await this.prisma.ticketListing.findUnique({
       where: { id },
+      include: { ticketUnits: true },
     });
     return listing ? this.mapToListing(listing) : undefined;
   }
@@ -240,6 +256,7 @@ export class TicketsRepository implements ITicketsRepository {
     if (ids.length === 0) return [];
     const listings = await this.prisma.ticketListing.findMany({
       where: { id: { in: ids } },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -247,6 +264,7 @@ export class TicketsRepository implements ITicketsRepository {
   async getAll(_ctx: Ctx): Promise<TicketListing[]> {
     const listings = await this.prisma.ticketListing.findMany({
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -255,6 +273,7 @@ export class TicketsRepository implements ITicketsRepository {
     const listings = await this.prisma.ticketListing.findMany({
       where: { status: PrismaListingStatus.Active },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -266,6 +285,7 @@ export class TicketsRepository implements ITicketsRepository {
         status: PrismaListingStatus.Active,
       },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -280,6 +300,7 @@ export class TicketsRepository implements ITicketsRepository {
         status: PrismaListingStatus.Active,
       },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -288,6 +309,7 @@ export class TicketsRepository implements ITicketsRepository {
     const listings = await this.prisma.ticketListing.findMany({
       where: { sellerId },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -306,9 +328,6 @@ export class TicketsRepository implements ITicketsRepository {
 
     if (updates.type !== undefined) {
       data.type = this.mapTicketTypeToDb(updates.type);
-    }
-    if (updates.ticketUnits !== undefined) {
-      data.ticketUnits = this.serializeTicketUnits(updates.ticketUnits);
     }
     if (updates.sellTogether !== undefined) {
       data.sellTogether = updates.sellTogether;
@@ -339,6 +358,7 @@ export class TicketsRepository implements ITicketsRepository {
     const updated = await this.prisma.ticketListing.update({
       where: { id },
       data,
+      include: { ticketUnits: true },
     });
     return this.mapToListing(updated);
   }
@@ -354,44 +374,41 @@ export class TicketsRepository implements ITicketsRepository {
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
-    const existing = await this.prisma.ticketListing.findUnique({
-      where: { id },
-    });
-    if (!existing) return undefined;
-
     const idSet = new Set(ticketUnitIds);
     if (idSet.size !== ticketUnitIds.length) {
       return undefined;
     }
 
-    const currentUnits = this.deserializeTicketUnits(existing.ticketUnits);
-    const unitsById = new Map(currentUnits.map((unit) => [unit.id, unit]));
+    const units = await this.prisma.ticketUnit.findMany({
+      where: { id: { in: ticketUnitIds }, listingId: id },
+    });
 
-    for (const unitId of ticketUnitIds) {
-      const unit = unitsById.get(unitId);
-      if (!unit || unit.status !== TicketUnitStatus.Available) {
-        return undefined;
-      }
+    if (units.length !== ticketUnitIds.length) {
+      return undefined;
     }
 
-    const updatedUnits = currentUnits.map((unit) =>
-      idSet.has(unit.id)
-        ? { ...unit, status: TicketUnitStatus.Reserved }
-        : unit,
-    );
+    if (units.some((u) => u.status !== PrismaTicketUnitStatus.available)) {
+      return undefined;
+    }
 
-    const hasAvailable = updatedUnits.some(
-      (unit) => unit.status === TicketUnitStatus.Available,
-    );
-    const nextStatus = hasAvailable ? ListingStatus.Active : ListingStatus.Sold;
+    await this.prisma.ticketUnit.updateMany({
+      where: { id: { in: ticketUnitIds } },
+      data: { status: PrismaTicketUnitStatus.reserved, updatedAt: new Date() },
+    });
+
+    const remainingAvailable = await this.prisma.ticketUnit.count({
+      where: { listingId: id, status: PrismaTicketUnitStatus.available },
+    });
+
+    const nextStatus =
+      remainingAvailable === 0
+        ? PrismaListingStatus.Sold
+        : PrismaListingStatus.Active;
 
     const updated = await this.prisma.ticketListing.update({
       where: { id },
-      data: {
-        ticketUnits: this.serializeTicketUnits(updatedUnits),
-        status: this.mapListingStatusToDb(nextStatus),
-        updatedAt: new Date(),
-      },
+      data: { status: nextStatus, updatedAt: new Date() },
+      include: { ticketUnits: true },
     });
 
     return this.mapToListing(updated);
@@ -402,45 +419,39 @@ export class TicketsRepository implements ITicketsRepository {
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
-    const existing = await this.prisma.ticketListing.findUnique({
-      where: { id },
-    });
-    if (!existing) return undefined;
-
     const idSet = new Set(ticketUnitIds);
     if (idSet.size !== ticketUnitIds.length) {
       return undefined;
     }
 
-    const currentUnits = this.deserializeTicketUnits(existing.ticketUnits);
-    const unitsById = new Map(currentUnits.map((unit) => [unit.id, unit]));
+    const units = await this.prisma.ticketUnit.findMany({
+      where: { id: { in: ticketUnitIds }, listingId: id },
+    });
 
-    for (const unitId of ticketUnitIds) {
-      const unit = unitsById.get(unitId);
-      if (!unit || unit.status !== TicketUnitStatus.Reserved) {
-        return undefined;
-      }
+    if (units.length !== ticketUnitIds.length) {
+      return undefined;
     }
 
-    const updatedUnits = currentUnits.map((unit) =>
-      idSet.has(unit.id)
-        ? { ...unit, status: TicketUnitStatus.Available }
-        : unit,
-    );
+    if (units.some((u) => u.status !== PrismaTicketUnitStatus.reserved)) {
+      return undefined;
+    }
 
-    const hasAvailable = updatedUnits.some(
-      (unit) => unit.status === TicketUnitStatus.Available,
-    );
+    await this.prisma.ticketUnit.updateMany({
+      where: { id: { in: ticketUnitIds } },
+      data: { status: PrismaTicketUnitStatus.available, updatedAt: new Date() },
+    });
+
+    const hasAvailable = await this.prisma.ticketUnit.count({
+      where: { listingId: id, status: PrismaTicketUnitStatus.available },
+    });
 
     const updated = await this.prisma.ticketListing.update({
       where: { id },
       data: {
-        ticketUnits: this.serializeTicketUnits(updatedUnits),
-        status: hasAvailable
-          ? this.mapListingStatusToDb(ListingStatus.Active)
-          : this.mapListingStatusToDb(ListingStatus.Sold),
+        status: hasAvailable > 0 ? PrismaListingStatus.Active : PrismaListingStatus.Sold,
         updatedAt: new Date(),
       },
+      include: { ticketUnits: true },
     });
 
     return this.mapToListing(updated);
@@ -456,6 +467,7 @@ export class TicketsRepository implements ITicketsRepository {
         status: PrismaListingStatus.Pending,
       },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -470,6 +482,7 @@ export class TicketsRepository implements ITicketsRepository {
         status: PrismaListingStatus.Pending,
       },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -499,6 +512,7 @@ export class TicketsRepository implements ITicketsRepository {
     const listings = await this.prisma.ticketListing.findMany({
       where: { eventDateId },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -513,6 +527,7 @@ export class TicketsRepository implements ITicketsRepository {
         status: PrismaListingStatus.Pending,
       },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -524,6 +539,7 @@ export class TicketsRepository implements ITicketsRepository {
     const listings = await this.prisma.ticketListing.findMany({
       where: { eventSectionId },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -532,6 +548,7 @@ export class TicketsRepository implements ITicketsRepository {
     const listings = await this.prisma.ticketListing.findMany({
       where: { eventId },
       orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
     });
     return listings.map((l) => this.mapToListing(l));
   }
@@ -555,6 +572,7 @@ export class TicketsRepository implements ITicketsRepository {
 
     const listings = await this.prisma.ticketListing.findMany({
       where: { eventId: { in: eventIds } },
+      include: { ticketUnits: true },
     });
 
     for (const listing of listings) {
@@ -564,9 +582,8 @@ export class TicketsRepository implements ITicketsRepository {
       stats.listingsCount++;
 
       if (listing.status === PrismaListingStatus.Active) {
-        const units = this.deserializeTicketUnits(listing.ticketUnits);
-        const availableUnits = units.filter(
-          (unit) => unit.status === TicketUnitStatus.Available,
+        const availableUnits = listing.ticketUnits.filter(
+          (unit) => unit.status === PrismaTicketUnitStatus.available,
         ).length;
         stats.availableTicketsCount += availableUnits;
       }

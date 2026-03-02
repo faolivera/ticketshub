@@ -475,7 +475,14 @@ describe('EventsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
-      ticketUnits: [{ id: 'unit_1', status: 'available' as any }],
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_123',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,
@@ -776,7 +783,14 @@ describe('EventsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_123',
       type: TicketType.DigitalTransferable,
-      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_123',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,

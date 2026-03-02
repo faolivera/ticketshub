@@ -112,7 +112,14 @@ describe('TicketsService', () => {
     eventDateId: 'edt_456',
     eventSectionId: 'sec_test_123',
     type: TicketType.DigitalTransferable,
-    ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+    ticketUnits: [
+      {
+        id: 'unit_1',
+        listingId: 'tkt_pending_1',
+        status: TicketUnitStatus.Available,
+        version: 1,
+      },
+    ],
     sellTogether: false,
     pricePerTicket: { amount: 5000, currency: 'USD' },
     status: ListingStatus.Pending,
@@ -124,6 +131,7 @@ describe('TicketsService', () => {
     const mockTicketsRepository = {
       create: jest.fn(),
       findById: jest.fn(),
+      getByIds: jest.fn(),
       getAll: jest.fn(),
       getActiveListings: jest.fn(),
       getByEventId: jest.fn(),
@@ -139,10 +147,13 @@ describe('TicketsService', () => {
       bulkUpdateStatus: jest.fn(),
       getAllByEventDateId: jest.fn(),
       getAllByEventSectionId: jest.fn(),
+      getAllByEventId: jest.fn(),
+      getListingStatsByEventIds: jest.fn(),
     };
 
     const mockEventsService = {
       getEventById: jest.fn(),
+      getEventsByIds: jest.fn(),
       createEvent: jest.fn(),
       addEventDate: jest.fn(),
       approveEvent: jest.fn(),
@@ -343,7 +354,14 @@ describe('TicketsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
-      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_123',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,
@@ -579,7 +597,14 @@ describe('TicketsService', () => {
         eventDateId: 'edt_123',
         eventSectionId: 'sec_test_123',
         type: TicketType.DigitalTransferable,
-        ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+        ticketUnits: [
+          {
+            id: 'unit_1',
+            listingId: 'tkt_1',
+            status: TicketUnitStatus.Available,
+            version: 1,
+          },
+        ],
         sellTogether: false,
         pricePerTicket: { amount: 5000, currency: 'USD' },
         status: ListingStatus.Active,
@@ -593,7 +618,14 @@ describe('TicketsService', () => {
         eventDateId: 'edt_123',
         eventSectionId: 'sec_test_123',
         type: TicketType.Physical,
-        ticketUnits: [{ id: 'unit_2', status: TicketUnitStatus.Available }],
+        ticketUnits: [
+          {
+            id: 'unit_2',
+            listingId: 'tkt_2',
+            status: TicketUnitStatus.Available,
+            version: 1,
+          },
+        ],
         sellTogether: false,
         pricePerTicket: { amount: 7500, currency: 'USD' },
         status: ListingStatus.Pending,
@@ -642,7 +674,14 @@ describe('TicketsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
       type: TicketType.DigitalTransferable,
-      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'tkt_active',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'USD' },
       status: ListingStatus.Active,
@@ -657,7 +696,14 @@ describe('TicketsService', () => {
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
       type: TicketType.Physical,
-      ticketUnits: [{ id: 'unit_2', status: TicketUnitStatus.Available }],
+      ticketUnits: [
+        {
+          id: 'unit_2',
+          listingId: 'tkt_pending',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
       sellTogether: false,
       pricePerTicket: { amount: 7500, currency: 'USD' },
       status: ListingStatus.Pending,

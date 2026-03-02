@@ -376,7 +376,6 @@ model TicketListing {
   eventDateId     String
   eventSectionId  String
   type            TicketType
-  ticketUnits     Json
   sellTogether    Boolean       @default(false)
   pricePerTicket  Json
   deliveryMethod  DeliveryMethod?
@@ -394,8 +393,25 @@ model TicketListing {
   eventDate       EventDate     @relation(fields: [eventDateId], references: [id])
   eventSection    EventSection  @relation(fields: [eventSectionId], references: [id])
   transactions    Transaction[]
+  ticketUnits     TicketUnit[]
 
   @@map("ticket_listings")
+}
+
+model TicketUnit {
+  id          String           @id @default(uuid())
+  listingId   String
+  seatRow     String?
+  seatNumber  String?
+  status      TicketUnitStatus @default(available)
+  version     Int              @default(1)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  listing     TicketListing    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_units")
 }
 
 model Transaction {

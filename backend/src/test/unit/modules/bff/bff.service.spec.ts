@@ -386,7 +386,14 @@ describe('BffService', () => {
       eventDateId: 'date_123',
       type: TicketType.DigitalTransferable,
       seatingType: SeatingType.Unnumbered,
-      ticketUnits: [{ id: 'unit_1', status: TicketUnitStatus.Available }],
+      ticketUnits: [
+        {
+          id: 'unit_1',
+          listingId: 'listing_123',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
+      ],
       sellTogether: false,
       pricePerTicket: { amount: 10000, currency: 'USD' },
       eventSectionId: 'section_123',

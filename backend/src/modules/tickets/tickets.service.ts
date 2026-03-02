@@ -109,7 +109,9 @@ export class TicketsService {
       }
       return Array.from({ length: data.quantity }, () => ({
         id: this.generateUnitId(),
+        listingId: '',
         status: TicketUnitStatus.Available,
+        version: 1,
       }));
     }
 
@@ -117,8 +119,10 @@ export class TicketsService {
       data.ticketUnits as CreateListingTicketUnitInput[]
     ).map((unit) => ({
       id: this.generateUnitId(),
+      listingId: '',
       status: TicketUnitStatus.Available,
       seat: unit.seat,
+      version: 1,
     }));
 
     const hasNumbered = incomingUnits.some((unit) => unit.seat);

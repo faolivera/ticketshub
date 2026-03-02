@@ -74,8 +74,10 @@ export interface TicketSeat {
 
 export interface TicketUnit {
   id: string;
+  listingId: string;
   status: TicketUnitStatus;
   seat?: TicketSeat;
+  version: number;
 }
 
 /**
