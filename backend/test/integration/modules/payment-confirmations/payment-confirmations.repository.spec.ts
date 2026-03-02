@@ -146,7 +146,7 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         paymentMethodCommission: { amount: 250, currency: 'EUR' },
         totalPaid: { amount: 10750, currency: 'EUR' },
         sellerReceives: { amount: 9000, currency: 'EUR' },
-        pricingSnapshot: { connect: { id: pricingSnapshotId } },
+        pricingSnapshotId,
         status: 'PendingPayment',
         requiredActor: 'Buyer',
         ticketUnitIds: [],

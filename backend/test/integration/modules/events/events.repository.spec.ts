@@ -49,11 +49,11 @@ describe('EventsRepository (Integration)', () => {
     category: EventCategory.Concert,
     venue: 'Test Venue',
     location: {
-      street: '123 Main St',
+      line1: '123 Main St',
       city: 'Berlin',
       state: 'Berlin',
       postalCode: '10115',
-      country: 'Germany',
+      countryCode: 'DE',
     },
     imageIds: [],
     status: EventStatus.Pending,

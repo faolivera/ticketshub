@@ -84,7 +84,7 @@ export class PricingRepository extends BaseRepository implements IPricingReposit
     if (updates.pricingModel !== undefined) {
       data.pricingModel = updates.pricingModel;
     }
-    if (updates.bestOfferConfig !== undefined) {
+    if ('bestOfferConfig' in updates) {
       data.bestOfferConfig = updates.bestOfferConfig
         ? (updates.bestOfferConfig as unknown as Prisma.InputJsonValue)
         : Prisma.JsonNull;

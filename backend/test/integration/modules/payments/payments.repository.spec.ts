@@ -153,7 +153,7 @@ describe('PaymentsRepository (Integration)', () => {
         listing: { connect: { id: overrides?.listingId ?? testListingId } },
         buyer: { connect: { id: overrides?.buyerId ?? testBuyerId } },
         seller: { connect: { id: overrides?.sellerId ?? testSellerId } },
-        pricingSnapshot: { connect: { id: overrides?.pricingSnapshotId ?? testPricingSnapshotId } },
+        pricingSnapshotId: overrides?.pricingSnapshotId ?? testPricingSnapshotId,
         ticketType: 'Physical',
         ticketUnitIds: [],
         quantity: 2,

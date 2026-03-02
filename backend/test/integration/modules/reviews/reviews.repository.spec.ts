@@ -58,7 +58,7 @@ describe('ReviewsRepository (Integration)', () => {
         event: { connect: { id: event.id } },
         date: new Date(),
         status: 'approved',
-        createdById: sId,
+        createdBy: { connect: { id: sId } },
       },
     });
     const eventSection = await prisma.eventSection.create({
@@ -67,7 +67,7 @@ describe('ReviewsRepository (Integration)', () => {
         name: 'S',
         seatingType: 'unnumbered',
         status: 'approved',
-        createdById: sId,
+        createdBy: { connect: { id: sId } },
       },
     });
     const listing = await prisma.ticketListing.create({
@@ -169,7 +169,12 @@ describe('ReviewsRepository (Integration)', () => {
 
     it('should store all rating types', async () => {
       for (const rating of ['positive', 'neutral', 'negative'] as const) {
-        const review = createValidReview({ id: randomUUID(), rating });
+        const txId = await createTestTransaction();
+        const review = createValidReview({
+          id: randomUUID(),
+          transactionId: txId,
+          rating,
+        });
         const created = await repository.create(ctx, review);
         expect(created.rating).toBe(rating);
       }
