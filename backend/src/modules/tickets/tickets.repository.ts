@@ -670,7 +670,7 @@ export class TicketsRepository
     const units = await client.$queryRaw<PrismaTicketUnit[]>`
       SELECT * FROM ticket_units
       WHERE id = ANY(${ticketUnitIds}::text[])
-      AND listing_id = ${listingId}
+      AND "listingId" = ${listingId}
       FOR UPDATE
     `;
 
@@ -687,7 +687,7 @@ export class TicketsRepository
       UPDATE ticket_units
       SET status = 'reserved',
           version = version + 1,
-          updated_at = NOW()
+          "updatedAt" = NOW()
       WHERE id = ANY(${ticketUnitIds}::text[])
     `;
 
@@ -725,7 +725,7 @@ export class TicketsRepository
     const units = await client.$queryRaw<PrismaTicketUnit[]>`
       SELECT * FROM ticket_units
       WHERE id = ANY(${ticketUnitIds}::text[])
-      AND listing_id = ${listingId}
+      AND "listingId" = ${listingId}
       FOR UPDATE
     `;
 
@@ -742,7 +742,7 @@ export class TicketsRepository
       UPDATE ticket_units
       SET status = 'available',
           version = version + 1,
-          updated_at = NOW()
+          "updatedAt" = NOW()
       WHERE id = ANY(${ticketUnitIds}::text[])
     `;
 

@@ -697,7 +697,7 @@ async validateAndConsume(ctx: TxCtx, snapshotId: string, ...): Promise<...> {
 
 **Scope:** Procesamiento de notificaciones sin duplicados  
 **Riesgo:** Bajo  
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completado (2026-03-02)
 
 #### Cambios
 

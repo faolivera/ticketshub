@@ -158,6 +158,56 @@ export class OrdersService {
 - All methods must have explicit return types
 - **Repositories should only be injected by their own module's service**
 
+### Raw SQL Queries (CRITICAL)
+
+When using `$queryRaw` or `$executeRaw` in Prisma, column names must match the **actual database column names**, NOT the Prisma field names.
+
+**Check the schema for `@map()` decorators:**
+
+```prisma
+// Case 1: Field WITHOUT @map() - column name is camelCase
+model TicketUnit {
+  listingId   String      // DB column is "listingId" (camelCase)
+  updatedAt   DateTime    // DB column is "updatedAt" (camelCase)
+}
+
+// Case 2: Field WITH @map() - column name is the mapped value
+model SchedulerLock {
+  lockedBy  String   @map("locked_by")   // DB column is "locked_by" (snake_case)
+  expiresAt DateTime @map("expires_at")  // DB column is "expires_at" (snake_case)
+}
+```
+
+**Raw SQL rules:**
+
+```typescript
+// ✅ CORRECT - Using actual DB column names with double quotes for camelCase
+const units = await client.$queryRaw`
+  SELECT * FROM ticket_units
+  WHERE "listingId" = ${listingId}
+  FOR UPDATE
+`;
+
+await client.$executeRaw`
+  UPDATE ticket_units
+  SET status = 'reserved', "updatedAt" = NOW()
+  WHERE id = ${id}
+`;
+
+// ❌ WRONG - Using snake_case when schema doesn't have @map()
+const units = await client.$queryRaw`
+  SELECT * FROM ticket_units
+  WHERE listing_id = ${listingId}  -- ERROR: column does not exist
+`;
+```
+
+**Key points:**
+1. Always check the Prisma schema for `@map()` decorators
+2. If NO `@map()`: use camelCase with double quotes (`"listingId"`)
+3. If YES `@map()`: use the mapped snake_case name (`locked_by`)
+4. PostgreSQL requires double quotes for case-sensitive identifiers
+5. **Unit tests with mocks will NOT catch these errors** - only integration tests against a real database will
+
 ## Available Decorators
 
 - `@Ctx()` - Get request context

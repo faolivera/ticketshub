@@ -383,19 +383,6 @@ export class NotificationsService {
   }
 
   /**
-   * Mark an event as processing
-   * @deprecated Use claimEvent for atomic claiming
-   */
-  async markEventProcessing(
-    ctx: Ctx,
-    eventId: string,
-  ): Promise<NotificationEvent | undefined> {
-    return await this.repository.updateEvent(ctx, eventId, {
-      status: NotificationEventStatus.PROCESSING,
-    });
-  }
-
-  /**
    * Atomically claim a pending event for processing.
    * Returns the event if successfully claimed, undefined if already taken.
    */

@@ -43,7 +43,7 @@ export class WalletRepository
 
     const [wallet] = await client.$queryRaw<PrismaWallet[]>`
       SELECT * FROM wallets
-      WHERE user_id = ${userId}
+      WHERE "userId" = ${userId}
       FOR UPDATE
     `;
 
@@ -122,14 +122,14 @@ export class WalletRepository
           '{amount}', 
           to_jsonb((balance->>'amount')::numeric + ${balanceChange})
         ),
-        pending_balance = jsonb_set(
-          pending_balance::jsonb, 
+        "pendingBalance" = jsonb_set(
+          "pendingBalance"::jsonb, 
           '{amount}', 
-          to_jsonb((pending_balance->>'amount')::numeric + ${pendingChange})
+          to_jsonb(("pendingBalance"->>'amount')::numeric + ${pendingChange})
         ),
         version = version + 1,
-        updated_at = NOW()
-      WHERE user_id = ${userId} AND version = ${expectedVersion}
+        "updatedAt" = NOW()
+      WHERE "userId" = ${userId} AND version = ${expectedVersion}
     `;
 
     if (result === 0) {

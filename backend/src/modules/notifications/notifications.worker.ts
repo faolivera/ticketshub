@@ -96,19 +96,6 @@ export class NotificationsWorker {
     }
   }
 
-  /**
-   * Process a single notification event (legacy method).
-   * Attempts atomic claim before processing.
-   */
-  async processEvent(ctx: Ctx, event: NotificationEvent): Promise<void> {
-    const claimed = await this.service.claimEvent(ctx, event.id);
-    if (!claimed) {
-      this.logger.debug(ctx, `Event ${event.id} already claimed by another worker`);
-      return;
-    }
-    await this.processClaimedEvent(ctx, claimed);
-  }
-
   private async processRecipient(
     ctx: Ctx,
     event: NotificationEvent,

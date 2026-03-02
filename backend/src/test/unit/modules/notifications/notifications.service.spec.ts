@@ -190,22 +190,6 @@ describe('NotificationsService', () => {
     });
   });
 
-  describe('markEventProcessing (legacy method)', () => {
-    it('should update event status to PROCESSING', async () => {
-      const mockEvent = createMockEvent({ status: NotificationEventStatus.PROCESSING });
-      repository.updateEvent.mockResolvedValue(mockEvent);
-
-      const result = await service.markEventProcessing(mockCtx, 'ne_123456_abcd');
-
-      expect(result).toEqual(mockEvent);
-      expect(repository.updateEvent).toHaveBeenCalledWith(
-        mockCtx,
-        'ne_123456_abcd',
-        { status: NotificationEventStatus.PROCESSING },
-      );
-    });
-  });
-
   describe('markEventCompleted', () => {
     it('should update event status to COMPLETED with processedAt', async () => {
       const mockEvent = createMockEvent({
