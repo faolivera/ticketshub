@@ -383,6 +383,7 @@ model TicketListing {
   pickupAddress   Json?
   description     String?
   status          ListingStatus @default(Pending)
+  version         Int           @default(1)
   expiresAt       DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -414,6 +415,7 @@ model Transaction {
   pricingSnapshotId         String
   status                    TransactionStatus @default(PendingPayment)
   requiredActor             RequiredActor     @default(Buyer)
+  version                   Int               @default(1)
   paymentExpiresAt          DateTime
   adminReviewExpiresAt      DateTime?
   deliveryMethod            DeliveryMethod?
@@ -509,6 +511,7 @@ model PricingSnapshot {
   paymentMethodCommissions   Json
   pricingModel               String   @default("fixed")
   bestOfferConfig            Json?
+  version                    Int      @default(1)
   expiresAt                  DateTime
   consumedAt                 DateTime?
   consumedByTransactionId    String?
@@ -523,6 +526,7 @@ model Wallet {
   userId         String              @unique
   balance        Json
   pendingBalance Json
+  version        Int                 @default(1)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 
@@ -684,6 +688,7 @@ model NotificationEvent {
   triggeredBy String?
   triggeredAt DateTime                @default(now())
   status      NotificationEventStatus @default(PENDING)
+  version     Int                     @default(1)
   processedAt DateTime?
   error       String?
 
