@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('User', 'Admin');
 
@@ -143,7 +146,6 @@ CREATE TABLE "images" (
 CREATE TABLE "events" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
     "category" "EventCategory" NOT NULL,
     "venue" TEXT NOT NULL,
     "location" JSONB NOT NULL,
@@ -198,18 +200,32 @@ CREATE TABLE "ticket_listings" (
     "eventDateId" TEXT NOT NULL,
     "eventSectionId" TEXT NOT NULL,
     "type" "TicketType" NOT NULL,
-    "ticketUnits" JSONB NOT NULL,
     "sellTogether" BOOLEAN NOT NULL DEFAULT false,
     "pricePerTicket" JSONB NOT NULL,
     "deliveryMethod" "DeliveryMethod",
     "pickupAddress" JSONB,
     "description" TEXT,
     "status" "ListingStatus" NOT NULL DEFAULT 'Pending',
+    "version" INTEGER NOT NULL DEFAULT 1,
     "expiresAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ticket_listings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_units" (
+    "id" TEXT NOT NULL,
+    "listingId" TEXT NOT NULL,
+    "seatRow" TEXT,
+    "seatNumber" TEXT,
+    "status" "TicketUnitStatus" NOT NULL DEFAULT 'available',
+    "version" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ticket_units_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -230,6 +246,7 @@ CREATE TABLE "transactions" (
     "pricingSnapshotId" TEXT NOT NULL,
     "status" "TransactionStatus" NOT NULL DEFAULT 'PendingPayment',
     "requiredActor" "RequiredActor" NOT NULL DEFAULT 'Buyer',
+    "version" INTEGER NOT NULL DEFAULT 1,
     "paymentExpiresAt" TIMESTAMP(3) NOT NULL,
     "adminReviewExpiresAt" TIMESTAMP(3),
     "deliveryMethod" "DeliveryMethod",
@@ -315,6 +332,7 @@ CREATE TABLE "pricing_snapshots" (
     "paymentMethodCommissions" JSONB NOT NULL,
     "pricingModel" TEXT NOT NULL DEFAULT 'fixed',
     "bestOfferConfig" JSONB,
+    "version" INTEGER NOT NULL DEFAULT 1,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "consumedAt" TIMESTAMP(3),
     "consumedByTransactionId" TEXT,
@@ -330,6 +348,7 @@ CREATE TABLE "wallets" (
     "userId" TEXT NOT NULL,
     "balance" JSONB NOT NULL,
     "pendingBalance" JSONB NOT NULL,
+    "version" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -473,6 +492,7 @@ CREATE TABLE "notification_events" (
     "triggeredBy" TEXT,
     "triggeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" "NotificationEventStatus" NOT NULL DEFAULT 'PENDING',
+    "version" INTEGER NOT NULL DEFAULT 1,
     "processedAt" TIMESTAMP(3),
     "error" TEXT,
 
@@ -532,6 +552,16 @@ CREATE TABLE "notification_channel_configs" (
     "updatedBy" TEXT,
 
     CONSTRAINT "notification_channel_configs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "scheduler_locks" (
+    "id" TEXT NOT NULL,
+    "lockedBy" TEXT NOT NULL,
+    "lockedAt" TIMESTAMP(3) NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "scheduler_locks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -599,6 +629,9 @@ ALTER TABLE "ticket_listings" ADD CONSTRAINT "ticket_listings_eventDateId_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "ticket_listings" ADD CONSTRAINT "ticket_listings_eventSectionId_fkey" FOREIGN KEY ("eventSectionId") REFERENCES "event_sections"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ticket_units" ADD CONSTRAINT "ticket_units_listingId_fkey" FOREIGN KEY ("listingId") REFERENCES "ticket_listings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_listingId_fkey" FOREIGN KEY ("listingId") REFERENCES "ticket_listings"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

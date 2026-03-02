@@ -44,18 +44,19 @@ export class DistributedLockService {
     try {
       // Upsert: insert if not exists, or update if expired
       // The WHERE clause on DO UPDATE ensures we only take over expired locks
+      // Use double-quoted camelCase to match actual DB column names (Prisma default)
       const result = await this.prisma.$executeRaw`
-        INSERT INTO scheduler_locks (id, locked_by, locked_at, expires_at)
+        INSERT INTO scheduler_locks (id, "lockedBy", "lockedAt", "expiresAt")
         VALUES (${lockId}, ${holderIdentifier}, ${now}, ${expiresAt})
         ON CONFLICT (id) DO UPDATE SET
-          locked_by = ${holderIdentifier},
-          locked_at = ${now},
-          expires_at = ${expiresAt}
-        WHERE scheduler_locks.expires_at < ${now}
+          "lockedBy" = ${holderIdentifier},
+          "lockedAt" = ${now},
+          "expiresAt" = ${expiresAt}
+        WHERE scheduler_locks."expiresAt" < ${now}
       `;
-
       return result === 1;
-    } catch {
+    } catch (error) {
+      console.error('acquireLock error:', error);
       return false;
     }
   }
@@ -67,7 +68,7 @@ export class DistributedLockService {
   async releaseLock(lockId: string, holderIdentifier: string): Promise<void> {
     await this.prisma.$executeRaw`
       DELETE FROM scheduler_locks
-      WHERE id = ${lockId} AND locked_by = ${holderIdentifier}
+      WHERE id = ${lockId} AND "lockedBy" = ${holderIdentifier}
     `;
   }
 
