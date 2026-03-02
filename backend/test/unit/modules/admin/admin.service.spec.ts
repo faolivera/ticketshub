@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { AdminService } from '../../../../src/modules/admin/admin.service';
 import { PaymentConfirmationsService } from '../../../../src/modules/payment-confirmations/payment-confirmations.service';
+import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
 import { EventsService } from '../../../../src/modules/events/events.service';
 import { TICKETS_REPOSITORY } from '../../../../src/modules/tickets/tickets.repository.interface';
@@ -29,6 +30,7 @@ import { Language, Role, UserLevel, UserStatus } from '../../../../src/modules/u
 describe('AdminService', () => {
   let service: AdminService;
   let paymentConfirmationsService: jest.Mocked<PaymentConfirmationsService>;
+  let paymentMethodsService: jest.Mocked<PaymentMethodsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let eventsService: jest.Mocked<EventsService>;
   let ticketsRepository: jest.Mocked<ITicketsRepository>;
@@ -116,6 +118,10 @@ describe('AdminService', () => {
       findByEmailContaining: jest.fn(),
     };
 
+    const mockPaymentMethodsService = {
+      findById: jest.fn().mockRejectedValue(new NotFoundException('Payment method not found')),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -123,6 +129,7 @@ describe('AdminService', () => {
           provide: PaymentConfirmationsService,
           useValue: mockPaymentConfirmationsService,
         },
+        { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: EventsService, useValue: mockEventsService },
         { provide: TICKETS_REPOSITORY, useValue: mockTicketsRepository },
@@ -133,6 +140,7 @@ describe('AdminService', () => {
 
     service = module.get<AdminService>(AdminService);
     paymentConfirmationsService = module.get(PaymentConfirmationsService);
+    paymentMethodsService = module.get(PaymentMethodsService);
     transactionsService = module.get(TransactionsService);
     eventsService = module.get(EventsService);
     ticketsRepository = module.get(TICKETS_REPOSITORY);
@@ -1246,6 +1254,71 @@ describe('AdminService', () => {
         holderName: 'Jane Seller',
         iban: 'ES9121000418450200051332',
         bic: undefined,
+      });
+    });
+
+    it('should prefer payment method bankTransferConfig over seller bankAccount when transaction has paymentMethodId', async () => {
+      const transactionWithPm: Transaction = {
+        ...mockTransaction,
+        paymentMethodId: 'pm_bank_123',
+      };
+      const sellerWithBankAccount: User = {
+        id: 'seller_123',
+        email: 'jane@test.com',
+        password: 'hashed',
+        firstName: 'Jane',
+        lastName: 'Seller',
+        publicName: 'Jane',
+        role: Role.User,
+        level: UserLevel.Seller,
+        status: UserStatus.Enabled,
+        imageId: '',
+        country: 'ES',
+        currency: 'EUR',
+        language: Language.ES,
+        emailVerified: true,
+        phoneVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        bankAccount: {
+          holderName: 'Jane Seller',
+          iban: 'ES9121000418450200051332',
+          bic: 'CAIXESBBXXX',
+          verified: true,
+        },
+      };
+      paymentMethodsService.findById.mockResolvedValue({
+        id: 'pm_bank_123',
+        name: 'Transferencia',
+        publicName: 'Transferencia Bancaria',
+        type: 'manual_approval',
+        status: 'enabled',
+        buyerCommissionPercent: 0,
+        bankTransferConfig: {
+          cbu: '0720000980000000001234',
+          accountHolderName: 'TicketsHub Plataforma',
+          bankName: 'Banco Galicia',
+          cuitCuil: '30-12345678-9',
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
+
+      transactionsService.findById.mockResolvedValue(transactionWithPm);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([sellerWithBankAccount]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.bankTransferDestination).toBeDefined();
+      expect(result.bankTransferDestination).toEqual({
+        holderName: 'TicketsHub Plataforma',
+        iban: '0720000980000000001234',
+        bankName: 'Banco Galicia',
+        cuitCuil: '30-12345678-9',
       });
     });
   });

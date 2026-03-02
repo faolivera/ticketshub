@@ -347,6 +347,8 @@ const BankTransferDestinationSchema = z.object({
   holderName: z.string(),
   iban: z.string(),
   bic: z.string().optional(),
+  bankName: z.string().optional(),
+  cuitCuil: z.string().optional(),
 });
 
 export const AdminTransactionDetailResponseSchema = z.object({

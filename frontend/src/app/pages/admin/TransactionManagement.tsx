@@ -44,6 +44,7 @@ import {
   X,
 } from 'lucide-react';
 import { adminService, paymentConfirmationsService } from '../../../api/services';
+import { formatCurrency } from '@/lib/format-currency';
 import type {
   AdminTransactionDetailResponse,
   AdminTransactionListItem,
@@ -335,12 +336,6 @@ export default function TransactionManagement() {
       <Image className="w-4 h-4" />
     );
 
-  const formatAmount = (amount: number, currency: string): string =>
-    new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency,
-    }).format(amount / 100);
-
   const formatDate = (dateInput?: string): string => {
     if (!dateInput) return '-';
     return new Date(dateInput).toLocaleDateString(undefined, {
@@ -437,37 +432,37 @@ export default function TransactionManagement() {
             <div>
               <span className="text-muted-foreground">{t('admin.transactions.ticketPrice')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.ticketPrice.amount, detail.ticketPrice.currency)}
+                {formatCurrency(detail.ticketPrice.amount, detail.ticketPrice.currency)}
               </p>
             </div>
             <div>
               <span className="text-muted-foreground">{t('admin.transactions.buyerPlatformFee')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.buyerPlatformFee.amount, detail.buyerPlatformFee.currency)}
+                {formatCurrency(detail.buyerPlatformFee.amount, detail.buyerPlatformFee.currency)}
               </p>
             </div>
             <div>
               <span className="text-muted-foreground">{t('admin.transactions.sellerPlatformFee')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.sellerPlatformFee.amount, detail.sellerPlatformFee.currency)}
+                {formatCurrency(detail.sellerPlatformFee.amount, detail.sellerPlatformFee.currency)}
               </p>
             </div>
             <div>
               <span className="text-muted-foreground">{t('admin.transactions.paymentMethodCommission')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.paymentMethodCommission.amount, detail.paymentMethodCommission.currency)}
+                {formatCurrency(detail.paymentMethodCommission.amount, detail.paymentMethodCommission.currency)}
               </p>
             </div>
             <div>
               <span className="text-muted-foreground">{t('admin.transactions.totalPaid')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.totalPaid.amount, detail.totalPaid.currency)}
+                {formatCurrency(detail.totalPaid.amount, detail.totalPaid.currency)}
               </p>
             </div>
             <div>
               <span className="text-muted-foreground">{t('admin.transactions.sellerReceives')}:</span>
               <p className="font-medium">
-                {formatAmount(detail.sellerReceives.amount, detail.sellerReceives.currency)}
+                {formatCurrency(detail.sellerReceives.amount, detail.sellerReceives.currency)}
               </p>
             </div>
           </div>
@@ -720,7 +715,7 @@ export default function TransactionManagement() {
                           <TableCell className="text-sm">{transaction.seller.email}</TableCell>
                           <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatAmount(transaction.totalPaid.amount, transaction.totalPaid.currency)}
+                            {formatCurrency(transaction.totalPaid.amount, transaction.totalPaid.currency)}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDate(transaction.createdAt)}
@@ -818,52 +813,85 @@ export default function TransactionManagement() {
             <DialogDescription>{previewTransactionId}</DialogDescription>
           </DialogHeader>
           {previewTransactionId && detailCache[previewTransactionId] && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
-              <div>
-                <span className="text-muted-foreground block text-xs">
-                  {t('admin.transactions.proofPreviewBuyerName')}
-                </span>
-                <span className="font-medium">
-                  {detailCache[previewTransactionId].buyer?.name ?? '-'}
-                </span>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground block text-xs">
+                    {t('admin.transactions.proofPreviewBuyerName')}
+                  </span>
+                  <span className="font-medium">
+                    {detailCache[previewTransactionId].buyer?.name ?? '-'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs">
+                    {t('admin.transactions.proofPreviewTotalAmount')}
+                  </span>
+                  <span className="font-medium">
+                    {detailCache[previewTransactionId].totalPaid
+                      ? formatCurrency(
+                          detailCache[previewTransactionId].totalPaid.amount,
+                          detailCache[previewTransactionId].totalPaid.currency,
+                        )
+                      : '-'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-muted-foreground block text-xs">
-                  {t('admin.transactions.proofPreviewTotalAmount')}
-                </span>
-                <span className="font-medium">
-                  {detailCache[previewTransactionId].totalPaid
-                    ? formatAmount(
-                        detailCache[previewTransactionId].totalPaid.amount,
-                        detailCache[previewTransactionId].totalPaid.currency,
-                      )
-                    : '-'}
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block text-xs">
-                  {t('admin.transactions.proofPreviewDestinationAccount')}
-                </span>
-                <span className="font-medium">
-                  {detailCache[previewTransactionId].bankTransferDestination?.iban ?? '-'}
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block text-xs">
-                  {t('admin.transactions.proofPreviewHolderName')}
-                </span>
-                <span className="font-medium">
-                  {detailCache[previewTransactionId].bankTransferDestination?.holderName ?? '-'}
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block text-xs">
-                  {t('admin.transactions.proofPreviewBic')}
-                </span>
-                <span className="font-medium">
-                  {detailCache[previewTransactionId].bankTransferDestination?.bic ?? '-'}
-                </span>
-              </div>
+              {detailCache[previewTransactionId].bankTransferDestination && (
+                <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                  <h4 className="text-xs font-semibold text-muted-foreground mb-2">
+                    {t('admin.transactions.proofPreviewBankDetailsTitle')}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-muted-foreground block text-xs">
+                        {t('admin.transactions.proofPreviewHolderName')}
+                      </span>
+                      <span className="font-medium">
+                        {detailCache[previewTransactionId].bankTransferDestination?.holderName ?? '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">
+                        {t('admin.transactions.proofPreviewDestinationAccount')}
+                      </span>
+                      <span className="font-medium">
+                        {detailCache[previewTransactionId].bankTransferDestination?.iban ?? '-'}
+                      </span>
+                    </div>
+                    {detailCache[previewTransactionId].bankTransferDestination?.bic && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">
+                          {t('admin.transactions.proofPreviewBic')}
+                        </span>
+                        <span className="font-medium">
+                          {detailCache[previewTransactionId].bankTransferDestination.bic}
+                        </span>
+                      </div>
+                    )}
+                    {detailCache[previewTransactionId].bankTransferDestination?.bankName && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">
+                          {t('admin.transactions.proofPreviewBankName')}
+                        </span>
+                        <span className="font-medium">
+                          {detailCache[previewTransactionId].bankTransferDestination.bankName}
+                        </span>
+                      </div>
+                    )}
+                    {detailCache[previewTransactionId].bankTransferDestination?.cuitCuil && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">
+                          {t('admin.transactions.proofPreviewCuitCuil')}
+                        </span>
+                        <span className="font-medium">
+                          {detailCache[previewTransactionId].bankTransferDestination.cuitCuil}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <div className="flex-1 overflow-auto min-h-[400px]">

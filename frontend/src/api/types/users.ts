@@ -121,13 +121,14 @@ export interface LoginResponse {
 
 /**
  * Register request
+ * country is optional; backend defaults to Argentina when omitted.
  */
 export interface RegisterRequest {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
-  country: string;
+  country?: string;
   termsAcceptance: TermsAcceptanceData;
 }
 

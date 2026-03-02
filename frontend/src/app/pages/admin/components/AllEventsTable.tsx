@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '../../../components/ui/table';
 import { cn } from '../../../components/ui/utils';
+import { formatCurrency } from '@/lib/format-currency';
 import {
   Calendar,
   Pencil,
@@ -146,13 +147,6 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(new Date(dateString));
-  };
-
-  const formatPrice = (amount: number, currency: string): string => {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency,
-    }).format(amount / 100);
   };
 
   const getListingStatusBadge = (status: string) => {
@@ -436,7 +430,7 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
                                               )}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                              {formatPrice(
+                                              {formatCurrency(
                                                 listing.pricePerTicket.amount,
                                                 listing.pricePerTicket.currency
                                               )}

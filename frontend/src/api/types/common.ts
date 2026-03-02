@@ -1,7 +1,7 @@
 /**
  * Currency codes supported by the platform
  */
-export type CurrencyCode = 'EUR' | 'USD' | 'GBP';
+export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'ARS';
 
 /**
  * Money representation (amount in cents)

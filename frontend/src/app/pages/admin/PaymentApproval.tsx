@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
+import { formatCurrency } from '@/lib/format-currency';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { CreditCard, Check, X, BanknoteIcon, User, FileText, Image, Eye, ExternalLink } from 'lucide-react';
@@ -126,13 +127,6 @@ export function PaymentApproval() {
     }
   };
 
-  const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currency,
-    }).format(amount / 100);
-  };
-
   const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString(undefined, {
       year: 'numeric',
@@ -218,7 +212,7 @@ export function PaymentApproval() {
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold text-green-600">
-                      {formatAmount(confirmation.transactionAmount, confirmation.transactionCurrency)}
+                      {formatCurrency(confirmation.transactionAmount, confirmation.transactionCurrency)}
                     </TableCell>
                     <TableCell>
                       <a 
@@ -235,13 +229,13 @@ export function PaymentApproval() {
                       {confirmation.quantity} {t('admin.payments.tickets')}
                     </TableCell>
                     <TableCell>
-                      {formatAmount(confirmation.pricePerUnit.amount, confirmation.pricePerUnit.currency)}
+                      {formatCurrency(confirmation.pricePerUnit.amount, confirmation.pricePerUnit.currency)}
                     </TableCell>
                     <TableCell className="text-orange-600">
-                      {formatAmount(confirmation.buyerPlatformFee.amount, confirmation.buyerPlatformFee.currency)}
+                      {formatCurrency(confirmation.buyerPlatformFee.amount, confirmation.buyerPlatformFee.currency)}
                     </TableCell>
                     <TableCell className="text-orange-600">
-                      {formatAmount(confirmation.sellerPlatformFee.amount, confirmation.sellerPlatformFee.currency)}
+                      {formatCurrency(confirmation.sellerPlatformFee.amount, confirmation.sellerPlatformFee.currency)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -316,7 +310,7 @@ export function PaymentApproval() {
                     <div>
                       <span className="text-muted-foreground">{t('admin.payments.amount')}:</span>
                       <span className="ml-2 font-semibold text-green-600">
-                        {formatAmount(selectedConfirmation.transactionAmount, selectedConfirmation.transactionCurrency)}
+                        {formatCurrency(selectedConfirmation.transactionAmount, selectedConfirmation.transactionCurrency)}
                       </span>
                     </div>
                     <div>
@@ -346,19 +340,19 @@ export function PaymentApproval() {
                     <div>
                       <span className="text-muted-foreground">{t('admin.payments.pricePerUnit')}:</span>
                       <span className="ml-2">
-                        {formatAmount(selectedConfirmation.pricePerUnit.amount, selectedConfirmation.pricePerUnit.currency)}
+                        {formatCurrency(selectedConfirmation.pricePerUnit.amount, selectedConfirmation.pricePerUnit.currency)}
                       </span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">{t('admin.payments.buyerPlatformFee')}:</span>
                       <span className="ml-2 text-orange-600">
-                        {formatAmount(selectedConfirmation.buyerPlatformFee.amount, selectedConfirmation.buyerPlatformFee.currency)}
+                        {formatCurrency(selectedConfirmation.buyerPlatformFee.amount, selectedConfirmation.buyerPlatformFee.currency)}
                       </span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">{t('admin.payments.sellerPlatformFee')}:</span>
                       <span className="ml-2 text-orange-600">
-                        {formatAmount(selectedConfirmation.sellerPlatformFee.amount, selectedConfirmation.sellerPlatformFee.currency)}
+                        {formatCurrency(selectedConfirmation.sellerPlatformFee.amount, selectedConfirmation.sellerPlatformFee.currency)}
                       </span>
                     </div>
                   </div>
@@ -455,7 +449,7 @@ export function PaymentApproval() {
                   {t('admin.payments.buyer')}: {selectedConfirmation.buyerName}
                 </p>
                 <p className="text-sm font-semibold text-green-600">
-                  {formatAmount(selectedConfirmation.transactionAmount, selectedConfirmation.transactionCurrency)}
+                  {formatCurrency(selectedConfirmation.transactionAmount, selectedConfirmation.transactionCurrency)}
                 </p>
               </div>
             )}

@@ -15,7 +15,7 @@ export const AddressSchema = z.object({
   countryCode: z.string(),
 });
 
-export const CurrencyCodeSchema = z.enum(['EUR', 'USD', 'GBP']);
+export const CurrencyCodeSchema = z.enum(['EUR', 'USD', 'GBP', 'ARS']);
 
 export const UserAddressSchema = AddressSchema.extend({
   geoPoint: z

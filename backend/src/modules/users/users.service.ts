@@ -306,7 +306,7 @@ export class UsersService {
       status: UserStatus.Enabled,
       imageId: 'default',
       country: data.country,
-      currency: 'EUR',
+      currency: 'ARS',
       language: Language.ES,
       emailVerified: false,
       phoneVerified: false,

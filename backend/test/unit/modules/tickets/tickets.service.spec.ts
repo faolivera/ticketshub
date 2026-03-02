@@ -22,6 +22,7 @@ import {
   EventSectionStatus,
 } from '../../../../src/modules/events/events.domain';
 import { UserLevel } from '../../../../src/modules/users/users.domain';
+import { UsersService } from '../../../../src/modules/users/users.service';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../src/modules/shared/money.domain';
 import type { Ctx } from '../../../../src/common/types/context';
@@ -30,6 +31,7 @@ describe('TicketsService', () => {
   let service: TicketsService;
   let ticketsRepository: jest.Mocked<ITicketsRepository>;
   let eventsService: jest.Mocked<EventsService>;
+  let usersService: jest.Mocked<UsersService>;
   let txManager: jest.Mocked<TransactionManager>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
@@ -182,11 +184,20 @@ describe('TicketsService', () => {
       getClient: jest.fn(),
     };
 
+    const mockUsersService = {
+      findById: jest.fn().mockResolvedValue({
+        id: 'seller_123',
+        currency: 'ARS',
+        country: 'Argentina',
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
         { provide: TICKETS_REPOSITORY, useValue: mockTicketsRepository },
         { provide: EventsService, useValue: mockEventsService },
+        { provide: UsersService, useValue: mockUsersService },
         { provide: TransactionManager, useValue: mockTxManager },
       ],
     }).compile();
@@ -194,6 +205,7 @@ describe('TicketsService', () => {
     service = module.get<TicketsService>(TicketsService);
     ticketsRepository = module.get(TICKETS_REPOSITORY);
     eventsService = module.get(EventsService);
+    usersService = module.get(UsersService);
     txManager = module.get(TransactionManager);
   });
 
@@ -221,7 +233,12 @@ describe('TicketsService', () => {
       );
 
       expect(result.status).toBe(ListingStatus.Active);
+      expect(result.pricePerTicket.currency).toBe('ARS');
+      expect(result.pricePerTicket.amount).toBe(5000);
       expect(ticketsRepository.create).toHaveBeenCalledTimes(1);
+      const createdListing = ticketsRepository.create.mock.calls[0][1];
+      expect(createdListing.pricePerTicket.currency).toBe('ARS');
+      expect(createdListing.pricePerTicket.amount).toBe(5000);
     });
 
     it('should create listing with Pending status when event date is pending', async () => {

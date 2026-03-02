@@ -11,6 +11,7 @@ import type { TransactionWithDetails, TicketListingWithEvent } from '../../api/t
 import { TicketUnitStatus, RequiredActor, TransactionStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 import { BRAND_NAME } from '../../constants/brand';
+import { formatCurrency } from '@/lib/format-currency';
 
 type TabType = 'bought' | 'sold' | 'listed';
 
@@ -375,7 +376,7 @@ function ListedTicketsGrid({ listed, t, onCopyLink, copiedListingId }: ListedTic
         const statusInfo = getListedStatusInfo(listing.status, t);
         const StatusIcon = statusInfo.icon;
         const eventDate = new Date(listing.eventDate);
-        const priceDisplay = listing.pricePerTicket.amount / 100;
+        const priceFormatted = formatCurrency(listing.pricePerTicket.amount, listing.pricePerTicket.currency);
         const availableCount = listing.ticketUnits.filter(
           (unit) => unit.status === TicketUnitStatus.Available,
         ).length;
@@ -432,7 +433,7 @@ function ListedTicketsGrid({ listed, t, onCopyLink, copiedListingId }: ListedTic
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-3">
                 <div className="flex items-center gap-1.5 text-gray-900">
                   <DollarSign className="w-4 h-4" />
-                  <span className="text-lg font-bold">{priceDisplay.toFixed(2)}</span>
+                  <span className="text-lg font-bold">{priceFormatted}</span>
                 </div>
                 <span className="text-sm text-gray-500">
                   {availableCount} {t('boughtTickets.available')}

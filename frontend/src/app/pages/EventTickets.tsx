@@ -12,6 +12,7 @@ import { UserAvatar } from '../components/UserAvatar';
 import type { EventWithDates, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
+import { formatCurrencyFromUnits } from '@/lib/format-currency';
 
 interface ShowTime {
   date: string;
@@ -30,6 +31,7 @@ interface TransformedTicket {
   id: string;
   type: string;
   price: number;
+  currency: string;
   available: number;
   sellTogether: boolean;
   commissionPercentRange: { min: number; max: number };
@@ -57,6 +59,7 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
     id: listing.id,
     type: listing.sectionName || typeDisplay,
     price: listing.pricePerTicket.amount / 100,
+    currency: listing.pricePerTicket.currency,
     available: listing.ticketUnits.filter((unit) => unit.status === TicketUnitStatus.Available).length,
     sellTogether: listing.sellTogether,
     commissionPercentRange: listing.commissionPercentRange,
@@ -480,7 +483,7 @@ export function EventTickets() {
                                 </div>
                                 <div>
                                   <p className="text-xs text-gray-500">{t('eventTickets.price')}</p>
-                                  <p className="text-3xl font-bold text-blue-600">${ticket.price}</p>
+                                  <p className="text-3xl font-bold text-blue-600">{formatCurrencyFromUnits(ticket.price, ticket.currency)}</p>
                                   <p className="text-xs text-gray-500 mt-1">
                                     {t('eventTickets.commissionRange', {
                                       min: ticket.commissionPercentRange.min,

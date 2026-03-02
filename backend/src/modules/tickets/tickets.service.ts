@@ -31,6 +31,7 @@ import type {
   ListListingsQuery,
 } from './tickets.api';
 import { UserLevel } from '../users/users.domain';
+import { UsersService } from '../users/users.service';
 import {
   EventStatus,
   EventDateStatus,
@@ -44,6 +45,7 @@ export class TicketsService {
     private readonly ticketsRepository: ITicketsRepository,
     @Inject(forwardRef(() => EventsService))
     private readonly eventsService: EventsService,
+    private readonly usersService: UsersService,
     private readonly txManager: TransactionManager,
   ) {}
 
@@ -286,6 +288,13 @@ export class TicketsService {
 
     const ticketUnits = this.buildTicketUnits(data, eventSection.seatingType);
 
+    // Use seller's default currency for the listing (propagates through purchase flow)
+    const seller = await this.usersService.findById(ctx, sellerId);
+    if (!seller) {
+      throw new NotFoundException('Seller not found');
+    }
+    const listingCurrency = seller.currency;
+
     // Determine listing status based on event, date, and section approval
     const listingStatus = this.determineListingStatus(
       event.status,
@@ -301,7 +310,10 @@ export class TicketsService {
       type: data.type,
       ticketUnits,
       sellTogether: data.sellTogether || false,
-      pricePerTicket: data.pricePerTicket,
+      pricePerTicket: {
+        amount: data.pricePerTicket.amount,
+        currency: listingCurrency,
+      },
       deliveryMethod: data.deliveryMethod,
       pickupAddress: data.pickupAddress,
       description: data.description,

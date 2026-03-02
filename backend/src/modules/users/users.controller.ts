@@ -83,12 +83,12 @@ export class UsersController {
     @Context() ctx: Ctx,
     @Body() body: RegisterRequest,
   ): Promise<ApiResponse<RegisterResponse>> {
-    const { email, password, firstName, lastName, country, termsAcceptance } =
-      body;
+    const { email, password, firstName, lastName, termsAcceptance } = body;
+    const country = body.country ?? 'Argentina';
 
-    if (!email || !password || !firstName || !lastName || !country) {
+    if (!email || !password || !firstName || !lastName) {
       throw new BadRequestException(
-        'Email, password, firstName, lastName and country are required',
+        'Email, password, firstName and lastName are required',
       );
     }
 

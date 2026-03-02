@@ -21,8 +21,10 @@ import {
   AlertDialogTrigger,
 } from '@/app/components/ui/alert-dialog';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService } from '@/api/services';
+import { formatCurrency } from '@/lib/format-currency';
 import { useUser } from '../contexts/UserContext';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
+import type { TransactionTicketUnit } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
 
 export function MyTicket() {
@@ -35,6 +37,7 @@ export function MyTicket() {
   const [transaction, setTransaction] = useState<TransactionWithDetails | null>(null);
   const [paymentConfirmation, setPaymentConfirmation] = useState<PaymentConfirmation | null>(null);
   const [bankTransferConfig, setBankTransferConfig] = useState<BankTransferConfig | null>(null);
+  const [ticketUnits, setTicketUnits] = useState<TransactionTicketUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -64,6 +67,7 @@ export function MyTicket() {
       setPaymentConfirmation(data.paymentConfirmation);
       setReviewData(data.reviews);
       setBankTransferConfig(data.bankTransferConfig);
+      setTicketUnits(data.ticketUnits ?? []);
     } catch (err) {
       console.error('Failed to refetch transaction:', err);
     }
@@ -103,6 +107,7 @@ export function MyTicket() {
         setPaymentConfirmation(data.paymentConfirmation);
         setReviewData(data.reviews);
         setBankTransferConfig(data.bankTransferConfig);
+        setTicketUnits(data.ticketUnits ?? []);
       } catch (err) {
         console.error('Failed to fetch transaction:', err);
         setError(t('common.errorLoading'));
@@ -952,21 +957,34 @@ export function MyTicket() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">{t('myTicket.ticketPrice')}</span>
                   <span className="text-gray-900">
-                    ${(transaction.ticketPrice.amount / 100).toFixed(2)} {transaction.ticketPrice.currency}
+                    {formatCurrency(transaction.ticketPrice.amount, transaction.ticketPrice.currency)}
                   </span>
+                </div>
+                {/* Ticket quantity and seat detail */}
+                <div className="text-xs text-gray-500 pl-0">
+                  <span>{t('myTicket.quantity')}: {transaction.quantity}</span>
+                  {ticketUnits.length > 0 && ticketUnits.some((u) => u.seat) && (
+                    <div className="mt-1">
+                      {t('myTicket.seatDetail')}:{' '}
+                      {ticketUnits
+                        .filter((u) => u.seat)
+                        .map((u) => `${u.seat!.row}-${u.seat!.seatNumber}`)
+                        .join(', ')}
+                    </div>
+                  )}
                 </div>
                 {isBuyer && (
                   <>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">{t('myTicket.buyerPlatformFee')}</span>
                       <span className="text-gray-900">
-                        ${(transaction.buyerPlatformFee.amount / 100).toFixed(2)}
+                        {formatCurrency(transaction.buyerPlatformFee.amount, transaction.buyerPlatformFee.currency)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">{t('myTicket.paymentMethodCommission')}</span>
                       <span className="text-gray-900">
-                        ${(transaction.paymentMethodCommission.amount / 100).toFixed(2)}
+                        {formatCurrency(transaction.paymentMethodCommission.amount, transaction.paymentMethodCommission.currency)}
                       </span>
                     </div>
                   </>
@@ -975,7 +993,7 @@ export function MyTicket() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">{t('myTicket.sellerPlatformFee')}</span>
                     <span className="text-gray-900">
-                      -${(transaction.sellerPlatformFee.amount / 100).toFixed(2)}
+                      -{formatCurrency(transaction.sellerPlatformFee.amount, transaction.sellerPlatformFee.currency)}
                     </span>
                   </div>
                 )}
@@ -984,7 +1002,10 @@ export function MyTicket() {
                     {isBuyer ? t('myTicket.totalPaid') : t('myTicket.youReceive')}
                   </span>
                   <span className="text-gray-900">
-                    ${((isBuyer ? transaction.totalPaid.amount : transaction.sellerReceives.amount) / 100).toFixed(2)}
+                    {formatCurrency(
+                      isBuyer ? transaction.totalPaid.amount : transaction.sellerReceives.amount,
+                      isBuyer ? transaction.totalPaid.currency : transaction.sellerReceives.currency
+                    )}
                   </span>
                 </div>
               </div>

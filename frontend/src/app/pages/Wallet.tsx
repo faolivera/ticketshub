@@ -7,17 +7,8 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorAlert } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import type { Wallet as WalletType, WalletTransaction, WalletTransactionType } from '../../api/types';
+import { formatCurrency } from '@/lib/format-currency';
 import { useUser } from '../contexts/UserContext';
-
-/**
- * Format money amount from cents to display
- */
-function formatMoney(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(amount / 100);
-}
 
 /**
  * Get transaction type badge
@@ -148,7 +139,7 @@ export function Wallet() {
               <h3 className="text-sm font-semibold text-gray-600">{t('wallet.availableBalance')}</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              {wallet ? formatMoney(wallet.balance.amount, wallet.balance.currency) : '$0.00'}
+              {wallet ? formatCurrency(wallet.balance.amount, wallet.balance.currency) : formatCurrency(0, 'ARS')}
             </p>
             <p className="text-sm text-gray-600 mt-1">
               {t('wallet.readyToWithdraw')}
@@ -164,7 +155,7 @@ export function Wallet() {
               <h3 className="text-sm font-semibold text-gray-600">{t('wallet.pendingBalance')}</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              {wallet ? formatMoney(wallet.pendingBalance.amount, wallet.pendingBalance.currency) : '$0.00'}
+              {wallet ? formatCurrency(wallet.pendingBalance.amount, wallet.pendingBalance.currency) : formatCurrency(0, 'ARS')}
             </p>
             <p className="text-sm text-gray-600 mt-1">
               {t('wallet.inEscrow')}
@@ -180,8 +171,8 @@ export function Wallet() {
               <h3 className="text-sm font-semibold text-gray-600">{t('wallet.totalBalance')}</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900">
-              {wallet ? formatMoney(
-                wallet.balance.amount + wallet.pendingBalance.amount, 
+              {wallet ? formatCurrency(
+                wallet.balance.amount + wallet.pendingBalance.amount,
                 wallet.balance.currency
               ) : '$0.00'}
             </p>
@@ -271,7 +262,7 @@ export function Wallet() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`font-semibold ${isPositive ? 'text-green-600' : 'text-gray-900'}`}>
-                          {isPositive ? '+' : '-'}{formatMoney(transaction.amount.amount, transaction.amount.currency)}
+                          {isPositive ? '+' : '-'}{formatCurrency(transaction.amount.amount, transaction.amount.currency)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">

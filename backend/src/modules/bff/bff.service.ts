@@ -276,11 +276,29 @@ export class BffService {
       }
     }
 
+    let ticketUnits: GetTransactionDetailsResponse['ticketUnits'] = [];
+    try {
+      const listing = await this.ticketsService.getListingById(
+        ctx,
+        transaction.listingId,
+      );
+      const idSet = new Set(transaction.ticketUnitIds);
+      ticketUnits = listing.ticketUnits
+        .filter((u) => idSet.has(u.id))
+        .map((u) => ({
+          id: u.id,
+          seat: u.seat,
+        }));
+    } catch {
+      // Listing may be gone; leave ticketUnits empty
+    }
+
     return {
       transaction,
       paymentConfirmation,
       reviews,
       bankTransferConfig,
+      ticketUnits,
     };
   }
 }

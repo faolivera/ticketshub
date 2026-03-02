@@ -451,10 +451,12 @@ export interface AdminTransactionDetailResponse {
       contentType: string;
     }
   >;
-  /** Bank transfer destination for proof validation (from seller bankAccount) */
+  /** Bank transfer destination for proof validation (from payment method or seller bankAccount) */
   bankTransferDestination?: {
     holderName: string;
     iban: string;
     bic?: string;
+    bankName?: string;
+    cuitCuil?: string;
   };
 }

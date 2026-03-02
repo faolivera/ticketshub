@@ -418,6 +418,8 @@ export interface AdminTransactionDetail {
     holderName: string;
     iban: string;
     bic?: string;
+    bankName?: string;
+    cuitCuil?: string;
   };
 }
 
@@ -451,6 +453,8 @@ export interface AdminTransactionDetailResponse {
     holderName: string;
     iban: string;
     bic?: string;
+    bankName?: string;
+    cuitCuil?: string;
   };
 }
 

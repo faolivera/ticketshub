@@ -14,6 +14,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '@/api/services/events.service';
 import { ticketsService } from '@/api/services/tickets.service';
+import { useUser } from '@/app/contexts/UserContext';
+import { formatCurrencyFromUnits } from '@/lib/format-currency';
 import {
   SeatingType,
   TicketType,
@@ -58,6 +60,8 @@ interface TicketDetailsStepProps {
 export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketDetailsStepProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useUser();
+  const sellerCurrency = user?.currency ?? 'ARS';
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -212,7 +216,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
         sellTogether: formData.sellTogether,
         pricePerTicket: {
           amount: Math.round(formData.pricePerTicket * 100),
-          currency: 'USD',
+          currency: sellerCurrency,
         },
         deliveryMethod,
         pickupAddress:
@@ -897,9 +901,9 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               {t('sellTicket.pricePerTicket')} <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
-                $
+            <div className="relative flex items-stretch">
+              <span className="flex items-center pl-4 pr-2 text-gray-500 font-semibold border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 min-w-[4rem]">
+                {sellerCurrency === 'ARS' ? '$' : sellerCurrency}
               </span>
               <input
                 type="number"
@@ -909,7 +913,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
                 onChange={(e) =>
                   setFormData({ ...formData, pricePerTicket: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 rounded-r-lg border border-gray-300 pl-4 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
                 required
               />
@@ -921,7 +925,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
                   : formData.quantity;
               return ticketCount > 1 ? (
                 <p className="text-sm text-gray-600 mt-2">
-                  {t('sellTicket.totalValue')}: ${(formData.pricePerTicket * ticketCount).toFixed(2)}
+                  {t('sellTicket.totalValue')}: {formatCurrencyFromUnits(formData.pricePerTicket * ticketCount, sellerCurrency)}
                 </p>
               ) : null;
             })()}

@@ -56,7 +56,7 @@ export function EditListing() {
       await ticketsService.updateListing(listingId, {
         pricePerTicket: {
           amount: Math.round(parseFloat(price) * 100),
-          currency: listing?.pricePerTicket.currency || 'USD',
+          currency: listing?.pricePerTicket.currency || 'ARS',
         },
         description: description || undefined,
       });

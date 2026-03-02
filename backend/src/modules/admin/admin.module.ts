@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { PaymentConfirmationsModule } from '../payment-confirmations/payment-confirmations.module';
+import { PaymentsModule } from '../payments/payments.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
 import { TicketsModule } from '../tickets/tickets.module';
@@ -11,6 +12,7 @@ import { IdentityVerificationModule } from '../identity-verification/identity-ve
 @Module({
   imports: [
     PaymentConfirmationsModule,
+    PaymentsModule,
     TransactionsModule,
     UsersModule,
     TicketsModule,

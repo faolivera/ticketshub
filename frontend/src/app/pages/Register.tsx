@@ -31,7 +31,7 @@ export function Register() {
     password: '',
     firstName: '',
     lastName: '',
-    country: 'United States',
+    country: 'Argentina',
   });
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
@@ -46,9 +46,9 @@ export function Register() {
   const [termsLoading, setTermsLoading] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
-  // Auto-detect country (mock)
+  // Country is fixed to Argentina (backend default)
   useEffect(() => {
-    setFormData(prev => ({ ...prev, country: prev.country || 'United States' }));
+    setFormData(prev => ({ ...prev, country: 'Argentina' }));
   }, []);
 
   // Fetch current terms on mount
@@ -352,31 +352,22 @@ export function Register() {
               />
             </div>
 
-            {/* Country */}
+            {/* Country (fixed to Argentina) */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4" />
-                  {t('register.country')} <span className="text-red-500">*</span>
+                  {t('register.country')}
                 </div>
               </label>
-              <select
-                value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+              <div
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                aria-label={t('register.country')}
               >
-                <option value="United States">United States</option>
-                <option value="Mexico">Mexico</option>
-                <option value="Canada">Canada</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Spain">Spain</option>
-                <option value="Argentina">Argentina</option>
-                <option value="Colombia">Colombia</option>
-                <option value="Chile">Chile</option>
-              </select>
+                Argentina
+              </div>
               <p className="text-sm text-gray-500 mt-1">
-                {t('register.countryAutoDetected')}
+                {t('register.countryFixed')}
               </p>
             </div>
 

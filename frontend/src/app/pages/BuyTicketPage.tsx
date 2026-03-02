@@ -8,6 +8,7 @@ import { transactionsService } from '../../api/services/transactions.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import { UserAvatar } from '../components/UserAvatar';
+import { formatCurrencyFromUnits } from '@/lib/format-currency';
 import type { BuyPageData, PublicPaymentMethodOption } from '../../api/types';
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
@@ -238,7 +239,8 @@ export function BuyTicketPage() {
     );
   }
 
-  // Calculate pricing
+  // Calculate pricing (use listing currency throughout purchase flow)
+  const listingCurrency = listing.pricePerTicket.currency;
   const pricePerTicket = listing.pricePerTicket.amount / 100;
   const selectedQuantity = listing.sellTogether
     ? availableUnits.length
@@ -506,14 +508,18 @@ export function BuyTicketPage() {
                 <span className="text-gray-700">
                   {t('buyTicket.ticketPrice', { quantity: selectedQuantity })}
                 </span>
-                <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
+                <span className="font-semibold text-gray-900">
+                  {formatCurrencyFromUnits(subtotal, listingCurrency)}
+                </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-700">
                   {t('buyTicket.buyerPlatformFee', { percent: buyerPlatformFeePercent })}
                 </span>
-                <span className="font-semibold text-gray-900">${buyerPlatformFee.toFixed(2)}</span>
+                <span className="font-semibold text-gray-900">
+                  {formatCurrencyFromUnits(buyerPlatformFee, listingCurrency)}
+                </span>
               </div>
 
               <div className="flex justify-between">
@@ -524,13 +530,15 @@ export function BuyTicketPage() {
                       })
                     : t('buyTicket.paymentMethodCommissionManual')}
                 </span>
-                <span className="font-semibold text-gray-900">${paymentMethodCommission.toFixed(2)}</span>
+                <span className="font-semibold text-gray-900">
+                  {formatCurrencyFromUnits(paymentMethodCommission, listingCurrency)}
+                </span>
               </div>
 
               <div className="pt-4 border-t border-gray-200 flex justify-between">
                 <span className="text-lg font-bold text-gray-900">{t('buyTicket.total')}</span>
                 <span className="text-2xl font-bold text-blue-600">
-                  ${grandTotal.toFixed(2)}
+                  {formatCurrencyFromUnits(grandTotal, listingCurrency)}
                 </span>
               </div>
             </div>

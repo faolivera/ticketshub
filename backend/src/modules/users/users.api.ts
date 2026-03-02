@@ -23,13 +23,14 @@ export interface TermsAcceptanceData {
 
 /**
  * Request body for POST /users/register
+ * country is optional; when omitted, backend uses default (Argentina).
  */
 export interface RegisterRequest {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
-  country: string;
+  country?: string;
   termsAcceptance: TermsAcceptanceData;
 }
 

@@ -254,9 +254,15 @@ const TransactionReviewsDataSchema = z.object({
   canReview: z.boolean(),
 });
 
+const TransactionTicketUnitSchema = z.object({
+  id: z.string(),
+  seat: TicketSeatSchema.optional(),
+});
+
 export const GetTransactionDetailsResponseSchema = z.object({
   transaction: TransactionWithDetailsSchema,
   paymentConfirmation: PaymentConfirmationSchema.nullable(),
   reviews: TransactionReviewsDataSchema.nullable(),
   bankTransferConfig: BankTransferConfigSchema.nullable(),
+  ticketUnits: z.array(TransactionTicketUnitSchema),
 });

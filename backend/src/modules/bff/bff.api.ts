@@ -52,6 +52,14 @@ export interface TransactionReviewsData {
 }
 
 /**
+ * Ticket unit info for transaction details (id + optional seat for numbered tickets)
+ */
+export interface TransactionTicketUnit {
+  id: string;
+  seat?: { row: string; seatNumber: string };
+}
+
+/**
  * Get transaction details response (aggregated data for transaction page)
  */
 export interface GetTransactionDetailsResponse {
@@ -59,4 +67,6 @@ export interface GetTransactionDetailsResponse {
   paymentConfirmation: PaymentConfirmation | null;
   reviews: TransactionReviewsData | null;
   bankTransferConfig: BankTransferConfig | null;
+  /** Ticket units in this transaction (with seat info when numbered) */
+  ticketUnits: TransactionTicketUnit[];
 }

@@ -4,6 +4,14 @@ import type { Review } from './reviews';
 import type { BankTransferConfig } from './tickets';
 
 /**
+ * Ticket unit info for transaction details (id + optional seat for numbered tickets)
+ */
+export interface TransactionTicketUnit {
+  id: string;
+  seat?: { row: string; seatNumber: string };
+}
+
+/**
  * Transaction reviews data for the transaction details page
  */
 export interface TransactionReviewsData {
@@ -14,11 +22,12 @@ export interface TransactionReviewsData {
 
 /**
  * Get transaction details response (BFF aggregation)
- * Combines transaction, payment confirmation, and reviews data.
+ * Combines transaction, payment confirmation, reviews data.
  */
 export interface GetTransactionDetailsResponse {
   transaction: TransactionWithDetails;
   paymentConfirmation: PaymentConfirmation | null;
   reviews: TransactionReviewsData | null;
   bankTransferConfig: BankTransferConfig | null;
+  ticketUnits: TransactionTicketUnit[];
 }
