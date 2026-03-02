@@ -821,10 +821,32 @@
     "confirm": "Confirmar",
     "yes": "Sí",
     "no": "No",
+    "retry": "Reintentar",
+    "refresh": "Actualizar",
+    "somethingWentWrong": "Algo salió mal",
     "pending": "Pendiente",
     "creating": "Creando...",
     "saving": "Guardando...",
-    "errorLoading": "Error al cargar"
+    "errorLoading": "Error al cargar",
+    "resource": "datos"
+  },
+  "error": {
+    "conflict": {
+      "title": "Datos Modificados",
+      "description": "{{resource}} fue modificado por otro usuario. Por favor actualiza para ver la última versión."
+    },
+    "insufficientFunds": {
+      "title": "Fondos Insuficientes",
+      "description": "No tienes saldo suficiente para completar esta transacción."
+    },
+    "ticketNotAvailable": {
+      "title": "Entradas No Disponibles",
+      "description": "Las entradas solicitadas ya no están disponibles."
+    },
+    "generic": {
+      "title": "Error",
+      "description": "Ocurrió un error inesperado. Por favor intenta de nuevo."
+    }
   },
   "badges": {
     "newSeller": "Vendedor Nuevo",

@@ -9,11 +9,27 @@ export interface ApiResponse<T> {
 }
 
 /**
+ * Structured error details from backend
+ */
+export interface ApiErrorDetails {
+  code: string;
+  message: string;
+  details?: {
+    resource?: string;
+    resourceId?: string;
+    retryable?: boolean;
+    [key: string]: unknown;
+  };
+}
+
+/**
  * Normalized API error
  */
 export interface ApiError {
   message: string;
   statusCode: number;
+  code?: string;
+  details?: ApiErrorDetails['details'];
   errors?: Record<string, string[]>;
 }
 
@@ -80,11 +96,14 @@ function createApiClient(): AxiosInstance {
         window.dispatchEvent(new CustomEvent('auth:unauthorized'));
       }
 
-      // Normalize error
+      // Extract and normalize error
+      const errorData = extractErrorData(error);
       const apiError: ApiError = {
-        message: getErrorMessage(error),
+        message: errorData.message,
         statusCode: error.response?.status ?? 500,
-        errors: getValidationErrors(error),
+        code: errorData.code,
+        details: errorData.details,
+        errors: errorData.errors,
       };
 
       return Promise.reject(apiError);
@@ -95,33 +114,45 @@ function createApiClient(): AxiosInstance {
 }
 
 /**
- * Extract error message from axios error
+ * Backend error response structure
  */
-function getErrorMessage(error: AxiosError): string {
-  const data = error.response?.data as Record<string, unknown> | undefined;
-  
-  if (data?.message) {
-    return String(data.message);
-  }
-  
-  if (error.message) {
-    return error.message;
-  }
-  
-  return 'An unexpected error occurred';
+interface BackendErrorResponse {
+  success: false;
+  error?: ApiErrorDetails;
+  message?: string;
+  errors?: Record<string, string[]>;
 }
 
 /**
- * Extract validation errors from axios error
+ * Extract structured error data from axios error
  */
-function getValidationErrors(error: AxiosError): Record<string, string[]> | undefined {
-  const data = error.response?.data as Record<string, unknown> | undefined;
-  
-  if (data?.errors && typeof data.errors === 'object') {
-    return data.errors as Record<string, string[]>;
+function extractErrorData(error: AxiosError): {
+  message: string;
+  code?: string;
+  details?: ApiErrorDetails['details'];
+  errors?: Record<string, string[]>;
+} {
+  const data = error.response?.data as BackendErrorResponse | undefined;
+
+  // New structured error format: { success: false, error: { code, message, details } }
+  if (data?.error && typeof data.error === 'object') {
+    return {
+      message: data.error.message || 'An unexpected error occurred',
+      code: data.error.code,
+      details: data.error.details,
+      errors: undefined,
+    };
   }
-  
-  return undefined;
+
+  // Legacy format: { message, errors }
+  return {
+    message: data?.message ? String(data.message) : error.message || 'An unexpected error occurred',
+    code: undefined,
+    details: undefined,
+    errors: data?.errors && typeof data.errors === 'object'
+      ? data.errors as Record<string, string[]>
+      : undefined,
+  };
 }
 
 /**

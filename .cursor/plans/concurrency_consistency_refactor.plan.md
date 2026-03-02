@@ -763,12 +763,16 @@ async processPendingEvents(ctx: Ctx): Promise<void> {
 
 **Scope:** Errores descriptivos y manejo en UI  
 **Riesgo:** Bajo  
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completado (2026-03-02)
 
 #### Cambios
 
 ```
 backend/src/common/
+├── types/
+│   └── api.ts                    # UPDATE: ApiErrorDetails type
+├── exceptions/
+│   └── ticket-not-available.exception.ts  # NEW
 └── filters/
     └── http-exception.filter.ts  # UPDATE: Structured error codes
 

@@ -849,11 +849,31 @@
     "yes": "Yes",
     "no": "No",
     "retry": "Try Again",
+    "refresh": "Refresh",
     "somethingWentWrong": "Something went wrong",
     "pending": "Pending",
     "creating": "Creating...",
     "saving": "Saving...",
-    "errorLoading": "Failed to load"
+    "errorLoading": "Failed to load",
+    "resource": "data"
+  },
+  "error": {
+    "conflict": {
+      "title": "Data Changed",
+      "description": "The {{resource}} was modified by another user. Please refresh to see the latest version."
+    },
+    "insufficientFunds": {
+      "title": "Insufficient Funds",
+      "description": "You don't have enough balance to complete this transaction."
+    },
+    "ticketNotAvailable": {
+      "title": "Tickets Unavailable",
+      "description": "The requested tickets are no longer available."
+    },
+    "generic": {
+      "title": "Error",
+      "description": "An unexpected error occurred. Please try again."
+    }
   },
   "badges": {
     "newSeller": "New Seller",
