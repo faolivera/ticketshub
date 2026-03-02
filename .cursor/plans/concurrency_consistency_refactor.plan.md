@@ -331,7 +331,7 @@ model TicketListing {
 
 **Scope:** Prevenir procesamiento duplicado en schedulers  
 **Riesgo:** Bajo  
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completado (2026-03-02)
 
 #### Cambios
 

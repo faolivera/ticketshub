@@ -769,3 +769,12 @@ model NotificationChannelConfig {
 
   @@map("notification_channel_configs")
 }
+
+model SchedulerLock {
+  id        String   @id
+  lockedBy  String   @map("locked_by")
+  lockedAt  DateTime @map("locked_at")
+  expiresAt DateTime @map("expires_at")
+
+  @@map("scheduler_locks")
+}
