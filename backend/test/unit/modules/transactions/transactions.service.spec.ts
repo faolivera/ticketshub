@@ -392,7 +392,6 @@ describe('TransactionsService', () => {
   describe('handlePaymentFailed', () => {
     it('should cancel transaction on payment failure', async () => {
       const transaction = createMockTransaction();
-      transactionsRepository.findById.mockResolvedValue(transaction);
       transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
       transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
@@ -409,21 +408,22 @@ describe('TransactionsService', () => {
       expect(result.status).toBe(TransactionStatus.Cancelled);
       expect(result.cancellationReason).toBe(CancellationReason.PaymentFailed);
       expect(result.cancelledBy).toBe(RequiredActor.Platform);
+      expect(txManager.executeInTransaction).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when transaction not found', async () => {
-      transactionsRepository.findById.mockResolvedValue(undefined);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(undefined);
 
       await expect(
         service.handlePaymentFailed(mockCtx, 'invalid_id'),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException when transaction is not PendingPayment', async () => {
+    it('should throw BadRequestException when transaction is not in cancellable status', async () => {
       const transaction = createMockTransaction({
         status: TransactionStatus.PaymentReceived,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
 
       await expect(
         service.handlePaymentFailed(mockCtx, 'txn_123'),
@@ -432,31 +432,38 @@ describe('TransactionsService', () => {
   });
 
   describe('handlePaymentConfirmationUploaded', () => {
-    it('should transition to PaymentPendingVerification status', async () => {
+    it('should transition to PaymentPendingVerification status atomically', async () => {
       const transaction = createMockTransaction();
-      transactionsRepository.findById.mockResolvedValue(transaction);
-      transactionsRepository.update.mockResolvedValue({
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
         status: TransactionStatus.PaymentPendingVerification,
         requiredActor: RequiredActor.Platform,
         adminReviewExpiresAt: expect.any(Date),
+        version: 2,
       });
 
       const result = await service.handlePaymentConfirmationUploaded(mockCtx, 'txn_123');
 
       expect(result.status).toBe(TransactionStatus.PaymentPendingVerification);
-      expect(transactionsRepository.update).toHaveBeenCalledWith(
-        mockCtx,
+      expect(txManager.executeInTransaction).toHaveBeenCalled();
+      expect(transactionsRepository.findByIdForUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ requestId: mockCtx.requestId }),
+        'txn_123',
+      );
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.objectContaining({ requestId: mockCtx.requestId }),
         'txn_123',
         expect.objectContaining({
           status: TransactionStatus.PaymentPendingVerification,
           requiredActor: RequiredActor.Platform,
         }),
+        transaction.version,
       );
     });
 
     it('should throw NotFoundException when transaction not found', async () => {
-      transactionsRepository.findById.mockResolvedValue(undefined);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(undefined);
 
       await expect(
         service.handlePaymentConfirmationUploaded(mockCtx, 'invalid_id'),
@@ -467,7 +474,7 @@ describe('TransactionsService', () => {
       const transaction = createMockTransaction({
         status: TransactionStatus.PaymentReceived,
       });
-      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
 
       await expect(
         service.handlePaymentConfirmationUploaded(mockCtx, 'txn_123'),

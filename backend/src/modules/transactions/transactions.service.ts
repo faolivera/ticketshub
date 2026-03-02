@@ -340,22 +340,11 @@ export class TransactionsService {
   }
 
   /**
-   * Handle payment failure from gateway webhook
+   * Handle payment failure from gateway webhook.
+   * Delegates to cancelTransaction which handles locking atomically.
    */
   async handlePaymentFailed(ctx: Ctx, transactionId: string): Promise<Transaction> {
     this.logger.log(ctx, `Payment failed for transaction ${transactionId}`);
-
-    const transaction = await this.transactionsRepository.findById(
-      ctx,
-      transactionId,
-    );
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
-
-    if (transaction.status !== TransactionStatus.PendingPayment) {
-      throw new BadRequestException('Invalid transaction status for payment failure');
-    }
 
     return this.cancelTransaction(
       ctx,
@@ -368,6 +357,7 @@ export class TransactionsService {
   /**
    * Handle payment confirmation uploaded (for manual payments).
    * Transitions from PendingPayment to PaymentPendingVerification.
+   * Atomic with lock to prevent race with scheduler cancellation.
    */
   async handlePaymentConfirmationUploaded(
     ctx: Ctx,
@@ -378,35 +368,35 @@ export class TransactionsService {
       `Payment confirmation uploaded for transaction ${transactionId}`,
     );
 
-    const transaction = await this.transactionsRepository.findById(
-      ctx,
-      transactionId,
-    );
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
+    const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const transaction = await this.transactionsRepository.findByIdForUpdate(
+        txCtx,
+        transactionId,
+      );
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
 
-    if (transaction.status !== TransactionStatus.PendingPayment) {
-      throw new BadRequestException('Invalid transaction status');
-    }
+      if (transaction.status !== TransactionStatus.PendingPayment) {
+        throw new BadRequestException('Invalid transaction status');
+      }
 
-    const newStatus = TransactionStatus.PaymentPendingVerification;
-    const adminReviewExpiresAt = new Date(
-      Date.now() + this.configService.getAdminReviewTimeoutHours() * 60 * 60 * 1000,
-    );
-    const updated = await this.transactionsRepository.update(
-      ctx,
-      transactionId,
-      {
-        status: newStatus,
-        requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-        adminReviewExpiresAt,
-      },
-    );
+      const newStatus = TransactionStatus.PaymentPendingVerification;
+      const adminReviewExpiresAt = new Date(
+        Date.now() + this.configService.getAdminReviewTimeoutHours() * 60 * 60 * 1000,
+      );
 
-    if (!updated) {
-      throw new NotFoundException('Transaction not found');
-    }
+      return this.transactionsRepository.updateWithVersion(
+        txCtx,
+        transactionId,
+        {
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+          adminReviewExpiresAt,
+        },
+        transaction.version,
+      );
+    });
 
     this.logger.log(
       ctx,

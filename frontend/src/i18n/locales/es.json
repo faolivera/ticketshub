@@ -122,7 +122,13 @@
     "verifyPhoneNow": "Verificar Teléfono",
     "ownListingPreview": "Vista Previa del Anuncio",
     "ownListingPreviewDescription": "Esta es una vista previa de tu anuncio. No puedes comprar tus propias entradas.",
-    "pricesChanged": "Los precios pueden haber cambiado. La página se ha actualizado con los precios más recientes."
+    "pricesChanged": "Los precios pueden haber cambiado. La página se ha actualizado con los precios más recientes.",
+    "errorLoading": "Error al cargar los detalles de la entrada. Inténtalo de nuevo.",
+    "loginRequired": "Inicio de Sesión Requerido",
+    "mustBeLoggedIn": "Debes iniciar sesión para comprar entradas",
+    "loginToBuy": "Iniciar Sesión para Comprar",
+    "purchaseFailed": "La compra falló. Inténtalo de nuevo.",
+    "processing": "Procesando..."
   },
   "boughtTickets": {
     "title": "Mis Entradas",
