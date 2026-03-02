@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import { config as loadDotenv } from 'dotenv';
 import { parse } from 'hocon-config';
 
@@ -21,7 +21,7 @@ export function loadHoconConfig(overrideEnv?: AppEnvironment): Record<string, un
     );
   }
 
-  const configDir = path.join(__dirname, '..', '..', 'config');
+  const configDir = path.join(process.cwd(), 'config');
   const configPath = path.join(configDir, `${env}.conf`);
 
   const parsed = parse(configPath, {
