@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import { PAYMENT_METHODS_REPOSITORY } from './payment-methods.repository.interface';
 import type { IPaymentMethodsRepository } from './payment-methods.repository.interface';
@@ -34,6 +35,7 @@ export class PaymentMethodsService {
   constructor(
     @Inject(PAYMENT_METHODS_REPOSITORY)
     private readonly repository: IPaymentMethodsRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   private generateId(): string {
@@ -154,10 +156,11 @@ export class PaymentMethodsService {
       paymentMethod.gatewayProvider!,
     );
 
+    const env = (this.configService.get<Record<string, string | undefined>>('env') ?? {}) as Record<string, string | undefined>;
     const credentials: GatewayCredentials = {};
     for (const key of credentialKeys) {
       const envKey = `${prefix}_${key}`;
-      credentials[this.camelCase(key)] = process.env[envKey];
+      credentials[this.camelCase(key)] = env[envKey];
     }
 
     this.logger.log(

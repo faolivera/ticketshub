@@ -1,4 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type { INotificationsRepository } from './notifications.repository.interface';
@@ -20,7 +21,6 @@ import {
   generateNotificationId,
   generateNotificationTemplateId,
   generateNotificationChannelConfigId,
-  NOTIFICATION_RETRY_CONFIG,
 } from './notifications.domain';
 import type { NotificationContextMap } from './notifications.contexts';
 import type {
@@ -44,6 +44,7 @@ export class NotificationsService {
   constructor(
     @Inject(NOTIFICATIONS_REPOSITORY)
     private readonly repository: INotificationsRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   // ==========================================================================
@@ -575,9 +576,10 @@ export class NotificationsService {
     const newRetryCount = notification.retryCount + 1;
     let nextRetryAt: Date | undefined;
 
-    if (newRetryCount < NOTIFICATION_RETRY_CONFIG.maxRetries) {
+    const retryConfig = this.configService.get<{ maxRetries: number; backoffMinutes: number[] }>('notifications.retry') ?? { maxRetries: 3, backoffMinutes: [1, 5, 15] };
+    if (newRetryCount < retryConfig.maxRetries) {
       const backoffMinutes =
-        NOTIFICATION_RETRY_CONFIG.backoffMinutes[newRetryCount - 1] || 15;
+        retryConfig.backoffMinutes[newRetryCount - 1] ?? 15;
       nextRetryAt = new Date();
       nextRetryAt.setMinutes(nextRetryAt.getMinutes() + backoffMinutes);
     }

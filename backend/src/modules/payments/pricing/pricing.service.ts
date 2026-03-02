@@ -1,7 +1,7 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PRICING_REPOSITORY, type IPricingRepository } from './pricing.repository.interface';
-import { ConfigService } from '../../config/config.service';
+import { ConfigService } from '@nestjs/config';
 import { PaymentMethodsService } from '../payment-methods.service';
 import { ContextLogger } from '../../../common/logger/context-logger';
 import type { Ctx } from '../../../common/types/context';
@@ -39,8 +39,10 @@ export class PricingService {
   ): Promise<PricingSnapshot> {
     this.logger.log(ctx, `Creating pricing snapshot for listing ${listingId}`);
 
-    const buyerPlatformFeePercentage = this.configService.getBuyerPlatformFeePercentage();
-    const sellerPlatformFeePercentage = this.configService.getSellerPlatformFeePercentage();
+    const buyerPlatformFeePercentage =
+      this.configService.get<number>('platform.buyerPlatformFeePercentage') ?? 10;
+    const sellerPlatformFeePercentage =
+      this.configService.get<number>('platform.sellerPlatformFeePercentage') ?? 5;
 
     const enabledPaymentMethods =
       await this.paymentMethodsService.findEnabled(ctx);

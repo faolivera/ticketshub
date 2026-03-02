@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PricingService } from '../../../../../src/modules/payments/pricing/pricing.service';
 import { PRICING_REPOSITORY } from '../../../../../src/modules/payments/pricing/pricing.repository.interface';
 import type { IPricingRepository } from '../../../../../src/modules/payments/pricing/pricing.repository.interface';
-import { ConfigService } from '../../../../../src/modules/config/config.service';
+import { ConfigService } from '@nestjs/config';
 import { PaymentMethodsService } from '../../../../../src/modules/payments/payment-methods.service';
 import {
   PricingSnapshotError,
@@ -75,8 +75,13 @@ describe('PricingService', () => {
     };
 
     const mockConfigService = {
-      getBuyerPlatformFeePercentage: jest.fn().mockReturnValue(10),
-      getSellerPlatformFeePercentage: jest.fn().mockReturnValue(5),
+      get: jest.fn((key: string) => {
+        const map: Record<string, number> = {
+          'platform.buyerPlatformFeePercentage': 10,
+          'platform.sellerPlatformFeePercentage': 5,
+        };
+        return map[key];
+      }),
     };
 
     const mockPaymentMethodsService = {

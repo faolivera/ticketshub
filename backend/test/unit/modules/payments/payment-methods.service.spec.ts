@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { PAYMENT_METHODS_REPOSITORY } from '../../../../src/modules/payments/payment-methods.repository.interface';
@@ -9,6 +10,7 @@ import type { Ctx } from '../../../../src/common/types/context';
 describe('PaymentMethodsService', () => {
   let service: PaymentMethodsService;
   let repository: jest.Mocked<IPaymentMethodsRepository>;
+  let configService: jest.Mocked<ConfigService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -52,15 +54,21 @@ describe('PaymentMethodsService', () => {
       delete: jest.fn(),
     };
 
+    const mockConfigService = {
+      get: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentMethodsService,
         { provide: PAYMENT_METHODS_REPOSITORY, useValue: mockRepository },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
     service = module.get<PaymentMethodsService>(PaymentMethodsService);
     repository = module.get(PAYMENT_METHODS_REPOSITORY);
+    configService = module.get(ConfigService);
   });
 
   describe('findAll', () => {
@@ -253,19 +261,19 @@ describe('PaymentMethodsService', () => {
   });
 
   describe('getGatewayCredentials', () => {
-    const originalEnv = process.env;
-
     beforeEach(() => {
-      process.env = { ...originalEnv };
-      process.env.MERCADOPAGO_MAIN_ACCESS_TOKEN = 'test_access_token';
-      process.env.MERCADOPAGO_MAIN_PUBLIC_KEY = 'test_public_key';
+      configService.get.mockImplementation((key: string) => {
+        if (key === 'env') {
+          return {
+            MERCADOPAGO_MAIN_ACCESS_TOKEN: 'test_access_token',
+            MERCADOPAGO_MAIN_PUBLIC_KEY: 'test_public_key',
+          };
+        }
+        return undefined;
+      });
     });
 
-    afterEach(() => {
-      process.env = originalEnv;
-    });
-
-    it('should load credentials from env using prefix', () => {
+    it('should load credentials from config env using prefix', () => {
       const result = service.getGatewayCredentials(mockCtx, mockPaymentMethod);
 
       expect(result.accessToken).toBe('test_access_token');

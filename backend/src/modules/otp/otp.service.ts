@@ -1,16 +1,18 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import type { IOTPRepository } from './otp.repository.interface';
 import { OTP_REPOSITORY } from './otp.repository.interface';
 import type { Ctx } from '../../common/types/context';
 import type { OTP } from './otp.domain';
-import { OTPType, OTPStatus, OTP_CONFIG } from './otp.domain';
+import { OTPType, OTPStatus } from './otp.domain';
 
 @Injectable()
 export class OTPService {
   constructor(
     @Inject(OTP_REPOSITORY)
     private readonly otpRepository: IOTPRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -42,8 +44,9 @@ export class OTPService {
     await this.otpRepository.expireAllPendingByUserAndType(ctx, userId, type);
 
     const code = this.generateCode(type);
+    const expirationMinutes = this.configService.get<number>('otp.expirationMinutes') ?? 10;
     const expiresAt = new Date(
-      Date.now() + OTP_CONFIG.expirationMinutes * 60 * 1000,
+      Date.now() + expirationMinutes * 60 * 1000,
     );
 
     const otp: OTP = {

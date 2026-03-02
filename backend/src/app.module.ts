@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { TransactionManagerModule } from './common/database';
 import { DistributedLockModule } from './common/locks';
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
-import { PlatformConfigModule } from './modules/config/config.module';
+import configuration from './config/configuration';
 import { OTPModule } from './modules/otp/otp.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { EventsModule } from './modules/events/events.module';
@@ -28,10 +29,14 @@ import { IdentityVerificationModule } from './modules/identity-verification/iden
     ScheduleModule.forRoot(),
 
     // Global modules (must be first)
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+      ignoreEnvFile: true,
+    }),
     PrismaModule,
     TransactionManagerModule,
     DistributedLockModule,
-    PlatformConfigModule,
     NotificationsModule,
     StorageModule,
 

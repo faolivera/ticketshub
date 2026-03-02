@@ -35,9 +35,8 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 
-# Environment
+# Environment (secrets; set vars in shell or optional .env loaded by config loader)
 .env
 .env.*
-!.env.example
 
 /generated/prisma

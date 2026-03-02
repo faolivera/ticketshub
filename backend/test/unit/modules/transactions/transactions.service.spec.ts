@@ -10,7 +10,7 @@ import type { ITransactionsRepository } from '../../../../src/modules/transactio
 import { TicketsService } from '../../../../src/modules/tickets/tickets.service';
 import { PaymentsService } from '../../../../src/modules/payments/payments.service';
 import { WalletService } from '../../../../src/modules/wallet/wallet.service';
-import { ConfigService } from '../../../../src/modules/config/config.service';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { PricingService } from '../../../../src/modules/payments/pricing/pricing.service';
@@ -101,9 +101,14 @@ describe('TransactionsService', () => {
     };
 
     const mockConfigService = {
-      getPaymentTimeoutMinutes: jest.fn().mockReturnValue(10),
-      getAdminReviewTimeoutHours: jest.fn().mockReturnValue(24),
-      getDigitalNonTransferableReleaseMinutes: jest.fn().mockReturnValue(30),
+      get: jest.fn((key: string) => {
+        const map: Record<string, number> = {
+          'platform.paymentTimeoutMinutes': 10,
+          'platform.adminReviewTimeoutHours': 24,
+          'platform.digitalNonTransferableReleaseMinutes': 30,
+        };
+        return map[key];
+      }),
     };
 
     const mockUsersService = {

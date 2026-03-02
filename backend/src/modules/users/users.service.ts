@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 import type { IUsersRepository } from './users.repository.interface';
@@ -29,23 +30,6 @@ import {
   type FileStorageProvider,
 } from '../../common/storage/file-storage-provider.interface';
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-
-/** Allowed MIME types for avatar uploads */
-const ALLOWED_AVATAR_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-] as const;
-
-type AvatarMimeType = (typeof ALLOWED_AVATAR_MIME_TYPES)[number];
-
-/** Maximum avatar file size in bytes (5MB) */
-const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -59,6 +43,7 @@ export class UsersService {
     private readonly termsService: TermsService,
     @Inject(PUBLIC_STORAGE_PROVIDER)
     private readonly publicStorageProvider: FileStorageProvider,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -196,14 +181,18 @@ export class UsersService {
    * Generate JWT token for user
    */
   private generateToken(user: User): string {
+    const secret = this.configService.get<string>('jwt.secret');
+    const expiresIn = this.configService.get<string>('jwt.expiresIn');
+    if (!secret) {
+      throw new Error('jwt.secret is required. Set JWT_SECRET or configure in HOCON.');
+    }
     const payload: JWTPayload = {
       userId: user.id,
       email: user.email,
       role: user.role,
       level: user.level,
     };
-    // @ts-ignore - JWT_EXPIRES_IN is a valid string for expiresIn
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    return jwt.sign(payload, secret, { expiresIn: expiresIn ?? '7d' } as jwt.SignOptions);
   }
 
   /**
@@ -211,9 +200,11 @@ export class UsersService {
    */
   verifyToken(token: string): JWTPayload | null {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+      const secret = this.configService.get<string>('jwt.secret');
+      if (!secret) return null;
+      const decoded = jwt.verify(token, secret) as JWTPayload;
       return decoded;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -537,17 +528,21 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
 
-    // Validate file type
-    if (!ALLOWED_AVATAR_MIME_TYPES.includes(file.mimetype as AvatarMimeType)) {
+    const allowedMimeTypes = this.configService.get<string[]>('users.allowedAvatarMimeTypes') ?? [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+    ];
+    const maxSizeBytes = this.configService.get<number>('users.maxAvatarSizeBytes') ?? 5 * 1024 * 1024;
+    if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type. Allowed: ${ALLOWED_AVATAR_MIME_TYPES.join(', ')}`,
+        `Invalid file type. Allowed: ${allowedMimeTypes.join(', ')}`,
       );
     }
-
-    // Validate file size
-    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+    if (file.size > maxSizeBytes) {
       throw new BadRequestException(
-        `File too large. Maximum size: ${MAX_AVATAR_SIZE_BYTES / 1024 / 1024}MB`,
+        `File too large. Maximum size: ${maxSizeBytes / 1024 / 1024}MB`,
       );
     }
 

@@ -11,7 +11,7 @@ import { TRANSACTIONS_REPOSITORY } from './transactions.repository.interface';
 import { TicketsService } from '../tickets/tickets.service';
 import { PaymentsService } from '../payments/payments.service';
 import { WalletService } from '../wallet/wallet.service';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { PricingService } from '../payments/pricing/pricing.service';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -178,7 +178,7 @@ export class TransactionsService {
         let autoReleaseAt: Date | undefined;
         if (listing.type === TicketType.DigitalNonTransferable) {
           const releaseMinutes =
-            this.configService.getDigitalNonTransferableReleaseMinutes();
+            this.configService.get<number>('platform.digitalNonTransferableReleaseMinutes') ?? 30;
           const eventDate = new Date(listing.eventDate);
           autoReleaseAt = new Date(
             eventDate.getTime() + releaseMinutes * 60 * 1000,
@@ -209,13 +209,13 @@ export class TransactionsService {
           requiredActor: STATUS_REQUIRED_ACTOR[initialStatus],
           createdAt: new Date(),
           paymentExpiresAt: new Date(
-            Date.now() + this.configService.getPaymentTimeoutMinutes() * 60 * 1000,
+            Date.now() + (this.configService.get<number>('platform.paymentTimeoutMinutes') ?? 10) * 60 * 1000,
           ),
           updatedAt: new Date(),
           eventDateTime: new Date(listing.eventDate),
           releaseAfterMinutes:
             listing.type === TicketType.DigitalNonTransferable
-              ? this.configService.getDigitalNonTransferableReleaseMinutes()
+              ? (this.configService.get<number>('platform.digitalNonTransferableReleaseMinutes') ?? 30)
               : undefined,
           autoReleaseAt,
           deliveryMethod: listing.deliveryMethod,
@@ -383,7 +383,7 @@ export class TransactionsService {
 
       const newStatus = TransactionStatus.PaymentPendingVerification;
       const adminReviewExpiresAt = new Date(
-        Date.now() + this.configService.getAdminReviewTimeoutHours() * 60 * 60 * 1000,
+        Date.now() + (this.configService.get<number>('platform.adminReviewTimeoutHours') ?? 24) * 60 * 60 * 1000,
       );
 
       return this.transactionsRepository.updateWithVersion(

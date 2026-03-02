@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { loadHoconConfig } from '../src/config/load-hocon';
 
-const connectionString = process.env.DATABASE_URL;
+const config = loadHoconConfig() as { database?: { url?: string } };
+const connectionString = config.database?.url;
 if (!connectionString) {
-  console.error('DATABASE_URL environment variable is not set');
+  console.error('database.url is required. Set DATABASE_URL or configure in config/*.conf');
   process.exit(1);
 }
 

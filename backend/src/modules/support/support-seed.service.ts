@@ -1,4 +1,5 @@
 import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Ctx } from '../../common/types/context';
 import type { IImagesRepository } from '../images/images.repository.interface';
 import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
@@ -40,10 +41,12 @@ export class SupportSeedService {
     private readonly ticketsService: TicketsService,
     @Inject(TICKETS_REPOSITORY)
     private readonly ticketsRepository: ITicketsRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   async seedDemoData(ctx: Ctx): Promise<SeedDemoResponse> {
-    if (process.env.NODE_ENV === 'production') {
+    const isProduction = this.configService.get<boolean>('app.isProduction');
+    if (isProduction) {
       throw new ForbiddenException(
         'This endpoint is not available in production',
       );
