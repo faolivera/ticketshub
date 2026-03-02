@@ -12,7 +12,7 @@ const BANNERS_PREFIX = 'event-banners';
 
 /**
  * Storage service for event banner images.
- * Uses PublicFileStorageProvider to store files at data/public/event-banners/{eventId}/{type}.{ext}
+ * Files are stored in S3 (public bucket); URLs are signed URLs.
  */
 @Injectable()
 export class EventBannerStorageService {
@@ -115,10 +115,18 @@ export class EventBannerStorageService {
   }
 
   /**
-   * Get the public URL for a banner
-   * Note: Public storage is served statically at /public/
+   * Get a signed public URL for a banner (for S3; use in API responses).
+   * @param expiresInSeconds Default 3600 (1 hour)
    */
-  getPublicUrl(eventId: string, filename: string): string {
+  async getPublicUrlAsync(
+    eventId: string,
+    filename: string,
+    expiresInSeconds: number = 3600,
+  ): Promise<string> {
+    const key = this.getStorageKey(eventId, filename);
+    if (this.storageProvider.getSignedUrl) {
+      return this.storageProvider.getSignedUrl(key, expiresInSeconds);
+    }
     return `/public/${BANNERS_PREFIX}/${eventId}/${filename}`;
   }
 

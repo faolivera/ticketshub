@@ -261,7 +261,7 @@ export const adminService = {
     eventId: string,
     bannerType: 'square' | 'rectangle',
     file: File
-  ): Promise<{ success: true; data: { eventId: string; bannerType: string; url: string } }> {
+  ): Promise<{ eventId: string; bannerType: string; url: string }> {
     const formData = new FormData();
     formData.append('file', file);
     const response = await apiClient.post<{

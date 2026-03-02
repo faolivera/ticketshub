@@ -88,7 +88,7 @@ describe('EventsService - getEventsForSelection', () => {
       delete: jest.fn(),
       deleteByFilename: jest.fn(),
       exists: jest.fn(),
-      getPublicUrl: jest.fn(),
+      getPublicUrlAsync: jest.fn(),
       scanExistingBanners: jest.fn(),
       readFile: jest.fn(),
     };
@@ -230,9 +230,9 @@ describe('EventsService - getEventsForSelection', () => {
         events: [eventWithBanners],
         total: 1,
       });
-      bannerStorage.getPublicUrl.mockImplementation(
+      bannerStorage.getPublicUrlAsync.mockImplementation(
         (eventId: string, filename: string) =>
-          `/public/event-banners/${eventId}/${filename}`,
+          Promise.resolve(`/public/event-banners/${eventId}/${filename}`),
       );
 
       const result = await service.getEventsForSelection(mockCtx, {});
@@ -244,7 +244,7 @@ describe('EventsService - getEventsForSelection', () => {
       expect(result.events[0].rectangleBannerUrl).toBe(
         '/public/event-banners/evt_with_banners/rectangle.png',
       );
-      expect(bannerStorage.getPublicUrl).toHaveBeenCalledTimes(2);
+      expect(bannerStorage.getPublicUrlAsync).toHaveBeenCalledTimes(2);
     });
 
     it('should include only square banner URL when no rectangle banner exists', async () => {
@@ -270,7 +270,7 @@ describe('EventsService - getEventsForSelection', () => {
         events: [eventWithSquareBanner],
         total: 1,
       });
-      bannerStorage.getPublicUrl.mockReturnValue(
+      bannerStorage.getPublicUrlAsync.mockResolvedValue(
         '/public/event-banners/evt_square_only/square.png',
       );
 
@@ -281,7 +281,7 @@ describe('EventsService - getEventsForSelection', () => {
         '/public/event-banners/evt_square_only/square.png',
       );
       expect(result.events[0].rectangleBannerUrl).toBeUndefined();
-      expect(bannerStorage.getPublicUrl).toHaveBeenCalledTimes(1);
+      expect(bannerStorage.getPublicUrlAsync).toHaveBeenCalledTimes(1);
     });
 
     it('should return correct EventSelectItem shape', async () => {

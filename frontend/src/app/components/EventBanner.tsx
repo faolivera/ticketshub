@@ -52,6 +52,13 @@ interface EventBannerProps {
  * When no images are available:
  * - Shows a gradient placeholder with ticket icon
  */
+/**
+ * Escape a URL for safe use inside CSS url(...). Wraps in double quotes and escapes internal quotes.
+ */
+function cssUrl(url: string): string {
+  return `url("${url.replace(/"/g, '\\"')}")`;
+}
+
 export const EventBanner: FC<EventBannerProps> = ({
   variant,
   squareUrl,
@@ -87,7 +94,7 @@ export const EventBanner: FC<EventBannerProps> = ({
         <div
           className="absolute inset-0 scale-150"
           style={{
-            backgroundImage: `url(${squareUrl})`,
+            backgroundImage: cssUrl(squareUrl),
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'blur(20px)',

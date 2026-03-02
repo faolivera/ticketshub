@@ -304,7 +304,7 @@ export function EditEventModal({
       setBannerUploading(bannerType);
       setError(null);
       const response = await adminService.uploadEventBanner(event.id, bannerType, file);
-      setBannerUrls((prev) => ({ ...prev, [bannerType]: response.data.url }));
+      setBannerUrls((prev) => ({ ...prev, [bannerType]: response.url }));
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('createEvent.bannerUploadFailed'));

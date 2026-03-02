@@ -16,5 +16,18 @@ services:
       timeout: 5s
       retries: 5
 
+  localstack:
+    image: localstack/localstack
+    container_name: ticketshub-localstack
+    ports:
+      - "4567:4566"
+    environment:
+      SERVICES: s3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:

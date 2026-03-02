@@ -62,6 +62,25 @@ export class UsersService {
   ) {}
 
   /**
+   * Resolve image src to a signed URL when it points to public storage (/public/...).
+   * Otherwise returns the image unchanged (e.g. default /images/default/...).
+   */
+  private async resolveImageUrl(image: Image): Promise<Image> {
+    if (!image.src.startsWith('/public/')) {
+      return image;
+    }
+    const key = image.src.replace(/^\/public\//, '');
+    if (!this.publicStorageProvider.getSignedUrl) {
+      return image;
+    }
+    const signedUrl = await this.publicStorageProvider.getSignedUrl(
+      key,
+      3600,
+    );
+    return { ...image, src: signedUrl };
+  }
+
+  /**
    * Get user by ID (public info only)
    */
   async getPublicUserInfoByIds(
@@ -77,14 +96,19 @@ export class UsersService {
     const imagesMap = new Map<string, Image>(
       images.map((image) => [image.id, image]),
     );
-    return users.map((user) => ({
-      id: user.id,
-      publicName: user.publicName,
-      pic: imagesMap.get(user.imageId) || {
-        id: 'default',
-        src: '/images/default/default.png',
-      },
-    }));
+    const defaultPic: Image = {
+      id: 'default',
+      src: '/images/default/default.png',
+    };
+    return Promise.all(
+      users.map(async (user) => ({
+        id: user.id,
+        publicName: user.publicName,
+        pic: await this.resolveImageUrl(
+          imagesMap.get(user.imageId) || defaultPic,
+        ),
+      })),
+    );
   }
 
   /**
@@ -159,11 +183,12 @@ export class UsersService {
         src: '/images/default/default.png',
       };
     }
+    const resolvedPic = await this.resolveImageUrl(image);
 
     const { password: _password, imageId: _imageId, ...safeUser } = user;
     return {
       ...safeUser,
-      pic: image,
+      pic: resolvedPic,
     };
   }
 

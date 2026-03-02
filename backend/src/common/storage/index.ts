@@ -1,3 +1,4 @@
 export * from './file-storage-provider.interface';
-export * from './local-file-storage-provider';
+export * from './s3-file-storage-provider';
+export * from './storage-config';
 export * from './storage.module';

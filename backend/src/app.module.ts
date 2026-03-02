@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { TransactionManagerModule } from './common/database';
 import { DistributedLockModule } from './common/locks';
@@ -26,12 +24,6 @@ import { IdentityVerificationModule } from './modules/identity-verification/iden
 
 @Module({
   imports: [
-    // Static file serving for public files (event banners, etc.)
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'data', 'public'),
-      serveRoot: '/public',
-    }),
-
     // Scheduling support for cron jobs
     ScheduleModule.forRoot(),
 

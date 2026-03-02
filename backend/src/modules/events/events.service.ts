@@ -687,33 +687,35 @@ export class EventsService {
       images.map((image) => [image.id, image]),
     );
 
-    return events.map((event) => {
-      const result: EventWithDatesResponse = {
-        ...event,
-        images: this.resolveImages(event.imageIds || [], imagesMap),
-      };
+    return Promise.all(
+      events.map(async (event) => {
+        const result: EventWithDatesResponse = {
+          ...event,
+          images: this.resolveImages(event.imageIds || [], imagesMap),
+        };
 
-      if (event.banners) {
-        const bannerUrls: { square?: string; rectangle?: string } = {};
-        if (event.banners.square) {
-          bannerUrls.square = this.bannerStorage.getPublicUrl(
-            event.id,
-            event.banners.square.filename,
-          );
+        if (event.banners) {
+          const bannerUrls: { square?: string; rectangle?: string } = {};
+          if (event.banners.square) {
+            bannerUrls.square = await this.bannerStorage.getPublicUrlAsync(
+              event.id,
+              event.banners.square.filename,
+            );
+          }
+          if (event.banners.rectangle) {
+            bannerUrls.rectangle = await this.bannerStorage.getPublicUrlAsync(
+              event.id,
+              event.banners.rectangle.filename,
+            );
+          }
+          if (Object.keys(bannerUrls).length > 0) {
+            result.bannerUrls = bannerUrls;
+          }
         }
-        if (event.banners.rectangle) {
-          bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
-            event.id,
-            event.banners.rectangle.filename,
-          );
-        }
-        if (Object.keys(bannerUrls).length > 0) {
-          result.bannerUrls = bannerUrls;
-        }
-      }
 
-      return result;
-    });
+        return result;
+      }),
+    );
   }
 
   private resolveImages(
@@ -991,30 +993,32 @@ export class EventsService {
     const hasMore = events.length > limit;
     const resultEvents = hasMore ? events.slice(0, limit) : events;
 
-    const selectItems: EventSelectItem[] = resultEvents.map((event) => {
-      const item: EventSelectItem = {
-        id: event.id,
-        name: event.name,
-        venue: event.venue,
-        category: event.category,
-      };
+    const selectItems: EventSelectItem[] = await Promise.all(
+      resultEvents.map(async (event) => {
+        const item: EventSelectItem = {
+          id: event.id,
+          name: event.name,
+          venue: event.venue,
+          category: event.category,
+        };
 
-      if (event.banners?.square) {
-        item.squareBannerUrl = this.bannerStorage.getPublicUrl(
-          event.id,
-          event.banners.square.filename,
-        );
-      }
+        if (event.banners?.square) {
+          item.squareBannerUrl = await this.bannerStorage.getPublicUrlAsync(
+            event.id,
+            event.banners.square.filename,
+          );
+        }
 
-      if (event.banners?.rectangle) {
-        item.rectangleBannerUrl = this.bannerStorage.getPublicUrl(
-          event.id,
-          event.banners.rectangle.filename,
-        );
-      }
+        if (event.banners?.rectangle) {
+          item.rectangleBannerUrl = await this.bannerStorage.getPublicUrlAsync(
+            event.id,
+            event.banners.rectangle.filename,
+          );
+        }
 
-      return item;
-    });
+        return item;
+      }),
+    );
 
     return {
       events: selectItems,
@@ -1134,7 +1138,7 @@ export class EventsService {
       banners: updatedBanners,
     });
 
-    const url = this.bannerStorage.getPublicUrl(eventId, filename);
+    const url = await this.bannerStorage.getPublicUrlAsync(eventId, filename);
 
     this.logger.log(
       ctx,
@@ -1209,14 +1213,20 @@ export class EventsService {
 
     if (event.banners?.square) {
       response.square = {
-        url: this.bannerStorage.getPublicUrl(eventId, event.banners.square.filename),
+        url: await this.bannerStorage.getPublicUrlAsync(
+          eventId,
+          event.banners.square.filename,
+        ),
         banner: event.banners.square,
       };
     }
 
     if (event.banners?.rectangle) {
       response.rectangle = {
-        url: this.bannerStorage.getPublicUrl(eventId, event.banners.rectangle.filename),
+        url: await this.bannerStorage.getPublicUrlAsync(
+          eventId,
+          event.banners.rectangle.filename,
+        ),
         banner: event.banners.rectangle,
       };
     }
@@ -1227,9 +1237,11 @@ export class EventsService {
   /**
    * Internal method to add banner URLs to an event response.
    */
-  private addBannerUrlsToEvent(event: EventWithDates): EventWithDatesResponse & {
-    bannerUrls?: { square?: string; rectangle?: string };
-  } {
+  private async addBannerUrlsToEvent(event: EventWithDates): Promise<
+    EventWithDatesResponse & {
+      bannerUrls?: { square?: string; rectangle?: string };
+    }
+  > {
     const result: EventWithDatesResponse & {
       bannerUrls?: { square?: string; rectangle?: string };
     } = {
@@ -1240,13 +1252,13 @@ export class EventsService {
     if (event.banners) {
       const bannerUrls: { square?: string; rectangle?: string } = {};
       if (event.banners.square) {
-        bannerUrls.square = this.bannerStorage.getPublicUrl(
+        bannerUrls.square = await this.bannerStorage.getPublicUrlAsync(
           event.id,
           event.banners.square.filename,
         );
       }
       if (event.banners.rectangle) {
-        bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
+        bannerUrls.rectangle = await this.bannerStorage.getPublicUrlAsync(
           event.id,
           event.banners.rectangle.filename,
         );

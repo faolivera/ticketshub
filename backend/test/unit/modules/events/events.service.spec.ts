@@ -118,7 +118,7 @@ describe('EventsService', () => {
       delete: jest.fn(),
       deleteByFilename: jest.fn(),
       exists: jest.fn(),
-      getPublicUrl: jest.fn(),
+      getPublicUrlAsync: jest.fn(),
       scanExistingBanners: jest.fn(),
       readFile: jest.fn(),
     };
@@ -947,7 +947,7 @@ describe('EventsService', () => {
         },
       });
       bannerStorage.store.mockResolvedValue('square.png');
-      bannerStorage.getPublicUrl.mockReturnValue('/public/event-banners/evt_123/square.png');
+      bannerStorage.getPublicUrlAsync.mockResolvedValue('/public/event-banners/evt_123/square.png');
 
       // Mock sharp - we can't easily mock it in this test, so we'll skip this assertion
       // In a real scenario, you would use jest.mock for the sharp module
@@ -1109,7 +1109,7 @@ describe('EventsService', () => {
         updatedAt: new Date(),
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithBanner);
-      bannerStorage.getPublicUrl.mockReturnValue('/public/event-banners/evt_123/square.png');
+      bannerStorage.getPublicUrlAsync.mockResolvedValue('/public/event-banners/evt_123/square.png');
 
       const result = await service.getBanners(mockCtx, 'evt_123');
 
