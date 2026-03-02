@@ -351,7 +351,6 @@ describe('AdminService', () => {
       event: {
         id: 'evt_123',
         name: 'Updated Event',
-        description: 'Updated description',
         category: 'Concert',
         venue: 'Updated Venue',
         location: {
@@ -463,7 +462,6 @@ describe('AdminService', () => {
     const mockEvent: Event = {
       id: 'evt_123',
       name: 'Test Concert',
-      description: 'A test concert',
       category: EventCategory.Concert,
       venue: 'Test Venue',
       location: {
@@ -645,7 +643,6 @@ describe('AdminService', () => {
     const mockEventWithDates = {
       id: 'evt_123',
       name: 'Test Concert',
-      description: 'A test concert',
       category: EventCategory.Concert,
       venue: 'Test Venue',
       location: {

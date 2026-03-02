@@ -203,6 +203,24 @@ export class TicketsService {
       throw new ForbiddenException('Only sellers can create listings');
     }
 
+    // Validate required fields
+    if (!data.type) {
+      throw new BadRequestException('Ticket type is required');
+    }
+
+    const validTicketTypes = Object.values(TicketType);
+    if (!validTicketTypes.includes(data.type)) {
+      throw new BadRequestException('Invalid ticket type');
+    }
+
+    if (!data.eventDateId) {
+      throw new BadRequestException('Event date is required');
+    }
+
+    if (!data.eventSectionId) {
+      throw new BadRequestException('Event section is required');
+    }
+
     // Validate event exists
     const event = await this.eventsService.getEventById(ctx, data.eventId);
     if (!event) {

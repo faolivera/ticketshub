@@ -48,7 +48,6 @@ describe('EventsService', () => {
   const mockPendingEvent: Event = {
     id: 'evt_123',
     name: 'Test Event',
-    description: 'Test description',
     category: 'Concert' as any,
     venue: 'Test Venue',
     location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -147,7 +146,6 @@ describe('EventsService', () => {
     const mockApprovedEvent: Event = {
       id: 'evt_123',
       name: 'Test Event',
-      description: 'Test description',
       category: EventCategory.Concert,
       venue: 'Test Venue',
       location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -445,7 +443,6 @@ describe('EventsService', () => {
     const mockApprovedEvent: Event = {
       id: 'evt_123',
       name: 'Test Event',
-      description: 'Test description for event',
       category: EventCategory.Concert,
       venue: 'Test Venue',
       location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -865,7 +862,6 @@ describe('EventsService', () => {
     const mockEventWithoutBanners: Event = {
       id: 'evt_123',
       name: 'Test Event',
-      description: 'Test description',
       category: EventCategory.Concert,
       venue: 'Test Venue',
       location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -960,7 +956,6 @@ describe('EventsService', () => {
     const mockEventWithBanner: Event = {
       id: 'evt_123',
       name: 'Test Event',
-      description: 'Test description',
       category: EventCategory.Concert,
       venue: 'Test Venue',
       location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -1068,7 +1063,6 @@ describe('EventsService', () => {
       const eventWithoutBanners: Event = {
         id: 'evt_123',
         name: 'Test Event',
-        description: 'Test description',
         category: EventCategory.Concert,
         venue: 'Test Venue',
         location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -1102,7 +1096,6 @@ describe('EventsService', () => {
       const eventWithBanner: Event = {
         id: 'evt_123',
         name: 'Test Event',
-        description: 'Test description',
         category: EventCategory.Concert,
         venue: 'Test Venue',
         location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -1131,7 +1124,6 @@ describe('EventsService', () => {
       const eventWithoutBanner: Event = {
         id: 'evt_123',
         name: 'Test Event',
-        description: 'Test description',
         category: EventCategory.Concert,
         venue: 'Test Venue',
         location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -1152,7 +1144,6 @@ describe('EventsService', () => {
       const eventWithBanner: Event = {
         id: 'evt_123',
         name: 'Test Event',
-        description: 'Test description',
         category: EventCategory.Concert,
         venue: 'Test Venue',
         location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -1195,7 +1186,6 @@ describe('EventsService', () => {
       const eventWithoutBanner: Event = {
         id: 'evt_123',
         name: 'Test Event',
-        description: 'Test description',
         category: EventCategory.Concert,
         venue: 'Test Venue',
         location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },

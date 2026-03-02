@@ -28,7 +28,6 @@ export class EventsRepository implements IEventsRepository {
       data: {
         id: event.id,
         name: event.name,
-        description: event.description,
         category: this.mapEventCategoryToDb(event.category),
         venue: event.venue,
         location: event.location as object,
@@ -150,7 +149,6 @@ export class EventsRepository implements IEventsRepository {
       const data: Record<string, unknown> = {};
 
       if (updates.name !== undefined) data.name = updates.name;
-      if (updates.description !== undefined) data.description = updates.description;
       if (updates.category !== undefined) {
         data.category = this.mapEventCategoryToDb(updates.category);
       }
@@ -512,7 +510,6 @@ export class EventsRepository implements IEventsRepository {
     return {
       id: prismaEvent.id,
       name: prismaEvent.name,
-      description: prismaEvent.description,
       category: this.mapEventCategoryFromDb(prismaEvent.category),
       venue: prismaEvent.venue,
       location: prismaEvent.location as unknown as Address,

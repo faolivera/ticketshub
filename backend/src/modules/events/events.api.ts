@@ -16,7 +16,6 @@ import type {
  */
 export interface CreateEventRequest {
   name: string;
-  description: string;
   category: EventCategory;
   venue: string;
   location: Address;

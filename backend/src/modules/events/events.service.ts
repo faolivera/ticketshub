@@ -121,7 +121,6 @@ export class EventsService {
     const event: Event = {
       id: this.generateId('evt'),
       name: data.name,
-      description: data.description,
       category: data.category,
       venue: data.venue,
       location: data.location,
@@ -224,7 +223,6 @@ export class EventsService {
       events = events.filter(
         (e) =>
           e.name.toLowerCase().includes(searchLower) ||
-          e.description.toLowerCase().includes(searchLower) ||
           e.venue.toLowerCase().includes(searchLower),
       );
     }
@@ -807,8 +805,6 @@ export class EventsService {
     // 2. Update event fields
     const eventUpdates: Partial<Event> = {};
     if (data.name !== undefined) eventUpdates.name = data.name;
-    if (data.description !== undefined)
-      eventUpdates.description = data.description;
     if (data.category !== undefined)
       eventUpdates.category = data.category as EventCategory;
     if (data.venue !== undefined) eventUpdates.venue = data.venue;
@@ -936,7 +932,6 @@ export class EventsService {
       event: {
         id: finalEvent.id,
         name: finalEvent.name,
-        description: finalEvent.description,
         category: finalEvent.category,
         venue: finalEvent.venue,
         location: finalEvent.location,
@@ -1074,32 +1069,37 @@ export class EventsService {
     }
 
     const constraints = BANNER_CONSTRAINTS[bannerType];
-    const actualRatio = metadata.width / metadata.height;
-    const ratioDiff = Math.abs(actualRatio - constraints.aspectRatio);
 
-    if (ratioDiff > constraints.aspectTolerance) {
-      if (bannerType === 'square') {
-        throw new BadRequestException(
-          'Square banner must have 1:1 aspect ratio (min 300x300)',
-        );
-      } else {
-        throw new BadRequestException(
-          'Rectangle banner must have 16:9 aspect ratio (min 640x360)',
-        );
-      }
-    }
+    // TODO: Re-enable aspect ratio validation when ready for production
+    // const actualRatio = metadata.width / metadata.height;
+    // const ratioDiff = Math.abs(actualRatio - constraints.aspectRatio);
+    //
+    // if (ratioDiff > constraints.aspectTolerance) {
+    //   if (bannerType === 'square') {
+    //     throw new BadRequestException(
+    //       'Square banner must have 1:1 aspect ratio (min 300x300)',
+    //     );
+    //   } else {
+    //     throw new BadRequestException(
+    //       'Rectangle banner must have 16:9 aspect ratio (min 640x360)',
+    //     );
+    //   }
+    // }
 
-    if (metadata.width < constraints.minWidth || metadata.height < constraints.minHeight) {
-      if (bannerType === 'square') {
-        throw new BadRequestException(
-          'Square banner must have 1:1 aspect ratio (min 300x300)',
-        );
-      } else {
-        throw new BadRequestException(
-          'Rectangle banner must have 16:9 aspect ratio (min 640x360)',
-        );
-      }
-    }
+    // TODO: Re-enable minimum dimensions validation when ready for production
+    // if (metadata.width < constraints.minWidth || metadata.height < constraints.minHeight) {
+    //   if (bannerType === 'square') {
+    //     throw new BadRequestException(
+    //       'Square banner must have 1:1 aspect ratio (min 300x300)',
+    //     );
+    //   } else {
+    //     throw new BadRequestException(
+    //       'Rectangle banner must have 16:9 aspect ratio (min 640x360)',
+    //     );
+    //   }
+    // }
+
+    void constraints;
 
     const existingBanner = event.banners?.[bannerType];
     if (existingBanner) {

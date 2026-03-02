@@ -262,13 +262,15 @@ export class BffService {
     }
 
     let bankTransferConfig = null;
-    if (transaction.paymentMethodId?.includes('bank_transfer') && isBuyer) {
+    if (transaction.paymentMethodId && isBuyer) {
       try {
         const paymentMethod = await this.paymentMethodsService.findById(
           ctx,
           transaction.paymentMethodId,
         );
-        bankTransferConfig = paymentMethod?.bankTransferConfig ?? null;
+        if (paymentMethod?.type === 'manual_approval') {
+          bankTransferConfig = paymentMethod.bankTransferConfig ?? null;
+        }
       } catch {
         // Failed to load payment method config, buyer can still view transaction
       }

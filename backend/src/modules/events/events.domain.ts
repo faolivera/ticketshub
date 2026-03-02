@@ -48,7 +48,6 @@ export enum EventCategory {
 export interface Event {
   id: string;
   name: string;
-  description: string;
   category: EventCategory;
   venue: string;
   location: Address;

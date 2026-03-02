@@ -23,7 +23,6 @@ describe('EventsService - getEventsForSelection', () => {
   const createMockEvent = (overrides: Partial<Event> = {}): Event => ({
     id: `evt_${Math.random().toString(36).substr(2, 9)}`,
     name: 'Test Event',
-    description: 'Test description',
     category: EventCategory.Concert,
     venue: 'Test Venue',
     location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
@@ -291,7 +290,6 @@ describe('EventsService - getEventsForSelection', () => {
         name: 'Rock Concert',
         venue: 'Madison Square Garden',
         category: EventCategory.Concert,
-        description: 'This should not appear',
         imageIds: ['img_1', 'img_2'],
       });
 

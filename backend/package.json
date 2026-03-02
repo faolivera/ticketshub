@@ -19,7 +19,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "reset:sales": "ts-node scripts/reset-sales.ts",
-    "seed:terms": "ts-node scripts/seed-terms.ts"
+    "seed:terms": "ts-node scripts/seed-terms.ts",
+    "db:truncate": "ts-node scripts/truncate-tables.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

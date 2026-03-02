@@ -294,6 +294,70 @@ describe('TicketsService', () => {
         ),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('should throw BadRequestException when type is missing', async () => {
+      const requestWithoutType = {
+        ...baseCreateRequest,
+        type: undefined as unknown as TicketType,
+      };
+
+      await expect(
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          requestWithoutType,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when type is invalid', async () => {
+      const requestWithInvalidType = {
+        ...baseCreateRequest,
+        type: 'InvalidType' as TicketType,
+      };
+
+      await expect(
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          requestWithInvalidType,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when eventDateId is missing', async () => {
+      const requestWithoutDateId = {
+        ...baseCreateRequest,
+        eventDateId: undefined as unknown as string,
+      };
+
+      await expect(
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          requestWithoutDateId,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when eventSectionId is missing', async () => {
+      const requestWithoutSectionId = {
+        ...baseCreateRequest,
+        eventSectionId: undefined as unknown as string,
+      };
+
+      await expect(
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          requestWithoutSectionId,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('activatePendingListingsForEvent', () => {

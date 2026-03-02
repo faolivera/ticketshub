@@ -312,8 +312,6 @@ export class SupportSeedService {
   private getBadBunnyEventRequest(imageId: string): CreateEventRequest {
     return {
       name: 'BAD BUNNY',
-      description:
-        'Bad Bunny - DeBÍ TiRAR MáS FOToS World Tour. Estadio River Plate, Buenos Aires.',
       category: EventCategory.Concert,
       venue: 'Estadio River Plate',
       location: {

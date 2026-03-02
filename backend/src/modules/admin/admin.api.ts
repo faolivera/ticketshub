@@ -145,7 +145,6 @@ export interface AdminEventDateUpdate {
  */
 export interface AdminUpdateEventRequest {
   name?: string;
-  description?: string;
   category?: string;
   venue?: string;
   location?: AdminEventAddress;
@@ -161,7 +160,6 @@ export interface AdminUpdateEventResponse {
   event: {
     id: string;
     name: string;
-    description: string;
     category: string;
     venue: string;
     location: AdminEventAddress;
