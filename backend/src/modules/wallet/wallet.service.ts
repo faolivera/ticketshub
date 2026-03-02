@@ -2,6 +2,8 @@ import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import type { IWalletRepository } from './wallet.repository.interface';
 import { WALLET_REPOSITORY } from './wallet.repository.interface';
+import { TransactionManager } from '../../common/database';
+import { InsufficientFundsException } from '../../common/exceptions/insufficient-funds.exception';
 import type { Ctx } from '../../common/types/context';
 import type { Wallet, WalletTransaction, Money } from './wallet.domain';
 import { WalletTransactionType } from './wallet.domain';
@@ -12,6 +14,7 @@ export class WalletService {
   constructor(
     @Inject(WALLET_REPOSITORY)
     private readonly walletRepository: IWalletRepository,
+    private readonly txManager: TransactionManager,
   ) {}
 
   /**
@@ -22,7 +25,7 @@ export class WalletService {
   }
 
   /**
-   * Get or create wallet for user
+   * Get or create wallet for user (within transaction context)
    */
   async getOrCreateWallet(
     ctx: Ctx,
@@ -36,9 +39,10 @@ export class WalletService {
         userId,
         balance: { amount: 0, currency },
         pendingBalance: { amount: 0, currency },
+        version: 1,
         updatedAt: new Date(),
       };
-      await this.walletRepository.upsertWallet(ctx, wallet);
+      wallet = await this.walletRepository.upsertWallet(ctx, wallet);
     }
 
     return wallet;
@@ -53,6 +57,7 @@ export class WalletService {
 
   /**
    * Hold funds in escrow (when buyer pays)
+   * Atomically increments pending balance with transaction and optimistic locking
    */
   async holdFunds(
     ctx: Ctx,
@@ -61,21 +66,60 @@ export class WalletService {
     reference: string,
     description: string,
   ): Promise<WalletTransaction> {
-    const wallet = await this.getOrCreateWallet(ctx, sellerId, amount.currency);
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const wallet = await this.walletRepository.findByUserIdForUpdate(
+        txCtx,
+        sellerId,
+      );
 
-    // Add to pending balance
-    const newPending = wallet.pendingBalance.amount + amount.amount;
-    await this.walletRepository.updateBalances(
+      if (!wallet) {
+        // Create wallet if not exists
+        const newWallet: Wallet = {
+          userId: sellerId,
+          balance: { amount: 0, currency: amount.currency },
+          pendingBalance: { amount: 0, currency: amount.currency },
+          version: 1,
+          updatedAt: new Date(),
+        };
+        await this.walletRepository.upsertWallet(txCtx, newWallet);
+
+        // Re-fetch with lock to get accurate version
+        const createdWallet = await this.walletRepository.findByUserIdForUpdate(
+          txCtx,
+          sellerId,
+        );
+        return this.executeHoldFunds(
+          txCtx,
+          createdWallet!,
+          amount,
+          reference,
+          description,
+        );
+      }
+
+      return this.executeHoldFunds(txCtx, wallet, amount, reference, description);
+    });
+  }
+
+  private async executeHoldFunds(
+    ctx: Ctx,
+    wallet: Wallet,
+    amount: Money,
+    reference: string,
+    description: string,
+  ): Promise<WalletTransaction> {
+    // Update with version check (add to pending)
+    await this.walletRepository.updateBalancesWithVersion(
       ctx,
-      sellerId,
-      wallet.balance.amount,
-      newPending,
+      wallet.userId,
+      0, // balance change
+      amount.amount, // pending change (add to pending)
+      wallet.version,
     );
 
-    // Create transaction record
     const transaction: WalletTransaction = {
       id: this.generateId(),
-      walletUserId: sellerId,
+      walletUserId: wallet.userId,
       type: WalletTransactionType.Hold,
       amount,
       reference,
@@ -88,6 +132,7 @@ export class WalletService {
 
   /**
    * Release funds from escrow to balance (when transaction completes)
+   * Atomically moves funds from pending to available balance
    */
   async releaseFunds(
     ctx: Ctx,
@@ -96,26 +141,60 @@ export class WalletService {
     reference: string,
     description: string,
   ): Promise<WalletTransaction> {
-    const wallet = await this.getOrCreateWallet(ctx, sellerId, amount.currency);
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const wallet = await this.walletRepository.findByUserIdForUpdate(
+        txCtx,
+        sellerId,
+      );
 
+      if (!wallet) {
+        const newWallet = await this.createWalletWithLock(
+          txCtx,
+          sellerId,
+          amount.currency,
+        );
+        return this.executeReleaseFunds(
+          txCtx,
+          newWallet,
+          amount,
+          reference,
+          description,
+        );
+      }
+
+      return this.executeReleaseFunds(
+        txCtx,
+        wallet,
+        amount,
+        reference,
+        description,
+      );
+    });
+  }
+
+  private async executeReleaseFunds(
+    ctx: Ctx,
+    wallet: Wallet,
+    amount: Money,
+    reference: string,
+    description: string,
+  ): Promise<WalletTransaction> {
     if (wallet.pendingBalance.amount < amount.amount) {
       throw new BadRequestException('Insufficient pending balance');
     }
 
-    // Move from pending to available
-    const newPending = wallet.pendingBalance.amount - amount.amount;
-    const newBalance = wallet.balance.amount + amount.amount;
-    await this.walletRepository.updateBalances(
+    // Move from pending to available: balance += amount, pending -= amount
+    await this.walletRepository.updateBalancesWithVersion(
       ctx,
-      sellerId,
-      newBalance,
-      newPending,
+      wallet.userId,
+      amount.amount, // balance change (add to balance)
+      -amount.amount, // pending change (subtract from pending)
+      wallet.version,
     );
 
-    // Create transaction record
     const transaction: WalletTransaction = {
       id: this.generateId(),
-      walletUserId: sellerId,
+      walletUserId: wallet.userId,
       type: WalletTransactionType.Release,
       amount,
       reference,
@@ -128,6 +207,7 @@ export class WalletService {
 
   /**
    * Refund held funds (when transaction is cancelled/disputed)
+   * Atomically decrements pending balance
    */
   async refundHeldFunds(
     ctx: Ctx,
@@ -136,26 +216,61 @@ export class WalletService {
     reference: string,
     description: string,
   ): Promise<WalletTransaction> {
-    const wallet = await this.getOrCreateWallet(ctx, sellerId, amount.currency);
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const wallet = await this.walletRepository.findByUserIdForUpdate(
+        txCtx,
+        sellerId,
+      );
 
-    // Remove from pending balance (refund goes back to buyer via payment provider)
-    const newPending = Math.max(
-      0,
-      wallet.pendingBalance.amount - amount.amount,
-    );
-    await this.walletRepository.updateBalances(
+      if (!wallet) {
+        const newWallet = await this.createWalletWithLock(
+          txCtx,
+          sellerId,
+          amount.currency,
+        );
+        return this.executeRefundHeldFunds(
+          txCtx,
+          newWallet,
+          amount,
+          reference,
+          description,
+        );
+      }
+
+      return this.executeRefundHeldFunds(
+        txCtx,
+        wallet,
+        amount,
+        reference,
+        description,
+      );
+    });
+  }
+
+  private async executeRefundHeldFunds(
+    ctx: Ctx,
+    wallet: Wallet,
+    amount: Money,
+    reference: string,
+    description: string,
+  ): Promise<WalletTransaction> {
+    // Calculate actual amount to refund (cannot go below 0)
+    const actualRefund = Math.min(amount.amount, wallet.pendingBalance.amount);
+
+    // Remove from pending balance
+    await this.walletRepository.updateBalancesWithVersion(
       ctx,
-      sellerId,
-      wallet.balance.amount,
-      newPending,
+      wallet.userId,
+      0, // balance change
+      -actualRefund, // pending change (subtract from pending)
+      wallet.version,
     );
 
-    // Create transaction record
     const transaction: WalletTransaction = {
       id: this.generateId(),
-      walletUserId: sellerId,
+      walletUserId: wallet.userId,
       type: WalletTransactionType.Debit,
-      amount,
+      amount: { ...amount, amount: actualRefund },
       reference,
       description: `Refund: ${description}`,
       createdAt: new Date(),
@@ -166,6 +281,7 @@ export class WalletService {
 
   /**
    * Credit funds to wallet (e.g., manual adjustment, bonus)
+   * Atomically increments available balance
    */
   async creditFunds(
     ctx: Ctx,
@@ -174,19 +290,50 @@ export class WalletService {
     reference: string,
     description: string,
   ): Promise<WalletTransaction> {
-    const wallet = await this.getOrCreateWallet(ctx, userId, amount.currency);
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const wallet = await this.walletRepository.findByUserIdForUpdate(
+        txCtx,
+        userId,
+      );
 
-    const newBalance = wallet.balance.amount + amount.amount;
-    await this.walletRepository.updateBalances(
+      if (!wallet) {
+        const newWallet = await this.createWalletWithLock(
+          txCtx,
+          userId,
+          amount.currency,
+        );
+        return this.executeCreditFunds(
+          txCtx,
+          newWallet,
+          amount,
+          reference,
+          description,
+        );
+      }
+
+      return this.executeCreditFunds(txCtx, wallet, amount, reference, description);
+    });
+  }
+
+  private async executeCreditFunds(
+    ctx: Ctx,
+    wallet: Wallet,
+    amount: Money,
+    reference: string,
+    description: string,
+  ): Promise<WalletTransaction> {
+    // Add to balance
+    await this.walletRepository.updateBalancesWithVersion(
       ctx,
-      userId,
-      newBalance,
-      wallet.pendingBalance.amount,
+      wallet.userId,
+      amount.amount, // balance change (add to balance)
+      0, // pending change
+      wallet.version,
     );
 
     const transaction: WalletTransaction = {
       id: this.generateId(),
-      walletUserId: userId,
+      walletUserId: wallet.userId,
       type: WalletTransactionType.Credit,
       amount,
       reference,
@@ -199,6 +346,8 @@ export class WalletService {
 
   /**
    * Debit funds from wallet (e.g., withdrawal)
+   * Atomically decrements available balance with overdraw protection
+   * @throws InsufficientFundsException if balance is insufficient
    */
   async debitFunds(
     ctx: Ctx,
@@ -207,23 +356,54 @@ export class WalletService {
     reference: string,
     description: string,
   ): Promise<WalletTransaction> {
-    const wallet = await this.getOrCreateWallet(ctx, userId, amount.currency);
+    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const wallet = await this.walletRepository.findByUserIdForUpdate(
+        txCtx,
+        userId,
+      );
 
+      if (!wallet) {
+        const newWallet = await this.createWalletWithLock(
+          txCtx,
+          userId,
+          amount.currency,
+        );
+        return this.executeDebitFunds(
+          txCtx,
+          newWallet,
+          amount,
+          reference,
+          description,
+        );
+      }
+
+      return this.executeDebitFunds(txCtx, wallet, amount, reference, description);
+    });
+  }
+
+  private async executeDebitFunds(
+    ctx: Ctx,
+    wallet: Wallet,
+    amount: Money,
+    reference: string,
+    description: string,
+  ): Promise<WalletTransaction> {
     if (wallet.balance.amount < amount.amount) {
-      throw new BadRequestException('Insufficient balance');
+      throw new InsufficientFundsException(wallet.balance.amount, amount.amount);
     }
 
-    const newBalance = wallet.balance.amount - amount.amount;
-    await this.walletRepository.updateBalances(
+    // Subtract from balance
+    await this.walletRepository.updateBalancesWithVersion(
       ctx,
-      userId,
-      newBalance,
-      wallet.pendingBalance.amount,
+      wallet.userId,
+      -amount.amount, // balance change (subtract from balance)
+      0, // pending change
+      wallet.version,
     );
 
     const transaction: WalletTransaction = {
       id: this.generateId(),
-      walletUserId: userId,
+      walletUserId: wallet.userId,
       type: WalletTransactionType.Debit,
       amount,
       reference,
@@ -242,5 +422,30 @@ export class WalletService {
     userId: string,
   ): Promise<WalletTransaction[]> {
     return await this.walletRepository.getTransactionsByUserId(ctx, userId);
+  }
+
+  /**
+   * Helper to create a wallet and return it with lock
+   */
+  private async createWalletWithLock(
+    ctx: Ctx,
+    userId: string,
+    currency: CurrencyCode,
+  ): Promise<Wallet> {
+    const newWallet: Wallet = {
+      userId,
+      balance: { amount: 0, currency },
+      pendingBalance: { amount: 0, currency },
+      version: 1,
+      updatedAt: new Date(),
+    };
+    await this.walletRepository.upsertWallet(ctx, newWallet);
+
+    // Re-fetch with lock to get accurate version
+    const wallet = await this.walletRepository.findByUserIdForUpdate(
+      ctx,
+      userId,
+    );
+    return wallet!;
   }
 }

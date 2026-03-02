@@ -15,6 +15,7 @@ export interface Wallet {
   userId: string;
   balance: Money;
   pendingBalance: Money; // In escrow, waiting to be released
+  version: number; // Optimistic lock version
   updatedAt: Date;
 }
 

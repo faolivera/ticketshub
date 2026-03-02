@@ -384,7 +384,7 @@ model SchedulerLock {
 
 **Scope:** Wallet service con consistencia fuerte  
 **Riesgo:** ALTO (operaciones de dinero)  
-**Estado:** [ ] Pendiente
+**Estado:** [x] Completado (2026-03-02)
 
 #### Cambios
 

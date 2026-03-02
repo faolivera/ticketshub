@@ -13,12 +13,19 @@ export interface IWalletRepository {
   getByUserId(ctx: Ctx, userId: string): Promise<Wallet | undefined>;
 
   /**
+   * Get wallet by user ID with pessimistic lock (FOR UPDATE)
+   * Use this when you need to read and then modify the wallet atomically
+   */
+  findByUserIdForUpdate(ctx: Ctx, userId: string): Promise<Wallet | undefined>;
+
+  /**
    * Create or update wallet
    */
   upsertWallet(ctx: Ctx, wallet: Wallet): Promise<Wallet>;
 
   /**
    * Update wallet balances
+   * @deprecated Use updateBalancesWithVersion for safe concurrent updates
    */
   updateBalances(
     ctx: Ctx,
@@ -26,6 +33,18 @@ export interface IWalletRepository {
     balance: number,
     pendingBalance: number,
   ): Promise<Wallet | undefined>;
+
+  /**
+   * Atomically update balances with optimistic locking
+   * @throws OptimisticLockException if version mismatch
+   */
+  updateBalancesWithVersion(
+    ctx: Ctx,
+    userId: string,
+    balanceChange: number,
+    pendingChange: number,
+    expectedVersion: number,
+  ): Promise<Wallet>;
 
   // ==================== Transactions ====================
 
