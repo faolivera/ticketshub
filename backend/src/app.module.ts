@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { TransactionManagerModule } from './common/database';
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
 import { PlatformConfigModule } from './modules/config/config.module';
@@ -35,6 +36,7 @@ import { IdentityVerificationModule } from './modules/identity-verification/iden
 
     // Global modules (must be first)
     PrismaModule,
+    TransactionManagerModule,
     PlatformConfigModule,
     NotificationsModule,
     StorageModule,
