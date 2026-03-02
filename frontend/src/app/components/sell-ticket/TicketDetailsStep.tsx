@@ -224,7 +224,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
             ? {
                 line1: formData.pickupAddress,
                 city: '',
-                countryCode: 'US',
+                countryCode: 'AR',
               }
             : undefined,
         eventSectionId: formData.eventSectionId,

@@ -199,6 +199,13 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'rejectionReason',
     'transactionId',
   ],
+  [NotificationEventType.SELLER_PAYMENT_RECEIVED]: [
+    'eventName',
+    'amount',
+    'currency',
+    'amountFormatted',
+    'transactionId',
+  ],
   [NotificationEventType.TICKET_TRANSFERRED]: [
     'eventName',
     'eventDate',

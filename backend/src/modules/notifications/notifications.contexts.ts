@@ -52,6 +52,16 @@ export interface BuyerPaymentRejectedContext {
   rejectionReason?: string;
 }
 
+export interface SellerPaymentReceivedContext {
+  transactionId: string;
+  ticketId: string;
+  eventName: string;
+  amount: number;
+  currency: string;
+  sellerId: string;
+  buyerId: string;
+}
+
 export interface TicketTransferredContext {
   transactionId: string;
   ticketId: string;
@@ -172,6 +182,7 @@ export interface NotificationContextMap {
   [NotificationEventType.BUYER_PAYMENT_SUBMITTED]: BuyerPaymentSubmittedContext;
   [NotificationEventType.BUYER_PAYMENT_APPROVED]: BuyerPaymentApprovedContext;
   [NotificationEventType.BUYER_PAYMENT_REJECTED]: BuyerPaymentRejectedContext;
+  [NotificationEventType.SELLER_PAYMENT_RECEIVED]: SellerPaymentReceivedContext;
   [NotificationEventType.TICKET_TRANSFERRED]: TicketTransferredContext;
   [NotificationEventType.TRANSACTION_COMPLETED]: TransactionCompletedContext;
   [NotificationEventType.TRANSACTION_CANCELLED]: TransactionCancelledContext;

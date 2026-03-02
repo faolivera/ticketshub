@@ -5,6 +5,7 @@ import { PaymentRequiredProcessor } from './payment-required.processor';
 import { BuyerPaymentSubmittedProcessor } from './buyer-payment-submitted.processor';
 import { BuyerPaymentApprovedProcessor } from './buyer-payment-approved.processor';
 import { BuyerPaymentRejectedProcessor } from './buyer-payment-rejected.processor';
+import { SellerPaymentReceivedProcessor } from './seller-payment-received.processor';
 import { TicketTransferredProcessor } from './ticket-transferred.processor';
 import { TransactionCompletedProcessor } from './transaction-completed.processor';
 import { TransactionCancelledProcessor } from './transaction-cancelled.processor';
@@ -29,6 +30,7 @@ export class ProcessorRegistry {
     private readonly buyerPaymentSubmitted: BuyerPaymentSubmittedProcessor,
     private readonly buyerPaymentApproved: BuyerPaymentApprovedProcessor,
     private readonly buyerPaymentRejected: BuyerPaymentRejectedProcessor,
+    private readonly sellerPaymentReceived: SellerPaymentReceivedProcessor,
     private readonly ticketTransferred: TicketTransferredProcessor,
     private readonly transactionCompleted: TransactionCompletedProcessor,
     private readonly transactionCancelled: TransactionCancelledProcessor,
@@ -51,6 +53,7 @@ export class ProcessorRegistry {
       this.buyerPaymentSubmitted,
       this.buyerPaymentApproved,
       this.buyerPaymentRejected,
+      this.sellerPaymentReceived,
       this.ticketTransferred,
       this.transactionCompleted,
       this.transactionCancelled,

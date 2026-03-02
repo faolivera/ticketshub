@@ -205,7 +205,7 @@ function mapLocationToAddress(location: string): { line1: string; city: string; 
   return {
     line1: normalized,
     city,
-    countryCode: 'US',
+    countryCode: 'AR',
   };
 }
 

@@ -335,6 +335,18 @@ export class TransactionsService {
       })
       .catch((err) => this.logger.error(ctx, `Failed to emit BUYER_PAYMENT_APPROVED: ${err}`));
 
+    this.notificationsService
+      .emit(ctx, NotificationEventType.SELLER_PAYMENT_RECEIVED, {
+        transactionId: updated.id,
+        ticketId: listing.id,
+        eventName: listing.eventName,
+        amount: updated.sellerReceives.amount,
+        currency: updated.sellerReceives.currency,
+        sellerId: updated.sellerId,
+        buyerId: updated.buyerId,
+      })
+      .catch((err) => this.logger.error(ctx, `Failed to emit SELLER_PAYMENT_RECEIVED: ${err}`));
+
     this.logger.log(ctx, `Transaction ${transactionId} - payment received`);
     return updated;
   }
@@ -1069,6 +1081,21 @@ export class TransactionsService {
         ctx,
         `Transaction ${transactionId} - manual payment approved`,
       );
+
+      // Emit seller notification (payment available, transfer ticket)
+      const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
+      this.notificationsService
+        .emit(ctx, NotificationEventType.SELLER_PAYMENT_RECEIVED, {
+          transactionId: updated.id,
+          ticketId: listing.id,
+          eventName: listing.eventName,
+          amount: updated.sellerReceives.amount,
+          currency: updated.sellerReceives.currency,
+          sellerId: updated.sellerId,
+          buyerId: updated.buyerId,
+        })
+        .catch((err) => this.logger.error(ctx, `Failed to emit SELLER_PAYMENT_RECEIVED: ${err}`));
+
       return updated;
     } else {
       // Admin rejected - cancel the transaction (already atomic)

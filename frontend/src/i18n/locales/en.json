@@ -166,6 +166,8 @@
     "soldBy": "Sold by",
     "ticketsListed": "Tickets Listed",
     "activeListing": "Active",
+    "activeListings": "Active listings",
+    "pastListings": "Past listings",
     "pendingSale": "Pending Sale",
     "sold": "Sold",
     "noListingsYet": "No listings yet",

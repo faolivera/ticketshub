@@ -7,7 +7,8 @@ import { ErrorMessage } from '@/app/components/ErrorMessage';
 import { EmptyState } from '@/app/components/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '../../api/services/events.service';
-import type { EventWithDates, EventCategory } from '../../api/types';
+import type { EventWithDates } from '../../api/types';
+import { EventSectionStatus } from '../../api/types/events';
 
 /**
  * Transform API event data to EventCard props format
@@ -39,8 +40,17 @@ function transformEventForCard(event: EventWithDates) {
     labels.push('New Event');
   }
 
-  // Build location string
-  const locationStr = [event.location.city, event.location.countryCode].filter(Boolean).join(', ');
+  // Build location string (city + country name for display)
+  const locationStr = buildLocationString(event.location.city, event.location.countryCode);
+
+  // Unique approved section names (sectors with tickets available for purchase)
+  const ticketTypes = [
+    ...new Set(
+      event.sections
+        .filter(s => s.status === EventSectionStatus.Approved)
+        .map(s => s.name)
+    ),
+  ];
 
   return {
     id: event.id,
@@ -49,12 +59,31 @@ function transformEventForCard(event: EventWithDates) {
     location: locationStr,
     venue: event.venue,
     showTimes,
-    ticketTypes: ['General'], // Will be updated when we fetch listings
+    ticketTypes,
     labels,
     bannerUrls: event.bannerUrls,
     image: event.images?.[0]?.src,
     price: undefined, // Will be updated when we fetch listings
   };
+}
+
+/** Map ISO country code to display name (avoids showing raw "US" / "AR") */
+const COUNTRY_NAMES: Record<string, string> = {
+  AR: 'Argentina',
+  US: 'United States',
+  DE: 'Germany',
+  ES: 'Spain',
+  MX: 'Mexico',
+  CO: 'Colombia',
+  CL: 'Chile',
+  BR: 'Brazil',
+  UY: 'Uruguay',
+  PY: 'Paraguay',
+};
+
+function buildLocationString(city: string, countryCode: string): string {
+  const parts = [city?.trim(), countryCode ? (COUNTRY_NAMES[countryCode] ?? countryCode) : null].filter(Boolean);
+  return parts.length ? parts.join(', ') : '';
 }
 
 export function Landing() {

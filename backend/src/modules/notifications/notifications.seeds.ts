@@ -88,6 +88,7 @@ export class NotificationsSeeder implements OnModuleInit {
       { eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.BUYER_PAYMENT_APPROVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.BUYER_PAYMENT_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
+      { eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.TICKET_TRANSFERRED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.TRANSACTION_COMPLETED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.TRANSACTION_CANCELLED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
@@ -148,7 +149,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Pago pendiente',
         bodyTemplate: 'Tienes un pago pendiente de {{amountFormatted}} para "{{eventName}}"',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.PAYMENT_REQUIRED,
@@ -156,7 +157,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Pago pendiente para "{{eventName}}"',
         bodyTemplate: 'Hola, tienes un pago pendiente de {{amountFormatted}} para el ticket de "{{eventName}}" de {{sellerName}}. El pago expira el {{expiresAt}}. Por favor realiza el pago para completar tu compra.',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // BUYER_PAYMENT_SUBMITTED (notify admins; link to admin transactions)
@@ -184,7 +185,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Pago aprobado',
         bodyTemplate: '{{sellerName}} aprobó tu pago para "{{eventName}}"',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.BUYER_PAYMENT_APPROVED,
@@ -192,7 +193,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu pago para "{{eventName}}" fue aprobado',
         bodyTemplate: '¡Buenas noticias! {{sellerName}} ha aprobado tu pago para "{{eventName}}". El vendedor ahora transferirá el ticket a tu cuenta.',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // BUYER_PAYMENT_REJECTED
@@ -202,7 +203,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Pago rechazado',
         bodyTemplate: '{{sellerName}} rechazó tu pago para "{{eventName}}"',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.BUYER_PAYMENT_REJECTED,
@@ -210,7 +211,25 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu pago para "{{eventName}}" fue rechazado',
         bodyTemplate: 'Lamentablemente, {{sellerName}} ha rechazado tu pago para "{{eventName}}". Motivo: {{rejectionReason}}. Por favor contacta al vendedor o intenta nuevamente.',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
+      },
+
+      // SELLER_PAYMENT_RECEIVED
+      {
+        eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Pago disponible',
+        bodyTemplate: 'El pago de {{amountFormatted}} por "{{eventName}}" ya está disponible. Transferí la entrada al comprador.',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
+      },
+      {
+        eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Pago recibido - Transferí la entrada',
+        bodyTemplate: 'El pago de {{amountFormatted}} por tu entrada de "{{eventName}}" ya está disponible en escrow. Por favor transferí la entrada al comprador para completar la venta.',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // TICKET_TRANSFERRED
@@ -218,16 +237,16 @@ export class NotificationsSeeder implements OnModuleInit {
         eventType: NotificationEventType.TICKET_TRANSFERRED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
-        titleTemplate: '¡Ticket recibido!',
-        bodyTemplate: 'Has recibido tu ticket para "{{eventName}}"',
+        titleTemplate: '¡Entrada transferida!',
+        bodyTemplate: 'Has recibido tu entrada para "{{eventName}}". Por favor confirma que la recibiste para liberar el pago al vendedor.',
         actionUrlTemplate: '/my-tickets',
       },
       {
         eventType: NotificationEventType.TICKET_TRANSFERRED,
         channel: NotificationChannel.EMAIL,
         locale: 'es',
-        titleTemplate: '¡Tu ticket para "{{eventName}}" está listo!',
-        bodyTemplate: '¡Felicidades! Has recibido tu ticket para "{{eventName}}" el {{eventDate}} en {{venue}}. Ya puedes ver tu ticket en la sección Mis Tickets.',
+        titleTemplate: '¡Tu entrada para "{{eventName}}" está listo!',
+        bodyTemplate: '¡Felicidades! Has recibido tu entrada para "{{eventName}}" el {{eventDate}} en {{venue}}. Por favor confirma que la recibiste en la app para liberar el pago al vendedor.',
         actionUrlTemplate: '/my-tickets',
       },
 
@@ -238,7 +257,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Venta completada',
         bodyTemplate: 'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amountFormatted}}',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.TRANSACTION_COMPLETED,
@@ -256,7 +275,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Transacción cancelada',
         bodyTemplate: 'La transacción de "{{eventName}}" fue cancelada',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.TRANSACTION_CANCELLED,
@@ -264,7 +283,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Transacción cancelada - "{{eventName}}"',
         bodyTemplate: 'La transacción de "{{eventName}}" fue cancelada por {{cancelledBy}}. Motivo: {{reason}}',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // TRANSACTION_EXPIRED
@@ -274,7 +293,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Transacción expirada',
         bodyTemplate: 'La transacción de "{{eventName}}" ha expirado',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.TRANSACTION_EXPIRED,
@@ -282,7 +301,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Transacción expirada - "{{eventName}}"',
         bodyTemplate: 'La transacción de "{{eventName}}" ha expirado debido a que no se completó el pago a tiempo.',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // DISPUTE_OPENED
@@ -292,7 +311,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Nueva disputa abierta',
         bodyTemplate: 'Se ha abierto una disputa para "{{eventName}}"',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.DISPUTE_OPENED,
@@ -300,7 +319,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Disputa abierta - "{{eventName}}"',
         bodyTemplate: 'Se ha abierto una disputa para la transacción de "{{eventName}}" por el {{openedBy}}. Motivo: {{reason}}. Nuestro equipo revisará el caso.',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // DISPUTE_RESOLVED
@@ -310,7 +329,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Disputa resuelta',
         bodyTemplate: 'La disputa de "{{eventName}}" ha sido resuelta',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.DISPUTE_RESOLVED,
@@ -318,7 +337,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Disputa resuelta - "{{eventName}}"',
         bodyTemplate: 'La disputa de "{{eventName}}" ha sido resuelta a favor del {{resolvedInFavorOf}}. Resolución: {{resolution}}',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // IDENTITY_VERIFIED

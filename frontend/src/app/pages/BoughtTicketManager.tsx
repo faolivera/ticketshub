@@ -362,12 +362,13 @@ function TransactionSections({ groupedTransactions, activeTab, userId, t }: Tran
 
 interface ListedTicketsGridProps {
   listed: TicketListingWithEvent[];
+  isPast?: boolean;
   t: (key: string, options?: Record<string, string>) => string;
   onCopyLink: (listingId: string) => void;
   copiedListingId: string | null;
 }
 
-function ListedTicketsGrid({ listed, t, onCopyLink, copiedListingId }: ListedTicketsGridProps) {
+function ListedTicketsGrid({ listed, isPast = false, t, onCopyLink, copiedListingId }: ListedTicketsGridProps) {
   const bannerVariant = useEventBannerVariant();
 
   return (
@@ -384,7 +385,11 @@ function ListedTicketsGrid({ listed, t, onCopyLink, copiedListingId }: ListedTic
         return (
           <div
             key={listing.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+            className={`bg-white rounded-lg shadow-md overflow-hidden transition-shadow ${
+              isPast
+                ? 'opacity-80 grayscale-[0.4] hover:opacity-90 hover:grayscale-[0.2] hover:shadow-md'
+                : 'hover:shadow-lg'
+            }`}
           >
             {/* Event Image */}
             <div className="relative h-48">
@@ -543,6 +548,12 @@ export function BoughtTicketManager() {
     return { pendingMyAction, pendingOtherAction, completed };
   }, [bought, sold, activeTab, user?.id]);
 
+  const { activeListings, pastListings } = useMemo(() => {
+    const active = listed.filter((l) => l.status === 'Active');
+    const past = listed.filter((l) => l.status !== 'Active');
+    return { activeListings: active, pastListings: past };
+  }, [listed]);
+
   const handleCopyLink = async (listingId: string) => {
     const url = `${window.location.origin}/buy/${listingId}`;
     try {
@@ -632,9 +643,33 @@ export function BoughtTicketManager() {
         {!isLoading && !error && (
           <>
             {activeTab === 'listed' ? (
-              // Listed Tickets View
+              // Listed Tickets View – active first, then past
               listed.length > 0 ? (
-                <ListedTicketsGrid listed={listed} t={t} onCopyLink={handleCopyLink} copiedListingId={copiedListingId} />
+                <div className="space-y-10">
+                  {activeListings.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold text-gray-900">{t('boughtTickets.activeListings')}</h2>
+                      <ListedTicketsGrid
+                        listed={activeListings}
+                        t={t}
+                        onCopyLink={handleCopyLink}
+                        copiedListingId={copiedListingId}
+                      />
+                    </div>
+                  )}
+                  {pastListings.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold text-gray-700">{t('boughtTickets.pastListings')}</h2>
+                      <ListedTicketsGrid
+                        listed={pastListings}
+                        isPast
+                        t={t}
+                        onCopyLink={handleCopyLink}
+                        copiedListingId={copiedListingId}
+                      />
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="bg-white rounded-lg shadow-md p-12">
                   <EmptyState
