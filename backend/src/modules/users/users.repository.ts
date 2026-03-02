@@ -81,6 +81,13 @@ export class UsersRepository implements IUsersRepository {
     return users.map((u) => this.mapToUser(u));
   }
 
+  async getAdmins(_ctx: Ctx): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      where: { role: 'Admin' },
+    });
+    return users.map((u) => this.mapToUser(u));
+  }
+
   async add(_ctx: Ctx, userData: CreateUserData): Promise<User> {
     const user = await this.prisma.user.create({
       data: {

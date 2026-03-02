@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
+import { formatMoney } from '../../../common/format-money';
 import type { NotificationRecipient } from '../notifications.domain';
 import { NotificationEventType } from '../notifications.domain';
 import type { PaymentRequiredContext } from '../notifications.contexts';
@@ -28,6 +29,7 @@ export class PaymentRequiredProcessor
       eventName: context.eventName,
       amount: String(context.amount),
       currency: context.currency,
+      amountFormatted: formatMoney(context.amount, context.currency),
       expiresAt: context.expiresAt,
       transactionId: context.transactionId,
     };

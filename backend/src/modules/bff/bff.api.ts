@@ -69,4 +69,6 @@ export interface GetTransactionDetailsResponse {
   bankTransferConfig: BankTransferConfig | null;
   /** Ticket units in this transaction (with seat info when numbered) */
   ticketUnits: TransactionTicketUnit[];
+  /** Public display name of the payment method (e.g. "Transferencia Bancaria") */
+  paymentMethodPublicName: string | null;
 }

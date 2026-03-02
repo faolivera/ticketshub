@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
+import { formatMoney } from '../../../common/format-money';
 import type { NotificationRecipient } from '../notifications.domain';
 import { NotificationEventType } from '../notifications.domain';
 import type { BuyerPaymentSubmittedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
+import { UsersService } from '../../users/users.service';
 
 @Injectable()
 export class BuyerPaymentSubmittedProcessor
@@ -11,12 +13,15 @@ export class BuyerPaymentSubmittedProcessor
 {
   readonly eventType = NotificationEventType.BUYER_PAYMENT_SUBMITTED;
 
+  constructor(private readonly usersService: UsersService) {}
+
   async getRecipients(
     ctx: Ctx,
-    context: BuyerPaymentSubmittedContext,
+    _context: BuyerPaymentSubmittedContext,
   ): Promise<NotificationRecipient[]> {
-    // Only the seller receives this notification
-    return [{ userId: context.sellerId }];
+    // All admins receive this notification (payment confirmation to review)
+    const adminIds = await this.usersService.getAdminUserIds(ctx);
+    return adminIds.map((userId) => ({ userId }));
   }
 
   getTemplateVariables(
@@ -28,6 +33,7 @@ export class BuyerPaymentSubmittedProcessor
       eventName: context.eventName,
       amount: String(context.amount),
       currency: context.currency,
+      amountFormatted: formatMoney(context.amount, context.currency),
       transactionId: context.transactionId,
     };
   }

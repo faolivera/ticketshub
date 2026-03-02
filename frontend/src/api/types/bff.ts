@@ -30,4 +30,6 @@ export interface GetTransactionDetailsResponse {
   reviews: TransactionReviewsData | null;
   bankTransferConfig: BankTransferConfig | null;
   ticketUnits: TransactionTicketUnit[];
+  /** Public display name of the payment method (e.g. "Transferencia Bancaria") */
+  paymentMethodPublicName: string | null;
 }

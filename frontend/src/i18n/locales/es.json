@@ -453,6 +453,8 @@
     "seller": "Vendedor",
     "paymentInfo": "Información de Pago",
     "ticketPrice": "Precio de Entrada",
+    "ticketPriceTotal": "Precio por entradas",
+    "pricePerUnitDetail": "{{price}} por unidad × {{quantity}}",
     "buyerPlatformFee": "Comisión de Plataforma",
     "paymentMethodCommission": "Comisión del Método de Pago",
     "sellerPlatformFee": "Comisión de Plataforma",

@@ -63,6 +63,11 @@ export interface IUsersRepository {
   getSellers(ctx: Ctx): Promise<User[]>;
 
   /**
+   * Get all admin users (users with Admin role)
+   */
+  getAdmins(ctx: Ctx): Promise<User[]>;
+
+  /**
    * Add a new user
    */
   add(ctx: Ctx, user: CreateUserData): Promise<User>;

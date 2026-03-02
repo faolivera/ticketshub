@@ -117,6 +117,7 @@ describe('BffService', () => {
 
     const mockPaymentMethodsService = {
       getPublicPaymentMethods: jest.fn(),
+      findById: jest.fn().mockResolvedValue({ publicName: 'Test Method', type: 'payment_gateway', bankTransferConfig: null }),
     };
 
     const mockPricingService = {

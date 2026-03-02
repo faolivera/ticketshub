@@ -262,17 +262,19 @@ export class BffService {
     }
 
     let bankTransferConfig = null;
-    if (transaction.paymentMethodId && isBuyer) {
+    let paymentMethodPublicName: string | null = null;
+    if (transaction.paymentMethodId) {
       try {
         const paymentMethod = await this.paymentMethodsService.findById(
           ctx,
           transaction.paymentMethodId,
         );
-        if (paymentMethod?.type === 'manual_approval') {
+        paymentMethodPublicName = paymentMethod?.publicName ?? null;
+        if (isBuyer && paymentMethod?.type === 'manual_approval') {
           bankTransferConfig = paymentMethod.bankTransferConfig ?? null;
         }
       } catch {
-        // Failed to load payment method config, buyer can still view transaction
+        // Failed to load payment method; buyer/seller can still view transaction
       }
     }
 
@@ -299,6 +301,7 @@ export class BffService {
       reviews,
       bankTransferConfig,
       ticketUnits,
+      paymentMethodPublicName,
     };
   }
 }

@@ -136,6 +136,14 @@ export class UsersService {
   }
 
   /**
+   * Get IDs of all admin users (for notifications that target admins)
+   */
+  async getAdminUserIds(ctx: Ctx): Promise<string[]> {
+    const admins = await this.usersRepository.getAdmins(ctx);
+    return admins.map((u) => u.id);
+  }
+
+  /**
    * Add a new user
    */
   async add(

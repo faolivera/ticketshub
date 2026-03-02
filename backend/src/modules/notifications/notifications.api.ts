@@ -176,6 +176,7 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'eventName',
     'amount',
     'currency',
+    'amountFormatted',
     'expiresAt',
     'transactionId',
   ],
@@ -184,6 +185,7 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'eventName',
     'amount',
     'currency',
+    'amountFormatted',
     'transactionId',
   ],
   [NotificationEventType.BUYER_PAYMENT_APPROVED]: [
@@ -207,6 +209,7 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'eventName',
     'amount',
     'currency',
+    'amountFormatted',
     'transactionId',
   ],
   [NotificationEventType.TRANSACTION_CANCELLED]: [

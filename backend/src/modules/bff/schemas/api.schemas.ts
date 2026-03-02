@@ -265,4 +265,5 @@ export const GetTransactionDetailsResponseSchema = z.object({
   reviews: TransactionReviewsDataSchema.nullable(),
   bankTransferConfig: BankTransferConfigSchema.nullable(),
   ticketUnits: z.array(TransactionTicketUnitSchema),
+  paymentMethodPublicName: z.string().nullable(),
 });

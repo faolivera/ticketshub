@@ -469,6 +469,8 @@
     "seller": "Seller",
     "paymentInfo": "Payment Information",
     "ticketPrice": "Ticket Price",
+    "ticketPriceTotal": "Price for tickets",
+    "pricePerUnitDetail": "{{price}} per unit × {{quantity}}",
     "buyerPlatformFee": "Platform Fee",
     "paymentMethodCommission": "Payment Method Commission",
     "sellerPlatformFee": "Platform Fee",

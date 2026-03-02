@@ -36,6 +36,42 @@ export class NotificationsSeeder implements OnModuleInit {
     await this.seedTemplates(ON_APP_INIT_CTX);
   }
 
+  /**
+   * Sync existing templates with default content (title, body, actionUrl).
+   * Call from a script to apply template changes without deleting data.
+   */
+  async syncTemplates(ctx: Ctx): Promise<{ updated: number; created: number }> {
+    const defaults = this.getDefaultTemplates();
+    let updated = 0;
+    let created = 0;
+    for (const template of defaults) {
+      const existing = await this.repository.findTemplate(
+        ctx,
+        template.eventType,
+        template.channel,
+        template.locale,
+      );
+      if (existing) {
+        await this.repository.updateTemplate(ctx, existing.id, {
+          titleTemplate: template.titleTemplate,
+          bodyTemplate: template.bodyTemplate,
+          actionUrlTemplate: template.actionUrlTemplate,
+        });
+        updated++;
+      } else {
+        await this.repository.createTemplate(ctx, {
+          ...template,
+          id: generateNotificationTemplateId(),
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        created++;
+      }
+    }
+    return { updated, created };
+  }
+
   private async seedChannelConfigs(ctx: Ctx): Promise<void> {
     const existing = await this.repository.findAllChannelConfigs(ctx);
     const existingEventTypes = new Set(existing.map(c => c.eventType));
@@ -111,7 +147,7 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Pago pendiente',
-        bodyTemplate: 'Tienes un pago pendiente de {{amount}} {{currency}} para "{{eventName}}"',
+        bodyTemplate: 'Tienes un pago pendiente de {{amountFormatted}} para "{{eventName}}"',
         actionUrlTemplate: '/transactions/{{transactionId}}',
       },
       {
@@ -119,26 +155,26 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Pago pendiente para "{{eventName}}"',
-        bodyTemplate: 'Hola, tienes un pago pendiente de {{amount}} {{currency}} para el ticket de "{{eventName}}" de {{sellerName}}. El pago expira el {{expiresAt}}. Por favor realiza el pago para completar tu compra.',
+        bodyTemplate: 'Hola, tienes un pago pendiente de {{amountFormatted}} para el ticket de "{{eventName}}" de {{sellerName}}. El pago expira el {{expiresAt}}. Por favor realiza el pago para completar tu compra.',
         actionUrlTemplate: '/transactions/{{transactionId}}',
       },
 
-      // BUYER_PAYMENT_SUBMITTED
+      // BUYER_PAYMENT_SUBMITTED (notify admins; link to admin transactions)
       {
         eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Nuevo pago recibido',
         bodyTemplate: '{{buyerName}} envió un comprobante de pago para "{{eventName}}"',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        actionUrlTemplate: '/admin/transactions',
       },
       {
         eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Pago recibido para "{{eventName}}"',
-        bodyTemplate: '{{buyerName}} ha enviado un comprobante de pago de {{amount}} {{currency}} para tu ticket de "{{eventName}}". Por favor revisa y confirma el pago.',
-        actionUrlTemplate: '/transactions/{{transactionId}}',
+        bodyTemplate: '{{buyerName}} ha enviado un comprobante de pago de {{amountFormatted}} para tu ticket de "{{eventName}}". Por favor revisa y confirma el pago.',
+        actionUrlTemplate: '/admin/transactions',
       },
 
       // BUYER_PAYMENT_APPROVED
@@ -201,7 +237,7 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Venta completada',
-        bodyTemplate: 'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amount}} {{currency}}',
+        bodyTemplate: 'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amountFormatted}}',
         actionUrlTemplate: '/transactions/{{transactionId}}',
       },
       {
@@ -209,7 +245,7 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Venta completada - Fondos liberados',
-        bodyTemplate: '¡Tu venta de "{{eventName}}" se ha completado exitosamente! Se han liberado {{amount}} {{currency}} a tu wallet.',
+        bodyTemplate: '¡Tu venta de "{{eventName}}" se ha completado exitosamente! Se han liberado {{amountFormatted}} a tu wallet.',
         actionUrlTemplate: '/wallet',
       },
 
