@@ -60,6 +60,17 @@ export interface MarkAllAsReadResponse {
   markedCount: number;
 }
 
+/**
+ * PATCH /notifications/read-batch
+ */
+export interface MarkAsReadBatchRequest {
+  notificationIds: string[];
+}
+
+export interface MarkAsReadBatchResponse {
+  markedCount: number;
+}
+
 // ============================================================================
 // ADMIN ENDPOINTS - TEMPLATES
 // ============================================================================
@@ -249,5 +260,20 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'rating',
     'comment',
     'transactionId',
+  ],
+  [NotificationEventType.OFFER_ACCEPTED]: [
+    'offerId',
+    'listingId',
+    'eventName',
+    'offeredAmount',
+    'currency',
+    'amountFormatted',
+  ],
+  [NotificationEventType.OFFER_REJECTED]: ['offerId', 'listingId', 'eventName'],
+  [NotificationEventType.OFFER_CANCELLED]: [
+    'offerId',
+    'listingId',
+    'eventName',
+    'reason',
   ],
 };

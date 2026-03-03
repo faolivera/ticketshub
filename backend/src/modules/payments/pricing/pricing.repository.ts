@@ -6,9 +6,7 @@ import type { PricingSnapshot as PrismaPricingSnapshot } from '@prisma/client';
 import type { Ctx } from '../../../common/types/context';
 import type {
   PricingSnapshot,
-  PricingModelType,
   PaymentMethodCommissionSnapshot,
-  BestOfferConfig,
 } from './pricing.domain';
 import type { Money } from '../payments.domain';
 import type { IPricingRepository } from './pricing.repository.interface';
@@ -30,10 +28,6 @@ export class PricingRepository extends BaseRepository implements IPricingReposit
         sellerPlatformFeePercentage: snapshot.sellerPlatformFeePercentage,
         paymentMethodCommissions:
           snapshot.paymentMethodCommissions as unknown as Prisma.InputJsonValue,
-        pricingModel: snapshot.pricingModel,
-        bestOfferConfig: snapshot.bestOfferConfig
-          ? (snapshot.bestOfferConfig as unknown as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
         expiresAt: snapshot.expiresAt,
         consumedAt: snapshot.consumedAt ?? null,
         consumedByTransactionId: snapshot.consumedByTransactionId ?? null,
@@ -80,14 +74,6 @@ export class PricingRepository extends BaseRepository implements IPricingReposit
     if (updates.paymentMethodCommissions !== undefined) {
       data.paymentMethodCommissions =
         updates.paymentMethodCommissions as unknown as Prisma.InputJsonValue;
-    }
-    if (updates.pricingModel !== undefined) {
-      data.pricingModel = updates.pricingModel;
-    }
-    if ('bestOfferConfig' in updates) {
-      data.bestOfferConfig = updates.bestOfferConfig
-        ? (updates.bestOfferConfig as unknown as Prisma.InputJsonValue)
-        : Prisma.JsonNull;
     }
     if (updates.expiresAt !== undefined) {
       data.expiresAt = updates.expiresAt;
@@ -164,10 +150,6 @@ export class PricingRepository extends BaseRepository implements IPricingReposit
       sellerPlatformFeePercentage: prisma.sellerPlatformFeePercentage,
       paymentMethodCommissions:
         prisma.paymentMethodCommissions as unknown as PaymentMethodCommissionSnapshot[],
-      pricingModel: prisma.pricingModel as PricingModelType,
-      bestOfferConfig: prisma.bestOfferConfig
-        ? (prisma.bestOfferConfig as unknown as BestOfferConfig)
-        : undefined,
       createdAt: prisma.createdAt,
       expiresAt: prisma.expiresAt,
       consumedAt: prisma.consumedAt ?? undefined,

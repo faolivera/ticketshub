@@ -18,6 +18,7 @@ import { TransactionStatus } from '../transactions/transactions.domain';
 import { UserLevel, Role } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
 import type {
+  BffTransactionWithDetails,
   GetMyTicketsData,
   GetTransactionDetailsResponse,
   TransactionReviewsData,
@@ -192,14 +193,15 @@ export class BffService {
     const pricingSnapshot: BuyPagePricingSnapshot = {
       id: snapshot.id,
       expiresAt: snapshot.expiresAt,
-      buyerPlatformFeePercentage: snapshot.buyerPlatformFeePercentage,
     };
 
     const buyPagePaymentMethods: BuyPagePaymentMethodOption[] = paymentMethods.map(
       (pm) => ({
         id: pm.id,
         name: pm.name,
-        buyerCommissionPercent: pm.buyerCommissionPercent,
+        serviceFeePercent:
+          snapshot.buyerPlatformFeePercentage +
+          (pm.buyerCommissionPercent ?? 0),
       }),
     );
 
@@ -213,15 +215,18 @@ export class BffService {
 
   /**
    * Get current user's tickets: bought, sold, and listed.
+   * Transactions use BFF view with servicePrice (no buyer commission breakdown).
    */
   async getMyTickets(ctx: Ctx, userId: string): Promise<GetMyTicketsData> {
-    const [bought, sold, listed] = await Promise.all([
+    const [boughtRaw, soldRaw, listed] = await Promise.all([
       this.transactionsService.listTransactions(ctx, userId, { role: 'buyer' }),
       this.transactionsService.listTransactions(ctx, userId, {
         role: 'seller',
       }),
       this.ticketsService.getMyListings(ctx, userId),
     ]);
+    const bought = boughtRaw.map((tx) => this.toBffTransaction(tx));
+    const sold = soldRaw.map((tx) => this.toBffTransaction(tx));
     return { bought, sold, listed };
   }
 
@@ -318,13 +323,30 @@ export class BffService {
       console.warn('getTransactionDetails: listing not found or gone', error);
     }
 
+    const bffTransaction: BffTransactionWithDetails = this.toBffTransaction(transaction);
+
     return {
-      transaction,
+      transaction: bffTransaction,
       paymentConfirmation,
       reviews,
       bankTransferConfig,
       ticketUnits,
       paymentMethodPublicName,
     };
+  }
+
+  /**
+   * Map full transaction to BFF view: single servicePrice (buyer platform + payment method commission).
+   * Backend keeps full breakdown; frontend receives one combined value.
+   */
+  private toBffTransaction(
+    tx: Awaited<ReturnType<TransactionsService['getTransactionById']>>,
+  ): BffTransactionWithDetails {
+    const { buyerPlatformFee, paymentMethodCommission, ...rest } = tx;
+    const servicePrice = {
+      amount: buyerPlatformFee.amount + paymentMethodCommission.amount,
+      currency: buyerPlatformFee.currency,
+    };
+    return { ...rest, servicePrice } as BffTransactionWithDetails;
   }
 }

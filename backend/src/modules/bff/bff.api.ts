@@ -3,15 +3,28 @@ import type { TransactionWithDetails } from '../transactions/transactions.domain
 import type { PaymentConfirmation } from '../payment-confirmations/payment-confirmations.domain';
 import type { Review } from '../reviews/reviews.domain';
 import type { BankTransferConfig } from '../payments/payments.domain';
+import type { Money } from '../transactions/transactions.domain';
 import type {
   SellerProfile,
   ListingWithSeller,
   BuyPageData,
 } from './bff.domain';
 
+/**
+ * Transaction view for buyer-facing BFF: single "service price" (platform + payment method commission).
+ * Backend keeps full breakdown internally; this shape hides it from the frontend.
+ */
+export type BffTransactionWithDetails = Omit<
+  TransactionWithDetails,
+  'buyerPlatformFee' | 'paymentMethodCommission'
+> & {
+  /** Combined buyer fee: buyerPlatformFee + paymentMethodCommission (single line for buyer UI) */
+  servicePrice: Money;
+};
+
 export interface GetMyTicketsData {
-  bought: TransactionWithDetails[];
-  sold: TransactionWithDetails[];
+  bought: BffTransactionWithDetails[];
+  sold: BffTransactionWithDetails[];
   listed: TicketListingWithEvent[];
 }
 
@@ -73,10 +86,11 @@ export interface GetSellTicketConfigResponse {
 }
 
 /**
- * Get transaction details response (aggregated data for transaction page)
+ * Get transaction details response (aggregated data for transaction page).
+ * Transaction uses BFF view with servicePrice (no buyer commission breakdown).
  */
 export interface GetTransactionDetailsResponse {
-  transaction: TransactionWithDetails;
+  transaction: BffTransactionWithDetails;
   paymentConfirmation: PaymentConfirmation | null;
   reviews: TransactionReviewsData | null;
   bankTransferConfig: BankTransferConfig | null;

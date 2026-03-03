@@ -998,6 +998,21 @@ describe('AdminService', () => {
       pricePerTicket: { amount: 5000, currency: 'USD' },
     };
 
+    const mockPaymentMethod = {
+      id: 'bank_transfer',
+      name: 'Bank Transfer',
+      publicName: 'Transferencia Bancaria',
+      type: 'manual_approval' as const,
+      status: 'enabled' as const,
+      buyerCommissionPercent: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    beforeEach(() => {
+      paymentMethodsService.findById.mockResolvedValue(mockPaymentMethod as any);
+    });
+
     it('should return transaction detail with enriched data', async () => {
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
@@ -1050,7 +1065,7 @@ describe('AdminService', () => {
       expect(result.paymentConfirmations[0].originalFilename).toBe('receipt.png');
     });
 
-    it('should include paymentMethodId when present on transaction', async () => {
+    it('should include paymentMethodId and paymentMethod (type, name) when present on transaction', async () => {
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
         .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
@@ -1061,6 +1076,11 @@ describe('AdminService', () => {
       const result = await service.getTransactionById(mockCtx, 'txn_123');
 
       expect(result.paymentMethodId).toBe('bank_transfer');
+      expect(result.paymentMethod).toEqual({
+        id: 'bank_transfer',
+        type: 'manual_approval',
+        name: 'Transferencia Bancaria',
+      });
     });
 
     it('should include full price breakdown (ticketPrice, buyerPlatformFee, sellerPlatformFee, totalPaid, sellerReceives)', async () => {
@@ -1131,11 +1151,53 @@ describe('AdminService', () => {
       const result = await service.getTransactionById(mockCtx, 'txn_123');
 
       expect(result.paymentMethodId).toBeUndefined();
+      expect(result.paymentMethod).toBeUndefined();
       expect(result.cancelledAt).toBeUndefined();
       expect(result.refundedAt).toBeUndefined();
       expect(result.paymentApprovedAt).toBeUndefined();
       expect(result.paymentApprovedBy).toBeUndefined();
       expect(result.disputeId).toBeUndefined();
+    });
+
+    it('should include appliedPromotion when listing has promotionSnapshot', async () => {
+      const listingWithPromotion = {
+        ...mockListingWithEvent,
+        promotionSnapshot: {
+          id: 'promo_456',
+          name: 'Early Bird Fee Discount',
+          type: 'SELLER_DISCOUNTED_FEE',
+          config: { feePercentage: 2 },
+        },
+      };
+
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(listingWithPromotion as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.appliedPromotion).toEqual({
+        id: 'promo_456',
+        name: 'Early Bird Fee Discount',
+        type: 'SELLER_DISCOUNTED_FEE',
+        config: { feePercentage: 2 },
+      });
+    });
+
+    it('should omit appliedPromotion when listing has no promotionSnapshot', async () => {
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.appliedPromotion).toBeUndefined();
     });
 
     it('should include bankTransferDestination when seller has bankAccount', async () => {

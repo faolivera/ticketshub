@@ -82,6 +82,14 @@ export interface TicketUnit {
 }
 
 /**
+ * Optional config for accepting offers on a listing (seller can enable/disable).
+ */
+export interface BestOfferConfig {
+  enabled: boolean;
+  minimumPrice: Money;
+}
+
+/**
  * Ticket listing entity
  * seatingType is derived from the event section, not stored on the listing
  */
@@ -96,6 +104,9 @@ export interface TicketListing {
   sellTogether: boolean; // true = all or nothing
 
   pricePerTicket: Money;
+
+  /** When set, buyers can make offers; minimumPrice is the floor per ticket. */
+  bestOfferConfig?: BestOfferConfig;
 
   // Physical tickets only
   deliveryMethod?: DeliveryMethod;

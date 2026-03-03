@@ -18,6 +18,8 @@ describe('PlatformConfigService', () => {
     sellerPlatformFeePercentage: 5,
     paymentTimeoutMinutes: 10,
     adminReviewTimeoutHours: 24,
+    offerPendingExpirationMinutes: 1440,
+    offerAcceptedExpirationMinutes: 1440,
   };
 
   beforeEach(async () => {
@@ -33,6 +35,8 @@ describe('PlatformConfigService', () => {
           'platform.sellerPlatformFeePercentage': 5,
           'platform.paymentTimeoutMinutes': 10,
           'platform.adminReviewTimeoutHours': 24,
+          'platform.offerPendingExpirationMinutes': 1440,
+          'platform.offerAcceptedExpirationMinutes': 1440,
         };
         return map[key];
       }),
@@ -79,6 +83,8 @@ describe('PlatformConfigService', () => {
       expect(result.sellerPlatformFeePercentage).toBe(5);
       expect(result.paymentTimeoutMinutes).toBe(10);
       expect(result.adminReviewTimeoutHours).toBe(24);
+      expect(result.offerPendingExpirationMinutes).toBe(1440);
+      expect(result.offerAcceptedExpirationMinutes).toBe(1440);
       expect(configRepository.upsertPlatformConfig).toHaveBeenCalledWith(
         mockCtx,
         expect.objectContaining({ buyerPlatformFeePercentage: 15 })

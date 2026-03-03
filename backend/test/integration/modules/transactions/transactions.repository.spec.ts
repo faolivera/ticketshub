@@ -141,7 +141,6 @@ describe('TransactionsRepository (Integration)', () => {
         buyerPlatformFeePercentage: 5,
         sellerPlatformFeePercentage: 10,
         paymentMethodCommissions: { card: 2.5, transfer: 0 },
-        pricingModel: 'fixed',
         expiresAt: new Date(Date.now() + 30 * 60 * 1000),
       },
     });

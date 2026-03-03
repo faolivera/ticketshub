@@ -547,11 +547,55 @@ export class AdminService {
       pricePerTicket: listing.pricePerTicket,
     };
 
-    const bankTransferDestination = await this.resolveBankTransferDestination(
-      ctx,
-      transaction.paymentMethodId,
-      seller?.bankAccount,
-    );
+    let paymentMethodDetail: AdminTransactionDetailResponse['paymentMethod'];
+    let bankTransferDestination: AdminTransactionDetailResponse['bankTransferDestination'];
+
+    if (transaction.paymentMethodId) {
+      try {
+        const paymentMethod = await this.paymentMethodsService.findById(
+          ctx,
+          transaction.paymentMethodId,
+        );
+        paymentMethodDetail = {
+          id: paymentMethod.id,
+          type: paymentMethod.type,
+          name: paymentMethod.publicName,
+        };
+        const config = paymentMethod.bankTransferConfig;
+        if (config) {
+          bankTransferDestination = {
+            holderName: config.accountHolderName,
+            iban: config.cbu,
+            bankName: config.bankName,
+            cuitCuil: config.cuitCuil,
+          };
+        }
+      } catch (error) {
+        this.logger.warn(
+          ctx,
+          `Payment method not found for transaction ${transaction.id}: ${error}`,
+        );
+      }
+    }
+    if (
+      !bankTransferDestination &&
+      seller?.bankAccount
+    ) {
+      bankTransferDestination = {
+        holderName: seller.bankAccount.holderName,
+        iban: seller.bankAccount.iban,
+        bic: seller.bankAccount.bic,
+      };
+    }
+
+    const appliedPromotion = listing.promotionSnapshot
+      ? {
+          id: listing.promotionSnapshot.id,
+          name: listing.promotionSnapshot.name,
+          type: listing.promotionSnapshot.type,
+          config: listing.promotionSnapshot.config as unknown as Record<string, unknown>,
+        }
+      : undefined;
 
     return {
       id: transaction.id,
@@ -567,6 +611,8 @@ export class AdminService {
       totalPaid: transaction.totalPaid,
       sellerReceives: transaction.sellerReceives,
       paymentMethodId: transaction.paymentMethodId,
+      paymentMethod: paymentMethodDetail,
+      appliedPromotion,
       createdAt: transaction.createdAt,
       paymentReceivedAt: transaction.paymentReceivedAt,
       ticketTransferredAt: transaction.ticketTransferredAt,
@@ -580,54 +626,6 @@ export class AdminService {
       paymentConfirmations,
       bankTransferDestination,
     };
-  }
-
-  /**
-   * Resolves bank transfer destination from the transaction's payment method (when it has
-   * bankTransferConfig) or from the seller's bank account as fallback.
-   */
-  private async resolveBankTransferDestination(
-    ctx: Ctx,
-    paymentMethodId: string | undefined,
-    sellerBankAccount?: { holderName: string; iban: string; bic?: string },
-  ): Promise<
-    | {
-        holderName: string;
-        iban: string;
-        bic?: string;
-        bankName?: string;
-        cuitCuil?: string;
-      }
-    | undefined
-  > {
-    if (paymentMethodId) {
-      try {
-        const paymentMethod =
-          await this.paymentMethodsService.findById(ctx, paymentMethodId);
-        const config = paymentMethod.bankTransferConfig;
-        if (config) {
-          return {
-            holderName: config.accountHolderName,
-            iban: config.cbu,
-            bankName: config.bankName,
-            cuitCuil: config.cuitCuil,
-          };
-        }
-      } catch (error) {
-        this.logger.warn(
-          ctx,
-          `resolveBankTransferDestination: payment method not found or no bank config, falling back to seller: ${error}`,
-        );
-      }
-    }
-    if (sellerBankAccount) {
-      return {
-        holderName: sellerBankAccount.holderName,
-        iban: sellerBankAccount.iban,
-        bic: sellerBankAccount.bic,
-      };
-    }
-    return undefined;
   }
 
   private async resolveTransactionSearchFilters(

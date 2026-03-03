@@ -413,6 +413,20 @@ export interface AdminTransactionDetail {
   refundedAt?: string;
   paymentApprovedAt?: string;
   paymentMethodId?: string;
+  /** Enriched payment method (type and display name) when paymentMethodId is set */
+  paymentMethod?: {
+    id: string;
+    type: string;
+    name: string;
+  };
+  /** Promotion applied when the listing was created (if any) */
+  appliedPromotion?: {
+    id: string;
+    name: string;
+    type: string;
+    /** Promotion config (e.g. feePercentage for SELLER_DISCOUNTED_FEE) */
+    config: Record<string, unknown>;
+  };
   paymentConfirmations: AdminTransactionPaymentConfirmation[];
   bankTransferDestination?: {
     holderName: string;
@@ -448,6 +462,8 @@ export interface AdminTransactionDetailResponse {
   refundedAt?: string;
   paymentApprovedAt?: string;
   paymentMethodId?: string;
+  paymentMethod?: AdminTransactionDetail['paymentMethod'];
+  appliedPromotion?: AdminTransactionDetail['appliedPromotion'];
   paymentConfirmations: AdminTransactionPaymentConfirmation[];
   bankTransferDestination?: {
     holderName: string;

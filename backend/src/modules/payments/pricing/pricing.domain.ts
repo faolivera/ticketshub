@@ -1,25 +1,12 @@
 import type { Money } from '../payments.domain';
 
 /**
- * Pricing model type - extensible for future pricing strategies
- */
-export type PricingModelType = 'fixed' | 'best_offer';
-
-/**
  * Snapshot of a single payment method's commission at quote time
  */
 export interface PaymentMethodCommissionSnapshot {
   paymentMethodId: string;
   paymentMethodName: string;
   commissionPercent: number | null;
-}
-
-/**
- * Configuration for best offer pricing model (future)
- */
-export interface BestOfferConfig {
-  minAcceptablePrice: Money;
-  expiresAt: Date;
 }
 
 /**
@@ -34,9 +21,6 @@ export interface PricingSnapshot {
   sellerPlatformFeePercentage: number;
 
   paymentMethodCommissions: PaymentMethodCommissionSnapshot[];
-
-  pricingModel: PricingModelType;
-  bestOfferConfig?: BestOfferConfig;
 
   createdAt: Date;
   expiresAt: Date;

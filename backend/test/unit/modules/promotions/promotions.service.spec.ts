@@ -55,6 +55,8 @@ describe('PromotionsService', () => {
         buyerPlatformFeePercentage: 10,
         paymentTimeoutMinutes: 15,
         adminReviewTimeoutHours: 24,
+        offerPendingExpirationMinutes: 1440,
+        offerAcceptedExpirationMinutes: 1440,
       }),
     };
 

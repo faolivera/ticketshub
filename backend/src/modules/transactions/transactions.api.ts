@@ -4,13 +4,18 @@ import type {
 } from './transactions.domain';
 
 /**
- * Request to initiate a purchase
+ * Request to initiate a purchase.
+ * When offerId is set, the purchase uses the accepted offer's price; ticketUnitIds and pricingSnapshotId are derived and can be omitted.
  */
 export interface InitiatePurchaseRequest {
   listingId: string;
-  ticketUnitIds: string[];
+  /** Required when buying at list price; ignored when offerId is set */
+  ticketUnitIds?: string[];
   paymentMethodId: string;
-  pricingSnapshotId: string;
+  /** Required when buying at list price; ignored when offerId is set */
+  pricingSnapshotId?: string;
+  /** When set, purchase is for an accepted offer (price and units come from the offer) */
+  offerId?: string;
 }
 
 /**

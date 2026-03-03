@@ -3,9 +3,7 @@ import { randomUUID } from 'crypto';
 import { PricingRepository } from '@/modules/payments/pricing/pricing.repository';
 import type {
   PricingSnapshot,
-  PricingModelType,
   PaymentMethodCommissionSnapshot,
-  BestOfferConfig,
 } from '@/modules/payments/pricing/pricing.domain';
 import type { Money } from '@/modules/payments/payments.domain';
 import type { Ctx } from '@/common/types/context';
@@ -35,11 +33,6 @@ describe('PricingRepository (Integration)', () => {
     { paymentMethodId: 'pm-card', paymentMethodName: 'Credit Card', commissionPercent: 2.5 },
     { paymentMethodId: 'pm-transfer', paymentMethodName: 'Bank Transfer', commissionPercent: 0 },
   ];
-
-  const createBestOfferConfig = (): BestOfferConfig => ({
-    minAcceptablePrice: createMoney(4000),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  });
 
   const createTestUser = async (overrides?: Partial<{
     email: string;
@@ -137,7 +130,6 @@ describe('PricingRepository (Integration)', () => {
       buyerPlatformFeePercentage: 5,
       sellerPlatformFeePercentage: 10,
       paymentMethodCommissions: createPaymentMethodCommissions(),
-      pricingModel: 'fixed' as PricingModelType,
       createdAt: now,
       expiresAt: new Date(now.getTime() + 30 * 60 * 1000),
       ...overrides,
@@ -175,7 +167,6 @@ describe('PricingRepository (Integration)', () => {
       expect(snapshot).toBeDefined();
       expect(snapshot.id).toBe(snapshotData.id);
       expect(snapshot.listingId).toBe(testListingId);
-      expect(snapshot.pricingModel).toBe('fixed');
     });
 
     it('should create a pricing snapshot with all pricing fields', async () => {
@@ -187,20 +178,6 @@ describe('PricingRepository (Integration)', () => {
       expect(snapshot.buyerPlatformFeePercentage).toBe(snapshotData.buyerPlatformFeePercentage);
       expect(snapshot.sellerPlatformFeePercentage).toBe(snapshotData.sellerPlatformFeePercentage);
       expect(snapshot.paymentMethodCommissions).toEqual(snapshotData.paymentMethodCommissions);
-    });
-
-    it('should create a pricing snapshot with best_offer pricing model', async () => {
-      const bestOfferConfig = createBestOfferConfig();
-      const snapshotData = createValidPricingSnapshot({
-        pricingModel: 'best_offer',
-        bestOfferConfig,
-      });
-
-      const snapshot = await repository.create(ctx, snapshotData);
-
-      expect(snapshot.pricingModel).toBe('best_offer');
-      expect(snapshot.bestOfferConfig).toBeDefined();
-      expect(snapshot.bestOfferConfig?.minAcceptablePrice).toEqual(bestOfferConfig.minAcceptablePrice);
     });
 
     it('should create a pricing snapshot with consumption data', async () => {
@@ -253,11 +230,7 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should return snapshot with all fields correctly mapped', async () => {
-      const bestOfferConfig = createBestOfferConfig();
-      const snapshotData = createValidPricingSnapshot({
-        pricingModel: 'best_offer',
-        bestOfferConfig,
-      });
+      const snapshotData = createValidPricingSnapshot();
       await repository.create(ctx, snapshotData);
 
       const found = await repository.findById(ctx, snapshotData.id);
@@ -266,17 +239,6 @@ describe('PricingRepository (Integration)', () => {
       expect(found?.buyerPlatformFeePercentage).toBe(snapshotData.buyerPlatformFeePercentage);
       expect(found?.sellerPlatformFeePercentage).toBe(snapshotData.sellerPlatformFeePercentage);
       expect(found?.paymentMethodCommissions).toEqual(snapshotData.paymentMethodCommissions);
-      expect(found?.pricingModel).toBe('best_offer');
-      expect(found?.bestOfferConfig).toBeDefined();
-    });
-
-    it('should return undefined bestOfferConfig when not set', async () => {
-      const snapshotData = createValidPricingSnapshot({ pricingModel: 'fixed' });
-      await repository.create(ctx, snapshotData);
-
-      const found = await repository.findById(ctx, snapshotData.id);
-
-      expect(found?.bestOfferConfig).toBeUndefined();
     });
   });
 
@@ -322,20 +284,6 @@ describe('PricingRepository (Integration)', () => {
       });
 
       expect(updated?.paymentMethodCommissions).toEqual(newCommissions);
-    });
-
-    it('should update pricing model and best offer config', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({ pricingModel: 'fixed' }));
-      const bestOfferConfig = createBestOfferConfig();
-
-      const updated = await repository.update(ctx, snapshot.id, {
-        pricingModel: 'best_offer',
-        bestOfferConfig,
-      });
-
-      expect(updated?.pricingModel).toBe('best_offer');
-      expect(updated?.bestOfferConfig).toBeDefined();
-      expect(updated?.bestOfferConfig?.minAcceptablePrice).toEqual(bestOfferConfig.minAcceptablePrice);
     });
 
     it('should update expiration date', async () => {
@@ -390,21 +338,6 @@ describe('PricingRepository (Integration)', () => {
       expect(updated?.sellerPlatformFeePercentage).toBe(originalData.sellerPlatformFeePercentage);
     });
 
-    it('should clear bestOfferConfig when setting to undefined after having value', async () => {
-      const bestOfferConfig = createBestOfferConfig();
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        pricingModel: 'best_offer',
-        bestOfferConfig,
-      }));
-
-      const updated = await repository.update(ctx, snapshot.id, {
-        pricingModel: 'fixed',
-        bestOfferConfig: undefined,
-      });
-
-      expect(updated?.pricingModel).toBe('fixed');
-      expect(updated?.bestOfferConfig).toBeUndefined();
-    });
   });
 
   // ==================== deleteExpired ====================
@@ -586,15 +519,6 @@ describe('PricingRepository (Integration)', () => {
   // ==================== Edge Cases ====================
 
   describe('Edge Cases', () => {
-    it('should handle all pricing model types', async () => {
-      const pricingModels: PricingModelType[] = ['fixed', 'best_offer'];
-
-      for (const pricingModel of pricingModels) {
-        const snapshot = await repository.create(ctx, createValidPricingSnapshot({ pricingModel }));
-        expect(snapshot.pricingModel).toBe(pricingModel);
-      }
-    });
-
     it('should handle zero commission percentages', async () => {
       const commissions: PaymentMethodCommissionSnapshot[] = [
         { paymentMethodId: 'pm-free', paymentMethodName: 'Free Transfer', commissionPercent: 0 },
@@ -656,44 +580,23 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should handle snapshot with all optional fields set', async () => {
-      const bestOfferConfig = createBestOfferConfig();
       const consumedAt = new Date();
       const transactionId = randomUUID();
       const paymentMethodId = 'pm-card';
 
       const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        pricingModel: 'best_offer',
-        bestOfferConfig,
         consumedAt,
         consumedByTransactionId: transactionId,
         selectedPaymentMethodId: paymentMethodId,
       }));
 
-      expect(snapshot.bestOfferConfig).toBeDefined();
       expect(snapshot.consumedAt).toEqual(consumedAt);
       expect(snapshot.consumedByTransactionId).toBe(transactionId);
       expect(snapshot.selectedPaymentMethodId).toBe(paymentMethodId);
     });
 
-    it('should handle snapshot with no optional fields set', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        bestOfferConfig: undefined,
-        consumedAt: undefined,
-        consumedByTransactionId: undefined,
-        selectedPaymentMethodId: undefined,
-      }));
-
-      expect(snapshot.bestOfferConfig).toBeUndefined();
-      expect(snapshot.consumedAt).toBeUndefined();
-      expect(snapshot.consumedByTransactionId).toBeUndefined();
-      expect(snapshot.selectedPaymentMethodId).toBeUndefined();
-    });
-
     it('should maintain data integrity across create and findById', async () => {
-      const originalData = createValidPricingSnapshot({
-        pricingModel: 'best_offer',
-        bestOfferConfig: createBestOfferConfig(),
-      });
+      const originalData = createValidPricingSnapshot();
       await repository.create(ctx, originalData);
 
       const found = await repository.findById(ctx, originalData.id);
@@ -703,7 +606,6 @@ describe('PricingRepository (Integration)', () => {
       expect(found?.pricePerTicket).toEqual(originalData.pricePerTicket);
       expect(found?.buyerPlatformFeePercentage).toBe(originalData.buyerPlatformFeePercentage);
       expect(found?.sellerPlatformFeePercentage).toBe(originalData.sellerPlatformFeePercentage);
-      expect(found?.pricingModel).toBe(originalData.pricingModel);
     });
   });
 });

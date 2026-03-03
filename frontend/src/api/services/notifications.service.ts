@@ -100,6 +100,18 @@ export const notificationsService = {
   },
 
   /**
+   * Mark multiple notifications as read by IDs (e.g. when user opens dropdown)
+   */
+  async markAsReadBatch(notificationIds: string[]): Promise<number> {
+    if (notificationIds.length === 0) return 0;
+    const response = await apiClient.patch<{ markedCount: number }>(
+      '/notifications/read-batch',
+      { notificationIds }
+    );
+    return response.data.markedCount;
+  },
+
+  /**
    * Mark all notifications as read
    */
   async markAllAsRead(): Promise<number> {

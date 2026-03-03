@@ -62,6 +62,12 @@ export interface TicketSeat {
   seatNumber: string;
 }
 
+/** Best-offer configuration for a listing (seller can enable and set minimum price). */
+export interface BestOfferConfig {
+  enabled: boolean;
+  minimumPrice: Money;
+}
+
 export interface TicketUnit {
   id: string;
   status: TicketUnitStatus;
@@ -83,6 +89,8 @@ export interface TicketListing {
   sellTogether: boolean;
 
   pricePerTicket: Money;
+
+  bestOfferConfig?: BestOfferConfig;
 
   // Physical tickets only
   deliveryMethod?: DeliveryMethod;
@@ -136,6 +144,8 @@ export interface CreateListingRequest {
 
   pricePerTicket: Money;
 
+  bestOfferConfig?: BestOfferConfig;
+
   // Physical tickets only
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
@@ -162,6 +172,7 @@ export interface UpdateListingRequest {
   description?: string;
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
+  bestOfferConfig?: BestOfferConfig | null;
 }
 
 /**
@@ -251,18 +262,17 @@ export interface BuyPageSellerInfo {
   memberSince: string;
 }
 
-/** Pricing snapshot summary for buy page (minimal data for UI) */
+/** Pricing snapshot summary for buy page (minimal data for UI; no fee breakdown) */
 export interface BuyPagePricingSnapshot {
   id: string;
   expiresAt: Date;
-  buyerPlatformFeePercentage: number;
 }
 
-/** Payment method option for buy page (minimal data for UI) */
+/** Payment method option for buy page: single service fee % (platform + payment method) */
 export interface BuyPagePaymentMethodOption {
   id: string;
   name: string;
-  buyerCommissionPercent: number | null;
+  serviceFeePercent: number;
 }
 
 /** Full buy page data (listing + seller + payment methods + pricing snapshot) from BFF */

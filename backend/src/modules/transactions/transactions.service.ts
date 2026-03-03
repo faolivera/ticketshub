@@ -27,7 +27,8 @@ import {
   STATUS_REQUIRED_ACTOR,
   CancellationReason,
 } from './transactions.domain';
-import { TicketType } from '../tickets/tickets.domain';
+import { TicketType, TicketUnitStatus } from '../tickets/tickets.domain';
+import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import type {
   ListTransactionsQuery,
   GetPendingPaymentsResponse,
@@ -36,6 +37,8 @@ import type {
 import { PaymentMethodsService } from '../payments/payment-methods.service';
 import type { PricingSnapshot } from '../payments/pricing/pricing.domain';
 import { NotificationsService } from '../notifications/notifications.service';
+import { OffersService } from '../offers/offers.service';
+import type { Offer, OfferTickets } from '../offers/offers.domain';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { TransactionManager } from '../../common/database';
 
@@ -61,6 +64,8 @@ export class TransactionsService {
     @Inject(PricingService)
     private readonly pricingService: PricingService,
     private readonly notificationsService: NotificationsService,
+    @Inject(OffersService)
+    private readonly offersService: OffersService,
     private readonly txManager: TransactionManager,
   ) {}
 
@@ -106,50 +111,115 @@ export class TransactionsService {
   }
 
   /**
-   * Initiate a purchase (atomic - all-or-nothing)
+   * Resolve offer tickets to listing ticket unit ids (available units matching seats or count).
+   */
+  private resolveOfferToUnitIds(
+    listing: TicketListingWithEvent,
+    tickets: OfferTickets,
+  ): string[] {
+    const available = listing.ticketUnits.filter(
+      (u) => u.status === TicketUnitStatus.Available,
+    );
+    if (tickets.type === 'numbered') {
+      const ids: string[] = [];
+      for (const seat of tickets.seats) {
+        const unit = available.find(
+          (u) =>
+            u.seat &&
+            u.seat.row === seat.row &&
+            u.seat.seatNumber === seat.seatNumber,
+        );
+        if (!unit) {
+          throw new BadRequestException(
+            `Seat ${seat.row}-${seat.seatNumber} is no longer available`,
+          );
+        }
+        ids.push(unit.id);
+      }
+      return ids;
+    }
+    if (available.length < tickets.count) {
+      throw new BadRequestException(
+        `Not enough tickets available (need ${tickets.count}, ${available.length} left)`,
+      );
+    }
+    return available.slice(0, tickets.count).map((u) => u.id);
+  }
+
+  /**
+   * Initiate a purchase (atomic - all-or-nothing).
+   * When offerId is set, price and ticket selection come from the accepted offer; otherwise listing price and ticketUnitIds/pricingSnapshotId are used.
    */
   async initiatePurchase(
     ctx: Ctx,
     buyerId: string,
     listingId: string,
-    ticketUnitIds: string[],
+    ticketUnitIds: string[] | undefined,
     paymentMethodId: string,
-    pricingSnapshotId: string,
+    pricingSnapshotId: string | undefined,
+    offerId: string | undefined,
   ): Promise<{ transaction: Transaction; paymentIntentId: string }> {
-    this.logger.log(ctx, `Initiating purchase for listing ${listingId}`);
+    this.logger.log(ctx, `Initiating purchase for listing ${listingId}${offerId ? ` (offer ${offerId})` : ''}`);
 
-    // Get listing and validate (outside transaction for read performance)
     const listing = await this.ticketsService.getListingById(ctx, listingId);
 
     if (listing.sellerId === buyerId) {
       throw new BadRequestException('Cannot buy your own listing');
     }
 
-    if (!ticketUnitIds.length) {
-      throw new BadRequestException(
-        'At least one ticket unit must be selected',
-      );
+    let resolvedTicketUnitIds: string[];
+    let resolvedPricingSnapshotId: string;
+
+    if (offerId) {
+      const offer = await this.offersService.getOfferById(ctx, offerId);
+      if (!offer) throw new NotFoundException('Offer not found');
+      if (offer.listingId !== listingId) {
+        throw new BadRequestException('Offer does not match listing');
+      }
+      if (offer.userId !== buyerId) {
+        throw new ForbiddenException('This offer belongs to another user');
+      }
+      if (offer.status !== 'accepted') {
+        throw new BadRequestException('Offer is not accepted or has expired');
+      }
+      const now = new Date();
+      if (offer.acceptedExpiresAt && offer.acceptedExpiresAt < now) {
+        throw new BadRequestException('Offer has expired; complete purchase before the deadline');
+      }
+      resolvedTicketUnitIds = this.resolveOfferToUnitIds(listing, offer.tickets);
+      const snapshot = await this.pricingService.createSnapshot(ctx, listing, {
+        offeredPricePerTicket: offer.offeredPrice,
+      });
+      resolvedPricingSnapshotId = snapshot.id;
+    } else {
+      if (!ticketUnitIds?.length) {
+        throw new BadRequestException(
+          'At least one ticket unit must be selected',
+        );
+      }
+      if (!pricingSnapshotId) {
+        throw new BadRequestException('pricingSnapshotId is required when not using an offer');
+      }
+      resolvedTicketUnitIds = ticketUnitIds;
+      resolvedPricingSnapshotId = pricingSnapshotId;
     }
 
-    const quantity = ticketUnitIds.length;
+    const quantity = resolvedTicketUnitIds.length;
     const transactionId = this.generateId();
     const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
 
-    // Atomic: consume pricing, reserve tickets, create transaction
     const { transaction, totalPaid } = await this.txManager.executeInTransaction(
       ctx,
       async (txCtx) => {
-        // Validate and consume pricing snapshot (atomic)
         const { snapshot, selectedCommissionPercent } =
           await this.pricingService.validateAndConsume(
             txCtx,
-            pricingSnapshotId,
+            resolvedPricingSnapshotId,
             listingId,
             paymentMethodId,
             transactionId,
           );
 
-        // Calculate prices using snapshotted values
         const ticketPriceTotal: Money = {
           amount: snapshot.pricePerTicket.amount * quantity,
           currency: snapshot.pricePerTicket.currency,
@@ -175,13 +245,14 @@ export class TransactionsService {
           currency: ticketPriceTotal.currency,
         };
 
-        // autoReleaseAt reserved for future use; always undefined for now.
         const autoReleaseAt: Date | undefined = undefined;
 
-        // Reserve tickets (atomic)
-        await this.ticketsService.reserveTickets(txCtx, listingId, ticketUnitIds);
+        await this.ticketsService.reserveTickets(
+          txCtx,
+          listingId,
+          resolvedTicketUnitIds,
+        );
 
-        // Create transaction
         const initialStatus = TransactionStatus.PendingPayment;
         const txn: Transaction = {
           id: transactionId,
@@ -189,7 +260,7 @@ export class TransactionsService {
           buyerId,
           sellerId: listing.sellerId,
           ticketType: listing.type,
-          ticketUnitIds,
+          ticketUnitIds: resolvedTicketUnitIds,
           quantity,
           ticketPrice: ticketPriceTotal,
           buyerPlatformFee,
@@ -197,7 +268,8 @@ export class TransactionsService {
           paymentMethodCommission,
           totalPaid: calculatedTotalPaid,
           sellerReceives,
-          pricingSnapshotId,
+          pricingSnapshotId: resolvedPricingSnapshotId,
+          offerId,
           status: initialStatus,
           requiredActor: STATUS_REQUIRED_ACTOR[initialStatus],
           createdAt: new Date(),
@@ -215,14 +287,24 @@ export class TransactionsService {
           version: 1,
         };
 
-        const createdTransaction = await this.transactionsRepository.create(txCtx, txn);
-        return { transaction: createdTransaction, totalPaid: calculatedTotalPaid };
+        const createdTransaction =
+          await this.transactionsRepository.create(txCtx, txn);
+
+        if (offerId) {
+          await this.offersService.markConverted(txCtx, offerId, transactionId);
+        }
+
+        return {
+          transaction: createdTransaction,
+          totalPaid: calculatedTotalPaid,
+        };
       },
       { isolationLevel: 'Serializable' },
     );
 
+    await this.offersService.cancelAffectedOffers(ctx, listingId);
+
     // Payment intent creation is outside the DB transaction
-    // (can be retried independently, idempotent by transactionId)
     const paymentIntent = await this.paymentsService.createPaymentIntent(
       ctx,
       transaction.id,

@@ -119,6 +119,9 @@ export interface Transaction {
   // Pricing snapshot reference
   pricingSnapshotId: string;
 
+  /** Set when the purchase was made from an accepted offer */
+  offerId?: string;
+
   status: TransactionStatus;
 
   /** Actor required to advance the transaction to the next status */

@@ -309,6 +309,30 @@ export class NotificationsRepository extends BaseRepository implements INotifica
     return result.count;
   }
 
+  async markAsReadBatch(
+    ctx: Ctx,
+    userId: string,
+    notificationIds: string[],
+  ): Promise<number> {
+    if (notificationIds.length === 0) return 0;
+    const client = this.getClient(ctx);
+    const now = new Date();
+    const result = await client.notification.updateMany({
+      where: {
+        id: { in: notificationIds },
+        recipientId: userId,
+        channel: 'IN_APP',
+        read: false,
+      },
+      data: {
+        read: true,
+        readAt: now,
+        updatedAt: now,
+      },
+    });
+    return result.count;
+  }
+
   async findPendingEmailNotifications(ctx: Ctx): Promise<Notification[]> {
     const client = this.getClient(ctx);
     const notifications = await client.notification.findMany({

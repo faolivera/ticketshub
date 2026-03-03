@@ -16,6 +16,7 @@ import type {
   TicketListing,
   TicketListingWithEvent,
   TicketUnit,
+  Money,
 } from './tickets.domain';
 import {
   TicketType,
@@ -310,6 +311,12 @@ export class TicketsService {
       eventSection.seatingType,
     );
 
+    this.validateBestOfferConfig(
+      data.bestOfferConfig,
+      data.pricePerTicket,
+      listingCurrency,
+    );
+
     const created = await this.txManager.executeInTransaction(
       ctx,
       async (txCtx) => {
@@ -343,6 +350,7 @@ export class TicketsService {
           promotionSnapshot: hasPromotion
             ? this.promotionsService.toSnapshot(activePromotion)
             : undefined,
+          bestOfferConfig: data.bestOfferConfig,
           status: listingStatus,
           version: 1,
           createdAt: new Date(),
@@ -552,13 +560,45 @@ export class TicketsService {
         throw new BadRequestException('Can only update active listings');
       }
 
+      const effectivePrice = updates.pricePerTicket ?? listing.pricePerTicket;
+      this.validateBestOfferConfig(
+        updates.bestOfferConfig ?? undefined,
+        effectivePrice,
+        effectivePrice.currency,
+      );
+
+      const updatesToApply =
+        updates.bestOfferConfig === null
+          ? { ...updates, bestOfferConfig: undefined }
+          : updates;
+
       return await this.ticketsRepository.updateWithVersion(
         txCtx,
         listingId,
-        updates,
+        updatesToApply,
         listing.version,
       );
     });
+  }
+
+  /**
+   * Validate bestOfferConfig: when enabled, minimumPrice is required and must be <= pricePerTicket.
+   */
+  private validateBestOfferConfig(
+    config: { enabled: boolean; minimumPrice?: Money } | undefined | null,
+    pricePerTicket: Money,
+    currency: string,
+  ): void {
+    if (!config || !config.enabled) return;
+    if (
+      !config.minimumPrice ||
+      config.minimumPrice.currency !== currency ||
+      config.minimumPrice.amount > pricePerTicket.amount
+    ) {
+      throw new BadRequestException(
+        'When offers are enabled, minimumPrice is required, must match listing currency, and must be less than or equal to price per ticket',
+      );
+    }
   }
 
   /**

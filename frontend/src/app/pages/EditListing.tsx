@@ -20,6 +20,8 @@ export function EditListing() {
   
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
+  const [bestOfferEnabled, setBestOfferEnabled] = useState(false);
+  const [bestOfferMinPrice, setBestOfferMinPrice] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -36,6 +38,12 @@ export function EditListing() {
         setListing(data);
         setPrice((data.pricePerTicket.amount / 100).toString());
         setDescription(data.description || '');
+        setBestOfferEnabled(data.bestOfferConfig?.enabled ?? false);
+        setBestOfferMinPrice(
+          data.bestOfferConfig?.minimumPrice != null
+            ? (data.bestOfferConfig.minimumPrice.amount / 100).toString()
+            : '',
+        );
       } catch (err) {
         console.error('Failed to fetch listing:', err);
         setError(t('editListing.errorLoading'));
@@ -54,12 +62,22 @@ export function EditListing() {
     setError(null);
     
     try {
+      const currency = listing?.pricePerTicket.currency || 'ARS';
       await ticketsService.updateListing(listingId, {
         pricePerTicket: {
           amount: Math.round(parseFloat(price) * 100),
-          currency: listing?.pricePerTicket.currency || 'ARS',
+          currency,
         },
         description: description || undefined,
+        bestOfferConfig: bestOfferEnabled
+          ? {
+              enabled: true,
+              minimumPrice: {
+                amount: Math.round(parseFloat(bestOfferMinPrice || '0') * 100),
+                currency,
+              },
+            }
+          : null,
       });
       
       navigate('/my-tickets');
@@ -116,6 +134,8 @@ export function EditListing() {
 
   const priceValue = parseFloat(price) || 0;
   const isValidPrice = priceValue > 0;
+  const minOfferValue = parseFloat(bestOfferMinPrice) || 0;
+  const isValidMinOffer = !bestOfferEnabled || (minOfferValue > 0 && minOfferValue <= priceValue);
   const isActive = listing.status === 'Active';
   const availableUnits = listing.ticketUnits.filter((unit) => unit.status === TicketUnitStatus.Available);
   const numberedSeats = listing.ticketUnits
@@ -284,6 +304,40 @@ export function EditListing() {
                     disabled={!isActive}
                   />
                 </div>
+
+                {/* Best offer */}
+                <div className="pt-4 border-t border-gray-200">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={bestOfferEnabled}
+                      onChange={(e) => setBestOfferEnabled(e.target.checked)}
+                      disabled={!isActive}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">{t('editListing.allowOffers')}</span>
+                  </label>
+                  <p className="mt-1 text-xs text-gray-500 mb-3">{t('editListing.allowOffersDescription')}</p>
+                  {bestOfferEnabled && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {t('editListing.minimumOfferPrice')}
+                      </label>
+                      <input
+                        type="number"
+                        value={bestOfferMinPrice}
+                        onChange={(e) => setBestOfferMinPrice(e.target.value)}
+                        min="0"
+                        max={price ? parseFloat(price) : undefined}
+                        step="0.01"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="0.00"
+                        disabled={!isActive}
+                      />
+                      <p className="mt-1 text-xs text-gray-500">{t('editListing.minimumOfferPriceHint')}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -293,9 +347,9 @@ export function EditListing() {
                 <>
                   <button
                     onClick={handleSave}
-                    disabled={!isValidPrice || isSaving}
+                    disabled={!isValidPrice || !isValidMinOffer || isSaving}
                     className={`w-full py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
-                      !isValidPrice || isSaving
+                      !isValidPrice || !isValidMinOffer || isSaving
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}

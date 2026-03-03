@@ -106,6 +106,8 @@ describe('TransactionsService', () => {
         sellerPlatformFeePercentage: 5,
         paymentTimeoutMinutes: 10,
         adminReviewTimeoutHours: 24,
+        offerPendingExpirationMinutes: 1440,
+        offerAcceptedExpirationMinutes: 1440,
       }),
     };
 

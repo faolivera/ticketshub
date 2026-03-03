@@ -6,6 +6,7 @@ import type {
   TicketSeat,
   TicketListing,
   TicketListingWithEvent,
+  BestOfferConfig,
 } from './tickets.domain';
 
 /**
@@ -22,6 +23,9 @@ export interface CreateListingRequest {
   sellTogether?: boolean;
 
   pricePerTicket: Money;
+
+  /** Optional: allow buyers to make offers with a minimum price. */
+  bestOfferConfig?: BestOfferConfig;
 
   // Physical tickets only
   deliveryMethod?: DeliveryMethod;
@@ -46,6 +50,8 @@ export type CreateListingResponse = TicketListingWithEvent;
  */
 export interface UpdateListingRequest {
   pricePerTicket?: Money;
+  /** Optional: allow buyers to make offers; set to undefined to clear. */
+  bestOfferConfig?: BestOfferConfig | null;
   description?: string;
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;

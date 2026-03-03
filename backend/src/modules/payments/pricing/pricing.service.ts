@@ -37,13 +37,16 @@ export class PricingService {
   /**
    * Creates a pricing snapshot for a listing. If the listing has a SELLER_DISCOUNTED_FEE
    * promotion snapshot, uses that fee percentage; otherwise uses platform global config.
+   * When options.offeredPricePerTicket is provided (e.g. for an accepted offer), that price
+   * is used instead of the listing's pricePerTicket.
    */
   async createSnapshot(
     ctx: Ctx,
     listing: { id: string; pricePerTicket: Money; promotionSnapshot?: PromotionSnapshot },
+    options?: { offeredPricePerTicket?: Money },
   ): Promise<PricingSnapshot> {
     const listingId = listing.id;
-    const pricePerTicket = listing.pricePerTicket;
+    const pricePerTicket = options?.offeredPricePerTicket ?? listing.pricePerTicket;
     this.logger.log(ctx, `Creating pricing snapshot for listing ${listingId}`);
 
     const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
@@ -75,7 +78,6 @@ export class PricingService {
       buyerPlatformFeePercentage,
       sellerPlatformFeePercentage,
       paymentMethodCommissions,
-      pricingModel: 'fixed',
       createdAt: now,
       expiresAt,
     };

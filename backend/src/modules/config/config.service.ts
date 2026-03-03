@@ -16,6 +16,8 @@ const MIN_PAYMENT_TIMEOUT_MINUTES = 1;
 const MAX_PAYMENT_TIMEOUT_MINUTES = 1440; // 24h
 const MIN_ADMIN_REVIEW_HOURS = 1;
 const MAX_ADMIN_REVIEW_HOURS = 168; // 1 week
+const MIN_OFFER_EXPIRATION_MINUTES = 1;
+const MAX_OFFER_EXPIRATION_MINUTES = 10080; // 7 days
 
 @Injectable()
 export class PlatformConfigService {
@@ -64,6 +66,10 @@ export class PlatformConfigService {
       paymentTimeoutMinutes: body.paymentTimeoutMinutes ?? current.paymentTimeoutMinutes,
       adminReviewTimeoutHours:
         body.adminReviewTimeoutHours ?? current.adminReviewTimeoutHours,
+      offerPendingExpirationMinutes:
+        body.offerPendingExpirationMinutes ?? current.offerPendingExpirationMinutes,
+      offerAcceptedExpirationMinutes:
+        body.offerAcceptedExpirationMinutes ?? current.offerAcceptedExpirationMinutes,
     };
     this.validatePlatformConfig(merged);
     const updated = await this.configRepository.upsertPlatformConfig(ctx, merged);
@@ -81,6 +87,10 @@ export class PlatformConfigService {
         this.nestConfigService.get<number>('platform.paymentTimeoutMinutes') ?? 10,
       adminReviewTimeoutHours:
         this.nestConfigService.get<number>('platform.adminReviewTimeoutHours') ?? 24,
+      offerPendingExpirationMinutes:
+        this.nestConfigService.get<number>('platform.offerPendingExpirationMinutes') ?? 1440, // 24h
+      offerAcceptedExpirationMinutes:
+        this.nestConfigService.get<number>('platform.offerAcceptedExpirationMinutes') ?? 1440, // 24h
     };
   }
 
@@ -115,6 +125,22 @@ export class PlatformConfigService {
     ) {
       throw new BadRequestException(
         `adminReviewTimeoutHours must be between ${MIN_ADMIN_REVIEW_HOURS} and ${MAX_ADMIN_REVIEW_HOURS}`,
+      );
+    }
+    if (
+      config.offerPendingExpirationMinutes < MIN_OFFER_EXPIRATION_MINUTES ||
+      config.offerPendingExpirationMinutes > MAX_OFFER_EXPIRATION_MINUTES
+    ) {
+      throw new BadRequestException(
+        `offerPendingExpirationMinutes must be between ${MIN_OFFER_EXPIRATION_MINUTES} and ${MAX_OFFER_EXPIRATION_MINUTES}`,
+      );
+    }
+    if (
+      config.offerAcceptedExpirationMinutes < MIN_OFFER_EXPIRATION_MINUTES ||
+      config.offerAcceptedExpirationMinutes > MAX_OFFER_EXPIRATION_MINUTES
+    ) {
+      throw new BadRequestException(
+        `offerAcceptedExpirationMinutes must be between ${MIN_OFFER_EXPIRATION_MINUTES} and ${MAX_OFFER_EXPIRATION_MINUTES}`,
       );
     }
   }

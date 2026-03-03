@@ -34,6 +34,23 @@ export function NotificationBell() {
       setNotifications(response.notifications);
       setUnreadCount(response.unreadCount);
       setHasLoaded(true);
+      // Mark visible unread notifications as read when dropdown is opened
+      const unreadIds = response.notifications
+        .filter((n) => !n.read)
+        .map((n) => n.id);
+      if (unreadIds.length > 0) {
+        try {
+          const marked = await notificationsService.markAsReadBatch(unreadIds);
+          setNotifications((prev) =>
+            prev.map((n) =>
+              unreadIds.includes(n.id) ? { ...n, read: true } : n
+            )
+          );
+          setUnreadCount((prev) => Math.max(0, prev - marked));
+        } catch {
+          // Keep UI state as-is if batch mark fails
+        }
+      }
     } catch {
       // Error handled silently
     } finally {
@@ -67,23 +84,8 @@ export function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleNotificationClick = async (notification: NotificationItem) => {
-    // Mark as read if not already
-    if (!notification.read) {
-      try {
-        await notificationsService.markAsRead(notification.id);
-        setNotifications(prev =>
-          prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      } catch {
-        // Continue with navigation even if marking fails
-      }
-    }
-
+  const handleNotificationClick = (notification: NotificationItem) => {
     setIsOpen(false);
-
-    // Navigate to the action URL if present
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
     }

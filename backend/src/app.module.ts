@@ -24,6 +24,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { IdentityVerificationModule } from './modules/identity-verification/identity-verification.module';
 import { ConfigModule as PlatformConfigModule } from './modules/config/config.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
+import { OffersModule } from './modules/offers/offers.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
     AdminModule,
     PlatformConfigModule,
     PromotionsModule,
+    OffersModule,
   ],
 })
 export class AppModule {}

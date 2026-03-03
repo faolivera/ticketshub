@@ -132,6 +132,8 @@ describe('BffService', () => {
         buyerPlatformFeePercentage: 10,
         paymentTimeoutMinutes: 15,
         adminReviewTimeoutHours: 24,
+        offerPendingExpirationMinutes: 1440,
+        offerAcceptedExpirationMinutes: 1440,
       }),
     };
 
@@ -183,7 +185,12 @@ describe('BffService', () => {
         Role.User,
       );
 
-      expect(result.transaction).toEqual(mockTransactionWithDetails);
+      expect(result.transaction.servicePrice).toEqual({
+        amount: 2200,
+        currency: 'USD',
+      });
+      expect(result.transaction).not.toHaveProperty('buyerPlatformFee');
+      expect(result.transaction).not.toHaveProperty('paymentMethodCommission');
       expect(result.paymentConfirmation).toBeNull();
       expect(result.reviews).toEqual(mockTransactionReviews);
       expect(transactionsService.getTransactionById).toHaveBeenCalledWith(
@@ -208,7 +215,10 @@ describe('BffService', () => {
         Role.User,
       );
 
-      expect(result.transaction).toEqual(mockTransactionWithDetails);
+      expect(result.transaction.servicePrice).toEqual({
+        amount: 2200,
+        currency: 'USD',
+      });
       expect(result.reviews).toEqual(mockTransactionReviews);
     });
 
@@ -227,7 +237,12 @@ describe('BffService', () => {
         Role.Admin,
       );
 
-      expect(result.transaction).toEqual(mockTransactionWithDetails);
+      expect(result.transaction.servicePrice).toEqual({
+        amount: 2200,
+        currency: 'USD',
+      });
+      expect(result.transaction).not.toHaveProperty('buyerPlatformFee');
+      expect(result.transaction).not.toHaveProperty('paymentMethodCommission');
     });
 
     it('should throw NotFoundException when transaction not found', async () => {
@@ -460,7 +475,6 @@ describe('BffService', () => {
       buyerPlatformFeePercentage: 10,
       sellerPlatformFeePercentage: 5,
       paymentMethodCommissions: [],
-      pricingModel: 'fixed',
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     };
@@ -482,7 +496,7 @@ describe('BffService', () => {
       badges: ['verified'],
     };
 
-    it('should return buy page data with buyerPlatformFeePercentage in pricing snapshot', async () => {
+    it('should return buy page data with serviceFeePercent per payment method', async () => {
       ticketsService.getListingById.mockResolvedValue(mockListing);
       usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
       usersService.findById.mockResolvedValue(mockUser);
@@ -503,8 +517,10 @@ describe('BffService', () => {
       expect(result.pricingSnapshot.expiresAt).toEqual(
         mockPricingSnapshot.expiresAt,
       );
-      expect(result.pricingSnapshot.buyerPlatformFeePercentage).toBe(10);
+      expect(result.pricingSnapshot).not.toHaveProperty('buyerPlatformFeePercentage');
       expect(result.paymentMethods).toHaveLength(2);
+      expect(result.paymentMethods[0].serviceFeePercent).toBe(13); // 10 + 3
+      expect(result.paymentMethods[1].serviceFeePercent).toBe(10); // 10 + 0
       expect(pricingService.createSnapshot).toHaveBeenCalledWith(mockCtx, {
         id: mockListing.id,
         pricePerTicket: mockListing.pricePerTicket,

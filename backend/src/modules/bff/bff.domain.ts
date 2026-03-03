@@ -57,18 +57,18 @@ export interface BuyPageSellerInfo {
   memberSince: string;
 }
 
-/** Pricing snapshot summary for buy page (minimal data for UI) */
+/** Pricing snapshot summary for buy page (minimal data for UI; no fee breakdown) */
 export interface BuyPagePricingSnapshot {
   id: string;
   expiresAt: Date;
-  buyerPlatformFeePercentage: number;
 }
 
-/** Payment method option for buy page (minimal data for UI) */
+/** Payment method option for buy page: single service fee % (platform + payment method) */
 export interface BuyPagePaymentMethodOption {
   id: string;
   name: string;
-  buyerCommissionPercent: number | null;
+  /** Combined service fee percentage (platform + payment method); used for one "Precio por servicio" line */
+  serviceFeePercent: number;
 }
 
 /** Full buy page data (listing + seller + payment methods + pricing snapshot) */

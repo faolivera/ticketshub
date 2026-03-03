@@ -91,7 +91,6 @@ describe('ReviewsRepository (Integration)', () => {
         buyerPlatformFeePercentage: 0,
         sellerPlatformFeePercentage: 0,
         paymentMethodCommissions: {},
-        pricingModel: 'fixed',
         expiresAt: new Date(Date.now() + 3600000),
       },
     });

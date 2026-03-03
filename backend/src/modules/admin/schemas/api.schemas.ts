@@ -365,6 +365,21 @@ export const AdminTransactionDetailResponseSchema = z.object({
   totalPaid: MoneySchema,
   sellerReceives: MoneySchema,
   paymentMethodId: z.string().optional(),
+  paymentMethod: z
+    .object({
+      id: z.string(),
+      type: z.string(),
+      name: z.string(),
+    })
+    .optional(),
+  appliedPromotion: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      type: z.string(),
+      config: z.record(z.string(), z.unknown()),
+    })
+    .optional(),
   createdAt: z.coerce.date(),
   paymentReceivedAt: z.coerce.date().optional(),
   ticketTransferredAt: z.coerce.date().optional(),

@@ -203,6 +203,9 @@ export class TicketsRepository
       ),
       sellTogether: record.sellTogether,
       pricePerTicket: this.deserializeMoney(record.pricePerTicket),
+      bestOfferConfig: record.bestOfferConfig
+        ? (record.bestOfferConfig as unknown as TicketListing['bestOfferConfig'])
+        : undefined,
       deliveryMethod: this.mapDeliveryMethodFromDb(record.deliveryMethod),
       pickupAddress: record.pickupAddress
         ? (record.pickupAddress as unknown as Address)
@@ -232,6 +235,11 @@ export class TicketsRepository
     }
     if (updates.pricePerTicket !== undefined) {
       data.pricePerTicket = this.serializeMoney(updates.pricePerTicket);
+    }
+    if (updates.bestOfferConfig !== undefined) {
+      data.bestOfferConfig = updates.bestOfferConfig
+        ? (updates.bestOfferConfig as object)
+        : null;
     }
     if (updates.deliveryMethod !== undefined) {
       data.deliveryMethod = this.mapDeliveryMethodToDb(updates.deliveryMethod);
@@ -276,6 +284,9 @@ export class TicketsRepository
         },
         sellTogether: listing.sellTogether,
         pricePerTicket: this.serializeMoney(listing.pricePerTicket),
+        bestOfferConfig: listing.bestOfferConfig
+          ? (listing.bestOfferConfig as object)
+          : undefined,
         deliveryMethod: this.mapDeliveryMethodToDb(listing.deliveryMethod),
         pickupAddress: listing.pickupAddress
           ? (listing.pickupAddress as object)

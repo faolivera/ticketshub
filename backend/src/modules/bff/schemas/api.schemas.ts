@@ -142,7 +142,8 @@ export const ListingWithSellerSchema = z.object({
 
 export const GetEventListingsResponseSchema = z.array(ListingWithSellerSchema);
 
-const TransactionWithDetailsSchema = z.object({
+/** BFF transaction view: servicePrice instead of buyerPlatformFee + paymentMethodCommission */
+const BffTransactionWithDetailsSchema = z.object({
   id: z.string(),
   listingId: z.string(),
   buyerId: z.string(),
@@ -151,11 +152,12 @@ const TransactionWithDetailsSchema = z.object({
   ticketUnitIds: z.array(z.string()),
   quantity: z.number(),
   ticketPrice: MoneySchema,
-  buyerPlatformFee: MoneySchema,
+  servicePrice: MoneySchema,
   sellerPlatformFee: MoneySchema,
-  paymentMethodCommission: MoneySchema,
   totalPaid: MoneySchema,
   sellerReceives: MoneySchema,
+  pricingSnapshotId: z.string(),
+  offerId: z.string().optional(),
   status: TransactionStatusSchema,
   requiredActor: RequiredActorSchema,
   createdAt: z.coerce.date(),
@@ -164,6 +166,10 @@ const TransactionWithDetailsSchema = z.object({
   buyerConfirmedAt: z.coerce.date().optional(),
   completedAt: z.coerce.date().optional(),
   cancelledAt: z.coerce.date().optional(),
+  cancelledBy: z.string().optional(),
+  cancellationReason: z.string().optional(),
+  paymentExpiresAt: z.coerce.date(),
+  adminReviewExpiresAt: z.coerce.date().optional(),
   refundedAt: z.coerce.date().optional(),
   eventDateTime: z.coerce.date().optional(),
   releaseAfterMinutes: z.number().optional(),
@@ -171,7 +177,12 @@ const TransactionWithDetailsSchema = z.object({
   deliveryMethod: DeliveryMethodSchema.optional(),
   pickupAddress: AddressSchema.optional(),
   disputeId: z.string().optional(),
+  paymentMethodId: z.string().optional(),
+  paymentConfirmationId: z.string().optional(),
+  paymentApprovedBy: z.string().optional(),
+  paymentApprovedAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date(),
+  version: z.number(),
   eventName: z.string(),
   eventDate: z.coerce.date(),
   venue: z.string(),
@@ -187,21 +198,20 @@ const TicketListingWithEventSchema = ListingWithSellerSchema.omit({
 });
 
 export const GetMyTicketsResponseSchema = z.object({
-  bought: z.array(TransactionWithDetailsSchema),
-  sold: z.array(TransactionWithDetailsSchema),
+  bought: z.array(BffTransactionWithDetailsSchema),
+  sold: z.array(BffTransactionWithDetailsSchema),
   listed: z.array(TicketListingWithEventSchema),
 });
 
 const BuyPagePaymentMethodOptionSchema = z.object({
   id: z.string(),
   name: z.string(),
-  buyerCommissionPercent: z.number().nullable(),
+  serviceFeePercent: z.number(),
 });
 
 const BuyPagePricingSnapshotSchema = z.object({
   id: z.string(),
   expiresAt: z.coerce.date(),
-  buyerPlatformFeePercentage: z.number(),
 });
 
 const BuyPageSellerInfoSchema = z.object({
@@ -272,7 +282,7 @@ const TransactionTicketUnitSchema = z.object({
 });
 
 export const GetTransactionDetailsResponseSchema = z.object({
-  transaction: TransactionWithDetailsSchema,
+  transaction: BffTransactionWithDetailsSchema,
   paymentConfirmation: PaymentConfirmationSchema.nullable(),
   reviews: TransactionReviewsDataSchema.nullable(),
   bankTransferConfig: BankTransferConfigSchema.nullable(),

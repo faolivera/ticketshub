@@ -433,6 +433,20 @@ export interface AdminTransactionDetailResponse {
   sellerReceives: Money;
   /** Payment method ID used for this transaction (optional if absent) */
   paymentMethodId?: string;
+  /** Enriched payment method details (type and display name) when paymentMethodId is set */
+  paymentMethod?: {
+    id: string;
+    type: string;
+    name: string;
+  };
+  /** Promotion applied when the listing was created (from listing promotionSnapshot), if any */
+  appliedPromotion?: {
+    id: string;
+    name: string;
+    type: string;
+    /** Promotion config (e.g. feePercentage for SELLER_DISCOUNTED_FEE) */
+    config: Record<string, unknown>;
+  };
   /** Timeline dates */
   createdAt: Date;
   paymentReceivedAt?: Date;

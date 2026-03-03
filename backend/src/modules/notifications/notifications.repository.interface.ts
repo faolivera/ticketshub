@@ -108,6 +108,15 @@ export interface INotificationsRepository {
   markAllAsRead(ctx: Ctx, userId: string): Promise<number>;
 
   /**
+   * Mark specific in-app notifications as read for user (by ids)
+   */
+  markAsReadBatch(
+    ctx: Ctx,
+    userId: string,
+    notificationIds: string[],
+  ): Promise<number>;
+
+  /**
    * Find pending email notifications
    */
   findPendingEmailNotifications(ctx: Ctx): Promise<Notification[]>;

@@ -59,7 +59,6 @@ describe('PricingService', () => {
       { paymentMethodId: 'pm_payway', paymentMethodName: 'Payway', commissionPercent: 12 },
       { paymentMethodId: 'pm_bank_transfer', paymentMethodName: 'Bank Transfer', commissionPercent: 0 },
     ],
-    pricingModel: 'fixed',
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     ...overrides,
@@ -80,6 +79,8 @@ describe('PricingService', () => {
         sellerPlatformFeePercentage: 5,
         paymentTimeoutMinutes: 10,
         adminReviewTimeoutHours: 24,
+        offerPendingExpirationMinutes: 1440,
+        offerAcceptedExpirationMinutes: 1440,
       }),
     };
 
@@ -118,7 +119,6 @@ describe('PricingService', () => {
       expect(result.pricePerTicket).toEqual(pricePerTicket);
       expect(result.buyerPlatformFeePercentage).toBe(10);
       expect(result.sellerPlatformFeePercentage).toBe(5);
-      expect(result.pricingModel).toBe('fixed');
       expect(result.paymentMethodCommissions).toHaveLength(2);
       expect(result.paymentMethodCommissions[0]).toEqual({
         paymentMethodId: 'pm_payway',

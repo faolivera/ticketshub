@@ -29,6 +29,7 @@ import type {
   GetUnreadCountResponse,
   MarkAsReadResponse,
   MarkAllAsReadResponse,
+  MarkAsReadBatchResponse,
   GetTemplatesResponse,
   UpdateTemplateRequest,
   CreateTemplateRequest,
@@ -179,6 +180,26 @@ export class NotificationsService {
       read: updated.read,
       createdAt: updated.createdAt,
     };
+  }
+
+  /**
+   * Mark multiple notifications as read (e.g. when user opens the dropdown)
+   */
+  async markAsReadBatch(
+    ctx: Ctx,
+    userId: string,
+    notificationIds: string[],
+  ): Promise<MarkAsReadBatchResponse> {
+    const uniqueIds = [...new Set(notificationIds)].filter(Boolean);
+    if (uniqueIds.length === 0) {
+      return { markedCount: 0 };
+    }
+    const markedCount = await this.repository.markAsReadBatch(
+      ctx,
+      userId,
+      uniqueIds,
+    );
+    return { markedCount };
   }
 
   /**

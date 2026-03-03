@@ -18,6 +18,8 @@ export interface GetPlatformConfigResponse {
   sellerPlatformFeePercentage: number;
   paymentTimeoutMinutes: number;
   adminReviewTimeoutHours: number;
+  offerPendingExpirationMinutes: number;
+  offerAcceptedExpirationMinutes: number;
 }
 
 /**
@@ -28,6 +30,8 @@ export interface UpdatePlatformConfigRequest {
   sellerPlatformFeePercentage?: number;
   paymentTimeoutMinutes?: number;
   adminReviewTimeoutHours?: number;
+  offerPendingExpirationMinutes?: number;
+  offerAcceptedExpirationMinutes?: number;
 }
 
 /**

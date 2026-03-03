@@ -417,8 +417,29 @@ export default function TransactionManagement() {
           </div>
           <div>
             <span className="text-muted-foreground">{t('admin.transactions.paymentMethod')}:</span>
-            <p className="font-medium">{detail.paymentMethodId ?? '-'}</p>
+            <p className="font-medium">
+              {detail.paymentMethod
+                ? `${detail.paymentMethod.name} (${detail.paymentMethod.type})`
+                : detail.paymentMethodId ?? '-'}
+            </p>
           </div>
+          {detail.appliedPromotion && (
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.appliedPromotion')}:</span>
+              <p className="font-medium">
+                {detail.appliedPromotion.name} <span className="text-muted-foreground font-normal">({detail.appliedPromotion.id})</span>
+              </p>
+              {detail.appliedPromotion.config && Object.keys(detail.appliedPromotion.config).length > 0 && (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {Object.entries(detail.appliedPromotion.config).map(([key, value]) => (
+                    <span key={key} className="mr-3">
+                      {key}: {String(value)}
+                    </span>
+                  ))}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div>
@@ -440,6 +461,15 @@ export default function TransactionManagement() {
               <span className="text-muted-foreground">{t('admin.transactions.sellerPlatformFee')}:</span>
               <p className="font-medium">
                 {formatCurrency(detail.sellerPlatformFee.amount, detail.sellerPlatformFee.currency)}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">{t('admin.transactions.platformReceives')}:</span>
+              <p className="font-medium">
+                {formatCurrency(
+                  detail.buyerPlatformFee.amount + detail.sellerPlatformFee.amount,
+                  detail.buyerPlatformFee.currency,
+                )}
               </p>
             </div>
             <div>

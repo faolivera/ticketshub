@@ -35,6 +35,11 @@ export enum NotificationEventType {
 
   // Reviews
   REVIEW_RECEIVED = 'REVIEW_RECEIVED',
+
+  // Offers
+  OFFER_ACCEPTED = 'OFFER_ACCEPTED',
+  OFFER_REJECTED = 'OFFER_REJECTED',
+  OFFER_CANCELLED = 'OFFER_CANCELLED',
 }
 
 /**

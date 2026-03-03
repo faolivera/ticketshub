@@ -13,6 +13,7 @@ export * from './sellers';
 export * from './terms';
 export * from './payment-confirmations';
 export * from './reviews';
+export * from './offers';
 export * from './bff';
 export * from './admin';
 export * from './config';

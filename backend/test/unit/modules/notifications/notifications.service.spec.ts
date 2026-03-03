@@ -61,6 +61,7 @@ describe('NotificationsService', () => {
       countUnreadNotifications: jest.fn(),
       updateNotification: jest.fn(),
       markAllAsRead: jest.fn(),
+      markAsReadBatch: jest.fn(),
       findPendingEmailNotifications: jest.fn(),
       findRetryableEmailNotifications: jest.fn(),
       deleteOldNotifications: jest.fn(),
@@ -275,6 +276,48 @@ describe('NotificationsService', () => {
 
       expect(result).toEqual(mockNotifications);
       expect(repository.findRetryableEmailNotifications).toHaveBeenCalledWith(mockCtx);
+    });
+  });
+
+  describe('markAsReadBatch', () => {
+    it('should return markedCount from repository when given ids', async () => {
+      repository.markAsReadBatch.mockResolvedValue(2);
+
+      const result = await service.markAsReadBatch(mockCtx, 'user_123', [
+        'n_1',
+        'n_2',
+      ]);
+
+      expect(result).toEqual({ markedCount: 2 });
+      expect(repository.markAsReadBatch).toHaveBeenCalledWith(
+        mockCtx,
+        'user_123',
+        ['n_1', 'n_2'],
+      );
+    });
+
+    it('should return markedCount 0 when given empty array', async () => {
+      const result = await service.markAsReadBatch(mockCtx, 'user_123', []);
+
+      expect(result).toEqual({ markedCount: 0 });
+      expect(repository.markAsReadBatch).not.toHaveBeenCalled();
+    });
+
+    it('should deduplicate and filter empty ids before calling repository', async () => {
+      repository.markAsReadBatch.mockResolvedValue(2);
+
+      await service.markAsReadBatch(mockCtx, 'user_123', [
+        'n_1',
+        'n_1',
+        '',
+        'n_2',
+      ]);
+
+      expect(repository.markAsReadBatch).toHaveBeenCalledWith(
+        mockCtx,
+        'user_123',
+        ['n_1', 'n_2'],
+      );
     });
   });
 });

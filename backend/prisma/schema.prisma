@@ -87,6 +87,14 @@ enum ListingStatus {
   Expired
 }
 
+enum OfferStatus {
+  pending
+  accepted
+  rejected
+  converted
+  cancelled
+}
+
 enum TicketUnitStatus {
   available
   reserved
@@ -221,6 +229,9 @@ enum NotificationEventType {
   EVENT_APPROVED
   EVENT_REJECTED
   REVIEW_RECEIVED
+  OFFER_ACCEPTED
+  OFFER_REJECTED
+  OFFER_CANCELLED
 }
 
 enum NotificationChannel {
@@ -296,6 +307,7 @@ model User {
   identityVerifications IdentityVerificationRequest[]
   notifications         Notification[]
   promotions            Promotion[]
+  offers                Offer[]
 
   @@map("users")
 }
@@ -409,10 +421,11 @@ model TicketListing {
   type              TicketType
   sellTogether      Boolean         @default(false)
   pricePerTicket    Json
+  bestOfferConfig   Json?            // { enabled, minimumPrice } when seller allows offers
   deliveryMethod    DeliveryMethod?
   pickupAddress     Json?
   description       String?
-  promotionSnapshot Json?           // { id, name, type, config } when listing was created with a promotion
+  promotionSnapshot Json?            // { id, name, type, config } when listing was created with a promotion
   status            ListingStatus   @default(Pending)
   version           Int             @default(1)
   expiresAt         DateTime?
@@ -426,6 +439,7 @@ model TicketListing {
   eventSection      EventSection    @relation(fields: [eventSectionId], references: [id])
   transactions      Transaction[]
   ticketUnits       TicketUnit[]
+  offers            Offer[]
 
   @@map("ticket_listings")
 }
@@ -461,6 +475,7 @@ model Transaction {
   totalPaid                 Json
   sellerReceives            Json
   pricingSnapshotId         String
+  offerId                   String?
   status                    TransactionStatus @default(PendingPayment)
   requiredActor             RequiredActor     @default(Buyer)
   version                   Int               @default(1)
@@ -496,6 +511,29 @@ model Transaction {
   reviews                   Review[]
 
   @@map("transactions")
+}
+
+model Offer {
+  id                      String     @id @default(uuid())
+  listingId               String
+  userId                  String
+  offeredPrice            Json       // Money per ticket
+  status                  OfferStatus @default(pending)
+  tickets                 Json       // NumberedOfferTickets | UnnumberedOfferTickets
+  expiresAt               DateTime   // seller must accept/reject before this
+  acceptedAt              DateTime?
+  acceptedExpiresAt       DateTime?  // buyer must convert before this
+  rejectedAt              DateTime?
+  convertedTransactionId  String?
+  cancelledAt             DateTime?
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+
+  // Relations
+  listing  TicketListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("offers")
 }
 
 model PaymentIntent {
@@ -557,8 +595,6 @@ model PricingSnapshot {
   buyerPlatformFeePercentage Float
   sellerPlatformFeePercentage Float
   paymentMethodCommissions   Json
-  pricingModel               String   @default("fixed")
-  bestOfferConfig            Json?
   version                    Int      @default(1)
   expiresAt                  DateTime
   consumedAt                 DateTime?
@@ -814,12 +850,14 @@ model SchedulerLock {
 
 // Singleton: one row (id = "default") holds editable platform config. Seeded from HOCON on first read.
 model PlatformConfig {
-  id                         String   @id @default("default")
-  buyerPlatformFeePercentage Float    @map("buyer_platform_fee_percentage")
-  sellerPlatformFeePercentage Float    @map("seller_platform_fee_percentage")
-  paymentTimeoutMinutes      Int      @map("payment_timeout_minutes")
-  adminReviewTimeoutHours    Int      @map("admin_review_timeout_hours")
-  updatedAt                  DateTime @updatedAt
+  id                              String   @id @default("default")
+  buyerPlatformFeePercentage      Float    @map("buyer_platform_fee_percentage")
+  sellerPlatformFeePercentage     Float    @map("seller_platform_fee_percentage")
+  paymentTimeoutMinutes           Int      @map("payment_timeout_minutes")
+  adminReviewTimeoutHours         Int      @map("admin_review_timeout_hours")
+  offerPendingExpirationMinutes   Int      @map("offer_pending_expiration_minutes")
+  offerAcceptedExpirationMinutes Int      @map("offer_accepted_expiration_minutes")
+  updatedAt                       DateTime @updatedAt
 
   @@map("platform_config")
 }

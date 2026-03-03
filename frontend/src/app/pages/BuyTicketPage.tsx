@@ -1,16 +1,17 @@
 import React from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye, AlertTriangle } from 'lucide-react';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
 import { transactionsService } from '../../api/services/transactions.service';
+import { offersService } from '../../api/services/offers.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import { UserAvatar } from '../components/UserAvatar';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
 import { formatDateTime, formatMonthYear } from '@/lib/format-date';
-import type { BuyPageData, PublicPaymentMethodOption } from '../../api/types';
+import type { BuyPageData, BuyPagePaymentMethodOption, Offer } from '../../api/types';
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 
@@ -55,6 +56,8 @@ function isPricingSnapshotError(errorCode: string | undefined): boolean {
 export function BuyTicketPage() {
   const { t } = useTranslation();
   const { ticketId } = useParams<{ ticketId: string }>();
+  const [searchParams] = useSearchParams();
+  const offerIdFromUrl = searchParams.get('offerId');
   const navigate = useNavigate();
   const { isAuthenticated, user, canBuy } = useUser();
 
@@ -63,9 +66,16 @@ export function BuyTicketPage() {
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PublicPaymentMethodOption | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<BuyPagePaymentMethodOption | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  /** When user arrived with ?offerId= and has an accepted offer, we show "Complete purchase" at offer price */
+  const [acceptedOffer, setAcceptedOffer] = useState<Offer | null>(null);
+  /** Make offer flow */
+  const [offerPriceCents, setOfferPriceCents] = useState<number>(0);
+  const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
+  const [offerError, setOfferError] = useState<string | null>(null);
+  const [offerSuccess, setOfferSuccess] = useState(false);
 
   const listing = buyPageData?.listing ?? null;
   const seller = buyPageData?.seller ?? null;
@@ -142,6 +152,32 @@ export function BuyTicketPage() {
     }
   }, [listing, isNumberedListing, listing?.sellTogether, availableIds, availableCount]);
 
+  // Resolve accepted offer when URL has offerId (buyer completing an accepted offer)
+  useEffect(() => {
+    if (!offerIdFromUrl || !ticketId || !isAuthenticated || !listing) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const offers = await offersService.listMyOffers();
+        const offer = offers.find(
+          (o) => o.id === offerIdFromUrl && o.listingId === ticketId && o.status === 'accepted',
+        );
+        if (!cancelled) setAcceptedOffer(offer ?? null);
+      } catch {
+        if (!cancelled) setAcceptedOffer(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [offerIdFromUrl, ticketId, isAuthenticated, listing?.id]);
+
+  // Default offer price to minimum or listing price when best offer is enabled
+  useEffect(() => {
+    if (!listing?.bestOfferConfig?.enabled) return;
+    const min = listing.bestOfferConfig.minimumPrice.amount ?? 0;
+    const list = listing.pricePerTicket.amount ?? 0;
+    setOfferPriceCents((prev) => (prev === 0 ? Math.min(min || list, list) : prev));
+  }, [listing?.id, listing?.bestOfferConfig?.enabled, listing?.bestOfferConfig?.minimumPrice?.amount, listing?.pricePerTicket?.amount]);
+
   const toggleSeatSelection = (unitId: string) => {
     if (listing?.sellTogether) return;
 
@@ -171,7 +207,9 @@ export function BuyTicketPage() {
   };
 
   const handlePurchase = async () => {
-    if (!listing || !ticketId || !pricingSnapshot) return;
+    if (!listing || !ticketId) return;
+    const useOffer = acceptedOffer != null;
+    if (!useOffer && !pricingSnapshot) return;
 
     if (!isAuthenticated) {
       navigate('/login', { state: { from: `/buy/${ticketId}` } });
@@ -187,6 +225,16 @@ export function BuyTicketPage() {
     setPurchaseError(null);
 
     try {
+      if (useOffer) {
+        const response = await transactionsService.initiatePurchase({
+          listingId: ticketId,
+          paymentMethodId: selectedPaymentMethod?.id ?? 'payway',
+          offerId: acceptedOffer.id,
+        });
+        navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets?tab=bought' } });
+        return;
+      }
+
       const unitsToPurchase = listing.sellTogether
         ? availableUnits.map((unit) => unit.id)
         : isNumberedListing
@@ -203,7 +251,7 @@ export function BuyTicketPage() {
         listingId: ticketId,
         ticketUnitIds: unitsToPurchase,
         paymentMethodId: selectedPaymentMethod?.id ?? 'payway',
-        pricingSnapshotId: pricingSnapshot.id,
+        pricingSnapshotId: pricingSnapshot!.id,
       });
 
       navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets?tab=bought' } });
@@ -242,18 +290,59 @@ export function BuyTicketPage() {
 
   // Calculate pricing (use listing currency throughout purchase flow)
   const listingCurrency = listing.pricePerTicket.currency;
-  const pricePerTicket = listing.pricePerTicket.amount / 100;
-  const selectedQuantity = listing.sellTogether
-    ? availableUnits.length
-    : isNumberedListing
-      ? selectedUnitIds.length
-      : quantity;
+  const pricePerTicket = (acceptedOffer ? acceptedOffer.offeredPrice.amount : listing.pricePerTicket.amount) / 100;
+  const selectedQuantity = acceptedOffer
+    ? (acceptedOffer.tickets.type === 'numbered' ? acceptedOffer.tickets.seats.length : acceptedOffer.tickets.count)
+    : listing.sellTogether
+      ? availableUnits.length
+      : isNumberedListing
+        ? selectedUnitIds.length
+        : quantity;
   const subtotal = pricePerTicket * selectedQuantity;
-  const buyerPlatformFeePercent = pricingSnapshot?.buyerPlatformFeePercentage ?? 0;
-  const buyerPlatformFee = subtotal * (buyerPlatformFeePercent / 100);
-  const commissionPercent = selectedPaymentMethod?.buyerCommissionPercent ?? 0;
-  const paymentMethodCommission = subtotal * (commissionPercent / 100);
-  const grandTotal = subtotal + buyerPlatformFee + paymentMethodCommission;
+  const serviceFeePercent = selectedPaymentMethod?.serviceFeePercent ?? 0;
+  const servicePrice = subtotal * (serviceFeePercent / 100);
+  const grandTotal = subtotal + servicePrice;
+
+  const handleSubmitOffer = async () => {
+    if (!ticketId || !listing?.bestOfferConfig?.enabled || !user) return;
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/buy/${ticketId}` } });
+      return;
+    }
+    const minCents = listing.bestOfferConfig.minimumPrice.amount ?? 0;
+    if (offerPriceCents < minCents) {
+      setOfferError(t('buyTicket.offerBelowMinimum'));
+      return;
+    }
+    const ticketsPayload = listing.seatingType === SeatingType.Numbered
+      ? { type: 'numbered' as const, seats: selectedUnitIds.map((id) => {
+          const u = availableUnits.find((x) => x.id === id);
+          return u?.seat ? { row: u.seat.row, seatNumber: u.seat.seatNumber } : null;
+        }).filter((s): s is { row: string; seatNumber: string } => s != null) }
+      : { type: 'unnumbered' as const, count: quantity };
+    if (ticketsPayload.type === 'numbered' && ticketsPayload.seats.length === 0) {
+      setOfferError(t('buyTicket.selectAtLeastOneSeat'));
+      return;
+    }
+    if (ticketsPayload.type === 'unnumbered' && ticketsPayload.count < 1) {
+      setOfferError(t('buyTicket.selectAtLeastOneSeat'));
+      return;
+    }
+    setIsSubmittingOffer(true);
+    setOfferError(null);
+    try {
+      await offersService.create({
+        listingId: ticketId,
+        offeredPrice: { amount: offerPriceCents, currency: listing.pricePerTicket.currency },
+        tickets: ticketsPayload,
+      });
+      setOfferSuccess(true);
+    } catch (err: unknown) {
+      setOfferError(err instanceof Error ? err.message : t('buyTicket.offerSubmitFailed'));
+    } finally {
+      setIsSubmittingOffer(false);
+    }
+  };
 
   const eventDateTimeFormatted = formatDateTime(listing.eventDate);
 
@@ -433,6 +522,64 @@ export function BuyTicketPage() {
                 )}
               </div>
             </div>
+
+            {/* Make an offer (when seller enabled best offer and user is not completing an accepted offer) */}
+            {listing.bestOfferConfig?.enabled && !acceptedOffer && !isOwnListing && (
+              <div className="bg-white rounded-lg shadow-md p-6 border-2 border-dashed border-amber-200">
+                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-amber-600" />
+                  {t('buyTicket.makeOffer')}
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  {t('buyTicket.makeOfferDescription')}
+                </p>
+                {offerSuccess ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="font-medium text-green-800">{t('buyTicket.offerSubmitted')}</p>
+                    <Link to="/my-tickets?tab=my-offers" className="text-sm text-green-700 underline mt-1 inline-block">
+                      {t('buyTicket.viewMyOffers')}
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <label className="text-sm text-gray-600 block mb-1">
+                        {t('buyTicket.yourOfferPrice')} ({listingCurrency})
+                      </label>
+                      <input
+                        type="number"
+                        min={(listing.bestOfferConfig.minimumPrice?.amount ?? 0) / 100}
+                        max={(listing.pricePerTicket.amount ?? 0) / 100}
+                        step="0.01"
+                        value={offerPriceCents / 100}
+                        onChange={(e) => setOfferPriceCents(Math.round(parseFloat(e.target.value || '0') * 100))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {t('buyTicket.minimumOffer', {
+                          amount: formatCurrencyFromUnits(listing.bestOfferConfig.minimumPrice?.amount ?? 0, listingCurrency),
+                        })}
+                      </p>
+                    </div>
+                    {offerError && <ErrorAlert message={offerError} className="mb-4" />}
+                    <button
+                      type="button"
+                      onClick={handleSubmitOffer}
+                      disabled={isSubmittingOffer || !isAuthenticated}
+                      className="w-full py-3 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isSubmittingOffer ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
+                      {isSubmittingOffer ? t('common.loading') : t('buyTicket.submitOffer')}
+                    </button>
+                    {!isAuthenticated && (
+                      <p className="text-xs text-amber-700 mt-2">
+                        {t('buyTicket.loginToOffer')}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -502,24 +649,9 @@ export function BuyTicketPage() {
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {t('buyTicket.buyerPlatformFee', { percent: buyerPlatformFeePercent })}
-                </span>
+                <span className="text-gray-700">{t('buyTicket.servicePrice')}</span>
                 <span className="font-semibold text-gray-900">
-                  {formatCurrencyFromUnits(buyerPlatformFee, listingCurrency)}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {selectedPaymentMethod?.buyerCommissionPercent != null
-                    ? t('buyTicket.paymentMethodCommission', {
-                        percent: selectedPaymentMethod.buyerCommissionPercent,
-                      })
-                    : t('buyTicket.paymentMethodCommissionManual')}
-                </span>
-                <span className="font-semibold text-gray-900">
-                  {formatCurrencyFromUnits(paymentMethodCommission, listingCurrency)}
+                  {formatCurrencyFromUnits(servicePrice, listingCurrency)}
                 </span>
               </div>
 
@@ -553,11 +685,9 @@ export function BuyTicketPage() {
                       >
                         <span className="font-medium text-gray-900">{method.name}</span>
                         <span className="text-sm text-gray-500">
-                          {method.buyerCommissionPercent != null
-                            ? t('buyTicket.commissionPercent', {
-                                percent: method.buyerCommissionPercent,
-                              })
-                            : t('buyTicket.manualApproval')}
+                          {t('buyTicket.serviceFeePercent', {
+                            percent: method.serviceFeePercent,
+                          })}
                         </span>
                       </button>
                     );
@@ -593,12 +723,22 @@ export function BuyTicketPage() {
               <ErrorAlert message={purchaseError} className="mb-4" />
             )}
 
+            {acceptedOffer && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p className="text-sm font-medium text-green-800">
+                  {t('buyTicket.acceptedOfferComplete')}
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  {t('buyTicket.acceptedOfferExpires')}
+                </p>
+              </div>
+            )}
+
             <button
               onClick={handlePurchase}
               disabled={
                 isPurchasing ||
-                availableUnits.length === 0 ||
-                selectedQuantity === 0 ||
+                (acceptedOffer ? !selectedPaymentMethod : (availableUnits.length === 0 || selectedQuantity === 0 || !pricingSnapshot)) ||
                 isOwnListing ||
                 (isAuthenticated && !canBuy())
               }

@@ -23,6 +23,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       sellerPlatformFeePercentage: row.sellerPlatformFeePercentage,
       paymentTimeoutMinutes: row.paymentTimeoutMinutes,
       adminReviewTimeoutHours: row.adminReviewTimeoutHours,
+      offerPendingExpirationMinutes: row.offerPendingExpirationMinutes,
+      offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
     };
   }
 
@@ -36,12 +38,16 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         sellerPlatformFeePercentage: config.sellerPlatformFeePercentage,
         paymentTimeoutMinutes: config.paymentTimeoutMinutes,
         adminReviewTimeoutHours: config.adminReviewTimeoutHours,
+        offerPendingExpirationMinutes: config.offerPendingExpirationMinutes,
+        offerAcceptedExpirationMinutes: config.offerAcceptedExpirationMinutes,
       },
       update: {
         buyerPlatformFeePercentage: config.buyerPlatformFeePercentage,
         sellerPlatformFeePercentage: config.sellerPlatformFeePercentage,
         paymentTimeoutMinutes: config.paymentTimeoutMinutes,
         adminReviewTimeoutHours: config.adminReviewTimeoutHours,
+        offerPendingExpirationMinutes: config.offerPendingExpirationMinutes,
+        offerAcceptedExpirationMinutes: config.offerAcceptedExpirationMinutes,
       },
     });
     return {
@@ -49,6 +55,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       sellerPlatformFeePercentage: row.sellerPlatformFeePercentage,
       paymentTimeoutMinutes: row.paymentTimeoutMinutes,
       adminReviewTimeoutHours: row.adminReviewTimeoutHours,
+      offerPendingExpirationMinutes: row.offerPendingExpirationMinutes,
+      offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
     };
   }
 }

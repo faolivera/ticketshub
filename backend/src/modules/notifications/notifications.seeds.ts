@@ -100,6 +100,9 @@ export class NotificationsSeeder implements OnModuleInit {
       { eventType: NotificationEventType.EVENT_APPROVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.EVENT_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.REVIEW_RECEIVED, inAppEnabled: true, emailEnabled: false, priority: NotificationPriority.LOW, updatedAt: new Date() },
+      { eventType: NotificationEventType.OFFER_ACCEPTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
+      { eventType: NotificationEventType.OFFER_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
+      { eventType: NotificationEventType.OFFER_CANCELLED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
     ];
 
     let seededCount = 0;
@@ -420,6 +423,60 @@ export class NotificationsSeeder implements OnModuleInit {
         titleTemplate: 'Nueva reseña recibida',
         bodyTemplate: '{{reviewerName}} te dejó una reseña de {{rating}} estrellas',
         actionUrlTemplate: '/profile/reviews',
+      },
+
+      // OFFER_ACCEPTED
+      {
+        eventType: NotificationEventType.OFFER_ACCEPTED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Oferta aceptada',
+        bodyTemplate: 'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada. Completa la compra antes de que expire.',
+        actionUrlTemplate: '/buy/{{listingId}}?offerId={{offerId}}',
+      },
+      {
+        eventType: NotificationEventType.OFFER_ACCEPTED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Tu oferta para "{{eventName}}" fue aceptada',
+        bodyTemplate: 'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada por el vendedor. Completa la compra antes de que expire.',
+        actionUrlTemplate: '/buy/{{listingId}}?offerId={{offerId}}',
+      },
+
+      // OFFER_REJECTED
+      {
+        eventType: NotificationEventType.OFFER_REJECTED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Oferta rechazada',
+        bodyTemplate: 'Tu oferta para "{{eventName}}" fue rechazada por el vendedor',
+        actionUrlTemplate: '/buy/{{listingId}}',
+      },
+      {
+        eventType: NotificationEventType.OFFER_REJECTED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Tu oferta para "{{eventName}}" fue rechazada',
+        bodyTemplate: 'El vendedor rechazó tu oferta para "{{eventName}}". Puedes hacer otra oferta o comprar al precio publicado.',
+        actionUrlTemplate: '/buy/{{listingId}}',
+      },
+
+      // OFFER_CANCELLED
+      {
+        eventType: NotificationEventType.OFFER_CANCELLED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Oferta cancelada',
+        bodyTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible. {{reason}}',
+        actionUrlTemplate: '/buy/{{listingId}}',
+      },
+      {
+        eventType: NotificationEventType.OFFER_CANCELLED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible',
+        bodyTemplate: 'Tu oferta para "{{eventName}}" fue cancelada. {{reason}}',
+        actionUrlTemplate: '/buy/{{listingId}}',
       },
     ];
   }

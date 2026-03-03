@@ -80,16 +80,18 @@ export interface Transaction {
   ticketUnitIds: string[];
   quantity: number;
 
-  // Pricing breakdown
+  // Pricing breakdown (BFF view: single servicePrice for buyer, no commission breakdown)
   ticketPrice: Money;
-  buyerPlatformFee: Money;
+  servicePrice: Money;
   sellerPlatformFee: Money;
-  paymentMethodCommission: Money;
   totalPaid: Money;
   sellerReceives: Money;
 
   // Pricing snapshot reference
   pricingSnapshotId: string;
+
+  /** Set when the purchase was made from an accepted offer */
+  offerId?: string;
 
   status: TransactionStatus;
 
@@ -159,20 +161,23 @@ export interface TransactionWithDetails extends Transaction {
 // === API Types ===
 
 /**
- * Request to initiate a purchase
+ * Request to initiate a purchase.
+ * When offerId is set, price and ticket selection come from the offer; ticketUnitIds and pricingSnapshotId can be omitted.
  */
 export interface InitiatePurchaseRequest {
   listingId: string;
-  ticketUnitIds: string[];
+  ticketUnitIds?: string[];
   paymentMethodId: string;
-  pricingSnapshotId: string;
+  pricingSnapshotId?: string;
+  offerId?: string;
 }
 
 /**
- * Response after initiating purchase
+ * Response after initiating purchase.
+ * Only transaction.id is used by the frontend (redirect); full display data comes from BFF.
  */
 export interface InitiatePurchaseResponse {
-  transaction: Transaction;
+  transaction: { id: string };
   paymentIntentId: string;
   clientSecret?: string;
 }
