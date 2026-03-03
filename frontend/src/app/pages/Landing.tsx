@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { eventsService } from '../../api/services/events.service';
 import type { EventWithDates } from '../../api/types';
 import { EventSectionStatus } from '../../api/types/events';
+import { formatDate, formatTime } from '@/lib/format-date';
 
 /**
  * Transform API event data to EventCard props format
@@ -20,16 +21,8 @@ function transformEventForCard(event: EventWithDates) {
     .map(d => {
       const date = new Date(d.date);
       return {
-        date: date.toLocaleDateString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
-        }),
-        time: date.toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        }),
+        date: formatDate(d.date),
+        time: formatTime(d.date),
       };
     });
 

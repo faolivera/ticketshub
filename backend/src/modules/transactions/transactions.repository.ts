@@ -158,7 +158,8 @@ export class TransactionsRepository
         data,
       });
       return this.mapToTransaction(updated);
-    } catch {
+    } catch (error) {
+      console.error('transactions.repository update failed:', error);
       return undefined;
     }
   }

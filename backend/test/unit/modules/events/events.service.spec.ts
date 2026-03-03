@@ -95,7 +95,7 @@ describe('EventsService', () => {
     };
 
     const mockImagesRepository = {
-      getByIds: jest.fn(),
+      findByIds: jest.fn(),
     };
 
     const mockTicketsService = {
@@ -211,7 +211,7 @@ describe('EventsService', () => {
         mockApprovedSection,
         mockPendingSection,
       ]);
-      imagesRepository.getByIds.mockResolvedValue([]);
+      imagesRepository.findByIds.mockResolvedValue([]);
 
       const result = await service.listEvents(mockCtx, {}, false);
 
@@ -245,7 +245,7 @@ describe('EventsService', () => {
         mockApprovedSection,
         mockPendingSection,
       ]);
-      imagesRepository.getByIds.mockResolvedValue([]);
+      imagesRepository.findByIds.mockResolvedValue([]);
 
       const result = await service.listEvents(mockCtx, {}, true);
 

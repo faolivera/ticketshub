@@ -245,16 +245,16 @@ describe('TicketsRepository (Integration)', () => {
     });
   });
 
-  // ==================== getByIds ====================
+  // ==================== findByIds ====================
 
-  describe('getByIds', () => {
+  describe('findByIds', () => {
     it('should return empty array when no ids provided', async () => {
-      const listings = await repository.getByIds(ctx, []);
+      const listings = await repository.findByIds(ctx, []);
       expect(listings).toEqual([]);
     });
 
     it('should return empty array when no listings match', async () => {
-      const listings = await repository.getByIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const listings = await repository.findByIds(ctx, ['non-existent-1', 'non-existent-2']);
       expect(listings).toEqual([]);
     });
 
@@ -263,7 +263,7 @@ describe('TicketsRepository (Integration)', () => {
       const listing2 = await repository.create(ctx, createValidListing());
       await repository.create(ctx, createValidListing());
 
-      const listings = await repository.getByIds(ctx, [listing1.id, listing2.id]);
+      const listings = await repository.findByIds(ctx, [listing1.id, listing2.id]);
 
       expect(listings).toHaveLength(2);
       expect(listings.map(l => l.id)).toContain(listing1.id);

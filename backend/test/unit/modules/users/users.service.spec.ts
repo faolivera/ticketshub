@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { USERS_REPOSITORY } from '../../../../src/modules/users/users.repository.interface';
@@ -72,8 +73,8 @@ describe('UsersService', () => {
     };
 
     const mockImagesRepository = {
-      getById: jest.fn(),
-      getByIds: jest.fn(),
+      findById: jest.fn(),
+      findByIds: jest.fn(),
       set: jest.fn(),
     };
 
@@ -95,6 +96,18 @@ describe('UsersService', () => {
       exists: jest.fn(),
     };
 
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        const defaults: Record<string, unknown> = {
+          'jwt.secret': 'test-secret',
+          'jwt.expiresIn': '7d',
+          'users.allowedAvatarMimeTypes': ['image/jpeg', 'image/png', 'image/webp'],
+          'users.maxAvatarSizeBytes': 5 * 1024 * 1024,
+        };
+        return defaults[key];
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -103,6 +116,7 @@ describe('UsersService', () => {
         { provide: OTPService, useValue: mockOTPService },
         { provide: TermsService, useValue: mockTermsService },
         { provide: PUBLIC_STORAGE_PROVIDER, useValue: mockStorageProvider },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -129,7 +143,7 @@ describe('UsersService', () => {
         ...mockUser,
         imageId: 'new-uuid',
       });
-      imagesRepository.getById.mockResolvedValue({
+      imagesRepository.findById.mockResolvedValue({
         id: 'new-uuid',
         src: '/public/avatars/user_123/new-uuid.jpg',
       });
@@ -199,7 +213,7 @@ describe('UsersService', () => {
       };
 
       usersRepository.findById.mockResolvedValue(userWithAvatar);
-      imagesRepository.getById
+      imagesRepository.findById
         .mockResolvedValueOnce(oldImage) // First call for old image lookup
         .mockResolvedValue({
           // Subsequent calls for updated user info
@@ -245,7 +259,7 @@ describe('UsersService', () => {
         ...mockUser,
         imageId: 'new-uuid',
       });
-      imagesRepository.getById.mockResolvedValue({
+      imagesRepository.findById.mockResolvedValue({
         id: 'new-uuid',
         src: '/public/avatars/user_123/new-uuid.jpg',
       });
@@ -271,7 +285,7 @@ describe('UsersService', () => {
         ...mockUser,
         imageId: 'new-uuid',
       });
-      imagesRepository.getById.mockResolvedValue({
+      imagesRepository.findById.mockResolvedValue({
         id: 'new-uuid',
         src: '/public/avatars/user_123/new-uuid.png',
       });
@@ -308,7 +322,7 @@ describe('UsersService', () => {
         ...mockUser,
         imageId: 'new-uuid',
       });
-      imagesRepository.getById.mockResolvedValue({
+      imagesRepository.findById.mockResolvedValue({
         id: 'new-uuid',
         src: '/public/avatars/user_123/new-uuid.webp',
       });

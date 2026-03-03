@@ -244,6 +244,17 @@ throw new ConflictException('Email already exists');
 throw new HttpException('Custom error', HttpStatus.INTERNAL_SERVER_ERROR);
 ```
 
+## Error logging in catch blocks (mandatory)
+
+**Every `try/catch` that handles an error MUST log it.** The application must not hide errors; at least log them for observability.
+
+- In **services**: use `this.logger.error(ctx, message, error)` (or include the error in the message). Prefer the project's `ContextLogger`, not `console.error`, when a context is available.
+- In **repositories** and **guards** (and other places without injected logger): use `console.error` or inject a logger if the module provides one.
+- **Tests**: catch blocks that assert on the error (e.g. `expect(error).toBeInstanceOf(...)`) are exempt; they are part of the test, not production error handling.
+- **Scripts** (e.g. under `scripts/`): `console.error` before `process.exit(1)` is acceptable.
+
+If you intentionally swallow an error (e.g. "optional data not found"), still log it at debug/warn level so that failures are visible in logs when debugging.
+
 ## Development Guidelines
 
 1. Follow existing module structure

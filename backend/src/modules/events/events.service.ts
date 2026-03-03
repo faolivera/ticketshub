@@ -681,7 +681,7 @@ export class EventsService {
       new Set(events.flatMap((event) => event.imageIds || [])),
     );
     const images = imageIds.length
-      ? await this.imagesRepository.getByIds(ctx, imageIds)
+      ? await this.imagesRepository.findByIds(ctx, imageIds)
       : [];
     const imagesMap = new Map<string, Image>(
       images.map((image) => [image.id, image]),

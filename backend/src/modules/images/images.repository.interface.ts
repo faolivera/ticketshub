@@ -6,14 +6,14 @@ import type { Image } from './images.domain';
  */
 export interface IImagesRepository {
   /**
-   * Get image by ID
+   * Find image by ID
    */
-  getById(ctx: Ctx, id: string): Promise<Image | undefined>;
+  findById(ctx: Ctx, id: string): Promise<Image | undefined>;
 
   /**
-   * Get multiple images by IDs
+   * Find multiple images by IDs
    */
-  getByIds(ctx: Ctx, ids: string[]): Promise<Image[]>;
+  findByIds(ctx: Ctx, ids: string[]): Promise<Image[]>;
 
   /**
    * Save an image

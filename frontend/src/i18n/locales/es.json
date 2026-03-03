@@ -309,7 +309,7 @@
   },
   "sellerProfile": {
     "title": "Perfil del Vendedor",
-    "memberSince": "Miembro Desde",
+    "memberSince": "Miembro desde",
     "activeListings": "Anuncios Activos",
     "totalSales": "Ventas Totales",
     "reviewsTitle": "Reseñas",
@@ -318,7 +318,16 @@
     "negative": "Negativo",
     "recentListings": "Anuncios Recientes",
     "availableTickets": "Entradas Disponibles",
-    "contactSeller": "Contactar Vendedor"
+    "contactSeller": "Contactar Vendedor",
+    "loading": "Cargando perfil del vendedor",
+    "sellerNotFound": "Vendedor no encontrado",
+    "loadError": "No se pudo cargar el perfil del vendedor",
+    "tryAgainLater": "Por favor, inténtalo más tarde.",
+    "totalReviewsLabel": "{{count}} reseñas en total",
+    "customerReviews": "Reseñas de clientes",
+    "noReviewsYet": "Aún no hay reseñas",
+    "noReviewsDescription": "Este vendedor aún no ha recibido reseñas.",
+    "ticket": "Entrada"
   },
   "howItWorks": {
     "title": "Cómo Funciona",
@@ -817,6 +826,7 @@
     "noDatesFound": "No se encontraron fechas coincidentes"
   },
   "common": {
+    "at": "a las",
     "loading": "Cargando...",
     "error": "Error",
     "success": "Éxito",

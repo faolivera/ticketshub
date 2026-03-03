@@ -325,7 +325,7 @@
   },
   "sellerProfile": {
     "title": "Seller Profile",
-    "memberSince": "Member Since",
+    "memberSince": "Member since",
     "activeListings": "Active Listings",
     "totalSales": "Total Sales",
     "reviewsTitle": "Reviews",
@@ -334,7 +334,16 @@
     "negative": "Negative",
     "recentListings": "Recent Listings",
     "availableTickets": "Available Tickets",
-    "contactSeller": "Contact Seller"
+    "contactSeller": "Contact Seller",
+    "loading": "Loading seller profile",
+    "sellerNotFound": "Seller not found",
+    "loadError": "Unable to load seller profile",
+    "tryAgainLater": "Please try again later.",
+    "totalReviewsLabel": "{{count}} total reviews",
+    "customerReviews": "Customer Reviews",
+    "noReviewsYet": "No reviews yet",
+    "noReviewsDescription": "This seller has not received any reviews yet.",
+    "ticket": "Ticket"
   },
   "howItWorks": {
     "title": "How It Works",
@@ -838,6 +847,7 @@
     "noDatesFound": "No matching dates found"
   },
   "common": {
+    "at": "at",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",

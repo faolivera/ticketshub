@@ -98,7 +98,7 @@ export function EventCard({
               {displayDates.map((showTime, index) => (
                 <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
                   <Clock className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                  <span>{showTime.date} at {showTime.time}</span>
+                  <span>{showTime.date} {t('common.at')} {showTime.time}</span>
                 </div>
               ))}
               {hasMoreDates && (

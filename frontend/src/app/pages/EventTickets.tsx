@@ -13,6 +13,7 @@ import type { EventWithDates, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
+import { formatDate, formatTime, formatDateTime } from '@/lib/format-date';
 
 interface ShowTime {
   date: string;
@@ -70,16 +71,8 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
     sellerBadges: [],
     sellerTotalSales: 0,
     showTime: {
-      date: dateObj.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      }),
-      time: dateObj.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }),
+      date: formatDate(dateObj),
+      time: formatTime(dateObj),
       dateObj,
       eventDateId: listing.eventDateId,
     },
@@ -340,16 +333,11 @@ export function EventTickets() {
                   {event.dates
                     .filter(d => d.status === 'approved')
                     .slice(0, 3)
-                    .map((eventDate) => {
-                      const date = new Date(eventDate.date);
-                      const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                      return (
-                        <p key={eventDate.id} className="text-sm text-gray-900">
-                          {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                          {' '}at {time}
-                        </p>
-                      );
-                    })}
+                    .map((eventDate) => (
+                      <p key={eventDate.id} className="text-sm text-gray-900">
+                        {formatDateTime(eventDate.date)}
+                      </p>
+                    ))}
                   {event.dates.filter(d => d.status === 'approved').length > 3 && (
                     <p className="text-sm text-blue-600">
                       +{event.dates.filter(d => d.status === 'approved').length - 3} more dates
@@ -408,7 +396,7 @@ export function EventTickets() {
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             <span className="text-sm font-medium">
-                              {showTime.date} at {showTime.time}
+                              {formatDateTime(showTime.dateObj)}
                             </span>
                           </div>
                         </button>
@@ -458,7 +446,7 @@ export function EventTickets() {
                       <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
                         <Clock className="w-5 h-5 text-blue-600" />
                         <h3 className="text-lg font-bold text-gray-900">
-                          {date} at {time}
+                          {showTimeTickets[0] ? formatDateTime(showTimeTickets[0].showTime.dateObj) : `${date} ${time}`}
                         </h3>
                       </div>
 

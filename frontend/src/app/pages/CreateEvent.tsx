@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { eventsService } from '@/api/services/events.service';
 import { EventCategory } from '@/api/types';
+import { formatDateTime } from '@/lib/format-date';
 
 interface EventData {
   name: string;
@@ -570,7 +571,7 @@ export function CreateEvent() {
                   <span className="text-sm text-gray-600">{t('createEvent.dateTime')}:</span>
                   <p className="font-semibold text-gray-900">
                     {formData.date && formData.time 
-                      ? `${new Date(formData.date).toLocaleDateString()} ${t('createEvent.at')} ${formData.time}`
+                      ? formatDateTime(`${formData.date}T${formData.time}:00`)
                       : '-'}
                   </p>
                 </div>

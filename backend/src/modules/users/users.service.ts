@@ -74,7 +74,7 @@ export class UsersService {
   ): Promise<UserPublicInfo[]> {
     const users = await this.findByIds(ctx, ids);
     if (!users) return [];
-    const images = await this.imagesRepository.getByIds(
+    const images = await this.imagesRepository.findByIds(
       ctx,
       users.map((user) => user.imageId),
     );
@@ -166,7 +166,7 @@ export class UsersService {
       return null;
     }
 
-    let image: Image | undefined = await this.imagesRepository.getById(
+    let image: Image | undefined = await this.imagesRepository.findById(
       ctx,
       user.imageId,
     );
@@ -212,7 +212,8 @@ export class UsersService {
       if (!secret) return null;
       const decoded = jwt.verify(token, secret) as JWTPayload;
       return decoded;
-    } catch {
+    } catch (error) {
+      console.error('JWT verify failed:', error);
       return null;
     }
   }
@@ -428,7 +429,7 @@ export class UsersService {
 
     // Validate imageId if provided
     if (updates.imageId !== undefined) {
-      const image = await this.imagesRepository.getById(ctx, updates.imageId);
+      const image = await this.imagesRepository.findById(ctx, updates.imageId);
       if (!image) {
         throw new BadRequestException('Invalid imageId');
       }
@@ -446,7 +447,7 @@ export class UsersService {
     }
 
     // Get updated user info
-    const image = await this.imagesRepository.getById(ctx, updatedUser.imageId);
+    const image = await this.imagesRepository.findById(ctx, updatedUser.imageId);
     if (!image) {
       return null;
     }
@@ -569,7 +570,7 @@ export class UsersService {
     // Delete old avatar if not default
     const oldImageId = user.imageId;
     if (oldImageId && oldImageId !== 'default') {
-      const oldImage = await this.imagesRepository.getById(ctx, oldImageId);
+      const oldImage = await this.imagesRepository.findById(ctx, oldImageId);
       if (oldImage && oldImage.src.startsWith('/public/avatars/')) {
         const oldKey = oldImage.src.replace('/public/', '');
         await this.publicStorageProvider.delete(oldKey);

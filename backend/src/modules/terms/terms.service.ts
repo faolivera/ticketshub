@@ -62,9 +62,13 @@ export class TermsService {
     };
   }
 
-  async getTermsContent(ctx: Ctx, versionId: string): Promise<fs.ReadStream> {
-    this.logger.log(ctx, `Getting terms content for versionId: ${versionId}`);
-
+  /**
+   * Resolves the file path for a terms version. Throws if version not found or file missing.
+   */
+  private async getTermsFilePathOrThrow(
+    ctx: Ctx,
+    versionId: string,
+  ): Promise<string> {
     const termsVersion = await this.termsRepository.findVersionById(
       ctx,
       versionId,
@@ -82,27 +86,17 @@ export class TermsService {
       throw new NotFoundException('Terms document file not found');
     }
 
+    return filePath;
+  }
+
+  async getTermsContent(ctx: Ctx, versionId: string): Promise<fs.ReadStream> {
+    this.logger.log(ctx, `Getting terms content for versionId: ${versionId}`);
+    const filePath = await this.getTermsFilePathOrThrow(ctx, versionId);
     return fs.createReadStream(filePath);
   }
 
   async getTermsFilePath(ctx: Ctx, versionId: string): Promise<string> {
-    const termsVersion = await this.termsRepository.findVersionById(
-      ctx,
-      versionId,
-    );
-
-    if (!termsVersion) {
-      throw new NotFoundException(`Terms version not found: ${versionId}`);
-    }
-
-    const assetsPath = path.join(process.cwd(), 'assets', 'terms');
-    const filePath = path.join(assetsPath, termsVersion.contentUrl);
-
-    if (!fs.existsSync(filePath)) {
-      throw new NotFoundException('Terms document file not found');
-    }
-
-    return filePath;
+    return this.getTermsFilePathOrThrow(ctx, versionId);
   }
 
   async acceptTerms(

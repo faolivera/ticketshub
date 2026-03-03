@@ -95,40 +95,6 @@ describe('DistributedLockService', () => {
     });
   });
 
-  describe('withLock', () => {
-    it('should execute function when lock is acquired', async () => {
-      prismaService.$executeRaw.mockResolvedValue(1);
-      const fn = jest.fn().mockResolvedValue('result');
-
-      const result = await service.withLock('test-lock', 'holder-1', 60, fn);
-
-      expect(result).toBe('result');
-      expect(fn).toHaveBeenCalledTimes(1);
-      expect(prismaService.$executeRaw).toHaveBeenCalledTimes(2); // acquire + release
-    });
-
-    it('should return null when lock cannot be acquired', async () => {
-      prismaService.$executeRaw.mockResolvedValue(0);
-      const fn = jest.fn().mockResolvedValue('result');
-
-      const result = await service.withLock('test-lock', 'holder-1', 60, fn);
-
-      expect(result).toBeNull();
-      expect(fn).not.toHaveBeenCalled();
-      expect(prismaService.$executeRaw).toHaveBeenCalledTimes(1); // only acquire attempt
-    });
-
-    it('should release lock even when function throws an error', async () => {
-      prismaService.$executeRaw.mockResolvedValue(1);
-      const error = new Error('Function error');
-      const fn = jest.fn().mockRejectedValue(error);
-
-      await expect(service.withLock('test-lock', 'holder-1', 60, fn)).rejects.toThrow(error);
-
-      expect(prismaService.$executeRaw).toHaveBeenCalledTimes(2); // acquire + release
-    });
-  });
-
   describe('withLockAndLog', () => {
     it('should execute function when lock is acquired', async () => {
       prismaService.$executeRaw.mockResolvedValue(1);

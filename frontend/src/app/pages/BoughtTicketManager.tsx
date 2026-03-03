@@ -12,6 +12,7 @@ import { TicketUnitStatus, RequiredActor, TransactionStatus } from '../../api/ty
 import { useUser } from '../contexts/UserContext';
 import { BRAND_NAME } from '../../constants/brand';
 import { formatCurrency } from '@/lib/format-currency';
+import { formatDate } from '@/lib/format-date';
 
 type TabType = 'bought' | 'sold' | 'listed';
 
@@ -230,11 +231,7 @@ function TransactionCard({ transaction, userId, showWaitingFor, activeTab, t }: 
         <div className="flex items-center gap-2 text-gray-600 mb-3">
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span className="text-sm">
-            {eventDate.toLocaleDateString('en-US', { 
-              month: 'long', 
-              day: 'numeric', 
-              year: 'numeric' 
-            })}
+            {formatDate(eventDate)}
           </span>
         </div>
 

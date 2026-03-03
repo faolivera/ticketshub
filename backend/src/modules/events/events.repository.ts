@@ -171,7 +171,8 @@ export class EventsRepository implements IEventsRepository {
         data,
       });
       return this.mapToEvent(updated);
-    } catch {
+    } catch (error) {
+      console.error('events.repository updateEvent failed:', error);
       return undefined;
     }
   }
@@ -361,7 +362,8 @@ export class EventsRepository implements IEventsRepository {
         data,
       });
       return this.mapToEventDate(updated);
-    } catch {
+    } catch (error) {
+      console.error('events.repository updateEventDate failed:', error);
       return undefined;
     }
   }
@@ -493,7 +495,8 @@ export class EventsRepository implements IEventsRepository {
         data,
       });
       return this.mapToEventSection(updated);
-    } catch {
+    } catch (error) {
+      console.error('events.repository updateEventSection failed:', error);
       return undefined;
     }
   }

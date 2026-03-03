@@ -16,6 +16,7 @@ import { eventsService } from '@/api/services/events.service';
 import { ticketsService } from '@/api/services/tickets.service';
 import { useUser } from '@/app/contexts/UserContext';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
+import { formatDate, formatTime, formatDateTime } from '@/lib/format-date';
 import {
   SeatingType,
   TicketType,
@@ -332,17 +333,8 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
       return;
     }
 
-    const date = new Date(eventDate.date);
-    const formattedDate = date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    const formattedTime = date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
+    const formattedDate = formatDate(eventDate.date);
+    const formattedTime = formatTime(eventDate.date);
 
     setFormData({
       ...formData,
@@ -351,7 +343,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
       eventTime: formattedTime,
     });
 
-    setDateSearchTerm(`${formattedDate} at ${formattedTime}`);
+    setDateSearchTerm(formatDateTime(eventDate.date));
     setShowDateSuggestions(false);
 
     const eventPending = currentEvent.status === EventStatus.Pending;
@@ -400,20 +392,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
     }
   };
 
-  const formatDateForDisplay = (eventDate: EventDate) => {
-    const date = new Date(eventDate.date);
-    const formattedDate = date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    const formattedTime = date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-    return `${formattedDate} at ${formattedTime}`;
-  };
+  const formatDateForDisplay = (eventDate: EventDate) => formatDateTime(eventDate.date);
 
   const getFilteredDates = () => {
     const searchLower = dateSearchTerm.toLowerCase();

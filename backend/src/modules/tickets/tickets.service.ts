@@ -354,7 +354,7 @@ export class TicketsService {
     ids: string[],
   ): Promise<TicketListingWithEvent[]> {
     if (ids.length === 0) return [];
-    const listings = await this.ticketsRepository.getByIds(ctx, ids);
+    const listings = await this.ticketsRepository.findByIds(ctx, ids);
     if (listings.length === 0) return [];
 
     const eventIds = [...new Set(listings.map((l) => l.eventId))];

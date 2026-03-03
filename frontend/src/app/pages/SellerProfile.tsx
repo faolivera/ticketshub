@@ -1,5 +1,6 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ThumbsUp, ThumbsDown, Minus, ArrowLeft, Calendar, Ticket, MessageSquare } from 'lucide-react';
 import { sellersService } from '../../api/services/sellers.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -7,17 +8,25 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { UserAvatar } from '../components/UserAvatar';
 import type { SellerProfile as SellerProfileData } from '../../api/types';
+import { formatMonthYear } from '@/lib/format-date';
 
 export function SellerProfile() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const { sellerId } = useParams<{ sellerId: string }>();
   const [seller, setSeller] = useState<SellerProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    setCanGoBack(typeof window !== 'undefined' && window.history.length > 1);
+  }, []);
 
   useEffect(() => {
     async function fetchSellerProfile() {
       if (!sellerId) {
-        setError('Seller not found');
+        setError('sellerProfile.sellerNotFound');
         setIsLoading(false);
         return;
       }
@@ -30,7 +39,7 @@ export function SellerProfile() {
         setSeller(data);
       } catch (err) {
         console.error('Failed to fetch seller profile:', err);
-        setError('Unable to load seller profile');
+        setError('sellerProfile.loadError');
       } finally {
         setIsLoading(false);
       }
@@ -43,7 +52,7 @@ export function SellerProfile() {
     return (
       <LoadingSpinner
         size="lg"
-        text="Loading seller profile"
+        text={t('sellerProfile.loading')}
         fullScreen
       />
     );
@@ -52,8 +61,8 @@ export function SellerProfile() {
   if (error || !seller) {
     return (
       <ErrorMessage
-        title={error || 'Seller not found'}
-        message="Please try again later."
+        title={error ? t(error) : t('sellerProfile.sellerNotFound')}
+        message={t('sellerProfile.tryAgainLater')}
         fullScreen
       />
     );
@@ -86,18 +95,21 @@ export function SellerProfile() {
   const memberSinceDate = new Date(seller.memberSince);
   const memberSinceLabel = Number.isNaN(memberSinceDate.getTime())
     ? seller.memberSince
-    : memberSinceDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    : formatMonthYear(seller.memberSince);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <Link 
-          to="/" 
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Link>
+        {canGoBack && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('common.back')}
+          </button>
+        )}
 
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
           <div className="flex items-start gap-6">
@@ -105,19 +117,19 @@ export function SellerProfile() {
 
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{seller.publicName}</h1>
-              <p className="text-gray-600 mb-4">Member since {memberSinceLabel}</p>
+              <p className="text-gray-600 mb-4">{t('sellerProfile.memberSince')} {memberSinceLabel}</p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">Total Sales</p>
+                  <p className="text-sm text-gray-600 mb-1">{t('sellerProfile.totalSales')}</p>
                   <p className="text-2xl font-bold text-gray-900">{seller.totalSales}</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4 col-span-2">
-                  <p className="text-sm text-gray-600 mb-2">Reviews</p>
+                  <p className="text-sm text-gray-600 mb-2">{t('sellerProfile.reviewsTitle')}</p>
                   <div className="flex items-center gap-4 mb-3">
                     <p className="text-2xl font-bold text-gray-900">{positivePercentage}%</p>
-                    <span className="text-sm text-gray-600">positive</span>
+                    <span className="text-sm text-gray-600">{t('sellerProfile.positive')}</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1 text-green-600">
@@ -133,7 +145,7 @@ export function SellerProfile() {
                       <span className="font-semibold">{seller.reviewStats.negative}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">{totalReviews} total reviews</p>
+                  <p className="text-xs text-gray-500 mt-2">{t('sellerProfile.totalReviewsLabel', { count: totalReviews })}</p>
                 </div>
               </div>
             </div>
@@ -141,13 +153,13 @@ export function SellerProfile() {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('sellerProfile.customerReviews')}</h2>
 
           {seller.reviews.length === 0 ? (
             <EmptyState
               icon={MessageSquare}
-              title="No reviews yet"
-              description="This seller has not received any reviews yet."
+              title={t('sellerProfile.noReviewsYet')}
+              description={t('sellerProfile.noReviewsDescription')}
             />
           ) : (
             <div className="space-y-6">
@@ -163,7 +175,7 @@ export function SellerProfile() {
                     </div>
                     <div className={`flex items-center gap-2 px-3 py-1 rounded-full border-2 ${getReviewBadgeColor(review.type)}`}>
                       {getReviewIcon(review.type)}
-                      <span className="text-sm font-semibold capitalize">{review.type}</span>
+                      <span className="text-sm font-semibold">{t(`sellerProfile.${review.type}`)}</span>
                     </div>
                   </div>
 
@@ -175,7 +187,7 @@ export function SellerProfile() {
                       <span>{review.eventName}</span>
                     </div>
                     <div className="text-gray-600">
-                      <span className="font-medium">Ticket:</span> {review.ticketType}
+                      <span className="font-medium">{t('sellerProfile.ticket')}:</span> {review.ticketType}
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Calendar className="w-4 h-4" />

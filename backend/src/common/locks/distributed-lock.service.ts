@@ -73,29 +73,6 @@ export class DistributedLockService {
   }
 
   /**
-   * Execute a function while holding a lock.
-   * Automatically acquires and releases the lock.
-   * Returns null if the lock couldn't be acquired.
-   */
-  async withLock<T>(
-    lockId: string,
-    holderIdentifier: string,
-    ttlSeconds: number,
-    fn: () => Promise<T>,
-  ): Promise<T | null> {
-    const acquired = await this.acquireLock(lockId, holderIdentifier, ttlSeconds);
-    if (!acquired) {
-      return null;
-    }
-
-    try {
-      return await fn();
-    } finally {
-      await this.releaseLock(lockId, holderIdentifier);
-    }
-  }
-
-  /**
    * Execute a function while holding a lock, with logging.
    * Uses the internal holder identifier and logs acquisition/release.
    * Returns null if the lock couldn't be acquired.

@@ -9,6 +9,7 @@ import { UserLevel } from '@/api/types/users';
 import { identityVerificationService, usersService } from '@/api/services';
 import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
 import { UserAvatar } from '@/app/components/UserAvatar';
+import { formatMonthYear } from '@/lib/format-date';
 
 const mockActivity = [
   {
@@ -187,7 +188,7 @@ export function UserProfile() {
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <Calendar className="w-4 h-4 text-blue-600" />
-                  <span>{t('userProfile.memberSince')} January 2025</span>
+                  <span>{t('userProfile.memberSince')} {user?.createdAt ? formatMonthYear(user.createdAt) : formatMonthYear('2025-01-01')}</span>
                 </div>
               </div>
             </div>

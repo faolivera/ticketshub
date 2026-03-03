@@ -1,15 +1,19 @@
 import { Logger } from '@nestjs/common';
 import { Ctx } from '../types/context';
+import { isLogLevelEnabled } from './log-level-resolver';
 
 /**
  * Wrapper around NestJS Logger that includes context information in log messages.
  * All methods receive `ctx` as the first argument to automatically include
  * request ID, user ID, and other contextual information in logs.
+ * Respects global and per-context log levels from config (see logging in config/*.conf).
  */
 export class ContextLogger {
   private readonly logger: Logger;
+  private readonly contextName: string;
 
   constructor(context?: string) {
+    this.contextName = context ?? 'ContextLogger';
     this.logger = context ? new Logger(context) : new Logger();
   }
 
@@ -38,6 +42,7 @@ export class ContextLogger {
    * Write a 'log' level log.
    */
   log(ctx: Ctx, message: any, ...optionalParams: any[]): void {
+    if (!isLogLevelEnabled(this.contextName, 'log')) return;
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.log(formattedMessage, ...optionalParams);
@@ -53,6 +58,7 @@ export class ContextLogger {
     ...optionalParams: [...any, string?, string?]
   ): void;
   error(ctx: Ctx, message: any, ...optionalParams: any[]): void {
+    if (!isLogLevelEnabled(this.contextName, 'error')) return;
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.error(formattedMessage, ...optionalParams);
@@ -64,6 +70,7 @@ export class ContextLogger {
   warn(ctx: Ctx, message: any, context?: string): void;
   warn(ctx: Ctx, message: any, ...optionalParams: [...any, string?]): void;
   warn(ctx: Ctx, message: any, ...optionalParams: any[]): void {
+    if (!isLogLevelEnabled(this.contextName, 'warn')) return;
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.warn(formattedMessage, ...optionalParams);
@@ -75,6 +82,7 @@ export class ContextLogger {
   debug(ctx: Ctx, message: any, context?: string): void;
   debug(ctx: Ctx, message: any, ...optionalParams: [...any, string?]): void;
   debug(ctx: Ctx, message: any, ...optionalParams: any[]): void {
+    if (!isLogLevelEnabled(this.contextName, 'debug')) return;
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.debug(formattedMessage, ...optionalParams);
@@ -86,6 +94,7 @@ export class ContextLogger {
   verbose(ctx: Ctx, message: any, context?: string): void;
   verbose(ctx: Ctx, message: any, ...optionalParams: [...any, string?]): void;
   verbose(ctx: Ctx, message: any, ...optionalParams: any[]): void {
+    if (!isLogLevelEnabled(this.contextName, 'verbose')) return;
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.verbose(formattedMessage, ...optionalParams);
@@ -97,6 +106,7 @@ export class ContextLogger {
   fatal(ctx: Ctx, message: any, context?: string): void;
   fatal(ctx: Ctx, message: any, ...optionalParams: [...any, string?]): void;
   fatal(ctx: Ctx, message: any, ...optionalParams: any[]): void {
+    if (!isLogLevelEnabled(this.contextName, 'fatal')) return;
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.fatal(formattedMessage, ...optionalParams);

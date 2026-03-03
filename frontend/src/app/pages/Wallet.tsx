@@ -8,6 +8,7 @@ import { ErrorAlert } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import type { Wallet as WalletType, WalletTransaction, WalletTransactionType } from '../../api/types';
 import { formatCurrency } from '@/lib/format-currency';
+import { formatDateShort } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
 
 /**
@@ -266,11 +267,7 @@ export function Wallet() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(transaction.createdAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {formatDateShort(transaction.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${badge.color}`}>

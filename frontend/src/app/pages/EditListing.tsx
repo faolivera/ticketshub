@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import type { TicketListingWithEvent } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
+import { formatDate } from '@/lib/format-date';
 
 export function EditListing() {
   const { t } = useTranslation();
@@ -115,7 +116,6 @@ export function EditListing() {
 
   const priceValue = parseFloat(price) || 0;
   const isValidPrice = priceValue > 0;
-  const eventDate = new Date(listing.eventDate);
   const isActive = listing.status === 'Active';
   const availableUnits = listing.ticketUnits.filter((unit) => unit.status === TicketUnitStatus.Available);
   const numberedSeats = listing.ticketUnits
@@ -200,11 +200,7 @@ export function EditListing() {
                   <div className="flex items-center gap-2 text-gray-900">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      {eventDate.toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
+                      {formatDate(listing.eventDate)}
                     </span>
                   </div>
                 </div>

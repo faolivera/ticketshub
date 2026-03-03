@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { formatCurrency } from '@/lib/format-currency';
+import { formatDateTimeMedium } from '@/lib/format-date';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { CreditCard, Check, X, BanknoteIcon, User, FileText, Image, Eye, ExternalLink } from 'lucide-react';
@@ -127,15 +128,7 @@ export function PaymentApproval() {
     }
   };
 
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const formatDate = (dateString: string | Date) => formatDateTimeMedium(dateString);
 
   const getFileIcon = (contentType: string) => {
     if (contentType.includes('pdf')) {

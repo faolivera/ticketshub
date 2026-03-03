@@ -125,7 +125,8 @@ export class S3FileStorageProvider implements FileStorageProvider {
         }),
       );
       return true;
-    } catch {
+    } catch (error) {
+      console.error('S3 delete failed:', error);
       return false;
     }
   }

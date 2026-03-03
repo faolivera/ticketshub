@@ -22,6 +22,7 @@ import {
 } from '@/app/components/ui/alert-dialog';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService } from '@/api/services';
 import { formatCurrency } from '@/lib/format-currency';
+import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit } from '@/api/types/bff';
@@ -405,11 +406,7 @@ export function MyTicket() {
                       <div className="flex items-center gap-2 text-white/90">
                         <Calendar className="w-4 h-4" />
                         <span>
-                          {eventDate.toLocaleDateString('en-US', {
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
+                          {formatDate(transaction.eventDate)}
                         </span>
                       </div>
                     </div>
@@ -1092,7 +1089,7 @@ export function MyTicket() {
                 <div>
                   <span className="text-gray-600">{t('myTicket.createdAt')}</span>
                   <p className="font-semibold text-gray-900">
-                    {new Date(transaction.createdAt).toLocaleString()}
+                    {formatDateTime(transaction.createdAt)}
                   </p>
                 </div>
                 {transaction.deliveryMethod && (

@@ -297,7 +297,7 @@ export class TicketsRepository
     return listing ? this.mapToListing(listing) : undefined;
   }
 
-  async getByIds(ctx: Ctx, ids: string[]): Promise<TicketListing[]> {
+  async findByIds(ctx: Ctx, ids: string[]): Promise<TicketListing[]> {
     if (ids.length === 0) return [];
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Send, Minus, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { formatTime } from '@/lib/format-date';
 
 interface Message {
   id: string;
@@ -88,10 +89,6 @@ export function TicketChat({
       };
       setMessages(prev => [...prev, sellerResponse]);
     }, 2000);
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   if (!isOpen) return null;

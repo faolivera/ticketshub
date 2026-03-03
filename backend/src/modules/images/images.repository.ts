@@ -9,14 +9,14 @@ import type { IImagesRepository } from './images.repository.interface';
 export class ImagesRepository implements IImagesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getById(_ctx: Ctx, id: string): Promise<Image | undefined> {
+  async findById(_ctx: Ctx, id: string): Promise<Image | undefined> {
     const image = await this.prisma.image.findUnique({
       where: { id },
     });
     return image ? this.mapToImage(image) : undefined;
   }
 
-  async getByIds(_ctx: Ctx, ids: string[]): Promise<Image[]> {
+  async findByIds(_ctx: Ctx, ids: string[]): Promise<Image[]> {
     if (ids.length === 0) return [];
     const images = await this.prisma.image.findMany({
       where: { id: { in: ids } },

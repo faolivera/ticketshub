@@ -55,7 +55,7 @@ export class OptionalJwtAuthGuard implements CanActivate {
       (request as any).user = userData;
       (request as any).token = token;
     } catch (error) {
-      // If any error occurs during validation, allow request to proceed without user
+      console.warn('OptionalJwtAuthGuard: validation failed, allowing unauthenticated request', error);
       return true;
     }
 

@@ -36,6 +36,7 @@ import {
 import { Badge } from '../../components/ui/badge';
 import { Shield, Check, X, User, Eye, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { identityVerificationService } from '@/api/services';
+import { formatDateTimeMedium } from '@/lib/format-date';
 import type {
   IdentityVerificationWithUser,
   IdentityVerificationStatus,
@@ -146,15 +147,7 @@ export function IdentityVerificationManagement() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const formatDate = (dateString: string) => formatDateTimeMedium(dateString);
 
   const getStatusBadge = (status: IdentityVerificationStatus) => {
     switch (status) {

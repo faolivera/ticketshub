@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { notificationsService, type NotificationItem } from '@/api/services/notifications.service';
 import { cn } from '@/app/components/ui/utils';
+import { formatDateShort } from '@/lib/format-date';
 
 const POLL_INTERVAL_MS = 30000; // Poll every 30 seconds
 
@@ -110,7 +111,7 @@ export function NotificationBell() {
     if (diffMins < 60) return t('notifications.minutesAgo', { count: diffMins });
     if (diffHours < 24) return t('notifications.hoursAgo', { count: diffHours });
     if (diffDays < 7) return t('notifications.daysAgo', { count: diffDays });
-    return date.toLocaleDateString();
+    return formatDateShort(dateString);
   };
 
   return (

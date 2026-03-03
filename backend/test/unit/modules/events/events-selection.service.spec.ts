@@ -64,7 +64,7 @@ describe('EventsService - getEventsForSelection', () => {
     };
 
     const mockImagesRepository = {
-      getByIds: jest.fn(),
+      findByIds: jest.fn(),
     };
 
     const mockTicketsService = {

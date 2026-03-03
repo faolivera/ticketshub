@@ -28,30 +28,30 @@ describe('ImagesRepository (Integration)', () => {
     await disconnectTestPrisma();
   });
 
-  describe('getById', () => {
+  describe('findById', () => {
     it('should return undefined when image does not exist', async () => {
-      const found = await repository.getById(ctx, 'non-existent-id');
+      const found = await repository.findById(ctx, 'non-existent-id');
       expect(found).toBeUndefined();
     });
 
     it('should find image by id after set', async () => {
       const image: Image = { id: randomUUID(), src: 'path/to/image.png' };
       await repository.set(ctx, image);
-      const found = await repository.getById(ctx, image.id);
+      const found = await repository.findById(ctx, image.id);
       expect(found).toBeDefined();
       expect(found?.id).toBe(image.id);
       expect(found?.src).toBe(image.src);
     });
   });
 
-  describe('getByIds', () => {
+  describe('findByIds', () => {
     it('should return empty array when no ids provided', async () => {
-      const images = await repository.getByIds(ctx, []);
+      const images = await repository.findByIds(ctx, []);
       expect(images).toEqual([]);
     });
 
     it('should return empty array when no matches', async () => {
-      const images = await repository.getByIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const images = await repository.findByIds(ctx, ['non-existent-1', 'non-existent-2']);
       expect(images).toEqual([]);
     });
 
@@ -60,7 +60,7 @@ describe('ImagesRepository (Integration)', () => {
       const img2: Image = { id: randomUUID(), src: 'src2.png' };
       await repository.set(ctx, img1);
       await repository.set(ctx, img2);
-      const images = await repository.getByIds(ctx, [img1.id, img2.id]);
+      const images = await repository.findByIds(ctx, [img1.id, img2.id]);
       expect(images).toHaveLength(2);
       expect(images.map(i => i.id).sort()).toEqual([img1.id, img2.id].sort());
     });
@@ -70,7 +70,7 @@ describe('ImagesRepository (Integration)', () => {
     it('should create new image', async () => {
       const image: Image = { id: randomUUID(), src: 'new-image.png' };
       await repository.set(ctx, image);
-      const found = await repository.getById(ctx, image.id);
+      const found = await repository.findById(ctx, image.id);
       expect(found?.src).toBe('new-image.png');
     });
 
@@ -78,7 +78,7 @@ describe('ImagesRepository (Integration)', () => {
       const image: Image = { id: randomUUID(), src: 'original.png' };
       await repository.set(ctx, image);
       await repository.set(ctx, { ...image, src: 'updated.png' });
-      const found = await repository.getById(ctx, image.id);
+      const found = await repository.findById(ctx, image.id);
       expect(found?.src).toBe('updated.png');
     });
   });

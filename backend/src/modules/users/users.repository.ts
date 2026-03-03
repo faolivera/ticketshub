@@ -130,7 +130,8 @@ export class UsersRepository implements IUsersRepository {
         data: { emailVerified },
       });
       return this.mapToUser(user);
-    } catch {
+    } catch (error) {
+      console.error('updateEmailVerified failed:', error);
       return undefined;
     }
   }
@@ -150,7 +151,8 @@ export class UsersRepository implements IUsersRepository {
         },
       });
       return this.mapToUser(user);
-    } catch {
+    } catch (error) {
+      console.error('updatePhoneVerified failed:', error);
       return undefined;
     }
   }
@@ -173,7 +175,8 @@ export class UsersRepository implements IUsersRepository {
         data,
       });
       return this.mapToUser(user);
-    } catch {
+    } catch (error) {
+      console.error('updateBasicInfo failed:', error);
       return undefined;
     }
   }
@@ -189,7 +192,8 @@ export class UsersRepository implements IUsersRepository {
         data: { level },
       });
       return this.mapToUser(user);
-    } catch {
+    } catch (error) {
+      console.error('updateLevel failed:', error);
       return undefined;
     }
   }
@@ -220,7 +224,8 @@ export class UsersRepository implements IUsersRepository {
         },
       });
       return this.mapToUser(user);
-    } catch {
+    } catch (error) {
+      console.error('updateToVerifiedSeller failed:', error);
       return undefined;
     }
   }

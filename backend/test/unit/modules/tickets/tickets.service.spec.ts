@@ -141,7 +141,7 @@ describe('TicketsService', () => {
     const mockTicketsRepository = {
       create: jest.fn(),
       findById: jest.fn(),
-      getByIds: jest.fn(),
+      findByIds: jest.fn(),
       getAll: jest.fn(),
       getActiveListings: jest.fn(),
       getByEventId: jest.fn(),

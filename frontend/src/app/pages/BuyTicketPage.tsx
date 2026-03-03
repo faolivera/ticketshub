@@ -9,6 +9,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import { UserAvatar } from '../components/UserAvatar';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
+import { formatDateTime, formatMonthYear } from '@/lib/format-date';
 import type { BuyPageData, PublicPaymentMethodOption } from '../../api/types';
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
@@ -254,17 +255,7 @@ export function BuyTicketPage() {
   const paymentMethodCommission = subtotal * (commissionPercent / 100);
   const grandTotal = subtotal + buyerPlatformFee + paymentMethodCommission;
 
-  const eventDate = new Date(listing.eventDate);
-  const formattedDate = eventDate.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  const formattedTime = eventDate.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const eventDateTimeFormatted = formatDateTime(listing.eventDate);
 
   const maxQuantity = availableUnits.length;
   const quantityOptions = listing.sellTogether
@@ -354,7 +345,7 @@ export function BuyTicketPage() {
                 <div className="flex items-center gap-2 text-gray-700">
                   <Calendar className="w-4 h-4 text-blue-600" />
                   <span>
-                    {formattedDate} at {formattedTime}
+                    {eventDateTimeFormatted}
                   </span>
                 </div>
 
@@ -487,10 +478,7 @@ export function BuyTicketPage() {
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {t('buyTicket.sellerMemberSince', {
-                        date: new Date(seller.memberSince).toLocaleDateString(undefined, {
-                          month: 'short',
-                          year: 'numeric',
-                        }),
+                        date: formatMonthYear(seller.memberSince, true),
                       })}
                     </p>
                   </div>

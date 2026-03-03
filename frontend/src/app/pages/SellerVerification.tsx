@@ -5,6 +5,7 @@ import { ArrowLeft, Shield, User, CheckCircle, Upload, X, Clock, AlertCircle } f
 import { useUser } from '@/app/contexts/UserContext';
 import { identityVerificationService } from '@/api/services';
 import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
+import { formatDateShort } from '@/lib/format-date';
 
 export function SellerVerification() {
   const { t } = useTranslation();
@@ -251,7 +252,7 @@ export function SellerVerification() {
               </p>
               <p className="text-sm text-gray-600">
                 <strong>{t('verification.submittedAt')}:</strong>{' '}
-                {new Date(existingVerification.submittedAt).toLocaleDateString()}
+                {formatDateShort(existingVerification.submittedAt)}
               </p>
             </div>
           </div>

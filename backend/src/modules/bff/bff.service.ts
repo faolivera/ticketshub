@@ -243,8 +243,8 @@ export class BffService {
             userId,
             userRole,
           );
-      } catch {
-        // No confirmation yet, that's fine
+      } catch (error) {
+        console.warn('getTransactionDetails: no payment confirmation yet', error);
       }
     }
 
@@ -256,8 +256,8 @@ export class BffService {
           transactionId,
           userId,
         );
-      } catch {
-        // Failed to load reviews, user can still view transaction
+      } catch (error) {
+        console.warn('getTransactionDetails: failed to load reviews', error);
       }
     }
 
@@ -273,8 +273,8 @@ export class BffService {
         if (isBuyer && paymentMethod?.type === 'manual_approval') {
           bankTransferConfig = paymentMethod.bankTransferConfig ?? null;
         }
-      } catch {
-        // Failed to load payment method; buyer/seller can still view transaction
+      } catch (error) {
+        console.warn('getTransactionDetails: failed to load payment method', error);
       }
     }
 
@@ -291,8 +291,8 @@ export class BffService {
           id: u.id,
           seat: u.seat,
         }));
-    } catch {
-      // Listing may be gone; leave ticketUnits empty
+    } catch (error) {
+      console.warn('getTransactionDetails: listing not found or gone', error);
     }
 
     return {

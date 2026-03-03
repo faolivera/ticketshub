@@ -40,6 +40,7 @@ import type { AdminPendingEventItem, AdminPendingEventDateItem, AdminPendingSect
 import type { EventWithDates, EventDate } from '../../../api/types/events';
 import { EditEventModal } from './components/EditEventModal';
 import { AllEventsTable } from './components/AllEventsTable';
+import { formatDateShort, formatDateTimeMedium } from '@/lib/format-date';
 import { Layers } from 'lucide-react';
 
 type RejectTarget = 
@@ -259,24 +260,8 @@ export function EventManagement() {
     setExpandedEvents(newExpanded);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const dateFormatted = date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-    const timeFormatted = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-    return `${dateFormatted} at ${timeFormatted}`;
-  };
+  const formatDate = (dateString: string) => formatDateShort(dateString);
+  const formatDateTime = (dateString: string) => formatDateTimeMedium(dateString);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

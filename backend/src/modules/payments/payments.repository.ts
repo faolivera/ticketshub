@@ -83,7 +83,8 @@ export class PaymentsRepository implements IPaymentsRepository {
         data,
       });
       return this.mapToPaymentIntent(updated);
-    } catch {
+    } catch (error) {
+      console.error('payments.repository update failed:', error);
       return undefined;
     }
   }

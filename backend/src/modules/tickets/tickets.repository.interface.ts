@@ -16,9 +16,9 @@ export interface ITicketsRepository {
   findById(ctx: Ctx, id: string): Promise<TicketListing | undefined>;
 
   /**
-   * Get listings by IDs (batch)
+   * Find listings by IDs (batch)
    */
-  getByIds(ctx: Ctx, ids: string[]): Promise<TicketListing[]>;
+  findByIds(ctx: Ctx, ids: string[]): Promise<TicketListing[]>;
 
   /**
    * Get all listings

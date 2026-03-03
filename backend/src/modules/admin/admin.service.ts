@@ -596,8 +596,11 @@ export class AdminService {
             cuitCuil: config.cuitCuil,
           };
         }
-      } catch {
-        // Payment method not found or no bank config; fall back to seller
+      } catch (error) {
+        this.logger.warn(
+          ctx,
+          `resolveBankTransferDestination: payment method not found or no bank config, falling back to seller: ${error}`,
+        );
       }
     }
     if (sellerBankAccount) {

@@ -80,7 +80,8 @@ export class OTPRepository implements IOTPRepository {
         },
       });
       return this.mapToOTP(updated);
-    } catch {
+    } catch (error) {
+      console.error('otp.repository updateStatus failed:', error);
       return undefined;
     }
   }
@@ -90,8 +91,8 @@ export class OTPRepository implements IOTPRepository {
       await this.prisma.otp.delete({
         where: { id },
       });
-    } catch {
-      // Ignore if not found
+    } catch (error) {
+      console.warn('otp.repository delete: not found or already deleted', error);
     }
   }
 

@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { adminService, paymentConfirmationsService } from '../../../api/services';
 import { formatCurrency } from '@/lib/format-currency';
+import { formatDateTimeMedium } from '@/lib/format-date';
 import type {
   AdminTransactionDetailResponse,
   AdminTransactionListItem,
@@ -338,13 +339,7 @@ export default function TransactionManagement() {
 
   const formatDate = (dateInput?: string): string => {
     if (!dateInput) return '-';
-    return new Date(dateInput).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatDateTimeMedium(dateInput);
   };
 
   const renderExpandedContent = (transactionId: string): ReactNode => {

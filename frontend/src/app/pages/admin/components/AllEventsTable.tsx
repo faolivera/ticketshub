@@ -21,6 +21,7 @@ import {
 } from '../../../components/ui/table';
 import { cn } from '../../../components/ui/utils';
 import { formatCurrency } from '@/lib/format-currency';
+import { formatDateTimeMedium } from '@/lib/format-date';
 import {
   Calendar,
   Pencil,
@@ -142,12 +143,7 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(dateString));
-  };
+  const formatDate = (dateString: string): string => formatDateTimeMedium(dateString);
 
   const getListingStatusBadge = (status: string) => {
     switch (status) {
