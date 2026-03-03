@@ -208,6 +208,9 @@ export class TicketsRepository
         ? (record.pickupAddress as unknown as Address)
         : undefined,
       description: record.description ?? undefined,
+      promotionSnapshot: record.promotionSnapshot
+        ? (record.promotionSnapshot as unknown as TicketListing['promotionSnapshot'])
+        : undefined,
       status: this.mapListingStatusFromDb(record.status),
       version: record.version,
       expiresAt: record.expiresAt ?? undefined,
@@ -278,6 +281,9 @@ export class TicketsRepository
           ? (listing.pickupAddress as object)
           : undefined,
         description: listing.description,
+        promotionSnapshot: listing.promotionSnapshot
+          ? (listing.promotionSnapshot as object)
+          : undefined,
         status: this.mapListingStatusToDb(listing.status),
         expiresAt: listing.expiresAt,
         createdAt: listing.createdAt,

@@ -95,6 +95,18 @@ export const SellerProfileSchema = z.object({
 
 export const GetSellerProfileResponseSchema = SellerProfileSchema;
 
+const ActivePromotionSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.string(),
+  config: z.object({ feePercentage: z.number() }),
+});
+
+export const GetSellTicketConfigResponseSchema = z.object({
+  sellerPlatformFeePercentage: z.number(),
+  activePromotion: ActivePromotionSummarySchema.optional(),
+});
+
 const CommissionPercentRangeSchema = z.object({
   min: z.number(),
   max: z.number(),

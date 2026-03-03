@@ -12,6 +12,8 @@ import type {
   ConsumedSnapshotResult,
 } from './pricing.domain';
 import { PricingSnapshotError } from './pricing.domain';
+import type { PromotionSnapshot } from '../../promotions/promotions.domain';
+import { PromotionType } from '../../promotions/promotions.domain';
 
 const SNAPSHOT_EXPIRATION_MINUTES = 15;
 
@@ -32,15 +34,24 @@ export class PricingService {
     return `ps_${Date.now()}_${randomBytes(6).toString('hex')}`;
   }
 
+  /**
+   * Creates a pricing snapshot for a listing. If the listing has a SELLER_DISCOUNTED_FEE
+   * promotion snapshot, uses that fee percentage; otherwise uses platform global config.
+   */
   async createSnapshot(
     ctx: Ctx,
-    listingId: string,
-    pricePerTicket: Money,
+    listing: { id: string; pricePerTicket: Money; promotionSnapshot?: PromotionSnapshot },
   ): Promise<PricingSnapshot> {
+    const listingId = listing.id;
+    const pricePerTicket = listing.pricePerTicket;
     this.logger.log(ctx, `Creating pricing snapshot for listing ${listingId}`);
 
     const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
-    const { buyerPlatformFeePercentage, sellerPlatformFeePercentage } = platformConfig;
+    const { buyerPlatformFeePercentage } = platformConfig;
+    const sellerPlatformFeePercentage =
+      listing.promotionSnapshot?.type === PromotionType.SELLER_DISCOUNTED_FEE
+        ? listing.promotionSnapshot.config.feePercentage
+        : platformConfig.sellerPlatformFeePercentage;
 
     const enabledPaymentMethods =
       await this.paymentMethodsService.findEnabled(ctx);

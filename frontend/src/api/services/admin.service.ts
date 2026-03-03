@@ -24,6 +24,9 @@ import type {
   AdminUpdatePaymentMethodRequest,
   PlatformConfig,
   UpdatePlatformConfigRequest,
+  AdminPromotionListItem,
+  AdminCreatePromotionRequest,
+  AdminUserSearchItem,
 } from '../types/admin';
 
 /**
@@ -311,6 +314,64 @@ export const adminService = {
     const response = await apiClient.patch<PlatformConfig>(
       '/admin/config/platform',
       data
+    );
+    return response.data;
+  },
+
+  // === Promotions (admin only) ===
+
+  /**
+   * Search users by email for autocomplete (e.g. when adding promotion recipients).
+   * Requires at least 2 characters. Returns id and email only.
+   */
+  async searchUsersByEmail(q: string): Promise<AdminUserSearchItem[]> {
+    const term = (q ?? '').trim();
+    if (term.length < 2) return [];
+    const response = await apiClient.get<AdminUserSearchItem[]>(
+      '/admin/users/search',
+      { params: { q: term } }
+    );
+    return response.data;
+  },
+
+  /**
+   * List promotions (optional filters: status, type, userId)
+   */
+  async getPromotions(params?: {
+    status?: string;
+    type?: string;
+    userId?: string;
+  }): Promise<AdminPromotionListItem[]> {
+    const response = await apiClient.get<AdminPromotionListItem[]>(
+      '/admin/promotions',
+      { params }
+    );
+    return response.data;
+  },
+
+  /**
+   * Create one or more promotions (one per user, by userIds or emails)
+   */
+  async createPromotion(
+    data: AdminCreatePromotionRequest
+  ): Promise<AdminPromotionListItem[]> {
+    const response = await apiClient.post<AdminPromotionListItem[]>(
+      '/admin/promotions',
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Update promotion status (active | inactive)
+   */
+  async updatePromotionStatus(
+    id: string,
+    status: 'active' | 'inactive'
+  ): Promise<{ status: string }> {
+    const response = await apiClient.patch<{ status: string }>(
+      `/admin/promotions/${id}/status`,
+      { status }
     );
     return response.data;
   },

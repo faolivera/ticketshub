@@ -536,3 +536,40 @@ export interface UpdatePlatformConfigRequest {
   paymentTimeoutMinutes?: number;
   adminReviewTimeoutHours?: number;
 }
+
+// === Admin Promotions (GET/POST /admin/promotions, PATCH /admin/promotions/:id/status) ===
+
+export type PromotionType = 'SELLER_DISCOUNTED_FEE' | 'BUYER_DISCOUNTED_FEE';
+export type PromotionStatus = 'active' | 'inactive';
+
+export interface AdminPromotionListItem {
+  id: string;
+  userId: string;
+  userEmail?: string;
+  name: string;
+  type: PromotionType;
+  config: { feePercentage: number };
+  maxUsages: number;
+  usedCount: number;
+  usedInListingIds: string[];
+  status: PromotionStatus;
+  validUntil: string | null;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface AdminCreatePromotionRequest {
+  name: string;
+  type: PromotionType;
+  config: { feePercentage: number };
+  maxUsages: number;
+  validUntil?: string | null;
+  userIds?: string[];
+  emails?: string[];
+}
+
+/** User search result for admin autocomplete (e.g. promotions). */
+export interface AdminUserSearchItem {
+  id: string;
+  email: string;
+}

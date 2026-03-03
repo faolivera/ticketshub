@@ -37,6 +37,8 @@ import {
   EventDateStatus,
   EventSectionStatus,
 } from '../events/events.domain';
+import { PromotionsService } from '../promotions/promotions.service';
+import { PromotionType } from '../promotions/promotions.domain';
 
 @Injectable()
 export class TicketsService {
@@ -47,6 +49,7 @@ export class TicketsService {
     private readonly eventsService: EventsService,
     private readonly usersService: UsersService,
     private readonly txManager: TransactionManager,
+    private readonly promotionsService: PromotionsService,
   ) {}
 
   /**
@@ -302,34 +305,62 @@ export class TicketsService {
       eventSection.status,
     );
 
-    const listing: TicketListing = {
-      id: this.generateId(),
-      sellerId,
-      eventId: data.eventId,
-      eventDateId: data.eventDateId,
-      type: data.type,
-      ticketUnits,
-      sellTogether: data.sellTogether || false,
-      pricePerTicket: {
-        amount: data.pricePerTicket.amount,
-        currency: listingCurrency,
-      },
-      deliveryMethod: data.deliveryMethod,
-      pickupAddress: data.pickupAddress,
-      description: data.description,
-      eventSectionId: data.eventSectionId,
-      status: listingStatus,
-      version: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
     this.validateListingSeatingConsistency(
       ticketUnits,
       eventSection.seatingType,
     );
 
-    const created = await this.ticketsRepository.create(ctx, listing);
+    const created = await this.txManager.executeInTransaction(
+      ctx,
+      async (txCtx) => {
+        const activePromotion =
+          await this.promotionsService.getActiveForUser(
+            txCtx,
+            sellerId,
+            PromotionType.SELLER_DISCOUNTED_FEE,
+          );
+        const hasPromotion =
+          activePromotion &&
+          (activePromotion.maxUsages === 0 ||
+            activePromotion.usedCount < activePromotion.maxUsages);
+
+        const listing: TicketListing = {
+          id: this.generateId(),
+          sellerId,
+          eventId: data.eventId,
+          eventDateId: data.eventDateId,
+          type: data.type,
+          ticketUnits,
+          sellTogether: data.sellTogether || false,
+          pricePerTicket: {
+            amount: data.pricePerTicket.amount,
+            currency: listingCurrency,
+          },
+          deliveryMethod: data.deliveryMethod,
+          pickupAddress: data.pickupAddress,
+          description: data.description,
+          eventSectionId: data.eventSectionId,
+          promotionSnapshot: hasPromotion
+            ? this.promotionsService.toSnapshot(activePromotion)
+            : undefined,
+          status: listingStatus,
+          version: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        const createdListing = await this.ticketsRepository.create(txCtx, listing);
+        if (hasPromotion && activePromotion) {
+          await this.promotionsService.incrementUsedAndAddListingId(
+            txCtx,
+            activePromotion.id,
+            createdListing.id,
+          );
+        }
+        return createdListing;
+      },
+    );
+
     return await this.enrichListingWithEvent(ctx, created);
   }
 

@@ -1,5 +1,6 @@
 import type { Address } from '../shared/address.domain';
 import type { CurrencyCode } from '../shared/money.domain';
+import type { PromotionSnapshot } from '../promotions/promotions.domain';
 
 /**
  * Money representation
@@ -103,6 +104,9 @@ export interface TicketListing {
   // Ticket details
   description?: string;
   eventSectionId: string;
+
+  /** Snapshot of promotion applied when listing was created (id, name, type, config) */
+  promotionSnapshot?: PromotionSnapshot;
 
   status: ListingStatus;
   version: number;

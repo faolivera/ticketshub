@@ -8,6 +8,8 @@ import { ReviewsService } from '../../../../src/modules/reviews/reviews.service'
 import { PaymentConfirmationsService } from '../../../../src/modules/payment-confirmations/payment-confirmations.service';
 import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { PricingService } from '../../../../src/modules/payments/pricing/pricing.service';
+import { PlatformConfigService } from '../../../../src/modules/config/config.service';
+import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import {
   TransactionStatus,
   RequiredActor,
@@ -124,6 +126,19 @@ describe('BffService', () => {
       createSnapshot: jest.fn(),
     };
 
+    const mockPlatformConfigService = {
+      getPlatformConfig: jest.fn().mockResolvedValue({
+        sellerPlatformFeePercentage: 5,
+        buyerPlatformFeePercentage: 10,
+        paymentTimeoutMinutes: 15,
+        adminReviewTimeoutHours: 24,
+      }),
+    };
+
+    const mockPromotionsService = {
+      getActivePromotionSummary: jest.fn().mockResolvedValue(null),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BffService,
@@ -137,6 +152,8 @@ describe('BffService', () => {
         },
         { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
         { provide: PricingService, useValue: mockPricingService },
+        { provide: PlatformConfigService, useValue: mockPlatformConfigService },
+        { provide: PromotionsService, useValue: mockPromotionsService },
       ],
     }).compile();
 
@@ -488,11 +505,11 @@ describe('BffService', () => {
       );
       expect(result.pricingSnapshot.buyerPlatformFeePercentage).toBe(10);
       expect(result.paymentMethods).toHaveLength(2);
-      expect(pricingService.createSnapshot).toHaveBeenCalledWith(
-        mockCtx,
-        'listing_123',
-        mockListing.pricePerTicket,
-      );
+      expect(pricingService.createSnapshot).toHaveBeenCalledWith(mockCtx, {
+        id: mockListing.id,
+        pricePerTicket: mockListing.pricePerTicket,
+        promotionSnapshot: mockListing.promotionSnapshot,
+      });
     });
   });
 });

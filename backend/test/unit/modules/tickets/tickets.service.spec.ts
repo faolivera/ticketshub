@@ -23,6 +23,7 @@ import {
 } from '../../../../src/modules/events/events.domain';
 import { UserLevel } from '../../../../src/modules/users/users.domain';
 import { UsersService } from '../../../../src/modules/users/users.service';
+import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../src/modules/shared/money.domain';
 import type { Ctx } from '../../../../src/common/types/context';
@@ -192,6 +193,17 @@ describe('TicketsService', () => {
       }),
     };
 
+    const mockPromotionsService = {
+      getActiveForUser: jest.fn().mockResolvedValue(null),
+      toSnapshot: jest.fn((p: { id: string; name: string; type: string; config: object }) => ({
+        id: p.id,
+        name: p.name,
+        type: p.type,
+        config: p.config,
+      })),
+      incrementUsedAndAddListingId: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
@@ -199,6 +211,7 @@ describe('TicketsService', () => {
         { provide: EventsService, useValue: mockEventsService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: TransactionManager, useValue: mockTxManager },
+        { provide: PromotionsService, useValue: mockPromotionsService },
       ],
     }).compile();
 

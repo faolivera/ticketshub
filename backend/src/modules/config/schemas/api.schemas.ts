@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+export const GetSellerPricingResponseSchema = z.object({
+  sellerPlatformFeePercentage: z.number(),
+});
+
 export const GetPlatformConfigResponseSchema = z.object({
   buyerPlatformFeePercentage: z.number(),
   sellerPlatformFeePercentage: z.number(),

@@ -378,3 +378,10 @@ export const AdminTransactionDetailResponseSchema = z.object({
   paymentConfirmations: z.array(AdminTransactionDetailPaymentConfirmationSchema),
   bankTransferDestination: BankTransferDestinationSchema.optional(),
 });
+
+export const AdminUserSearchItemSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+});
+
+export const AdminUserSearchResponseSchema = z.array(AdminUserSearchItemSchema);

@@ -44,6 +44,7 @@ import type {
   AdminTransactionsResponse,
   AdminTransactionsPendingSummaryResponse,
   AdminTransactionDetailResponse,
+  AdminUserSearchResponse,
 } from './admin.api';
 import {
   AdminPendingEventsResponseSchema,
@@ -57,6 +58,7 @@ import {
   AdminTransactionsResponseSchema,
   AdminTransactionsPendingSummaryResponseSchema,
   AdminTransactionDetailResponseSchema,
+  AdminUserSearchResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { SeatingType } from '../tickets/tickets.domain';
@@ -315,6 +317,20 @@ export class AdminController {
         message: 'Section deleted successfully',
       },
     };
+  }
+
+  /**
+   * Search users by email for autocomplete (e.g. when creating promotions).
+   * Query param: q (min 2 characters). Returns id and email only.
+   */
+  @Get('users/search')
+  @ValidateResponse(AdminUserSearchResponseSchema)
+  async searchUsersByEmail(
+    @Context() ctx: Ctx,
+    @Query('q') q?: string,
+  ): Promise<ApiResponse<AdminUserSearchResponse>> {
+    const data = await this.adminService.searchUsersByEmail(ctx, q ?? '');
+    return { success: true, data };
   }
 
   // ==================== Event Banners (Admin) ====================

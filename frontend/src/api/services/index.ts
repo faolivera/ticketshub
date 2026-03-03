@@ -14,3 +14,4 @@ export { bffService } from './bff.service';
 export { adminService } from './admin.service';
 export { identityVerificationService } from './identity-verification.service';
 export { notificationsService } from './notifications.service';
+export { configService } from './config.service';

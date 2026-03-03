@@ -34,6 +34,7 @@ import type {
   AdminTransactionListingRef,
   AdminTransactionPaymentConfirmationRef,
   Money,
+  AdminUserSearchResponse,
 } from './admin.api';
 import { EventDateStatus, EventSectionStatus } from '../events/events.domain';
 import type { Transaction } from '../transactions/transactions.domain';
@@ -59,6 +60,22 @@ export class AdminService {
     @Inject(UsersService)
     private readonly usersService: UsersService,
   ) {}
+
+  private static readonly USER_SEARCH_LIMIT = 20;
+
+  /**
+   * Search users by email (contains, case-insensitive) for admin autocomplete.
+   * Returns at most USER_SEARCH_LIMIT results with id and email only.
+   */
+  async searchUsersByEmail(ctx: Ctx, searchTerm: string): Promise<AdminUserSearchResponse> {
+    const term = searchTerm?.trim() ?? '';
+    if (term.length < 2) return [];
+    const users = await this.usersService.findByEmailContaining(ctx, term);
+    return users.slice(0, AdminService.USER_SEARCH_LIMIT).map((u) => ({
+      id: u.id,
+      email: u.email,
+    }));
+  }
 
   /**
    * Get enriched payment confirmations for admin payments approval page.

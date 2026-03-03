@@ -3,6 +3,14 @@
  */
 
 /**
+ * Response for GET /api/config/seller-pricing (authenticated, non-admin).
+ * Used by the sell-ticket flow to display platform commission.
+ */
+export interface GetSellerPricingResponse {
+  sellerPlatformFeePercentage: number;
+}
+
+/**
  * Response for GET /api/admin/config/platform
  */
 export interface GetPlatformConfigResponse {

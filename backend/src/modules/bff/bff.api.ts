@@ -60,6 +60,19 @@ export interface TransactionTicketUnit {
 }
 
 /**
+ * Sell-ticket config response (platform fee % and optional active promotion for seller)
+ */
+export interface GetSellTicketConfigResponse {
+  sellerPlatformFeePercentage: number;
+  activePromotion?: {
+    id: string;
+    name: string;
+    type: string;
+    config: { feePercentage: number };
+  };
+}
+
+/**
  * Get transaction details response (aggregated data for transaction page)
  */
 export interface GetTransactionDetailsResponse {

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import { INotificationsRepository, NOTIFICATIONS_REPOSITORY } from '../../../../src/modules/notifications/notifications.repository.interface';
 import type { Ctx } from '../../../../src/common/types/context';
@@ -77,10 +78,20 @@ describe('NotificationsService', () => {
       claimRetryableEmailNotification: jest.fn(),
     };
 
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        const map: Record<string, unknown> = {
+          NODE_ENV: 'test',
+        };
+        return map[key];
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationsService,
         { provide: NOTIFICATIONS_REPOSITORY, useValue: mockRepository },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 

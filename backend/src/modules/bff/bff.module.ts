@@ -7,6 +7,8 @@ import { TicketsModule } from '../tickets/tickets.module';
 import { ReviewsModule } from '../reviews/reviews.module';
 import { PaymentConfirmationsModule } from '../payment-confirmations/payment-confirmations.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { ConfigModule } from '../config/config.module';
+import { PromotionsModule } from '../promotions/promotions.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { PaymentsModule } from '../payments/payments.module';
     ReviewsModule,
     PaymentConfirmationsModule,
     PaymentsModule,
+    ConfigModule,
+    PromotionsModule,
   ],
   controllers: [BffController],
   providers: [BffService],

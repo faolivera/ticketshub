@@ -23,6 +23,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { IdentityVerificationModule } from './modules/identity-verification/identity-verification.module';
 import { ConfigModule as PlatformConfigModule } from './modules/config/config.module';
+import { PromotionsModule } from './modules/promotions/promotions.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ConfigModule as PlatformConfigModule } from './modules/config/config.mo
     TermsModule,
     AdminModule,
     PlatformConfigModule,
+    PromotionsModule,
   ],
 })
 export class AppModule {}

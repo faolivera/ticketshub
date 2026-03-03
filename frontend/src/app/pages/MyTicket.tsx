@@ -342,6 +342,13 @@ export function MyTicket() {
     !isPaymentExpiredLocally &&
     isBuyer && 
     !paymentConfirmation;
+  const isBankTransferPendingUpload = Boolean(
+    isBuyer &&
+    transaction?.status === TransactionStatus.PendingPayment &&
+    !isPaymentExpiredLocally &&
+    bankTransferConfig &&
+    !paymentConfirmation
+  );
 
   if (isLoading) {
     return (
@@ -530,8 +537,8 @@ export function MyTicket() {
                 </div>
               </div>
 
-              {/* Current Status Description - Hide when buyer has pending payment confirmation */}
-              {!(isBuyer && paymentConfirmation?.status === 'Pending' && transaction.status === TransactionStatus.PaymentPendingVerification) && (
+              {/* Current Status Description - Hide when buyer has pending payment confirmation or when showing unified bank transfer card */}
+              {!(isBuyer && paymentConfirmation?.status === 'Pending' && transaction.status === TransactionStatus.PaymentPendingVerification) && !isBankTransferPendingUpload && (
                 <div className={`p-4 rounded-lg mb-4 ${
                   statusInfo.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
                   statusInfo.color === 'blue' ? 'bg-blue-50 border border-blue-200' :
@@ -590,8 +597,8 @@ export function MyTicket() {
                 </div>
               )}
 
-              {/* Cancel Button - Show when buyer is viewing and status is PendingPayment (not expired) */}
-              {isBuyer && effectiveStatus === TransactionStatus.PendingPayment && (
+              {/* Cancel Button - Show when buyer is viewing and status is PendingPayment (not expired), not when unified bank transfer card is shown */}
+              {isBuyer && effectiveStatus === TransactionStatus.PendingPayment && !isBankTransferPendingUpload && (
                 <div className="mb-4">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -629,11 +636,139 @@ export function MyTicket() {
                 </div>
               )}
 
-              {/* Bank Transfer Details - Show when pending payment for bank transfer and no confirmation uploaded yet */}
+              {/* Unified Bank Transfer Card - Single card when buyer must transfer and upload proof */}
+              {isBankTransferPendingUpload && bankTransferConfig && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-blue-900 mb-1">
+                        {t('myTicket.bankTransferCompletePaymentTitle')}
+                      </p>
+                      <p className="text-sm text-blue-800 mb-3">
+                        {t('myTicket.bankTransferCompletePaymentDesc')}
+                      </p>
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <PaymentCountdown
+                          expiresAt={transaction.paymentExpiresAt}
+                          onExpired={() => setIsPaymentExpiredLocally(true)}
+                          className="text-blue-800"
+                        />
+                      </div>
+                      <div className="space-y-2 text-sm mt-3 p-3 bg-blue-100/50 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-700">{t('myTicket.bankName')}</span>
+                          <span className="font-medium text-blue-900">{bankTransferConfig.bankName}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-700">{t('myTicket.accountHolder')}</span>
+                          <span className="font-medium text-blue-900">{bankTransferConfig.accountHolderName}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-700">{t('myTicket.cuitCuil')}</span>
+                          <span className="font-medium text-blue-900">{bankTransferConfig.cuitCuil}</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2 pt-2 border-t border-blue-200">
+                          <span className="text-blue-700">{t('myTicket.cbu')}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-medium text-blue-900">{bankTransferConfig.cbu}</span>
+                            <button
+                              onClick={() => handleCopyCbu(bankTransferConfig.cbu)}
+                              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                copiedCbu
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 active:scale-95'
+                              }`}
+                              title={t('myTicket.copyCbu')}
+                            >
+                              {copiedCbu ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  {t('myTicket.copied')}
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  {t('myTicket.copy')}
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,application/pdf"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        >
+                          {isUploading ? (
+                            <>
+                              <LoadingSpinner size="sm" />
+                              {t('myTicket.uploading')}
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4" />
+                              {t('myTicket.uploadPaymentConfirmation')}
+                            </>
+                          )}
+                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" disabled={isCancelling}>
+                              {t('transaction.cancelButton')}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{t('transaction.cancelButton')}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t('transaction.cancelConfirm')}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{t('myTicket.cancel')}</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={async () => {
+                                  setIsCancelling(true);
+                                  try {
+                                    await transactionsService.cancelTransaction(transaction.id);
+                                    await refetch();
+                                  } catch (err) {
+                                    console.error('Failed to cancel transaction:', err);
+                                  } finally {
+                                    setIsCancelling(false);
+                                  }
+                                }}
+                              >
+                                {t('myTicket.confirm')}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                      {uploadError && (
+                        <p className="mt-2 text-sm text-red-600">{uploadError}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bank Transfer Details - Show when pending payment for bank transfer and no confirmation uploaded yet (non-unified view) */}
               {effectiveStatus === TransactionStatus.PendingPayment && 
                isBuyer && 
                bankTransferConfig &&
-               !paymentConfirmation && (
+               !paymentConfirmation &&
+               !isBankTransferPendingUpload && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                   <div className="flex items-start gap-3">
                     <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -688,8 +823,8 @@ export function MyTicket() {
                 </div>
               )}
 
-              {/* Payment Confirmation Upload - Manual Payments */}
-              {needsPaymentConfirmation && (
+              {/* Payment Confirmation Upload - Manual Payments (when not using unified bank transfer card) */}
+              {needsPaymentConfirmation && !isBankTransferPendingUpload && (
                 <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg mb-4">
                   <div className="flex items-start gap-3">
                     <Upload className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />

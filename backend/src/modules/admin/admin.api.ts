@@ -460,3 +460,13 @@ export interface AdminTransactionDetailResponse {
     cuitCuil?: string;
   };
 }
+
+/**
+ * User search result for admin autocomplete (e.g. promotions).
+ */
+export interface AdminUserSearchItem {
+  id: string;
+  email: string;
+}
+
+export type AdminUserSearchResponse = AdminUserSearchItem[];

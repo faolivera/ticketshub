@@ -15,3 +15,4 @@ export * from './payment-confirmations';
 export * from './reviews';
 export * from './bff';
 export * from './admin';
+export * from './config';

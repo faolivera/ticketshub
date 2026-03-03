@@ -109,7 +109,10 @@ describe('PricingService', () => {
 
       repository.create.mockImplementation(async (_, snapshot) => snapshot);
 
-      const result = await service.createSnapshot(mockCtx, listingId, pricePerTicket);
+      const result = await service.createSnapshot(mockCtx, {
+        id: listingId,
+        pricePerTicket,
+      });
 
       expect(result.listingId).toBe(listingId);
       expect(result.pricePerTicket).toEqual(pricePerTicket);

@@ -11,6 +11,8 @@ import { ReviewsService } from '../reviews/reviews.service';
 import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
 import { PaymentMethodsService } from '../payments/payment-methods.service';
 import { PricingService } from '../payments/pricing/pricing.service';
+import { PlatformConfigService } from '../config/config.service';
+import { PromotionsService } from '../promotions/promotions.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import { UserLevel, Role } from '../users/users.domain';
@@ -28,6 +30,7 @@ import type {
   BuyPagePricingSnapshot,
   BuyPagePaymentMethodOption,
 } from './bff.domain';
+import type { GetSellTicketConfigResponse } from './bff.api';
 
 @Injectable()
 export class BffService {
@@ -46,6 +49,10 @@ export class BffService {
     private readonly paymentMethodsService: PaymentMethodsService,
     @Inject(PricingService)
     private readonly pricingService: PricingService,
+    @Inject(PlatformConfigService)
+    private readonly platformConfigService: PlatformConfigService,
+    @Inject(PromotionsService)
+    private readonly promotionsService: PromotionsService,
   ) {}
 
   /**
@@ -129,6 +136,22 @@ export class BffService {
   }
 
   /**
+   * Get sell-ticket page config: global platform fee % and active promotion for the user (if any).
+   */
+  async getSellTicketConfig(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<GetSellTicketConfigResponse> {
+    const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
+    const activePromotion =
+      await this.promotionsService.getActivePromotionSummary(ctx, userId);
+    return {
+      sellerPlatformFeePercentage: platformConfig.sellerPlatformFeePercentage,
+      ...(activePromotion && { activePromotion }),
+    };
+  }
+
+  /**
    * Get buy page data: listing, seller info, payment methods, and pricing snapshot.
    */
   async getBuyPageData(ctx: Ctx, ticketId: string): Promise<BuyPageData> {
@@ -145,11 +168,11 @@ export class BffService {
         ),
         this.reviewsService.getSellerMetrics(ctx, listing.sellerId),
         this.paymentMethodsService.getPublicPaymentMethods(ctx),
-        this.pricingService.createSnapshot(
-          ctx,
-          ticketId,
-          listing.pricePerTicket,
-        ),
+        this.pricingService.createSnapshot(ctx, {
+          id: listing.id,
+          pricePerTicket: listing.pricePerTicket,
+          promotionSnapshot: listing.promotionSnapshot,
+        }),
       ]);
 
     const seller: BuyPageSellerInfo = {

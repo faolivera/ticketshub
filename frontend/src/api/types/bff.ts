@@ -21,6 +21,19 @@ export interface TransactionReviewsData {
 }
 
 /**
+ * Sell-ticket config response (platform fee % and optional active promotion)
+ */
+export interface GetSellTicketConfigResponse {
+  sellerPlatformFeePercentage: number;
+  activePromotion?: {
+    id: string;
+    name: string;
+    type: string;
+    config: { feePercentage: number };
+  };
+}
+
+/**
  * Get transaction details response (BFF aggregation)
  * Combines transaction, payment confirmation, reviews data.
  */

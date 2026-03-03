@@ -5,9 +5,14 @@ import { TicketsRepository } from './tickets.repository';
 import { TICKETS_REPOSITORY } from './tickets.repository.interface';
 import { EventsModule } from '../events/events.module';
 import { UsersModule } from '../users/users.module';
+import { PromotionsModule } from '../promotions/promotions.module';
 
 @Module({
-  imports: [forwardRef(() => EventsModule), UsersModule],
+  imports: [
+    forwardRef(() => EventsModule),
+    UsersModule,
+    PromotionsModule,
+  ],
   controllers: [TicketsController],
   providers: [
     TicketsService,

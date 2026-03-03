@@ -194,6 +194,16 @@ enum TermsStatus {
   archived
 }
 
+enum PromotionType {
+  SELLER_DISCOUNTED_FEE
+  BUYER_DISCOUNTED_FEE
+}
+
+enum PromotionStatus {
+  active
+  inactive
+}
+
 enum NotificationEventType {
   PAYMENT_REQUIRED
   BUYER_PAYMENT_SUBMITTED
@@ -285,6 +295,7 @@ model User {
   otps                  Otp[]
   identityVerifications IdentityVerificationRequest[]
   notifications         Notification[]
+  promotions            Promotion[]
 
   @@map("users")
 }
@@ -369,31 +380,52 @@ model EventSection {
   @@map("event_sections")
 }
 
-model TicketListing {
-  id              String        @id @default(uuid())
-  sellerId        String
-  eventId         String
-  eventDateId     String
-  eventSectionId  String
-  type            TicketType
-  sellTogether    Boolean       @default(false)
-  pricePerTicket  Json
-  deliveryMethod  DeliveryMethod?
-  pickupAddress   Json?
-  description     String?
-  status          ListingStatus @default(Pending)
-  version         Int           @default(1)
-  expiresAt       DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+model Promotion {
+  id                 String          @id @default(uuid())
+  userId             String
+  name               String
+  type               PromotionType
+  config             Json
+  maxUsages          Int            @default(0)
+  usedCount          Int            @default(0)
+  usedInListingIds   Json           // string[] - listing IDs where promotion was applied
+  status             PromotionStatus @default(active)
+  validUntil         DateTime?
+  createdAt          DateTime       @default(now())
+  createdBy          String
 
   // Relations
-  seller          User          @relation(fields: [sellerId], references: [id])
-  event           Event         @relation(fields: [eventId], references: [id])
-  eventDate       EventDate     @relation(fields: [eventDateId], references: [id])
-  eventSection    EventSection  @relation(fields: [eventSectionId], references: [id])
-  transactions    Transaction[]
-  ticketUnits     TicketUnit[]
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("promotions")
+}
+
+model TicketListing {
+  id                String          @id @default(uuid())
+  sellerId          String
+  eventId           String
+  eventDateId       String
+  eventSectionId    String
+  type              TicketType
+  sellTogether      Boolean         @default(false)
+  pricePerTicket    Json
+  deliveryMethod    DeliveryMethod?
+  pickupAddress     Json?
+  description       String?
+  promotionSnapshot Json?           // { id, name, type, config } when listing was created with a promotion
+  status            ListingStatus   @default(Pending)
+  version           Int             @default(1)
+  expiresAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  seller            User            @relation(fields: [sellerId], references: [id])
+  event             Event           @relation(fields: [eventId], references: [id])
+  eventDate         EventDate       @relation(fields: [eventDateId], references: [id])
+  eventSection      EventSection    @relation(fields: [eventSectionId], references: [id])
+  transactions      Transaction[]
+  ticketUnits       TicketUnit[]
 
   @@map("ticket_listings")
 }

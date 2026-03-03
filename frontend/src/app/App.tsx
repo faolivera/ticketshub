@@ -29,6 +29,7 @@ import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManage
 import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerificationManagement';
 import { NotificationManagement } from '@/app/pages/admin/NotificationManagement';
 import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
+import { PromotionsManagement } from '@/app/pages/admin/PromotionsManagement';
 
 export default function App() {
   return (
@@ -68,6 +69,7 @@ export default function App() {
                 <Route path="identity-verifications" element={<IdentityVerificationManagement />} />
                 <Route path="notifications" element={<NotificationManagement />} />
                 <Route path="platform-config" element={<PlatformConfig />} />
+                <Route path="promotions" element={<PromotionsManagement />} />
               </Route>
             </Routes>
           </main>

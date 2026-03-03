@@ -14,6 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '@/api/services/events.service';
 import { ticketsService } from '@/api/services/tickets.service';
+import { bffService } from '@/api/services/bff.service';
 import { useUser } from '@/app/contexts/UserContext';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
 import { formatDate, formatTime, formatDateTime } from '@/lib/format-date';
@@ -80,6 +81,13 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
 
   const [isPendingListing, setIsPendingListing] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<EventWithDates>(event);
+  const [sellerPlatformFeePercentage, setSellerPlatformFeePercentage] = useState<number | null>(null);
+  const [activePromotion, setActivePromotion] = useState<{
+    id: string;
+    name: string;
+    type: string;
+    config: { feePercentage: number };
+  } | null>(null);
 
   const [formData, setFormData] = useState<TicketListingForm>({
     eventId: event.id,
@@ -107,6 +115,16 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
   useEffect(() => {
     setIsPendingListing(event.status === EventStatus.Pending);
   }, [event]);
+
+  useEffect(() => {
+    bffService
+      .getSellTicketConfig()
+      .then((res) => {
+        setSellerPlatformFeePercentage(res.sellerPlatformFeePercentage);
+        setActivePromotion(res.activePromotion ?? null);
+      })
+      .catch(() => setSellerPlatformFeePercentage(5));
+  }, []);
 
   useEffect(() => {
     if (preselectedDateISO && currentEvent.dates.length > 0) {
@@ -897,17 +915,6 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
                 required
               />
             </div>
-            {(() => {
-              const ticketCount =
-                formData.seatingType === 'numbered'
-                  ? formData.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim()).length
-                  : formData.quantity;
-              return ticketCount > 1 ? (
-                <p className="text-sm text-gray-600 mt-2">
-                  {t('sellTicket.totalValue')}: {formatCurrencyFromUnits(formData.pricePerTicket * ticketCount, sellerCurrency)}
-                </p>
-              ) : null;
-            })()}
           </div>
 
           <div>
@@ -1057,6 +1064,97 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          {formData.eventSectionId &&
+            formData.pricePerTicket > 0 &&
+            (() => {
+              const ticketCount =
+                formData.seatingType === 'numbered'
+                  ? formData.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim()).length
+                  : formData.quantity;
+              if (ticketCount < 1) return null;
+              const sectionName =
+                currentEvent.sections.find((s) => s.id === formData.eventSectionId)?.name ?? '';
+              const totalCharged = formData.pricePerTicket * ticketCount;
+              const globalFeePercent = sellerPlatformFeePercentage ?? 5;
+              const effectiveFeePercent = activePromotion
+                ? activePromotion.config.feePercentage
+                : globalFeePercent;
+              const platformCommission = (totalCharged * effectiveFeePercent) / 100;
+              const sellerReceives = totalCharged - platformCommission;
+              const validNumberedSeats = formData.numberedSeats.filter(
+                (s) => s.row.trim() && s.seatNumber.trim()
+              );
+              return (
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                  <div className="bg-gray-900 px-4 py-2.5">
+                    <h3 className="text-sm font-semibold text-white tracking-wide">
+                      {t('sellTicket.summaryTitle')}
+                    </h3>
+                  </div>
+                  <div className="p-4 space-y-1">
+                    <div className="flex justify-between items-start gap-4 text-sm">
+                      <div className="text-gray-600 min-w-0">
+                        <span className="font-medium text-gray-900">{sectionName}</span>
+                        <span className="text-gray-500">
+                          {' · '}
+                          {formatCurrencyFromUnits(formData.pricePerTicket, sellerCurrency)}{' '}
+                          × {ticketCount} {ticketCount === 1 ? t('sellTicket.ticket') : t('sellTicket.tickets')}
+                        </span>
+                        {formData.seatingType === 'numbered' && validNumberedSeats.length > 0 && (
+                          <p className="text-gray-500 mt-0.5">
+                            {t('sellTicket.rowsAndSeats')}: {validNumberedSeats.map((s) => `${s.row}-${s.seatNumber}`).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <span className="font-medium text-gray-900 tabular-nums shrink-0">
+                        {formatCurrencyFromUnits(totalCharged, sellerCurrency)}
+                      </span>
+                    </div>
+                    {activePromotion ? (
+                      <>
+                        <div className="flex justify-between items-center text-sm text-gray-500 pt-2 border-t border-gray-100">
+                          <span className="line-through">
+                            {t('sellTicket.platformCommission')} ({globalFeePercent}%)
+                          </span>
+                          <span className="tabular-nums line-through">
+                            −{formatCurrencyFromUnits((totalCharged * globalFeePercent) / 100, sellerCurrency)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm text-gray-600">
+                          <span>
+                            {t('sellTicket.platformCommissionPromotion', {
+                              name: activePromotion.name,
+                            })}{' '}
+                            ({effectiveFeePercent}%)
+                          </span>
+                          <span className="tabular-nums">
+                            −{formatCurrencyFromUnits(platformCommission, sellerCurrency)}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between items-center text-sm text-gray-600 pt-2 border-t border-gray-100">
+                        <span>
+                          {t('sellTicket.platformCommission')} ({effectiveFeePercent}%)
+                        </span>
+                        <span className="tabular-nums">
+                          −{formatCurrencyFromUnits(platformCommission, sellerCurrency)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                      <span className="font-semibold text-gray-900">
+                        {t('sellTicket.sellerReceives')}
+                      </span>
+                      <span className="font-semibold text-gray-900 tabular-nums">
+                        {formatCurrencyFromUnits(sellerReceives, sellerCurrency)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
           <div className="flex gap-4">
             <button

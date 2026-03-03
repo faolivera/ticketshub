@@ -21,6 +21,7 @@ import type {
   GetMyTicketsResponse,
   GetBuyPageResponse,
   GetTransactionDetailsResponse,
+  GetSellTicketConfigResponse,
 } from './bff.api';
 import {
   GetSellerProfileResponseSchema,
@@ -28,6 +29,7 @@ import {
   GetMyTicketsResponseSchema,
   GetBuyPageResponseSchema,
   GetTransactionDetailsResponseSchema,
+  GetSellTicketConfigResponseSchema,
 } from './schemas/api.schemas';
 
 @Controller('api')
@@ -48,6 +50,20 @@ export class BffController {
   ): Promise<ApiResponse<GetSellerProfileResponse>> {
     const profile = await this.bffService.getSellerProfile(ctx, sellerId);
     return { success: true, data: profile };
+  }
+
+  /**
+   * Get sell-ticket page config: platform fee % and active promotion (authenticated)
+   */
+  @Get('sell-ticket/config')
+  @UseGuards(JwtAuthGuard)
+  @ValidateResponse(GetSellTicketConfigResponseSchema)
+  async getSellTicketConfig(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+  ): Promise<ApiResponse<GetSellTicketConfigResponse>> {
+    const data = await this.bffService.getSellTicketConfig(ctx, user.id);
+    return { success: true, data };
   }
 
   /**

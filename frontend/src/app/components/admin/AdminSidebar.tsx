@@ -9,6 +9,7 @@ import {
   Shield,
   Bell,
   Settings,
+  Tag,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -63,6 +64,11 @@ const navItems: NavItem[] = [
     to: '/admin/platform-config',
     icon: <Settings className="w-4 h-4" />,
     labelKey: 'admin.sidebar.platformConfig',
+  },
+  {
+    to: '/admin/promotions',
+    icon: <Tag className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.promotions',
   },
 ];
 
