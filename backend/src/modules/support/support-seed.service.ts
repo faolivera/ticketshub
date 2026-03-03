@@ -228,36 +228,30 @@ export class SupportSeedService {
       sectionMap[spec.name] = createdSection.id;
     }
 
-    // Tickets: 3 listings from seller
+    // Tickets: 3 listings from seller (identified by eventSectionId + price)
     const sellerListings = await this.ticketsRepository.getBySellerId(
       ctx,
       seller.id,
     );
-    const existingSeedListings = sellerListings.filter(
-      (l) =>
-        l.eventId === event.id &&
-        (l.description || '').startsWith('Seed listing'),
+    const existingForEvent = sellerListings.filter((l) => l.eventId === event.id);
+    const existingSignatures = new Set(
+      existingForEvent.map(
+        (l) => `${l.eventSectionId}-${l.pricePerTicket.amount}`,
+      ),
     );
 
-    const desiredDescriptions = [
-      'Seed listing 1 - Bad Bunny',
-      'Seed listing 2 - Bad Bunny',
-      'Seed listing 3 - Bad Bunny',
-    ];
-
-    const existingDescriptions = new Set(
-      existingSeedListings.map((l) => l.description || ''),
-    );
+    const desiredSeedVariants: Array<1 | 2 | 3> = [1, 2, 3];
     const createdListingIds: string[] = [];
 
-    for (const desc of desiredDescriptions) {
-      if (existingDescriptions.has(desc)) continue;
+    for (const variant of desiredSeedVariants) {
       const req = this.getSeedListingRequest(
         event.id,
         primaryDateId,
-        desc,
+        variant,
         sectionMap,
       );
+      const signature = `${req.eventSectionId}-${req.pricePerTicket.amount}`;
+      if (existingSignatures.has(signature)) continue;
       const listing = await this.ticketsService.createListing(
         ctx,
         seller.id,
@@ -265,6 +259,7 @@ export class SupportSeedService {
         req,
       );
       createdListingIds.push(listing.id);
+      existingSignatures.add(signature);
     }
 
     const finalListings = await this.ticketsRepository.getBySellerId(
@@ -272,9 +267,7 @@ export class SupportSeedService {
       seller.id,
     );
     const finalSeedListings = finalListings.filter(
-      (l) =>
-        l.eventId === event.id &&
-        (l.description || '').startsWith('Seed listing'),
+      (l) => l.eventId === event.id,
     );
 
     return {
@@ -331,17 +324,16 @@ export class SupportSeedService {
   private getSeedListingRequest(
     eventId: string,
     eventDateId: string,
-    description: string,
+    variant: 1 | 2 | 3,
     sectionMap: Record<string, string>,
   ): CreateListingRequest {
-    if (description.includes('1')) {
+    if (variant === 1) {
       return {
         eventId,
         eventDateId,
         type: TicketType.DigitalTransferable,
         sellTogether: false,
         pricePerTicket: { amount: 15000, currency: 'EUR' },
-        description,
         eventSectionId: sectionMap['Platea'],
         ticketUnits: [
           { seat: { row: '10', seatNumber: '12' } },
@@ -350,7 +342,7 @@ export class SupportSeedService {
       };
     }
 
-    if (description.includes('2')) {
+    if (variant === 2) {
       return {
         eventId,
         eventDateId,
@@ -365,7 +357,6 @@ export class SupportSeedService {
           postalCode: '10178',
           countryCode: 'DE',
         },
-        description,
         eventSectionId: sectionMap['Campo'],
       };
     }
@@ -377,7 +368,6 @@ export class SupportSeedService {
       quantity: 1,
       sellTogether: true,
       pricePerTicket: { amount: 12000, currency: 'EUR' },
-      description,
       eventSectionId: sectionMap['Platea Alta'],
     };
   }

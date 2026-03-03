@@ -475,13 +475,6 @@ export function BuyTicketPage() {
                   )}
                 </div>
 
-                {listing.description && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">{t('buyTicket.description')}</p>
-                    <p className="text-gray-700">{listing.description}</p>
-                  </div>
-                )}
-
                 {!isNumberedListing ? (
                   <div>
                     <label className="text-sm text-gray-600 block mb-2">

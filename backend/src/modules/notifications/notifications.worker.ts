@@ -88,7 +88,7 @@ export class NotificationsWorker {
       }
 
       await this.service.markEventCompleted(ctx, event.id);
-      this.logger.log(ctx, `Successfully processed event ${event.id}`);
+      this.logger.log(ctx, `Successfully processed event ${event.type} for ${event.id}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(ctx, `Failed to process event ${event.id}: ${errorMessage}`);

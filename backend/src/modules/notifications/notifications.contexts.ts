@@ -174,6 +174,15 @@ export interface ReviewReceivedContext {
 // OFFER CONTEXTS
 // ============================================================================
 
+export interface OfferReceivedContext {
+  offerId: string;
+  listingId: string;
+  eventName: string;
+  sellerId: string;
+  offeredAmount: number;
+  currency: string;
+}
+
 export interface OfferAcceptedContext {
   offerId: string;
   listingId: string;
@@ -222,6 +231,7 @@ export interface NotificationContextMap {
   [NotificationEventType.EVENT_APPROVED]: EventApprovedContext;
   [NotificationEventType.EVENT_REJECTED]: EventRejectedContext;
   [NotificationEventType.REVIEW_RECEIVED]: ReviewReceivedContext;
+  [NotificationEventType.OFFER_RECEIVED]: OfferReceivedContext;
   [NotificationEventType.OFFER_ACCEPTED]: OfferAcceptedContext;
   [NotificationEventType.OFFER_REJECTED]: OfferRejectedContext;
   [NotificationEventType.OFFER_CANCELLED]: OfferCancelledContext;

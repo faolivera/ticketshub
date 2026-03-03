@@ -17,6 +17,10 @@ import { IdentityRejectedProcessor } from './identity-rejected.processor';
 import { EventApprovedProcessor } from './event-approved.processor';
 import { EventRejectedProcessor } from './event-rejected.processor';
 import { ReviewReceivedProcessor } from './review-received.processor';
+import { OfferReceivedProcessor } from './offer-received.processor';
+import { OfferAcceptedProcessor } from './offer-accepted.processor';
+import { OfferRejectedProcessor } from './offer-rejected.processor';
+import { OfferCancelledProcessor } from './offer-cancelled.processor';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyEventProcessor = EventProcessor<any>;
@@ -42,6 +46,10 @@ export class ProcessorRegistry {
     private readonly eventApproved: EventApprovedProcessor,
     private readonly eventRejected: EventRejectedProcessor,
     private readonly reviewReceived: ReviewReceivedProcessor,
+    private readonly offerReceived: OfferReceivedProcessor,
+    private readonly offerAccepted: OfferAcceptedProcessor,
+    private readonly offerRejected: OfferRejectedProcessor,
+    private readonly offerCancelled: OfferCancelledProcessor,
   ) {
     this.processors = new Map();
     this.registerAll();
@@ -65,6 +73,10 @@ export class ProcessorRegistry {
       this.eventApproved,
       this.eventRejected,
       this.reviewReceived,
+      this.offerReceived,
+      this.offerAccepted,
+      this.offerRejected,
+      this.offerCancelled,
     ];
 
     for (const processor of allProcessors) {

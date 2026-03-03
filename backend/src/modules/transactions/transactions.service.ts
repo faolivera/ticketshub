@@ -314,7 +314,6 @@ export class TransactionsService {
         sellerId: listing.sellerId,
         listingId,
         eventName: listing.eventName,
-        ticketDescription: listing.description,
       },
     );
 

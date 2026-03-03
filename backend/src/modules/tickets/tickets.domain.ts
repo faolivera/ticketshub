@@ -113,7 +113,6 @@ export interface TicketListing {
   pickupAddress?: Address;
 
   // Ticket details
-  description?: string;
   eventSectionId: string;
 
   /** Snapshot of promotion applied when listing was created (id, name, type, config) */

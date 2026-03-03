@@ -97,7 +97,6 @@ export interface TicketListing {
   pickupAddress?: Address;
 
   // Ticket details
-  description?: string;
   eventSectionId: string;
 
   status: ListingStatus;
@@ -151,7 +150,6 @@ export interface CreateListingRequest {
   pickupAddress?: Address;
 
   // Ticket details
-  description?: string;
   eventSectionId: string;
 }
 
@@ -169,7 +167,6 @@ export type CreateListingResponse = TicketListing;
  */
 export interface UpdateListingRequest {
   pricePerTicket?: Money;
-  description?: string;
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
   bestOfferConfig?: BestOfferConfig | null;

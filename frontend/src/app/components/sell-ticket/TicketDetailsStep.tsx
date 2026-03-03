@@ -52,7 +52,6 @@ interface TicketListingForm {
   bestOfferEnabled: boolean;
   bestOfferMinPrice: string;
   numberedSeats: NumberedSeat[];
-  description?: string;
 }
 
 interface TicketDetailsStepProps {
@@ -264,7 +263,6 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
               }
             : undefined,
         eventSectionId: formData.eventSectionId,
-        description: formData.description,
         bestOfferConfig: formData.bestOfferEnabled
           ? {
               enabled: true,
@@ -1117,19 +1115,6 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
                 )}
               </div>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('sellTicket.description')}
-            </label>
-            <textarea
-              value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder={t('sellTicket.descriptionPlaceholder')}
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
           </div>
 
           {formData.eventSectionId &&

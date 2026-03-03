@@ -19,7 +19,6 @@ export function EditListing() {
   const [error, setError] = useState<string | null>(null);
   
   const [price, setPrice] = useState('');
-  const [description, setDescription] = useState('');
   const [bestOfferEnabled, setBestOfferEnabled] = useState(false);
   const [bestOfferMinPrice, setBestOfferMinPrice] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -37,7 +36,6 @@ export function EditListing() {
         const data = await ticketsService.getListing(listingId);
         setListing(data);
         setPrice((data.pricePerTicket.amount / 100).toString());
-        setDescription(data.description || '');
         setBestOfferEnabled(data.bestOfferConfig?.enabled ?? false);
         setBestOfferMinPrice(
           data.bestOfferConfig?.minimumPrice != null
@@ -68,7 +66,6 @@ export function EditListing() {
           amount: Math.round(parseFloat(price) * 100),
           currency,
         },
-        description: description || undefined,
         bestOfferConfig: bestOfferEnabled
           ? {
               enabled: true,
@@ -288,21 +285,6 @@ export function EditListing() {
                   <p className="mt-2 text-sm text-gray-500">
                     {t('editListing.priceDescription')}
                   </p>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('editListing.description')}
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={t('editListing.descriptionPlaceholder')}
-                    disabled={!isActive}
-                  />
                 </div>
 
                 {/* Best offer */}

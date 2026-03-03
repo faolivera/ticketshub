@@ -261,6 +261,14 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'comment',
     'transactionId',
   ],
+  [NotificationEventType.OFFER_RECEIVED]: [
+    'offerId',
+    'listingId',
+    'eventName',
+    'offeredAmount',
+    'currency',
+    'amountFormatted',
+  ],
   [NotificationEventType.OFFER_ACCEPTED]: [
     'offerId',
     'listingId',

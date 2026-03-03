@@ -229,6 +229,7 @@ enum NotificationEventType {
   EVENT_APPROVED
   EVENT_REJECTED
   REVIEW_RECEIVED
+  OFFER_RECEIVED
   OFFER_ACCEPTED
   OFFER_REJECTED
   OFFER_CANCELLED
@@ -424,7 +425,6 @@ model TicketListing {
   bestOfferConfig   Json?            // { enabled, minimumPrice } when seller allows offers
   deliveryMethod    DeliveryMethod?
   pickupAddress     Json?
-  description       String?
   promotionSnapshot Json?            // { id, name, type, config } when listing was created with a promotion
   status            ListingStatus   @default(Pending)
   version           Int             @default(1)

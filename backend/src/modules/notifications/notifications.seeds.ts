@@ -34,6 +34,11 @@ export class NotificationsSeeder implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.seedChannelConfigs(ON_APP_INIT_CTX);
     await this.seedTemplates(ON_APP_INIT_CTX);
+    // Sync so new templates (e.g. OFFER_RECEIVED) are created when getDefaultTemplates() is extended
+    const sync = await this.syncTemplates(ON_APP_INIT_CTX);
+    if (sync.created > 0 || sync.updated > 0) {
+      this.logger.log(ON_APP_INIT_CTX, `Notification templates sync: ${sync.created} created, ${sync.updated} updated`);
+    }
   }
 
   /**
@@ -100,6 +105,7 @@ export class NotificationsSeeder implements OnModuleInit {
       { eventType: NotificationEventType.EVENT_APPROVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.EVENT_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.REVIEW_RECEIVED, inAppEnabled: true, emailEnabled: false, priority: NotificationPriority.LOW, updatedAt: new Date() },
+      { eventType: NotificationEventType.OFFER_RECEIVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.OFFER_ACCEPTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.OFFER_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.OFFER_CANCELLED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
@@ -423,6 +429,24 @@ export class NotificationsSeeder implements OnModuleInit {
         titleTemplate: 'Nueva reseña recibida',
         bodyTemplate: '{{reviewerName}} te dejó una reseña de {{rating}} estrellas',
         actionUrlTemplate: '/profile/reviews',
+      },
+
+      // OFFER_RECEIVED (seller notified when someone makes an offer on their listing)
+      {
+        eventType: NotificationEventType.OFFER_RECEIVED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Nueva oferta recibida',
+        bodyTemplate: 'Recibiste una oferta de {{amountFormatted}} para "{{eventName}}". Revisa y acepta o rechaza.',
+        actionUrlTemplate: '/my-tickets?tab=listed&expand={{listingId}}',
+      },
+      {
+        eventType: NotificationEventType.OFFER_RECEIVED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Nueva oferta en "{{eventName}}"',
+        bodyTemplate: 'Alguien ofertó {{amountFormatted}} por tus entradas de "{{eventName}}". Entra a Mis anuncios para revisar y aceptar o rechazar.',
+        actionUrlTemplate: '/my-tickets?tab=listed&expand={{listingId}}',
       },
 
       // OFFER_ACCEPTED

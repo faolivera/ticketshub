@@ -395,7 +395,7 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('update', () => {
     it('should return undefined for non-existent listing', async () => {
-      const result = await repository.update(ctx, 'non-existent-id', { description: 'Updated' });
+      const result = await repository.update(ctx, 'non-existent-id', { status: ListingStatus.Active });
       expect(result).toBeUndefined();
     });
 
@@ -405,14 +405,6 @@ describe('TicketsRepository (Integration)', () => {
       const updated = await repository.update(ctx, listing.id, { status: ListingStatus.Active });
 
       expect(updated?.status).toBe(ListingStatus.Active);
-    });
-
-    it('should update listing description', async () => {
-      const listing = await repository.create(ctx, createValidListing());
-
-      const updated = await repository.update(ctx, listing.id, { description: 'New description' });
-
-      expect(updated?.description).toBe('New description');
     });
 
     it('should update price', async () => {
@@ -916,16 +908,16 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('updateWithVersion', () => {
     it('should update listing when version matches', async () => {
-      const listing = await repository.create(ctx, createValidListing());
+      const listing = await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
 
       const updated = await repository.updateWithVersion(
         ctx,
         listing.id,
-        { description: 'Updated description' },
+        { status: ListingStatus.Active },
         listing.version,
       );
 
-      expect(updated.description).toBe('Updated description');
+      expect(updated.status).toBe(ListingStatus.Active);
       expect(updated.version).toBe(listing.version + 1);
     });
 
@@ -937,7 +929,7 @@ describe('TicketsRepository (Integration)', () => {
         repository.updateWithVersion(
           ctx,
           listing.id,
-          { description: 'Updated' },
+          { status: ListingStatus.Active },
           wrongVersion,
         ),
       ).rejects.toThrow('was modified by another process');
@@ -948,7 +940,7 @@ describe('TicketsRepository (Integration)', () => {
         repository.updateWithVersion(
           ctx,
           'non-existent-id',
-          { description: 'Updated' },
+          { status: ListingStatus.Active },
           1,
         ),
       ).rejects.toThrow('was modified by another process');

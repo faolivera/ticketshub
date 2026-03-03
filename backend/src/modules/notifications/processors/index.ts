@@ -17,6 +17,7 @@ import { IdentityRejectedProcessor } from './identity-rejected.processor';
 import { EventApprovedProcessor } from './event-approved.processor';
 import { EventRejectedProcessor } from './event-rejected.processor';
 import { ReviewReceivedProcessor } from './review-received.processor';
+import { OfferReceivedProcessor } from './offer-received.processor';
 import { OfferAcceptedProcessor } from './offer-accepted.processor';
 import { OfferRejectedProcessor } from './offer-rejected.processor';
 import { OfferCancelledProcessor } from './offer-cancelled.processor';
@@ -38,6 +39,7 @@ export {
   EventApprovedProcessor,
   EventRejectedProcessor,
   ReviewReceivedProcessor,
+  OfferReceivedProcessor,
   OfferAcceptedProcessor,
   OfferRejectedProcessor,
   OfferCancelledProcessor,
@@ -63,6 +65,7 @@ export const ALL_PROCESSORS = [
   EventApprovedProcessor,
   EventRejectedProcessor,
   ReviewReceivedProcessor,
+  OfferReceivedProcessor,
   OfferAcceptedProcessor,
   OfferRejectedProcessor,
   OfferCancelledProcessor,

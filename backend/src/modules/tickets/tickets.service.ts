@@ -345,7 +345,6 @@ export class TicketsService {
           },
           deliveryMethod: data.deliveryMethod,
           pickupAddress: data.pickupAddress,
-          description: data.description,
           eventSectionId: data.eventSectionId,
           promotionSnapshot: hasPromotion
             ? this.promotionsService.toSnapshot(activePromotion)

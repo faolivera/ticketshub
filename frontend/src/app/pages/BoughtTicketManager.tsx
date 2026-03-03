@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Ticket, CheckCircle, Clock, Calendar, User, DollarSign, Edit, AlertCircle, Eye, Link as LinkIcon, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -15,9 +15,9 @@ import { BRAND_NAME } from '../../constants/brand';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate } from '@/lib/format-date';
 
-type TabType = 'bought' | 'sold' | 'listed' | 'offers' | 'my-offers';
+type TabType = 'bought' | 'sold' | 'listed' | 'my-offers';
 
-const VALID_TABS: TabType[] = ['bought', 'sold', 'listed', 'offers', 'my-offers'];
+const VALID_TABS: TabType[] = ['bought', 'sold', 'listed', 'my-offers'];
 
 function isValidTab(tab: string | null): tab is TabType {
   return tab !== null && VALID_TABS.includes(tab as TabType);
@@ -364,9 +364,25 @@ interface ListedTicketsGridProps {
   t: (key: string, options?: Record<string, string>) => string;
   onCopyLink: (listingId: string) => void;
   copiedListingId: string | null;
+  expandedListingId: string | null;
+  onToggleOffers: (listingId: string) => void;
+  offersByListing: Record<string, Offer[]>;
+  onAcceptOffer: (offerId: string, listingId: string) => void;
+  onRejectOffer: (offerId: string, listingId: string) => void;
 }
 
-function ListedTicketsGrid({ listed, isPast = false, t, onCopyLink, copiedListingId }: ListedTicketsGridProps) {
+function ListedTicketsGrid({
+  listed,
+  isPast = false,
+  t,
+  onCopyLink,
+  copiedListingId,
+  expandedListingId,
+  onToggleOffers,
+  offersByListing,
+  onAcceptOffer,
+  onRejectOffer,
+}: ListedTicketsGridProps) {
   const bannerVariant = useEventBannerVariant();
 
   return (
@@ -379,6 +395,9 @@ function ListedTicketsGrid({ listed, isPast = false, t, onCopyLink, copiedListin
         const availableCount = listing.ticketUnits.filter(
           (unit) => unit.status === TicketUnitStatus.Available,
         ).length;
+        const hasBestOffer = listing.status === 'Active' && listing.bestOfferConfig?.enabled && !isPast;
+        const isOffersExpanded = expandedListingId === listing.id;
+        const offers = offersByListing[listing.id] ?? [];
 
         return (
           <div
@@ -469,6 +488,76 @@ function ListedTicketsGrid({ listed, isPast = false, t, onCopyLink, copiedListin
                       ? t('boughtTickets.copied')
                       : t('boughtTickets.copyLink')}
                   </button>
+
+                  {/* Expandable offers section (best offer enabled) */}
+                  {hasBestOffer && (
+                    <div className="border-t border-gray-200 pt-2 mt-2">
+                      <button
+                        type="button"
+                        className="w-full flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 text-left font-medium text-gray-700"
+                        onClick={() => onToggleOffers(listing.id)}
+                      >
+                        <span className="flex items-center gap-2">
+                          <MessageCircle className="w-4 h-4" />
+                          {isOffersExpanded
+                            ? t('boughtTickets.offersCount', { count: offers.length })
+                            : t('boughtTickets.viewOffers')}
+                        </span>
+                        {isOffersExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </button>
+                      {isOffersExpanded && (
+                        <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                          {offers.length === 0 ? (
+                            <p className="text-sm text-gray-500 px-2 py-2">{t('boughtTickets.noOffersYet')}</p>
+                          ) : (
+                            offers.map((offer) => (
+                              <div
+                                key={offer.id}
+                                className="flex items-center justify-between gap-2 py-2 px-2 border-b border-gray-100 last:border-0 text-sm"
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">
+                                    {formatCurrency(offer.offeredPrice.amount, offer.offeredPrice.currency)} / ticket
+                                    {offer.tickets.type === 'numbered'
+                                      ? ` · ${offer.tickets.seats.length} seat(s)`
+                                      : ` · ${offer.tickets.count} ticket(s)`}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {offer.status === 'pending' && t('boughtTickets.offerStatusPending')}
+                                    {offer.status === 'accepted' && t('boughtTickets.offerStatusAccepted')}
+                                  </p>
+                                </div>
+                                {offer.status === 'pending' && (
+                                  <div className="flex gap-1.5 flex-shrink-0">
+                                    <button
+                                      type="button"
+                                      className="px-2.5 py-1 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAcceptOffer(offer.id, listing.id);
+                                      }}
+                                    >
+                                      {t('boughtTickets.acceptOffer')}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="px-2.5 py-1 bg-gray-200 text-gray-800 text-xs font-medium rounded-lg hover:bg-gray-300"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRejectOffer(offer.id, listing.id);
+                                      }}
+                                    >
+                                      {t('boughtTickets.rejectOffer')}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -497,9 +586,16 @@ export function BoughtTicketManager() {
 
   const isSeller = canSell();
 
-  // Get active tab from query string, default to 'bought'
+  // Get active tab from query string, default to 'bought'. Redirect legacy 'offers' to 'listed'.
   const tabFromUrl = searchParams.get('tab');
-  const activeTab: TabType = isValidTab(tabFromUrl) ? tabFromUrl : 'bought';
+  const resolvedTab = tabFromUrl === 'offers' ? 'listed' : tabFromUrl;
+  const activeTab: TabType = isValidTab(resolvedTab) ? resolvedTab : 'bought';
+
+  useEffect(() => {
+    if (searchParams.get('tab') === 'offers') {
+      setSearchParams({ tab: 'listed' }, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const setActiveTab = (tab: TabType) => {
     setSearchParams({ tab });
@@ -541,14 +637,24 @@ export function BoughtTicketManager() {
   }, [isAuthenticated, activeTab]);
 
   // Fetch offers for a listing when expanded (seller offers tab). Always refetches so accept/reject can refresh.
-  const loadOffersForListing = async (listingId: string) => {
+  const loadOffersForListing = useCallback(async (listingId: string) => {
     try {
       const res = await offersService.listByListing(listingId);
       setOffersByListing((prev) => ({ ...prev, [listingId]: Array.isArray(res) ? res : [] }));
     } catch {
       setOffersByListing((prev) => ({ ...prev, [listingId]: [] }));
     }
-  };
+  }, []);
+
+  // Deep link: when URL has tab=listed&expand=<listingId>, open that listing's offers section and load offers.
+  const expandFromUrl = searchParams.get('expand');
+  useEffect(() => {
+    if (activeTab !== 'listed' || !expandFromUrl || listed.length === 0) return;
+    const listingExists = listed.some((l) => l.id === expandFromUrl);
+    if (!listingExists) return;
+    setExpandedListingId(expandFromUrl);
+    loadOffersForListing(expandFromUrl);
+  }, [activeTab, expandFromUrl, listed, loadOffersForListing]);
 
   // Group transactions into pending (my action, other's action) and completed
   const groupedTransactions = useMemo(() => {
@@ -586,6 +692,24 @@ export function BoughtTicketManager() {
     } catch (err) {
       console.error('Failed to copy link:', err);
     }
+  };
+
+  const handleToggleOffers = (listingId: string) => {
+    setExpandedListingId((prev) => {
+      const next = prev === listingId ? null : listingId;
+      if (next === listingId) loadOffersForListing(listingId);
+      return next;
+    });
+  };
+
+  const handleAcceptOffer = async (offerId: string, listingId: string) => {
+    await offersService.accept(offerId);
+    loadOffersForListing(listingId);
+  };
+
+  const handleRejectOffer = async (offerId: string, listingId: string) => {
+    await offersService.reject(offerId);
+    loadOffersForListing(listingId);
   };
 
   // Not authenticated
@@ -646,16 +770,6 @@ export function BoughtTicketManager() {
                   >
                     {t('boughtTickets.ticketsListed')}
                   </button>
-                  <button
-                    onClick={() => setActiveTab('offers')}
-                    className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
-                      activeTab === 'offers'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {t('boughtTickets.offersTab')}
-                  </button>
                 </>
               )}
               <button
@@ -696,6 +810,11 @@ export function BoughtTicketManager() {
                         t={t}
                         onCopyLink={handleCopyLink}
                         copiedListingId={copiedListingId}
+                        expandedListingId={expandedListingId}
+                        onToggleOffers={handleToggleOffers}
+                        offersByListing={offersByListing}
+                        onAcceptOffer={handleAcceptOffer}
+                        onRejectOffer={handleRejectOffer}
                       />
                     </div>
                   )}
@@ -708,6 +827,11 @@ export function BoughtTicketManager() {
                         t={t}
                         onCopyLink={handleCopyLink}
                         copiedListingId={copiedListingId}
+                        expandedListingId={expandedListingId}
+                        onToggleOffers={handleToggleOffers}
+                        offersByListing={offersByListing}
+                        onAcceptOffer={handleAcceptOffer}
+                        onRejectOffer={handleRejectOffer}
                       />
                     </div>
                   )}
@@ -774,91 +898,6 @@ export function BoughtTicketManager() {
                         )}
                       </div>
                     ))}
-                  </div>
-                </div>
-              )
-            ) : activeTab === 'offers' && isSeller ? (
-              listed.filter((l) => l.bestOfferConfig?.enabled).length === 0 ? (
-                <div className="bg-white rounded-lg shadow-md p-12">
-                  <EmptyState
-                    icon={MessageCircle}
-                    title={t('boughtTickets.noOffersYet')}
-                    description=""
-                  />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-gray-900">{t('boughtTickets.offersTab')}</h2>
-                  <div className="space-y-4">
-                    {listed.filter((l) => l.bestOfferConfig?.enabled).map((listing) => {
-                      const isExpanded = expandedListingId === listing.id;
-                      const offers = offersByListing[listing.id] ?? [];
-                      return (
-                        <div key={listing.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                          <button
-                            type="button"
-                            className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-                            onClick={() => {
-                              setExpandedListingId(isExpanded ? null : listing.id);
-                              if (!isExpanded) loadOffersForListing(listing.id);
-                            }}
-                          >
-                            <span className="font-semibold text-gray-900">{listing.eventName}</span>
-                            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                          </button>
-                          {isExpanded && (
-                            <div className="border-t border-gray-200 p-4 space-y-3">
-                              {offers.length === 0 ? (
-                                <p className="text-sm text-gray-500">{t('boughtTickets.noOffersYet')}</p>
-                              ) : (
-                                offers.map((offer) => (
-                                  <div key={offer.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                                    <div>
-                                      <p className="font-medium">
-                                        {formatCurrency(offer.offeredPrice.amount, offer.offeredPrice.currency)} / ticket
-                                        {offer.tickets.type === 'numbered'
-                                          ? ` · ${offer.tickets.seats.length} seat(s)`
-                                          : ` · ${offer.tickets.count} ticket(s)`}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        {offer.status === 'pending' && t('boughtTickets.offerStatusPending')}
-                                        {offer.status === 'accepted' && t('boughtTickets.offerStatusAccepted')}
-                                      </p>
-                                    </div>
-                                    {offer.status === 'pending' && (
-                                      <div className="flex gap-2">
-                                        <button
-                                          type="button"
-                                          className="px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700"
-                                          onClick={async (e) => {
-                                            e.stopPropagation();
-                                            await offersService.accept(offer.id);
-                                            loadOffersForListing(listing.id);
-                                          }}
-                                        >
-                                          {t('boughtTickets.acceptOffer')}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="px-3 py-1.5 bg-gray-200 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-300"
-                                          onClick={async (e) => {
-                                            e.stopPropagation();
-                                            await offersService.reject(offer.id);
-                                            loadOffersForListing(listing.id);
-                                          }}
-                                        >
-                                          {t('boughtTickets.rejectOffer')}
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
               )

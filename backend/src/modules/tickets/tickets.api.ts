@@ -32,7 +32,6 @@ export interface CreateListingRequest {
   pickupAddress?: Address;
 
   // Ticket details
-  description?: string;
   eventSectionId: string;
 }
 
@@ -52,7 +51,6 @@ export interface UpdateListingRequest {
   pricePerTicket?: Money;
   /** Optional: allow buyers to make offers; set to undefined to clear. */
   bestOfferConfig?: BestOfferConfig | null;
-  description?: string;
   deliveryMethod?: DeliveryMethod;
   pickupAddress?: Address;
 }

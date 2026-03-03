@@ -210,7 +210,6 @@ export class TicketsRepository
       pickupAddress: record.pickupAddress
         ? (record.pickupAddress as unknown as Address)
         : undefined,
-      description: record.description ?? undefined,
       promotionSnapshot: record.promotionSnapshot
         ? (record.promotionSnapshot as unknown as TicketListing['promotionSnapshot'])
         : undefined,
@@ -248,9 +247,6 @@ export class TicketsRepository
       data.pickupAddress = updates.pickupAddress
         ? (updates.pickupAddress as object)
         : null;
-    }
-    if (updates.description !== undefined) {
-      data.description = updates.description;
     }
     if (updates.status !== undefined) {
       data.status = this.mapListingStatusToDb(updates.status);
@@ -291,7 +287,6 @@ export class TicketsRepository
         pickupAddress: listing.pickupAddress
           ? (listing.pickupAddress as object)
           : undefined,
-        description: listing.description,
         promotionSnapshot: listing.promotionSnapshot
           ? (listing.promotionSnapshot as object)
           : undefined,

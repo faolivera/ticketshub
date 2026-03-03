@@ -124,7 +124,6 @@ export const ListingWithSellerSchema = z.object({
   pricePerTicket: MoneySchema,
   deliveryMethod: DeliveryMethodSchema.optional(),
   pickupAddress: AddressSchema.optional(),
-  description: z.string().optional(),
   eventSectionId: z.string(),
   status: ListingStatusSchema,
   expiresAt: z.coerce.date().optional(),

@@ -105,6 +105,20 @@ export class OffersService {
 
     const created = await this.offersRepository.create(ctx, offer);
     this.logger.log(ctx, `Created offer ${created.id} for listing ${body.listingId}`);
+
+    this.notificationsService
+      .emit(ctx, NotificationEventType.OFFER_RECEIVED, {
+        offerId: created.id,
+        listingId: body.listingId,
+        eventName: listing.eventName,
+        sellerId: listing.sellerId,
+        offeredAmount: created.offeredPrice.amount,
+        currency: created.offeredPrice.currency,
+      })
+      .catch((err) =>
+        this.logger.error(ctx, `Failed to emit OFFER_RECEIVED: ${err}`),
+      );
+
     return created;
   }
 
