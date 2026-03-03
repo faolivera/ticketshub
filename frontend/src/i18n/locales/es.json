@@ -1279,6 +1279,7 @@
       "deepLinkTitle": "Detalles de la Transacción",
       "deepLinkDesc": "Esta transacción se abrió mediante enlace directo. Puede no aparecer en la página actual.",
       "statusPendingPayment": "Pago Pendiente",
+      "statusPaymentPendingVerification": "Pago en Revisión",
       "statusPaymentReceived": "Pago Recibido",
       "statusTicketTransferred": "Transferida",
       "statusCompleted": "Completada",

@@ -441,6 +441,15 @@ model TicketListing {
   ticketUnits       TicketUnit[]
   offers            Offer[]
 
+  @@index([status])
+  @@index([sellerId])
+  @@index([eventId])
+  @@index([eventDateId])
+  @@index([eventSectionId])
+  @@index([eventId, status])
+  @@index([eventDateId, status])
+  @@index([eventSectionId, status])
+  @@index([status, createdAt(sort: Desc)])
   @@map("ticket_listings")
 }
 
@@ -457,6 +466,8 @@ model TicketUnit {
   // Relations
   listing     TicketListing    @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
+  @@index([listingId])
+  @@index([listingId, status])
   @@map("ticket_units")
 }
 
@@ -510,6 +521,13 @@ model Transaction {
   paymentConfirmation       PaymentConfirmation?
   reviews                   Review[]
 
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([listingId])
+  @@index([status])
+  @@index([status, paymentExpiresAt])
+  @@index([status, adminReviewExpiresAt])
+  @@index([createdAt(sort: Desc)])
   @@map("transactions")
 }
 
@@ -779,6 +797,8 @@ model NotificationEvent {
   // Relations
   notifications Notification[]
 
+  @@index([status])
+  @@index([status, triggeredAt(sort: Asc)])
   @@map("notification_events")
 }
 
@@ -807,6 +827,10 @@ model Notification {
   event         NotificationEvent    @relation(fields: [eventId], references: [id])
   recipient     User                 @relation(fields: [recipientId], references: [id])
 
+  @@index([recipientId, channel])
+  @@index([recipientId, channel, read])
+  @@index([channel, status])
+  @@index([eventId])
   @@map("notifications")
 }
 

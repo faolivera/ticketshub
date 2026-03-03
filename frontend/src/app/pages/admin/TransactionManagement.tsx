@@ -273,6 +273,7 @@ export default function TransactionManagement() {
   const getStatusBadge = (status: string): ReactNode => {
     const statusLabels: Record<string, string> = {
       PendingPayment: t('admin.transactions.statusPendingPayment'),
+      PaymentPendingVerification: t('admin.transactions.statusPaymentPendingVerification'),
       PaymentReceived: t('admin.transactions.statusPaymentReceived'),
       TicketTransferred: t('admin.transactions.statusTicketTransferred'),
       Completed: t('admin.transactions.statusCompleted'),

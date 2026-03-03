@@ -1300,6 +1300,7 @@
       "deepLinkTitle": "Transaction Details",
       "deepLinkDesc": "This transaction was opened via direct link. It may not appear in the current page.",
       "statusPendingPayment": "Pending Payment",
+      "statusPaymentPendingVerification": "Payment Under Review",
       "statusPaymentReceived": "Payment Received",
       "statusTicketTransferred": "Transferred",
       "statusCompleted": "Completed",
