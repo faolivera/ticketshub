@@ -143,7 +143,8 @@
     "offerSubmitFailed": "Failed to submit offer. Please try again.",
     "loginToOffer": "Log in to make an offer.",
     "acceptedOfferComplete": "Your offer was accepted. Complete your purchase below.",
-    "acceptedOfferExpires": "Complete before the deadline shown in your notification."
+    "acceptedOfferExpires": "Complete before the deadline shown in your notification.",
+    "offeredPrice": "Offered price"
   },
   "boughtTickets": {
     "title": "My Tickets",
@@ -819,6 +820,11 @@
     "sellTogether": "Sell all tickets together",
     "sellTogetherDesc": "Require buyers to purchase all tickets as a bundle",
     "pricePerTicket": "Price Per Ticket",
+    "allowOffers": "Open to offers",
+    "allowOffersDescription": "Buyers can make offers; you can accept or reject.",
+    "minimumOfferPrice": "Minimum offer (per ticket)",
+    "minimumOfferPriceHint": "Must be less than or equal to your listing price.",
+    "invalidMinimumOfferPrice": "Minimum offer must be greater than 0 and not exceed the listing price.",
     "totalValue": "Total value",
     "totalChargedForTickets": "Total charged for tickets",
     "ticketDetailLine": "{{section}}: {{pricePerUnit}} per unit × {{count}} ticket(s)",

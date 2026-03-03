@@ -69,13 +69,14 @@ export function BuyTicketPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<BuyPagePaymentMethodOption | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
-  /** When user arrived with ?offerId= and has an accepted offer, we show "Complete purchase" at offer price */
+  /** When user has an accepted offer for this listing, we show "Complete purchase" at offer price */
   const [acceptedOffer, setAcceptedOffer] = useState<Offer | null>(null);
+  /** Pending offer for this listing (waiting for seller); restored on load or set after submit */
+  const [pendingOffer, setPendingOffer] = useState<Offer | null>(null);
   /** Make offer flow */
   const [offerPriceCents, setOfferPriceCents] = useState<number>(0);
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
   const [offerError, setOfferError] = useState<string | null>(null);
-  const [offerSuccess, setOfferSuccess] = useState(false);
 
   const listing = buyPageData?.listing ?? null;
   const seller = buyPageData?.seller ?? null;
@@ -152,31 +153,52 @@ export function BuyTicketPage() {
     }
   }, [listing, isNumberedListing, listing?.sellTogether, availableIds, availableCount]);
 
-  // Resolve accepted offer when URL has offerId (buyer completing an accepted offer)
+  // Resolve my offer for this listing: accepted (complete purchase) or pending (waiting for seller).
+  // When URL has offerId, prefer that accepted offer; otherwise fetch my offers and detect state on load/refresh.
   useEffect(() => {
-    if (!offerIdFromUrl || !ticketId || !isAuthenticated || !listing) return;
+    if (!ticketId || !isAuthenticated || !listing) return;
     let cancelled = false;
     (async () => {
       try {
         const offers = await offersService.listMyOffers();
-        const offer = offers.find(
-          (o) => o.id === offerIdFromUrl && o.listingId === ticketId && o.status === 'accepted',
-        );
-        if (!cancelled) setAcceptedOffer(offer ?? null);
+        const forListing = offers.filter((o) => o.listingId === ticketId);
+        const accepted = offerIdFromUrl
+          ? forListing.find((o) => o.id === offerIdFromUrl && o.status === 'accepted')
+          : forListing.find((o) => o.status === 'accepted');
+        const pending = forListing.find((o) => o.status === 'pending');
+        if (!cancelled) {
+          setAcceptedOffer(accepted ?? null);
+          setPendingOffer(pending ?? null);
+        }
       } catch {
-        if (!cancelled) setAcceptedOffer(null);
+        if (!cancelled) {
+          setAcceptedOffer(null);
+          setPendingOffer(null);
+        }
       }
     })();
     return () => { cancelled = true; };
   }, [offerIdFromUrl, ticketId, isAuthenticated, listing?.id]);
 
-  // Default offer price to minimum or listing price when best offer is enabled
+  // When we have an accepted offer, sync quantity and selectedUnitIds to the offer's selection
+  // so the UI shows exactly what was agreed (disabled controls display the offer's choice).
   useEffect(() => {
-    if (!listing?.bestOfferConfig?.enabled) return;
-    const min = listing.bestOfferConfig.minimumPrice.amount ?? 0;
-    const list = listing.pricePerTicket.amount ?? 0;
-    setOfferPriceCents((prev) => (prev === 0 ? Math.min(min || list, list) : prev));
-  }, [listing?.id, listing?.bestOfferConfig?.enabled, listing?.bestOfferConfig?.minimumPrice?.amount, listing?.pricePerTicket?.amount]);
+    if (!acceptedOffer || !listing) return;
+    if (acceptedOffer.tickets.type === 'unnumbered') {
+      setQuantity(acceptedOffer.tickets.count);
+      setSelectedUnitIds([]);
+    } else {
+      const offerSeats = acceptedOffer.tickets.seats;
+      const ids = offerSeats
+        .map((seat) =>
+          availableUnits.find(
+            (u) => u.seat?.row === seat.row && u.seat?.seatNumber === seat.seatNumber
+          )?.id
+        )
+        .filter((id): id is string => id != null);
+      setSelectedUnitIds(ids);
+    }
+  }, [acceptedOffer, listing?.id]);
 
   const toggleSeatSelection = (unitId: string) => {
     if (listing?.sellTogether) return;
@@ -331,12 +353,12 @@ export function BuyTicketPage() {
     setIsSubmittingOffer(true);
     setOfferError(null);
     try {
-      await offersService.create({
+      const created = await offersService.create({
         listingId: ticketId,
         offeredPrice: { amount: offerPriceCents, currency: listing.pricePerTicket.currency },
         tickets: ticketsPayload,
       });
-      setOfferSuccess(true);
+      setPendingOffer(created);
     } catch (err: unknown) {
       setOfferError(err instanceof Error ? err.message : t('buyTicket.offerSubmitFailed'));
     } finally {
@@ -473,7 +495,8 @@ export function BuyTicketPage() {
                       <select
                         value={quantity}
                         onChange={(e) => setQuantity(Number(e.target.value))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={!!acceptedOffer}
+                        className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${acceptedOffer ? 'opacity-70 cursor-not-allowed bg-gray-50' : ''}`}
                       >
                         {quantityOptions.map((num) => (
                           <option key={num} value={num}>
@@ -496,17 +519,18 @@ export function BuyTicketPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {sortedNumberedUnits.map((unit) => {
                         const isSelected = selectedUnitIds.includes(unit.id);
+                        const selectionDisabled = listing.sellTogether || !!acceptedOffer;
                         return (
                           <button
                             key={unit.id}
                             type="button"
                             onClick={() => toggleSeatSelection(unit.id)}
-                            disabled={listing.sellTogether}
+                            disabled={selectionDisabled}
                             className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
                               isSelected
                                 ? 'bg-blue-600 text-white border-blue-600'
                                 : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
-                            } ${listing.sellTogether ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            } ${selectionDisabled ? 'opacity-70 cursor-not-allowed' : ''}`}
                           >
                             {unit.seat?.row}-{unit.seat?.seatNumber}
                           </button>
@@ -523,66 +547,7 @@ export function BuyTicketPage() {
               </div>
             </div>
 
-            {/* Make an offer (when seller enabled best offer and user is not completing an accepted offer) */}
-            {listing.bestOfferConfig?.enabled && !acceptedOffer && !isOwnListing && (
-              <div className="bg-white rounded-lg shadow-md p-6 border-2 border-dashed border-amber-200">
-                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-amber-600" />
-                  {t('buyTicket.makeOffer')}
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  {t('buyTicket.makeOfferDescription')}
-                </p>
-                {offerSuccess ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="font-medium text-green-800">{t('buyTicket.offerSubmitted')}</p>
-                    <Link to="/my-tickets?tab=my-offers" className="text-sm text-green-700 underline mt-1 inline-block">
-                      {t('buyTicket.viewMyOffers')}
-                    </Link>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-4">
-                      <label className="text-sm text-gray-600 block mb-1">
-                        {t('buyTicket.yourOfferPrice')} ({listingCurrency})
-                      </label>
-                      <input
-                        type="number"
-                        min={(listing.bestOfferConfig.minimumPrice?.amount ?? 0) / 100}
-                        max={(listing.pricePerTicket.amount ?? 0) / 100}
-                        step="0.01"
-                        value={offerPriceCents / 100}
-                        onChange={(e) => setOfferPriceCents(Math.round(parseFloat(e.target.value || '0') * 100))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {t('buyTicket.minimumOffer', {
-                          amount: formatCurrencyFromUnits(listing.bestOfferConfig.minimumPrice?.amount ?? 0, listingCurrency),
-                        })}
-                      </p>
-                    </div>
-                    {offerError && <ErrorAlert message={offerError} className="mb-4" />}
-                    <button
-                      type="button"
-                      onClick={handleSubmitOffer}
-                      disabled={isSubmittingOffer || !isAuthenticated}
-                      className="w-full py-3 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {isSubmittingOffer ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
-                      {isSubmittingOffer ? t('common.loading') : t('buyTicket.submitOffer')}
-                    </button>
-                    {!isAuthenticated && (
-                      <p className="text-xs text-amber-700 mt-2">
-                        {t('buyTicket.loginToOffer')}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-6">
+            {/* Seller (moved from right column) */}
             {seller && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('buyTicket.seller')}</h2>
@@ -632,31 +597,139 @@ export function BuyTicketPage() {
                 </Link>
               </div>
             )}
+          </div>
+
+          <div className="space-y-6">
+            {/* Make an offer / Pending offer (when seller enabled best offer; not for own listing) */}
+            {listing.bestOfferConfig?.enabled && !isOwnListing && (
+              <div className="bg-white rounded-lg shadow-md p-6 border-2 border-dashed border-amber-200">
+                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-amber-600" />
+                  {t('buyTicket.makeOffer')}
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  {t('buyTicket.makeOfferDescription')}
+                </p>
+                {acceptedOffer ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="font-medium text-green-800">{t('buyTicket.acceptedOfferComplete')}</p>
+                    <p className="text-xs text-green-700 mt-1">{t('buyTicket.acceptedOfferExpires')}</p>
+                  </div>
+                ) : pendingOffer ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="font-medium text-green-800">{t('buyTicket.offerSubmitted')}</p>
+                    <Link to="/my-tickets?tab=my-offers" className="text-sm text-green-700 underline mt-1 inline-block">
+                      {t('buyTicket.viewMyOffers')}
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <label className="text-sm text-gray-600 block mb-1">
+                        {t('buyTicket.yourOfferPrice')} ({listingCurrency})
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={(listing.pricePerTicket.amount ?? 0) / 100}
+                        step="0.01"
+                        value={offerPriceCents === 0 ? '' : offerPriceCents / 100}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setOfferPriceCents(v === '' ? 0 : Math.round(parseFloat(v) * 100));
+                        }}
+                        placeholder="—"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    {offerError && <ErrorAlert message={offerError} className="mb-4" />}
+                    <button
+                      type="button"
+                      onClick={handleSubmitOffer}
+                      disabled={isSubmittingOffer || !isAuthenticated}
+                      className="w-full py-3 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isSubmittingOffer ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
+                      {isSubmittingOffer ? t('common.loading') : t('buyTicket.submitOffer')}
+                    </button>
+                    {!isAuthenticated && (
+                      <p className="text-xs text-amber-700 mt-2">
+                        {t('buyTicket.loginToOffer')}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 {t('buyTicket.paymentSummary')}
               </h2>
 
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {t('buyTicket.ticketPrice', { quantity: selectedQuantity })}
-                </span>
-                <span className="font-semibold text-gray-900">
+            <div className="space-y-3 mb-6">
+              {/* Precio por entradas */}
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">{t('myTicket.ticketPriceTotal')}</span>
+                <span className="text-gray-900">
                   {formatCurrencyFromUnits(subtotal, listingCurrency)}
                 </span>
               </div>
+              {/* Detalle: precio por unidad × cantidad y asientos si aplica */}
+              <div className="text-xs text-gray-500 pl-0">
+                {acceptedOffer ? (
+                  <>
+                    <div className="line-through">
+                      {t('myTicket.pricePerUnitDetail', {
+                        price: formatCurrencyFromUnits(
+                          (listing.pricePerTicket.amount ?? 0) / 100,
+                          listingCurrency,
+                        ),
+                        quantity: selectedQuantity,
+                      })}
+                    </div>
+                    <div>
+                      {t('myTicket.pricePerUnitDetail', {
+                        price: formatCurrencyFromUnits(pricePerTicket, listingCurrency),
+                        quantity: selectedQuantity,
+                      })}{' '}
+                      ({t('buyTicket.offeredPrice')})
+                    </div>
+                  </>
+                ) : (
+                  <span>
+                    {t('myTicket.pricePerUnitDetail', {
+                      price: formatCurrencyFromUnits(pricePerTicket, listingCurrency),
+                      quantity: selectedQuantity,
+                    })}
+                  </span>
+                )}
+                {isNumberedListing && (() => {
+                  const seats =
+                    acceptedOffer && acceptedOffer.tickets.type === 'numbered'
+                      ? acceptedOffer.tickets.seats.map((s) => `${s.row}-${s.seatNumber}`)
+                      : selectedUnitIds
+                          .map((id) => availableUnits.find((u) => u.id === id)?.seat)
+                          .filter((s): s is { row: string; seatNumber: string } => s != null)
+                          .map((s) => `${s.row}-${s.seatNumber}`);
+                  return seats.length > 0 ? (
+                    <div className="mt-1">
+                      {t('myTicket.seatDetail')}: {seats.join(', ')}
+                    </div>
+                  ) : null;
+                })()}
+              </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-700">{t('buyTicket.servicePrice')}</span>
-                <span className="font-semibold text-gray-900">
+              {/* Precio por servicio */}
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">{t('myTicket.servicePrice')}</span>
+                <span className="text-gray-900">
                   {formatCurrencyFromUnits(servicePrice, listingCurrency)}
                 </span>
               </div>
 
-              <div className="pt-4 border-t border-gray-200 flex justify-between">
-                <span className="text-lg font-bold text-gray-900">{t('buyTicket.total')}</span>
+              <div className="border-t pt-3 flex justify-between font-semibold">
+                <span className="text-gray-900">{t('buyTicket.total')}</span>
                 <span className="text-2xl font-bold text-blue-600">
                   {formatCurrencyFromUnits(grandTotal, listingCurrency)}
                 </span>
@@ -721,17 +794,6 @@ export function BuyTicketPage() {
 
             {purchaseError && (
               <ErrorAlert message={purchaseError} className="mb-4" />
-            )}
-
-            {acceptedOffer && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p className="text-sm font-medium text-green-800">
-                  {t('buyTicket.acceptedOfferComplete')}
-                </p>
-                <p className="text-xs text-green-700 mt-1">
-                  {t('buyTicket.acceptedOfferExpires')}
-                </p>
-              </div>
             )}
 
             <button

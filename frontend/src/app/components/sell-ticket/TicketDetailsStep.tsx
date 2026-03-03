@@ -49,6 +49,8 @@ interface TicketListingForm {
   quantity: number;
   sellTogether: boolean;
   pricePerTicket: number;
+  bestOfferEnabled: boolean;
+  bestOfferMinPrice: string;
   numberedSeats: NumberedSeat[];
   description?: string;
 }
@@ -103,6 +105,8 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
     quantity: 1,
     sellTogether: false,
     pricePerTicket: 0,
+    bestOfferEnabled: false,
+    bestOfferMinPrice: '',
     seatingType: 'unnumbered',
     numberedSeats: [{ row: '', seatNumber: '' }],
   });
@@ -160,6 +164,11 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
       }
     }
 
+    if (formData.bestOfferEnabled) {
+      const minPrice = parseFloat(formData.bestOfferMinPrice) || 0;
+      if (minPrice <= 0 || minPrice > formData.pricePerTicket) return false;
+    }
+
     return true;
   };
 
@@ -193,6 +202,14 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
     } else {
       if (formData.quantity < 1) {
         setError(t('sellTicket.pleaseCompleteAllFields'));
+        return;
+      }
+    }
+
+    if (formData.bestOfferEnabled) {
+      const minPrice = parseFloat(formData.bestOfferMinPrice) || 0;
+      if (minPrice <= 0 || minPrice > formData.pricePerTicket) {
+        setError(t('sellTicket.invalidMinimumOfferPrice'));
         return;
       }
     }
@@ -248,6 +265,15 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
             : undefined,
         eventSectionId: formData.eventSectionId,
         description: formData.description,
+        bestOfferConfig: formData.bestOfferEnabled
+          ? {
+              enabled: true,
+              minimumPrice: {
+                amount: Math.round(parseFloat(formData.bestOfferMinPrice || '0') * 100),
+                currency: sellerCurrency,
+              },
+            }
+          : undefined,
       });
 
       navigate(`/buy/${listing.id}`);
@@ -915,6 +941,47 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
                 required
               />
             </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-200">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.bestOfferEnabled}
+                onChange={(e) =>
+                  setFormData({ ...formData, bestOfferEnabled: e.target.checked })
+                }
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                {t('sellTicket.allowOffers')}
+              </span>
+            </label>
+            <p className="mt-1 text-xs text-gray-500 mb-3">
+              {t('sellTicket.allowOffersDescription')}
+            </p>
+            {formData.bestOfferEnabled && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('sellTicket.minimumOfferPrice')}
+                </label>
+                <input
+                  type="number"
+                  value={formData.bestOfferMinPrice}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bestOfferMinPrice: e.target.value })
+                  }
+                  min="0"
+                  max={formData.pricePerTicket > 0 ? formData.pricePerTicket : undefined}
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {t('sellTicket.minimumOfferPriceHint')}
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
