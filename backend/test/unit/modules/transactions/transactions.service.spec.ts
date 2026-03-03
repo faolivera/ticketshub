@@ -10,7 +10,7 @@ import type { ITransactionsRepository } from '../../../../src/modules/transactio
 import { TicketsService } from '../../../../src/modules/tickets/tickets.service';
 import { PaymentsService } from '../../../../src/modules/payments/payments.service';
 import { WalletService } from '../../../../src/modules/wallet/wallet.service';
-import { ConfigService } from '@nestjs/config';
+import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { PricingService } from '../../../../src/modules/payments/pricing/pricing.service';
@@ -100,14 +100,12 @@ describe('TransactionsService', () => {
       refundHeldFunds: jest.fn(),
     };
 
-    const mockConfigService = {
-      get: jest.fn((key: string) => {
-        const map: Record<string, number> = {
-          'platform.paymentTimeoutMinutes': 10,
-          'platform.adminReviewTimeoutHours': 24,
-          'platform.digitalNonTransferableReleaseMinutes': 30,
-        };
-        return map[key];
+    const mockPlatformConfigService = {
+      getPlatformConfig: jest.fn().mockResolvedValue({
+        buyerPlatformFeePercentage: 10,
+        sellerPlatformFeePercentage: 5,
+        paymentTimeoutMinutes: 10,
+        adminReviewTimeoutHours: 24,
       }),
     };
 
@@ -145,7 +143,7 @@ describe('TransactionsService', () => {
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: PaymentsService, useValue: mockPaymentsService },
         { provide: WalletService, useValue: mockWalletService },
-        { provide: ConfigService, useValue: mockConfigService },
+        { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
         { provide: PricingService, useValue: mockPricingService },

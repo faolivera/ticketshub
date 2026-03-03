@@ -928,7 +928,21 @@
       "transactions": "Gestión de Transacciones",
       "paymentMethods": "Métodos de Pago",
       "identityVerifications": "Verificación de Identidad",
-      "notifications": "Notificaciones"
+      "notifications": "Notificaciones",
+      "platformConfig": "Configuración de Plataforma"
+    },
+    "platformConfig": {
+      "title": "Configuración de Plataforma",
+      "description": "Configura comisiones y tiempos de espera. Los cambios aplican a nuevas transacciones y snapshots de precios.",
+      "buyerPlatformFeePercentage": "Comisión comprador (%)",
+      "sellerPlatformFeePercentage": "Comisión vendedor (%)",
+      "paymentTimeoutMinutes": "Tiempo límite de pago (minutos)",
+      "adminReviewTimeoutHours": "Tiempo límite revisión admin (horas)",
+      "save": "Guardar cambios",
+      "saving": "Guardando...",
+      "saved": "Configuración guardada correctamente.",
+      "loadError": "Error al cargar la configuración.",
+      "saveError": "Error al guardar la configuración."
     },
     "dashboard": {
       "title": "Panel Principal",

@@ -779,3 +779,15 @@ model SchedulerLock {
 
   @@map("scheduler_locks")
 }
+
+// Singleton: one row (id = "default") holds editable platform config. Seeded from HOCON on first read.
+model PlatformConfig {
+  id                         String   @id @default("default")
+  buyerPlatformFeePercentage Float    @map("buyer_platform_fee_percentage")
+  sellerPlatformFeePercentage Float    @map("seller_platform_fee_percentage")
+  paymentTimeoutMinutes      Int      @map("payment_timeout_minutes")
+  adminReviewTimeoutHours    Int      @map("admin_review_timeout_hours")
+  updatedAt                  DateTime @updatedAt
+
+  @@map("platform_config")
+}

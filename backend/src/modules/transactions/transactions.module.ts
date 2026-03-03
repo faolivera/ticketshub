@@ -9,6 +9,7 @@ import { PaymentsModule } from '../payments/payments.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { UsersModule } from '../users/users.module';
 import { EventsModule } from '../events/events.module';
+import { ConfigModule } from '../config/config.module';
 import { TransactionManagerModule } from '../../common/database';
 
 @Module({
@@ -19,6 +20,7 @@ import { TransactionManagerModule } from '../../common/database';
     WalletModule,
     UsersModule,
     forwardRef(() => EventsModule),
+    ConfigModule,
   ],
   controllers: [TransactionsController],
   providers: [

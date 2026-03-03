@@ -1,8 +1,8 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PRICING_REPOSITORY, type IPricingRepository } from './pricing.repository.interface';
-import { ConfigService } from '@nestjs/config';
 import { PaymentMethodsService } from '../payment-methods.service';
+import { PlatformConfigService } from '../../config/config.service';
 import { ContextLogger } from '../../../common/logger/context-logger';
 import type { Ctx } from '../../../common/types/context';
 import type { Money } from '../payments.domain';
@@ -22,8 +22,8 @@ export class PricingService {
   constructor(
     @Inject(PRICING_REPOSITORY)
     private readonly repository: IPricingRepository,
-    @Inject(ConfigService)
-    private readonly configService: ConfigService,
+    @Inject(PlatformConfigService)
+    private readonly platformConfigService: PlatformConfigService,
     @Inject(PaymentMethodsService)
     private readonly paymentMethodsService: PaymentMethodsService,
   ) {}
@@ -39,10 +39,8 @@ export class PricingService {
   ): Promise<PricingSnapshot> {
     this.logger.log(ctx, `Creating pricing snapshot for listing ${listingId}`);
 
-    const buyerPlatformFeePercentage =
-      this.configService.get<number>('platform.buyerPlatformFeePercentage') ?? 10;
-    const sellerPlatformFeePercentage =
-      this.configService.get<number>('platform.sellerPlatformFeePercentage') ?? 5;
+    const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
+    const { buyerPlatformFeePercentage, sellerPlatformFeePercentage } = platformConfig;
 
     const enabledPaymentMethods =
       await this.paymentMethodsService.findEnabled(ctx);

@@ -11,7 +11,7 @@ import { TRANSACTIONS_REPOSITORY } from './transactions.repository.interface';
 import { TicketsService } from '../tickets/tickets.service';
 import { PaymentsService } from '../payments/payments.service';
 import { WalletService } from '../wallet/wallet.service';
-import { ConfigService } from '@nestjs/config';
+import { PlatformConfigService } from '../config/config.service';
 import { UsersService } from '../users/users.service';
 import { PricingService } from '../payments/pricing/pricing.service';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -52,8 +52,8 @@ export class TransactionsService {
     private readonly paymentsService: PaymentsService,
     @Inject(WalletService)
     private readonly walletService: WalletService,
-    @Inject(ConfigService)
-    private readonly configService: ConfigService,
+    @Inject(PlatformConfigService)
+    private readonly platformConfigService: PlatformConfigService,
     @Inject(UsersService)
     private readonly usersService: UsersService,
     @Inject(PaymentMethodsService)
@@ -133,6 +133,7 @@ export class TransactionsService {
 
     const quantity = ticketUnitIds.length;
     const transactionId = this.generateId();
+    const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
 
     // Atomic: consume pricing, reserve tickets, create transaction
     const { transaction, totalPaid } = await this.txManager.executeInTransaction(
@@ -174,16 +175,8 @@ export class TransactionsService {
           currency: ticketPriceTotal.currency,
         };
 
-        // Calculate auto-release time for digital non-transferable tickets
-        let autoReleaseAt: Date | undefined;
-        if (listing.type === TicketType.DigitalNonTransferable) {
-          const releaseMinutes =
-            this.configService.get<number>('platform.digitalNonTransferableReleaseMinutes') ?? 30;
-          const eventDate = new Date(listing.eventDate);
-          autoReleaseAt = new Date(
-            eventDate.getTime() + releaseMinutes * 60 * 1000,
-          );
-        }
+        // autoReleaseAt reserved for future use; always undefined for now.
+        const autoReleaseAt: Date | undefined = undefined;
 
         // Reserve tickets (atomic)
         await this.ticketsService.reserveTickets(txCtx, listingId, ticketUnitIds);
@@ -209,14 +202,12 @@ export class TransactionsService {
           requiredActor: STATUS_REQUIRED_ACTOR[initialStatus],
           createdAt: new Date(),
           paymentExpiresAt: new Date(
-            Date.now() + (this.configService.get<number>('platform.paymentTimeoutMinutes') ?? 10) * 60 * 1000,
+            Date.now() + platformConfig.paymentTimeoutMinutes * 60 * 1000,
           ),
           updatedAt: new Date(),
           eventDateTime: new Date(listing.eventDate),
           releaseAfterMinutes:
-            listing.type === TicketType.DigitalNonTransferable
-              ? (this.configService.get<number>('platform.digitalNonTransferableReleaseMinutes') ?? 30)
-              : undefined,
+            listing.type === TicketType.DigitalNonTransferable ? 30 : undefined,
           autoReleaseAt,
           deliveryMethod: listing.deliveryMethod,
           pickupAddress: listing.pickupAddress,
@@ -393,9 +384,10 @@ export class TransactionsService {
         throw new BadRequestException('Invalid transaction status');
       }
 
+      const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
       const newStatus = TransactionStatus.PaymentPendingVerification;
       const adminReviewExpiresAt = new Date(
-        Date.now() + (this.configService.get<number>('platform.adminReviewTimeoutHours') ?? 24) * 60 * 60 * 1000,
+        Date.now() + platformConfig.adminReviewTimeoutHours * 60 * 60 * 1000,
       );
 
       return this.transactionsRepository.updateWithVersion(

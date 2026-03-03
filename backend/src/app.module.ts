@@ -22,6 +22,7 @@ import { PaymentConfirmationsModule } from './modules/payment-confirmations/paym
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { IdentityVerificationModule } from './modules/identity-verification/identity-verification.module';
+import { ConfigModule as PlatformConfigModule } from './modules/config/config.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { IdentityVerificationModule } from './modules/identity-verification/iden
     BffModule,
     TermsModule,
     AdminModule,
+    PlatformConfigModule,
   ],
 })
 export class AppModule {}

@@ -949,7 +949,21 @@
       "transactions": "Transaction Management",
       "paymentMethods": "Payment Methods",
       "identityVerifications": "Identity Verification",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "platformConfig": "Platform Settings"
+    },
+    "platformConfig": {
+      "title": "Platform Settings",
+      "description": "Configure platform fees and timeouts. Changes apply to new transactions and pricing snapshots.",
+      "buyerPlatformFeePercentage": "Buyer platform fee (%)",
+      "sellerPlatformFeePercentage": "Seller platform fee (%)",
+      "paymentTimeoutMinutes": "Payment timeout (minutes)",
+      "adminReviewTimeoutHours": "Admin review timeout (hours)",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saved": "Settings saved successfully.",
+      "loadError": "Failed to load platform settings.",
+      "saveError": "Failed to save settings."
     },
     "dashboard": {
       "title": "Dashboard",

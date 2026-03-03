@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PricingService } from '../../../../../src/modules/payments/pricing/pricing.service';
 import { PRICING_REPOSITORY } from '../../../../../src/modules/payments/pricing/pricing.repository.interface';
 import type { IPricingRepository } from '../../../../../src/modules/payments/pricing/pricing.repository.interface';
-import { ConfigService } from '@nestjs/config';
+import { PlatformConfigService } from '../../../../../src/modules/config/config.service';
 import { PaymentMethodsService } from '../../../../../src/modules/payments/payment-methods.service';
 import {
   PricingSnapshotError,
@@ -15,7 +15,7 @@ import type { Ctx } from '../../../../../src/common/types/context';
 describe('PricingService', () => {
   let service: PricingService;
   let repository: jest.Mocked<IPricingRepository>;
-  let configService: jest.Mocked<ConfigService>;
+  let platformConfigService: jest.Mocked<PlatformConfigService>;
   let paymentMethodsService: jest.Mocked<PaymentMethodsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
@@ -74,13 +74,12 @@ describe('PricingService', () => {
       deleteExpired: jest.fn(),
     };
 
-    const mockConfigService = {
-      get: jest.fn((key: string) => {
-        const map: Record<string, number> = {
-          'platform.buyerPlatformFeePercentage': 10,
-          'platform.sellerPlatformFeePercentage': 5,
-        };
-        return map[key];
+    const mockPlatformConfigService = {
+      getPlatformConfig: jest.fn().mockResolvedValue({
+        buyerPlatformFeePercentage: 10,
+        sellerPlatformFeePercentage: 5,
+        paymentTimeoutMinutes: 10,
+        adminReviewTimeoutHours: 24,
       }),
     };
 
@@ -92,14 +91,14 @@ describe('PricingService', () => {
       providers: [
         PricingService,
         { provide: PRICING_REPOSITORY, useValue: mockRepository },
-        { provide: ConfigService, useValue: mockConfigService },
+        { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
       ],
     }).compile();
 
     service = module.get<PricingService>(PricingService);
     repository = module.get(PRICING_REPOSITORY);
-    configService = module.get(ConfigService);
+    platformConfigService = module.get(PlatformConfigService);
     paymentMethodsService = module.get(PaymentMethodsService);
   });
 

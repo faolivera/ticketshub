@@ -8,6 +8,7 @@ import {
   Ticket,
   Shield,
   Bell,
+  Settings,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -57,6 +58,11 @@ const navItems: NavItem[] = [
     to: '/admin/notifications',
     icon: <Bell className="w-4 h-4" />,
     labelKey: 'admin.sidebar.notifications',
+  },
+  {
+    to: '/admin/platform-config',
+    icon: <Settings className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.platformConfig',
   },
 ];
 

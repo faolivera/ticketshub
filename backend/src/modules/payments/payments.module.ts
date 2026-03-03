@@ -11,9 +11,10 @@ import { PricingService } from './pricing/pricing.service';
 import { PricingRepository } from './pricing/pricing.repository';
 import { PRICING_REPOSITORY } from './pricing/pricing.repository.interface';
 import { UsersModule } from '../users/users.module';
+import { ConfigModule } from '../config/config.module';
 
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, ConfigModule],
   controllers: [PaymentsController, PaymentMethodsController],
   providers: [
     PaymentsService,

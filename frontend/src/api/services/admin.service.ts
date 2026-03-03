@@ -22,6 +22,8 @@ import type {
   AdminPaymentMethodResponse,
   AdminCreatePaymentMethodRequest,
   AdminUpdatePaymentMethodRequest,
+  PlatformConfig,
+  UpdatePlatformConfigRequest,
 } from '../types/admin';
 
 /**
@@ -284,6 +286,31 @@ export const adminService = {
   ): Promise<{ success: true }> {
     const response = await apiClient.delete<{ success: true }>(
       `/admin/events/${eventId}/banners/${bannerType}`
+    );
+    return response.data;
+  },
+
+  // === Platform Config (admin only) ===
+
+  /**
+   * Get current platform config (fees and timeouts)
+   */
+  async getPlatformConfig(): Promise<PlatformConfig> {
+    const response = await apiClient.get<PlatformConfig>(
+      '/admin/config/platform'
+    );
+    return response.data;
+  },
+
+  /**
+   * Update platform config
+   */
+  async updatePlatformConfig(
+    data: UpdatePlatformConfigRequest
+  ): Promise<PlatformConfig> {
+    const response = await apiClient.patch<PlatformConfig>(
+      '/admin/config/platform',
+      data
     );
     return response.data;
   },

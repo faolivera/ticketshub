@@ -28,6 +28,7 @@ import TransactionManagement from '@/app/pages/admin/TransactionManagement';
 import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManagement';
 import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerificationManagement';
 import { NotificationManagement } from '@/app/pages/admin/NotificationManagement';
+import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
 
 export default function App() {
   return (
@@ -66,6 +67,7 @@ export default function App() {
                 <Route path="payment-methods" element={<PaymentMethodsManagement />} />
                 <Route path="identity-verifications" element={<IdentityVerificationManagement />} />
                 <Route path="notifications" element={<NotificationManagement />} />
+                <Route path="platform-config" element={<PlatformConfig />} />
               </Route>
             </Routes>
           </main>
