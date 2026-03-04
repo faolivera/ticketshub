@@ -4,6 +4,7 @@ import { UserProvider } from '@/app/contexts/UserContext';
 import { SocketProvider } from '@/app/contexts/SocketContext';
 import { Header } from '@/app/components/Header';
 import { Footer } from '@/app/components/Footer';
+import { MobileNav } from '@/app/components/MobileNav';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { AdminProtectedRoute } from '@/app/components/admin/AdminProtectedRoute';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
@@ -39,7 +40,7 @@ export default function App() {
       <BrowserRouter>
         <div className="min-h-screen flex flex-col">
           <Header />
-          <main className="flex-1">
+          <main className="flex-1 pb-16 sm:pb-0">
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
@@ -82,6 +83,7 @@ export default function App() {
             </Routes>
           </main>
           <Footer />
+          <MobileNav />
         </div>
       </BrowserRouter>
       </SocketProvider>

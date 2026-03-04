@@ -81,9 +81,9 @@ function buildLocationString(city: string, countryCode: string): string {
 
 function TrustItem({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
-    <div className="flex items-center justify-center gap-2 py-1">
+    <div className="flex items-center gap-2 py-1 flex-shrink-0">
       <Icon className="w-5 h-5 text-blue-600 flex-shrink-0" />
-      <span className="text-sm font-medium text-gray-700">{label}</span>
+      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">{label}</span>
     </div>
   );
 }
@@ -155,7 +155,7 @@ export function Landing() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div
-        className="relative bg-cover bg-center bg-no-repeat text-white py-28 min-h-[420px] flex items-center"
+        className="relative bg-cover bg-center bg-no-repeat text-white py-16 md:py-28 min-h-[320px] md:min-h-[420px] flex items-center"
         style={{ backgroundImage: 'url(/hero.jpeg)' }}
       >
         <div className="absolute inset-0 bg-black/55" />
@@ -183,7 +183,7 @@ export function Landing() {
       </div>
 
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex gap-6 overflow-x-auto scrollbar-none md:justify-around">
           <TrustItem icon={ShieldCheck} label={t('landing.trustSecurePayment')} />
           <TrustItem icon={Ticket} label={t('landing.trustGuaranteedTickets')} />
           <TrustItem icon={Headphones} label={t('landing.trustSupport')} />
