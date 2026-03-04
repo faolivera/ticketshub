@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, Minus, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { UserAvatar } from '@/app/components/UserAvatar';
 import { formatTime } from '@/lib/format-date';
 import { transactionsService } from '@/api/services';
 import type { TransactionChatMessage } from '@/api/types';
+import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 
 export interface TicketChatProps {
   isOpen: boolean;
@@ -18,6 +19,12 @@ export interface TicketChatProps {
   ticketTitle: string;
   pollIntervalSeconds: number;
   chatMaxMessages: number;
+  /** When true, chat is read-only (no send); e.g. when transaction is completed */
+  readOnly?: boolean;
+  /** When true, messages are marked as read only when the user interacts with the chat (click/focus), not on open */
+  wasAutoOpened?: boolean;
+  /** Called once when user first interacts with the chat and wasAutoOpened is true (to mark messages as read) */
+  onMarkAsRead?: () => void;
 }
 
 export function TicketChat({
@@ -32,8 +39,12 @@ export function TicketChat({
   ticketTitle,
   pollIntervalSeconds,
   chatMaxMessages,
+  readOnly = false,
+  wasAutoOpened = false,
+  onMarkAsRead,
 }: TicketChatProps) {
   const { t } = useTranslation();
+  const { socket, isConnected } = useSocket();
   const [messages, setMessages] = useState<TransactionChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -43,6 +54,11 @@ export function TicketChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasFiredMarkAsReadRef = useRef(false);
+
+  useEffect(() => {
+    if (wasAutoOpened) hasFiredMarkAsReadRef.current = false;
+  }, [wasAutoOpened]);
 
   const fetchMessages = useCallback(async (): Promise<void> => {
     if (!transactionId) return;
@@ -58,14 +74,56 @@ export function TicketChat({
     }
   }, [transactionId]);
 
+  // Always fetch messages when chat opens so the list is visible. When opened automatically use markRead=false; mark as read on first user interaction instead.
   useEffect(() => {
-    if (isOpen && transactionId) {
+    if (!isOpen || !transactionId) return;
+    if (wasAutoOpened) {
+      setLoading(true);
+      transactionsService
+        .getTransactionChatMessages(transactionId, undefined, false)
+        .then(({ messages: next }) => setMessages(next))
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
       void fetchMessages();
     }
-  }, [isOpen, transactionId, fetchMessages]);
+  }, [isOpen, transactionId, wasAutoOpened, fetchMessages]);
 
+  // Socket: join transaction room while on this page so we receive messages even when chat is closed; leave only when unmounting (navigate away)
   useEffect(() => {
-    if (!isOpen || !transactionId || pollIntervalSeconds <= 0) return;
+    if (!socket || !transactionId) return;
+    socket.emit(SOCKET_EVENTS.CHAT_JOIN, { transactionId });
+    return () => {
+      socket.emit(SOCKET_EVENTS.CHAT_LEAVE, { transactionId });
+    };
+  }, [socket, transactionId]);
+
+  // Socket: subscribe to new messages for this transaction
+  useEffect(() => {
+    if (!socket || !transactionId) return;
+    const handler = (payload: TransactionChatMessage & { transactionId?: string }) => {
+      if (payload.transactionId && payload.transactionId !== transactionId) return;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === payload.id)) return prev;
+        const msg: TransactionChatMessage = {
+          id: payload.id,
+          senderId: payload.senderId,
+          senderRole: payload.senderRole,
+          content: payload.content,
+          createdAt: typeof payload.createdAt === 'string' ? payload.createdAt : new Date(payload.createdAt).toISOString(),
+        };
+        return [...prev, msg];
+      });
+    };
+    socket.on(SOCKET_EVENTS.CHAT_MESSAGE, handler);
+    return () => {
+      socket.off(SOCKET_EVENTS.CHAT_MESSAGE, handler);
+    };
+  }, [socket, transactionId]);
+
+  // Poll messages only when socket is disconnected (fallback); when connected, rely on socket events
+  useEffect(() => {
+    if (!isOpen || !transactionId || pollIntervalSeconds <= 0 || isConnected) return;
     const id = setInterval(() => {
       void transactionsService.getTransactionChatMessages(transactionId).then(({ messages: next }) => {
         setMessages((prev) => {
@@ -83,28 +141,32 @@ export function TicketChat({
         pollIntervalRef.current = null;
       }
     };
-  }, [isOpen, transactionId, pollIntervalSeconds]);
+  }, [isOpen, transactionId, pollIntervalSeconds, isConnected]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen && !isMinimized && !readOnly) {
       inputRef.current?.focus();
     }
-  }, [isOpen, isMinimized]);
+  }, [isOpen, isMinimized, readOnly]);
 
   const atLimit = messages.length >= chatMaxMessages;
 
   const handleSendMessage = async (): Promise<void> => {
+    if (readOnly) return;
     const trimmed = inputMessage.trim();
     if (trimmed === '' || sending || atLimit) return;
     setSendError(null);
     setSending(true);
     try {
       const newMsg = await transactionsService.postTransactionChatMessage(transactionId, trimmed);
-      setMessages((prev) => [...prev, newMsg]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
       setInputMessage('');
     } catch (err: unknown) {
       const message = err && typeof err === 'object' && 'message' in err
@@ -116,6 +178,12 @@ export function TicketChat({
     }
   };
 
+  const handleChatInteraction = useCallback(() => {
+    if (!wasAutoOpened || !onMarkAsRead || hasFiredMarkAsReadRef.current) return;
+    hasFiredMarkAsReadRef.current = true;
+    onMarkAsRead();
+  }, [wasAutoOpened, onMarkAsRead]);
+
   if (!isOpen) return null;
 
   const containerClass =
@@ -123,7 +191,13 @@ export function TicketChat({
     'inset-0 md:inset-auto md:bottom-4 md:right-4 md:w-[380px] md:max-h-[90vh] md:rounded-lg md:shadow-2xl';
 
   return (
-    <div className={containerClass}>
+    <div
+      className={containerClass}
+      role="dialog"
+      aria-label="Chat"
+      onClick={handleChatInteraction}
+      onKeyDown={(e) => { if (e.key === 'Tab' || e.key === 'Enter') handleChatInteraction(); }}
+    >
       {/* Header */}
       <div
         className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 flex items-center justify-between cursor-pointer shrink-0"
@@ -131,9 +205,9 @@ export function TicketChat({
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div className="relative flex-shrink-0">
-            <ImageWithFallback
-              src={counterpartImage || '/images/default/default.png'}
-              alt={counterpartName}
+            <UserAvatar
+              name={counterpartName}
+              src={counterpartImage}
               className="w-10 h-10 rounded-full object-cover border-2 border-white"
             />
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
@@ -202,9 +276,9 @@ export function TicketChat({
                     >
                       {!isCurrentUser && (
                         <div className="flex-shrink-0">
-                          <ImageWithFallback
-                            src={counterpartImage || '/images/default/default.png'}
-                            alt={counterpartName}
+                          <UserAvatar
+                            name={counterpartName}
+                            src={counterpartImage}
                             className="w-7 h-7 rounded-full object-cover"
                           />
                         </div>
@@ -235,44 +309,46 @@ export function TicketChat({
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-gray-200 p-3 bg-white shrink-0">
-            {sendError && (
-              <p className="text-xs text-red-600 mb-2">{sendError}</p>
-            )}
-            {atLimit && (
-              <p className="text-xs text-amber-700 mb-2">{t('chat.maxMessagesReached')}</p>
-            )}
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    void handleSendMessage();
-                  }
-                }}
-                placeholder={t('chat.typePlaceholder')}
-                disabled={atLimit}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-              />
-              <button
-                type="button"
-                onClick={() => void handleSendMessage()}
-                disabled={inputMessage.trim() === '' || sending || atLimit}
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
-                  inputMessage.trim() === '' || sending || atLimit
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                <Send className="w-4 h-4" />
-              </button>
+          {!readOnly && (
+            <div className="border-t border-gray-200 p-3 bg-white shrink-0">
+              {sendError && (
+                <p className="text-xs text-red-600 mb-2">{sendError}</p>
+              )}
+              {atLimit && (
+                <p className="text-xs text-amber-700 mb-2">{t('chat.maxMessagesReached')}</p>
+              )}
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      void handleSendMessage();
+                    }
+                  }}
+                  placeholder={t('chat.typePlaceholder')}
+                  disabled={atLimit}
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleSendMessage()}
+                  disabled={inputMessage.trim() === '' || sending || atLimit}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                    inputMessage.trim() === '' || sending || atLimit
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">{t('chat.disclaimer')}</p>
             </div>
-            <p className="text-xs text-gray-500 mt-2">{t('chat.disclaimer')}</p>
-          </div>
+          )}
         </>
       )}
     </div>

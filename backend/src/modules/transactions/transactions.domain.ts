@@ -82,14 +82,50 @@ export enum CancellationReason {
 }
 
 /**
+ * Chat UI state for the transaction details page.
+ * - disabled: no chat button, no chat panel
+ * - enabled: full chat with send
+ * - only_read: chat visible, read-only (no send); backend rejects new messages
+ */
+export type TransactionChatMode = 'disabled' | 'enabled' | 'only_read';
+
+/**
+ * Maps transaction status to chat mode for the transaction details page.
+ * Adjust this mapping to change when chat is shown and whether sending is allowed.
+ */
+export const TRANSACTION_CHAT_MODE: Record<TransactionStatus, TransactionChatMode> = {
+  [TransactionStatus.PendingPayment]: 'disabled',
+  [TransactionStatus.PaymentPendingVerification]: 'disabled',
+  [TransactionStatus.PaymentReceived]: 'enabled',
+  [TransactionStatus.TicketTransferred]: 'enabled',
+  [TransactionStatus.Completed]: 'only_read',
+  [TransactionStatus.Disputed]: 'disabled',
+  [TransactionStatus.Refunded]: 'disabled',
+  [TransactionStatus.Cancelled]: 'disabled',
+};
+
+export function getTransactionChatMode(status: TransactionStatus): TransactionChatMode {
+  return TRANSACTION_CHAT_MODE[status];
+}
+
+/** True when user can open chat and read messages (enabled or only_read). */
+export function canReadTransactionChat(status: TransactionStatus): boolean {
+  const mode = getTransactionChatMode(status);
+  return mode === 'enabled' || mode === 'only_read';
+}
+
+/** True when user can send messages (only when chat is enabled). */
+export function canSendTransactionChat(status: TransactionStatus): boolean {
+  return getTransactionChatMode(status) === 'enabled';
+}
+
+/**
+ * @deprecated Use getTransactionChatMode / canReadTransactionChat / canSendTransactionChat instead.
  * Whether buyer-seller chat is allowed for this transaction status.
  * Chat is only allowed between payment confirmed and buyer confirming receipt.
  */
 export function isTransactionChatAllowed(status: TransactionStatus): boolean {
-  return (
-    status === TransactionStatus.PaymentReceived ||
-    status === TransactionStatus.TicketTransferred
-  );
+  return canReadTransactionChat(status);
 }
 
 /**

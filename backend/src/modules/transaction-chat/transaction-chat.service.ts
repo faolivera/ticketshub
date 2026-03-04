@@ -18,7 +18,10 @@ import type {
 import { TRANSACTION_CHAT_REPOSITORY } from './transaction-chat.repository.interface';
 import { TransactionsService } from '../transactions/transactions.service';
 import { PlatformConfigService } from '../config/config.service';
-import { isTransactionChatAllowed } from '../transactions/transactions.domain';
+import {
+  canReadTransactionChat,
+  canSendTransactionChat,
+} from '../transactions/transactions.domain';
 
 const MAX_CONTENT_LENGTH = 2000;
 
@@ -38,6 +41,7 @@ export class TransactionChatService {
     transactionId: string,
     userId: string,
     afterId?: string,
+    options?: { markRead?: boolean },
   ): Promise<GetTransactionChatMessagesResponse> {
     const transaction =
       await this.transactionsService.getTransactionById(
@@ -45,7 +49,7 @@ export class TransactionChatService {
         transactionId,
         userId,
       );
-    if (!isTransactionChatAllowed(transaction.status)) {
+    if (!canReadTransactionChat(transaction.status)) {
       throw new ForbiddenException('Chat is not available for this transaction');
     }
     const config = await this.platformConfigService.getPlatformConfig(ctx);
@@ -53,6 +57,40 @@ export class TransactionChatService {
       afterId,
       limit: config.transactionChatMaxMessages,
     });
+    const markRead = options?.markRead !== false;
+    if (markRead) {
+      await this.chatRepository.markAsReadForUser(
+        ctx,
+        transactionId,
+        userId,
+        transaction.buyerId,
+        transaction.sellerId,
+      );
+    }
+    const messages: TransactionChatMessageItem[] = entities.map((e) =>
+      this.toMessageItem(e, transaction.buyerId, transaction.sellerId),
+    );
+    return { messages };
+  }
+
+  /**
+   * Mark all messages in this transaction as read for the current user.
+   * Used when the user interacts with an auto-opened chat (without re-fetching messages).
+   */
+  async markAsRead(
+    ctx: Ctx,
+    transactionId: string,
+    userId: string,
+  ): Promise<void> {
+    const transaction =
+      await this.transactionsService.getTransactionById(
+        ctx,
+        transactionId,
+        userId,
+      );
+    if (!canReadTransactionChat(transaction.status)) {
+      return;
+    }
     await this.chatRepository.markAsReadForUser(
       ctx,
       transactionId,
@@ -60,10 +98,6 @@ export class TransactionChatService {
       transaction.buyerId,
       transaction.sellerId,
     );
-    const messages: TransactionChatMessageItem[] = entities.map((e) =>
-      this.toMessageItem(e, transaction.buyerId, transaction.sellerId),
-    );
-    return { messages };
   }
 
   /**
@@ -81,7 +115,7 @@ export class TransactionChatService {
         transactionId,
         userId,
       );
-    if (!isTransactionChatAllowed(transaction.status)) {
+    if (!canReadTransactionChat(transaction.status)) {
       return false;
     }
     const count = await this.chatRepository.countUnreadForUser(
@@ -106,7 +140,7 @@ export class TransactionChatService {
         transactionId,
         userId,
       );
-    if (!isTransactionChatAllowed(transaction.status)) {
+    if (!canSendTransactionChat(transaction.status)) {
       throw new ForbiddenException('Chat is not available for this transaction');
     }
     if (content == null || typeof content !== 'string') {

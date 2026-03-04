@@ -3,14 +3,16 @@ import { Bell, CheckCheck, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { notificationsService, type NotificationItem } from '@/api/services/notifications.service';
+import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 import { cn } from '@/app/components/ui/utils';
 import { formatDateShort } from '@/lib/format-date';
 
-const POLL_INTERVAL_MS = 30000; // Poll every 30 seconds
+const POLL_INTERVAL_MS = 30000; // Poll every 30 seconds (fallback when socket disconnected)
 
 export function NotificationBell() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { socket, isConnected } = useSocket();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -58,12 +60,29 @@ export function NotificationBell() {
     }
   }, []);
 
-  // Initial fetch and polling
+  // Realtime: push new notifications when socket emits
   useEffect(() => {
-    fetchUnreadCount();
+    if (!socket) return;
+    const handler = (payload: NotificationItem) => {
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === payload.id)) return prev;
+        return [payload, ...prev];
+      });
+      setUnreadCount((prev) => prev + (payload.read ? 0 : 1));
+    };
+    socket.on(SOCKET_EVENTS.NOTIFICATION, handler);
+    return () => {
+      socket.off(SOCKET_EVENTS.NOTIFICATION, handler);
+    };
+  }, [socket]);
+
+  // Initial fetch on load; polling only when socket is disconnected (fallback)
+  useEffect(() => {
+    void fetchUnreadCount();
+    if (isConnected) return;
     const interval = setInterval(fetchUnreadCount, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [fetchUnreadCount]);
+  }, [fetchUnreadCount, isConnected]);
 
   // Fetch notifications when dropdown opens
   useEffect(() => {

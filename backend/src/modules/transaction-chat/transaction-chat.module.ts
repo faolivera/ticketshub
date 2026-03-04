@@ -9,9 +9,10 @@ import {
 import { TransactionsModule } from '../transactions/transactions.module';
 import { ConfigModule } from '../config/config.module';
 import { UsersModule } from '../users/users.module';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
-  imports: [TransactionsModule, ConfigModule, UsersModule],
+  imports: [TransactionsModule, ConfigModule, UsersModule, RealtimeModule],
   controllers: [TransactionChatController],
   providers: [
     TransactionChatService,

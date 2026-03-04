@@ -26,6 +26,8 @@ import { ConfigModule as PlatformConfigModule } from './modules/config/config.mo
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { TransactionChatModule } from './modules/transaction-chat/transaction-chat.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
+import { SocketModule } from './modules/socket/socket.module';
 
 @Module({
   imports: [
@@ -66,6 +68,8 @@ import { TransactionChatModule } from './modules/transaction-chat/transaction-ch
     PromotionsModule,
     OffersModule,
     TransactionChatModule,
+    RealtimeModule,
+    SocketModule,
   ],
 })
 export class AppModule {}

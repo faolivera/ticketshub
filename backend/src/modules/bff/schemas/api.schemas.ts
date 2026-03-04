@@ -281,7 +281,7 @@ const TransactionTicketUnitSchema = z.object({
 });
 
 const TransactionDetailsChatConfigSchema = z.object({
-  chatAllowed: z.literal(true),
+  chatMode: z.enum(['enabled', 'only_read']),
   chatPollIntervalSeconds: z.number(),
   chatMaxMessages: z.number(),
   hasUnreadMessages: z.boolean(),

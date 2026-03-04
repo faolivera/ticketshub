@@ -24,6 +24,7 @@ import { transactionsService, paymentConfirmationsService, reviewsService, bffSe
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
+import { useSocket, SOCKET_EVENTS } from '../contexts/SocketContext';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
@@ -32,6 +33,7 @@ export function MyTicket() {
   const { t } = useTranslation();
   const { transactionId } = useParams();
   const { user } = useUser();
+  const { socket } = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -45,6 +47,7 @@ export function MyTicket() {
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatWasAutoOpened, setChatWasAutoOpened] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -128,6 +131,20 @@ export function MyTicket() {
 
     fetchData();
   }, [transactionId, t]);
+
+  // Open chat when receiving a message from the other party (e.g. they sent while chat was closed)
+  useEffect(() => {
+    if (!socket || !transactionId || !user?.id) return;
+    const handler = (payload: { transactionId?: string; senderId?: string }) => {
+      if (payload.transactionId !== transactionId || payload.senderId === user?.id) return;
+      setChatWasAutoOpened(true);
+      setIsChatOpen(true);
+    };
+    socket.on(SOCKET_EVENTS.CHAT_MESSAGE, handler);
+    return () => {
+      socket.off(SOCKET_EVENTS.CHAT_MESSAGE, handler);
+    };
+  }, [socket, transactionId, user?.id]);
 
   const getStatusInfo = (status: TransactionStatus, role: 'buyer' | 'seller') => {
     const suffix = role === 'buyer' ? 'Buyer' : 'Seller';
@@ -1187,13 +1204,15 @@ export function MyTicket() {
                 showProfileLink={isBuyer}
               />
 
-              {chatConfig?.chatAllowed && (
+              {chatConfig && (
                 <button
-                  onClick={() => setIsChatOpen(true)}
+                  onClick={() => { setChatWasAutoOpened(false); setIsChatOpen(true); }}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-3"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  {isBuyer ? t('myTicket.contactSeller') : t('myTicket.contactBuyer')}
+                  {chatConfig.chatMode === 'only_read'
+                    ? t('myTicket.readConversation')
+                    : (isBuyer ? t('myTicket.contactSeller') : t('myTicket.contactBuyer'))}
                 </button>
               )}
             </div>
@@ -1309,11 +1328,11 @@ export function MyTicket() {
         </div>
       )}
 
-      {/* Chat Component - only when chat is allowed for this transaction */}
-      {chatConfig?.chatAllowed && (
+      {/* Chat Component - when chat is visible (enabled or only_read) */}
+      {chatConfig && (
         <TicketChat
           isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
+          onClose={() => { setIsChatOpen(false); setChatWasAutoOpened(false); }}
           transactionId={transaction.id}
           currentUserRole={isBuyer ? 'buyer' : 'seller'}
           counterpartName={isBuyer ? transaction.sellerName : transaction.buyerName}
@@ -1323,6 +1342,15 @@ export function MyTicket() {
           ticketTitle={`${transaction.eventName} - ${transaction.ticketType}`}
           pollIntervalSeconds={chatConfig.chatPollIntervalSeconds}
           chatMaxMessages={chatConfig.chatMaxMessages}
+          readOnly={chatConfig.chatMode === 'only_read'}
+          wasAutoOpened={chatWasAutoOpened}
+          onMarkAsRead={async () => {
+            if (!transaction?.id) return;
+            try {
+              await transactionsService.markTransactionChatAsRead(transaction.id);
+              setChatWasAutoOpened(false);
+            } catch { /* ignore */ }
+          }}
         />
       )}
     </div>

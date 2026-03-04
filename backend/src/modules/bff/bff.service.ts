@@ -15,7 +15,7 @@ import { PlatformConfigService } from '../config/config.service';
 import { PromotionsService } from '../promotions/promotions.service';
 import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
-import { TransactionStatus, isTransactionChatAllowed } from '../transactions/transactions.domain';
+import { TransactionStatus, getTransactionChatMode } from '../transactions/transactions.domain';
 import { UserLevel, Role } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -332,9 +332,10 @@ export class BffService {
     const bffTransaction: BffTransactionWithDetails = this.toBffTransaction(transaction);
 
     let chat: GetTransactionDetailsResponse['chat'];
+    const chatMode = getTransactionChatMode(transaction.status);
     if (
       (isBuyer || isSeller) &&
-      isTransactionChatAllowed(transaction.status)
+      (chatMode === 'enabled' || chatMode === 'only_read')
     ) {
       const config = await this.platformConfigService.getPlatformConfig(ctx);
       const hasUnreadMessages =
@@ -344,7 +345,7 @@ export class BffService {
           userId,
         );
       chat = {
-        chatAllowed: true,
+        chatMode,
         chatPollIntervalSeconds: config.transactionChatPollIntervalSeconds,
         chatMaxMessages: config.transactionChatMaxMessages,
         hasUnreadMessages,

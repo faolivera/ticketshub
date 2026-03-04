@@ -1,6 +1,7 @@
 import '@/i18n/config';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider } from '@/app/contexts/UserContext';
+import { SocketProvider } from '@/app/contexts/SocketContext';
 import { Header } from '@/app/components/Header';
 import { Footer } from '@/app/components/Footer';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
@@ -35,6 +36,7 @@ import { NotFound } from '@/app/pages/NotFound';
 export default function App() {
   return (
     <UserProvider>
+      <SocketProvider>
       <BrowserRouter>
         <div className="min-h-screen flex flex-col">
           <Header />
@@ -81,6 +83,7 @@ export default function App() {
           <Footer />
         </div>
       </BrowserRouter>
+      </SocketProvider>
     </UserProvider>
   );
 }

@@ -18,6 +18,12 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // Socket.IO (WebSocket + long polling)
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        ws: true,
+      },
       // Backend API
       '/api': {
         target: 'http://localhost:3000',

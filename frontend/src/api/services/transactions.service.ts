@@ -56,17 +56,28 @@ export const transactionsService = {
 
   /**
    * Get transaction chat messages (buyer-seller). Only allowed when status is PaymentReceived or TicketTransferred.
+   * @param markRead - when false, messages are not marked as read (e.g. when chat was auto-opened; mark on interaction instead)
    */
   async getTransactionChatMessages(
     transactionId: string,
-    afterId?: string
+    afterId?: string,
+    markRead: boolean = true
   ): Promise<GetTransactionChatMessagesResponse> {
-    const params = afterId ? { afterId } : undefined;
+    const params: Record<string, string> = {};
+    if (afterId) params.afterId = afterId;
+    if (!markRead) params.markRead = 'false';
     const response = await apiClient.get<GetTransactionChatMessagesResponse>(
       `/transactions/${transactionId}/chat/messages`,
-      { params }
+      { params: Object.keys(params).length ? params : undefined }
     );
     return response.data;
+  },
+
+  /**
+   * Mark transaction chat messages as read for the current user (e.g. after user interacts with an auto-opened chat).
+   */
+  async markTransactionChatAsRead(transactionId: string): Promise<void> {
+    await apiClient.patch(`/transactions/${transactionId}/chat/read`);
   },
 
   /**

@@ -34,10 +34,12 @@ export interface GetSellTicketConfigResponse {
 }
 
 /**
- * Chat config when user is participant and transaction status allows chat.
+ * Chat config when user is participant and chat is visible (enabled or only_read).
+ * - enabled: full chat with send
+ * - only_read: chat visible, read-only; button shows "Read conversation"
  */
 export interface TransactionDetailsChatConfig {
-  chatAllowed: true;
+  chatMode: 'enabled' | 'only_read';
   chatPollIntervalSeconds: number;
   chatMaxMessages: number;
   /** True when the current user has unread messages from the other party */

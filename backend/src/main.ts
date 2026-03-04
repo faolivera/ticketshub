@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
 import { ContextInterceptor } from './common/interceptors/context.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -8,6 +9,8 @@ import { setLogLevelConfig } from './common/logger/log-level-resolver';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   const configService = app.get(ConfigService);
   const loggingConfig = configService.get<{ level?: string; levels?: Record<string, string> }>('logging');
