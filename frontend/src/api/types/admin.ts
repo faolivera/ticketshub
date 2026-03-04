@@ -541,6 +541,10 @@ export interface PlatformConfig {
   sellerPlatformFeePercentage: number;
   paymentTimeoutMinutes: number;
   adminReviewTimeoutHours: number;
+  offerPendingExpirationMinutes?: number;
+  offerAcceptedExpirationMinutes?: number;
+  transactionChatPollIntervalSeconds: number;
+  transactionChatMaxMessages: number;
 }
 
 /**
@@ -551,6 +555,10 @@ export interface UpdatePlatformConfigRequest {
   sellerPlatformFeePercentage?: number;
   paymentTimeoutMinutes?: number;
   adminReviewTimeoutHours?: number;
+  offerPendingExpirationMinutes?: number;
+  offerAcceptedExpirationMinutes?: number;
+  transactionChatPollIntervalSeconds?: number;
+  transactionChatMaxMessages?: number;
 }
 
 // === Admin Promotions (GET/POST /admin/promotions, PATCH /admin/promotions/:id/status) ===

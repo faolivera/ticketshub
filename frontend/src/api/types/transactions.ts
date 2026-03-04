@@ -219,3 +219,20 @@ export interface GetMyTicketsResponse {
   sold: TransactionWithDetails[];
   listed: TicketListingWithEvent[];
 }
+
+/** Transaction chat: sender role for display */
+export type TransactionChatSenderRole = 'buyer' | 'seller';
+
+/** Single message in transaction chat */
+export interface TransactionChatMessage {
+  id: string;
+  senderId: string;
+  senderRole: TransactionChatSenderRole;
+  content: string;
+  createdAt: string;
+}
+
+/** Response for GET /api/transactions/:id/chat/messages */
+export interface GetTransactionChatMessagesResponse {
+  messages: TransactionChatMessage[];
+}

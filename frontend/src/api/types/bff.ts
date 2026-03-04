@@ -34,6 +34,17 @@ export interface GetSellTicketConfigResponse {
 }
 
 /**
+ * Chat config when user is participant and transaction status allows chat.
+ */
+export interface TransactionDetailsChatConfig {
+  chatAllowed: true;
+  chatPollIntervalSeconds: number;
+  chatMaxMessages: number;
+  /** True when the current user has unread messages from the other party */
+  hasUnreadMessages: boolean;
+}
+
+/**
  * Get transaction details response (BFF aggregation)
  * Combines transaction, payment confirmation, reviews data.
  */
@@ -45,4 +56,6 @@ export interface GetTransactionDetailsResponse {
   ticketUnits: TransactionTicketUnit[];
   /** Public display name of the payment method (e.g. "Transferencia Bancaria") */
   paymentMethodPublicName: string | null;
+  /** Present when user is buyer/seller and chat is allowed for this transaction */
+  chat?: TransactionDetailsChatConfig;
 }

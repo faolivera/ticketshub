@@ -25,7 +25,7 @@ import { formatCurrency } from '@/lib/format-currency';
 import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
-import type { TransactionTicketUnit } from '@/api/types/bff';
+import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
 
 export function MyTicket() {
@@ -40,6 +40,7 @@ export function MyTicket() {
   const [bankTransferConfig, setBankTransferConfig] = useState<BankTransferConfig | null>(null);
   const [ticketUnits, setTicketUnits] = useState<TransactionTicketUnit[]>([]);
   const [paymentMethodPublicName, setPaymentMethodPublicName] = useState<string | null>(null);
+  const [chatConfig, setChatConfig] = useState<TransactionDetailsChatConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -71,6 +72,7 @@ export function MyTicket() {
       setBankTransferConfig(data.bankTransferConfig);
       setTicketUnits(data.ticketUnits ?? []);
       setPaymentMethodPublicName(data.paymentMethodPublicName ?? null);
+      setChatConfig(data.chat ?? null);
     } catch (err) {
       console.error('Failed to refetch transaction:', err);
     }
@@ -112,6 +114,10 @@ export function MyTicket() {
         setBankTransferConfig(data.bankTransferConfig);
         setTicketUnits(data.ticketUnits ?? []);
         setPaymentMethodPublicName(data.paymentMethodPublicName ?? null);
+        setChatConfig(data.chat ?? null);
+        if (data.chat?.hasUnreadMessages) {
+          setIsChatOpen(true);
+        }
       } catch (err) {
         console.error('Failed to fetch transaction:', err);
         setError(t('common.errorLoading'));
@@ -1181,13 +1187,13 @@ export function MyTicket() {
                 showProfileLink={isBuyer}
               />
 
-              {isBuyer && (
+              {chatConfig?.chatAllowed && (
                 <button
                   onClick={() => setIsChatOpen(true)}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-3"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  {t('myTicket.contactSeller')}
+                  {isBuyer ? t('myTicket.contactSeller') : t('myTicket.contactBuyer')}
                 </button>
               )}
             </div>
@@ -1303,16 +1309,20 @@ export function MyTicket() {
         </div>
       )}
 
-      {/* Chat Component */}
-      {isBuyer && (
+      {/* Chat Component - only when chat is allowed for this transaction */}
+      {chatConfig?.chatAllowed && (
         <TicketChat
           isOpen={isChatOpen}
           onClose={() => setIsChatOpen(false)}
-          sellerName={transaction.sellerName}
-          sellerImage=""
-          sellerRating={0}
-          sellerLevel={1}
+          transactionId={transaction.id}
+          currentUserRole={isBuyer ? 'buyer' : 'seller'}
+          counterpartName={isBuyer ? transaction.sellerName : transaction.buyerName}
+          counterpartImage=""
+          counterpartRating={0}
+          counterpartLevel={1}
           ticketTitle={`${transaction.eventName} - ${transaction.ticketType}`}
+          pollIntervalSeconds={chatConfig.chatPollIntervalSeconds}
+          chatMaxMessages={chatConfig.chatMaxMessages}
         />
       )}
     </div>

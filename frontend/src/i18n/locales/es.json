@@ -25,6 +25,13 @@
     "createAccount": "Crear cuenta",
     "genericError": "Error al iniciar sesión. Inténtalo de nuevo."
   },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "No encontramos lo que buscas. La página pudo haberse movido o no existe.",
+    "goHome": "Ir al inicio",
+    "browseEvents": "Ver eventos",
+    "hint": "Revisa la URL o usa los enlaces de arriba para volver."
+  },
   "landing": {
     "title": "Compra y Vende Entradas de Forma Segura",
     "subtitle": "Encuentra entradas para conciertos, deportes y más con protección al comprador",
@@ -74,6 +81,7 @@
     "checkBackLater": "Vuelve más tarde o crea un anuncio si tienes entradas para vender",
     "noReviewsYet": "Aún no hay reseñas",
     "commissionRange": "(+{{min}}% a +{{max}}% comisión)",
+    "commissionSingle": "(+{{percent}}% comisión)",
     "soldAsBundle": "se vende como paquete",
     "soldIndividually": "se vende por unidad"
   },
@@ -293,6 +301,7 @@
     "typePlaceholder": "Escribe tu mensaje...",
     "send": "Enviar",
     "disclaimer": "Sé respetuoso. Los intercambios fuera de la plataforma no están protegidos.",
+    "maxMessagesReached": "Se alcanzó el máximo de mensajes para esta transacción.",
     "sellerGreeting": "¡Hola! Gracias por tu interés. ¿Cómo puedo ayudarte con esta entrada?",
     "sellerAutoResponse": "¡Gracias por tu mensaje! Te responderé lo antes posible."
   },
@@ -582,6 +591,7 @@
     "ticketsSold": "entradas vendidas",
     "viewSellerProfile": "Ver Perfil del Vendedor",
     "contactSeller": "Contactar Vendedor",
+    "contactBuyer": "Contactar Comprador",
     "needHelp": "¿Necesitás Ayuda?",
     "supportDescription": "Si tenés algún problema con tu compra, nuestro equipo de soporte está acá para ayudarte.",
     "contactSupport": "Contactar Soporte",
@@ -1057,6 +1067,8 @@
       "sellerPlatformFeePercentage": "Comisión vendedor (%)",
       "paymentTimeoutMinutes": "Tiempo límite de pago (minutos)",
       "adminReviewTimeoutHours": "Tiempo límite revisión admin (horas)",
+      "transactionChatPollIntervalSeconds": "Intervalo de poll del chat de transacción (segundos)",
+      "transactionChatMaxMessages": "Máximo de mensajes de chat por transacción",
       "save": "Guardar cambios",
       "saving": "Guardando...",
       "saved": "Configuración guardada correctamente.",

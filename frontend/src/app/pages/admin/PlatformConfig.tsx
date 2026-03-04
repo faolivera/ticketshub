@@ -19,6 +19,10 @@ const MIN_PAYMENT_MINUTES = 1;
 const MAX_PAYMENT_MINUTES = 1440;
 const MIN_ADMIN_HOURS = 1;
 const MAX_ADMIN_HOURS = 168;
+const MIN_CHAT_POLL_SECONDS = 5;
+const MAX_CHAT_POLL_SECONDS = 120;
+const MIN_CHAT_MAX_MESSAGES = 10;
+const MAX_CHAT_MAX_MESSAGES = 500;
 
 export function PlatformConfig() {
   const { t } = useTranslation();
@@ -32,6 +36,8 @@ export function PlatformConfig() {
   const [sellerFee, setSellerFee] = useState('');
   const [paymentTimeout, setPaymentTimeout] = useState('');
   const [adminReviewHours, setAdminReviewHours] = useState('');
+  const [chatPollIntervalSeconds, setChatPollIntervalSeconds] = useState('');
+  const [chatMaxMessages, setChatMaxMessages] = useState('');
 
   const fetchConfig = async () => {
     try {
@@ -43,6 +49,8 @@ export function PlatformConfig() {
       setSellerFee(String(data.sellerPlatformFeePercentage));
       setPaymentTimeout(String(data.paymentTimeoutMinutes));
       setAdminReviewHours(String(data.adminReviewTimeoutHours));
+      setChatPollIntervalSeconds(String(data.transactionChatPollIntervalSeconds ?? 15));
+      setChatMaxMessages(String(data.transactionChatMaxMessages ?? 100));
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('admin.platformConfig.loadError')
@@ -61,12 +69,16 @@ export function PlatformConfig() {
     const seller = Number(sellerFee);
     const payment = Number(paymentTimeout);
     const adminHours = Number(adminReviewHours);
+    const chatPoll = Number(chatPollIntervalSeconds);
+    const chatMax = Number(chatMaxMessages);
 
     if (
       Number.isNaN(buyer) ||
       Number.isNaN(seller) ||
       Number.isNaN(payment) ||
-      Number.isNaN(adminHours)
+      Number.isNaN(adminHours) ||
+      Number.isNaN(chatPoll) ||
+      Number.isNaN(chatMax)
     ) {
       setError('All fields must be numbers.');
       return;
@@ -91,6 +103,18 @@ export function PlatformConfig() {
       );
       return;
     }
+    if (chatPoll < MIN_CHAT_POLL_SECONDS || chatPoll > MAX_CHAT_POLL_SECONDS) {
+      setError(
+        `Chat poll interval must be between ${MIN_CHAT_POLL_SECONDS} and ${MAX_CHAT_POLL_SECONDS} seconds.`
+      );
+      return;
+    }
+    if (chatMax < MIN_CHAT_MAX_MESSAGES || chatMax > MAX_CHAT_MAX_MESSAGES) {
+      setError(
+        `Max chat messages must be between ${MIN_CHAT_MAX_MESSAGES} and ${MAX_CHAT_MAX_MESSAGES}.`
+      );
+      return;
+    }
 
     try {
       setSaving(true);
@@ -101,6 +125,8 @@ export function PlatformConfig() {
         sellerPlatformFeePercentage: seller,
         paymentTimeoutMinutes: Math.round(payment),
         adminReviewTimeoutHours: Math.round(adminHours),
+        transactionChatPollIntervalSeconds: Math.round(chatPoll),
+        transactionChatMaxMessages: Math.round(chatMax),
       });
       setSuccess(t('admin.platformConfig.saved'));
     } catch (err) {
@@ -204,6 +230,32 @@ export function PlatformConfig() {
                 max={MAX_ADMIN_HOURS}
                 value={adminReviewHours}
                 onChange={(e) => setAdminReviewHours(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="chatPollIntervalSeconds">
+                {t('admin.platformConfig.transactionChatPollIntervalSeconds')}
+              </Label>
+              <Input
+                id="chatPollIntervalSeconds"
+                type="number"
+                min={MIN_CHAT_POLL_SECONDS}
+                max={MAX_CHAT_POLL_SECONDS}
+                value={chatPollIntervalSeconds}
+                onChange={(e) => setChatPollIntervalSeconds(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="chatMaxMessages">
+                {t('admin.platformConfig.transactionChatMaxMessages')}
+              </Label>
+              <Input
+                id="chatMaxMessages"
+                type="number"
+                min={MIN_CHAT_MAX_MESSAGES}
+                max={MAX_CHAT_MAX_MESSAGES}
+                value={chatMaxMessages}
+                onChange={(e) => setChatMaxMessages(e.target.value)}
               />
             </div>
           </div>

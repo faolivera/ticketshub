@@ -25,6 +25,13 @@
     "createAccount": "Create account",
     "genericError": "Login failed. Please try again."
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "We couldn't find what you're looking for. The page may have been moved or doesn't exist.",
+    "goHome": "Go to home",
+    "browseEvents": "Browse events",
+    "hint": "Check the URL or use the links above to get back on track."
+  },
   "landing": {
     "title": "Buy and Sell Tickets Securely",
     "subtitle": "Find tickets for concerts, sports, and more with buyer protection",
@@ -75,6 +82,7 @@
     "checkBackLater": "Check back later or create a listing if you have tickets to sell",
     "noReviewsYet": "No reviews yet",
     "commissionRange": "(+{{min}}% to +{{max}}% commission)",
+    "commissionSingle": "(+{{percent}}% commission)",
     "soldAsBundle": "sold as bundle",
     "soldIndividually": "sold individually"
   },
@@ -298,6 +306,7 @@
     "typePlaceholder": "Type your message...",
     "send": "Send",
     "disclaimer": "Be respectful. Exchanges outside the platform are not protected.",
+    "maxMessagesReached": "Maximum number of messages reached for this transaction.",
     "sellerGreeting": "Hi! Thanks for your interest. How can I help you with this ticket?",
     "sellerAutoResponse": "Thanks for your message! I'll get back to you as soon as possible."
   },
@@ -598,6 +607,7 @@
     "ticketsSold": "tickets sold",
     "viewSellerProfile": "View Seller Profile",
     "contactSeller": "Contact Seller",
+    "contactBuyer": "Contact Buyer",
     "needHelp": "Need Help?",
     "supportDescription": "If you have any issues with your purchase, our support team is here to help.",
     "contactSupport": "Contact Support",
@@ -1078,6 +1088,8 @@
       "sellerPlatformFeePercentage": "Seller platform fee (%)",
       "paymentTimeoutMinutes": "Payment timeout (minutes)",
       "adminReviewTimeoutHours": "Admin review timeout (hours)",
+      "transactionChatPollIntervalSeconds": "Transaction chat poll interval (seconds)",
+      "transactionChatMaxMessages": "Max chat messages per transaction",
       "save": "Save changes",
       "saving": "Saving...",
       "saved": "Settings saved successfully.",

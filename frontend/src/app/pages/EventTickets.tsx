@@ -473,10 +473,14 @@ export function EventTickets() {
                                   <p className="text-xs text-gray-500">{t('eventTickets.price')}</p>
                                   <p className="text-3xl font-bold text-blue-600">{formatCurrencyFromUnits(ticket.price, ticket.currency)}</p>
                                   <p className="text-xs text-gray-500 mt-1">
-                                    {t('eventTickets.commissionRange', {
-                                      min: ticket.commissionPercentRange.min,
-                                      max: ticket.commissionPercentRange.max,
-                                    })}
+                                    {ticket.commissionPercentRange.min === ticket.commissionPercentRange.max
+                                      ? t('eventTickets.commissionSingle', {
+                                          percent: ticket.commissionPercentRange.min,
+                                        })
+                                      : t('eventTickets.commissionRange', {
+                                          min: ticket.commissionPercentRange.min,
+                                          max: ticket.commissionPercentRange.max,
+                                        })}
                                   </p>
                                 </div>
                                 <div>

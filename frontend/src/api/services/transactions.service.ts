@@ -5,6 +5,8 @@ import type {
   ConfirmTransferResponse,
   ConfirmReceiptRequest,
   ConfirmReceiptResponse,
+  GetTransactionChatMessagesResponse,
+  TransactionChatMessage,
 } from '../types';
 
 /**
@@ -49,6 +51,35 @@ export const transactionsService = {
    */
   async cancelTransaction(id: string): Promise<{ cancelled: boolean }> {
     const response = await apiClient.post<{ cancelled: boolean }>(`/transactions/${id}/cancel`);
+    return response.data;
+  },
+
+  /**
+   * Get transaction chat messages (buyer-seller). Only allowed when status is PaymentReceived or TicketTransferred.
+   */
+  async getTransactionChatMessages(
+    transactionId: string,
+    afterId?: string
+  ): Promise<GetTransactionChatMessagesResponse> {
+    const params = afterId ? { afterId } : undefined;
+    const response = await apiClient.get<GetTransactionChatMessagesResponse>(
+      `/transactions/${transactionId}/chat/messages`,
+      { params }
+    );
+    return response.data;
+  },
+
+  /**
+   * Send a message in the transaction chat.
+   */
+  async postTransactionChatMessage(
+    transactionId: string,
+    content: string
+  ): Promise<TransactionChatMessage> {
+    const response = await apiClient.post<TransactionChatMessage>(
+      `/transactions/${transactionId}/chat/messages`,
+      { content }
+    );
     return response.data;
   },
 };

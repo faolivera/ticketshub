@@ -30,6 +30,7 @@ import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerifi
 import { NotificationManagement } from '@/app/pages/admin/NotificationManagement';
 import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
 import { PromotionsManagement } from '@/app/pages/admin/PromotionsManagement';
+import { NotFound } from '@/app/pages/NotFound';
 
 export default function App() {
   return (
@@ -72,6 +73,9 @@ export default function App() {
                 <Route path="platform-config" element={<PlatformConfig />} />
                 <Route path="promotions" element={<PromotionsManagement />} />
               </Route>
+
+              {/* Catch-all: unknown routes */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
           <Footer />
