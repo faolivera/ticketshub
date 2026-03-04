@@ -18,6 +18,10 @@ const MIN_ADMIN_REVIEW_HOURS = 1;
 const MAX_ADMIN_REVIEW_HOURS = 168; // 1 week
 const MIN_OFFER_EXPIRATION_MINUTES = 1;
 const MAX_OFFER_EXPIRATION_MINUTES = 10080; // 7 days
+const MIN_CHAT_POLL_INTERVAL_SECONDS = 5;
+const MAX_CHAT_POLL_INTERVAL_SECONDS = 120;
+const MIN_CHAT_MAX_MESSAGES = 10;
+const MAX_CHAT_MAX_MESSAGES = 500;
 
 @Injectable()
 export class PlatformConfigService {
@@ -70,6 +74,10 @@ export class PlatformConfigService {
         body.offerPendingExpirationMinutes ?? current.offerPendingExpirationMinutes,
       offerAcceptedExpirationMinutes:
         body.offerAcceptedExpirationMinutes ?? current.offerAcceptedExpirationMinutes,
+      transactionChatPollIntervalSeconds:
+        body.transactionChatPollIntervalSeconds ?? current.transactionChatPollIntervalSeconds,
+      transactionChatMaxMessages:
+        body.transactionChatMaxMessages ?? current.transactionChatMaxMessages,
     };
     this.validatePlatformConfig(merged);
     const updated = await this.configRepository.upsertPlatformConfig(ctx, merged);
@@ -91,6 +99,10 @@ export class PlatformConfigService {
         this.nestConfigService.get<number>('platform.offerPendingExpirationMinutes') ?? 1440, // 24h
       offerAcceptedExpirationMinutes:
         this.nestConfigService.get<number>('platform.offerAcceptedExpirationMinutes') ?? 1440, // 24h
+      transactionChatPollIntervalSeconds:
+        this.nestConfigService.get<number>('platform.transactionChatPollIntervalSeconds') ?? 15,
+      transactionChatMaxMessages:
+        this.nestConfigService.get<number>('platform.transactionChatMaxMessages') ?? 100,
     };
   }
 
@@ -141,6 +153,22 @@ export class PlatformConfigService {
     ) {
       throw new BadRequestException(
         `offerAcceptedExpirationMinutes must be between ${MIN_OFFER_EXPIRATION_MINUTES} and ${MAX_OFFER_EXPIRATION_MINUTES}`,
+      );
+    }
+    if (
+      config.transactionChatPollIntervalSeconds < MIN_CHAT_POLL_INTERVAL_SECONDS ||
+      config.transactionChatPollIntervalSeconds > MAX_CHAT_POLL_INTERVAL_SECONDS
+    ) {
+      throw new BadRequestException(
+        `transactionChatPollIntervalSeconds must be between ${MIN_CHAT_POLL_INTERVAL_SECONDS} and ${MAX_CHAT_POLL_INTERVAL_SECONDS}`,
+      );
+    }
+    if (
+      config.transactionChatMaxMessages < MIN_CHAT_MAX_MESSAGES ||
+      config.transactionChatMaxMessages > MAX_CHAT_MAX_MESSAGES
+    ) {
+      throw new BadRequestException(
+        `transactionChatMaxMessages must be between ${MIN_CHAT_MAX_MESSAGES} and ${MAX_CHAT_MAX_MESSAGES}`,
       );
     }
   }

@@ -1,0 +1,52 @@
+import type { Ctx } from '../../common/types/context';
+
+export interface TransactionChatMessageEntity {
+  id: string;
+  transactionId: string;
+  senderId: string;
+  content: string;
+  createdAt: Date;
+  readByBuyerAt: Date | null;
+  readBySellerAt: Date | null;
+}
+
+export interface ITransactionChatRepository {
+  create(
+    ctx: Ctx,
+    transactionId: string,
+    senderId: string,
+    content: string,
+  ): Promise<TransactionChatMessageEntity>;
+
+  findByTransaction(
+    ctx: Ctx,
+    transactionId: string,
+    options?: { afterId?: string; limit?: number },
+  ): Promise<TransactionChatMessageEntity[]>;
+
+  countByTransaction(ctx: Ctx, transactionId: string): Promise<number>;
+
+  /**
+   * Mark messages from the other party as read for the given user (buyer or seller).
+   */
+  markAsReadForUser(
+    ctx: Ctx,
+    transactionId: string,
+    userId: string,
+    buyerId: string,
+    sellerId: string,
+  ): Promise<void>;
+
+  /**
+   * Count messages from the other party that the given user has not read.
+   */
+  countUnreadForUser(
+    ctx: Ctx,
+    transactionId: string,
+    userId: string,
+    buyerId: string,
+    sellerId: string,
+  ): Promise<number>;
+}
+
+export const TRANSACTION_CHAT_REPOSITORY = Symbol('ITransactionChatRepository');

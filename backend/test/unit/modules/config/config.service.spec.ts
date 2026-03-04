@@ -20,6 +20,8 @@ describe('PlatformConfigService', () => {
     adminReviewTimeoutHours: 24,
     offerPendingExpirationMinutes: 1440,
     offerAcceptedExpirationMinutes: 1440,
+    transactionChatPollIntervalSeconds: 15,
+    transactionChatMaxMessages: 100,
   };
 
   beforeEach(async () => {
@@ -37,6 +39,8 @@ describe('PlatformConfigService', () => {
           'platform.adminReviewTimeoutHours': 24,
           'platform.offerPendingExpirationMinutes': 1440,
           'platform.offerAcceptedExpirationMinutes': 1440,
+          'platform.transactionChatPollIntervalSeconds': 15,
+          'platform.transactionChatMaxMessages': 100,
         };
         return map[key];
       }),
@@ -85,6 +89,8 @@ describe('PlatformConfigService', () => {
       expect(result.adminReviewTimeoutHours).toBe(24);
       expect(result.offerPendingExpirationMinutes).toBe(1440);
       expect(result.offerAcceptedExpirationMinutes).toBe(1440);
+      expect(result.transactionChatPollIntervalSeconds).toBe(15);
+      expect(result.transactionChatMaxMessages).toBe(100);
       expect(configRepository.upsertPlatformConfig).toHaveBeenCalledWith(
         mockCtx,
         expect.objectContaining({ buyerPlatformFeePercentage: 15 })
@@ -103,6 +109,22 @@ describe('PlatformConfigService', () => {
       await expect(
         service.updatePlatformConfig(mockCtx, {
           sellerPlatformFeePercentage: -1,
+        })
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw when transactionChatPollIntervalSeconds is out of range', async () => {
+      await expect(
+        service.updatePlatformConfig(mockCtx, {
+          transactionChatPollIntervalSeconds: 200,
+        })
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw when transactionChatMaxMessages is out of range', async () => {
+      await expect(
+        service.updatePlatformConfig(mockCtx, {
+          transactionChatMaxMessages: 5,
         })
       ).rejects.toThrow(BadRequestException);
     });

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import type { IUsersRepository } from './users.repository.interface';
 import { USERS_REPOSITORY } from './users.repository.interface';
@@ -45,6 +46,19 @@ export class UsersService {
     private readonly publicStorageProvider: FileStorageProvider,
     private readonly configService: ConfigService,
   ) {}
+
+  private static readonly BCRYPT_ROUNDS = 10;
+
+  private async hashPassword(plainPassword: string): Promise<string> {
+    return bcrypt.hash(plainPassword, UsersService.BCRYPT_ROUNDS);
+  }
+
+  private async verifyPassword(
+    plainPassword: string,
+    storedHash: string,
+  ): Promise<boolean> {
+    return bcrypt.compare(plainPassword, storedHash);
+  }
 
   /**
    * Resolve image src to a signed URL when it points to public storage (/public/...).
@@ -144,14 +158,18 @@ export class UsersService {
   }
 
   /**
-   * Add a new user
+   * Add a new user. Plain password is hashed before storage.
    */
   async add(
     ctx: Ctx,
     user: Omit<User, 'id' | 'country' | 'currency'> &
       Partial<Pick<User, 'country' | 'currency'>>,
   ): Promise<User> {
-    return await this.usersRepository.add(ctx, user);
+    const hashedPassword = await this.hashPassword(user.password);
+    return await this.usersRepository.add(ctx, {
+      ...user,
+      password: hashedPassword,
+    });
   }
 
   /**
@@ -219,7 +237,7 @@ export class UsersService {
   }
 
   /**
-   * Authenticate user by email and password
+   * Authenticate user by email and password.
    */
   async login(
     ctx: Ctx,
@@ -227,7 +245,11 @@ export class UsersService {
     password: string,
   ): Promise<LoginResponse | null> {
     const user = await this.findByEmail(ctx, email);
-    if (!user || user.password !== password) {
+    if (!user) {
+      return null;
+    }
+    const passwordMatch = await this.verifyPassword(password, user.password);
+    if (!passwordMatch) {
       return null;
     }
 
@@ -280,7 +302,11 @@ export class UsersService {
       if (existing.emailVerified) {
         throw new ConflictException('Email already registered');
       }
-      if (existing.password !== data.password) {
+      const passwordMatch = await this.verifyPassword(
+        data.password,
+        existing.password,
+      );
+      if (!passwordMatch) {
         throw new BadRequestException('Invalid password for existing account');
       }
       // Resume verification: resend OTP
@@ -301,10 +327,10 @@ export class UsersService {
       };
     }
 
-    // Create new user
+    // Create new user (add() hashes password)
     const publicName = `${data.firstName} ${data.lastName[0]}.`;
     const now = new Date();
-    const newUser = await this.usersRepository.add(ctx, {
+    const newUser = await this.add(ctx, {
       email: data.email,
       password: data.password,
       firstName: data.firstName,

@@ -13,8 +13,9 @@ import { PaymentMethodsService } from '../payments/payment-methods.service';
 import { PricingService } from '../payments/pricing/pricing.service';
 import { PlatformConfigService } from '../config/config.service';
 import { PromotionsService } from '../promotions/promotions.service';
+import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
-import { TransactionStatus } from '../transactions/transactions.domain';
+import { TransactionStatus, isTransactionChatAllowed } from '../transactions/transactions.domain';
 import { UserLevel, Role } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -54,6 +55,8 @@ export class BffService {
     private readonly platformConfigService: PlatformConfigService,
     @Inject(PromotionsService)
     private readonly promotionsService: PromotionsService,
+    @Inject(TransactionChatService)
+    private readonly transactionChatService: TransactionChatService,
   ) {}
 
   /**
@@ -80,18 +83,21 @@ export class BffService {
     );
     const sellersMap = new Map(sellers.map((s) => [s.id, s]));
 
-    const paymentMethods =
-      await this.paymentMethodsService.getPublicPaymentMethods(ctx);
-    const commissionPercents = paymentMethods
-      .map((pm) => pm.buyerCommissionPercent)
+    const [paymentMethods, platformConfig] = await Promise.all([
+      this.paymentMethodsService.getPublicPaymentMethods(ctx),
+      this.platformConfigService.getPlatformConfig(ctx),
+    ]);
+    const platformCommissionPercent = platformConfig.buyerPlatformFeePercentage;
+    const combinedCommissionPercents = paymentMethods
+      .map((pm) => (pm.buyerCommissionPercent != null ? platformCommissionPercent + pm.buyerCommissionPercent : null))
       .filter((p): p is number => p != null);
     const commissionPercentRange =
-      commissionPercents.length > 0
+      combinedCommissionPercents.length > 0
         ? {
-            min: Math.min(...commissionPercents),
-            max: Math.max(...commissionPercents),
+            min: Math.min(...combinedCommissionPercents),
+            max: Math.max(...combinedCommissionPercents),
           }
-        : { min: 0, max: 0 };
+        : { min: platformCommissionPercent, max: platformCommissionPercent };
 
     return activeListings.map((listing) => {
       const seller = sellersMap.get(listing.sellerId);
@@ -325,6 +331,26 @@ export class BffService {
 
     const bffTransaction: BffTransactionWithDetails = this.toBffTransaction(transaction);
 
+    let chat: GetTransactionDetailsResponse['chat'];
+    if (
+      (isBuyer || isSeller) &&
+      isTransactionChatAllowed(transaction.status)
+    ) {
+      const config = await this.platformConfigService.getPlatformConfig(ctx);
+      const hasUnreadMessages =
+        await this.transactionChatService.hasUnreadMessages(
+          ctx,
+          transactionId,
+          userId,
+        );
+      chat = {
+        chatAllowed: true,
+        chatPollIntervalSeconds: config.transactionChatPollIntervalSeconds,
+        chatMaxMessages: config.transactionChatMaxMessages,
+        hasUnreadMessages,
+      };
+    }
+
     return {
       transaction: bffTransaction,
       paymentConfirmation,
@@ -332,6 +358,7 @@ export class BffService {
       bankTransferConfig,
       ticketUnits,
       paymentMethodPublicName,
+      ...(chat && { chat }),
     };
   }
 

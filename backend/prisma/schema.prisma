@@ -520,6 +520,7 @@ model Transaction {
   paymentIntent             PaymentIntent?
   paymentConfirmation       PaymentConfirmation?
   reviews                   Review[]
+  chatMessages              TransactionChatMessage[]
 
   @@index([buyerId])
   @@index([sellerId])
@@ -529,6 +530,21 @@ model Transaction {
   @@index([status, adminReviewExpiresAt])
   @@index([createdAt(sort: Desc)])
   @@map("transactions")
+}
+
+model TransactionChatMessage {
+  id              String    @id @default(uuid())
+  transactionId   String    @map("transaction_id")
+  senderId        String    @map("sender_id")
+  content         String
+  createdAt       DateTime  @default(now()) @map("created_at")
+  readByBuyerAt   DateTime? @map("read_by_buyer_at")
+  readBySellerAt  DateTime? @map("read_by_seller_at")
+
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@map("transaction_chat_messages")
 }
 
 model Offer {
@@ -874,14 +890,16 @@ model SchedulerLock {
 
 // Singleton: one row (id = "default") holds editable platform config. Seeded from HOCON on first read.
 model PlatformConfig {
-  id                              String   @id @default("default")
-  buyerPlatformFeePercentage      Float    @map("buyer_platform_fee_percentage")
-  sellerPlatformFeePercentage     Float    @map("seller_platform_fee_percentage")
-  paymentTimeoutMinutes           Int      @map("payment_timeout_minutes")
-  adminReviewTimeoutHours         Int      @map("admin_review_timeout_hours")
-  offerPendingExpirationMinutes   Int      @map("offer_pending_expiration_minutes")
-  offerAcceptedExpirationMinutes Int      @map("offer_accepted_expiration_minutes")
-  updatedAt                       DateTime @updatedAt
+  id                                   String   @id @default("default")
+  buyerPlatformFeePercentage           Float    @map("buyer_platform_fee_percentage")
+  sellerPlatformFeePercentage          Float    @map("seller_platform_fee_percentage")
+  paymentTimeoutMinutes                Int      @map("payment_timeout_minutes")
+  adminReviewTimeoutHours              Int      @map("admin_review_timeout_hours")
+  offerPendingExpirationMinutes        Int      @map("offer_pending_expiration_minutes")
+  offerAcceptedExpirationMinutes       Int      @map("offer_accepted_expiration_minutes")
+  transactionChatPollIntervalSeconds    Int      @map("transaction_chat_poll_interval_seconds")
+  transactionChatMaxMessages           Int      @map("transaction_chat_max_messages")
+  updatedAt                            DateTime @updatedAt
 
   @@map("platform_config")
 }

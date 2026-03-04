@@ -528,4 +528,59 @@ describe('BffService', () => {
       });
     });
   });
+
+  describe('getEventListings', () => {
+    const mockListing: TicketListingWithEvent = {
+      id: 'listing_1',
+      sellerId: 'seller_123',
+      eventId: 'event_123',
+      eventDateId: 'date_123',
+      type: TicketType.DigitalTransferable,
+      seatingType: SeatingType.Unnumbered,
+      ticketUnits: [
+        { id: 'unit_1', listingId: 'listing_1', status: TicketUnitStatus.Available, version: 1 },
+      ],
+      sellTogether: false,
+      pricePerTicket: { amount: 5000, currency: 'EUR' },
+      eventSectionId: 'section_1',
+      status: ListingStatus.Active,
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      eventName: 'Test Event',
+      eventDate: new Date(),
+      venue: 'Test Venue',
+      sectionName: 'General',
+    };
+
+    const mockPublicUserInfo = { id: 'seller_123', publicName: 'Jane Seller', pic: { id: 'pic_1', src: '/img.png' } };
+
+    const mockPaymentMethods: PublicPaymentMethodOption[] = [
+      { id: 'pm_1', name: 'Card', type: 'payment_gateway', buyerCommissionPercent: 3 },
+      { id: 'pm_2', name: 'Transfer', type: 'manual_approval', buyerCommissionPercent: 0 },
+    ];
+
+    it('should return listings with commissionPercentRange = platform + payment method (min/max)', async () => {
+      ticketsService.listListings.mockResolvedValue([mockListing]);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(mockPaymentMethods);
+
+      const result = await service.getEventListings(mockCtx, 'event_123');
+
+      expect(result).toHaveLength(1);
+      expect(result[0].commissionPercentRange).toEqual({ min: 10, max: 13 }); // platform 10% + 0% and 10% + 3%
+    });
+
+    it('should return single commission value when only platform (no payment methods with numeric commission)', async () => {
+      ticketsService.listListings.mockResolvedValue([mockListing]);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue([
+        { id: 'pm_1', name: 'Manual', type: 'manual_approval', buyerCommissionPercent: null },
+      ]);
+
+      const result = await service.getEventListings(mockCtx, 'event_123');
+
+      expect(result[0].commissionPercentRange).toEqual({ min: 10, max: 10 });
+    });
+  });
 });

@@ -1,2 +1,0 @@
--- AlterEnum
-ALTER TYPE "NotificationEventType" ADD VALUE 'SELLER_PAYMENT_RECEIVED';

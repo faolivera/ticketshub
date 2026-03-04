@@ -25,6 +25,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       adminReviewTimeoutHours: row.adminReviewTimeoutHours,
       offerPendingExpirationMinutes: row.offerPendingExpirationMinutes,
       offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
+      transactionChatPollIntervalSeconds: row.transactionChatPollIntervalSeconds,
+      transactionChatMaxMessages: row.transactionChatMaxMessages,
     };
   }
 
@@ -40,6 +42,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         adminReviewTimeoutHours: config.adminReviewTimeoutHours,
         offerPendingExpirationMinutes: config.offerPendingExpirationMinutes,
         offerAcceptedExpirationMinutes: config.offerAcceptedExpirationMinutes,
+        transactionChatPollIntervalSeconds: config.transactionChatPollIntervalSeconds,
+        transactionChatMaxMessages: config.transactionChatMaxMessages,
       },
       update: {
         buyerPlatformFeePercentage: config.buyerPlatformFeePercentage,
@@ -48,6 +52,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         adminReviewTimeoutHours: config.adminReviewTimeoutHours,
         offerPendingExpirationMinutes: config.offerPendingExpirationMinutes,
         offerAcceptedExpirationMinutes: config.offerAcceptedExpirationMinutes,
+        transactionChatPollIntervalSeconds: config.transactionChatPollIntervalSeconds,
+        transactionChatMaxMessages: config.transactionChatMaxMessages,
       },
     });
     return {
@@ -57,6 +63,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       adminReviewTimeoutHours: row.adminReviewTimeoutHours,
       offerPendingExpirationMinutes: row.offerPendingExpirationMinutes,
       offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
+      transactionChatPollIntervalSeconds: row.transactionChatPollIntervalSeconds,
+      transactionChatMaxMessages: row.transactionChatMaxMessages,
     };
   }
 }

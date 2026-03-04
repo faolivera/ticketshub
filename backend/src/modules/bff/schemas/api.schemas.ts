@@ -280,6 +280,13 @@ const TransactionTicketUnitSchema = z.object({
   seat: TicketSeatSchema.optional(),
 });
 
+const TransactionDetailsChatConfigSchema = z.object({
+  chatAllowed: z.literal(true),
+  chatPollIntervalSeconds: z.number(),
+  chatMaxMessages: z.number(),
+  hasUnreadMessages: z.boolean(),
+});
+
 export const GetTransactionDetailsResponseSchema = z.object({
   transaction: BffTransactionWithDetailsSchema,
   paymentConfirmation: PaymentConfirmationSchema.nullable(),
@@ -287,4 +294,5 @@ export const GetTransactionDetailsResponseSchema = z.object({
   bankTransferConfig: BankTransferConfigSchema.nullable(),
   ticketUnits: z.array(TransactionTicketUnitSchema),
   paymentMethodPublicName: z.string().nullable(),
+  chat: TransactionDetailsChatConfigSchema.optional(),
 });

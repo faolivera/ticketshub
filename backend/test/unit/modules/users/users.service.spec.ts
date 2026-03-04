@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../../../../src/modules/users/users.service';
@@ -16,12 +16,26 @@ import type { User } from '../../../../src/modules/users/users.domain';
 import { Language, UserLevel, Role, UserStatus } from '../../../../src/modules/users/users.domain';
 import type { Image } from '../../../../src/modules/images/images.domain';
 import type { Ctx } from '../../../../src/common/types/context';
+import { AcceptanceMethod } from '../../../../src/modules/terms/terms.domain';
+
+jest.mock('bcrypt', () => ({
+  hash: jest.fn().mockImplementation((plain: string) => Promise.resolve(`hashed:${plain}`)),
+  compare: jest.fn().mockImplementation((plain: string, stored: string) =>
+    Promise.resolve(stored.startsWith('$2') && (plain === 'correct' || plain === 'newPass123')),
+  ),
+}));
 
 describe('UsersService', () => {
   let service: UsersService;
   let usersRepository: jest.Mocked<IUsersRepository>;
   let imagesRepository: jest.Mocked<IImagesRepository>;
   let storageProvider: jest.Mocked<FileStorageProvider>;
+  let mockOTPService: { sendOTP: jest.Mock; verifyOTP: jest.Mock };
+  let mockTermsService: {
+    validateTermsVersion: jest.Mock;
+    acceptTerms: jest.Mock;
+    hasAcceptedCurrentTerms: jest.Mock;
+  };
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -35,7 +49,7 @@ describe('UsersService', () => {
     level: UserLevel.Buyer,
     status: UserStatus.Enabled,
     imageId: 'default',
-    password: 'hashed',
+    password: '$2b$10$hashed',
     country: 'ES',
     currency: 'EUR',
     language: Language.ES,
@@ -64,6 +78,7 @@ describe('UsersService', () => {
       findByIds: jest.fn(),
       findByEmailContaining: jest.fn(),
       getSellers: jest.fn(),
+      getAdmins: jest.fn(),
       add: jest.fn(),
       updateBasicInfo: jest.fn(),
       updateEmailVerified: jest.fn(),
@@ -78,12 +93,12 @@ describe('UsersService', () => {
       set: jest.fn(),
     };
 
-    const mockOTPService = {
+    mockOTPService = {
       sendOTP: jest.fn(),
       verifyOTP: jest.fn(),
     };
 
-    const mockTermsService = {
+    mockTermsService = {
       validateTermsVersion: jest.fn(),
       acceptTerms: jest.fn(),
       hasAcceptedCurrentTerms: jest.fn(),
@@ -124,6 +139,148 @@ describe('UsersService', () => {
     usersRepository = module.get(USERS_REPOSITORY);
     imagesRepository = module.get(IMAGES_REPOSITORY);
     storageProvider = module.get(PUBLIC_STORAGE_PROVIDER);
+  });
+
+  describe('add', () => {
+    it('should hash password before storing user', async () => {
+      const newUser = {
+        ...mockUser,
+        email: 'new@example.com',
+        password: 'plainSecret',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      usersRepository.add.mockResolvedValue({ ...newUser, id: 'new-id' });
+
+      await service.add(mockCtx, newUser);
+
+      expect(usersRepository.add).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({
+          email: 'new@example.com',
+          password: 'hashed:plainSecret',
+        }),
+      );
+    });
+  });
+
+  describe('login', () => {
+    it('should return token and user when password matches (bcrypt)', async () => {
+      usersRepository.findByEmail.mockResolvedValue(mockUser);
+      usersRepository.findById.mockResolvedValue(mockUser);
+      imagesRepository.findById.mockResolvedValue(mockImage);
+
+      const result = await service.login(mockCtx, mockUser.email, 'correct');
+
+      expect(result).not.toBeNull();
+      expect(result?.token).toBeDefined();
+      expect(result?.user.email).toBe(mockUser.email);
+    });
+
+    it('should return null when password does not match', async () => {
+      usersRepository.findByEmail.mockResolvedValue(mockUser);
+
+      const result = await service.login(mockCtx, mockUser.email, 'wrong');
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when user not found', async () => {
+      usersRepository.findByEmail.mockResolvedValue(undefined);
+
+      const result = await service.login(mockCtx, 'nobody@example.com', 'any');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('register', () => {
+    const registerData = {
+      email: 'newuser@example.com',
+      password: 'newPass123',
+      firstName: 'New',
+      lastName: 'User',
+      country: 'AR',
+      termsAcceptance: {
+        termsVersionId: 'v1',
+        method: AcceptanceMethod.Checkbox,
+      },
+    };
+
+    beforeEach(() => {
+      mockTermsService.validateTermsVersion.mockResolvedValue(undefined);
+      mockTermsService.acceptTerms.mockResolvedValue(undefined);
+      mockOTPService.sendOTP.mockResolvedValue(undefined);
+    });
+
+    it('should create new user with hashed password', async () => {
+      usersRepository.findByEmail.mockResolvedValue(undefined);
+      usersRepository.add.mockResolvedValue({
+        ...mockUser,
+        id: 'new-id',
+        email: registerData.email,
+      });
+      usersRepository.findById.mockResolvedValue({
+        ...mockUser,
+        id: 'new-id',
+        email: registerData.email,
+      });
+      imagesRepository.findById.mockResolvedValue(mockImage);
+
+      await service.register(mockCtx, registerData);
+
+      expect(usersRepository.add).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({
+          email: registerData.email,
+          password: 'hashed:newPass123',
+        }),
+      );
+    });
+
+    it('should allow resume verification when existing unverified user has matching password', async () => {
+      const existingUnverified: User = {
+        ...mockUser,
+        email: registerData.email,
+        emailVerified: false,
+        password: '$2b$10$hashed',
+      };
+      usersRepository.findByEmail.mockResolvedValue(existingUnverified);
+      usersRepository.findById.mockResolvedValue(existingUnverified);
+      imagesRepository.findById.mockResolvedValue(mockImage);
+
+      const result = await service.register(mockCtx, registerData);
+
+      expect(result).toBeDefined();
+      expect(result.user.email).toBe(registerData.email);
+      expect(usersRepository.add).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when existing unverified user has wrong password', async () => {
+      const existingUnverified: User = {
+        ...mockUser,
+        email: registerData.email,
+        emailVerified: false,
+        password: '$2b$10$stored',
+      };
+      usersRepository.findByEmail.mockResolvedValue(existingUnverified);
+
+      await expect(
+        service.register(mockCtx, { ...registerData, password: 'wrong' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw ConflictException when email already registered and verified', async () => {
+      usersRepository.findByEmail.mockResolvedValue({
+        ...mockUser,
+        email: registerData.email,
+        emailVerified: true,
+      });
+
+      await expect(service.register(mockCtx, registerData)).rejects.toThrow(
+        ConflictException,
+      );
+    });
   });
 
   describe('uploadAvatar', () => {

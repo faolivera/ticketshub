@@ -82,6 +82,17 @@ export enum CancellationReason {
 }
 
 /**
+ * Whether buyer-seller chat is allowed for this transaction status.
+ * Chat is only allowed between payment confirmed and buyer confirming receipt.
+ */
+export function isTransactionChatAllowed(status: TransactionStatus): boolean {
+  return (
+    status === TransactionStatus.PaymentReceived ||
+    status === TransactionStatus.TicketTransferred
+  );
+}
+
+/**
  * Mapping of transaction status to required actor
  */
 export const STATUS_REQUIRED_ACTOR: Record<TransactionStatus, RequiredActor> = {

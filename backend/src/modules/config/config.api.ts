@@ -20,6 +20,8 @@ export interface GetPlatformConfigResponse {
   adminReviewTimeoutHours: number;
   offerPendingExpirationMinutes: number;
   offerAcceptedExpirationMinutes: number;
+  transactionChatPollIntervalSeconds: number;
+  transactionChatMaxMessages: number;
 }
 
 /**
@@ -32,6 +34,8 @@ export interface UpdatePlatformConfigRequest {
   adminReviewTimeoutHours?: number;
   offerPendingExpirationMinutes?: number;
   offerAcceptedExpirationMinutes?: number;
+  transactionChatPollIntervalSeconds?: number;
+  transactionChatMaxMessages?: number;
 }
 
 /**

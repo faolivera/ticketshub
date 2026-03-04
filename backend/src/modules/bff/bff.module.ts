@@ -9,11 +9,13 @@ import { PaymentConfirmationsModule } from '../payment-confirmations/payment-con
 import { PaymentsModule } from '../payments/payments.module';
 import { ConfigModule } from '../config/config.module';
 import { PromotionsModule } from '../promotions/promotions.module';
+import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
 
 @Module({
   imports: [
     UsersModule,
     TransactionsModule,
+    TransactionChatModule,
     TicketsModule,
     ReviewsModule,
     PaymentConfirmationsModule,

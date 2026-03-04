@@ -11,6 +11,10 @@ export interface PlatformConfig {
   offerPendingExpirationMinutes: number;
   /** Minutes until an accepted offer expires (buyer must complete purchase). */
   offerAcceptedExpirationMinutes: number;
+  /** Seconds between chat message polls on the transaction page. */
+  transactionChatPollIntervalSeconds: number;
+  /** Maximum number of chat messages per transaction. */
+  transactionChatMaxMessages: number;
 }
 
 export const PLATFORM_CONFIG_DEFAULT_ID = 'default';

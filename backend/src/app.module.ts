@@ -25,6 +25,7 @@ import { IdentityVerificationModule } from './modules/identity-verification/iden
 import { ConfigModule as PlatformConfigModule } from './modules/config/config.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { OffersModule } from './modules/offers/offers.module';
+import { TransactionChatModule } from './modules/transaction-chat/transaction-chat.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { OffersModule } from './modules/offers/offers.module';
     PlatformConfigModule,
     PromotionsModule,
     OffersModule,
+    TransactionChatModule,
   ],
 })
 export class AppModule {}

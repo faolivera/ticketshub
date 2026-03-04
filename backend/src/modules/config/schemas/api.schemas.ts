@@ -11,6 +11,8 @@ export const GetPlatformConfigResponseSchema = z.object({
   adminReviewTimeoutHours: z.number(),
   offerPendingExpirationMinutes: z.number(),
   offerAcceptedExpirationMinutes: z.number(),
+  transactionChatPollIntervalSeconds: z.number(),
+  transactionChatMaxMessages: z.number(),
 });
 
 const OFFER_EXPIRATION_MIN = 1;
@@ -23,6 +25,8 @@ export const UpdatePlatformConfigRequestSchema = z.object({
   adminReviewTimeoutHours: z.number().min(1).max(168).optional(),
   offerPendingExpirationMinutes: z.number().min(OFFER_EXPIRATION_MIN).max(OFFER_EXPIRATION_MAX).optional(),
   offerAcceptedExpirationMinutes: z.number().min(OFFER_EXPIRATION_MIN).max(OFFER_EXPIRATION_MAX).optional(),
+  transactionChatPollIntervalSeconds: z.number().min(5).max(120).optional(),
+  transactionChatMaxMessages: z.number().min(10).max(500).optional(),
 });
 
 export const UpdatePlatformConfigResponseSchema = GetPlatformConfigResponseSchema;

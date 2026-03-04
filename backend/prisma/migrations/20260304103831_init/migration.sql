@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('User', 'Admin');
 
@@ -36,6 +33,9 @@ CREATE TYPE "DeliveryMethod" AS ENUM ('Pickup', 'ArrangeWithSeller');
 
 -- CreateEnum
 CREATE TYPE "ListingStatus" AS ENUM ('Pending', 'Active', 'Sold', 'Cancelled', 'Expired');
+
+-- CreateEnum
+CREATE TYPE "OfferStatus" AS ENUM ('pending', 'accepted', 'rejected', 'converted', 'cancelled');
 
 -- CreateEnum
 CREATE TYPE "TicketUnitStatus" AS ENUM ('available', 'reserved', 'sold');
@@ -86,7 +86,13 @@ CREATE TYPE "TermsUserType" AS ENUM ('buyer', 'seller');
 CREATE TYPE "TermsStatus" AS ENUM ('draft', 'active', 'archived');
 
 -- CreateEnum
-CREATE TYPE "NotificationEventType" AS ENUM ('PAYMENT_REQUIRED', 'BUYER_PAYMENT_SUBMITTED', 'BUYER_PAYMENT_APPROVED', 'BUYER_PAYMENT_REJECTED', 'TICKET_TRANSFERRED', 'TRANSACTION_COMPLETED', 'TRANSACTION_CANCELLED', 'TRANSACTION_EXPIRED', 'DISPUTE_OPENED', 'DISPUTE_RESOLVED', 'IDENTITY_VERIFIED', 'IDENTITY_REJECTED', 'EVENT_APPROVED', 'EVENT_REJECTED', 'REVIEW_RECEIVED');
+CREATE TYPE "PromotionType" AS ENUM ('SELLER_DISCOUNTED_FEE', 'BUYER_DISCOUNTED_FEE');
+
+-- CreateEnum
+CREATE TYPE "PromotionStatus" AS ENUM ('active', 'inactive');
+
+-- CreateEnum
+CREATE TYPE "NotificationEventType" AS ENUM ('PAYMENT_REQUIRED', 'BUYER_PAYMENT_SUBMITTED', 'BUYER_PAYMENT_APPROVED', 'BUYER_PAYMENT_REJECTED', 'SELLER_PAYMENT_RECEIVED', 'TICKET_TRANSFERRED', 'TRANSACTION_COMPLETED', 'TRANSACTION_CANCELLED', 'TRANSACTION_EXPIRED', 'DISPUTE_OPENED', 'DISPUTE_RESOLVED', 'IDENTITY_VERIFIED', 'IDENTITY_REJECTED', 'EVENT_APPROVED', 'EVENT_REJECTED', 'REVIEW_RECEIVED', 'OFFER_RECEIVED', 'OFFER_ACCEPTED', 'OFFER_REJECTED', 'OFFER_CANCELLED');
 
 -- CreateEnum
 CREATE TYPE "NotificationChannel" AS ENUM ('IN_APP', 'EMAIL');
@@ -193,6 +199,24 @@ CREATE TABLE "event_sections" (
 );
 
 -- CreateTable
+CREATE TABLE "promotions" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" "PromotionType" NOT NULL,
+    "config" JSONB NOT NULL,
+    "maxUsages" INTEGER NOT NULL DEFAULT 0,
+    "usedCount" INTEGER NOT NULL DEFAULT 0,
+    "usedInListingIds" JSONB NOT NULL,
+    "status" "PromotionStatus" NOT NULL DEFAULT 'active',
+    "validUntil" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdBy" TEXT NOT NULL,
+
+    CONSTRAINT "promotions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ticket_listings" (
     "id" TEXT NOT NULL,
     "sellerId" TEXT NOT NULL,
@@ -202,9 +226,10 @@ CREATE TABLE "ticket_listings" (
     "type" "TicketType" NOT NULL,
     "sellTogether" BOOLEAN NOT NULL DEFAULT false,
     "pricePerTicket" JSONB NOT NULL,
+    "bestOfferConfig" JSONB,
     "deliveryMethod" "DeliveryMethod",
     "pickupAddress" JSONB,
-    "description" TEXT,
+    "promotionSnapshot" JSONB,
     "status" "ListingStatus" NOT NULL DEFAULT 'Pending',
     "version" INTEGER NOT NULL DEFAULT 1,
     "expiresAt" TIMESTAMP(3),
@@ -244,6 +269,7 @@ CREATE TABLE "transactions" (
     "totalPaid" JSONB NOT NULL,
     "sellerReceives" JSONB NOT NULL,
     "pricingSnapshotId" TEXT NOT NULL,
+    "offerId" TEXT,
     "status" "TransactionStatus" NOT NULL DEFAULT 'PendingPayment',
     "requiredActor" "RequiredActor" NOT NULL DEFAULT 'Buyer',
     "version" INTEGER NOT NULL DEFAULT 1,
@@ -271,6 +297,37 @@ CREATE TABLE "transactions" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "transactions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "transaction_chat_messages" (
+    "id" TEXT NOT NULL,
+    "transaction_id" TEXT NOT NULL,
+    "sender_id" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "transaction_chat_messages_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "offers" (
+    "id" TEXT NOT NULL,
+    "listingId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "offeredPrice" JSONB NOT NULL,
+    "status" "OfferStatus" NOT NULL DEFAULT 'pending',
+    "tickets" JSONB NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "acceptedAt" TIMESTAMP(3),
+    "acceptedExpiresAt" TIMESTAMP(3),
+    "rejectedAt" TIMESTAMP(3),
+    "convertedTransactionId" TEXT,
+    "cancelledAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "offers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -330,8 +387,6 @@ CREATE TABLE "pricing_snapshots" (
     "buyerPlatformFeePercentage" DOUBLE PRECISION NOT NULL,
     "sellerPlatformFeePercentage" DOUBLE PRECISION NOT NULL,
     "paymentMethodCommissions" JSONB NOT NULL,
-    "pricingModel" TEXT NOT NULL DEFAULT 'fixed',
-    "bestOfferConfig" JSONB,
     "version" INTEGER NOT NULL DEFAULT 1,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "consumedAt" TIMESTAMP(3),
@@ -564,11 +619,84 @@ CREATE TABLE "scheduler_locks" (
     CONSTRAINT "scheduler_locks_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "platform_config" (
+    "id" TEXT NOT NULL DEFAULT 'default',
+    "buyer_platform_fee_percentage" DOUBLE PRECISION NOT NULL,
+    "seller_platform_fee_percentage" DOUBLE PRECISION NOT NULL,
+    "payment_timeout_minutes" INTEGER NOT NULL,
+    "admin_review_timeout_hours" INTEGER NOT NULL,
+    "offer_pending_expiration_minutes" INTEGER NOT NULL,
+    "offer_accepted_expiration_minutes" INTEGER NOT NULL,
+    "transaction_chat_poll_interval_seconds" INTEGER NOT NULL,
+    "transaction_chat_max_messages" INTEGER NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "platform_config_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "event_sections_eventId_name_key" ON "event_sections"("eventId", "name");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_status_idx" ON "ticket_listings"("status");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_sellerId_idx" ON "ticket_listings"("sellerId");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_eventId_idx" ON "ticket_listings"("eventId");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_eventDateId_idx" ON "ticket_listings"("eventDateId");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_eventSectionId_idx" ON "ticket_listings"("eventSectionId");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_eventId_status_idx" ON "ticket_listings"("eventId", "status");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_eventDateId_status_idx" ON "ticket_listings"("eventDateId", "status");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_eventSectionId_status_idx" ON "ticket_listings"("eventSectionId", "status");
+
+-- CreateIndex
+CREATE INDEX "ticket_listings_status_createdAt_idx" ON "ticket_listings"("status", "createdAt" DESC);
+
+-- CreateIndex
+CREATE INDEX "ticket_units_listingId_idx" ON "ticket_units"("listingId");
+
+-- CreateIndex
+CREATE INDEX "ticket_units_listingId_status_idx" ON "ticket_units"("listingId", "status");
+
+-- CreateIndex
+CREATE INDEX "transactions_buyerId_idx" ON "transactions"("buyerId");
+
+-- CreateIndex
+CREATE INDEX "transactions_sellerId_idx" ON "transactions"("sellerId");
+
+-- CreateIndex
+CREATE INDEX "transactions_listingId_idx" ON "transactions"("listingId");
+
+-- CreateIndex
+CREATE INDEX "transactions_status_idx" ON "transactions"("status");
+
+-- CreateIndex
+CREATE INDEX "transactions_status_paymentExpiresAt_idx" ON "transactions"("status", "paymentExpiresAt");
+
+-- CreateIndex
+CREATE INDEX "transactions_status_adminReviewExpiresAt_idx" ON "transactions"("status", "adminReviewExpiresAt");
+
+-- CreateIndex
+CREATE INDEX "transactions_createdAt_idx" ON "transactions"("createdAt" DESC);
+
+-- CreateIndex
+CREATE INDEX "transaction_chat_messages_transaction_id_idx" ON "transaction_chat_messages"("transaction_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "payment_intents_transactionId_key" ON "payment_intents"("transactionId");
@@ -587,6 +715,24 @@ CREATE UNIQUE INDEX "user_terms_acceptances_userId_termsVersionId_key" ON "user_
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_terms_states_userId_userType_key" ON "user_terms_states"("userId", "userType");
+
+-- CreateIndex
+CREATE INDEX "notification_events_status_idx" ON "notification_events"("status");
+
+-- CreateIndex
+CREATE INDEX "notification_events_status_triggeredAt_idx" ON "notification_events"("status", "triggeredAt" ASC);
+
+-- CreateIndex
+CREATE INDEX "notifications_recipientId_channel_idx" ON "notifications"("recipientId", "channel");
+
+-- CreateIndex
+CREATE INDEX "notifications_recipientId_channel_read_idx" ON "notifications"("recipientId", "channel", "read");
+
+-- CreateIndex
+CREATE INDEX "notifications_channel_status_idx" ON "notifications"("channel", "status");
+
+-- CreateIndex
+CREATE INDEX "notifications_eventId_idx" ON "notifications"("eventId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "notification_templates_eventType_channel_locale_key" ON "notification_templates"("eventType", "channel", "locale");
@@ -619,6 +765,9 @@ ALTER TABLE "event_sections" ADD CONSTRAINT "event_sections_createdById_fkey" FO
 ALTER TABLE "event_sections" ADD CONSTRAINT "event_sections_approvedById_fkey" FOREIGN KEY ("approvedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "promotions" ADD CONSTRAINT "promotions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ticket_listings" ADD CONSTRAINT "ticket_listings_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -641,6 +790,15 @@ ALTER TABLE "transactions" ADD CONSTRAINT "transactions_buyerId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "transaction_chat_messages" ADD CONSTRAINT "transaction_chat_messages_transaction_id_fkey" FOREIGN KEY ("transaction_id") REFERENCES "transactions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "offers" ADD CONSTRAINT "offers_listingId_fkey" FOREIGN KEY ("listingId") REFERENCES "ticket_listings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "offers" ADD CONSTRAINT "offers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "payment_intents" ADD CONSTRAINT "payment_intents_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "transactions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
