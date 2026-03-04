@@ -319,21 +319,21 @@ export class TransactionsService {
 
     this.logger.log(ctx, `Transaction ${transaction.id} created`);
 
-    // Emit notification (fire-and-forget, outside transaction)
-    const seller = await this.usersService.findById(ctx, listing.sellerId);
-    this.notificationsService
-      .emit(ctx, NotificationEventType.PAYMENT_REQUIRED, {
-        transactionId: transaction.id,
-        ticketId: listing.id,
-        eventName: listing.eventName,
-        amount: totalPaid.amount,
-        currency: totalPaid.currency,
-        expiresAt: transaction.paymentExpiresAt?.toISOString() || '',
-        buyerId,
-        sellerId: listing.sellerId,
-        sellerName: seller?.publicName || 'Seller',
-      })
-      .catch((err) => this.logger.error(ctx, `Failed to emit PAYMENT_REQUIRED: ${err}`));
+    // PAYMENT_REQUIRED emission disabled for now; event and processors remain for future logic.
+    // const seller = await this.usersService.findById(ctx, listing.sellerId);
+    // this.notificationsService
+    //   .emit(ctx, NotificationEventType.PAYMENT_REQUIRED, {
+    //     transactionId: transaction.id,
+    //     ticketId: listing.id,
+    //     eventName: listing.eventName,
+    //     amount: totalPaid.amount,
+    //     currency: totalPaid.currency,
+    //     expiresAt: transaction.paymentExpiresAt?.toISOString() || '',
+    //     buyerId,
+    //     sellerId: listing.sellerId,
+    //     sellerName: seller?.publicName || 'Seller',
+    //   })
+    //   .catch((err) => this.logger.error(ctx, `Failed to emit PAYMENT_REQUIRED: ${err}`));
 
     return {
       transaction,
@@ -396,6 +396,7 @@ export class TransactionsService {
     // Emit notification (fire-and-forget, outside transaction)
     const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
     const seller = await this.usersService.findById(ctx, updated.sellerId);
+    // Notify both buyer and seller: buyer = "seller will transfer you the ticket", seller = "payment processed, transfer the ticket"
     this.notificationsService
       .emit(ctx, NotificationEventType.BUYER_PAYMENT_APPROVED, {
         transactionId: updated.id,
@@ -406,18 +407,6 @@ export class TransactionsService {
         sellerName: seller?.publicName || 'Seller',
       })
       .catch((err) => this.logger.error(ctx, `Failed to emit BUYER_PAYMENT_APPROVED: ${err}`));
-
-    this.notificationsService
-      .emit(ctx, NotificationEventType.SELLER_PAYMENT_RECEIVED, {
-        transactionId: updated.id,
-        ticketId: listing.id,
-        eventName: listing.eventName,
-        amount: updated.sellerReceives.amount,
-        currency: updated.sellerReceives.currency,
-        sellerId: updated.sellerId,
-        buyerId: updated.buyerId,
-      })
-      .catch((err) => this.logger.error(ctx, `Failed to emit SELLER_PAYMENT_RECEIVED: ${err}`));
 
     this.logger.log(ctx, `Transaction ${transactionId} - payment received`);
     return updated;

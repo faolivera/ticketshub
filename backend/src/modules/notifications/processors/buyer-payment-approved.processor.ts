@@ -15,18 +15,34 @@ export class BuyerPaymentApprovedProcessor
     ctx: Ctx,
     context: BuyerPaymentApprovedContext,
   ): Promise<NotificationRecipient[]> {
-    // Only the buyer receives this notification
-    return [{ userId: context.buyerId }];
+    // Both buyer and seller receive a notification when payment is approved
+    return [
+      { userId: context.buyerId },
+      { userId: context.sellerId },
+    ];
   }
 
   getTemplateVariables(
     context: BuyerPaymentApprovedContext,
     recipientId: string,
   ): Record<string, string> {
+    const isBuyer = recipientId === context.buyerId;
+    const transactionId = context.transactionId;
+    const eventName = context.eventName;
+    const sellerName = context.sellerName;
+
+    if (isBuyer) {
+      return {
+        title: 'Pago aprobado',
+        body: `${sellerName} aprobó tu pago para "${eventName}". El vendedor ya te transferirá la entrada.`,
+        transactionId,
+      };
+    }
+    // Seller: payment was processed (not yet available); they must transfer the ticket
     return {
-      sellerName: context.sellerName,
-      eventName: context.eventName,
-      transactionId: context.transactionId,
+      title: 'Pago procesado',
+      body: `El pago del comprador para "${eventName}" fue procesado. Transferí la entrada al comprador para completar la venta.`,
+      transactionId,
     };
   }
 }

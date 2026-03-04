@@ -187,21 +187,21 @@ export class NotificationsSeeder implements OnModuleInit {
         actionUrlTemplate: '/admin/transactions',
       },
 
-      // BUYER_PAYMENT_APPROVED
+      // BUYER_PAYMENT_APPROVED (buyer and seller get different copy via processor variables)
       {
         eventType: NotificationEventType.BUYER_PAYMENT_APPROVED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
-        titleTemplate: 'Pago aprobado',
-        bodyTemplate: '{{sellerName}} aprobó tu pago para "{{eventName}}"',
+        titleTemplate: '{{title}}',
+        bodyTemplate: '{{body}}',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.BUYER_PAYMENT_APPROVED,
         channel: NotificationChannel.EMAIL,
         locale: 'es',
-        titleTemplate: 'Tu pago para "{{eventName}}" fue aprobado',
-        bodyTemplate: '¡Buenas noticias! {{sellerName}} ha aprobado tu pago para "{{eventName}}". El vendedor ahora transferirá el ticket a tu cuenta.',
+        titleTemplate: '{{title}}',
+        bodyTemplate: '{{body}}',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -241,14 +241,14 @@ export class NotificationsSeeder implements OnModuleInit {
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
-      // TICKET_TRANSFERRED
+      // TICKET_TRANSFERRED (actionUrl points to the transaction with the transferred ticket)
       {
         eventType: NotificationEventType.TICKET_TRANSFERRED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: '¡Entrada transferida!',
         bodyTemplate: 'Has recibido tu entrada para "{{eventName}}". Por favor confirma que la recibiste para liberar el pago al vendedor.',
-        actionUrlTemplate: '/my-tickets',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
         eventType: NotificationEventType.TICKET_TRANSFERRED,
@@ -256,7 +256,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: '¡Tu entrada para "{{eventName}}" está listo!',
         bodyTemplate: '¡Felicidades! Has recibido tu entrada para "{{eventName}}" el {{eventDate}} en {{venue}}. Por favor confirma que la recibiste en la app para liberar el pago al vendedor.',
-        actionUrlTemplate: '/my-tickets',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // TRANSACTION_COMPLETED

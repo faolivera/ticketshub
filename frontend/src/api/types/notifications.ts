@@ -71,7 +71,7 @@ export interface UpdateTemplateRequest {
 export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
   PAYMENT_REQUIRED: ['sellerName', 'eventName', 'amount', 'currency', 'amountFormatted', 'expiresAt', 'transactionId'],
   BUYER_PAYMENT_SUBMITTED: ['buyerName', 'eventName', 'amount', 'currency', 'amountFormatted', 'transactionId'],
-  BUYER_PAYMENT_APPROVED: ['sellerName', 'eventName', 'transactionId'],
+  BUYER_PAYMENT_APPROVED: ['title', 'body', 'transactionId'],
   BUYER_PAYMENT_REJECTED: ['sellerName', 'eventName', 'rejectionReason', 'transactionId'],
   TICKET_TRANSFERRED: ['eventName', 'eventDate', 'venue', 'transactionId'],
   TRANSACTION_COMPLETED: ['eventName', 'amount', 'currency', 'amountFormatted', 'transactionId'],
