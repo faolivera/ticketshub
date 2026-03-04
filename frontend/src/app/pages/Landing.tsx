@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Shield, Calendar } from 'lucide-react';
+import { Search, Shield, Calendar, ShieldCheck, Ticket, Headphones, RotateCcw } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { EventCard } from '@/app/components/EventCard';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorMessage } from '@/app/components/ErrorMessage';
@@ -8,7 +9,7 @@ import { EmptyState } from '@/app/components/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '../../api/services/events.service';
 import type { EventWithDates } from '../../api/types';
-import { EventSectionStatus } from '../../api/types/events';
+import { EventCategory, EventSectionStatus } from '../../api/types/events';
 import { formatDate, formatTime } from '@/lib/format-date';
 
 /**
@@ -79,9 +80,29 @@ function buildLocationString(city: string, countryCode: string): string {
   return parts.length ? parts.join(', ') : '';
 }
 
+function TrustItem({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-1">
+      <Icon className="w-5 h-5 text-blue-600 flex-shrink-0" />
+      <span className="text-sm font-medium text-gray-700">{label}</span>
+    </div>
+  );
+}
+
+const CATEGORY_I18N_KEYS: Record<EventCategory, string> = {
+  [EventCategory.Concert]:    'landing.categoryConcert',
+  [EventCategory.Sports]:     'landing.categorySports',
+  [EventCategory.Theater]:    'landing.categoryTheater',
+  [EventCategory.Festival]:   'landing.categoryFestival',
+  [EventCategory.Conference]: 'landing.categoryConference',
+  [EventCategory.Comedy]:     'landing.categoryComedy',
+  [EventCategory.Other]:      'landing.categoryOther',
+};
+
 export function Landing() {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState<EventCategory | null>(null);
   const [events, setEvents] = useState<EventWithDates[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,12 +129,19 @@ export function Landing() {
     fetchEvents();
   }, [t]);
 
+  // Categories that actually have at least one loaded event
+  const availableCategories = useMemo(() => {
+    const present = new Set(events.map(e => e.category));
+    return Object.values(EventCategory).filter(c => present.has(c));
+  }, [events]);
+
   // Transform and filter events
   const filteredEvents = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
-    
+
     return events
       .filter(event => {
+        if (activeCategory && event.category !== activeCategory) return false;
         if (!searchTerm) return true;
         return (
           event.name.toLowerCase().includes(searchLower) ||
@@ -123,22 +151,26 @@ export function Landing() {
         );
       })
       .map(transformEventForCard);
-  }, [events, searchTerm]);
+  }, [events, searchTerm, activeCategory]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-5xl font-bold mb-4 text-center">
+      <div
+        className="relative bg-cover bg-center bg-no-repeat text-white py-24"
+        style={{ backgroundImage: 'url(/hero.jpeg)' }}
+      >
+        <div className="absolute inset-0 bg-black/55" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4">
+          <h1 className="text-5xl font-bold mb-4 text-center tracking-tight">
             {t('landing.title')}
           </h1>
-          <p className="text-xl text-center mb-4 text-blue-100">
+          <p className="text-xl text-center mb-4 text-white/80">
             {t('landing.subtitle')}
           </p>
-          
+
           <div className="flex items-center justify-center gap-2 mb-8">
             <Shield className="w-5 h-5 text-green-300" />
-            <Link 
+            <Link
               to="/how-it-works"
               className="text-white hover:text-green-300 transition-colors font-semibold underline decoration-2 underline-offset-4"
             >
@@ -161,10 +193,47 @@ export function Landing() {
         </div>
       </div>
 
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <TrustItem icon={ShieldCheck} label={t('landing.trustSecurePayment')} />
+          <TrustItem icon={Ticket} label={t('landing.trustGuaranteedTickets')} />
+          <TrustItem icon={Headphones} label={t('landing.trustSupport')} />
+          <TrustItem icon={RotateCcw} label={t('landing.trustRefund')} />
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">
           {searchTerm ? t('landing.searchResults') : t('landing.upcomingEvents')}
         </h2>
+
+        {!isLoading && !error && availableCategories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                activeCategory === null
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
+              }`}
+            >
+              {t('landing.categoryAll')}
+            </button>
+            {availableCategories.map(category => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(activeCategory === category ? null : category)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  activeCategory === category
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
+                }`}
+              >
+                {t(CATEGORY_I18N_KEYS[category])}
+              </button>
+            ))}
+          </div>
+        )}
 
         {isLoading && (
           <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />

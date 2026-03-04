@@ -46,7 +46,7 @@ export function Header() {
           {isAuthenticated && user?.role === 'Admin' && (
             <Link
               to="/admin"
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
             >
               <Shield className="w-4 h-4" />
               <span className="hidden sm:inline">{t('header.admin')}</span>
@@ -57,7 +57,7 @@ export function Header() {
           {isAuthenticated && (
             <Link
               to="/sell-ticket"
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{t('header.sellTickets')}</span>
@@ -106,7 +106,7 @@ export function Header() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
               >
                 <User className="w-4 h-4" />
                 <span>{user?.firstName} {user?.lastName}</span>
@@ -159,13 +159,13 @@ export function Header() {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="px-6 py-2 bg-white text-blue-600 border-2 border-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+                className="px-6 py-2 bg-white text-indigo-600 border-2 border-indigo-600 font-semibold rounded-full hover:bg-indigo-50 transition-colors"
               >
                 {t('header.login')}
               </Link>
               <Link
                 to="/register"
-                className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-full hover:bg-indigo-700 transition-colors"
               >
                 {t('header.signUp')}
               </Link>

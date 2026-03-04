@@ -28,7 +28,6 @@ interface EventCardProps {
 export function EventCard({
   id,
   name,
-  artist,
   location,
   venue,
   showTimes,
@@ -53,9 +52,9 @@ export function EventCard({
   };
 
   return (
-    <Link 
+    <Link
       to={`/event/${id}`}
-      className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden group flex flex-col h-full"
+      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col h-full"
     >
       <div className="relative h-48 overflow-hidden flex-shrink-0">
         <EventBanner
@@ -65,10 +64,16 @@ export function EventCard({
           alt={name}
           className="h-full group-hover:scale-105 transition-transform duration-300"
         />
+        {/* Hover overlay with CTA */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <span className="px-5 py-2 bg-white text-gray-900 font-semibold rounded-full text-sm shadow">
+            {t('eventCard.viewTickets')}
+          </span>
+        </div>
         {labels.length > 0 && (
           <div className="absolute top-3 right-3 flex flex-col gap-2">
             {labels.map((label, index) => (
-              <span 
+              <span
                 key={index}
                 className="px-3 py-1 bg-yellow-400 text-gray-900 text-xs font-semibold rounded-full"
               >
@@ -80,15 +85,14 @@ export function EventCard({
       </div>
 
       <div className="p-4 flex flex-col flex-1">
-        <h3 className="text-xl font-bold text-gray-900 mb-1">{name}</h3>
-        <p className="text-gray-600 mb-3">{artist}</p>
+        <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight">{name}</h3>
 
         <div className="space-y-3 mb-4 flex-1">
           <div className="flex items-center gap-2 text-sm text-gray-700">
             <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
             <span className="line-clamp-1">{location} - {venue}</span>
           </div>
-          
+
           <div>
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
               <Calendar className="w-4 h-4 text-blue-600 flex-shrink-0" />
@@ -103,7 +107,7 @@ export function EventCard({
               ))}
               {hasMoreDates && (
                 <p className="text-xs text-blue-600 ml-5 font-medium">
-                  {remainingDates === 1 
+                  {remainingDates === 1
                     ? t('eventCard.moreDate')
                     : t('eventCard.moreDates', { count: remainingDates })
                   }
@@ -116,9 +120,9 @@ export function EventCard({
             <p className="text-xs text-gray-500 mb-2">{t('eventCard.availableTickets')}</p>
             <div className="flex flex-wrap gap-2">
               {ticketTypes.map((type, index) => (
-                <span 
+                <span
                   key={index}
-                  className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md"
+                  className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-medium rounded-full"
                 >
                   {type}
                 </span>
