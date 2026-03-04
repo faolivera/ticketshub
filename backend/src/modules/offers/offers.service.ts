@@ -15,9 +15,16 @@ import type { Ctx } from '../../common/types/context';
 import type { Offer, OfferTickets } from './offers.domain';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
-import type { CreateOfferRequest } from './offers.api';
+import type {
+  CreateOfferRequest,
+  OfferWithListingSummary,
+  OfferListingSummary,
+  OfferWithReceivedContext,
+  OfferReceivedContext,
+} from './offers.api';
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class OffersService {
@@ -31,6 +38,7 @@ export class OffersService {
     @Inject(PlatformConfigService)
     private readonly platformConfigService: PlatformConfigService,
     private readonly notificationsService: NotificationsService,
+    private readonly usersService: UsersService,
   ) {}
 
   private generateId(): string {
@@ -173,9 +181,78 @@ export class OffersService {
     return this.applyLazyExpiration(ctx, offers);
   }
 
-  async listMyOffers(ctx: Ctx, userId: string): Promise<Offer[]> {
+  async listReceivedOffers(ctx: Ctx, sellerId: string): Promise<OfferWithReceivedContext[]> {
+    const myListings = await this.ticketsService.getMyListings(ctx, sellerId);
+    const listingIds = myListings.map((l) => l.id);
+    if (listingIds.length === 0) return [];
+    const listingMap = new Map(myListings.map((l) => [l.id, l]));
+    const offers = await this.offersRepository.findByListingIds(ctx, listingIds);
+    const expiredApplied = await this.applyLazyExpiration(ctx, offers);
+    if (expiredApplied.length === 0) return [];
+    const buyerIds = [...new Set(expiredApplied.map((o) => o.userId))];
+    const buyers = await this.usersService.findByIds(ctx, buyerIds);
+    const buyerNameMap = new Map(
+      buyers.map((u) => [u.id, u.publicName ?? 'Unknown']),
+    );
+    return expiredApplied.map((offer): OfferWithReceivedContext => {
+      const listing = listingMap.get(offer.listingId);
+      const context: OfferReceivedContext = listing
+        ? {
+            listingId: listing.id,
+            eventName: listing.eventName,
+            eventDate:
+              listing.eventDate instanceof Date
+                ? listing.eventDate.toISOString()
+                : String(listing.eventDate),
+            listingPrice: listing.pricePerTicket,
+            bannerUrls: listing.bannerUrls,
+            buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
+          }
+        : {
+            listingId: offer.listingId,
+            eventName: 'Unknown Event',
+            eventDate: new Date().toISOString(),
+            listingPrice: { amount: 0, currency: 'EUR' },
+            buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
+          };
+      return { ...offer, receivedContext: context };
+    });
+  }
+
+  async listMyOffers(ctx: Ctx, userId: string): Promise<OfferWithListingSummary[]> {
     const offers = await this.offersRepository.findByUserId(ctx, userId);
-    return this.applyLazyExpiration(ctx, offers);
+    const expiredApplied = await this.applyLazyExpiration(ctx, offers);
+    if (expiredApplied.length === 0) return [];
+
+    const listingIds = [...new Set(expiredApplied.map((o) => o.listingId))];
+    const listings = await this.ticketsService.getListingsByIds(ctx, listingIds);
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
+
+    const sellerIds = [...new Set(listings.map((l) => l.sellerId))];
+    const sellers = await this.usersService.findByIds(ctx, sellerIds);
+    const sellerNameMap = new Map(
+      sellers.map((u) => [u.id, u.publicName ?? 'Unknown']),
+    );
+
+    return expiredApplied.map((offer): OfferWithListingSummary => {
+      const listing = listingMap.get(offer.listingId);
+      const summary: OfferListingSummary = listing
+        ? {
+            eventName: listing.eventName,
+            eventDate:
+              listing.eventDate instanceof Date
+                ? listing.eventDate.toISOString()
+                : String(listing.eventDate),
+            sellerName: sellerNameMap.get(listing.sellerId) ?? 'Unknown',
+            bannerUrls: listing.bannerUrls,
+          }
+        : {
+            eventName: 'Unknown Event',
+            eventDate: new Date().toISOString(),
+            sellerName: 'Unknown',
+          };
+      return { ...offer, listingSummary: summary };
+    });
   }
 
   /** Mark expired pending offers as cancelled (lazy). */

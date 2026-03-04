@@ -7,6 +7,7 @@ export interface IOffersRepository {
   create(ctx: Ctx, offer: Offer): Promise<Offer>;
   findById(ctx: Ctx, id: string): Promise<Offer | undefined>;
   findByListingId(ctx: Ctx, listingId: string): Promise<Offer[]>;
+  findByListingIds(ctx: Ctx, listingIds: string[]): Promise<Offer[]>;
   findByUserId(ctx: Ctx, userId: string): Promise<Offer[]>;
   findActiveByUserAndListing(
     ctx: Ctx,

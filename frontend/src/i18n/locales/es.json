@@ -1,6 +1,7 @@
 {
   "header": {
     "myTickets": "Mis Entradas",
+    "mySales": "Mis Ventas",
     "myProfile": "Mi Perfil",
     "myWallet": "Mi Cartera",
     "sellTickets": "Vender Entradas",
@@ -147,8 +148,8 @@
   },
   "boughtTickets": {
     "title": "Mis Entradas",
-    "ticketsBought": "Entradas Compradas",
-    "ticketsSold": "Entradas Vendidas",
+    "ticketsBought": "Mis Entradas/Ofertas",
+    "ticketsSold": "Mis Ventas",
     "event": "Evento",
     "type": "Tipo",
     "role": "Rol",
@@ -221,7 +222,36 @@
     "offerStatusConverted": "Convertida",
     "offerStatusCancelled": "Cancelada",
     "completePurchase": "Completar compra",
-    "cancelled": "Cancelada"
+    "seat": "Asiento",
+    "seats": "Asientos",
+    "ticket": "Entrada",
+    "tickets": "Entradas",
+    "perTicket": "entrada",
+    "requireAction": "Requieren acción",
+    "waiting": "En espera",
+    "expiredCancelledOffers": "Ofertas expiradas o canceladas",
+    "offerLabel": "Oferta",
+    "cancelled": "Cancelada",
+    "filterStatusActive": "Activo",
+    "filterStatusCompleted": "Completado",
+    "filterTypeBoughtTicket": "Entrada Comprada",
+    "filterTypeOffer": "Oferta",
+    "myTicketsTabTickets": "Mis entradas",
+    "myTicketsTabOffers": "Mis ofertas",
+    "filterByOffer": "Mostrando una oferta"
+  },
+  "sellerDashboard": {
+    "title": "Mis Ventas",
+    "tabListed": "Entradas Publicadas",
+    "tabSold": "Entradas Vendidas",
+    "tabReceived": "Ofertas Recibidas",
+    "offerReceived": "Oferta recibida",
+    "fromBuyer": "De:",
+    "listingPrice": "Precio base",
+    "offeredPrice": "Precio ofertado",
+    "noReceivedOffers": "No hay ofertas en tus anuncios",
+    "receivedOffersWillAppear": "Las ofertas que recibas en tus publicaciones aparecerán aquí",
+    "filterByOffer": "Mostrando una oferta"
   },
   "ditListing": {
     "description": "Descripción"
@@ -899,7 +929,8 @@
     "creating": "Creando...",
     "saving": "Guardando...",
     "errorLoading": "Error al cargar",
-    "resource": "datos"
+    "resource": "datos",
+    "clearFilter": "Quitar filtro"
   },
   "error": {
     "conflict": {
@@ -1382,6 +1413,7 @@
         "BUYER_PAYMENT_SUBMITTED": "Pago Enviado",
         "BUYER_PAYMENT_APPROVED": "Pago Aprobado",
         "BUYER_PAYMENT_REJECTED": "Pago Rechazado",
+        "SELLER_PAYMENT_RECEIVED": "Pago Recibido (Vendedor)",
         "TICKET_TRANSFERRED": "Ticket Transferido",
         "TRANSACTION_COMPLETED": "Transacción Completada",
         "TRANSACTION_CANCELLED": "Transacción Cancelada",
@@ -1392,7 +1424,11 @@
         "IDENTITY_REJECTED": "Identidad Rechazada",
         "EVENT_APPROVED": "Evento Aprobado",
         "EVENT_REJECTED": "Evento Rechazado",
-        "REVIEW_RECEIVED": "Reseña Recibida"
+        "REVIEW_RECEIVED": "Reseña Recibida",
+        "OFFER_RECEIVED": "Oferta Recibida",
+        "OFFER_ACCEPTED": "Oferta Aceptada",
+        "OFFER_REJECTED": "Oferta Rechazada",
+        "OFFER_CANCELLED": "Oferta Cancelada"
       },
       "priority": {
         "LOW": "Baja",

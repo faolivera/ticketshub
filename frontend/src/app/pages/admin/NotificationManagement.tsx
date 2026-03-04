@@ -459,7 +459,7 @@ export function NotificationManagement() {
               <div className="space-y-2">
                 <Label>{t('admin.notifications.templates.form.variables')}</Label>
                 <div className="flex flex-wrap gap-1">
-                  {TEMPLATE_VARIABLES[editingTemplate.eventType].map((variable) => (
+                  {(TEMPLATE_VARIABLES[editingTemplate.eventType] ?? []).map((variable) => (
                     <Badge key={variable} variant="outline" className="text-xs font-mono">
                       {`{{${variable}}}`}
                     </Badge>

@@ -45,8 +45,38 @@ export type CreateOfferResponse = Offer;
 /** Backend returns the array directly (unwrapped from ApiResponse). */
 export type ListOffersByListingResponse = Offer[];
 
+/** Listing summary attached to each offer in GET /offers/me */
+export interface OfferListingSummary {
+  eventName: string;
+  eventDate: string;
+  sellerName: string;
+  bannerUrls?: { square?: string; rectangle?: string };
+}
+
+/** Enriched offer returned by GET /offers/me */
+export interface OfferWithListingSummary extends Offer {
+  listingSummary: OfferListingSummary;
+}
+
 /** Backend returns the array directly (unwrapped from ApiResponse). */
-export type ListMyOffersResponse = Offer[];
+export type ListMyOffersResponse = OfferWithListingSummary[];
+
+/** Context for an offer received by the seller (GET /offers/received). */
+export interface OfferReceivedContext {
+  listingId: string;
+  eventName: string;
+  eventDate: string;
+  listingPrice: { amount: number; currency: string };
+  bannerUrls?: { square?: string; rectangle?: string };
+  buyerName: string;
+}
+
+/** Enriched offer returned by GET /offers/received (seller view). */
+export interface OfferWithReceivedContext extends Offer {
+  receivedContext: OfferReceivedContext;
+}
+
+export type ListReceivedOffersResponse = OfferWithReceivedContext[];
 
 export type AcceptOfferResponse = Offer;
 export type RejectOfferResponse = Offer;

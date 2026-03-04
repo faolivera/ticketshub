@@ -7,7 +7,7 @@ import { NotificationBell } from './NotificationBell';
 
 export function Header() {
   const { t, i18n } = useTranslation();
-  const { user, isAuthenticated, logout } = useUser();
+  const { user, isAuthenticated, logout, canSell } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -123,6 +123,16 @@ export function Header() {
                     <Ticket className="w-4 h-4" />
                     <span>{t('header.myTickets')}</span>
                   </Link>
+                  {canSell?.() && (
+                    <Link
+                      to="/seller-dashboard"
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      <Ticket className="w-4 h-4" />
+                      <span>{t('header.mySales')}</span>
+                    </Link>
+                  )}
                   <Link
                     to="/user-profile"
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"

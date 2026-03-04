@@ -1,6 +1,7 @@
 {
   "header": {
     "myTickets": "My Tickets",
+    "mySales": "My Sales",
     "myProfile": "My Profile",
     "myWallet": "My Wallet",
     "sellTickets": "Sell Tickets",
@@ -148,8 +149,8 @@
   },
   "boughtTickets": {
     "title": "My Tickets",
-    "ticketsBought": "Tickets Bought",
-    "ticketsSold": "Tickets Sold",
+    "ticketsBought": "My Tickets/Offers",
+    "ticketsSold": "My Sales",
     "event": "Event",
     "type": "Type",
     "role": "Role",
@@ -179,7 +180,7 @@
     "from": "From:",
     "viewDetails": "View Details",
     "soldBy": "Sold by",
-    "ticketsListed": "Tickets Listed",
+    "ticketsListed": "Listed Tickets",
     "activeListing": "Active",
     "activeListings": "Active listings",
     "pastListings": "Past listings",
@@ -223,7 +224,36 @@
     "offerStatusRejected": "Rejected",
     "offerStatusConverted": "Converted",
     "offerStatusCancelled": "Cancelled",
-    "completePurchase": "Complete purchase"
+    "completePurchase": "Complete purchase",
+    "seat": "Seat",
+    "seats": "Seats",
+    "ticket": "Ticket",
+    "tickets": "Tickets",
+    "perTicket": "ticket",
+    "requireAction": "Require action",
+    "waiting": "Waiting",
+    "expiredCancelledOffers": "Expired / cancelled offers",
+    "filterStatusActive": "Active",
+    "filterStatusCompleted": "Completed",
+    "filterTypeBoughtTicket": "Bought Ticket",
+    "filterTypeOffer": "Offer",
+    "offerLabel": "Offer",
+    "myTicketsTabTickets": "My tickets",
+    "myTicketsTabOffers": "My offers",
+    "filterByOffer": "Showing one offer"
+  },
+  "sellerDashboard": {
+    "title": "My Sales",
+    "tabListed": "Listed Tickets",
+    "tabSold": "Sold Tickets",
+    "tabReceived": "Received Offers",
+    "offerReceived": "Offer received",
+    "fromBuyer": "From:",
+    "listingPrice": "Listing price",
+    "offeredPrice": "Offered price",
+    "noReceivedOffers": "No offers on your listings",
+    "receivedOffersWillAppear": "Offers you receive on your listings will appear here",
+    "filterByOffer": "Showing one offer"
   },
   "ditListing": {
     "description": "Description"
@@ -920,7 +950,8 @@
     "creating": "Creating...",
     "saving": "Saving...",
     "errorLoading": "Failed to load",
-    "resource": "data"
+    "resource": "data",
+    "clearFilter": "Clear filter"
   },
   "error": {
     "conflict": {
@@ -1403,6 +1434,7 @@
         "BUYER_PAYMENT_SUBMITTED": "Payment Submitted",
         "BUYER_PAYMENT_APPROVED": "Payment Approved",
         "BUYER_PAYMENT_REJECTED": "Payment Rejected",
+        "SELLER_PAYMENT_RECEIVED": "Seller Payment Received",
         "TICKET_TRANSFERRED": "Ticket Transferred",
         "TRANSACTION_COMPLETED": "Transaction Completed",
         "TRANSACTION_CANCELLED": "Transaction Cancelled",
@@ -1413,7 +1445,11 @@
         "IDENTITY_REJECTED": "Identity Rejected",
         "EVENT_APPROVED": "Event Approved",
         "EVENT_REJECTED": "Event Rejected",
-        "REVIEW_RECEIVED": "Review Received"
+        "REVIEW_RECEIVED": "Review Received",
+        "OFFER_RECEIVED": "Offer Received",
+        "OFFER_ACCEPTED": "Offer Accepted",
+        "OFFER_REJECTED": "Offer Rejected",
+        "OFFER_CANCELLED": "Offer Cancelled"
       },
       "priority": {
         "LOW": "Low",

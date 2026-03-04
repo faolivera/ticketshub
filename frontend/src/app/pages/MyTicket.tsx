@@ -93,7 +93,7 @@ export function MyTicket() {
     if (location.state?.from) {
       navigate(location.state.from);
     } else {
-      navigate(`/my-tickets?tab=${isBuyer ? 'bought' : 'sold'}`);
+      navigate(isBuyer ? '/my-tickets' : '/seller-dashboard?tab=sold');
     }
   };
 

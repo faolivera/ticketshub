@@ -253,7 +253,7 @@ export function BuyTicketPage() {
           paymentMethodId: selectedPaymentMethod?.id ?? 'payway',
           offerId: acceptedOffer.id,
         });
-        navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets?tab=bought' } });
+        navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets' } });
         return;
       }
 
@@ -276,7 +276,7 @@ export function BuyTicketPage() {
         pricingSnapshotId: pricingSnapshot!.id,
       });
 
-      navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets?tab=bought' } });
+      navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets' } });
     } catch (err: unknown) {
       console.error('Purchase failed:', err);
       
@@ -433,7 +433,7 @@ export function BuyTicketPage() {
         )}
 
         <Link
-          to={isOwnListing ? '/my-tickets?tab=listed' : `/event/${listing.eventId}`}
+          to={isOwnListing ? '/seller-dashboard?tab=listed' : `/event/${listing.eventId}`}
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -611,7 +611,7 @@ export function BuyTicketPage() {
                 ) : pendingOffer ? (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <p className="font-medium text-green-800">{t('buyTicket.offerSubmitted')}</p>
-                    <Link to="/my-tickets?tab=my-offers" className="text-sm text-green-700 underline mt-1 inline-block">
+                    <Link to="/my-tickets?tab=offers" className="text-sm text-green-700 underline mt-1 inline-block">
                       {t('buyTicket.viewMyOffers')}
                     </Link>
                   </div>

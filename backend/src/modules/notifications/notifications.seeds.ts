@@ -438,7 +438,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Nueva oferta recibida',
         bodyTemplate: 'Recibiste una oferta de {{amountFormatted}} para "{{eventName}}". Revisa y acepta o rechaza.',
-        actionUrlTemplate: '/my-tickets?tab=listed&expand={{listingId}}',
+        actionUrlTemplate: '/seller-dashboard?tab=received&offerId={{offerId}}',
       },
       {
         eventType: NotificationEventType.OFFER_RECEIVED,
@@ -446,17 +446,17 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Nueva oferta en "{{eventName}}"',
         bodyTemplate: 'Alguien ofertó {{amountFormatted}} por tus entradas de "{{eventName}}". Entra a Mis anuncios para revisar y aceptar o rechazar.',
-        actionUrlTemplate: '/my-tickets?tab=listed&expand={{listingId}}',
+        actionUrlTemplate: '/seller-dashboard?tab=received&offerId={{offerId}}',
       },
 
-      // OFFER_ACCEPTED
+      // OFFER_ACCEPTED (buyer notified when seller accepts their offer; link to My offers so they can open and complete purchase)
       {
         eventType: NotificationEventType.OFFER_ACCEPTED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Oferta aceptada',
         bodyTemplate: 'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada. Completa la compra antes de que expire.',
-        actionUrlTemplate: '/buy/{{listingId}}?offerId={{offerId}}',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
       {
         eventType: NotificationEventType.OFFER_ACCEPTED,
@@ -464,17 +464,17 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu oferta para "{{eventName}}" fue aceptada',
         bodyTemplate: 'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada por el vendedor. Completa la compra antes de que expire.',
-        actionUrlTemplate: '/buy/{{listingId}}?offerId={{offerId}}',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
 
-      // OFFER_REJECTED
+      // OFFER_REJECTED (buyer: link to My offers so they can see the offer and try again or buy at list price)
       {
         eventType: NotificationEventType.OFFER_REJECTED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Oferta rechazada',
         bodyTemplate: 'Tu oferta para "{{eventName}}" fue rechazada por el vendedor',
-        actionUrlTemplate: '/buy/{{listingId}}',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
       {
         eventType: NotificationEventType.OFFER_REJECTED,
@@ -482,17 +482,17 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu oferta para "{{eventName}}" fue rechazada',
         bodyTemplate: 'El vendedor rechazó tu oferta para "{{eventName}}". Puedes hacer otra oferta o comprar al precio publicado.',
-        actionUrlTemplate: '/buy/{{listingId}}',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
 
-      // OFFER_CANCELLED
+      // OFFER_CANCELLED (buyer: link to My offers)
       {
         eventType: NotificationEventType.OFFER_CANCELLED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Oferta cancelada',
         bodyTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible. {{reason}}',
-        actionUrlTemplate: '/buy/{{listingId}}',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
       {
         eventType: NotificationEventType.OFFER_CANCELLED,
@@ -500,7 +500,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible',
         bodyTemplate: 'Tu oferta para "{{eventName}}" fue cancelada. {{reason}}',
-        actionUrlTemplate: '/buy/{{listingId}}',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
     ];
   }

@@ -24,11 +24,11 @@ export class OfferAcceptedProcessor
     _recipientId: string,
   ): Record<string, string> {
     return {
-      offerId: context.offerId,
-      listingId: context.listingId,
-      eventName: context.eventName,
+      offerId: String(context.offerId ?? ''),
+      listingId: String(context.listingId ?? ''),
+      eventName: String(context.eventName ?? ''),
       offeredAmount: String(context.offeredAmount),
-      currency: context.currency,
+      currency: String(context.currency ?? ''),
       amountFormatted: formatMoney(context.offeredAmount, context.currency),
     };
   }

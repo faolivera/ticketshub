@@ -3,6 +3,7 @@ import type {
   CreateOfferRequest,
   ListOffersByListingResponse,
   ListMyOffersResponse,
+  ListReceivedOffersResponse,
   AcceptOfferResponse,
   RejectOfferResponse,
   Offer,
@@ -26,6 +27,11 @@ export const offersService = {
     const response = await apiClient.get<ListOffersByListingResponse>(
       `/offers/listing/${listingId}`,
     );
+    return response.data;
+  },
+
+  async listReceivedOffers(): Promise<ListReceivedOffersResponse> {
+    const response = await apiClient.get<ListReceivedOffersResponse>('/offers/received');
     return response.data;
   },
 

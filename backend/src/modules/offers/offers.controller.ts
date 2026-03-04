@@ -20,6 +20,7 @@ import type {
   CreateOfferResponse,
   ListOffersByListingResponse,
   ListMyOffersResponse,
+  ListReceivedOffersResponse,
   AcceptOfferResponse,
   RejectOfferResponse,
 } from './offers.api';
@@ -51,6 +52,16 @@ export class OffersController {
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<ListMyOffersResponse>> {
     const offers = await this.offersService.listMyOffers(ctx, user.id);
+    return { success: true, data: offers };
+  }
+
+  @Get('received')
+  @UseGuards(JwtAuthGuard)
+  async listReceivedOffers(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+  ): Promise<ApiResponse<ListReceivedOffersResponse>> {
+    const offers = await this.offersService.listReceivedOffers(ctx, user.id);
     return { success: true, data: offers };
   }
 

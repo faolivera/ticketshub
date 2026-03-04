@@ -130,6 +130,7 @@ export class NotificationsWorker {
     variables: Record<string, string>,
   ): Promise<void> {
     // Render template
+    
     const content = await this.templateService.renderContent(
       ctx,
       event.type,

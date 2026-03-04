@@ -14,8 +14,39 @@ export type CreateOfferResponse = Offer;
 /** Response for listing offers for a listing (seller view). */
 export type ListOffersByListingResponse = Offer[];
 
+/** Listing summary attached to each offer in "my offers" (buyer view). */
+export interface OfferListingSummary {
+  eventName: string;
+  eventDate: string; // ISO date string
+  sellerName: string;
+  bannerUrls?: { square?: string; rectangle?: string };
+}
+
+/** Enriched offer returned by GET /offers/me (buyer view). */
+export interface OfferWithListingSummary extends Offer {
+  listingSummary: OfferListingSummary;
+}
+
 /** Response for listing current user's offers (buyer view). */
-export type ListMyOffersResponse = Offer[];
+export type ListMyOffersResponse = OfferWithListingSummary[];
+
+/** Context for an offer received by the seller (offers on my listings). */
+export interface OfferReceivedContext {
+  listingId: string;
+  eventName: string;
+  eventDate: string;
+  listingPrice: Money;
+  bannerUrls?: { square?: string; rectangle?: string };
+  buyerName: string;
+}
+
+/** Enriched offer returned by GET /offers/received (seller view). */
+export interface OfferWithReceivedContext extends Offer {
+  receivedContext: OfferReceivedContext;
+}
+
+/** Response for listing offers received by the current user (seller view). */
+export type ListReceivedOffersResponse = OfferWithReceivedContext[];
 
 /** Response for accept/reject. */
 export type AcceptOfferResponse = Offer;

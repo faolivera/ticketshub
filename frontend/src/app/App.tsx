@@ -1,5 +1,5 @@
 import '@/i18n/config';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider } from '@/app/contexts/UserContext';
 import { Header } from '@/app/components/Header';
 import { Footer } from '@/app/components/Footer';
@@ -11,7 +11,7 @@ import { EventTickets } from '@/app/pages/EventTickets';
 import { UserProfile } from '@/app/pages/UserProfile';
 import { SellerProfile } from '@/app/pages/SellerProfile';
 import { BuyTicketPage } from '@/app/pages/BuyTicketPage';
-import { BoughtTicketManager } from '@/app/pages/BoughtTicketManager';
+import { BoughtTicketManager, MyTicketsPage, SellerDashboardPage } from '@/app/pages/BoughtTicketManager';
 import { HowItWorks } from '@/app/pages/HowItWorks';
 import { Wallet } from '@/app/pages/Wallet';
 import { SellTicket } from '@/app/pages/SellTicket';
@@ -48,8 +48,9 @@ export default function App() {
               <Route path="/how-it-works" element={<HowItWorks />} />
 
               {/* Protected routes — require authentication */}
-              <Route path="/my-tickets" element={<ProtectedRoute><BoughtTicketManager /></ProtectedRoute>} />
-              <Route path="/bought-tickets" element={<ProtectedRoute><BoughtTicketManager /></ProtectedRoute>} />
+              <Route path="/my-tickets" element={<ProtectedRoute><MyTicketsPage /></ProtectedRoute>} />
+              <Route path="/bought-tickets" element={<Navigate to="/my-tickets" replace />} />
+              <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboardPage /></ProtectedRoute>} />
               <Route path="/transaction/:transactionId" element={<ProtectedRoute><MyTicket /></ProtectedRoute>} />
               <Route path="/edit-listing/:listingId" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
               <Route path="/sell-ticket" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />

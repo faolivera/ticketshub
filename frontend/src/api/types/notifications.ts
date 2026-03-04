@@ -13,7 +13,11 @@ export type NotificationEventType =
   | 'IDENTITY_REJECTED'
   | 'EVENT_APPROVED'
   | 'EVENT_REJECTED'
-  | 'REVIEW_RECEIVED';
+  | 'REVIEW_RECEIVED'
+  | 'OFFER_RECEIVED'
+  | 'OFFER_ACCEPTED'
+  | 'OFFER_REJECTED'
+  | 'OFFER_CANCELLED';
 
 export type NotificationChannel = 'IN_APP' | 'EMAIL';
 
@@ -80,6 +84,10 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
   EVENT_APPROVED: ['eventName'],
   EVENT_REJECTED: ['eventName', 'rejectionReason'],
   REVIEW_RECEIVED: ['reviewerName', 'rating', 'comment', 'transactionId'],
+  OFFER_RECEIVED: ['offerId', 'listingId', 'eventName', 'offeredAmount', 'currency', 'amountFormatted'],
+  OFFER_ACCEPTED: ['offerId', 'listingId', 'eventName', 'offeredAmount', 'currency', 'amountFormatted'],
+  OFFER_REJECTED: ['offerId', 'listingId', 'eventName'],
+  OFFER_CANCELLED: ['offerId', 'listingId', 'eventName', 'reason'],
 };
 
 export const ALL_EVENT_TYPES: NotificationEventType[] = [
@@ -98,4 +106,8 @@ export const ALL_EVENT_TYPES: NotificationEventType[] = [
   'EVENT_APPROVED',
   'EVENT_REJECTED',
   'REVIEW_RECEIVED',
+  'OFFER_RECEIVED',
+  'OFFER_ACCEPTED',
+  'OFFER_REJECTED',
+  'OFFER_CANCELLED',
 ];

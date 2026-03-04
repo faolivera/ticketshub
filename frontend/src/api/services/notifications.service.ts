@@ -1,7 +1,7 @@
 import apiClient from '../client';
 
 /**
- * Notification event types
+ * Notification event types (must match backend)
  */
 export type NotificationEventType =
   | 'PAYMENT_REQUIRED'
@@ -18,7 +18,11 @@ export type NotificationEventType =
   | 'IDENTITY_REJECTED'
   | 'EVENT_APPROVED'
   | 'EVENT_REJECTED'
-  | 'REVIEW_RECEIVED';
+  | 'REVIEW_RECEIVED'
+  | 'OFFER_RECEIVED'
+  | 'OFFER_ACCEPTED'
+  | 'OFFER_REJECTED'
+  | 'OFFER_CANCELLED';
 
 /**
  * Individual notification item

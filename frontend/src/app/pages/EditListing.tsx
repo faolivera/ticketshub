@@ -77,7 +77,7 @@ export function EditListing() {
           : null,
       });
       
-      navigate('/my-tickets');
+      navigate('/seller-dashboard?tab=listed');
     } catch (err) {
       console.error('Failed to update listing:', err);
       setError(err instanceof Error ? err.message : t('editListing.saveFailed'));
@@ -98,7 +98,7 @@ export function EditListing() {
     
     try {
       await ticketsService.cancelListing(listingId);
-      navigate('/my-tickets');
+      navigate('/seller-dashboard?tab=listed');
     } catch (err) {
       console.error('Failed to cancel listing:', err);
       setError(err instanceof Error ? err.message : t('editListing.cancelFailed'));
@@ -145,7 +145,7 @@ export function EditListing() {
         {/* Header */}
         <div className="mb-6">
           <Link
-            to="/my-tickets"
+            to="/seller-dashboard?tab=listed"
             className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-5 h-5" />

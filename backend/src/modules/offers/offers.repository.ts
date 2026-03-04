@@ -91,6 +91,16 @@ export class OffersRepository
     return rows.map((r) => this.mapToDomain(r));
   }
 
+  async findByListingIds(ctx: Ctx, listingIds: string[]): Promise<Offer[]> {
+    if (listingIds.length === 0) return [];
+    const client = this.getClient(ctx);
+    const rows = await client.offer.findMany({
+      where: { listingId: { in: listingIds } },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map((r) => this.mapToDomain(r));
+  }
+
   async findByUserId(ctx: Ctx, userId: string): Promise<Offer[]> {
     const client = this.getClient(ctx);
     const rows = await client.offer.findMany({
