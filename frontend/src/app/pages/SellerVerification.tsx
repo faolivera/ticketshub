@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Shield, User, CheckCircle, Upload, X, Clock, AlertCircle } from 'lucide-react';
+import { Shield, User, CheckCircle, Upload, X, Clock, AlertCircle } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
+import { BackButton } from '@/app/components/BackButton';
 import { identityVerificationService } from '@/api/services';
 import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
 import { formatDateShort } from '@/lib/format-date';
@@ -171,13 +172,7 @@ export function SellerVerification() {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-2xl mx-auto px-4">
-          <Link
-            to="/user-profile"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('verification.backToProfile')}
-          </Link>
+          <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6" />
 
           <div className="bg-white rounded-lg shadow-md p-8">
             <div className="flex items-center gap-3 mb-6">
@@ -264,13 +259,7 @@ export function SellerVerification() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-2xl mx-auto px-4">
-        <Link
-          to="/sell-ticket"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t('verification.backToSellTicket')}
-        </Link>
+        <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6" />
 
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="flex items-center gap-3 mb-6">

@@ -1,5 +1,11 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
+import {
+  PRIVATE_STORAGE_PROVIDER,
+  type FileStorageProvider,
+} from '../../common/storage/file-storage-provider.interface';
+import { PrismaService } from '../../common/prisma/prisma.service';
 import { PaymentMethodsService } from '../payments/payment-methods.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventsService } from '../events/events.service';
@@ -35,8 +41,12 @@ import type {
   AdminTransactionPaymentConfirmationRef,
   Money,
   AdminUserSearchResponse,
+  AdminSellerPayoutsResponse,
+  AdminSellerPayoutItem,
+  AdminCompletePayoutResponse,
 } from './admin.api';
 import { EventDateStatus, EventSectionStatus } from '../events/events.domain';
+import { IdentityVerificationStatus } from '../users/users.domain';
 import type { Transaction } from '../transactions/transactions.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 
@@ -59,9 +69,22 @@ export class AdminService {
     private readonly ticketsService: TicketsService,
     @Inject(UsersService)
     private readonly usersService: UsersService,
+    @Inject(PRIVATE_STORAGE_PROVIDER)
+    private readonly privateStorage: FileStorageProvider,
+    private readonly prisma: PrismaService,
   ) {}
 
   private static readonly USER_SEARCH_LIMIT = 20;
+
+  /** Allowed MIME types for payout receipt uploads (images and PDF) */
+  private static readonly PAYOUT_RECEIPT_MIME_TYPES = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'application/pdf',
+  ] as const;
+
+  private static readonly PAYOUT_RECEIPT_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
   /**
    * Search users by email (contains, case-insensitive) for admin autocomplete.
@@ -512,10 +535,15 @@ export class AdminService {
       transaction.listingId,
     );
 
-    const confirmations =
-      await this.paymentConfirmationsService.findByTransactionIds(ctx, [
+    const [confirmations, payoutReceipts] = await Promise.all([
+      this.paymentConfirmationsService.findByTransactionIds(ctx, [
         transaction.id,
-      ]);
+      ]),
+      this.prisma.payoutReceiptFile.findMany({
+        where: { transactionId: transaction.id },
+        orderBy: { uploadedAt: 'asc' },
+      }),
+    ]);
     const paymentConfirmations = confirmations.map((confirmation) => ({
       id: confirmation.id,
       transactionId: confirmation.transactionId,
@@ -526,6 +554,15 @@ export class AdminService {
       adminNotes: confirmation.adminNotes,
       uploadedBy: confirmation.uploadedBy,
       contentType: confirmation.contentType,
+    }));
+    const payoutReceiptFiles = payoutReceipts.map((receipt) => ({
+      id: receipt.id,
+      transactionId: receipt.transactionId,
+      originalFilename: receipt.originalFilename,
+      contentType: receipt.contentType,
+      sizeBytes: receipt.sizeBytes,
+      uploadedBy: receipt.uploadedBy,
+      uploadedAt: receipt.uploadedAt,
     }));
 
     const sellerRef: AdminTransactionUserRef = {
@@ -624,7 +661,182 @@ export class AdminService {
       paymentApprovedBy: transaction.paymentApprovedBy,
       disputeId: transaction.disputeId,
       paymentConfirmations,
+      payoutReceiptFiles,
       bankTransferDestination,
+    };
+  }
+
+  /**
+   * Retrieve a payout receipt file's raw content for admin preview/download.
+   * Returns null if the file record or storage object does not exist.
+   */
+  async getPayoutReceiptFileContent(
+    ctx: Ctx,
+    transactionId: string,
+    fileId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
+    const record = await this.prisma.payoutReceiptFile.findFirst({
+      where: { id: fileId, transactionId },
+    });
+    if (!record) {
+      return null;
+    }
+    const buffer = await this.privateStorage.retrieve(record.storageKey);
+    if (!buffer) {
+      this.logger.warn(
+        ctx,
+        `Payout receipt file not found in storage: ${record.storageKey}`,
+      );
+      return null;
+    }
+    return {
+      buffer,
+      contentType: record.contentType,
+      filename: record.originalFilename,
+    };
+  }
+
+  /**
+   * List all transactions in TransferringFund status for admin "pago a vendedores" page.
+   */
+  async getSellerPayouts(ctx: Ctx): Promise<AdminSellerPayoutsResponse> {
+    const ids = await this.transactionsService.getIdsByStatuses(ctx, [
+      TransactionStatus.TransferringFund,
+    ]);
+    if (ids.length === 0) {
+      return { payouts: [] };
+    }
+
+    const transactions =
+      await this.transactionsService.findByIds(ctx, ids);
+    const sellerIds = [...new Set(transactions.map((t) => t.sellerId))];
+    const listingIds = [...new Set(transactions.map((t) => t.listingId))];
+
+    const [sellers, listings] = await Promise.all([
+      this.usersService.findByIds(ctx, sellerIds),
+      Promise.all(
+        listingIds.map((id) => this.ticketsService.getListingById(ctx, id)),
+      ),
+    ]);
+    const listingMap = new Map(
+      listingIds.map((id, i) => [id, listings[i]]),
+    );
+    const sellerMap = new Map(sellers.map((s) => [s.id, s]));
+
+    const payouts: AdminSellerPayoutItem[] = [];
+
+    for (const transaction of transactions) {
+      const listing = listingMap.get(transaction.listingId);
+      const seller = sellerMap.get(transaction.sellerId);
+      if (!listing) continue;
+
+      // Use only seller's bank account (payout destination), not payment method config (buyer's transfer target).
+      const bankTransferDestination: AdminSellerPayoutItem['bankTransferDestination'] =
+        seller?.bankAccount
+          ? {
+              holderName: seller.bankAccount.holderName,
+              iban: seller.bankAccount.iban,
+              bic: seller.bankAccount.bic,
+            }
+          : undefined;
+
+      // Build ticket line for "Entradas" column: section, quantity, unit price, optional seat labels.
+      const unitIdsSet = new Set(transaction.ticketUnitIds);
+      const unitsForTxn = listing.ticketUnits.filter((u) => unitIdsSet.has(u.id));
+      const seatLabels = unitsForTxn
+        .filter((u) => u.seat)
+        .map((u) => `${u.seat!.row}${u.seat!.seatNumber}`)
+        .sort();
+      const unitPriceCents =
+        transaction.quantity > 0
+          ? Math.round(transaction.ticketPrice.amount / transaction.quantity)
+          : 0;
+      const ticketLine: AdminSellerPayoutItem['ticketLine'] = {
+        sectionName: listing.sectionName,
+        quantity: transaction.quantity,
+        unitPrice: {
+          amount: unitPriceCents,
+          currency: transaction.ticketPrice.currency,
+        },
+        seatLabels: seatLabels.length > 0 ? seatLabels : undefined,
+      };
+
+      const sellerVerified =
+        seller?.identityVerification?.status === IdentityVerificationStatus.Approved;
+
+      payouts.push({
+        transactionId: transaction.id,
+        eventName: listing.eventName,
+        eventDate: listing.eventDate,
+        sellerId: transaction.sellerId,
+        sellerName: seller?.publicName ?? 'Unknown',
+        sellerEmail: seller?.email ?? '',
+        sellerVerified,
+        sellerReceives: transaction.sellerReceives,
+        bankTransferDestination,
+        ticketLine,
+      });
+    }
+
+    return { payouts };
+  }
+
+  /**
+   * Mark transaction as payout completed (release funds to seller, set Completed, notify seller).
+   * Optionally upload one or more payment receipt files (images or PDF) to private S3 before completing.
+   */
+  async completePayout(
+    ctx: Ctx,
+    transactionId: string,
+    adminUserId: string,
+    files?: Array<{ buffer: Buffer; originalname: string; mimetype: string; size: number }>,
+  ): Promise<AdminCompletePayoutResponse> {
+    if (files?.length) {
+      for (const file of files) {
+        if (
+          !AdminService.PAYOUT_RECEIPT_MIME_TYPES.includes(
+            file.mimetype as (typeof AdminService.PAYOUT_RECEIPT_MIME_TYPES)[number],
+          )
+        ) {
+          throw new BadRequestException(
+            `Invalid file type. Allowed: ${AdminService.PAYOUT_RECEIPT_MIME_TYPES.join(', ')}`,
+          );
+        }
+        if (file.size > AdminService.PAYOUT_RECEIPT_MAX_SIZE_BYTES) {
+          throw new BadRequestException(
+            `File too large. Maximum size: ${AdminService.PAYOUT_RECEIPT_MAX_SIZE_BYTES / 1024 / 1024}MB`,
+          );
+        }
+      }
+      const ext = (name: string) => name.split('.').pop() || 'bin';
+      for (const file of files) {
+        const key = `payout-receipts/${transactionId}_${Date.now()}_${randomBytes(6).toString('hex')}.${ext(file.originalname)}`;
+        await this.privateStorage.store(key, file.buffer, {
+          contentType: file.mimetype,
+          contentLength: file.size,
+          originalFilename: file.originalname,
+        });
+        await this.prisma.payoutReceiptFile.create({
+          data: {
+            transactionId,
+            storageKey: key,
+            originalFilename: file.originalname,
+            contentType: file.mimetype,
+            sizeBytes: file.size,
+            uploadedBy: adminUserId,
+          },
+        });
+      }
+      this.logger.log(
+        ctx,
+        `Uploaded ${files.length} payout receipt(s) for transaction ${transactionId}`,
+      );
+    }
+    const transaction =
+      await this.transactionsService.completePayout(ctx, transactionId);
+    return {
+      id: transaction.id,
+      status: transaction.status,
     };
   }
 

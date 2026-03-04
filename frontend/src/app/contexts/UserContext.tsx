@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { authService } from '../../api/services/auth.service';
 import { usersService } from '../../api/services/users.service';
 import { getToken, removeToken } from '../../api/client';
+import { SELLER_UNVERIFIED_MODAL_DISMISSED_KEY } from '../components/SellerUnverifiedModal';
 import type {
   AuthenticatedUserPublicInfo,
   LoginRequest,
@@ -142,6 +143,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     authService.logout();
     setUser(null);
     setError(null);
+    try {
+      sessionStorage.removeItem(SELLER_UNVERIFIED_MODAL_DISMISSED_KEY);
+    } catch {
+      // ignore if sessionStorage is unavailable
+    }
   };
 
   /**

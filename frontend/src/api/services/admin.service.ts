@@ -27,6 +27,8 @@ import type {
   AdminPromotionListItem,
   AdminCreatePromotionRequest,
   AdminUserSearchItem,
+  AdminSellerPayoutsResponse,
+  AdminCompletePayoutResponse,
 } from '../types/admin';
 
 /**
@@ -180,6 +182,57 @@ export const adminService = {
   async getTransactionsPendingSummary(): Promise<AdminTransactionsPendingSummaryResponse> {
     const response = await apiClient.get<AdminTransactionsPendingSummaryResponse>(
       '/admin/transactions/pending-summary'
+    );
+    return response.data;
+  },
+
+  /**
+   * List transactions in TransferringFund status for seller payouts page
+   */
+  async getSellerPayouts(): Promise<AdminSellerPayoutsResponse> {
+    const response = await apiClient.get<AdminSellerPayoutsResponse>(
+      '/admin/seller-payouts'
+    );
+    return response.data;
+  },
+
+  /**
+   * Fetch a payout receipt file as a blob URL for admin preview.
+   * The caller is responsible for revoking the URL when no longer needed.
+   */
+  async getPayoutReceiptFileBlobUrl(
+    transactionId: string,
+    fileId: string,
+  ): Promise<string> {
+    const response = await apiClient.get<Blob>(
+      `/admin/transactions/${transactionId}/payout-receipts/${fileId}/file`,
+      { responseType: 'blob' },
+    );
+    return URL.createObjectURL(response.data);
+  },
+
+  /**
+   * Mark transaction payout as completed (release funds, set Completed, notify seller).
+   * Optionally attach payment receipt files (images or PDF); upload is optional.
+   */
+  async completePayout(
+    transactionId: string,
+    receiptFiles?: File[],
+  ): Promise<AdminCompletePayoutResponse> {
+    if (receiptFiles?.length) {
+      const formData = new FormData();
+      receiptFiles.forEach((file) => formData.append('receipts', file));
+      const response = await apiClient.post<AdminCompletePayoutResponse>(
+        `/admin/transactions/${transactionId}/complete-payout`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
+      );
+      return response.data;
+    }
+    const response = await apiClient.post<AdminCompletePayoutResponse>(
+      `/admin/transactions/${transactionId}/complete-payout`,
     );
     return response.data;
   },

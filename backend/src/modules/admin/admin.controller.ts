@@ -12,9 +12,13 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   BadRequestException,
+  Res,
+  NotFoundException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import type { Multer } from 'multer';
 import { AdminService } from './admin.service';
@@ -45,6 +49,8 @@ import type {
   AdminTransactionsPendingSummaryResponse,
   AdminTransactionDetailResponse,
   AdminUserSearchResponse,
+  AdminSellerPayoutsResponse,
+  AdminCompletePayoutResponse,
 } from './admin.api';
 import {
   AdminPendingEventsResponseSchema,
@@ -59,6 +65,8 @@ import {
   AdminTransactionsPendingSummaryResponseSchema,
   AdminTransactionDetailResponseSchema,
   AdminUserSearchResponseSchema,
+  AdminSellerPayoutsResponseSchema,
+  AdminCompletePayoutResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { SeatingType } from '../tickets/tickets.domain';
@@ -152,6 +160,55 @@ export class AdminController {
   }
 
   /**
+   * List transactions in TransferringFund status for "pago a vendedores" (seller payouts).
+   */
+  @Get('seller-payouts')
+  @ValidateResponse(AdminSellerPayoutsResponseSchema)
+  async getSellerPayouts(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<AdminSellerPayoutsResponse>> {
+    const data = await this.adminService.getSellerPayouts(ctx);
+    return { success: true, data };
+  }
+
+  /**
+   * Mark transaction payout as completed (release funds to seller, set Completed, notify seller).
+   * Optional: upload payment receipt files (images or PDF) via multipart field "receipts".
+   */
+  @Post('transactions/:id/complete-payout')
+  @UseInterceptors(
+    FilesInterceptor('receipts', 10, {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      fileFilter: (_req, file, cb) => {
+        const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+        if (allowed.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Invalid file type. Allowed: images (PNG, JPEG) or PDF'), false);
+        }
+      },
+    }),
+  )
+  @ValidateResponse(AdminCompletePayoutResponseSchema)
+  async completePayout(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') id: string,
+    @UploadedFiles() receipts?: Multer.File[],
+  ): Promise<ApiResponse<AdminCompletePayoutResponse>> {
+    const files =
+      receipts?.filter((f) => f?.buffer)?.map((f) => ({
+        buffer: f.buffer,
+        originalname: f.originalname,
+        mimetype: f.mimetype,
+        size: f.size,
+      })) ?? [];
+    const data = await this.adminService.completePayout(ctx, id, user.id, files.length ? files : undefined);
+    return { success: true, data };
+  }
+
+  /**
    * Get transaction detail by ID.
    */
   @Get('transactions/:id')
@@ -162,6 +219,34 @@ export class AdminController {
   ): Promise<ApiResponse<AdminTransactionDetailResponse>> {
     const data = await this.adminService.getTransactionById(ctx, id);
     return { success: true, data };
+  }
+
+  /**
+   * Stream a payout receipt file for admin preview/download.
+   * Route must be registered before /:id to avoid shadowing — not an issue here since
+   * we use a nested path under /:id/payout-receipts.
+   */
+  @Get('transactions/:id/payout-receipts/:fileId/file')
+  async getPayoutReceiptFile(
+    @Context() ctx: Ctx,
+    @Param('id') transactionId: string,
+    @Param('fileId') fileId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.adminService.getPayoutReceiptFileContent(
+      ctx,
+      transactionId,
+      fileId,
+    );
+    if (!result) {
+      throw new NotFoundException('Payout receipt file not found');
+    }
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${result.filename}"`,
+    );
+    res.send(result.buffer);
   }
 
   /**

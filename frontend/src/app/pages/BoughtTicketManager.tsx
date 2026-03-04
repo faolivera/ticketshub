@@ -11,6 +11,7 @@ import { EventBanner, useEventBannerVariant } from '../components/EventBanner';
 import type { TransactionWithDetails, TicketListingWithEvent, Offer, OfferWithListingSummary, OfferWithReceivedContext } from '../../api/types';
 import { TicketUnitStatus, RequiredActor, TransactionStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
+import { SellerUnverifiedModalTrigger } from '../components/SellerUnverifiedModalTrigger';
 import { BRAND_NAME } from '../../constants/brand';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate } from '@/lib/format-date';
@@ -1282,6 +1283,7 @@ export function SellerDashboardPage() {
           </>
         )}
       </div>
+      <SellerUnverifiedModalTrigger showWhen={activeTab === 'sold' && sold.length > 0} />
     </div>
   );
 }

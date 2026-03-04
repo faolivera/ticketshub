@@ -334,6 +334,43 @@ export const AdminTransactionsPendingSummaryResponseSchema = z.object({
   pendingTransactionIds: z.array(z.string()),
 });
 
+const AdminSellerPayoutTicketLineSchema = z.object({
+  sectionName: z.string(),
+  quantity: z.number(),
+  unitPrice: MoneySchema,
+  seatLabels: z.array(z.string()).optional(),
+});
+
+const AdminSellerPayoutItemSchema = z.object({
+  transactionId: z.string(),
+  eventName: z.string(),
+  eventDate: z.coerce.date(),
+  sellerId: z.string(),
+  sellerName: z.string(),
+  sellerEmail: z.string(),
+  sellerVerified: z.boolean(),
+  sellerReceives: MoneySchema,
+  bankTransferDestination: z
+    .object({
+      holderName: z.string(),
+      iban: z.string(),
+      bic: z.string().optional(),
+      bankName: z.string().optional(),
+      cuitCuil: z.string().optional(),
+    })
+    .optional(),
+  ticketLine: AdminSellerPayoutTicketLineSchema,
+});
+
+export const AdminSellerPayoutsResponseSchema = z.object({
+  payouts: z.array(AdminSellerPayoutItemSchema),
+});
+
+export const AdminCompletePayoutResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+});
+
 const AdminTransactionDetailPaymentConfirmationSchema =
   AdminTransactionPaymentConfirmationRefSchema.merge(
     z.object({
@@ -349,6 +386,16 @@ const BankTransferDestinationSchema = z.object({
   bic: z.string().optional(),
   bankName: z.string().optional(),
   cuitCuil: z.string().optional(),
+});
+
+const AdminTransactionPayoutReceiptFileSchema = z.object({
+  id: z.string(),
+  transactionId: z.string(),
+  originalFilename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.number(),
+  uploadedBy: z.string(),
+  uploadedAt: z.coerce.date(),
 });
 
 export const AdminTransactionDetailResponseSchema = z.object({
@@ -391,6 +438,7 @@ export const AdminTransactionDetailResponseSchema = z.object({
   paymentApprovedBy: z.string().optional(),
   disputeId: z.string().optional(),
   paymentConfirmations: z.array(AdminTransactionDetailPaymentConfirmationSchema),
+  payoutReceiptFiles: z.array(AdminTransactionPayoutReceiptFileSchema),
   bankTransferDestination: BankTransferDestinationSchema.optional(),
 });
 

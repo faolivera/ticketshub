@@ -30,11 +30,13 @@ import {
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import {
+  Braces,
   Check,
   CheckCircle,
   ChevronDown,
   ChevronRight,
   Clock,
+  Copy,
   CreditCard,
   Eye,
   FileText,
@@ -50,6 +52,7 @@ import type {
   AdminTransactionDetailResponse,
   AdminTransactionListItem,
   AdminTransactionPaymentConfirmation,
+  AdminTransactionPayoutReceiptFile,
   AdminTransactionsPendingSummaryResponse,
 } from '../../../api/types/admin';
 
@@ -93,6 +96,15 @@ export default function TransactionManagement() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewTransactionId, setPreviewTransactionId] = useState<string | null>(null);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+
+  const [payoutPreviewDialogOpen, setPayoutPreviewDialogOpen] = useState(false);
+  const [payoutPreviewLoading, setPayoutPreviewLoading] = useState(false);
+  const [payoutPreviewFile, setPayoutPreviewFile] = useState<AdminTransactionPayoutReceiptFile | null>(null);
+  const [payoutPreviewBlobUrl, setPayoutPreviewBlobUrl] = useState<string | null>(null);
+
+  const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
+  const [jsonDialogTransactionId, setJsonDialogTransactionId] = useState<string | null>(null);
+  const [jsonCopied, setJsonCopied] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -270,18 +282,51 @@ export default function TransactionManagement() {
     setPreviewBlobUrl(null);
   };
 
-  const getStatusBadge = (status: string): ReactNode => {
+  const openPayoutReceiptPreview = async (
+    transactionId: string,
+    file: AdminTransactionPayoutReceiptFile,
+  ): Promise<void> => {
+    try {
+      setPayoutPreviewDialogOpen(true);
+      setPayoutPreviewLoading(true);
+      setPayoutPreviewFile(file);
+      setPayoutPreviewBlobUrl(null);
+      const blobUrl = await adminService.getPayoutReceiptFileBlobUrl(transactionId, file.id);
+      setPayoutPreviewBlobUrl(blobUrl);
+    } catch {
+      setPayoutPreviewBlobUrl(null);
+    } finally {
+      setPayoutPreviewLoading(false);
+    }
+  };
+
+  const closePayoutReceiptPreview = (): void => {
+    setPayoutPreviewDialogOpen(false);
+    setPayoutPreviewFile(null);
+    if (payoutPreviewBlobUrl) {
+      URL.revokeObjectURL(payoutPreviewBlobUrl);
+    }
+    setPayoutPreviewBlobUrl(null);
+  };
+
+  const getStatusLabel = (status: string): string => {
     const statusLabels: Record<string, string> = {
       PendingPayment: t('admin.transactions.statusPendingPayment'),
       PaymentPendingVerification: t('admin.transactions.statusPaymentPendingVerification'),
       PaymentReceived: t('admin.transactions.statusPaymentReceived'),
       TicketTransferred: t('admin.transactions.statusTicketTransferred'),
+      DepositHold: t('admin.transactions.statusDepositHold'),
+      TransferringFund: t('admin.transactions.statusTransferringFund'),
       Completed: t('admin.transactions.statusCompleted'),
       Cancelled: t('admin.transactions.statusCancelled'),
       Refunded: t('admin.transactions.statusRefunded'),
       Disputed: t('admin.transactions.statusDisputed'),
     };
-    const label = statusLabels[status] ?? status;
+    return statusLabels[status] ?? status;
+  };
+
+  const getStatusBadge = (status: string): ReactNode => {
+    const label = getStatusLabel(status);
     if (status.includes('Pending') || status === 'PendingPayment') {
       return (
         <Badge variant="outline" className="text-yellow-600 border-yellow-600">
@@ -296,9 +341,23 @@ export default function TransactionManagement() {
         </Badge>
       );
     }
+    if (status === 'DepositHold' || status === 'TransferringFund') {
+      return (
+        <Badge variant="outline" className="text-blue-600 border-blue-600">
+          {label}
+        </Badge>
+      );
+    }
     if (status === 'Cancelled' || status === 'Refunded' || status === 'Rejected') {
       return (
         <Badge variant="outline" className="text-red-600 border-red-600">
+          {label}
+        </Badge>
+      );
+    }
+    if (status === 'Disputed') {
+      return (
+        <Badge variant="outline" className="text-orange-600 border-orange-600">
           {label}
         </Badge>
       );
@@ -495,7 +554,25 @@ export default function TransactionManagement() {
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold mb-3">{t('admin.transactions.transactionStatus')}</h4>
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <h4 className="text-sm font-semibold">{t('admin.transactions.transactionStatus')}</h4>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setJsonDialogTransactionId(transactionId);
+                setJsonDialogOpen(true);
+                setJsonCopied(false);
+              }}
+            >
+              <Braces className="w-3 h-3 mr-1" />
+              {t('admin.transactions.viewJson')}
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mb-2">
+            {t('admin.transactions.status')}: <span className="font-medium text-foreground">{getStatusLabel(detail.status)}</span>
+            <span className="ml-2 font-mono text-xs">({detail.status})</span>
+          </p>
           <div className="relative">
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted" aria-hidden="true" />
             <div
@@ -542,28 +619,60 @@ export default function TransactionManagement() {
           </div>
         </div>
 
-        {detail.paymentConfirmations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t('admin.transactions.noPaymentConfirmations')}
-          </p>
-        ) : (
+        <div className="space-y-3">
           <div>
             <h4 className="text-sm font-semibold mb-2">
-              {t('admin.transactions.paymentConfirmations')}
+              {t('admin.transactions.buyerPaymentConfirmations')}
             </h4>
-            <div className="space-y-2">
-              {detail.paymentConfirmations.map((confirmation) => (
-                <div
-                  key={confirmation.id}
-                  className="flex items-center justify-between rounded-lg border p-3 bg-background"
-                >
-                  <div className="flex items-center gap-3">
-                    {getFileIcon(confirmation.contentType)}
-                    <span className="text-sm">{confirmation.originalFilename}</span>
-                    {getConfirmationStatusBadge(confirmation.status)}
-                  </div>
-                  {confirmation.status === 'Pending' && (
-                    <div className="flex items-center gap-2">
+            {detail.paymentConfirmations.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('admin.transactions.noPaymentConfirmations')}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {detail.paymentConfirmations.map((confirmation) => (
+                  <div
+                    key={confirmation.id}
+                    className="flex items-center justify-between rounded-lg border p-3 bg-background"
+                  >
+                    <div className="flex items-center gap-3">
+                      {getFileIcon(confirmation.contentType)}
+                      <span className="text-sm">{confirmation.originalFilename}</span>
+                      {getConfirmationStatusBadge(confirmation.status)}
+                    </div>
+                    {confirmation.status === 'Pending' && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void openPreview(transactionId)}
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          {t('admin.transactions.view')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600"
+                          disabled={processingConfirmationId === confirmation.id}
+                          onClick={() => void handleApprove(transactionId, confirmation.id)}
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          {t('admin.transactions.approve')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600"
+                          disabled={processingConfirmationId === confirmation.id}
+                          onClick={() => openRejectDialog(transactionId, confirmation)}
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          {t('admin.transactions.reject')}
+                        </Button>
+                      </div>
+                    )}
+                    {confirmation.status !== 'Pending' && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -572,33 +681,46 @@ export default function TransactionManagement() {
                         <Eye className="w-3 h-3 mr-1" />
                         {t('admin.transactions.view')}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600"
-                        disabled={processingConfirmationId === confirmation.id}
-                        onClick={() => void handleApprove(transactionId, confirmation.id)}
-                      >
-                        <Check className="w-3 h-3 mr-1" />
-                        {t('admin.transactions.approve')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600"
-                        disabled={processingConfirmationId === confirmation.id}
-                        onClick={() => openRejectDialog(transactionId, confirmation)}
-                      >
-                        <X className="w-3 h-3 mr-1" />
-                        {t('admin.transactions.reject')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          <div>
+            <h4 className="text-sm font-semibold mb-2">
+              {t('admin.transactions.sellerPaymentReceipts')}
+            </h4>
+            {detail.payoutReceiptFiles.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('admin.transactions.noPayoutReceipts')}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {detail.payoutReceiptFiles.map((receipt) => (
+                  <div
+                    key={receipt.id}
+                    className="flex items-center justify-between rounded-lg border p-3 bg-background"
+                  >
+                    <div className="flex items-center gap-3">
+                      {getFileIcon(receipt.contentType)}
+                      <span className="text-sm">{receipt.originalFilename}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void openPayoutReceiptPreview(transactionId, receipt)}
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      {t('admin.transactions.view')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   };
@@ -939,6 +1061,83 @@ export default function TransactionManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closePreview}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={payoutPreviewDialogOpen} onOpenChange={(open) => !open && closePayoutReceiptPreview()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('admin.transactions.viewPayoutReceipt')}</DialogTitle>
+            <DialogDescription>{payoutPreviewFile?.originalFilename}</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto min-h-[400px]">
+            {payoutPreviewLoading ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : payoutPreviewBlobUrl ? (
+              <iframe
+                src={payoutPreviewBlobUrl}
+                className="w-full h-[500px] border rounded"
+                title={t('admin.transactions.viewPayoutReceipt')}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[400px] text-muted-foreground">
+                {t('common.errorLoading')}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closePayoutReceiptPreview}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={jsonDialogOpen} onOpenChange={setJsonDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('admin.transactions.transactionDataJson')}</DialogTitle>
+            <DialogDescription>
+              {jsonDialogTransactionId ? (
+                <span className="font-mono text-xs">{jsonDialogTransactionId}</span>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto min-h-[300px] rounded-lg border bg-muted/30 p-4">
+            {jsonDialogTransactionId && detailCache[jsonDialogTransactionId] ? (
+              <pre className="text-xs whitespace-pre-wrap break-all font-mono">
+                {JSON.stringify(detailCache[jsonDialogTransactionId], null, 2)}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('common.errorLoading')}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!jsonDialogTransactionId || !detailCache[jsonDialogTransactionId]) return;
+                try {
+                  await navigator.clipboard.writeText(
+                    JSON.stringify(detailCache[jsonDialogTransactionId], null, 2),
+                  );
+                  setJsonCopied(true);
+                  setTimeout(() => setJsonCopied(false), 2000);
+                } catch {
+                  setJsonCopied(false);
+                }
+              }}
+            >
+              <Copy className="w-3 h-3 mr-1" />
+              {jsonCopied ? t('admin.transactions.copied') : t('admin.transactions.copy')}
+            </Button>
+            <Button variant="outline" onClick={() => setJsonDialogOpen(false)}>
               {t('common.close')}
             </Button>
           </DialogFooter>

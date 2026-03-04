@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star, Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
@@ -25,6 +25,8 @@ import { formatCurrency } from '@/lib/format-currency';
 import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
 import { useSocket, SOCKET_EVENTS } from '../contexts/SocketContext';
+import { SellerUnverifiedModalTrigger } from '../components/SellerUnverifiedModalTrigger';
+import { isSellerUnverified } from '../components/SellerUnverifiedModal';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
@@ -178,6 +180,20 @@ export function MyTicket() {
           icon: AlertCircle,
           description: t(`myTicket.statusTransferredDesc${suffix}`)
         };
+      case TransactionStatus.DepositHold:
+        return {
+          label: t(`myTicket.statusDepositHold${suffix}`),
+          color: 'blue',
+          icon: Clock,
+          description: t(`myTicket.statusDepositHoldDesc${suffix}`)
+        };
+      case TransactionStatus.TransferringFund:
+        return {
+          label: t(`myTicket.statusTransferringFund${suffix}`),
+          color: 'blue',
+          icon: Clock,
+          description: t(`myTicket.statusTransferringFundDesc${suffix}`)
+        };
       case TransactionStatus.Completed:
         return {
           label: t(`myTicket.statusCompleted${suffix}`),
@@ -216,18 +232,22 @@ export function MyTicket() {
     }
   };
 
-  const getStatusStep = (status: TransactionStatus): number => {
+  /** Buyer: 3 steps (Pago, Transferida, Completada). Seller: 5 steps (Pago, Transferida, Recibida, Fondos liberados, Completado). */
+  const getStatusStep = (status: TransactionStatus, role: 'buyer' | 'seller'): number => {
     switch (status) {
       case TransactionStatus.PendingPayment:
-        return 0;
       case TransactionStatus.PaymentPendingVerification:
         return 0;
       case TransactionStatus.PaymentReceived:
         return 1;
       case TransactionStatus.TicketTransferred:
         return 2;
+      case TransactionStatus.DepositHold:
+        return role === 'buyer' ? 3 : 3; // buyer: show "Completada" after confirm; seller: "Recibida / Fondos retenidos"
+      case TransactionStatus.TransferringFund:
+        return role === 'buyer' ? 3 : 4; // buyer: show "Completada"; seller: "Fondos liberados"
       case TransactionStatus.Completed:
-        return 4;
+        return role === 'buyer' ? 3 : 5;
       default:
         return 0;
     }
@@ -401,7 +421,8 @@ export function MyTicket() {
 
   const statusInfo = getStatusInfo(effectiveStatus, isBuyer ? 'buyer' : 'seller');
   const StatusIcon = statusInfo.icon;
-  const statusStep = getStatusStep(effectiveStatus);
+  const statusStep = getStatusStep(effectiveStatus, isBuyer ? 'buyer' : 'seller');
+  const maxSteps = isBuyer ? 3 : 5;
   const eventDate = new Date(transaction.eventDate);
 
   return (
@@ -479,136 +500,145 @@ export function MyTicket() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">{t('myTicket.ticketStatus')}</h2>
 
-              {/* Status Timeline */}
+              {/* Status Timeline: buyer 3 steps (Pago, Transferida, Completada), seller 5 steps (Pago, Transferida, Recibida, Fondos liberados, Completado) */}
               <div className="mb-6">
                 <div className="relative">
-                  {/* Progress Line */}
                   <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200">
-                    <div 
+                    <div
                       className="h-full bg-blue-600 transition-all duration-500"
-                      style={{ width: `${(statusStep / 4) * 100}%` }}
+                      style={{ width: `${maxSteps > 0 ? (statusStep / maxSteps) * 100 : 0}%` }}
                     />
                   </div>
-
-                  {/* Status Steps */}
-                  <div className="relative grid grid-cols-4 gap-2">
-                    {/* Step 1: Paid */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                        statusStep >= 1 ? 'bg-blue-600 text-white' : 
-                        statusStep === 0 ? 'bg-yellow-100 text-yellow-600' : 
-                        'bg-gray-200 text-gray-400'
-                      }`}>
-                        {statusStep >= 1 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                      </div>
-                      <p className={`text-xs text-center font-medium ${
-                        statusStep >= 1 ? 'text-gray-900' : 
-                        statusStep === 0 ? 'text-yellow-600' : 'text-gray-400'
-                      }`}>
-                        {t('myTicket.statusStepPaid')}
-                      </p>
-                    </div>
-
-                    {/* Step 2: Payment Received */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                        statusStep >= 2 ? 'bg-blue-600 text-white' : 
-                        statusStep === 1 ? 'bg-yellow-100 text-yellow-600' : 
-                        'bg-gray-200 text-gray-400'
-                      }`}>
-                        {statusStep >= 2 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                      </div>
-                      <p className={`text-xs text-center font-medium ${
-                        statusStep >= 2 ? 'text-gray-900' : 
-                        statusStep === 1 ? 'text-yellow-600' : 'text-gray-400'
-                      }`}>
-                        {t('myTicket.statusStepTransferred')}
-                      </p>
-                    </div>
-
-                    {/* Step 3: Confirmed */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                        statusStep >= 3 ? 'bg-blue-600 text-white' : 
-                        statusStep === 2 ? 'bg-yellow-100 text-yellow-600' : 
-                        'bg-gray-200 text-gray-400'
-                      }`}>
-                        {statusStep >= 3 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                      </div>
-                      <p className={`text-xs text-center font-medium ${
-                        statusStep >= 3 ? 'text-gray-900' : 
-                        statusStep === 2 ? 'text-yellow-600' : 'text-gray-400'
-                      }`}>
-                        {t('myTicket.statusStepConfirmed')}
-                      </p>
-                    </div>
-
-                    {/* Step 4: Completed */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                        statusStep >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'
-                      }`}>
-                        {statusStep >= 4 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                      </div>
-                      <p className={`text-xs text-center font-medium ${
-                        statusStep >= 4 ? 'text-gray-900' : 'text-gray-400'
-                      }`}>
-                        {t('myTicket.statusStepReleased')}
-                      </p>
-                    </div>
+                  <div className="relative grid gap-2" style={{ gridTemplateColumns: `repeat(${maxSteps}, minmax(0, 1fr))` }}>
+                    {isBuyer ? (
+                      <>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 1 ? 'bg-blue-600 text-white' : statusStep === 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 1 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 1 ? 'text-gray-900' : statusStep === 0 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepPaid')}</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 2 ? 'bg-blue-600 text-white' : statusStep === 1 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 2 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 2 ? 'text-gray-900' : statusStep === 1 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepTransferred')}</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 3 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 3 ? 'text-gray-900' : 'text-gray-400'}`}>{t('myTicket.statusStepCompleted')}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 1 ? 'bg-blue-600 text-white' : statusStep === 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 1 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 1 ? 'text-gray-900' : statusStep === 0 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepPaid')}</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 2 ? 'bg-blue-600 text-white' : statusStep === 1 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 2 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 2 ? 'text-gray-900' : statusStep === 1 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepTransferred')}</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 3 ? 'bg-blue-600 text-white' : statusStep === 2 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 3 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 3 ? 'text-gray-900' : statusStep === 2 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepReceived')}</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 4 ? 'bg-blue-600 text-white' : statusStep === 3 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 4 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 4 ? 'text-gray-900' : statusStep === 3 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepFundsReleased')}</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 5 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                            {statusStep >= 5 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${statusStep >= 5 ? 'text-gray-900' : 'text-gray-400'}`}>{t('myTicket.statusStepCompleted')}</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Current Status Description - Hide when buyer has pending payment confirmation or when showing unified bank transfer card */}
+              {/* Current Status Description - one disclaimer: normal message if verified, orange verify CTA if seller unverified in DepositHold/TransferringFund */}
               {!(isBuyer && paymentConfirmation?.status === 'Pending' && transaction.status === TransactionStatus.PaymentPendingVerification) && !isBankTransferPendingUpload && (
-                <div className={`p-4 rounded-lg mb-4 ${
-                  statusInfo.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
-                  statusInfo.color === 'blue' ? 'bg-blue-50 border border-blue-200' :
-                  statusInfo.color === 'green' ? 'bg-green-50 border border-green-200' :
-                  statusInfo.color === 'red' ? 'bg-red-50 border border-red-200' :
-                  'bg-gray-50 border border-gray-200'
-                }`}>
-                  <div className="flex items-start gap-3">
-                    <StatusIcon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                      statusInfo.color === 'yellow' ? 'text-yellow-600' :
-                      statusInfo.color === 'blue' ? 'text-blue-600' :
-                      statusInfo.color === 'green' ? 'text-green-600' :
-                      statusInfo.color === 'red' ? 'text-red-600' :
-                      'text-gray-600'
-                    }`} />
-                    <div className="flex-1">
-                      <p className={`font-semibold mb-1 ${
-                        statusInfo.color === 'yellow' ? 'text-yellow-900' :
-                        statusInfo.color === 'blue' ? 'text-blue-900' :
-                        statusInfo.color === 'green' ? 'text-green-900' :
-                        statusInfo.color === 'red' ? 'text-red-900' :
-                        'text-gray-900'
-                      }`}>
-                        {statusInfo.label}
-                      </p>
-                      <p className={`text-sm ${
-                        statusInfo.color === 'yellow' ? 'text-yellow-800' :
-                        statusInfo.color === 'blue' ? 'text-blue-800' :
-                        statusInfo.color === 'green' ? 'text-green-800' :
-                        statusInfo.color === 'red' ? 'text-red-800' :
-                        'text-gray-800'
-                      }`}>
-                        {statusInfo.description}
-                      </p>
-                      {/* Countdown Timer - Show inside disclaimer when status is PendingPayment and not expired */}
-                      {effectiveStatus === TransactionStatus.PendingPayment && (
-                        <div className="mt-3 pt-3 border-t border-yellow-200">
-                          <PaymentCountdown
-                            expiresAt={transaction.paymentExpiresAt}
-                            onExpired={() => setIsPaymentExpiredLocally(true)}
-                            className="text-yellow-800"
-                          />
-                        </div>
-                      )}
+                isSeller && (effectiveStatus === TransactionStatus.DepositHold || effectiveStatus === TransactionStatus.TransferringFund) && user && isSellerUnverified(user) ? (
+                  <div className="p-4 rounded-lg mb-4 bg-amber-50 border border-amber-300">
+                    <p className="text-sm text-amber-900 font-medium mb-1">
+                      {effectiveStatus === TransactionStatus.DepositHold
+                        ? t('myTicket.statusDepositHoldSeller')
+                        : t('myTicket.sellerUnverifiedDisclaimer')}
+                    </p>
+                    <p className="text-sm text-amber-800 mb-2">
+                      {effectiveStatus === TransactionStatus.DepositHold
+                        ? t('myTicket.sellerUnverifiedDisclaimerDepositHoldDesc')
+                        : t('myTicket.sellerUnverifiedDisclaimerDesc')}
+                    </p>
+                    <Link
+                      to="/seller-verification"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-900 underline underline-offset-2"
+                    >
+                      {t('myTicket.sellerUnverifiedVerifyLink')}
+                    </Link>
+                  </div>
+                ) : (
+                  <div className={`p-4 rounded-lg mb-4 ${
+                    statusInfo.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
+                    statusInfo.color === 'blue' ? 'bg-blue-50 border border-blue-200' :
+                    statusInfo.color === 'green' ? 'bg-green-50 border border-green-200' :
+                    statusInfo.color === 'red' ? 'bg-red-50 border border-red-200' :
+                    'bg-gray-50 border border-gray-200'
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      <StatusIcon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                        statusInfo.color === 'yellow' ? 'text-yellow-600' :
+                        statusInfo.color === 'blue' ? 'text-blue-600' :
+                        statusInfo.color === 'green' ? 'text-green-600' :
+                        statusInfo.color === 'red' ? 'text-red-600' :
+                        'text-gray-600'
+                      }`} />
+                      <div className="flex-1">
+                        <p className={`font-semibold mb-1 ${
+                          statusInfo.color === 'yellow' ? 'text-yellow-900' :
+                          statusInfo.color === 'blue' ? 'text-blue-900' :
+                          statusInfo.color === 'green' ? 'text-green-900' :
+                          statusInfo.color === 'red' ? 'text-red-900' :
+                          'text-gray-900'
+                        }`}>
+                          {statusInfo.label}
+                        </p>
+                        <p className={`text-sm ${
+                          statusInfo.color === 'yellow' ? 'text-yellow-800' :
+                          statusInfo.color === 'blue' ? 'text-blue-800' :
+                          statusInfo.color === 'green' ? 'text-green-800' :
+                          statusInfo.color === 'red' ? 'text-red-800' :
+                          'text-gray-800'
+                        }`}>
+                          {statusInfo.description}
+                        </p>
+                        {/* Countdown Timer - Show inside disclaimer when status is PendingPayment and not expired */}
+                        {effectiveStatus === TransactionStatus.PendingPayment && (
+                          <div className="mt-3 pt-3 border-t border-yellow-200">
+                            <PaymentCountdown
+                              expiresAt={transaction.paymentExpiresAt}
+                              onExpired={() => setIsPaymentExpiredLocally(true)}
+                              className="text-yellow-800"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )
               )}
 
               {/* Cancellation Reason - Show when transaction is cancelled */}
@@ -1353,6 +1383,7 @@ export function MyTicket() {
           }}
         />
       )}
+      <SellerUnverifiedModalTrigger showWhen={!!(transaction && isSeller)} />
     </div>
   );
 }

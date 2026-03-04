@@ -14,7 +14,6 @@ import { SellerProfile } from '@/app/pages/SellerProfile';
 import { BuyTicketPage } from '@/app/pages/BuyTicketPage';
 import { BoughtTicketManager, MyTicketsPage, SellerDashboardPage } from '@/app/pages/BoughtTicketManager';
 import { HowItWorks } from '@/app/pages/HowItWorks';
-import { Wallet } from '@/app/pages/Wallet';
 import { SellTicket } from '@/app/pages/SellTicket';
 import { CreateEvent } from '@/app/pages/CreateEvent';
 import { Login } from '@/app/pages/Login';
@@ -31,8 +30,8 @@ import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerifi
 import { NotificationManagement } from '@/app/pages/admin/NotificationManagement';
 import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
 import { PromotionsManagement } from '@/app/pages/admin/PromotionsManagement';
+import { SellerPayouts } from '@/app/pages/admin/SellerPayouts';
 import { NotFound } from '@/app/pages/NotFound';
-
 export default function App() {
   return (
     <UserProvider>
@@ -58,7 +57,8 @@ export default function App() {
               <Route path="/edit-listing/:listingId" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
               <Route path="/sell-ticket" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />
               <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-              <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+              {/* Wallet route hidden from UI (backend still has wallet); uncomment to re-enable */}
+              {/* <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} /> */}
               <Route path="/phone-verification" element={<ProtectedRoute><PhoneVerification /></ProtectedRoute>} />
               <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
@@ -69,6 +69,7 @@ export default function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="events" element={<EventManagement />} />
                 <Route path="transactions" element={<TransactionManagement />} />
+                <Route path="seller-payouts" element={<SellerPayouts />} />
                 <Route path="payment-methods" element={<PaymentMethodsManagement />} />
                 <Route path="identity-verifications" element={<IdentityVerificationManagement />} />
                 <Route path="notifications" element={<NotificationManagement />} />

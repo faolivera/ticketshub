@@ -26,6 +26,16 @@ export enum TransactionStatus {
   TicketTransferred = 'TicketTransferred',
 
   /**
+   * Buyer confirmed receipt; funds held until depositReleaseAt (24h after event)
+   */
+  DepositHold = 'DepositHold',
+
+  /**
+   * Past depositReleaseAt; awaiting admin to pay seller and mark Completed
+   */
+  TransferringFund = 'TransferringFund',
+
+  /**
    * Transaction completed, payment released to seller
    */
   Completed = 'Completed',
@@ -117,6 +127,9 @@ export interface Transaction {
   eventDateTime?: Date;
   releaseAfterMinutes?: number;
   autoReleaseAt?: Date;
+
+  /** When escrow can transition to TransferringFund (event + 24h) */
+  depositReleaseAt?: Date;
 
   // Physical delivery details
   deliveryMethod?: DeliveryMethod;

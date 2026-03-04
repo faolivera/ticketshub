@@ -374,6 +374,19 @@ export interface AdminTransactionPaymentConfirmation {
 }
 
 /**
+ * Payout receipt file uploaded by admin when completing a seller payout
+ */
+export interface AdminTransactionPayoutReceiptFile {
+  id: string;
+  transactionId: string;
+  originalFilename: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
+/**
  * Transaction detail for admin (single transaction with confirmations)
  */
 export interface AdminTransactionDetail {
@@ -428,6 +441,7 @@ export interface AdminTransactionDetail {
     config: Record<string, unknown>;
   };
   paymentConfirmations: AdminTransactionPaymentConfirmation[];
+  payoutReceiptFiles: AdminTransactionPayoutReceiptFile[];
   bankTransferDestination?: {
     holderName: string;
     iban: string;
@@ -465,6 +479,7 @@ export interface AdminTransactionDetailResponse {
   paymentMethod?: AdminTransactionDetail['paymentMethod'];
   appliedPromotion?: AdminTransactionDetail['appliedPromotion'];
   paymentConfirmations: AdminTransactionPaymentConfirmation[];
+  payoutReceiptFiles: AdminTransactionPayoutReceiptFile[];
   bankTransferDestination?: {
     holderName: string;
     iban: string;
@@ -596,4 +611,42 @@ export interface AdminCreatePromotionRequest {
 export interface AdminUserSearchItem {
   id: string;
   email: string;
+}
+
+// === Admin Seller Payouts (GET /admin/seller-payouts, POST /admin/transactions/:id/complete-payout) ===
+
+export interface AdminSellerPayoutTicketLine {
+  sectionName: string;
+  quantity: number;
+  unitPrice: Money;
+  seatLabels?: string[];
+}
+
+export interface AdminSellerPayoutItem {
+  transactionId: string;
+  eventName: string;
+  eventDate: string;
+  sellerId: string;
+  sellerName: string;
+  sellerEmail: string;
+  /** Whether the seller has approved identity verification (VerifiedSeller). */
+  sellerVerified: boolean;
+  sellerReceives: Money;
+  bankTransferDestination?: {
+    holderName: string;
+    iban: string;
+    bic?: string;
+    bankName?: string;
+    cuitCuil?: string;
+  };
+  ticketLine: AdminSellerPayoutTicketLine;
+}
+
+export interface AdminSellerPayoutsResponse {
+  payouts: AdminSellerPayoutItem[];
+}
+
+export interface AdminCompletePayoutResponse {
+  id: string;
+  status: string;
 }

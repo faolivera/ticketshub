@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Ticket, ChevronDown, Wallet, LogOut, Languages, Plus, Shield } from 'lucide-react';
+import { User, Ticket, ChevronDown, LogOut, Languages, Plus, Shield } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
@@ -140,14 +140,6 @@ export function Header() {
                   >
                     <User className="w-4 h-4" />
                     <span>{t('header.myProfile')}</span>
-                  </Link>
-                  <Link
-                    to="/wallet"
-                    className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    <Wallet className="w-4 h-4" />
-                    <span>{t('header.myWallet')}</span>
                   </Link>
                   <div className="border-t border-gray-200 my-2"></div>
                   <button

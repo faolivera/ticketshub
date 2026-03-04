@@ -10,6 +10,7 @@ import {
   Bell,
   Settings,
   Tag,
+  Banknote,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -44,6 +45,11 @@ const navItems: NavItem[] = [
     to: '/admin/transactions',
     icon: <CreditCard className="w-4 h-4" />,
     labelKey: 'admin.sidebar.transactions',
+  },
+  {
+    to: '/admin/seller-payouts',
+    icon: <Banknote className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.sellerPayouts',
   },
   {
     to: '/admin/payment-methods',

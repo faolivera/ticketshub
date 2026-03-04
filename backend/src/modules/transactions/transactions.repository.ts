@@ -55,6 +55,7 @@ export class TransactionsRepository
         eventDateTime: transaction.eventDateTime,
         releaseAfterMinutes: transaction.releaseAfterMinutes,
         autoReleaseAt: transaction.autoReleaseAt,
+        depositReleaseAt: transaction.depositReleaseAt,
         disputeId: transaction.disputeId,
         paymentMethodId: transaction.paymentMethodId,
         paymentConfirmationId: transaction.paymentConfirmationId,
@@ -145,6 +146,19 @@ export class TransactionsRepository
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
+  async getPendingDepositRelease(ctx: Ctx): Promise<Transaction[]> {
+    const client = this.getClient(ctx);
+    const now = new Date();
+    const transactions = await client.transaction.findMany({
+      where: {
+        status: { in: ['TicketTransferred', 'DepositHold'] },
+        depositReleaseAt: { lte: now, not: null },
+        disputeId: null,
+      },
+    });
+    return transactions.map((t) => this.mapToTransaction(t));
+  }
+
   async update(
     ctx: Ctx,
     id: string,
@@ -229,6 +243,9 @@ export class TransactionsRepository
     }
     if (updates.autoReleaseAt !== undefined) {
       data.autoReleaseAt = updates.autoReleaseAt;
+    }
+    if (updates.depositReleaseAt !== undefined) {
+      data.depositReleaseAt = updates.depositReleaseAt;
     }
     if (updates.disputeId !== undefined) {
       data.disputeId = updates.disputeId;
@@ -470,6 +487,7 @@ export class TransactionsRepository
       eventDateTime: prismaTransaction.eventDateTime ?? undefined,
       releaseAfterMinutes: prismaTransaction.releaseAfterMinutes ?? undefined,
       autoReleaseAt: prismaTransaction.autoReleaseAt ?? undefined,
+      depositReleaseAt: prismaTransaction.depositReleaseAt ?? undefined,
       deliveryMethod: prismaTransaction.deliveryMethod
         ? this.mapDeliveryMethodFromDb(prismaTransaction.deliveryMethod)
         : undefined,
@@ -496,6 +514,8 @@ export class TransactionsRepository
     | 'PaymentPendingVerification'
     | 'PaymentReceived'
     | 'TicketTransferred'
+    | 'DepositHold'
+    | 'TransferringFund'
     | 'Completed'
     | 'Disputed'
     | 'Refunded'
@@ -509,6 +529,10 @@ export class TransactionsRepository
         return 'PaymentReceived';
       case TransactionStatus.TicketTransferred:
         return 'TicketTransferred';
+      case TransactionStatus.DepositHold:
+        return 'DepositHold';
+      case TransactionStatus.TransferringFund:
+        return 'TransferringFund';
       case TransactionStatus.Completed:
         return 'Completed';
       case TransactionStatus.Disputed:
@@ -526,6 +550,8 @@ export class TransactionsRepository
       | 'PaymentPendingVerification'
       | 'PaymentReceived'
       | 'TicketTransferred'
+      | 'DepositHold'
+      | 'TransferringFund'
       | 'Completed'
       | 'Disputed'
       | 'Refunded'
@@ -540,6 +566,10 @@ export class TransactionsRepository
         return TransactionStatus.PaymentReceived;
       case 'TicketTransferred':
         return TransactionStatus.TicketTransferred;
+      case 'DepositHold':
+        return TransactionStatus.DepositHold;
+      case 'TransferringFund':
+        return TransactionStatus.TransferringFund;
       case 'Completed':
         return TransactionStatus.Completed;
       case 'Disputed':

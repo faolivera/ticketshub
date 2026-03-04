@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Calendar, CreditCard, Users, Ticket } from 'lucide-react';
+import { Calendar, CreditCard, Users, Ticket, Banknote } from 'lucide-react';
 
 export function AdminDashboard() {
   const { t } = useTranslation();
@@ -76,6 +77,13 @@ export function AdminDashboard() {
             <p className="text-sm text-muted-foreground">
               {t('admin.dashboard.useNavigation')}
             </p>
+            <Link
+              to="/admin/seller-payouts"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            >
+              <Banknote className="w-4 h-4" />
+              {t('admin.sidebar.sellerPayouts')}
+            </Link>
           </CardContent>
         </Card>
       </div>

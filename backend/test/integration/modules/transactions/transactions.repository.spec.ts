@@ -472,6 +472,63 @@ describe('TransactionsRepository (Integration)', () => {
     });
   });
 
+  // ==================== getPendingDepositRelease ====================
+
+  describe('getPendingDepositRelease', () => {
+    it('should return empty array when no transactions have depositReleaseAt passed', async () => {
+      await repository.create(ctx, createValidTransaction({
+        status: TransactionStatus.TicketTransferred,
+        depositReleaseAt: new Date(Date.now() + 60 * 60 * 1000),
+      }));
+
+      const transactions = await repository.getPendingDepositRelease(ctx);
+
+      expect(transactions).toEqual([]);
+    });
+
+    it('should return TicketTransferred transactions with expired depositReleaseAt', async () => {
+      const pastDate = new Date(Date.now() - 60 * 1000);
+      await repository.create(ctx, createValidTransaction({
+        status: TransactionStatus.TicketTransferred,
+        depositReleaseAt: pastDate,
+      }));
+
+      const transactions = await repository.getPendingDepositRelease(ctx);
+
+      expect(transactions).toHaveLength(1);
+      expect(transactions[0].status).toBe(TransactionStatus.TicketTransferred);
+    });
+
+    it('should return DepositHold transactions with expired depositReleaseAt', async () => {
+      const pastDate = new Date(Date.now() - 60 * 1000);
+      await repository.create(ctx, createValidTransaction({
+        status: TransactionStatus.DepositHold,
+        depositReleaseAt: pastDate,
+      }));
+
+      const transactions = await repository.getPendingDepositRelease(ctx);
+
+      expect(transactions).toHaveLength(1);
+      expect(transactions[0].status).toBe(TransactionStatus.DepositHold);
+    });
+
+    it('should not return TransferringFund or Completed', async () => {
+      const pastDate = new Date(Date.now() - 60 * 1000);
+      await repository.create(ctx, createValidTransaction({
+        status: TransactionStatus.TransferringFund,
+        depositReleaseAt: pastDate,
+      }));
+      await repository.create(ctx, createValidTransaction({
+        status: TransactionStatus.Completed,
+        depositReleaseAt: pastDate,
+      }));
+
+      const transactions = await repository.getPendingDepositRelease(ctx);
+
+      expect(transactions).toHaveLength(0);
+    });
+  });
+
   // ==================== update ====================
 
   describe('update', () => {

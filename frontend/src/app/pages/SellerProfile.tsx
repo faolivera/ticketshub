@@ -1,27 +1,22 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Minus, ArrowLeft, Calendar, Ticket, MessageSquare } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Minus, Calendar, Ticket, MessageSquare } from 'lucide-react';
 import { sellersService } from '../../api/services/sellers.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { UserAvatar } from '../components/UserAvatar';
+import { BackButton } from '../components/BackButton';
 import type { SellerProfile as SellerProfileData } from '../../api/types';
 import { formatMonthYear } from '@/lib/format-date';
 
 export function SellerProfile() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { sellerId } = useParams<{ sellerId: string }>();
   const [seller, setSeller] = useState<SellerProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [canGoBack, setCanGoBack] = useState(false);
-
-  useEffect(() => {
-    setCanGoBack(typeof window !== 'undefined' && window.history.length > 1);
-  }, []);
 
   useEffect(() => {
     async function fetchSellerProfile() {
@@ -100,16 +95,7 @@ export function SellerProfile() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {canGoBack && (
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('common.back')}
-          </button>
-        )}
+        <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6" />
 
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
           <div className="flex items-start gap-6">

@@ -35,6 +35,16 @@ export enum TransactionStatus {
   TicketTransferred = 'TicketTransferred',
 
   /**
+   * Buyer confirmed receipt; funds held until depositReleaseAt (24h after event)
+   */
+  DepositHold = 'DepositHold',
+
+  /**
+   * Past depositReleaseAt; awaiting admin to pay seller and mark Completed
+   */
+  TransferringFund = 'TransferringFund',
+
+  /**
    * Transaction completed, payment released to seller
    */
   Completed = 'Completed',
@@ -98,6 +108,8 @@ export const TRANSACTION_CHAT_MODE: Record<TransactionStatus, TransactionChatMod
   [TransactionStatus.PaymentPendingVerification]: 'disabled',
   [TransactionStatus.PaymentReceived]: 'enabled',
   [TransactionStatus.TicketTransferred]: 'enabled',
+  [TransactionStatus.DepositHold]: 'enabled',
+  [TransactionStatus.TransferringFund]: 'only_read',
   [TransactionStatus.Completed]: 'only_read',
   [TransactionStatus.Disputed]: 'disabled',
   [TransactionStatus.Refunded]: 'disabled',
@@ -136,6 +148,8 @@ export const STATUS_REQUIRED_ACTOR: Record<TransactionStatus, RequiredActor> = {
   [TransactionStatus.PaymentPendingVerification]: RequiredActor.Platform,
   [TransactionStatus.PaymentReceived]: RequiredActor.Seller,
   [TransactionStatus.TicketTransferred]: RequiredActor.Buyer,
+  [TransactionStatus.DepositHold]: RequiredActor.None,
+  [TransactionStatus.TransferringFund]: RequiredActor.Platform,
   [TransactionStatus.Completed]: RequiredActor.None,
   [TransactionStatus.Disputed]: RequiredActor.Platform,
   [TransactionStatus.Refunded]: RequiredActor.None,
@@ -200,6 +214,9 @@ export interface Transaction {
   eventDateTime?: Date;
   releaseAfterMinutes?: number;
   autoReleaseAt?: Date;
+
+  /** When escrow can transition to TransferringFund (event + 24h) */
+  depositReleaseAt?: Date;
 
   // Physical delivery details
   deliveryMethod?: DeliveryMethod;

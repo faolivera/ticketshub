@@ -111,6 +111,8 @@ enum TransactionStatus {
   PaymentPendingVerification
   PaymentReceived
   TicketTransferred
+  DepositHold
+  TransferringFund
   Completed
   Disputed
   Refunded
@@ -497,6 +499,7 @@ model Transaction {
   eventDateTime             DateTime?
   releaseAfterMinutes       Int?
   autoReleaseAt             DateTime?
+  depositReleaseAt          DateTime?
   disputeId                 String?
   paymentMethodId           String?
   paymentConfirmationId     String?
@@ -519,6 +522,7 @@ model Transaction {
   seller                    User              @relation("TransactionSeller", fields: [sellerId], references: [id])
   paymentIntent             PaymentIntent?
   paymentConfirmation       PaymentConfirmation?
+  payoutReceiptFiles        PayoutReceiptFile[]
   reviews                   Review[]
   chatMessages              TransactionChatMessage[]
 
@@ -528,6 +532,7 @@ model Transaction {
   @@index([status])
   @@index([status, paymentExpiresAt])
   @@index([status, adminReviewExpiresAt])
+  @@index([status, depositReleaseAt])
   @@index([createdAt(sort: Desc)])
   @@map("transactions")
 }
@@ -620,6 +625,22 @@ model PaymentConfirmation {
   transaction         Transaction               @relation(fields: [transactionId], references: [id])
 
   @@map("payment_confirmations")
+}
+
+model PayoutReceiptFile {
+  id               String   @id @default(uuid())
+  transactionId    String
+  storageKey      String
+  originalFilename String
+  contentType     String
+  sizeBytes       Int
+  uploadedBy      String
+  uploadedAt      DateTime @default(now())
+
+  transaction      Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@map("payout_receipt_files")
 }
 
 model PricingSnapshot {

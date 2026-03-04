@@ -8,9 +8,11 @@ import { UsersModule } from '../users/users.module';
 import { TicketsModule } from '../tickets/tickets.module';
 import { EventsModule } from '../events/events.module';
 import { IdentityVerificationModule } from '../identity-verification/identity-verification.module';
+import { PrismaModule } from '../../common/prisma/prisma.module';
 
 @Module({
   imports: [
+    PrismaModule,
     PaymentConfirmationsModule,
     PaymentsModule,
     TransactionsModule,

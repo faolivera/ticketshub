@@ -281,6 +281,10 @@ export class TransactionsService {
           releaseAfterMinutes:
             listing.type === TicketType.DigitalNonTransferable ? 30 : undefined,
           autoReleaseAt,
+          depositReleaseAt: (() => {
+            const eventDate = new Date(listing.eventDate);
+            return new Date(eventDate.getTime() + 24 * 60 * 60 * 1000);
+          })(),
           deliveryMethod: listing.deliveryMethod,
           pickupAddress: listing.pickupAddress,
           paymentMethodId,
@@ -575,16 +579,8 @@ export class TransactionsService {
         throw new BadRequestException('Invalid transaction status');
       }
 
-      // Release payment to seller (atomic, same DB transaction)
-      await this.walletService.releaseFunds(
-        txCtx,
-        transaction.sellerId,
-        transaction.sellerReceives,
-        transactionId,
-        `Payment released for ticket sale`,
-      );
-
-      const newStatus = TransactionStatus.Completed;
+      // Transition to DepositHold only; funds stay in escrow until depositReleaseAt then TransferringFund, then admin completes
+      const newStatus = TransactionStatus.DepositHold;
       return this.transactionsRepository.updateWithVersion(
         txCtx,
         transactionId,
@@ -592,27 +588,19 @@ export class TransactionsService {
           status: newStatus,
           requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
           buyerConfirmedAt: new Date(),
-          completedAt: new Date(),
         },
         transaction.version,
       );
     });
 
-    // Emit notification (fire-and-forget, outside transaction)
-    const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
-    this.notificationsService
-      .emit(ctx, NotificationEventType.TRANSACTION_COMPLETED, {
-        transactionId: updated.id,
-        ticketId: listing.id,
-        eventName: listing.eventName,
-        amount: updated.sellerReceives.amount,
-        currency: updated.sellerReceives.currency,
-        buyerId: updated.buyerId,
-        sellerId: updated.sellerId,
-      })
-      .catch((err) => this.logger.error(ctx, `Failed to emit TRANSACTION_COMPLETED: ${err}`));
-
-    this.logger.log(ctx, `Transaction ${transactionId} - completed`);
+    if (updated.status !== TransactionStatus.DepositHold) {
+      this.logger.error(
+        ctx,
+        `confirmReceipt expected DepositHold but got ${updated.status} for transaction ${transactionId}`,
+      );
+      throw new Error('Unexpected status after confirm receipt');
+    }
+    this.logger.log(ctx, `Transaction ${transactionId} - buyer confirmed receipt, now DepositHold`);
     return updated;
   }
 
@@ -671,6 +659,120 @@ export class TransactionsService {
     }
 
     return released;
+  }
+
+  /**
+   * Transition transactions to TransferringFund when depositReleaseAt has passed.
+   * Does not release funds; admin pays manually then calls completePayout.
+   */
+  async processDepositReleases(ctx: Ctx): Promise<number> {
+    this.logger.log(ctx, 'Processing deposit releases (to TransferringFund)');
+
+    const pending =
+      await this.transactionsRepository.getPendingDepositRelease(ctx);
+    let count = 0;
+
+    for (const transaction of pending) {
+      try {
+        await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+          const txn = await this.transactionsRepository.findByIdForUpdate(
+            txCtx,
+            transaction.id,
+          );
+          if (
+            !txn ||
+            (txn.status !== TransactionStatus.TicketTransferred &&
+              txn.status !== TransactionStatus.DepositHold)
+          ) {
+            return;
+          }
+
+          const newStatus = TransactionStatus.TransferringFund;
+          await this.transactionsRepository.updateWithVersion(
+            txCtx,
+            txn.id,
+            {
+              status: newStatus,
+              requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+            },
+            txn.version,
+          );
+        });
+        count++;
+        this.logger.log(ctx, `Transaction ${transaction.id} -> TransferringFund`);
+      } catch (error) {
+        this.logger.error(
+          ctx,
+          `Failed to transition transaction ${transaction.id}: ${error}`,
+        );
+      }
+    }
+
+    return count;
+  }
+
+  /**
+   * Admin marks payout done: release funds to seller wallet and set status to Completed.
+   * Allowed only when status is TransferringFund.
+   */
+  async completePayout(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<Transaction> {
+    this.logger.log(ctx, `Completing payout for transaction ${transactionId}`);
+
+    const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
+      const transaction = await this.transactionsRepository.findByIdForUpdate(
+        txCtx,
+        transactionId,
+      );
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
+      if (transaction.status !== TransactionStatus.TransferringFund) {
+        throw new BadRequestException(
+          'Transaction must be in TransferringFund status to complete payout',
+        );
+      }
+
+      await this.walletService.releaseFunds(
+        txCtx,
+        transaction.sellerId,
+        transaction.sellerReceives,
+        transactionId,
+        `Payment released for ticket sale`,
+      );
+
+      const newStatus = TransactionStatus.Completed;
+      return this.transactionsRepository.updateWithVersion(
+        txCtx,
+        transactionId,
+        {
+          status: newStatus,
+          requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+          completedAt: new Date(),
+        },
+        transaction.version,
+      );
+    });
+
+    const listing = await this.ticketsService.getListingById(ctx, updated.listingId);
+    this.notificationsService
+      .emit(ctx, NotificationEventType.TRANSACTION_COMPLETED, {
+        transactionId: updated.id,
+        ticketId: listing.id,
+        eventName: listing.eventName,
+        amount: updated.sellerReceives.amount,
+        currency: updated.sellerReceives.currency,
+        buyerId: updated.buyerId,
+        sellerId: updated.sellerId,
+      })
+      .catch((err) =>
+        this.logger.error(ctx, `Failed to emit TRANSACTION_COMPLETED: ${err}`),
+      );
+
+    this.logger.log(ctx, `Transaction ${transactionId} - payout completed`);
+    return updated;
   }
 
   /**
@@ -860,6 +962,14 @@ export class TransactionsService {
     statuses: TransactionStatus[],
   ): Promise<string[]> {
     return this.transactionsRepository.getIdsByStatuses(ctx, statuses);
+  }
+
+  /**
+   * Get transactions by IDs (batch, admin use).
+   */
+  async findByIds(ctx: Ctx, ids: string[]): Promise<Transaction[]> {
+    if (ids.length === 0) return [];
+    return this.transactionsRepository.findByIds(ctx, ids);
   }
 
   /**

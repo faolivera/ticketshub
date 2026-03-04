@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { AdminService } from '../../../../src/modules/admin/admin.service';
+import { PRIVATE_STORAGE_PROVIDER } from '../../../../src/common/storage/file-storage-provider.interface';
+import { PrismaService } from '../../../../src/common/prisma/prisma.service';
 import { PaymentConfirmationsService } from '../../../../src/modules/payment-confirmations/payment-confirmations.service';
 import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
@@ -36,6 +38,8 @@ describe('AdminService', () => {
   let ticketsRepository: jest.Mocked<ITicketsRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let usersService: jest.Mocked<UsersService>;
+  let mockPrivateStorage: { store: jest.Mock; retrieve: jest.Mock };
+  let mockPrisma: { payoutReceiptFile: { create: jest.Mock; findMany: jest.Mock; findFirst: jest.Mock } };
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -122,6 +126,19 @@ describe('AdminService', () => {
       findById: jest.fn().mockRejectedValue(new NotFoundException('Payment method not found')),
     };
 
+    mockPrivateStorage = {
+      store: jest.fn().mockResolvedValue({ key: 'test-key', location: 's3://bucket/test-key' }),
+      retrieve: jest.fn().mockResolvedValue(Buffer.from('file-content')),
+    };
+
+    mockPrisma = {
+      payoutReceiptFile: {
+        create: jest.fn().mockResolvedValue({ id: 'prf_1', transactionId: 'txn_123' }),
+        findMany: jest.fn().mockResolvedValue([]),
+        findFirst: jest.fn().mockResolvedValue(null),
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -135,6 +152,8 @@ describe('AdminService', () => {
         { provide: TICKETS_REPOSITORY, useValue: mockTicketsRepository },
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: UsersService, useValue: mockUsersService },
+        { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage! },
+        { provide: PrismaService, useValue: mockPrisma! },
       ],
     }).compile();
 
@@ -283,6 +302,59 @@ describe('AdminService', () => {
       const payment = result.payments[0];
       expect(payment.reviewedAt).toBeDefined();
       expect(payment.adminNotes).toBe('Test notes');
+    });
+  });
+
+  describe('completePayout', () => {
+    const completedTransaction = {
+      ...mockTransaction,
+      id: 'txn_123',
+      status: TransactionStatus.Completed,
+    };
+
+    it('should complete payout without files and return transaction', async () => {
+      transactionsService.completePayout = jest.fn().mockResolvedValue(completedTransaction);
+
+      const result = await service.completePayout(mockCtx, 'txn_123', 'admin_1');
+
+      expect(result.id).toBe('txn_123');
+      expect(result.status).toBe(TransactionStatus.Completed);
+      expect(transactionsService.completePayout).toHaveBeenCalledWith(mockCtx, 'txn_123');
+    });
+
+    it('should upload receipt files and then complete payout when files provided', async () => {
+      transactionsService.completePayout = jest.fn().mockResolvedValue(completedTransaction);
+
+      const files = [
+        {
+          buffer: Buffer.from('fake'),
+          originalname: 'receipt.pdf',
+          mimetype: 'application/pdf',
+          size: 100,
+        },
+      ];
+
+      const result = await service.completePayout(mockCtx, 'txn_123', 'admin_1', files);
+
+      expect(mockPrivateStorage.store).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.payoutReceiptFile.create).toHaveBeenCalledTimes(1);
+      expect(transactionsService.completePayout).toHaveBeenCalledWith(mockCtx, 'txn_123');
+      expect(result.status).toBe(TransactionStatus.Completed);
+    });
+
+    it('should throw BadRequestException when file has invalid MIME type', async () => {
+      const files = [
+        {
+          buffer: Buffer.from('fake'),
+          originalname: 'file.txt',
+          mimetype: 'text/plain',
+          size: 100,
+        },
+      ];
+
+      await expect(
+        service.completePayout(mockCtx, 'txn_123', 'admin_1', files),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -1382,6 +1454,104 @@ describe('AdminService', () => {
         bankName: 'Banco Galicia',
         cuitCuil: '30-12345678-9',
       });
+    });
+
+    it('should include payoutReceiptFiles from db in response', async () => {
+      const mockReceipt = {
+        id: 'prf_1',
+        transactionId: 'txn_123',
+        storageKey: 'payout-receipts/txn_123_receipt.pdf',
+        originalFilename: 'payout-receipt.pdf',
+        contentType: 'application/pdf',
+        sizeBytes: 2048,
+        uploadedBy: 'admin_1',
+        uploadedAt: new Date(),
+      };
+      mockPrisma.payoutReceiptFile.findMany.mockResolvedValue([mockReceipt]);
+
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.payoutReceiptFiles).toHaveLength(1);
+      expect(result.payoutReceiptFiles[0].id).toBe('prf_1');
+      expect(result.payoutReceiptFiles[0].originalFilename).toBe('payout-receipt.pdf');
+      expect(result.payoutReceiptFiles[0].contentType).toBe('application/pdf');
+    });
+
+    it('should return empty payoutReceiptFiles when none exist', async () => {
+      mockPrisma.payoutReceiptFile.findMany.mockResolvedValue([]);
+
+      transactionsService.findById.mockResolvedValue(mockTransaction);
+      usersService.findByIds
+        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
+      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
+
+      const result = await service.getTransactionById(mockCtx, 'txn_123');
+
+      expect(result.payoutReceiptFiles).toHaveLength(0);
+    });
+  });
+
+  describe('getPayoutReceiptFileContent', () => {
+    const mockReceiptRecord = {
+      id: 'prf_1',
+      transactionId: 'txn_123',
+      storageKey: 'payout-receipts/txn_123_receipt.pdf',
+      originalFilename: 'payout-receipt.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 2048,
+      uploadedBy: 'admin_1',
+      uploadedAt: new Date(),
+    };
+
+    it('should return file content when record and storage object exist', async () => {
+      mockPrisma.payoutReceiptFile.findFirst.mockResolvedValue(mockReceiptRecord);
+      mockPrivateStorage.retrieve.mockResolvedValue(Buffer.from('pdf-content'));
+
+      const result = await service.getPayoutReceiptFileContent(
+        mockCtx,
+        'txn_123',
+        'prf_1',
+      );
+
+      expect(result).not.toBeNull();
+      expect(result!.contentType).toBe('application/pdf');
+      expect(result!.filename).toBe('payout-receipt.pdf');
+      expect(result!.buffer).toEqual(Buffer.from('pdf-content'));
+    });
+
+    it('should return null when receipt record is not found', async () => {
+      mockPrisma.payoutReceiptFile.findFirst.mockResolvedValue(null);
+
+      const result = await service.getPayoutReceiptFileContent(
+        mockCtx,
+        'txn_123',
+        'non_existent',
+      );
+
+      expect(result).toBeNull();
+      expect(mockPrivateStorage.retrieve).not.toHaveBeenCalled();
+    });
+
+    it('should return null when storage object does not exist', async () => {
+      mockPrisma.payoutReceiptFile.findFirst.mockResolvedValue(mockReceiptRecord);
+      mockPrivateStorage.retrieve.mockResolvedValue(null);
+
+      const result = await service.getPayoutReceiptFileContent(
+        mockCtx,
+        'txn_123',
+        'prf_1',
+      );
+
+      expect(result).toBeNull();
     });
   });
 });

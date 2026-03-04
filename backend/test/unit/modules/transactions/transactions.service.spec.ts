@@ -15,6 +15,7 @@ import { UsersService } from '../../../../src/modules/users/users.service';
 import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { PricingService } from '../../../../src/modules/payments/pricing/pricing.service';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
+import { OffersService } from '../../../../src/modules/offers/offers.service';
 import { TransactionManager } from '../../../../src/common/database';
 import { OptimisticLockException } from '../../../../src/common/exceptions/optimistic-lock.exception';
 import {
@@ -74,6 +75,7 @@ describe('TransactionsService', () => {
       getByListingId: jest.fn(),
       getByListingIds: jest.fn(),
       getPendingAutoRelease: jest.fn(),
+      getPendingDepositRelease: jest.fn(),
       findExpiredPendingPayments: jest.fn(),
       findExpiredAdminReviews: jest.fn(),
       getPaginated: jest.fn(),
@@ -128,6 +130,11 @@ describe('TransactionsService', () => {
       emit: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockOffersService = {
+      markConverted: jest.fn().mockResolvedValue(undefined),
+      cancelAffectedOffers: jest.fn().mockResolvedValue(undefined),
+    };
+
     const mockTxManager = {
       executeInTransaction: jest.fn().mockImplementation(
         async (_ctx: Ctx, fn: (txCtx: TxCtx) => Promise<unknown>) => {
@@ -150,6 +157,7 @@ describe('TransactionsService', () => {
         { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
         { provide: PricingService, useValue: mockPricingService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: OffersService, useValue: mockOffersService },
         { provide: TransactionManager, useValue: mockTxManager },
       ],
     }).compile();
@@ -725,36 +733,33 @@ describe('TransactionsService', () => {
   });
 
   describe('confirmReceipt', () => {
-    it('should release funds and complete transaction atomically', async () => {
+    it('should transition to DepositHold without releasing funds', async () => {
       const transaction = createMockTransaction({
         status: TransactionStatus.TicketTransferred,
         requiredActor: RequiredActor.Buyer,
       });
       transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
-      walletService.releaseFunds.mockResolvedValue(undefined);
       transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
-        status: TransactionStatus.Completed,
+        status: TransactionStatus.DepositHold,
         requiredActor: RequiredActor.None,
         buyerConfirmedAt: expect.any(Date),
-        completedAt: expect.any(Date),
         version: 2,
       });
-      ticketsService.getListingById.mockResolvedValue({
-        id: 'listing_123',
-        eventName: 'Test Event',
-      } as never);
 
       const result = await service.confirmReceipt(mockCtx, 'txn_123', 'buyer_123');
 
-      expect(result.status).toBe(TransactionStatus.Completed);
+      expect(result.status).toBe(TransactionStatus.DepositHold);
       expect(txManager.executeInTransaction).toHaveBeenCalled();
-      expect(walletService.releaseFunds).toHaveBeenCalledWith(
+      expect(walletService.releaseFunds).not.toHaveBeenCalled();
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
         expect.objectContaining({ tx: expect.anything() }),
-        'seller_123',
-        transaction.sellerReceives,
         'txn_123',
-        'Payment released for ticket sale',
+        expect.objectContaining({
+          status: TransactionStatus.DepositHold,
+          buyerConfirmedAt: expect.any(Date),
+        }),
+        1,
       );
     });
 
@@ -788,22 +793,17 @@ describe('TransactionsService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should use version check to prevent double payment', async () => {
+    it('should use version check when updating to DepositHold', async () => {
       const transaction = createMockTransaction({
         status: TransactionStatus.TicketTransferred,
         version: 3,
       });
       transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
-      walletService.releaseFunds.mockResolvedValue(undefined);
       transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
-        status: TransactionStatus.Completed,
+        status: TransactionStatus.DepositHold,
         version: 4,
       });
-      ticketsService.getListingById.mockResolvedValue({
-        id: 'listing_123',
-        eventName: 'Test Event',
-      } as never);
 
       await service.confirmReceipt(mockCtx, 'txn_123', 'buyer_123');
 
@@ -811,9 +811,112 @@ describe('TransactionsService', () => {
         expect.objectContaining({ tx: expect.anything() }),
         'txn_123',
         expect.objectContaining({
-          status: TransactionStatus.Completed,
+          status: TransactionStatus.DepositHold,
         }),
         3,
+      );
+    });
+  });
+
+  describe('processDepositReleases', () => {
+    it('should transition TicketTransferred to TransferringFund when depositReleaseAt passed', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        depositReleaseAt: new Date(Date.now() - 1000),
+      });
+      transactionsRepository.getPendingDepositRelease.mockResolvedValue([transaction]);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.TransferringFund,
+        requiredActor: RequiredActor.Platform,
+        version: 2,
+      });
+
+      const count = await service.processDepositReleases(mockCtx);
+
+      expect(count).toBe(1);
+      expect(transactionsRepository.getPendingDepositRelease).toHaveBeenCalledWith(mockCtx);
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.anything(),
+        transaction.id,
+        expect.objectContaining({
+          status: TransactionStatus.TransferringFund,
+          requiredActor: RequiredActor.Platform,
+        }),
+        1,
+      );
+      expect(walletService.releaseFunds).not.toHaveBeenCalled();
+    });
+
+    it('should return 0 when no pending deposit releases', async () => {
+      transactionsRepository.getPendingDepositRelease.mockResolvedValue([]);
+
+      const count = await service.processDepositReleases(mockCtx);
+
+      expect(count).toBe(0);
+      expect(transactionsRepository.updateWithVersion).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('completePayout', () => {
+    it('should release funds and set Completed when status is TransferringFund', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TransferringFund,
+        requiredActor: RequiredActor.Platform,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      walletService.releaseFunds.mockResolvedValue({} as never);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.Completed,
+        requiredActor: RequiredActor.None,
+        completedAt: expect.any(Date),
+        version: 2,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+      } as never);
+
+      const result = await service.completePayout(mockCtx, 'txn_123');
+
+      expect(result.status).toBe(TransactionStatus.Completed);
+      expect(walletService.releaseFunds).toHaveBeenCalledWith(
+        expect.objectContaining({ tx: expect.anything() }),
+        'seller_123',
+        transaction.sellerReceives,
+        'txn_123',
+        'Payment released for ticket sale',
+      );
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.anything(),
+        'txn_123',
+        expect.objectContaining({
+          status: TransactionStatus.Completed,
+          completedAt: expect.any(Date),
+        }),
+        1,
+      );
+    });
+
+    it('should throw BadRequestException when status is not TransferringFund', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.DepositHold,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+
+      await expect(service.completePayout(mockCtx, 'txn_123')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(walletService.releaseFunds).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when transaction not found', async () => {
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(undefined);
+
+      await expect(service.completePayout(mockCtx, 'invalid_id')).rejects.toThrow(
+        NotFoundException,
       );
     });
   });
@@ -869,26 +972,21 @@ describe('TransactionsService', () => {
   });
 
   describe('atomic transaction flows', () => {
-    it('confirmReceipt and auto-release race - only one completes (via lock)', async () => {
+    it('confirmReceipt transitions to DepositHold without releasing funds', async () => {
       const transaction = createMockTransaction({
         status: TransactionStatus.TicketTransferred,
       });
       transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
-      walletService.releaseFunds.mockResolvedValue(undefined);
       transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
-        status: TransactionStatus.Completed,
+        status: TransactionStatus.DepositHold,
         version: 2,
       });
-      ticketsService.getListingById.mockResolvedValue({
-        id: 'listing_123',
-        eventName: 'Test Event',
-      } as never);
 
       await service.confirmReceipt(mockCtx, 'txn_123', 'buyer_123');
 
       expect(transactionsRepository.findByIdForUpdate).toHaveBeenCalled();
-      expect(walletService.releaseFunds).toHaveBeenCalledTimes(1);
+      expect(walletService.releaseFunds).not.toHaveBeenCalled();
     });
 
     it('status transition uses optimistic locking', async () => {

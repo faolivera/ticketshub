@@ -416,6 +416,19 @@ export interface AdminTransactionsPendingSummaryResponse {
 }
 
 /**
+ * Payout receipt file uploaded by admin when completing a seller payout.
+ */
+export interface AdminTransactionPayoutReceiptFile {
+  id: string;
+  transactionId: string;
+  originalFilename: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+}
+
+/**
  * Transaction detail for GET /api/admin/transactions/:id
  */
 export interface AdminTransactionDetailResponse {
@@ -465,6 +478,8 @@ export interface AdminTransactionDetailResponse {
       contentType: string;
     }
   >;
+  /** Payout receipt files uploaded by admin when completing the seller payout */
+  payoutReceiptFiles: AdminTransactionPayoutReceiptFile[];
   /** Bank transfer destination for proof validation (from payment method or seller bankAccount) */
   bankTransferDestination?: {
     holderName: string;
@@ -473,6 +488,56 @@ export interface AdminTransactionDetailResponse {
     bankName?: string;
     cuitCuil?: string;
   };
+}
+
+/**
+ * Ticket line for seller payout (section, quantity, unit price, optional seat labels).
+ */
+export interface AdminSellerPayoutTicketLine {
+  sectionName: string;
+  quantity: number;
+  unitPrice: Money;
+  seatLabels?: string[];
+}
+
+/**
+ * Seller payout item for GET /api/admin/seller-payouts (transactions in TransferringFund).
+ */
+export interface AdminSellerPayoutItem {
+  transactionId: string;
+  eventName: string;
+  eventDate: Date;
+  sellerId: string;
+  sellerName: string;
+  sellerEmail: string;
+  /** Whether the seller has approved identity verification (VerifiedSeller) */
+  sellerVerified: boolean;
+  sellerReceives: Money;
+  /** Bank transfer destination (seller's bank account for payout) */
+  bankTransferDestination?: {
+    holderName: string;
+    iban: string;
+    bic?: string;
+    bankName?: string;
+    cuitCuil?: string;
+  };
+  /** Ticket line for "Entradas" column: section, quantity, unit price, optional seat labels */
+  ticketLine: AdminSellerPayoutTicketLine;
+}
+
+/**
+ * Response for GET /api/admin/seller-payouts
+ */
+export interface AdminSellerPayoutsResponse {
+  payouts: AdminSellerPayoutItem[];
+}
+
+/**
+ * Response for POST /api/admin/transactions/:id/complete-payout
+ */
+export interface AdminCompletePayoutResponse {
+  id: string;
+  status: string;
 }
 
 /**

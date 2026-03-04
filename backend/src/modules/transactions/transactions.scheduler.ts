@@ -7,6 +7,7 @@ import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 
 const LOCK_ID_EXPIRED_TRANSACTIONS = 'scheduler:transactions:expired';
+const LOCK_ID_DEPOSIT_RELEASES = 'scheduler:transactions:deposit-releases';
 const LOCK_TTL_SECONDS = 60;
 
 @Injectable()
@@ -67,6 +68,29 @@ export class TransactionsScheduler {
       }
     } catch (error) {
       this.logger.error(ctx, `Error processing expired transactions: ${error}`);
+    }
+  }
+
+  /**
+   * Transition to TransferringFund when depositReleaseAt has passed.
+   * Runs every 5 minutes with distributed lock.
+   */
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async handleDepositReleases(): Promise<void> {
+    const ctx: Ctx = {
+      source: 'CRON',
+      requestId: this.generateRequestId(),
+    };
+
+    const count = await this.lockService.withLockAndLog(
+      ctx,
+      LOCK_ID_DEPOSIT_RELEASES,
+      LOCK_TTL_SECONDS,
+      async () => this.transactionsService.processDepositReleases(ctx),
+    );
+
+    if (count !== null && count > 0) {
+      this.logger.log(ctx, `Deposit releases processed: ${count} transactions -> TransferringFund`);
     }
   }
 }
