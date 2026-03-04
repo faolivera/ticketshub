@@ -4,7 +4,7 @@
     "mySales": "My Sales",
     "myProfile": "My Profile",
     "myWallet": "My Wallet",
-    "sellTickets": "Sell Tickets",
+    "sellTickets": "Sell",
     "logout": "Logout",
     "login": "Login",
     "signUp": "Sign Up",
@@ -33,8 +33,8 @@
     "hint": "Check the URL or use the links above to get back on track."
   },
   "landing": {
-    "title": "Buy and Sell Tickets Securely",
-    "subtitle": "Find tickets for concerts, sports, and more with buyer protection",
+    "title": "Buy and Sell Tickets",
+    "subtitle": "Find tickets for concerts and events with buyer protection",
     "securePayment": "Learn how our secure payment system works",
     "searchPlaceholder": "Search for events, artists, or locations...",
     "searchResults": "Search Results",

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Shield, Calendar, ShieldCheck, Ticket, Headphones, RotateCcw } from 'lucide-react';
+import { Search, Calendar, ShieldCheck, Ticket, Headphones, RotateCcw } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { EventCard } from '@/app/components/EventCard';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
@@ -168,16 +167,6 @@ export function Landing() {
             {t('landing.subtitle')}
           </p>
 
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <Shield className="w-5 h-5 text-green-300" />
-            <Link
-              to="/how-it-works"
-              className="text-white hover:text-green-300 transition-colors font-semibold underline decoration-2 underline-offset-4"
-            >
-              {t('landing.securePayment')}
-            </Link>
-          </div>
-
           <div className="max-w-2xl mx-auto">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -202,38 +191,40 @@ export function Landing() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">
-          {searchTerm ? t('landing.searchResults') : t('landing.upcomingEvents')}
-        </h2>
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="flex items-center gap-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 shrink-0">
+            {searchTerm ? t('landing.searchResults') : t('landing.upcomingEvents')}
+          </h2>
 
-        {!isLoading && !error && availableCategories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            <button
-              onClick={() => setActiveCategory(null)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                activeCategory === null
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
-              }`}
-            >
-              {t('landing.categoryAll')}
-            </button>
-            {availableCategories.map(category => (
+          {!isLoading && !error && availableCategories.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
               <button
-                key={category}
-                onClick={() => setActiveCategory(activeCategory === category ? null : category)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  activeCategory === category
+                onClick={() => setActiveCategory(null)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeCategory === null
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
                 }`}
               >
-                {t(CATEGORY_I18N_KEYS[category])}
+                {t('landing.categoryAll')}
               </button>
-            ))}
-          </div>
-        )}
+              {availableCategories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(activeCategory === category ? null : category)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                    activeCategory === category
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
+                  }`}
+                >
+                  {t(CATEGORY_I18N_KEYS[category])}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {isLoading && (
           <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />

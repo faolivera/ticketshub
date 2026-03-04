@@ -4,7 +4,7 @@
     "mySales": "Mis Ventas",
     "myProfile": "Mi Perfil",
     "myWallet": "Mi Cartera",
-    "sellTickets": "Vender Entradas",
+    "sellTickets": "Vender",
     "logout": "Cerrar Sesión",
     "login": "Iniciar Sesión",
     "signUp": "Registrarse",
@@ -33,8 +33,8 @@
     "hint": "Revisa la URL o usa los enlaces de arriba para volver."
   },
   "landing": {
-    "title": "Compra y Vende Entradas de Forma Segura",
-    "subtitle": "Encuentra entradas para conciertos, deportes y más con protección al comprador",
+    "title": "Compra y Vende Entradas",
+    "subtitle": "Encuentra entradas para conciertos y eventos con protección al comprador",
     "securePayment": "Aprende cómo funciona nuestro sistema de pago seguro",
     "searchPlaceholder": "Buscar eventos, artistas o ubicaciones...",
     "searchResults": "Resultados de Búsqueda",
