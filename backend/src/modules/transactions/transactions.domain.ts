@@ -210,11 +210,6 @@ export interface Transaction {
 
   refundedAt?: Date;
 
-  // For Digital Non-Transferable tickets
-  eventDateTime?: Date;
-  releaseAfterMinutes?: number;
-  autoReleaseAt?: Date;
-
   /** When escrow can transition to TransferringFund (event + 24h) */
   depositReleaseAt?: Date;
 

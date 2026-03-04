@@ -118,7 +118,7 @@ describe('TicketsRepository (Integration)', () => {
       eventId: testEventId,
       eventDateId: testEventDateId,
       eventSectionId: testEventSectionId,
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [createValidTicketUnit(id), createValidTicketUnit(id)],
       sellTogether: false,
       pricePerTicket: createValidMoney(),
@@ -162,7 +162,7 @@ describe('TicketsRepository (Integration)', () => {
       expect(listing.eventId).toBe(testEventId);
       expect(listing.eventDateId).toBe(testEventDateId);
       expect(listing.eventSectionId).toBe(testEventSectionId);
-      expect(listing.type).toBe(TicketType.DigitalTransferable);
+      expect(listing.type).toBe(TicketType.Digital);
       expect(listing.ticketUnits).toHaveLength(2);
       expect(listing.status).toBe(ListingStatus.Active);
       expect(listing.pricePerTicket.amount).toBe(5000);
@@ -418,7 +418,7 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should update ticket type', async () => {
-      const listing = await repository.create(ctx, createValidListing({ type: TicketType.DigitalTransferable }));
+      const listing = await repository.create(ctx, createValidListing({ type: TicketType.Digital }));
 
       const updated = await repository.update(ctx, listing.id, { type: TicketType.Physical });
 
@@ -977,7 +977,7 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('enum mapping', () => {
     it('should correctly map all TicketType values', async () => {
-      for (const type of [TicketType.Physical, TicketType.DigitalTransferable, TicketType.DigitalNonTransferable]) {
+      for (const type of [TicketType.Physical, TicketType.Digital]) {
         const listing = await repository.create(ctx, createValidListing({ type }));
         const found = await repository.findById(ctx, listing.id);
         expect(found?.type).toBe(type);
@@ -1005,7 +1005,7 @@ describe('TicketsRepository (Integration)', () => {
 
     it('should handle undefined deliveryMethod', async () => {
       const listing = await repository.create(ctx, createValidListing({
-        type: TicketType.DigitalTransferable,
+        type: TicketType.Digital,
         deliveryMethod: undefined,
       }));
       const found = await repository.findById(ctx, listing.id);

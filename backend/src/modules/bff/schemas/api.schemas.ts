@@ -17,11 +17,7 @@ const BankTransferConfigSchema = z.object({
   cuitCuil: z.string(),
 });
 
-const TicketTypeSchema = z.enum([
-  'Physical',
-  'DigitalTransferable',
-  'DigitalNonTransferable',
-]);
+const TicketTypeSchema = z.enum(['Physical', 'Digital']);
 const DeliveryMethodSchema = z.enum(['Pickup', 'ArrangeWithSeller']);
 const TransactionStatusSchema = z.enum([
   'PendingPayment',
@@ -172,9 +168,6 @@ const BffTransactionWithDetailsSchema = z.object({
   paymentExpiresAt: z.coerce.date(),
   adminReviewExpiresAt: z.coerce.date().optional(),
   refundedAt: z.coerce.date().optional(),
-  eventDateTime: z.coerce.date().optional(),
-  releaseAfterMinutes: z.number().optional(),
-  autoReleaseAt: z.coerce.date().optional(),
   depositReleaseAt: z.coerce.date().optional(),
   deliveryMethod: DeliveryMethodSchema.optional(),
   pickupAddress: AddressSchema.optional(),

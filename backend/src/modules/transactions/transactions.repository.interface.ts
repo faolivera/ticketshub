@@ -42,11 +42,6 @@ export interface ITransactionsRepository {
   getByListingIds(ctx: Ctx, listingIds: string[]): Promise<Transaction[]>;
 
   /**
-   * Get transactions pending auto-release
-   */
-  getPendingAutoRelease(ctx: Ctx): Promise<Transaction[]>;
-
-  /**
    * Get transactions pending transition to TransferringFund (TicketTransferred or DepositHold, depositReleaseAt passed, no dispute)
    */
   getPendingDepositRelease(ctx: Ctx): Promise<Transaction[]>;

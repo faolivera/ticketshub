@@ -70,8 +70,7 @@ enum EventCategory {
 
 enum TicketType {
   Physical
-  DigitalTransferable
-  DigitalNonTransferable
+  Digital
 }
 
 enum DeliveryMethod {
@@ -496,9 +495,6 @@ model Transaction {
   adminReviewExpiresAt      DateTime?
   deliveryMethod            DeliveryMethod?
   pickupAddress             Json?
-  eventDateTime             DateTime?
-  releaseAfterMinutes       Int?
-  autoReleaseAt             DateTime?
   depositReleaseAt          DateTime?
   disputeId                 String?
   paymentMethodId           String?

@@ -43,7 +43,6 @@ interface TicketListingForm {
   eventSectionId: string;
   seatingType: 'numbered' | 'unnumbered';
   deliveryMethod: 'digital' | 'physical';
-  digitallyTransferable: boolean;
   physicalDeliveryMethod: 'pickup' | 'arrange' | '';
   pickupAddress: string;
   quantity: number;
@@ -98,7 +97,6 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
     eventTime: '',
     eventSectionId: '',
     deliveryMethod: 'digital',
-    digitallyTransferable: true,
     physicalDeliveryMethod: '',
     pickupAddress: '',
     quantity: 1,
@@ -216,10 +214,8 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
     let ticketType: TicketType;
     if (formData.deliveryMethod === 'physical') {
       ticketType = TicketType.Physical;
-    } else if (formData.digitallyTransferable) {
-      ticketType = TicketType.DigitalTransferable;
     } else {
-      ticketType = TicketType.DigitalNonTransferable;
+      ticketType = TicketType.Digital;
     }
 
     let deliveryMethod: DeliveryMethod | undefined;
@@ -993,7 +989,6 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
                   setFormData({
                     ...formData,
                     deliveryMethod: 'digital',
-                    digitallyTransferable: true,
                     physicalDeliveryMethod: '',
                     pickupAddress: '',
                   })
@@ -1013,7 +1008,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
               <button
                 type="button"
                 onClick={() =>
-                  setFormData({ ...formData, deliveryMethod: 'physical', digitallyTransferable: false })
+                  setFormData({ ...formData, deliveryMethod: 'physical' })
                 }
                 className={`p-4 border-2 rounded-lg transition-colors ${
                   formData.deliveryMethod === 'physical'
@@ -1027,29 +1022,6 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
                 </div>
               </button>
             </div>
-
-            {formData.deliveryMethod === 'digital' && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.digitallyTransferable}
-                    onChange={(e) =>
-                      setFormData({ ...formData, digitallyTransferable: e.target.checked })
-                    }
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {t('sellTicket.digitallyTransferable')}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {t('sellTicket.digitallyTransferableDesc')}
-                    </p>
-                  </div>
-                </label>
-              </div>
-            )}
 
             {formData.deliveryMethod === 'physical' && (
               <div className="mt-4 space-y-4">

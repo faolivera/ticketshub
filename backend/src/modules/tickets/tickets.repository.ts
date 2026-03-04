@@ -42,12 +42,8 @@ export class TicketsRepository
     switch (type) {
       case TicketType.Physical:
         return PrismaTicketType.Physical;
-      case TicketType.DigitalTransferable:
-        return PrismaTicketType.DigitalTransferable;
-      case TicketType.DigitalNonTransferable:
-        return PrismaTicketType.DigitalNonTransferable;
-      default:
-        return PrismaTicketType.Physical;
+      case TicketType.Digital:
+        return PrismaTicketType.Digital;
     }
   }
 
@@ -55,12 +51,8 @@ export class TicketsRepository
     switch (type) {
       case PrismaTicketType.Physical:
         return TicketType.Physical;
-      case PrismaTicketType.DigitalTransferable:
-        return TicketType.DigitalTransferable;
-      case PrismaTicketType.DigitalNonTransferable:
-        return TicketType.DigitalNonTransferable;
-      default:
-        return TicketType.Physical;
+      case PrismaTicketType.Digital:
+        return TicketType.Digital;
     }
   }
 

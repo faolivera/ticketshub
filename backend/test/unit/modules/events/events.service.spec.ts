@@ -471,7 +471,7 @@ describe('EventsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',
@@ -780,7 +780,7 @@ describe('EventsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',

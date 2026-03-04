@@ -27,7 +27,7 @@ import {
   STATUS_REQUIRED_ACTOR,
   CancellationReason,
 } from './transactions.domain';
-import { TicketType, TicketUnitStatus } from '../tickets/tickets.domain';
+import { TicketUnitStatus } from '../tickets/tickets.domain';
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import type {
   ListTransactionsQuery,
@@ -245,8 +245,6 @@ export class TransactionsService {
           currency: ticketPriceTotal.currency,
         };
 
-        const autoReleaseAt: Date | undefined = undefined;
-
         await this.ticketsService.reserveTickets(
           txCtx,
           listingId,
@@ -277,10 +275,6 @@ export class TransactionsService {
             Date.now() + platformConfig.paymentTimeoutMinutes * 60 * 1000,
           ),
           updatedAt: new Date(),
-          eventDateTime: new Date(listing.eventDate),
-          releaseAfterMinutes:
-            listing.type === TicketType.DigitalNonTransferable ? 30 : undefined,
-          autoReleaseAt,
           depositReleaseAt: (() => {
             const eventDate = new Date(listing.eventDate);
             return new Date(eventDate.getTime() + 24 * 60 * 60 * 1000);
@@ -549,8 +543,8 @@ export class TransactionsService {
   }
 
   /**
-   * Buyer confirms receipt (for Physical and DigitalTransferable tickets)
-   * Atomic with lock to prevent race with auto-release
+   * Buyer confirms receipt (for Physical and Digital tickets)
+   * Atomic with lock to prevent concurrent updates
    */
   async confirmReceipt(
     ctx: Ctx,
@@ -602,63 +596,6 @@ export class TransactionsService {
     }
     this.logger.log(ctx, `Transaction ${transactionId} - buyer confirmed receipt, now DepositHold`);
     return updated;
-  }
-
-  /**
-   * Auto-release payment for digital non-transferable tickets
-   * Each release is atomic to prevent double payment
-   */
-  async processAutoReleases(ctx: Ctx): Promise<number> {
-    this.logger.log(ctx, 'Processing auto-releases');
-
-    const pendingReleases =
-      await this.transactionsRepository.getPendingAutoRelease(ctx);
-    let released = 0;
-
-    for (const transaction of pendingReleases) {
-      try {
-        await this.txManager.executeInTransaction(ctx, async (txCtx) => {
-          // Lock and re-verify status to prevent race with confirmReceipt
-          const txn = await this.transactionsRepository.findByIdForUpdate(
-            txCtx,
-            transaction.id,
-          );
-          if (!txn || txn.status !== TransactionStatus.TicketTransferred) {
-            return; // Already processed or invalid
-          }
-
-          // Release funds (atomic, same DB transaction)
-          await this.walletService.releaseFunds(
-            txCtx,
-            txn.sellerId,
-            txn.sellerReceives,
-            txn.id,
-            `Auto-release for digital ticket`,
-          );
-
-          const newStatus = TransactionStatus.Completed;
-          await this.transactionsRepository.updateWithVersion(
-            txCtx,
-            txn.id,
-            {
-              status: newStatus,
-              requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-              completedAt: new Date(),
-            },
-            txn.version,
-          );
-        });
-        released++;
-        this.logger.log(ctx, `Auto-released transaction ${transaction.id}`);
-      } catch (error) {
-        this.logger.error(
-          ctx,
-          `Failed to auto-release transaction ${transaction.id}: ${error}`,
-        );
-      }
-    }
-
-    return released;
   }
 
   /**

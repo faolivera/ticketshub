@@ -41,7 +41,7 @@ describe('Ticket Units (e2e)', () => {
       .send({
         eventId: EXISTING_EVENT_ID,
         eventDateId: EXISTING_EVENT_DATE_ID,
-        type: 'DigitalTransferable',
+        type: 'Digital',
         seatingType: 'numbered',
         ticketUnits: [
           { seat: { row: 'A', seatNumber: '1' } },
@@ -68,7 +68,7 @@ describe('Ticket Units (e2e)', () => {
       .send({
         eventId: EXISTING_EVENT_ID,
         eventDateId: EXISTING_EVENT_DATE_ID,
-        type: 'DigitalTransferable',
+        type: 'Digital',
         seatingType: 'unnumbered',
         quantity: 3,
         sellTogether: false,

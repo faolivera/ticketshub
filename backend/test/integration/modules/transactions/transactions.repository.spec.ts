@@ -238,22 +238,6 @@ describe('TransactionsRepository (Integration)', () => {
       expect(transaction.pickupAddress).toEqual(pickupAddress);
     });
 
-    it('should create a transaction with auto-release fields', async () => {
-      const eventDateTime = new Date('2026-06-15T20:00:00Z');
-      const autoReleaseAt = new Date('2026-06-16T02:00:00Z');
-      const transactionData = createValidTransaction({
-        eventDateTime,
-        releaseAfterMinutes: 360,
-        autoReleaseAt,
-      });
-
-      const transaction = await repository.create(ctx, transactionData);
-
-      expect(transaction.eventDateTime).toEqual(eventDateTime);
-      expect(transaction.releaseAfterMinutes).toBe(360);
-      expect(transaction.autoReleaseAt).toEqual(autoReleaseAt);
-    });
-
     it('should create a transaction with cancellation info', async () => {
       const transactionData = createValidTransaction({
         status: TransactionStatus.Cancelled,
@@ -429,46 +413,6 @@ describe('TransactionsRepository (Integration)', () => {
       const transactions = await repository.getByListingIds(ctx, [testListingId, listing2Id]);
 
       expect(transactions).toHaveLength(2);
-    });
-  });
-
-  // ==================== getPendingAutoRelease ====================
-
-  describe('getPendingAutoRelease', () => {
-    it('should return empty array when no transactions need auto-release', async () => {
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.TicketTransferred,
-        autoReleaseAt: new Date(Date.now() + 60 * 60 * 1000),
-      }));
-
-      const transactions = await repository.getPendingAutoRelease(ctx);
-
-      expect(transactions).toEqual([]);
-    });
-
-    it('should return transactions with expired auto-release', async () => {
-      const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.TicketTransferred,
-        autoReleaseAt: pastDate,
-      }));
-
-      const transactions = await repository.getPendingAutoRelease(ctx);
-
-      expect(transactions).toHaveLength(1);
-      expect(transactions[0].status).toBe(TransactionStatus.TicketTransferred);
-    });
-
-    it('should not return non-TicketTransferred status transactions', async () => {
-      const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PaymentReceived,
-        autoReleaseAt: pastDate,
-      }));
-
-      const transactions = await repository.getPendingAutoRelease(ctx);
-
-      expect(transactions).toEqual([]);
     });
   });
 
@@ -938,8 +882,7 @@ describe('TransactionsRepository (Integration)', () => {
     it('should handle transactions with all ticket types', async () => {
       const ticketTypes = [
         TicketType.Physical,
-        TicketType.DigitalTransferable,
-        TicketType.DigitalNonTransferable,
+        TicketType.Digital,
       ];
 
       for (const ticketType of ticketTypes) {

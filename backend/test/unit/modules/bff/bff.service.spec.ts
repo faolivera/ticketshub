@@ -48,7 +48,7 @@ describe('BffService', () => {
     listingId: 'listing_123',
     buyerId: 'buyer_123',
     sellerId: 'seller_123',
-    ticketType: TicketType.DigitalTransferable,
+    ticketType: TicketType.Digital,
     ticketUnitIds: ['unit_1'],
     quantity: 1,
     ticketPrice: { amount: 10000, currency: 'USD' },
@@ -418,7 +418,7 @@ describe('BffService', () => {
       sellerId: 'seller_123',
       eventId: 'event_123',
       eventDateId: 'date_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       seatingType: SeatingType.Unnumbered,
       ticketUnits: [
         {
@@ -535,7 +535,7 @@ describe('BffService', () => {
       sellerId: 'seller_123',
       eventId: 'event_123',
       eventDateId: 'date_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       seatingType: SeatingType.Unnumbered,
       ticketUnits: [
         { id: 'unit_1', listingId: 'listing_1', status: TicketUnitStatus.Available, version: 1 },

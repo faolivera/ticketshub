@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { Transaction as PrismaTransaction } from '@prisma/client';
+import { TicketType as PrismaTicketType } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
 import type { Transaction, Money } from './transactions.domain';
 import {
@@ -52,9 +53,6 @@ export class TransactionsRepository
         pickupAddress: transaction.pickupAddress
           ? (transaction.pickupAddress as object)
           : undefined,
-        eventDateTime: transaction.eventDateTime,
-        releaseAfterMinutes: transaction.releaseAfterMinutes,
-        autoReleaseAt: transaction.autoReleaseAt,
         depositReleaseAt: transaction.depositReleaseAt,
         disputeId: transaction.disputeId,
         paymentMethodId: transaction.paymentMethodId,
@@ -130,18 +128,6 @@ export class TransactionsRepository
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
       where: { listingId: { in: listingIds } },
-    });
-    return transactions.map((t) => this.mapToTransaction(t));
-  }
-
-  async getPendingAutoRelease(ctx: Ctx): Promise<Transaction[]> {
-    const client = this.getClient(ctx);
-    const now = new Date();
-    const transactions = await client.transaction.findMany({
-      where: {
-        status: 'TicketTransferred',
-        autoReleaseAt: { lte: now },
-      },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
@@ -234,15 +220,6 @@ export class TransactionsRepository
       data.pickupAddress = updates.pickupAddress
         ? (updates.pickupAddress as object)
         : null;
-    }
-    if (updates.eventDateTime !== undefined) {
-      data.eventDateTime = updates.eventDateTime;
-    }
-    if (updates.releaseAfterMinutes !== undefined) {
-      data.releaseAfterMinutes = updates.releaseAfterMinutes;
-    }
-    if (updates.autoReleaseAt !== undefined) {
-      data.autoReleaseAt = updates.autoReleaseAt;
     }
     if (updates.depositReleaseAt !== undefined) {
       data.depositReleaseAt = updates.depositReleaseAt;
@@ -484,9 +461,6 @@ export class TransactionsRepository
       paymentExpiresAt: prismaTransaction.paymentExpiresAt,
       adminReviewExpiresAt: prismaTransaction.adminReviewExpiresAt ?? undefined,
       refundedAt: prismaTransaction.refundedAt ?? undefined,
-      eventDateTime: prismaTransaction.eventDateTime ?? undefined,
-      releaseAfterMinutes: prismaTransaction.releaseAfterMinutes ?? undefined,
-      autoReleaseAt: prismaTransaction.autoReleaseAt ?? undefined,
       depositReleaseAt: prismaTransaction.depositReleaseAt ?? undefined,
       deliveryMethod: prismaTransaction.deliveryMethod
         ? this.mapDeliveryMethodFromDb(prismaTransaction.deliveryMethod)
@@ -655,29 +629,21 @@ export class TransactionsRepository
     }
   }
 
-  private mapTicketTypeToDb(
-    type: TicketType,
-  ): 'Physical' | 'DigitalTransferable' | 'DigitalNonTransferable' {
+  private mapTicketTypeToDb(type: TicketType): PrismaTicketType {
     switch (type) {
       case TicketType.Physical:
-        return 'Physical';
-      case TicketType.DigitalTransferable:
-        return 'DigitalTransferable';
-      case TicketType.DigitalNonTransferable:
-        return 'DigitalNonTransferable';
+        return PrismaTicketType.Physical;
+      case TicketType.Digital:
+        return PrismaTicketType.Digital;
     }
   }
 
-  private mapTicketTypeFromDb(
-    type: 'Physical' | 'DigitalTransferable' | 'DigitalNonTransferable',
-  ): TicketType {
+  private mapTicketTypeFromDb(type: PrismaTicketType): TicketType {
     switch (type) {
-      case 'Physical':
+      case PrismaTicketType.Physical:
         return TicketType.Physical;
-      case 'DigitalTransferable':
-        return TicketType.DigitalTransferable;
-      case 'DigitalNonTransferable':
-        return TicketType.DigitalNonTransferable;
+      case PrismaTicketType.Digital:
+        return TicketType.Digital;
     }
   }
 

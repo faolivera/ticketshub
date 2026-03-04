@@ -43,7 +43,7 @@ describe('TransactionsService', () => {
     listingId: 'listing_123',
     buyerId: 'buyer_123',
     sellerId: 'seller_123',
-    ticketType: TicketType.DigitalTransferable,
+    ticketType: TicketType.Digital,
     ticketUnitIds: ['unit_1', 'unit_2'],
     quantity: 2,
     ticketPrice: { amount: 20000, currency: 'USD' },
@@ -74,7 +74,6 @@ describe('TransactionsService', () => {
       getBySellerId: jest.fn(),
       getByListingId: jest.fn(),
       getByListingIds: jest.fn(),
-      getPendingAutoRelease: jest.fn(),
       getPendingDepositRelease: jest.fn(),
       findExpiredPendingPayments: jest.fn(),
       findExpiredAdminReviews: jest.fn(),
@@ -586,99 +585,6 @@ describe('TransactionsService', () => {
         'txn_123',
       );
       expect(walletService.holdFunds).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('processAutoReleases', () => {
-    it('should release funds for pending auto-release transactions atomically', async () => {
-      const pendingReleases = [
-        createMockTransaction({
-          id: 'txn_1',
-          status: TransactionStatus.TicketTransferred,
-          autoReleaseAt: new Date(Date.now() - 1000),
-        }),
-        createMockTransaction({
-          id: 'txn_2',
-          status: TransactionStatus.TicketTransferred,
-          autoReleaseAt: new Date(Date.now() - 1000),
-        }),
-      ];
-
-      transactionsRepository.getPendingAutoRelease.mockResolvedValue(pendingReleases);
-      transactionsRepository.findByIdForUpdate.mockImplementation(async (_ctx, id) =>
-        pendingReleases.find((t) => t.id === id),
-      );
-      walletService.releaseFunds.mockResolvedValue(undefined);
-      transactionsRepository.updateWithVersion.mockImplementation(async (_ctx, id) => ({
-        ...pendingReleases.find((t) => t.id === id)!,
-        status: TransactionStatus.Completed,
-        version: 2,
-      }));
-
-      const result = await service.processAutoReleases(mockCtx);
-
-      expect(result).toBe(2);
-      expect(walletService.releaseFunds).toHaveBeenCalledTimes(2);
-      expect(txManager.executeInTransaction).toHaveBeenCalledTimes(2);
-    });
-
-    it('should return 0 when no pending auto-releases', async () => {
-      transactionsRepository.getPendingAutoRelease.mockResolvedValue([]);
-
-      const result = await service.processAutoReleases(mockCtx);
-
-      expect(result).toBe(0);
-      expect(walletService.releaseFunds).not.toHaveBeenCalled();
-    });
-
-    it('should continue processing when one release fails', async () => {
-      const pendingReleases = [
-        createMockTransaction({
-          id: 'txn_1',
-          status: TransactionStatus.TicketTransferred,
-        }),
-        createMockTransaction({
-          id: 'txn_2',
-          status: TransactionStatus.TicketTransferred,
-        }),
-      ];
-
-      transactionsRepository.getPendingAutoRelease.mockResolvedValue(pendingReleases);
-      transactionsRepository.findByIdForUpdate.mockImplementation(async (_ctx, id) =>
-        pendingReleases.find((t) => t.id === id),
-      );
-      walletService.releaseFunds
-        .mockResolvedValueOnce(undefined)
-        .mockRejectedValueOnce(new Error('Wallet error'));
-      transactionsRepository.updateWithVersion.mockImplementation(async (_ctx, id) => ({
-        ...pendingReleases.find((t) => t.id === id)!,
-        status: TransactionStatus.Completed,
-        version: 2,
-      }));
-
-      const result = await service.processAutoReleases(mockCtx);
-
-      expect(result).toBe(1);
-    });
-
-    it('should skip already processed transactions (status changed)', async () => {
-      const pendingReleases = [
-        createMockTransaction({
-          id: 'txn_1',
-          status: TransactionStatus.TicketTransferred,
-        }),
-      ];
-
-      transactionsRepository.getPendingAutoRelease.mockResolvedValue(pendingReleases);
-      transactionsRepository.findByIdForUpdate.mockResolvedValue({
-        ...pendingReleases[0],
-        status: TransactionStatus.Completed,
-      });
-
-      const result = await service.processAutoReleases(mockCtx);
-
-      expect(result).toBe(1);
-      expect(walletService.releaseFunds).not.toHaveBeenCalled();
     });
   });
 

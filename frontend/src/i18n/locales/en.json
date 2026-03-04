@@ -878,8 +878,6 @@
     "digitalDesc": "E-ticket or mobile ticket",
     "physical": "Physical",
     "physicalDesc": "Printed ticket",
-    "digitallyTransferable": "Digitally Transferable",
-    "digitallyTransferableDesc": "Ticket can be transferred electronically to the buyer",
     "howToDeliver": "How will you deliver the physical ticket?",
     "pickupAddress": "Pickup Address",
     "pickupAddressDesc": "Buyer picks up at a specific location",

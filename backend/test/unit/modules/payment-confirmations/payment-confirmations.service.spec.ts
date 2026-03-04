@@ -21,7 +21,7 @@ const createMockTransaction = (overrides: Partial<Transaction> = {}): Transactio
     listingId: 'listing_123',
     buyerId: 'buyer_123',
     sellerId: 'seller_123',
-    ticketType: TicketType.DigitalTransferable,
+    ticketType: TicketType.Digital,
     ticketUnitIds: ['unit_1'],
     quantity: 1,
     ticketPrice: { amount: 10000, currency: 'USD' },

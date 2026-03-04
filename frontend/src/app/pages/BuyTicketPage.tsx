@@ -383,11 +383,7 @@ export function BuyTicketPage() {
 
   const ticketTypeDisplay =
     listing.sectionName ||
-    (listing.type === 'Physical'
-      ? 'Physical Ticket'
-      : listing.type === 'DigitalTransferable'
-        ? 'Digital Ticket'
-        : 'Digital (Non-transferable)');
+    (listing.type === 'Physical' ? 'Physical Ticket' : 'Digital Ticket');
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Calendar, Clock } from 'lucide-react';
+import { MapPin, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { EventBanner, useEventBannerVariant } from './EventBanner';
 
@@ -93,31 +93,24 @@ export function EventCard({
             <span className="line-clamp-1">{location} - {venue}</span>
           </div>
 
-          <div>
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-              <Calendar className="w-4 h-4 text-blue-600 flex-shrink-0" />
-              <span className="font-semibold">{t('eventCard.availableDates')}</span>
-            </div>
-            <div className="ml-6 space-y-1">
-              {displayDates.map((showTime, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                  <Clock className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                  <span>{showTime.date} {t('common.at')} {showTime.time}</span>
-                </div>
-              ))}
-              {hasMoreDates && (
-                <p className="text-xs text-blue-600 ml-5 font-medium">
-                  {remainingDates === 1
-                    ? t('eventCard.moreDate')
-                    : t('eventCard.moreDates', { count: remainingDates })
-                  }
-                </p>
-              )}
-            </div>
+          <div className="space-y-1">
+            {displayDates.map((showTime, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                <Calendar className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                <span>{showTime.date} {t('common.at')} {showTime.time}</span>
+              </div>
+            ))}
+            {hasMoreDates && (
+              <p className="text-xs text-blue-600 ml-5 font-medium">
+                {remainingDates === 1
+                  ? t('eventCard.moreDate')
+                  : t('eventCard.moreDates', { count: remainingDates })
+                }
+              </p>
+            )}
           </div>
 
           <div>
-            <p className="text-xs text-gray-500 mb-2">{t('eventCard.availableTickets')}</p>
             <div className="flex flex-wrap gap-2">
               {ticketTypes.map((type, index) => (
                 <span
@@ -137,6 +130,12 @@ export function EventCard({
             <span className="text-2xl font-bold text-blue-600">${price}</span>
           </div>
         )}
+
+        <div className="md:hidden pt-3 border-t border-gray-100 mt-2">
+          <span className="text-sm font-semibold text-indigo-600">
+            {t('eventCard.viewTickets')} →
+          </span>
+        </div>
       </div>
     </Link>
   );

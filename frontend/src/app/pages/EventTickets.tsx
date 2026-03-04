@@ -52,9 +52,7 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
   const eventDate = eventDates.find(d => d.id === listing.eventDateId);
   const dateObj = eventDate ? new Date(eventDate.date) : new Date(listing.eventDate);
 
-  const typeDisplay = listing.type === 'Physical' ? 'Physical'
-    : listing.type === 'DigitalTransferable' ? 'Digital'
-    : 'Digital (Non-transferable)';
+  const typeDisplay = listing.type === 'Physical' ? 'Physical' : 'Digital';
 
   return {
     id: listing.id,

@@ -48,7 +48,7 @@ describe('AdminService', () => {
     listingId: 'listing_123',
     buyerId: 'buyer_123',
     sellerId: 'seller_123',
-    ticketType: TicketType.DigitalTransferable,
+    ticketType: TicketType.Digital,
     ticketUnitIds: ['unit_1', 'unit_2'],
     quantity: 2,
     ticketPrice: { amount: 20000, currency: 'USD' },
@@ -770,7 +770,7 @@ describe('AdminService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         { id: 'unit_1', status: 'available' },
         { id: 'unit_2', status: 'reserved' },

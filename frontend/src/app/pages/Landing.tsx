@@ -155,11 +155,11 @@ export function Landing() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div
-        className="relative bg-cover bg-center bg-no-repeat text-white py-24"
+        className="relative bg-cover bg-center bg-no-repeat text-white py-28 min-h-[420px] flex items-center"
         style={{ backgroundImage: 'url(/hero.jpeg)' }}
       >
         <div className="absolute inset-0 bg-black/55" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 w-full">
           <h1 className="text-5xl font-bold mb-4 text-center tracking-tight">
             {t('landing.title')}
           </h1>

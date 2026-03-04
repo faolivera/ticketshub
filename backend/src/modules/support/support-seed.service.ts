@@ -331,7 +331,7 @@ export class SupportSeedService {
       return {
         eventId,
         eventDateId,
-        type: TicketType.DigitalTransferable,
+        type: TicketType.Digital,
         sellTogether: false,
         pricePerTicket: { amount: 15000, currency: 'EUR' },
         eventSectionId: sectionMap['Platea'],
@@ -364,7 +364,7 @@ export class SupportSeedService {
     return {
       eventId,
       eventDateId,
-      type: TicketType.DigitalNonTransferable,
+      type: TicketType.Digital,
       quantity: 1,
       sellTogether: true,
       pricePerTicket: { amount: 12000, currency: 'EUR' },

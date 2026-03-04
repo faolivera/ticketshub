@@ -862,8 +862,6 @@
     "digitalDesc": "E-ticket o entrada móvil",
     "physical": "Físico",
     "physicalDesc": "Entrada impresa",
-    "digitallyTransferable": "Transferible Digitalmente",
-    "digitallyTransferableDesc": "La entrada puede transferirse electrónicamente al comprador",
     "howToDeliver": "¿Cómo entregarás la entrada física?",
     "pickupAddress": "Dirección de Recogida",
     "pickupAddressDesc": "El comprador recoge en un lugar específico",

@@ -20,15 +20,9 @@ export enum TicketType {
   Physical = 'Physical',
 
   /**
-   * Digital ticket that can be transferred (e.g., PDF, e-ticket)
+   * Digital ticket (e.g., PDF, e-ticket)
    */
-  DigitalTransferable = 'DigitalTransferable',
-
-  /**
-   * Digital ticket that cannot be transferred (e.g., ID-linked, app-only)
-   * Payment released automatically after event + X minutes
-   */
-  DigitalNonTransferable = 'DigitalNonTransferable',
+  Digital = 'Digital',
 }
 
 /**

@@ -121,7 +121,7 @@ describe('TicketsService', () => {
     eventId: 'evt_123',
     eventDateId: 'edt_456',
     eventSectionId: 'sec_test_123',
-    type: TicketType.DigitalTransferable,
+    type: TicketType.Digital,
     ticketUnits: [
       {
         id: 'unit_1',
@@ -227,7 +227,7 @@ describe('TicketsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       quantity: 2,
       pricePerTicket: { amount: 5000, currency: 'USD' as CurrencyCode },
     };
@@ -468,7 +468,7 @@ describe('TicketsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',
@@ -712,7 +712,7 @@ describe('TicketsService', () => {
         eventId: 'evt_123',
         eventDateId: 'edt_123',
         eventSectionId: 'sec_test_123',
-        type: TicketType.DigitalTransferable,
+        type: TicketType.Digital,
         ticketUnits: [
           {
             id: 'unit_1',
@@ -791,7 +791,7 @@ describe('TicketsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',
@@ -905,7 +905,7 @@ describe('TicketsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',
@@ -1030,7 +1030,7 @@ describe('TicketsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',
@@ -1097,7 +1097,7 @@ describe('TicketsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',
@@ -1197,7 +1197,7 @@ describe('TicketsService', () => {
       eventId: 'evt_123',
       eventDateId: 'edt_123',
       eventSectionId: 'sec_test_123',
-      type: TicketType.DigitalTransferable,
+      type: TicketType.Digital,
       ticketUnits: [
         {
           id: 'unit_1',
@@ -1292,7 +1292,7 @@ describe('TicketsService', () => {
         eventId: 'evt_123',
         eventDateId: 'edt_123',
         eventSectionId: 'sec_test_123',
-        type: TicketType.DigitalTransferable,
+        type: TicketType.Digital,
         ticketUnits: [
           {
             id: 'unit_1',
@@ -1327,7 +1327,7 @@ describe('TicketsService', () => {
         eventId: 'evt_123',
         eventDateId: 'edt_123',
         eventSectionId: 'sec_test_123',
-        type: TicketType.DigitalTransferable,
+        type: TicketType.Digital,
         ticketUnits: [
           {
             id: 'unit_1',
