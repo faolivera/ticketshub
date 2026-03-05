@@ -90,6 +90,23 @@ export function formatDateShort(value: DateInput): string {
 }
 
 /**
+ * Short date + time for compact contexts like filter chips.
+ * @example "Mar 30 · 8:00 PM" / "30 mar · 20:00"
+ */
+export function formatDateTimeShort(value: DateInput): string {
+  const date = toDate(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  const locale = getDateLocale();
+  const datePart = date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+  const timePart = date.toLocaleTimeString(locale, {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: locale.startsWith('en'),
+  });
+  return `${datePart} · ${timePart}`;
+}
+
+/**
  * Medium date + short time for admin tables.
  */
 export function formatDateTimeMedium(value: DateInput): string {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Calendar, Clock, Ticket, ArrowLeft, ThumbsUp, ThumbsDown, Minus, Award, ShieldCheck, Trophy } from 'lucide-react';
+import { MapPin, Calendar, Clock, Ticket, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '../../api/services/events.service';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -8,42 +8,16 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { EventBanner } from '../components/EventBanner';
-import { UserAvatar } from '../components/UserAvatar';
+import { TicketCard } from '../components/TicketCard';
+import { TicketFilters } from '../components/TicketFilters';
+import type { TransformedTicket } from '../components/TicketCard';
 import type { EventWithDates, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
-import { formatCurrencyFromUnits } from '@/lib/format-currency';
-import { formatDate, formatTime, formatDateTime } from '@/lib/format-date';
-
-interface ShowTime {
-  date: string;
-  time: string;
-  dateObj: Date;
-  eventDateId: string;
-}
-
-interface SellerReviews {
-  positive: number;
-  neutral: number;
-  negative: number;
-}
-
-interface TransformedTicket {
-  id: string;
-  type: string;
-  price: number;
-  currency: string;
-  available: number;
-  sellTogether: boolean;
-  commissionPercentRange: { min: number; max: number };
-  seller: string;
-  sellerName: string;
-  sellerPicture?: string;
-  sellerReviews: SellerReviews;
-  sellerBadges: Array<'trusted' | 'verified' | 'best_seller'>;
-  sellerTotalSales: number;
-  showTime: ShowTime;
-}
+import type { SortOption, ViewMode } from '../components/TicketFilters';
+import { Badge } from '../components/ui/badge';
+import { cn } from '../components/ui/utils';
+import { formatDate, formatTime, formatDateTime, formatDateTimeShort } from '@/lib/format-date';
 
 /**
  * Transform BFF listing (with seller info) to UI format
@@ -65,6 +39,7 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
     seller: listing.sellerId,
     sellerName: listing.sellerPublicName,
     sellerPicture: listing.sellerPic.src,
+    acceptsOffers: listing.bestOfferConfig?.enabled ?? false,
     sellerReviews: { positive: 0, neutral: 0, negative: 0 },
     sellerBadges: [],
     sellerTotalSales: 0,
@@ -77,38 +52,6 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
   };
 }
 
-const getBadgeIcon = (badge: 'trusted' | 'verified' | 'best_seller') => {
-  switch (badge) {
-    case 'trusted':
-      return <ShieldCheck className="w-4 h-4" />;
-    case 'verified':
-      return <Award className="w-4 h-4" />;
-    case 'best_seller':
-      return <Trophy className="w-4 h-4" />;
-  }
-};
-
-const getBadgeColor = (badge: 'trusted' | 'verified' | 'best_seller') => {
-  switch (badge) {
-    case 'trusted':
-      return 'bg-blue-100 text-blue-700';
-    case 'verified':
-      return 'bg-green-100 text-green-700';
-    case 'best_seller':
-      return 'bg-purple-100 text-purple-700';
-  }
-};
-
-const getBadgeLabel = (badge: 'trusted' | 'verified' | 'best_seller', t: (key: string) => string) => {
-  switch (badge) {
-    case 'trusted':
-      return t('eventTickets.badgeTrusted');
-    case 'verified':
-      return t('eventTickets.badgeVerified');
-    case 'best_seller':
-      return t('eventTickets.badgeBestSeller');
-  }
-};
 
 export function EventTickets() {
   const { t } = useTranslation();
@@ -122,6 +65,10 @@ export function EventTickets() {
   
   const [selectedShowTimes, setSelectedShowTimes] = useState<string[]>([]);
   const [selectedTicketTypes, setSelectedTicketTypes] = useState<string[]>([]);
+  const [acceptsOffersOnly, setAcceptsOffersOnly] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>('price_asc');
+  const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   // Fetch event and listings
   useEffect(() => {
@@ -174,6 +121,17 @@ export function EventTickets() {
     return Array.from(new Set(tickets.map(t => t.type))).sort();
   }, [tickets]);
 
+  const headerStats = useMemo(() => {
+    if (tickets.length === 0) return null;
+    const prices = tickets.map(t => t.price);
+    return {
+      minPrice: Math.min(...prices),
+      currency: tickets[0].currency,
+      totalAvailable: tickets.reduce((sum, t) => sum + t.available, 0),
+      sellersCount: new Set(tickets.map(t => t.seller)).size,
+    };
+  }, [tickets]);
+
   // Toggle filter selection
   const toggleShowTime = (key: string) => {
     setSelectedShowTimes(prev => 
@@ -187,18 +145,33 @@ export function EventTickets() {
     );
   };
 
+  const toggleAcceptsOffers = () => setAcceptsOffersOnly(prev => !prev);
+
   const clearAllFilters = () => {
     setSelectedShowTimes([]);
     setSelectedTicketTypes([]);
+    setAcceptsOffersOnly(false);
   };
 
-  // Sort tickets: first by date/time, then by ticket type
   const sortedTickets = useMemo(() => {
     return [...tickets].sort((a, b) => {
       const dateCompare = a.showTime.dateObj.getTime() - b.showTime.dateObj.getTime();
       if (dateCompare !== 0) return dateCompare;
-      return a.type.localeCompare(b.type);
+      switch (sortOption) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'most_available':
+          return b.available - a.available;
+        default:
+          return a.type.localeCompare(b.type);
+      }
     });
+  }, [tickets, sortOption]);
+
+  const hasOfferListings = useMemo(() => {
+    return tickets.some(t => t.acceptsOffers);
   }, [tickets]);
 
   // Apply filters
@@ -216,13 +189,42 @@ export function EventTickets() {
         selectedTicketTypes.includes(t.type)
       );
     }
+
+    if (acceptsOffersOnly) {
+      filtered = filtered.filter(t => t.acceptsOffers);
+    }
     
     return filtered;
-  }, [sortedTickets, selectedShowTimes, selectedTicketTypes]);
+  }, [sortedTickets, selectedShowTimes, selectedTicketTypes, acceptsOffersOnly]);
 
-  // Group tickets by show time for display
+  const bestPriceByType = useMemo(() => {
+    const result: Record<string, string> = {};
+    const typeGroups: Record<string, TransformedTicket[]> = {};
+
+    for (const ticket of displayTickets) {
+      if (!typeGroups[ticket.type]) typeGroups[ticket.type] = [];
+      typeGroups[ticket.type].push(ticket);
+    }
+
+    for (const [, group] of Object.entries(typeGroups)) {
+      if (group.length > 1) {
+        const cheapest = group.reduce((min, t) => (t.price < min.price ? t : min), group[0]);
+        result[cheapest.id] = cheapest.id;
+      }
+    }
+
+    return result;
+  }, [displayTickets]);
+
+  const visibleTickets = useMemo(() => {
+    return displayTickets.slice(0, visibleCount);
+  }, [displayTickets, visibleCount]);
+
+  const hasMoreTickets = displayTickets.length > visibleCount;
+  const remainingCount = displayTickets.length - visibleCount;
+
   const ticketsByShowTime = useMemo(() => {
-    return displayTickets.reduce((acc, ticket) => {
+    return visibleTickets.reduce((acc, ticket) => {
       const key = `${ticket.showTime.date}|${ticket.showTime.time}`;
       if (!acc[key]) {
         acc[key] = [];
@@ -230,40 +232,7 @@ export function EventTickets() {
       acc[key].push(ticket);
       return acc;
     }, {} as Record<string, TransformedTicket[]>);
-  }, [displayTickets]);
-
-  const renderReviews = (reviews: SellerReviews) => {
-    const totalReviews = reviews.positive + reviews.neutral + reviews.negative;
-    const positivePercentage = totalReviews > 0 ? Math.round((reviews.positive / totalReviews) * 100) : 0;
-    
-    if (totalReviews === 0) {
-      return (
-        <p className="text-xs text-gray-500">{t('eventTickets.noReviewsYet')}</p>
-      );
-    }
-    
-    return (
-      <div className="space-y-1">
-        <div className="flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-1 text-green-600">
-            <ThumbsUp className="w-3.5 h-3.5" />
-            <span className="font-semibold">{reviews.positive}</span>
-          </div>
-          <div className="flex items-center gap-1 text-gray-500">
-            <Minus className="w-3.5 h-3.5" />
-            <span className="font-semibold">{reviews.neutral}</span>
-          </div>
-          <div className="flex items-center gap-1 text-red-500">
-            <ThumbsDown className="w-3.5 h-3.5" />
-            <span className="font-semibold">{reviews.negative}</span>
-          </div>
-        </div>
-        <div className="text-xs text-gray-600">
-          {t('eventTickets.positiveReviews', { percent: positivePercentage, total: totalReviews })}
-        </div>
-      </div>
-    );
-  };
+  }, [visibleTickets]);
 
   // Loading state
   if (isLoading) {
@@ -302,56 +271,113 @@ export function EventTickets() {
         </Link>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-          <EventBanner
-            variant="rectangle"
-            squareUrl={event.bannerUrls?.square || event.images?.[0]?.src}
-            rectangleUrl={event.bannerUrls?.rectangle}
-            alt={event.name}
-            className="h-64"
-          />
-
-          <div className="p-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">{event.name}</h1>
-            <p className="text-xl text-gray-600 mb-6">{event.category}</p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-500">{t('eventTickets.location')}</p>
-                  <p className="font-semibold text-gray-900">{locationStr}</p>
-                  <p className="text-sm text-gray-600">{event.venue}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-500">{t('eventTickets.availableDates')}</p>
-                  {event.dates
-                    .filter(d => d.status === 'approved')
-                    .slice(0, 3)
-                    .map((eventDate) => (
-                      <p key={eventDate.id} className="text-sm text-gray-900">
-                        {formatDateTime(eventDate.date)}
-                      </p>
-                    ))}
-                  {event.dates.filter(d => d.status === 'approved').length > 3 && (
-                    <p className="text-sm text-blue-600">
-                      +{event.dates.filter(d => d.status === 'approved').length - 3} more dates
-                    </p>
-                  )}
-                </div>
-              </div>
+          <div className="flex flex-col md:flex-row">
+            <div className="md:w-2/5 flex-shrink-0">
+              <EventBanner
+                variant="rectangle"
+                squareUrl={event.bannerUrls?.square || event.images?.[0]?.src}
+                rectangleUrl={event.bannerUrls?.rectangle}
+                alt={event.name}
+                className="h-48 md:h-full md:min-h-[320px] md:aspect-auto"
+              />
             </div>
 
-            <p className="text-gray-700">{event.description}</p>
+            <div className="p-5 md:p-8 flex flex-col gap-3 md:gap-4 flex-1 min-w-0">
+              <Badge variant="secondary" className="w-fit">{event.category}</Badge>
+
+              <h1 className="text-2xl md:text-4xl font-bold text-gray-900 leading-tight">
+                {event.name}
+              </h1>
+
+              <div className="flex items-center gap-2 text-gray-700">
+                <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                <span className="truncate">
+                  <span className="font-semibold">{event.venue}</span>
+                  {locationStr && (
+                    <span className="text-gray-500"> · {locationStr}</span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {tickets.length > 0 ? (
+                  <>
+                    {uniqueShowTimes.length > 1 && (
+                      <button
+                        onClick={() => setSelectedShowTimes([])}
+                        className={cn(
+                          'px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                          selectedShowTimes.length === 0
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400',
+                        )}
+                      >
+                        {t('eventTickets.allDates')}
+                      </button>
+                    )}
+                    {uniqueShowTimes.map((st) => (
+                      <button
+                        key={st.key}
+                        onClick={() => toggleShowTime(st.key)}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                          selectedShowTimes.includes(st.key)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400',
+                        )}
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        {formatDateTimeShort(st.dateObj)}
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  event.dates
+                    .filter((d) => d.status === 'approved')
+                    .slice(0, 5)
+                    .map((eventDate) => (
+                      <span
+                        key={eventDate.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-gray-300 bg-white text-gray-700"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                        {formatDateTimeShort(eventDate.date)}
+                      </span>
+                    ))
+                )}
+              </div>
+
+              {headerStats && (
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="text-xl md:text-2xl font-bold text-blue-600">
+                    {t('eventTickets.ticketsFrom', {
+                      price: headerStats.minPrice.toLocaleString(undefined, {
+                        style: 'currency',
+                        currency: headerStats.currency,
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }),
+                    })}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {t('eventTickets.ticketsAvailable', { count: headerStats.totalAvailable })}
+                    {' · '}
+                    {t('eventTickets.fromSellersCount', { count: headerStats.sellersCount })}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 w-fit mt-auto">
+                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm font-medium">{t('eventTickets.buyerGuarantee')}</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('eventTickets.availableTickets')}</h2>
-          
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('eventTickets.availableTickets')}</h2>
+
           {tickets.length === 0 ? (
             <EmptyState
               icon={Ticket}
@@ -364,197 +390,80 @@ export function EventTickets() {
             />
           ) : (
             <>
-              {/* Filters */}
-              <div className="mb-6 space-y-4">
-                {/* Date Filters */}
-                {uniqueShowTimes.length > 1 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-sm font-semibold text-gray-700">{t('eventTickets.filterByDateTime')}</label>
-                      {(selectedShowTimes.length > 0 || selectedTicketTypes.length > 0) && (
-                        <button
-                          onClick={clearAllFilters}
-                          className="text-sm text-blue-600 hover:text-blue-700"
-                        >
-                          {t('eventTickets.clearAllFilters')}
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {uniqueShowTimes.map((showTime) => (
-                        <button
-                          key={showTime.key}
-                          onClick={() => toggleShowTime(showTime.key)}
-                          className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                            selectedShowTimes.includes(showTime.key)
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span className="text-sm font-medium">
-                              {formatDateTime(showTime.dateObj)}
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Ticket Type Filters */}
-                {uniqueTicketTypes.length > 1 && (
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 block mb-3">{t('eventTickets.filterByTicketType')}</label>
-                    <div className="flex flex-wrap gap-2">
-                      {uniqueTicketTypes.map((type) => (
-                        <button
-                          key={type}
-                          onClick={() => toggleTicketType(type)}
-                          className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                            selectedTicketTypes.includes(type)
-                              ? 'bg-purple-600 text-white border-purple-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Ticket className="w-4 h-4" />
-                            <span className="text-sm font-medium">{type}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Active Filters Summary */}
-                {(selectedShowTimes.length > 0 || selectedTicketTypes.length > 0) && (
-                  <div className="pt-2 text-sm text-gray-600">
-                    {t('eventTickets.showing', { displayed: displayTickets.length, total: sortedTickets.length })}
-                  </div>
-                )}
-              </div>
+              <TicketFilters
+                uniqueShowTimes={uniqueShowTimes}
+                uniqueTicketTypes={uniqueTicketTypes}
+                selectedShowTimes={selectedShowTimes}
+                selectedTicketTypes={selectedTicketTypes}
+                onToggleShowTime={toggleShowTime}
+                onToggleTicketType={toggleTicketType}
+                onClearAll={clearAllFilters}
+                sortOption={sortOption}
+                onSortChange={setSortOption}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                displayCount={displayTickets.length}
+                totalCount={sortedTickets.length}
+                acceptsOffersOnly={acceptsOffersOnly}
+                onAcceptsOffersToggle={toggleAcceptsOffers}
+                hasOfferListings={hasOfferListings}
+              />
 
               <div className="space-y-8">
                 {Object.entries(ticketsByShowTime).map(([showTimeKey, showTimeTickets]) => {
                   const [date, time] = showTimeKey.split('|');
                   return (
                     <div key={showTimeKey}>
-                      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
-                        <Clock className="w-5 h-5 text-blue-600" />
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {showTimeTickets[0] ? formatDateTime(showTimeTickets[0].showTime.dateObj) : `${date} ${time}`}
-                        </h3>
+                      <div className="sticky top-0 z-10 bg-white flex items-center justify-between gap-2 mb-4 pb-2 pt-2 -mt-2 border-b border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-5 h-5 text-blue-600" />
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {showTimeTickets[0] ? formatDateTime(showTimeTickets[0].showTime.dateObj) : `${date} ${time}`}
+                          </h3>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {t('eventTickets.listingsCount', { count: showTimeTickets.length })}
+                        </span>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {showTimeTickets.map((ticket) => (
-                          <div 
-                            key={ticket.id}
-                            className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors flex flex-col"
-                          >
-                            {/* Ticket Information */}
-                            <div className="mb-4">
-                              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">{t('eventTickets.ticketDetails')}</h4>
-                              <div className="space-y-2">
-                                <div>
-                                  <p className="text-xs text-gray-500">{t('eventTickets.type')}</p>
-                                  <p className="text-lg font-bold text-gray-900">{ticket.type}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500">{t('eventTickets.dateTime')}</p>
-                                  <p className="text-sm text-gray-900">{ticket.showTime.date}</p>
-                                  <p className="text-sm text-gray-900">{ticket.showTime.time}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500">{t('eventTickets.price')}</p>
-                                  <p className="text-3xl font-bold text-blue-600">{formatCurrencyFromUnits(ticket.price, ticket.currency)}</p>
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {ticket.commissionPercentRange.min === ticket.commissionPercentRange.max
-                                      ? t('eventTickets.commissionSingle', {
-                                          percent: ticket.commissionPercentRange.min,
-                                        })
-                                      : t('eventTickets.commissionRange', {
-                                          min: ticket.commissionPercentRange.min,
-                                          max: ticket.commissionPercentRange.max,
-                                        })}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500">{t('eventTickets.available')}</p>
-                                  <p className="text-sm text-gray-900">
-                                    {t('eventTickets.ticketsAvailable', { count: ticket.available })}
-                                    {ticket.sellTogether ? (
-                                      <span className="ml-1 text-gray-500">
-                                        ({t('eventTickets.soldAsBundle')})
-                                      </span>
-                                    ) : (
-                                      <span className="ml-1 text-gray-500">
-                                        ({t('eventTickets.soldIndividually')})
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Seller Information */}
-                            <div className="border-t border-gray-200 pt-4 mt-auto">
-                              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">{t('eventTickets.soldBy')}</h4>
-                              <div className="flex items-start gap-3 mb-4">
-                                <UserAvatar name={ticket.sellerName} src={ticket.sellerPicture} className="h-12 w-12" />
-
-                                <div className="flex-1 min-w-0">
-                                  <Link 
-                                    to={`/seller/${ticket.seller}`}
-                                    className="text-sm font-semibold text-blue-600 hover:text-blue-700 block mb-1 truncate"
-                                  >
-                                    {ticket.sellerName}
-                                  </Link>
-
-                                  {/* Reviews and Sales */}
-                                  <div className="mb-2 space-y-1">
-                                    {renderReviews(ticket.sellerReviews)}
-                                    {ticket.sellerTotalSales > 0 && (
-                                      <p className="text-xs text-gray-600">
-                                        {t('eventTickets.ticketsSold', { count: ticket.sellerTotalSales })}
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  {/* Badges */}
-                                  {ticket.sellerBadges.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
-                                      {ticket.sellerBadges.map((badge) => (
-                                        <span 
-                                          key={badge}
-                                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold ${getBadgeColor(badge)}`}
-                                        >
-                                          {getBadgeIcon(badge)}
-                                          {getBadgeLabel(badge, t)}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Action Button */}
-                              <Link
-                                to={`/buy/${ticket.id}`}
-                                className="block w-full px-4 py-3 bg-blue-600 text-white text-center font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                {t('eventTickets.buyTicket')}
-                              </Link>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      {viewMode === 'card' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                          {showTimeTickets.map((ticket) => (
+                            <TicketCard
+                              key={ticket.id}
+                              ticket={ticket}
+                              isBestPrice={ticket.id in bestPriceByType}
+                              variant="card"
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {showTimeTickets.map((ticket) => (
+                            <TicketCard
+                              key={ticket.id}
+                              ticket={ticket}
+                              isBestPrice={ticket.id in bestPriceByType}
+                              variant="list"
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
+
+              {hasMoreTickets && (
+                <div className="text-center mt-8">
+                  <button
+                    onClick={() => setVisibleCount(prev => prev + 12)}
+                    className="px-6 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    {t('eventTickets.showMore', { count: remainingCount })}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
