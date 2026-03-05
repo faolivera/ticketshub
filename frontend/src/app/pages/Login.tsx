@@ -4,13 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Mail, Lock, Ticket } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
 
-const QUICK_LOGIN_USERS = [
-  { label: 'Admin Facu', email: 'facu@admin.com', password: '12345678' },
-  { label: 'Venito Seller', email: 'seller@ticketshub.local', password: 'seller123' },
-  { label: 'Pepito', email: 'buyer@ticketshub.local', password: 'buyer123' },
-  { label: 'Facu Oli', email: 'f@f.com', password: '12345678' },
-];
-
 export function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -18,11 +11,6 @@ export function Login() {
   const { login, error, clearError } = useUser();
 
   const [formData, setFormData] = useState({ email: '', password: '' });
-
-  const handleQuickLogin = (email: string, password: string) => {
-    clearError();
-    setFormData({ email, password });
-  };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -136,22 +124,6 @@ export function Login() {
               </Link>
             </p>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center mb-3">Quick login (dev only)</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {QUICK_LOGIN_USERS.map((user) => (
-                <button
-                  key={user.email}
-                  type="button"
-                  onClick={() => handleQuickLogin(user.email, user.password)}
-                  className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
-                >
-                  {user.label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,9 @@
 # Caddy: serve frontend and reverse-proxy to backend
 # Listen on PORT (set by Render); default 8080 for local runs
+# Disable admin API so Render health checks (Host: *.onrender.com) are not rejected with 403
+{
+	admin off
+}
 # API/socket/health must be handled first, then static SPA (otherwise /api/* gets index.html)
 :{$PORT:8080} {
 	handle /api/* {

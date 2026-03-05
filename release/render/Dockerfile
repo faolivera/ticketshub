@@ -14,13 +14,13 @@ COPY frontend/ ./
 RUN npm run build
 
 # -----------------------------------------------------------------------------
-# Stage 2: Backend
+# Stage 2: Backend (production deps only; dist is built on host)
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS backend
 WORKDIR /app/backend
 
 COPY backend/package.json backend/package-lock.json* ./
-RUN npm ci 2>/dev/null || npm install
+RUN npm ci --omit=dev 2>/dev/null || npm install --omit=dev
 
 COPY backend/ ./
 RUN npx prisma generate
