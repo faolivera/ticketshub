@@ -1,5 +1,9 @@
 # Build TicketsHub Docker image for linux/amd64 (e.g. Render) and push to GHCR.
 # Trigger: push to main, or manual dispatch.
+#
+# If push fails with "permission_denied: write_package":
+# - Repo in org: Settings → Actions → General → Workflow permissions → "Read and write permissions".
+# - Or add a PAT with write:packages as repo secret GHCR_TOKEN (used below when set).
 name: Docker image (linux/amd64)
 
 on:
@@ -51,7 +55,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Push image
         run: |
