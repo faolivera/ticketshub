@@ -27,6 +27,8 @@ export interface S3FileStorageProviderOptions {
 @Injectable()
 export class S3FileStorageProvider implements FileStorageProvider {
   private readonly client: S3Client;
+  /** Used only for getSignedUrl when set, so signed URLs use a client-reachable host (e.g. localhost:4567). */
+  private readonly signingClient: S3Client | null;
   private readonly bucket: string;
   private readonly config: StorageConfig;
   private bucketEnsured = false;
@@ -44,6 +46,19 @@ export class S3FileStorageProvider implements FileStorageProvider {
       },
       forcePathStyle: !!options.config.endpoint,
     });
+
+    this.signingClient =
+      options.config.signedUrlEndpoint != null
+        ? new S3Client({
+            region: options.config.region,
+            endpoint: options.config.signedUrlEndpoint,
+            credentials: {
+              accessKeyId: options.config.accessKeyId,
+              secretAccessKey: options.config.secretAccessKey,
+            },
+            forcePathStyle: true,
+          })
+        : null;
   }
 
   private async ensureBucket(): Promise<void> {
@@ -152,6 +167,7 @@ export class S3FileStorageProvider implements FileStorageProvider {
       Bucket: this.bucket,
       Key: key,
     });
-    return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
+    const client = this.signingClient ?? this.client;
+    return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
   }
 }

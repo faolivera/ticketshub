@@ -14,6 +14,7 @@ function getStorageConfigFrom(configService: ConfigService): StorageConfig {
   const privateBucket = configService.get<string>('storage.privateBucket');
   const publicBucket = configService.get<string>('storage.publicBucket');
   const endpoint = configService.get<string>('storage.endpoint');
+  const signedUrlEndpoint = configService.get<string>('storage.signedUrlEndpoint');
   if (!region || !accessKeyId || !secretAccessKey || !privateBucket || !publicBucket) {
     throw new Error(
       'Missing required storage config. Set AWS_* / S3_* env vars or configure in HOCON (config/prod.conf).',
@@ -24,6 +25,7 @@ function getStorageConfigFrom(configService: ConfigService): StorageConfig {
     accessKeyId,
     secretAccessKey,
     endpoint: endpoint || undefined,
+    signedUrlEndpoint: signedUrlEndpoint || undefined,
     privateBucket,
     publicBucket,
   };

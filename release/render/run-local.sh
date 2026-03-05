@@ -18,7 +18,8 @@ docker run --rm -it \
   -e AWS_REGION="${AWS_REGION:-us-east-1}" \
   -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}" \
   -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}" \
-  -e S3_PRIVATE_BUCKET="${S3_PRIVATE_BUCKET:ticketshub-private-dev}" \
-  -e S3_PUBLIC_BUCKET="${S3_PUBLIC_BUCKET:ticketshub-public-dev}" \
+  -e S3_PRIVATE_BUCKET="${S3_PRIVATE_BUCKET:-ticketshub-private-dev}" \
+  -e S3_PUBLIC_BUCKET="${S3_PUBLIC_BUCKET:-ticketshub-public-dev}" \
   -e S3_ENDPOINT="http://localstack:4566" \
+  -e S3_SIGNED_URL_ENDPOINT="http://localhost:4567" \
   "$IMAGE"
