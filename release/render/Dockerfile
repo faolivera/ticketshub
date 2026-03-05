@@ -34,11 +34,12 @@ RUN apk add --no-cache caddy
 
 WORKDIR /app/backend
 
-# Copy backend runtime artifacts
+# Copy backend runtime artifacts (prisma.config.ts required for Prisma 7 migrate deploy)
 COPY --from=backend /app/backend/node_modules ./node_modules
 COPY --from=backend /app/backend/dist ./dist
 COPY --from=backend /app/backend/package.json ./
 COPY --from=backend /app/backend/prisma ./prisma
+COPY --from=backend /app/backend/prisma.config.ts ./
 COPY --from=backend /app/backend/config ./config
 
 # Copy frontend static assets

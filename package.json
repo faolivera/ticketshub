@@ -18,7 +18,9 @@
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "start:backend": "cd backend && npm run start:prod",
     "start:frontend": "cd frontend && npm run preview",
-    "prisma": "cd backend && npx prisma studio"
+    "prisma": "cd backend && npx prisma studio",
+    "render:build": "./release/render/render-build.sh",
+    "render:publish": "./release/render/render-publish.sh"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
