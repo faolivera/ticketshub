@@ -84,7 +84,7 @@ export const SellerReviewStatsSchema = z.object({
 export const SellerProfileSchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  pic: ImageSchema,
+  pic: ImageSchema.nullable(),
   memberSince: z.string(),
   totalSales: z.number(),
   reviewStats: SellerReviewStatsSchema,
@@ -110,6 +110,13 @@ const CommissionPercentRangeSchema = z.object({
   max: z.number(),
 });
 
+const SellerReputationSchema = z.object({
+  totalSales: z.number(),
+  totalReviews: z.number(),
+  positivePercent: z.number().nullable(),
+  badges: z.array(z.string()),
+});
+
 export const ListingWithSellerSchema = z.object({
   id: z.string(),
   sellerId: z.string(),
@@ -133,11 +140,17 @@ export const ListingWithSellerSchema = z.object({
   sectionName: z.string(),
   bannerUrls: BannerUrlsSchema.optional(),
   sellerPublicName: z.string(),
-  sellerPic: ImageSchema,
+  sellerPic: ImageSchema.nullable(),
   commissionPercentRange: CommissionPercentRangeSchema,
+  sellerReputation: SellerReputationSchema,
 });
 
 export const GetEventListingsResponseSchema = z.array(ListingWithSellerSchema);
+
+export const GetEventPageResponseSchema = z.object({
+  event: z.any(),
+  listings: GetEventListingsResponseSchema,
+});
 
 /** BFF transaction view: servicePrice instead of buyerPlatformFee + paymentMethodCommission */
 const BffTransactionWithDetailsSchema = z.object({
@@ -212,7 +225,7 @@ const BuyPagePricingSnapshotSchema = z.object({
 const BuyPageSellerInfoSchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  pic: ImageSchema,
+  pic: ImageSchema.nullable(),
   badges: z.array(z.string()),
   totalSales: z.number(),
   percentPositiveReviews: z.number().nullable(),

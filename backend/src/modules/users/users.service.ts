@@ -95,18 +95,15 @@ export class UsersService {
     const imagesMap = new Map<string, Image>(
       images.map((image) => [image.id, image]),
     );
-    const defaultPic: Image = {
-      id: 'default',
-      src: '/images/default/default.png',
-    };
     return Promise.all(
-      users.map(async (user) => ({
-        id: user.id,
-        publicName: user.publicName,
-        pic: await this.resolveImageUrl(
-          imagesMap.get(user.imageId) || defaultPic,
-        ),
-      })),
+      users.map(async (user) => {
+        const image = imagesMap.get(user.imageId);
+        return {
+          id: user.id,
+          publicName: user.publicName,
+          pic: image ? await this.resolveImageUrl(image) : null,
+        };
+      }),
     );
   }
 
@@ -184,17 +181,8 @@ export class UsersService {
       return null;
     }
 
-    let image: Image | undefined = await this.imagesRepository.findById(
-      ctx,
-      user.imageId,
-    );
-    if (!image) {
-      image = {
-        id: 'default',
-        src: '/images/default/default.png',
-      };
-    }
-    const resolvedPic = await this.resolveImageUrl(image);
+    const image = await this.imagesRepository.findById(ctx, user.imageId);
+    const resolvedPic = image ? await this.resolveImageUrl(image) : null;
 
     const { password: _password, imageId: _imageId, ...safeUser } = user;
     return {

@@ -117,6 +117,27 @@ export class ReviewsRepository implements IReviewsRepository {
     return reviews.map((r) => this.mapToReview(r));
   }
 
+  async getByRevieweeIdsAndRole(
+    _ctx: Ctx,
+    revieweeIds: string[],
+    revieweeRole: ReviewPartyRole,
+  ): Promise<Review[]> {
+    if (revieweeIds.length === 0) return [];
+    const reviews = await this.prisma.review.findMany({
+      where: {
+        revieweeId: { in: revieweeIds },
+        revieweeRole: this.mapRoleToDb(revieweeRole),
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        transaction: {
+          select: { buyerId: true, sellerId: true },
+        },
+      },
+    });
+    return reviews.map((r) => this.mapToReview(r));
+  }
+
   async getByReviewerId(_ctx: Ctx, reviewerId: string): Promise<Review[]> {
     const reviews = await this.prisma.review.findMany({
       where: { reviewerId },

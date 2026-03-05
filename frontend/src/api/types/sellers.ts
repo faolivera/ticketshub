@@ -22,7 +22,8 @@ export interface SellerReviewStats {
 export interface SellerProfile {
   id: string;
   publicName: string;
-  pic: Image;
+  /** Seller profile image; null when none set */
+  pic: Image | null;
   memberSince: string;
   totalSales: number;
   reviewStats: SellerReviewStats;

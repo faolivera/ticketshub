@@ -14,9 +14,10 @@ import { PricingService } from '../payments/pricing/pricing.service';
 import { PlatformConfigService } from '../config/config.service';
 import { PromotionsService } from '../promotions/promotions.service';
 import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
+import { EventsService } from '../events/events.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
 import { TransactionStatus, getTransactionChatMode } from '../transactions/transactions.domain';
-import { UserLevel, Role } from '../users/users.domain';
+import { Role } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
 import type {
   BffTransactionWithDetails,
@@ -27,6 +28,7 @@ import type {
 import type {
   SellerProfile,
   ListingWithSeller,
+  EventPageData,
   BuyPageData,
   BuyPageSellerInfo,
   BuyPagePricingSnapshot,
@@ -57,11 +59,29 @@ export class BffService {
     private readonly promotionsService: PromotionsService,
     @Inject(TransactionChatService)
     private readonly transactionChatService: TransactionChatService,
+    @Inject(EventsService)
+    private readonly eventsService: EventsService,
   ) {}
 
   /**
-   * Get event listings enriched with seller public info.
+   * Get event page data: event details + enriched listings in a single call.
+   */
+  async getEventPageData(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<EventPageData> {
+    const [event, listings] = await Promise.all([
+      this.eventsService.getEventById(ctx, eventId),
+      this.getEventListings(ctx, eventId),
+    ]);
+    return { event, listings };
+  }
+
+  /**
+   * Get event listings enriched with seller public info and reputation.
    * Only returns active listings with available tickets.
+   * Uses batch queries to avoid N+1: 1 for listings, 1 for sellers, 1 for reviews,
+   * 1 for sales counts, 1 for payment methods, 1 for platform config.
    */
   async getEventListings(
     ctx: Ctx,
@@ -76,17 +96,20 @@ export class BffService {
         ),
     );
 
+    if (activeListings.length === 0) return [];
+
     const uniqueSellerIds = [...new Set(activeListings.map((l) => l.sellerId))];
-    const sellers = await this.usersService.getPublicUserInfoByIds(
-      ctx,
-      uniqueSellerIds,
-    );
+
+    const [sellers, metricsMap, paymentMethods, platformConfig] =
+      await Promise.all([
+        this.usersService.getPublicUserInfoByIds(ctx, uniqueSellerIds),
+        this.reviewsService.getSellerMetricsBatch(ctx, uniqueSellerIds),
+        this.paymentMethodsService.getPublicPaymentMethods(ctx),
+        this.platformConfigService.getPlatformConfig(ctx),
+      ]);
+
     const sellersMap = new Map(sellers.map((s) => [s.id, s]));
 
-    const [paymentMethods, platformConfig] = await Promise.all([
-      this.paymentMethodsService.getPublicPaymentMethods(ctx),
-      this.platformConfigService.getPlatformConfig(ctx),
-    ]);
     const platformCommissionPercent = platformConfig.buyerPlatformFeePercentage;
     const combinedCommissionPercents = paymentMethods
       .map((pm) => (pm.buyerCommissionPercent != null ? platformCommissionPercent + pm.buyerCommissionPercent : null))
@@ -101,14 +124,18 @@ export class BffService {
 
     return activeListings.map((listing) => {
       const seller = sellersMap.get(listing.sellerId);
+      const metrics = metricsMap.get(listing.sellerId);
       return {
         ...listing,
         sellerPublicName: seller?.publicName ?? 'Unknown',
-        sellerPic: seller?.pic ?? {
-          id: 'default',
-          src: '/images/default/default.png',
-        },
+        sellerPic: seller?.pic ?? null,
         commissionPercentRange,
+        sellerReputation: {
+          totalSales: metrics?.totalTransactions ?? 0,
+          totalReviews: metrics?.totalReviews ?? 0,
+          positivePercent: metrics?.positivePercent ?? null,
+          badges: metrics?.badges ?? [],
+        },
       };
     });
   }
@@ -185,11 +212,8 @@ export class BffService {
     const seller: BuyPageSellerInfo = {
       id: listing.sellerId,
       publicName: publicInfo?.publicName ?? 'Unknown',
-      pic: publicInfo?.pic ?? {
-        id: 'default',
-        src: '/images/default/default.png',
-      },
-      badges: user?.level === UserLevel.VerifiedSeller ? ['verified'] : [],
+      pic: publicInfo?.pic ?? null,
+      badges: sellerMetrics.badges,
       totalSales,
       percentPositiveReviews: sellerMetrics.positivePercent,
       totalReviews: sellerMetrics.totalReviews,

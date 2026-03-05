@@ -1,0 +1,18 @@
+# Caddy: serve frontend and reverse-proxy to backend
+# Listen on PORT (set by Render); default 8080 for local runs
+:{$PORT:8080} {
+	root * /app/frontend/dist
+	encode gzip
+	file_server
+	try_files {path} /index.html
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+	handle /socket.io/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+	handle /health {
+		reverse_proxy 127.0.0.1:3000
+	}
+}

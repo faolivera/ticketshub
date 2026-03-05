@@ -35,7 +35,7 @@ export const AuthenticatedUserPublicInfoSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   publicName: z.string(),
-  pic: ImageSchema,
+  pic: ImageSchema.nullable(),
   country: z.string(),
   currency: CurrencyCodeSchema,
   address: UserAddressSchema.optional(),
@@ -55,7 +55,7 @@ export const GetMeResponseSchema = z.object({
   userId: z.string(),
   email: z.string().email(),
   publicName: z.string(),
-  pic: ImageSchema,
+  pic: ImageSchema.nullable(),
   address: AddressSchema.optional(),
 });
 
@@ -63,13 +63,13 @@ export const UpdateProfileResponseSchema = z.object({
   userId: z.string(),
   email: z.string().email(),
   publicName: z.string(),
-  pic: ImageSchema,
+  pic: ImageSchema.nullable(),
 });
 
 export const UpdateBasicInfoResponseSchema = z.object({
   userId: z.string(),
   email: z.string().email(),
   publicName: z.string(),
-  pic: ImageSchema,
+  pic: ImageSchema.nullable(),
   address: AddressSchema.optional(),
 });

@@ -1011,6 +1011,26 @@ export class TransactionsService {
   }
 
   /**
+   * Get total completed sales (ticket units sold) for multiple sellers (batch).
+   * Mirrors getSellerCompletedSalesTotal but for many sellers in a single query.
+   */
+  async getCompletedSalesTotalBatch(
+    ctx: Ctx,
+    sellerIds: string[],
+  ): Promise<Map<string, number>> {
+    const transactions = await this.transactionsRepository.getCompletedBySellerIds(
+      ctx,
+      sellerIds,
+    );
+    const map = new Map<string, number>();
+    for (const tx of transactions) {
+      const prev = map.get(tx.sellerId) ?? 0;
+      map.set(tx.sellerId, prev + tx.ticketUnitIds.length);
+    }
+    return map;
+  }
+
+  /**
    * Mark transaction as disputed
    */
   async markDisputed(

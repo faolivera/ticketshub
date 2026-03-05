@@ -1,6 +1,7 @@
 import type { Image } from '../images/images.domain';
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import type { PublicPaymentMethodOption } from '../payments/payments.domain';
+import type { EventWithDatesResponse } from '../events/events.api';
 
 export type SellerReviewType = 'positive' | 'neutral' | 'negative';
 
@@ -29,11 +30,20 @@ export interface CommissionPercentRange {
 export interface SellerProfile {
   id: string;
   publicName: string;
-  pic: Image;
+  /** Seller profile image; null when none set */
+  pic: Image | null;
   memberSince: string;
   totalSales: number;
   reviewStats: SellerReviewStats;
   reviews: SellerReview[];
+}
+
+/** Lightweight seller reputation summary for listing cards */
+export interface SellerReputation {
+  totalSales: number;
+  totalReviews: number;
+  positivePercent: number | null;
+  badges: string[];
 }
 
 /**
@@ -41,15 +51,24 @@ export interface SellerProfile {
  */
 export interface ListingWithSeller extends TicketListingWithEvent {
   sellerPublicName: string;
-  sellerPic: Image;
+  /** Seller profile image; null when none set */
+  sellerPic: Image | null;
   commissionPercentRange: CommissionPercentRange;
+  sellerReputation: SellerReputation;
+}
+
+/** Combined event page data: event details + enriched listings */
+export interface EventPageData {
+  event: EventWithDatesResponse;
+  listings: ListingWithSeller[];
 }
 
 /** Seller section data for buy page */
 export interface BuyPageSellerInfo {
   id: string;
   publicName: string;
-  pic: Image;
+  /** Seller profile image; null when none set */
+  pic: Image | null;
   badges: string[];
   totalSales: number;
   percentPositiveReviews: number | null;

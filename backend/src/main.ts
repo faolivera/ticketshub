@@ -22,15 +22,17 @@ async function bootstrap() {
   }
   app.useLogger(new ConfigurableLogger());
 
-  // Enable CORS for frontend
+  // CORS: in production allow request origin (e.g. same host when Caddy serves frontend); in dev allow Vite
+  const isProduction = configService.get<boolean>('app.isProduction') ?? false;
   app.enableCors({
-    origin: 'http://localhost:5173', // Vite default port
+    origin: isProduction ? true : 'http://localhost:5173',
     credentials: true,
   });
 
   app.useGlobalInterceptors(new ContextInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  await app.listen(3000);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
 }
 bootstrap();

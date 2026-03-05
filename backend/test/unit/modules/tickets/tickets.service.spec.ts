@@ -24,6 +24,7 @@ import {
 import { UserLevel } from '../../../../src/modules/users/users.domain';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
+import { TermsService } from '../../../../src/modules/terms/terms.service';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../src/modules/shared/money.domain';
 import type { Ctx } from '../../../../src/common/types/context';
@@ -34,6 +35,7 @@ describe('TicketsService', () => {
   let eventsService: jest.Mocked<EventsService>;
   let usersService: jest.Mocked<UsersService>;
   let txManager: jest.Mocked<TransactionManager>;
+  let termsService: jest.Mocked<TermsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -204,6 +206,10 @@ describe('TicketsService', () => {
       incrementUsedAndAddListingId: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockTermsService = {
+      hasAcceptedCurrentTerms: jest.fn().mockResolvedValue(true),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
@@ -212,6 +218,7 @@ describe('TicketsService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: TransactionManager, useValue: mockTxManager },
         { provide: PromotionsService, useValue: mockPromotionsService },
+        { provide: TermsService, useValue: mockTermsService },
       ],
     }).compile();
 
@@ -220,6 +227,7 @@ describe('TicketsService', () => {
     eventsService = module.get(EventsService);
     usersService = module.get(UsersService);
     txManager = module.get(TransactionManager);
+    termsService = module.get(TermsService);
   });
 
   describe('createListing', () => {
@@ -408,6 +416,20 @@ describe('TicketsService', () => {
           requestWithoutSectionId,
         ),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when seller has not accepted seller terms', async () => {
+      termsService.hasAcceptedCurrentTerms.mockResolvedValueOnce(false);
+      eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
+
+      await expect(
+        service.createListing(
+          mockCtx,
+          'seller_123',
+          UserLevel.Seller,
+          baseCreateRequest,
+        ),
+      ).rejects.toThrow('Must accept seller terms first');
     });
   });
 

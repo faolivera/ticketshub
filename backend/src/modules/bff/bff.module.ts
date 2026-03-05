@@ -10,6 +10,7 @@ import { PaymentsModule } from '../payments/payments.module';
 import { ConfigModule } from '../config/config.module';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
+import { EventsModule } from '../events/events.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TransactionChatModule } from '../transaction-chat/transaction-chat.modu
     PaymentsModule,
     ConfigModule,
     PromotionsModule,
+    EventsModule,
   ],
   controllers: [BffController],
   providers: [BffService],

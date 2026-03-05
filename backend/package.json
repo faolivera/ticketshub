@@ -21,7 +21,7 @@
     "test:integration": "jest --config ./test/jest-integration.json",
     "test:unit": "jest",
     "reset:sales": "ts-node scripts/reset-sales.ts",
-    "seed:terms": "ts-node scripts/seed-terms.ts",
+    "seed:terms": "ts-node -r tsconfig-paths/register src/scripts/seed-terms.ts",
     "seed:notification-templates": "ts-node -r tsconfig-paths/register scripts/seed-notification-templates.ts",
     "db:truncate": "ts-node scripts/truncate-tables.ts",
     "db:clean": "bash scripts/reset-db.sh",

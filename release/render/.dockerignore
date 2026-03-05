@@ -1,0 +1,34 @@
+# Dependencies and build outputs (rebuilt in Docker)
+node_modules
+*/node_modules
+frontend/dist
+backend/dist
+frontend/.vite
+*.log
+npm-debug.log*
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.vscode
+.idea
+
+# Env and secrets (injected at runtime)
+.env
+.env.*
+!.env.example
+
+# Tests and docs (not needed in image)
+backend/test
+frontend/**/*.spec.*
+frontend/**/*.test.*
+docs
+*.md
+!release/render/README.md
+
+# Misc
+.DS_Store
+*.tgz
+coverage
+.nyc_output

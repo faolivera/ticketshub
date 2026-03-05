@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Calendar, Clock, Ticket, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { eventsService } from '../../api/services/events.service';
 import { ticketsService } from '../../api/services/tickets.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -17,6 +16,7 @@ import { useUser } from '../contexts/UserContext';
 import type { SortOption, ViewMode } from '../components/TicketFilters';
 import { Badge } from '../components/ui/badge';
 import { cn } from '../components/ui/utils';
+import { useIsMobile } from '../components/ui/use-mobile';
 import { formatDate, formatTime, formatDateTime, formatDateTimeShort } from '@/lib/format-date';
 
 /**
@@ -38,11 +38,9 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
     commissionPercentRange: listing.commissionPercentRange,
     seller: listing.sellerId,
     sellerName: listing.sellerPublicName,
-    sellerPicture: listing.sellerPic.src,
+    sellerPicture: listing.sellerPic?.src,
     acceptsOffers: listing.bestOfferConfig?.enabled ?? false,
-    sellerReviews: { positive: 0, neutral: 0, negative: 0 },
-    sellerBadges: [],
-    sellerTotalSales: 0,
+    sellerReputation: listing.sellerReputation,
     showTime: {
       date: formatDate(dateObj),
       time: formatTime(dateObj),
@@ -69,6 +67,9 @@ export function EventTickets() {
   const [sortOption, setSortOption] = useState<SortOption>('price_asc');
   const [viewMode, setViewMode] = useState<ViewMode>('card');
   const [visibleCount, setVisibleCount] = useState(12);
+  const isMobile = useIsMobile();
+  // On mobile always use card view; list view is desktop-only
+  const effectiveViewMode: ViewMode = isMobile ? 'card' : viewMode;
 
   // Fetch event and listings
   useEffect(() => {
@@ -79,11 +80,8 @@ export function EventTickets() {
       setError(null);
       
       try {
-        const [eventData, listingsData] = await Promise.all([
-          eventsService.getEvent(eventId),
-          ticketsService.getEventListings(eventId),
-        ]);
-        
+        const { event: eventData, listings: listingsData } = await ticketsService.getEventPage(eventId);
+
         setEvent(eventData);
         setListings(listingsData);
       } catch (err) {
@@ -349,7 +347,7 @@ export function EventTickets() {
 
               {headerStats && (
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="text-xl md:text-2xl font-bold text-blue-600">
+                  <span className="text-base md:text-lg font-semibold text-blue-600">
                     {t('eventTickets.ticketsFrom', {
                       price: headerStats.minPrice.toLocaleString(undefined, {
                         style: 'currency',
@@ -414,9 +412,9 @@ export function EventTickets() {
                   const [date, time] = showTimeKey.split('|');
                   return (
                     <div key={showTimeKey}>
-                      <div className="sticky top-0 z-10 bg-white flex items-center justify-between gap-2 mb-4 pb-2 pt-2 -mt-2 border-b border-gray-200">
+                      <div className="sticky top-0 z-10 bg-gray-50 flex items-center justify-between gap-2 mb-4 pb-3 pt-3 -mt-2 px-4 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
-                          <Clock className="w-5 h-5 text-blue-600" />
+                          <Calendar className="w-5 h-5 text-blue-600" />
                           <h3 className="text-lg font-bold text-gray-900">
                             {showTimeTickets[0] ? formatDateTime(showTimeTickets[0].showTime.dateObj) : `${date} ${time}`}
                           </h3>
@@ -426,7 +424,7 @@ export function EventTickets() {
                         </span>
                       </div>
 
-                      {viewMode === 'card' ? (
+                      {effectiveViewMode === 'card' ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                           {showTimeTickets.map((ticket) => (
                             <TicketCard

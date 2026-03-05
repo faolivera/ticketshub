@@ -44,6 +44,15 @@ export interface IReviewsRepository {
   ): Promise<Review[]>;
 
   /**
+   * Get reviews where any of the given users is the reviewee with a specific role (batch)
+   */
+  getByRevieweeIdsAndRole(
+    ctx: Ctx,
+    revieweeIds: string[],
+    revieweeRole: ReviewPartyRole,
+  ): Promise<Review[]>;
+
+  /**
    * Get reviews by reviewer ID
    */
   getByReviewerId(ctx: Ctx, reviewerId: string): Promise<Review[]>;

@@ -1,21 +1,16 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
-import { Award, Link2, MessageCircle, ShieldCheck, Tag, Trophy } from 'lucide-react';
+import { Award, Link2, MessageCircle, ShieldCheck, Tag, Trophy, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UserAvatar } from './UserAvatar';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
+import type { SellerReputation } from '../../api/types';
 
 export interface ShowTime {
   date: string;
   time: string;
   dateObj: Date;
   eventDateId: string;
-}
-
-export interface SellerReviews {
-  positive: number;
-  neutral: number;
-  negative: number;
 }
 
 export interface TransformedTicket {
@@ -30,16 +25,16 @@ export interface TransformedTicket {
   seller: string;
   sellerName: string;
   sellerPicture?: string;
-  sellerReviews: SellerReviews;
-  sellerBadges: Array<'trusted' | 'verified' | 'best_seller'>;
-  sellerTotalSales: number;
+  sellerReputation: SellerReputation;
   showTime: ShowTime;
 }
 
-type BadgeType = 'trusted' | 'verified' | 'best_seller';
+type BadgeType = 'new_seller' | 'trusted' | 'verified' | 'best_seller';
 
 const getBadgeIcon = (badge: BadgeType) => {
   switch (badge) {
+    case 'new_seller':
+      return <UserPlus className="w-4 h-4" />;
     case 'trusted':
       return <ShieldCheck className="w-4 h-4" />;
     case 'verified':
@@ -51,6 +46,8 @@ const getBadgeIcon = (badge: BadgeType) => {
 
 const getBadgeColor = (badge: BadgeType) => {
   switch (badge) {
+    case 'new_seller':
+      return 'bg-gray-100 text-gray-600';
     case 'trusted':
       return 'bg-blue-100 text-blue-700';
     case 'verified':
@@ -62,6 +59,8 @@ const getBadgeColor = (badge: BadgeType) => {
 
 const getBadgeLabel = (badge: BadgeType, t: (key: string) => string) => {
   switch (badge) {
+    case 'new_seller':
+      return t('eventTickets.newSeller');
     case 'trusted':
       return t('eventTickets.badgeTrusted');
     case 'verified':
@@ -80,30 +79,18 @@ interface TicketCardProps {
 export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, variant = 'card' }) => {
   const { t } = useTranslation();
 
-  const renderSellerStatus = () => {
-    const { sellerReviews, sellerBadges } = ticket;
-    const totalReviews = sellerReviews.positive + sellerReviews.neutral + sellerReviews.negative;
+  const isNewSeller = ticket.sellerReputation.badges.includes('new_seller');
 
-    if (totalReviews === 0 && sellerBadges.length === 0) {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-          {t('eventTickets.newSeller')}
-        </span>
-      );
-    }
+  const renderSellerBadges = () => {
+    const typedBadges = ticket.sellerReputation.badges.filter((b): b is BadgeType =>
+      b === 'trusted' || b === 'verified' || b === 'best_seller',
+    );
 
-    const positivePercentage = totalReviews > 0
-      ? Math.round((sellerReviews.positive / totalReviews) * 100)
-      : 0;
+    if (typedBadges.length === 0) return null;
 
     return (
       <div className="flex items-center gap-1.5 flex-wrap">
-        {totalReviews > 0 && (
-          <span className="text-xs text-gray-600">
-            {t('eventTickets.positiveReviews', { percent: positivePercentage, total: totalReviews })}
-          </span>
-        )}
-        {sellerBadges.map((badge) => (
+        {typedBadges.map((badge) => (
           <span
             key={badge}
             className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-xs font-medium ${getBadgeColor(badge)}`}
@@ -114,6 +101,33 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
         ))}
       </div>
     );
+  };
+
+  const renderSellerSummary = () => {
+    if (isNewSeller) {
+      return (
+        <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-xs font-medium ${getBadgeColor('new_seller')}`}>
+          {getBadgeIcon('new_seller')}
+          {getBadgeLabel('new_seller', t)}
+        </span>
+      );
+    }
+
+    if (ticket.sellerReputation.totalSales > 0) {
+      return (
+        <span className="text-xs text-gray-500">
+          {t('eventTickets.ticketsSold', { count: ticket.sellerReputation.totalSales })}
+          {ticket.sellerReputation.totalReviews > 0 && ticket.sellerReputation.positivePercent != null && (
+            <>
+              <span className="text-gray-400 mx-1">·</span>
+              {t('eventTickets.positiveReviews', { percent: ticket.sellerReputation.positivePercent, total: ticket.sellerReputation.totalReviews })}
+            </>
+          )}
+        </span>
+      );
+    }
+
+    return null;
   };
 
   const formattedPrice = formatCurrencyFromUnits(ticket.price, ticket.currency);
@@ -178,6 +192,7 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
           <div className="flex items-center gap-2 mt-0.5">
             <UserAvatar name={ticket.sellerName} src={ticket.sellerPicture} className="h-5 w-5" />
             <span className="text-xs text-gray-500 truncate max-w-[120px]">{ticket.sellerName}</span>
+            {renderSellerBadges()}
             <span className="text-xs text-gray-400">·</span>
             <span className="text-xs text-gray-500">
               {ticket.available === 1 ? (
@@ -186,9 +201,11 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
                 t('eventTickets.ticketsAvailable', { count: ticket.available })
               )}
             </span>
+            <span className="text-xs text-gray-400">·</span>
+            {renderSellerSummary()}
           </div>
         </div>
-        <p className="text-lg font-bold text-gray-900 whitespace-nowrap shrink-0">{formattedPrice}</p>
+        <p className="text-base font-semibold text-gray-900 whitespace-nowrap shrink-0">{formattedPrice}</p>
         <Link
           to={`/buy/${ticket.id}`}
           className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
@@ -204,7 +221,7 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
       {/* Type + Price — always first for consistent scanning */}
       <div className="flex items-start justify-between gap-3 mb-2">
         <h4 className="text-lg font-bold text-gray-900">{ticket.type}</h4>
-        <p className="text-2xl font-bold text-gray-900 whitespace-nowrap">
+        <p className="text-base font-semibold text-gray-900 whitespace-nowrap">
           {formattedPrice}
         </p>
       </div>
@@ -227,13 +244,11 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
               >
                 {ticket.sellerName}
               </Link>
-              {renderSellerStatus()}
+              {renderSellerBadges()}
             </div>
-            {ticket.sellerTotalSales > 0 && (
-              <p className="text-xs text-gray-500">
-                {t('eventTickets.ticketsSold', { count: ticket.sellerTotalSales })}
-              </p>
-            )}
+            <div className="min-h-[1.25rem] flex items-center">
+              {renderSellerSummary()}
+            </div>
           </div>
         </div>
 

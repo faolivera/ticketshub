@@ -40,6 +40,8 @@ import {
 } from '../events/events.domain';
 import { PromotionsService } from '../promotions/promotions.service';
 import { PromotionType } from '../promotions/promotions.domain';
+import { TermsService } from '../terms/terms.service';
+import { TermsUserType } from '../terms/terms.domain';
 
 @Injectable()
 export class TicketsService {
@@ -51,6 +53,7 @@ export class TicketsService {
     private readonly usersService: UsersService,
     private readonly txManager: TransactionManager,
     private readonly promotionsService: PromotionsService,
+    private readonly termsService: TermsService,
   ) {}
 
   /**
@@ -209,6 +212,17 @@ export class TicketsService {
       userLevel !== UserLevel.VerifiedSeller
     ) {
       throw new ForbiddenException('Only sellers can create listings');
+    }
+
+    // Require seller terms to be accepted
+    const hasAcceptedSellerTerms =
+      await this.termsService.hasAcceptedCurrentTerms(
+        ctx,
+        sellerId,
+        TermsUserType.Seller,
+      );
+    if (!hasAcceptedSellerTerms) {
+      throw new BadRequestException('Must accept seller terms first');
     }
 
     // Validate required fields

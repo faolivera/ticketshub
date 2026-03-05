@@ -111,6 +111,14 @@ export interface ITransactionsRepository {
     updates: Partial<Transaction>,
     expectedVersion: number,
   ): Promise<Transaction>;
+
+  /**
+   * Get completed transactions for multiple sellers (batch)
+   */
+  getCompletedBySellerIds(
+    ctx: Ctx,
+    sellerIds: string[],
+  ): Promise<Transaction[]>;
 }
 
 /**

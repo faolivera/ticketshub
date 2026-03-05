@@ -2,9 +2,7 @@ import {
   Controller,
   Get,
   Param,
-  Query,
   Inject,
-  BadRequestException,
   UseGuards,
 } from '@nestjs/common';
 import { BffService } from './bff.service';
@@ -17,7 +15,7 @@ import type { Ctx } from '../../common/types/context';
 import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
 import type {
   GetSellerProfileResponse,
-  GetEventListingsResponse,
+  GetEventPageResponse,
   GetMyTicketsResponse,
   GetBuyPageResponse,
   GetTransactionDetailsResponse,
@@ -25,7 +23,7 @@ import type {
 } from './bff.api';
 import {
   GetSellerProfileResponseSchema,
-  GetEventListingsResponseSchema,
+  GetEventPageResponseSchema,
   GetMyTicketsResponseSchema,
   GetBuyPageResponseSchema,
   GetTransactionDetailsResponseSchema,
@@ -94,19 +92,16 @@ export class BffController {
   }
 
   /**
-   * Get event listings enriched with seller info (BFF aggregation)
+   * Get event page data: event details + enriched listings in a single call
    */
-  @Get('listings')
-  @ValidateResponse(GetEventListingsResponseSchema)
-  async getEventListings(
+  @Get('event-page/:eventId')
+  @ValidateResponse(GetEventPageResponseSchema)
+  async getEventPage(
     @Context() ctx: Ctx,
-    @Query('eventId') eventId: string,
-  ): Promise<ApiResponse<GetEventListingsResponse>> {
-    if (!eventId) {
-      throw new BadRequestException('eventId query parameter is required');
-    }
-    const listings = await this.bffService.getEventListings(ctx, eventId);
-    return { success: true, data: listings };
+    @Param('eventId') eventId: string,
+  ): Promise<ApiResponse<GetEventPageResponse>> {
+    const data = await this.bffService.getEventPageData(ctx, eventId);
+    return { success: true, data };
   }
 
   /**

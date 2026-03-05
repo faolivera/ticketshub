@@ -1,11 +1,12 @@
 import { createPortal } from 'react-dom';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Ticket, Tag, TrendingUp, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 
 export function MobileNav() {
   const { t } = useTranslation();
+  const location = useLocation();
   const { isAuthenticated, canSell } = useUser();
 
   if (!isAuthenticated) return null;
@@ -26,6 +27,7 @@ export function MobileNav() {
 
       <NavLink
         to="/sell-ticket"
+        state={{ from: location.pathname }}
         className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
       >
         <Tag className="w-5 h-5" />

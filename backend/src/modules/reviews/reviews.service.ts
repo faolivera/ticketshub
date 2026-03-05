@@ -24,6 +24,7 @@ import type {
   UserBadge,
 } from './reviews.domain';
 import { BADGE_THRESHOLDS } from './reviews.domain';
+import { UserLevel } from '../users/users.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import type {
   CreateReviewRequest,
@@ -191,20 +192,19 @@ export class ReviewsService {
   }
 
   /**
-   * Calculate badges for a user
+   * Pure badge computation — no I/O, single source of truth for badge rules.
    */
-  private async calculateBadges(
-    ctx: Ctx,
-    userId: string,
-    role: ReviewPartyRole,
-    positiveReviews: number,
-    totalReviews: number,
-    totalTransactions: number,
-  ): Promise<UserBadge[]> {
+  private computeBadges(params: {
+    isVerifiedSeller: boolean;
+    role: ReviewPartyRole;
+    positiveReviews: number;
+    totalReviews: number;
+    totalTransactions: number;
+  }): UserBadge[] {
+    const { isVerifiedSeller, role, positiveReviews, totalReviews, totalTransactions } = params;
     const badges: UserBadge[] = [];
 
-    const user = await this.usersService.findById(ctx, userId);
-    if (user?.phoneVerified) {
+    if (isVerifiedSeller) {
       badges.push('verified');
     }
 
@@ -226,7 +226,32 @@ export class ReviewsService {
       badges.push('best_seller');
     }
 
+    if (badges.length === 0 && totalTransactions <= 3 && totalReviews === 0) {
+      badges.push('new_seller');
+    }
+
     return badges;
+  }
+
+  /**
+   * Calculate badges for a user (fetches user data, then delegates to computeBadges).
+   */
+  private async calculateBadges(
+    ctx: Ctx,
+    userId: string,
+    role: ReviewPartyRole,
+    positiveReviews: number,
+    totalReviews: number,
+    totalTransactions: number,
+  ): Promise<UserBadge[]> {
+    const user = await this.usersService.findById(ctx, userId);
+    return this.computeBadges({
+      isVerifiedSeller: user?.level === UserLevel.VerifiedSeller,
+      role,
+      positiveReviews,
+      totalReviews,
+      totalTransactions,
+    });
   }
 
   /**
@@ -279,6 +304,73 @@ export class ReviewsService {
       positivePercent,
       badges,
     };
+  }
+
+  /**
+   * Get seller review metrics for multiple sellers (batch).
+   * Uses 3 queries total: reviews, completed sales, and users for badge computation.
+   */
+  async getSellerMetricsBatch(
+    ctx: Ctx,
+    sellerIds: string[],
+  ): Promise<Map<string, UserReviewMetrics>> {
+    if (sellerIds.length === 0) return new Map();
+
+    const [allReviews, salesMap, users] = await Promise.all([
+      this.reviewsRepository.getByRevieweeIdsAndRole(ctx, sellerIds, 'seller'),
+      this.transactionsService.getCompletedSalesTotalBatch(ctx, sellerIds),
+      this.usersService.findByIds(ctx, sellerIds),
+    ]);
+
+    const usersMap = new Map(users.map((u) => [u.id, u]));
+
+    const reviewsBySeller = new Map<string, typeof allReviews>();
+    for (const review of allReviews) {
+      const list = reviewsBySeller.get(review.revieweeId) ?? [];
+      list.push(review);
+      reviewsBySeller.set(review.revieweeId, list);
+    }
+
+    const result = new Map<string, UserReviewMetrics>();
+
+    for (const sellerId of sellerIds) {
+      const reviews = reviewsBySeller.get(sellerId) ?? [];
+      const totalReviews = reviews.length;
+      const positiveReviews = reviews.filter((r) => r.rating === 'positive').length;
+      const negativeReviews = reviews.filter((r) => r.rating === 'negative').length;
+      const neutralReviews = reviews.filter((r) => r.rating === 'neutral').length;
+
+      const nonNeutralReviews = totalReviews - neutralReviews;
+      const positivePercent =
+        nonNeutralReviews > 0
+          ? Math.round((positiveReviews / nonNeutralReviews) * 100)
+          : null;
+
+      const totalTransactions = salesMap.get(sellerId) ?? 0;
+      const user = usersMap.get(sellerId);
+
+      const badges = this.computeBadges({
+        isVerifiedSeller: user?.level === UserLevel.VerifiedSeller,
+        role: 'seller',
+        positiveReviews,
+        totalReviews,
+        totalTransactions,
+      });
+
+      result.set(sellerId, {
+        userId: sellerId,
+        role: 'seller',
+        totalTransactions,
+        totalReviews,
+        positiveReviews,
+        negativeReviews,
+        neutralReviews,
+        positivePercent,
+        badges,
+      });
+    }
+
+    return result;
   }
 
   /**

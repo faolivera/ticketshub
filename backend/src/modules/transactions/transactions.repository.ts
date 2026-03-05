@@ -112,6 +112,21 @@ export class TransactionsRepository
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
+  async getCompletedBySellerIds(
+    _ctx: Ctx,
+    sellerIds: string[],
+  ): Promise<Transaction[]> {
+    if (sellerIds.length === 0) return [];
+    const client = this.getClient(_ctx);
+    const transactions = await client.transaction.findMany({
+      where: {
+        sellerId: { in: sellerIds },
+        status: 'Completed',
+      },
+    });
+    return transactions.map((t) => this.mapToTransaction(t));
+  }
+
   async getByListingId(ctx: Ctx, listingId: string): Promise<Transaction[]> {
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({

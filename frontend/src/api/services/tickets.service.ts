@@ -7,7 +7,7 @@ import type {
   GetListingResponse,
   ListListingsResponse,
   ListListingsQuery,
-  GetEventListingsResponse,
+  GetEventPageResponse,
   GetMyTicketsResponse,
   GetBuyPageResponse,
 } from '../types';
@@ -57,10 +57,10 @@ export const ticketsService = {
   },
 
   /**
-   * Get event listings enriched with seller info (BFF endpoint)
+   * Get event page data: event + enriched listings (single BFF call)
    */
-  async getEventListings(eventId: string): Promise<GetEventListingsResponse> {
-    const response = await apiClient.get<GetEventListingsResponse>('/listings', { params: { eventId } });
+  async getEventPage(eventId: string): Promise<GetEventPageResponse> {
+    const response = await apiClient.get<GetEventPageResponse>(`/event-page/${eventId}`);
     return response.data;
   },
 

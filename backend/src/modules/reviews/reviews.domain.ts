@@ -29,7 +29,7 @@ export interface Review {
 /**
  * User badge types
  */
-export type UserBadge = 'verified' | 'trusted' | 'best_seller';
+export type UserBadge = 'new_seller' | 'verified' | 'trusted' | 'best_seller';
 
 /**
  * Aggregated review metrics for a user in a specific role

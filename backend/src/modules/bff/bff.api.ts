@@ -7,6 +7,7 @@ import type { Money } from '../transactions/transactions.domain';
 import type {
   SellerProfile,
   ListingWithSeller,
+  EventPageData,
   BuyPageData,
 } from './bff.domain';
 
@@ -39,9 +40,9 @@ export type GetSellerProfileResponse = SellerProfile;
 export type GetMyTicketsResponse = GetMyTicketsData;
 
 /**
- * Get event listings with seller info response
+ * Get event page data response (event + enriched listings)
  */
-export type GetEventListingsResponse = ListingWithSeller[];
+export type GetEventPageResponse = EventPageData;
 
 /**
  * Query params for getting event listings

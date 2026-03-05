@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Ticket, Phone, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
@@ -15,6 +15,7 @@ type WizardStep = 'select-event' | 'ticket-details';
 export function SellTicket() {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const newEvent = location.state?.newEvent;
   const { user, isAuthenticated, canSell } = useUser();
 
@@ -94,6 +95,7 @@ export function SellTicket() {
         <SellerIntroModal
           onClose={() => {
             setShowSellerIntroModal(false);
+            navigate((location.state as { from?: string } | null)?.from ?? '/');
           }}
         />
       )}

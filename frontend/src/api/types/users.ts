@@ -91,14 +91,16 @@ export interface User {
 export interface UserPublicInfo {
   id: string;
   publicName: string;
-  pic: Image;
+  /** User profile image; null when none set */
+  pic: Image | null;
 }
 
 /**
  * Authenticated user info (returned after login)
  */
 export interface AuthenticatedUserPublicInfo extends Omit<User, 'password' | 'imageId'> {
-  pic: Image;
+  /** User profile image; null when none set */
+  pic: Image | null;
 }
 
 /**

@@ -1,7 +1,7 @@
 import { PrismaClient, TermsUserType, TermsStatus } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import { loadHoconConfig } from '../src/config/load-hocon';
+import { loadHoconConfig } from '../config/load-hocon';
 
 const config = loadHoconConfig() as { database?: { url?: string } };
 const connectionString = config.database?.url;

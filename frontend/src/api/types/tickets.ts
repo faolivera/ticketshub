@@ -182,20 +182,34 @@ export type GetListingResponse = TicketListingWithEvent;
  */
 export type ListListingsResponse = TicketListingWithEvent[];
 
+/** Lightweight seller reputation summary returned with each listing */
+export interface SellerReputation {
+  totalSales: number;
+  totalReviews: number;
+  positivePercent: number | null;
+  badges: string[];
+}
+
 /**
  * Ticket listing enriched with seller public info — returned by the BFF endpoint
  */
 export interface ListingWithSeller extends TicketListingWithEvent {
   sellerPublicName: string;
-  sellerPic: import('./common').Image;
+  /** Seller profile image; null when none set */
+  sellerPic: import('./common').Image | null;
   /** Commission percent range (min–max) depending on payment method */
   commissionPercentRange: { min: number; max: number };
+  sellerReputation: SellerReputation;
 }
 
-/**
- * Response from the BFF event listings endpoint
- */
-export type GetEventListingsResponse = ListingWithSeller[];
+/** Combined event page data from BFF */
+export interface EventPageData {
+  event: import('./events').EventWithDates;
+  listings: ListingWithSeller[];
+}
+
+/** Response from GET /api/event-page/:eventId */
+export type GetEventPageResponse = EventPageData;
 
 /** How the payment method is processed */
 export type PaymentMethodType = 'payment_gateway' | 'manual_approval';
@@ -246,7 +260,8 @@ export interface PublicPaymentMethodOption {
 export interface BuyPageSellerInfo {
   id: string;
   publicName: string;
-  pic: import('./common').Image;
+  /** Seller profile image; null when none set */
+  pic: import('./common').Image | null;
   badges: string[];
   totalSales: number;
   percentPositiveReviews: number | null;

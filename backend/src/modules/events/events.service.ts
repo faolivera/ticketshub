@@ -57,11 +57,6 @@ import type {
 import { Role, UserLevel } from '../users/users.domain';
 import { SeatingType } from '../tickets/tickets.domain';
 
-const DEFAULT_IMAGE: Image = {
-  id: 'default',
-  src: '/images/default/default.png',
-};
-
 @Injectable()
 export class EventsService {
   private readonly logger = new ContextLogger(EventsService.name);
@@ -723,7 +718,9 @@ export class EventsService {
     imagesMap: Map<string, Image>,
   ): Image[] {
     if (!imageIds.length) return [];
-    return imageIds.map((id) => imagesMap.get(id) || DEFAULT_IMAGE);
+    return imageIds
+      .map((id) => imagesMap.get(id))
+      .filter((img): img is Image => img != null);
   }
 
   /**

@@ -17,6 +17,7 @@ import { TicketType } from '../../../../src/modules/tickets/tickets.domain';
 import type { Review } from '../../../../src/modules/reviews/reviews.domain';
 import type { Transaction } from '../../../../src/modules/transactions/transactions.domain';
 import type { Ctx } from '../../../../src/common/types/context';
+import { UserLevel } from '../../../../src/modules/users/users.domain';
 
 describe('ReviewsService', () => {
   let service: ReviewsService;
@@ -73,16 +74,19 @@ describe('ReviewsService', () => {
       findByTransactionAndReviewer: jest.fn(),
       getByTransactionId: jest.fn(),
       getByRevieweeIdAndRole: jest.fn(),
+      getByRevieweeIdsAndRole: jest.fn(),
       getByReviewerId: jest.fn(),
     };
 
     const mockTransactionsService = {
       findById: jest.fn(),
       getSellerCompletedSalesTotal: jest.fn(),
+      getCompletedSalesTotalBatch: jest.fn(),
     };
 
     const mockUsersService = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
       getPublicUserInfoByIds: jest.fn(),
     };
 
@@ -260,7 +264,7 @@ describe('ReviewsService', () => {
     it('should return correct metrics with no reviews', async () => {
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(5);
-      usersService.findById.mockResolvedValue({ phoneVerified: false } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -288,7 +292,7 @@ describe('ReviewsService', () => {
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(10);
-      usersService.findById.mockResolvedValue({ phoneVerified: false } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -308,7 +312,7 @@ describe('ReviewsService', () => {
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(10);
-      usersService.findById.mockResolvedValue({ phoneVerified: false } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -316,10 +320,10 @@ describe('ReviewsService', () => {
       expect(result.neutralReviews).toBe(2);
     });
 
-    it('should include verified badge when user has phone verified', async () => {
+    it('should include verified badge when user is VerifiedSeller', async () => {
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(0);
-      usersService.findById.mockResolvedValue({ phoneVerified: true } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -339,7 +343,7 @@ describe('ReviewsService', () => {
         positiveReviews,
       );
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(15);
-      usersService.findById.mockResolvedValue({ phoneVerified: false } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -359,7 +363,7 @@ describe('ReviewsService', () => {
         positiveReviews,
       );
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(55);
-      usersService.findById.mockResolvedValue({ phoneVerified: true } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -377,7 +381,7 @@ describe('ReviewsService', () => {
       ];
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
-      usersService.findById.mockResolvedValue({ phoneVerified: true } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
 
       const result = await service.getBuyerMetrics(mockCtx, 'buyer_123');
 
@@ -406,13 +410,246 @@ describe('ReviewsService', () => {
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(
         positiveReviews,
       );
-      usersService.findById.mockResolvedValue({ phoneVerified: true } as any);
+      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
 
       const result = await service.getBuyerMetrics(mockCtx, 'buyer_123');
 
       expect(result.badges).not.toContain('best_seller');
       expect(result.badges).toContain('trusted');
       expect(result.badges).toContain('verified');
+    });
+  });
+
+  describe('getSellerMetricsBatch', () => {
+    const makeReview = (
+      revieweeId: string,
+      rating: 'positive' | 'neutral' | 'negative',
+    ): Review =>
+      ({
+        id: `rev_${Math.random().toString(36).slice(2)}`,
+        transactionId: 'txn_123',
+        buyerId: 'buyer_123',
+        sellerId: revieweeId,
+        reviewerId: 'buyer_123',
+        reviewerRole: 'buyer',
+        revieweeId,
+        revieweeRole: 'seller',
+        rating,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }) as Review;
+
+    it('should return empty map for empty sellerIds', async () => {
+      const result = await service.getSellerMetricsBatch(mockCtx, []);
+      expect(result.size).toBe(0);
+    });
+
+    it('should return correct metrics for single seller with reviews', async () => {
+      const sellerId = 'seller_1';
+      const reviews: Review[] = [
+        makeReview(sellerId, 'positive'),
+        makeReview(sellerId, 'positive'),
+        makeReview(sellerId, 'negative'),
+        makeReview(sellerId, 'neutral'),
+      ];
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue(reviews);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 10]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.Seller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.size).toBe(1);
+      const metrics = result.get(sellerId)!;
+      expect(metrics.userId).toBe(sellerId);
+      expect(metrics.role).toBe('seller');
+      expect(metrics.totalTransactions).toBe(10);
+      expect(metrics.totalReviews).toBe(4);
+      expect(metrics.positiveReviews).toBe(2);
+      expect(metrics.negativeReviews).toBe(1);
+      expect(metrics.neutralReviews).toBe(1);
+      // positivePercent = 2 / (4 - 1) * 100 = 67
+      expect(metrics.positivePercent).toBe(67);
+      expect(metrics.badges).toEqual([]);
+    });
+
+    it('should return correct metrics for multiple sellers', async () => {
+      const seller1 = 'seller_1';
+      const seller2 = 'seller_2';
+      const reviews: Review[] = [
+        makeReview(seller1, 'positive'),
+        makeReview(seller1, 'positive'),
+        makeReview(seller2, 'positive'),
+        makeReview(seller2, 'negative'),
+        makeReview(seller2, 'neutral'),
+      ];
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue(reviews);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([
+          [seller1, 5],
+          [seller2, 15],
+        ]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: seller1, level: UserLevel.Seller },
+        { id: seller2, level: UserLevel.Seller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [
+        seller1,
+        seller2,
+      ]);
+
+      expect(result.size).toBe(2);
+
+      const m1 = result.get(seller1)!;
+      expect(m1.totalReviews).toBe(2);
+      expect(m1.positiveReviews).toBe(2);
+      expect(m1.negativeReviews).toBe(0);
+      expect(m1.neutralReviews).toBe(0);
+      expect(m1.positivePercent).toBe(100);
+      expect(m1.totalTransactions).toBe(5);
+
+      const m2 = result.get(seller2)!;
+      expect(m2.totalReviews).toBe(3);
+      expect(m2.positiveReviews).toBe(1);
+      expect(m2.negativeReviews).toBe(1);
+      expect(m2.neutralReviews).toBe(1);
+      // positivePercent = 1 / (3 - 1) * 100 = 50
+      expect(m2.positivePercent).toBe(50);
+      expect(m2.totalTransactions).toBe(15);
+    });
+
+    it('should include seller with no reviews with zero metrics', async () => {
+      const sellerId = 'seller_no_reviews';
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue([]);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 3]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.Seller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.size).toBe(1);
+      const metrics = result.get(sellerId)!;
+      expect(metrics.totalReviews).toBe(0);
+      expect(metrics.positiveReviews).toBe(0);
+      expect(metrics.negativeReviews).toBe(0);
+      expect(metrics.neutralReviews).toBe(0);
+      expect(metrics.positivePercent).toBeNull();
+      expect(metrics.totalTransactions).toBe(3);
+      expect(metrics.badges).toEqual([]);
+    });
+
+    it('should include verified badge when user is VerifiedSeller', async () => {
+      const sellerId = 'seller_verified';
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue([]);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 0]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.VerifiedSeller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.get(sellerId)!.badges).toContain('verified');
+    });
+
+    it('should include trusted badge when threshold is met', async () => {
+      const sellerId = 'seller_trusted';
+      const reviews: Review[] = Array(12)
+        .fill(null)
+        .map(() => makeReview(sellerId, 'positive'));
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue(reviews);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 15]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.Seller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.get(sellerId)!.badges).toContain('trusted');
+    });
+
+    it('should include best_seller badge when threshold is met', async () => {
+      const sellerId = 'seller_best';
+      const reviews: Review[] = Array(50)
+        .fill(null)
+        .map(() => makeReview(sellerId, 'positive'));
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue(reviews);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 55]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.Seller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.get(sellerId)!.badges).toContain('best_seller');
+    });
+
+    it('should include new_seller badge when no sales, no reviews, and no other badges', async () => {
+      const sellerId = 'seller_brand_new';
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue([]);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 0]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.Seller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.get(sellerId)!.badges).toEqual(['new_seller']);
+    });
+
+    it('should not include new_seller badge when seller has sales but no reviews', async () => {
+      const sellerId = 'seller_with_sales';
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue([]);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 3]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.Seller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.get(sellerId)!.badges).not.toContain('new_seller');
+    });
+
+    it('should not include new_seller badge when seller is VerifiedSeller with no activity', async () => {
+      const sellerId = 'seller_verified_no_activity';
+
+      reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue([]);
+      transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
+        new Map([[sellerId, 0]]),
+      );
+      usersService.findByIds.mockResolvedValue([
+        { id: sellerId, level: UserLevel.VerifiedSeller },
+      ] as any);
+
+      const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
+
+      expect(result.get(sellerId)!.badges).toContain('verified');
+      expect(result.get(sellerId)!.badges).not.toContain('new_seller');
     });
   });
 });

@@ -6,12 +6,14 @@ import { TICKETS_REPOSITORY } from './tickets.repository.interface';
 import { EventsModule } from '../events/events.module';
 import { UsersModule } from '../users/users.module';
 import { PromotionsModule } from '../promotions/promotions.module';
+import { TermsModule } from '../terms/terms.module';
 
 @Module({
   imports: [
     forwardRef(() => EventsModule),
     UsersModule,
     PromotionsModule,
+    TermsModule,
   ],
   controllers: [TicketsController],
   providers: [

@@ -82,7 +82,7 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
                 {t('sellerIntro.whatYouCanDo')}
               </p>
               <ul className="flex flex-col gap-2">
-                {['canList', 'canSell', 'canReceivePayment'].map((key) => (
+                {['canList', 'canSell'].map((key) => (
                   <li key={key} className="flex items-start gap-2 text-sm text-gray-700">
                     <CheckCircle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
                     <span>{t(`sellerIntro.${key}`)}</span>
@@ -101,6 +101,16 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
                   </p>
                   <ul className="flex flex-col gap-1">
                     {['limitListings', 'limitWithdraw'].map((key) => (
+                      <li key={key} className="text-sm text-amber-800">
+                        · {t(`sellerIntro.${key}`)}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-sm font-semibold text-amber-900 mt-3 mb-1">
+                    {t('sellerIntro.verifyAccountRequires')}
+                  </p>
+                  <ul className="flex flex-col gap-1">
+                    {['verifyAccountPhone', 'verifyAccountDni', 'verifyAccountBank'].map((key) => (
                       <li key={key} className="text-sm text-amber-800">
                         · {t(`sellerIntro.${key}`)}
                       </li>
