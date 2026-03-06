@@ -199,60 +199,65 @@ export class EventsService {
     query: ListEventsQuery,
     includeAllStatuses: boolean = false,
   ): Promise<EventWithDatesResponse[]> {
-    let events: Event[];
+    const offset = query.offset ?? 0;
+    const limit = query.limit ?? 20;
+    const result = await this.eventsRepository.listEventsPaginated(ctx, {
+      approvedOnly: !includeAllStatuses,
+      status: query.status as EventStatus | undefined,
+      category: query.category,
+      search: query.search,
+      limit,
+      offset,
+    });
 
-    if (includeAllStatuses) {
-      events = await this.eventsRepository.getAllEvents(ctx);
-    } else {
-      events = await this.eventsRepository.getApprovedEvents(ctx);
+    const events = result.events;
+    if (events.length === 0) {
+      return [];
     }
 
-    // Apply filters
-    if (query.status && includeAllStatuses) {
-      events = events.filter((e) => e.status === query.status);
+    const eventIds = events.map((e) => e.id);
+    const [allDates, allSections] = await Promise.all([
+      this.eventsRepository.getDatesByEventIds(ctx, eventIds),
+      this.eventsRepository.getSectionsByEventIds(ctx, eventIds),
+    ]);
+
+    const allowedDateStatuses =
+      includeAllStatuses
+        ? undefined
+        : [EventDateStatus.Pending, EventDateStatus.Approved];
+    const allowedSectionStatuses =
+      includeAllStatuses
+        ? undefined
+        : [EventSectionStatus.Pending, EventSectionStatus.Approved];
+
+    const datesByEvent = new Map<string, EventDate[]>();
+    const sectionsByEvent = new Map<string, EventSection[]>();
+    for (const d of allDates) {
+      if (
+        allowedDateStatuses === undefined ||
+        allowedDateStatuses.includes(d.status)
+      ) {
+        const arr = datesByEvent.get(d.eventId) ?? [];
+        arr.push(d);
+        datesByEvent.set(d.eventId, arr);
+      }
+    }
+    for (const s of allSections) {
+      if (
+        allowedSectionStatuses === undefined ||
+        allowedSectionStatuses.includes(s.status)
+      ) {
+        const arr = sectionsByEvent.get(s.eventId) ?? [];
+        arr.push(s);
+        sectionsByEvent.set(s.eventId, arr);
+      }
     }
 
-    if (query.category) {
-      events = events.filter((e) => e.category === query.category);
-    }
-
-    if (query.search) {
-      const searchLower = query.search.toLowerCase();
-      events = events.filter(
-        (e) =>
-          e.name.toLowerCase().includes(searchLower) ||
-          e.venue.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Pagination
-    const offset = query.offset || 0;
-    const limit = query.limit || 20;
-    events = events.slice(offset, offset + limit);
-
-    // Add dates and sections to each event
-    // Always include pending and approved (exclude rejected)
-    const eventsWithDates: EventWithDates[] = await Promise.all(
-      events.map(async (event) => {
-        const [dates, sections] = await Promise.all([
-          includeAllStatuses
-            ? this.eventsRepository.getDatesByEventId(ctx, event.id)
-            : this.eventsRepository.getDatesByEventIdAndStatus(ctx, event.id, [
-                EventDateStatus.Pending,
-                EventDateStatus.Approved,
-              ]),
-          includeAllStatuses
-            ? this.eventsRepository.getSectionsByEventId(ctx, event.id)
-            : this.eventsRepository.getSectionsByEventIdAndStatus(
-                ctx,
-                event.id,
-                [EventSectionStatus.Pending, EventSectionStatus.Approved],
-              ),
-        ]);
-
-        return { ...event, dates, sections };
-      }),
-    );
+    const eventsWithDates: EventWithDates[] = events.map((event) => ({
+      ...event,
+      dates: datesByEvent.get(event.id) ?? [],
+      sections: sectionsByEvent.get(event.id) ?? [],
+    }));
 
     return await this.attachImages(ctx, eventsWithDates);
   }
@@ -401,15 +406,32 @@ export class EventsService {
   async getPendingEvents(ctx: Ctx): Promise<EventWithDatesResponse[]> {
     const events = await this.eventsRepository.getPendingEvents(ctx);
 
-    const eventsWithDates: EventWithDates[] = await Promise.all(
-      events.map(async (event) => {
-        const [dates, sections] = await Promise.all([
-          this.eventsRepository.getDatesByEventId(ctx, event.id),
-          this.eventsRepository.getSectionsByEventId(ctx, event.id),
-        ]);
-        return { ...event, dates, sections };
-      }),
-    );
+    if (events.length === 0) return [];
+
+    const eventIds = events.map((e) => e.id);
+    const [allDates, allSections] = await Promise.all([
+      this.eventsRepository.getDatesByEventIds(ctx, eventIds),
+      this.eventsRepository.getSectionsByEventIds(ctx, eventIds),
+    ]);
+
+    const datesByEvent = new Map<string, EventDate[]>();
+    const sectionsByEvent = new Map<string, EventSection[]>();
+    for (const d of allDates) {
+      const arr = datesByEvent.get(d.eventId) ?? [];
+      arr.push(d);
+      datesByEvent.set(d.eventId, arr);
+    }
+    for (const s of allSections) {
+      const arr = sectionsByEvent.get(s.eventId) ?? [];
+      arr.push(s);
+      sectionsByEvent.set(s.eventId, arr);
+    }
+
+    const eventsWithDates: EventWithDates[] = events.map((event) => ({
+      ...event,
+      dates: datesByEvent.get(event.id) ?? [],
+      sections: sectionsByEvent.get(event.id) ?? [],
+    }));
 
     return await this.attachImages(ctx, eventsWithDates);
   }
@@ -423,15 +445,32 @@ export class EventsService {
   ): Promise<EventWithDatesResponse[]> {
     const events = await this.eventsRepository.getEventsByCreator(ctx, userId);
 
-    const eventsWithDates: EventWithDates[] = await Promise.all(
-      events.map(async (event) => {
-        const [dates, sections] = await Promise.all([
-          this.eventsRepository.getDatesByEventId(ctx, event.id),
-          this.eventsRepository.getSectionsByEventId(ctx, event.id),
-        ]);
-        return { ...event, dates, sections };
-      }),
-    );
+    if (events.length === 0) return [];
+
+    const eventIds = events.map((e) => e.id);
+    const [allDates, allSections] = await Promise.all([
+      this.eventsRepository.getDatesByEventIds(ctx, eventIds),
+      this.eventsRepository.getSectionsByEventIds(ctx, eventIds),
+    ]);
+
+    const datesByEvent = new Map<string, EventDate[]>();
+    const sectionsByEvent = new Map<string, EventSection[]>();
+    for (const d of allDates) {
+      const arr = datesByEvent.get(d.eventId) ?? [];
+      arr.push(d);
+      datesByEvent.set(d.eventId, arr);
+    }
+    for (const s of allSections) {
+      const arr = sectionsByEvent.get(s.eventId) ?? [];
+      arr.push(s);
+      sectionsByEvent.set(s.eventId, arr);
+    }
+
+    const eventsWithDates: EventWithDates[] = events.map((event) => ({
+      ...event,
+      dates: datesByEvent.get(event.id) ?? [],
+      sections: sectionsByEvent.get(event.id) ?? [],
+    }));
 
     return await this.attachImages(ctx, eventsWithDates);
   }

@@ -27,9 +27,36 @@ export interface ITransactionsRepository {
   getByBuyerId(ctx: Ctx, buyerId: string): Promise<Transaction[]>;
 
   /**
+   * Get transactions by buyer with optional status filter and pagination (DB-level).
+   */
+  getByBuyerIdPaginated(
+    ctx: Ctx,
+    buyerId: string,
+    opts: { status?: TransactionStatus; limit: number; offset: number },
+  ): Promise<{ transactions: Transaction[]; total: number }>;
+
+  /**
    * Get transactions by seller
    */
   getBySellerId(ctx: Ctx, sellerId: string): Promise<Transaction[]>;
+
+  /**
+   * Get transactions by seller with optional status filter and pagination (DB-level).
+   */
+  getBySellerIdPaginated(
+    ctx: Ctx,
+    sellerId: string,
+    opts: { status?: TransactionStatus; limit: number; offset: number },
+  ): Promise<{ transactions: Transaction[]; total: number }>;
+
+  /**
+   * Get transactions where user is buyer or seller, with optional status filter and pagination (DB-level).
+   */
+  getByUserIdPaginated(
+    ctx: Ctx,
+    userId: string,
+    opts: { status?: TransactionStatus; limit: number; offset: number },
+  ): Promise<{ transactions: Transaction[]; total: number }>;
 
   /**
    * Get transactions by listing
@@ -118,6 +145,15 @@ export interface ITransactionsRepository {
   getCompletedBySellerIds(
     ctx: Ctx,
     sellerIds: string[],
+  ): Promise<Transaction[]>;
+
+  /**
+   * Get transactions by status and payment method IDs (for admin pending manual payments).
+   */
+  getByStatusAndPaymentMethodIds(
+    ctx: Ctx,
+    status: TransactionStatus,
+    paymentMethodIds: string[],
   ): Promise<Transaction[]>;
 }
 

@@ -1,5 +1,20 @@
 import type { Ctx } from '../../common/types/context';
-import type { TicketListing, ListingStatus } from './tickets.domain';
+import type { TicketListing, ListingStatus, TicketType } from './tickets.domain';
+
+/**
+ * Options for paginated listing list with DB-level filters
+ */
+export interface ListListingsPaginatedOpts {
+  eventId?: string;
+  eventDateId?: string;
+  sellerId?: string;
+  /** When none of eventId/eventDateId/sellerId set, scope is active listings */
+  type?: TicketType;
+  minPrice?: number;
+  maxPrice?: number;
+  limit: number;
+  offset: number;
+}
 
 /**
  * Tickets repository interface
@@ -24,6 +39,15 @@ export interface ITicketsRepository {
    * Get all listings
    */
   getAll(ctx: Ctx): Promise<TicketListing[]>;
+
+  /**
+   * List listings with optional filters and pagination (DB-level).
+   * Exactly one of eventId, eventDateId, sellerId may be set, or none for all active.
+   */
+  listListingsPaginated(
+    ctx: Ctx,
+    opts: ListListingsPaginatedOpts,
+  ): Promise<{ listings: TicketListing[]; total: number }>;
 
   /**
    * Get active listings
@@ -81,6 +105,14 @@ export interface ITicketsRepository {
    * Get pending listings by event ID
    */
   getPendingByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]>;
+
+  /**
+   * Get pending listings for multiple event IDs (batch, status = Pending).
+   */
+  getPendingByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<TicketListing[]>;
 
   /**
    * Get pending listings by event date ID

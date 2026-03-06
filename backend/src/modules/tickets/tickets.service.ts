@@ -354,12 +354,8 @@ export class TicketsService {
 
     const ticketUnits = this.buildTicketUnits(data, eventSection.seatingType);
 
-    // Use seller's default currency for the listing (propagates through purchase flow)
-    const seller = await this.usersService.findById(ctx, sellerId);
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
-    }
-    const listingCurrency = seller.currency;
+    // Use seller's default currency (reuse user already loaded above)
+    const listingCurrency = user.currency;
 
     // Determine listing status based on event, date, and section approval
     const listingStatus = this.determineListingStatus(
@@ -541,56 +537,80 @@ export class TicketsService {
   }
 
   /**
+   * Enrich multiple listings with event information (batch).
+   */
+  private async enrichListingsWithEvent(
+    ctx: Ctx,
+    listings: TicketListing[],
+  ): Promise<TicketListingWithEvent[]> {
+    if (listings.length === 0) return [];
+
+    const eventIds = [...new Set(listings.map((l) => l.eventId))];
+    const events = await this.eventsService.getEventsByIds(ctx, eventIds);
+    const eventMap = new Map(events.map((e) => [e.id, e]));
+
+    return listings.map((listing) => {
+      const event = eventMap.get(listing.eventId);
+      const eventDate = event?.dates.find((d) => d.id === listing.eventDateId);
+      const eventSection = event?.sections.find(
+        (s) => s.id === listing.eventSectionId,
+      );
+
+      let pendingReason: string[] | undefined;
+      if (listing.status === ListingStatus.Pending && event) {
+        const reasons: string[] = [];
+        if (event.status !== EventStatus.Approved) {
+          reasons.push('event');
+        }
+        if (eventDate?.status !== EventDateStatus.Approved) {
+          reasons.push('date');
+        }
+        if (eventSection?.status !== EventSectionStatus.Approved) {
+          reasons.push('section');
+        }
+        if (reasons.length > 0) {
+          pendingReason = reasons;
+        }
+      }
+
+      return {
+        ...listing,
+        seatingType: eventSection?.seatingType ?? SeatingType.Unnumbered,
+        eventName: event?.name ?? 'Unknown Event',
+        eventDate: eventDate?.date ?? new Date(),
+        venue: event?.venue ?? 'Unknown',
+        sectionName: eventSection?.name ?? 'Unknown',
+        pendingReason,
+        bannerUrls: event?.bannerUrls,
+      };
+    });
+  }
+
+  /**
    * List listings with optional filters
    */
   async listListings(
     ctx: Ctx,
     query: ListListingsQuery,
   ): Promise<TicketListingWithEvent[]> {
-    let listings: TicketListing[];
+    const offset = query.offset ?? 0;
+    const limit = query.limit ?? 20;
 
-    if (query.eventDateId) {
-      listings = await this.ticketsRepository.getByEventDateId(
-        ctx,
-        query.eventDateId,
-      );
-    } else if (query.eventId) {
-      listings = await this.ticketsRepository.getByEventId(ctx, query.eventId);
-    } else if (query.sellerId) {
-      listings = await this.ticketsRepository.getBySellerId(
-        ctx,
-        query.sellerId,
-      );
-    } else {
-      listings = await this.ticketsRepository.getActiveListings(ctx);
-    }
-
-    // Apply filters
-    if (query.type) {
-      listings = listings.filter((l) => l.type === query.type);
-    }
-
-    if (query.minPrice !== undefined) {
-      listings = listings.filter(
-        (l) => l.pricePerTicket.amount >= query.minPrice!,
-      );
-    }
-
-    if (query.maxPrice !== undefined) {
-      listings = listings.filter(
-        (l) => l.pricePerTicket.amount <= query.maxPrice!,
-      );
-    }
-
-    // Pagination
-    const offset = query.offset || 0;
-    const limit = query.limit || 20;
-    listings = listings.slice(offset, offset + limit);
-
-    // Enrich with event info
-    return await Promise.all(
-      listings.map((l) => this.enrichListingWithEvent(ctx, l)),
+    const opts = {
+      eventId: query.eventId,
+      eventDateId: query.eventDateId,
+      sellerId: query.sellerId,
+      type: query.type,
+      minPrice: query.minPrice,
+      maxPrice: query.maxPrice,
+      limit,
+      offset,
+    };
+    const { listings } = await this.ticketsRepository.listListingsPaginated(
+      ctx,
+      opts,
     );
+    return this.enrichListingsWithEvent(ctx, listings);
   }
 
   /**
@@ -714,9 +734,7 @@ export class TicketsService {
     sellerId: string,
   ): Promise<TicketListingWithEvent[]> {
     const listings = await this.ticketsRepository.getBySellerId(ctx, sellerId);
-    return await Promise.all(
-      listings.map((l) => this.enrichListingWithEvent(ctx, l)),
-    );
+    return this.enrichListingsWithEvent(ctx, listings);
   }
 
   /**

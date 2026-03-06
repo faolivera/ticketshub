@@ -234,7 +234,7 @@ export class ReviewsService {
   }
 
   /**
-   * Calculate badges for a user (fetches user data, then delegates to computeBadges).
+   * Calculate badges for a user (fetches user data unless provided, then delegates to computeBadges).
    */
   private async calculateBadges(
     ctx: Ctx,
@@ -243,10 +243,11 @@ export class ReviewsService {
     positiveReviews: number,
     totalReviews: number,
     totalTransactions: number,
+    user?: import('../users/users.domain').User | null,
   ): Promise<UserBadge[]> {
-    const user = await this.usersService.findById(ctx, userId);
+    const resolvedUser = user !== undefined ? user : await this.usersService.findById(ctx, userId);
     return this.computeBadges({
-      isVerifiedSeller: user ? VerificationHelper.hasV3(user) : false,
+      isVerifiedSeller: resolvedUser ? VerificationHelper.hasV3(resolvedUser) : false,
       role,
       positiveReviews,
       totalReviews,
@@ -255,9 +256,14 @@ export class ReviewsService {
   }
 
   /**
-   * Get seller review metrics
+   * Get seller review metrics.
+   * Optional opts: pass { user, totalTransactions } to avoid duplicate fetches (e.g. from BFF).
    */
-  async getSellerMetrics(ctx: Ctx, userId: string): Promise<UserReviewMetrics> {
+  async getSellerMetrics(
+    ctx: Ctx,
+    userId: string,
+    opts?: { user?: import('../users/users.domain').User | null; totalTransactions?: number },
+  ): Promise<UserReviewMetrics> {
     this.logger.log(ctx, `Getting seller metrics for user ${userId}`);
 
     const reviews = await this.reviewsRepository.getByRevieweeIdAndRole(
@@ -282,7 +288,9 @@ export class ReviewsService {
         : null;
 
     const totalTransactions =
-      await this.transactionsService.getSellerCompletedSalesTotal(ctx, userId);
+      opts?.totalTransactions !== undefined
+        ? opts.totalTransactions
+        : await this.transactionsService.getSellerCompletedSalesTotal(ctx, userId);
 
     const badges = await this.calculateBadges(
       ctx,
@@ -291,6 +299,7 @@ export class ReviewsService {
       positiveReviews,
       totalReviews,
       totalTransactions,
+      opts?.user,
     );
 
     return {
@@ -458,26 +467,21 @@ export class ReviewsService {
     const buyerMap = new Map(buyerInfos.map((b) => [b.id, b]));
 
     const transactionIds = [...new Set(reviews.map((r) => r.transactionId))];
-    const transactionsWithListings = await Promise.all(
-      transactionIds.map(async (txnId) => {
-        const txn = await this.transactionsService.findById(ctx, txnId);
-        if (!txn) return null;
-        const listing = await this.ticketsService.getListingById(
-          ctx,
-          txn.listingId,
-        );
-        return { txnId, listing };
-      }),
+    const transactions = await this.transactionsService.findByIds(
+      ctx,
+      transactionIds,
     );
-    const listingMap = new Map(
-      transactionsWithListings
-        .filter((t): t is NonNullable<typeof t> => t !== null)
-        .map((t) => [t.txnId, t.listing]),
-    );
+    const txnMap = new Map(transactions.map((t) => [t.id, t]));
+    const listingIds = [
+      ...new Set(transactions.map((t) => t.listingId).filter(Boolean)),
+    ];
+    const listings = await this.ticketsService.getListingsByIds(ctx, listingIds);
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
 
     const enrichedReviews: SellerProfileReview[] = reviews.map((review) => {
       const buyer = buyerMap.get(review.buyerId);
-      const listing = listingMap.get(review.transactionId);
+      const txn = txnMap.get(review.transactionId);
+      const listing = txn ? listingMap.get(txn.listingId) : undefined;
 
       return {
         id: review.id,

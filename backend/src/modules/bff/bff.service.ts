@@ -198,24 +198,23 @@ export class BffService {
     buyerId?: string,
   ): Promise<BuyPageData> {
     const listing = await this.ticketsService.getListingById(ctx, ticketId);
-    const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [
-      listing.sellerId,
+    const [publicInfo, user, totalSales] = await Promise.all([
+      this.usersService.getPublicUserInfoByIds(ctx, [listing.sellerId]).then((a) => a[0]),
+      this.usersService.findById(ctx, listing.sellerId),
+      this.transactionsService.getSellerCompletedSalesTotal(ctx, listing.sellerId),
     ]);
-    const [user, totalSales, sellerMetrics, paymentMethods, snapshot] =
-      await Promise.all([
-        this.usersService.findById(ctx, listing.sellerId),
-        this.transactionsService.getSellerCompletedSalesTotal(
-          ctx,
-          listing.sellerId,
-        ),
-        this.reviewsService.getSellerMetrics(ctx, listing.sellerId),
-        this.paymentMethodsService.getPublicPaymentMethods(ctx),
-        this.pricingService.createSnapshot(ctx, {
-          id: listing.id,
-          pricePerTicket: listing.pricePerTicket,
-          promotionSnapshot: listing.promotionSnapshot,
-        }),
-      ]);
+    const [sellerMetrics, paymentMethods, snapshot] = await Promise.all([
+      this.reviewsService.getSellerMetrics(ctx, listing.sellerId, {
+        user: user ?? undefined,
+        totalTransactions: totalSales,
+      }),
+      this.paymentMethodsService.getPublicPaymentMethods(ctx),
+      this.pricingService.createSnapshot(ctx, {
+        id: listing.id,
+        pricePerTicket: listing.pricePerTicket,
+        promotionSnapshot: listing.promotionSnapshot,
+      }),
+    ]);
 
     const seller: BuyPageSellerInfo = {
       id: listing.sellerId,

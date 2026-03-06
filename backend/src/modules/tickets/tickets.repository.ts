@@ -21,6 +21,7 @@ import {
   TicketUnitStatus,
 } from './tickets.domain';
 import type { ITicketsRepository } from './tickets.repository.interface';
+import type { ListListingsPaginatedOpts } from './tickets.repository.interface';
 import type { Address } from '../shared/address.domain';
 
 type PrismaTicketListingWithUnits = PrismaTicketListing & {
@@ -330,6 +331,58 @@ export class TicketsRepository
     return listings.map((l) => this.mapToListing(l));
   }
 
+  async listListingsPaginated(
+    ctx: Ctx,
+    opts: ListListingsPaginatedOpts,
+  ): Promise<{ listings: TicketListing[]; total: number }> {
+    const client = this.getClient(ctx);
+    const baseWhere: Record<string, unknown> = {};
+    if (opts.eventId) {
+      baseWhere.eventId = opts.eventId;
+      baseWhere.status = PrismaListingStatus.Active;
+    } else if (opts.eventDateId) {
+      baseWhere.eventDateId = opts.eventDateId;
+      baseWhere.status = PrismaListingStatus.Active;
+    } else if (opts.sellerId) {
+      baseWhere.sellerId = opts.sellerId;
+    } else {
+      baseWhere.status = PrismaListingStatus.Active;
+    }
+    if (opts.type !== undefined) {
+      baseWhere.type = this.mapTicketTypeToDb(opts.type);
+    }
+    const priceFilters: Record<string, unknown>[] = [];
+    if (opts.minPrice != null) {
+      priceFilters.push({
+        pricePerTicket: { path: ['amount'], gte: opts.minPrice },
+      });
+    }
+    if (opts.maxPrice != null) {
+      priceFilters.push({
+        pricePerTicket: { path: ['amount'], lte: opts.maxPrice },
+      });
+    }
+    const where =
+      priceFilters.length > 0
+        ? { AND: [baseWhere, ...priceFilters] }
+        : baseWhere;
+
+    const [listings, total] = await Promise.all([
+      client.ticketListing.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: opts.offset,
+        take: opts.limit,
+        include: { ticketUnits: true },
+      }),
+      client.ticketListing.count({ where }),
+    ]);
+    return {
+      listings: listings.map((l) => this.mapToListing(l)),
+      total,
+    };
+  }
+
   async getByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
@@ -494,6 +547,23 @@ export class TicketsRepository
     const listings = await client.ticketListing.findMany({
       where: {
         eventId,
+        status: PrismaListingStatus.Pending,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: { ticketUnits: true },
+    });
+    return listings.map((l) => this.mapToListing(l));
+  }
+
+  async getPendingByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<TicketListing[]> {
+    if (eventIds.length === 0) return [];
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
+      where: {
+        eventId: { in: eventIds },
         status: PrismaListingStatus.Pending,
       },
       orderBy: { createdAt: 'desc' },
@@ -776,16 +846,23 @@ export class TicketsRepository
     data.version = { increment: 1 };
     data.updatedAt = new Date();
 
-    const result = await client.ticketListing.updateMany({
-      where: { id, version: expectedVersion },
-      data,
-    });
-
-    if (result.count === 0) {
-      throw new OptimisticLockException('TicketListing', id);
+    try {
+      const updated = await client.ticketListing.update({
+        where: { id, version: expectedVersion },
+        data,
+        include: { ticketUnits: true },
+      });
+      return this.mapToListing(updated);
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2025'
+      ) {
+        throw new OptimisticLockException('TicketListing', id);
+      }
+      throw error;
     }
-
-    const updated = await this.findById(ctx, id);
-    return updated!;
   }
 }

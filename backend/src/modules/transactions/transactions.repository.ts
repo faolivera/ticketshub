@@ -104,6 +104,37 @@ export class TransactionsRepository
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
+  async getByBuyerIdPaginated(
+    ctx: Ctx,
+    buyerId: string,
+    opts: {
+      status?: TransactionStatus;
+      limit: number;
+      offset: number;
+    },
+  ): Promise<{ transactions: Transaction[]; total: number }> {
+    const client = this.getClient(ctx);
+    const where = {
+      buyerId,
+      ...(opts.status !== undefined && {
+        status: this.mapStatusToDb(opts.status),
+      }),
+    };
+    const [transactions, total] = await Promise.all([
+      client.transaction.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: opts.offset,
+        take: opts.limit,
+      }),
+      client.transaction.count({ where }),
+    ]);
+    return {
+      transactions: transactions.map((t) => this.mapToTransaction(t)),
+      total,
+    };
+  }
+
   async getBySellerId(ctx: Ctx, sellerId: string): Promise<Transaction[]> {
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
@@ -111,6 +142,68 @@ export class TransactionsRepository
       orderBy: { createdAt: 'desc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
+  }
+
+  async getBySellerIdPaginated(
+    ctx: Ctx,
+    sellerId: string,
+    opts: {
+      status?: TransactionStatus;
+      limit: number;
+      offset: number;
+    },
+  ): Promise<{ transactions: Transaction[]; total: number }> {
+    const client = this.getClient(ctx);
+    const where = {
+      sellerId,
+      ...(opts.status !== undefined && {
+        status: this.mapStatusToDb(opts.status),
+      }),
+    };
+    const [transactions, total] = await Promise.all([
+      client.transaction.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: opts.offset,
+        take: opts.limit,
+      }),
+      client.transaction.count({ where }),
+    ]);
+    return {
+      transactions: transactions.map((t) => this.mapToTransaction(t)),
+      total,
+    };
+  }
+
+  async getByUserIdPaginated(
+    ctx: Ctx,
+    userId: string,
+    opts: {
+      status?: TransactionStatus;
+      limit: number;
+      offset: number;
+    },
+  ): Promise<{ transactions: Transaction[]; total: number }> {
+    const client = this.getClient(ctx);
+    const where = {
+      OR: [{ buyerId: userId }, { sellerId: userId }],
+      ...(opts.status !== undefined && {
+        status: this.mapStatusToDb(opts.status),
+      }),
+    };
+    const [transactions, total] = await Promise.all([
+      client.transaction.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: opts.offset,
+        take: opts.limit,
+      }),
+      client.transaction.count({ where }),
+    ]);
+    return {
+      transactions: transactions.map((t) => this.mapToTransaction(t)),
+      total,
+    };
   }
 
   async getCompletedBySellerIds(
@@ -397,6 +490,24 @@ export class TransactionsRepository
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
+  async getByStatusAndPaymentMethodIds(
+    ctx: Ctx,
+    status: TransactionStatus,
+    paymentMethodIds: string[],
+  ): Promise<Transaction[]> {
+    if (paymentMethodIds.length === 0) return [];
+    const client = this.getClient(ctx);
+    const dbStatus = this.mapStatusToDb(status);
+    const transactions = await client.transaction.findMany({
+      where: {
+        status: dbStatus,
+        paymentMethodId: { in: paymentMethodIds },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return transactions.map((t) => this.mapToTransaction(t));
+  }
+
   async findByIdForUpdate(
     ctx: Ctx,
     id: string,
@@ -422,25 +533,27 @@ export class TransactionsRepository
 
     const updateData = this.buildUpdateData(updates);
 
-    const result = await client.transaction.updateMany({
-      where: { id, version: expectedVersion },
-      data: {
-        ...updateData,
-        version: { increment: 1 },
-        updatedAt: new Date(),
-      },
-    });
-
-    if (result.count === 0) {
-      throw new OptimisticLockException('Transaction', id);
+    try {
+      const updated = await client.transaction.update({
+        where: { id, version: expectedVersion },
+        data: {
+          ...updateData,
+          version: { increment: 1 },
+          updatedAt: new Date(),
+        },
+      });
+      return this.mapToTransaction(updated);
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2025'
+      ) {
+        throw new OptimisticLockException('Transaction', id);
+      }
+      throw error;
     }
-
-    const updated = await this.findById(ctx, id);
-    if (!updated) {
-      throw new OptimisticLockException('Transaction', id);
-    }
-
-    return updated;
   }
 
   // ==================== Mappers ====================

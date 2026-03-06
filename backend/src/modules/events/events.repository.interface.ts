@@ -1,6 +1,6 @@
 import type { Ctx } from '../../common/types/context';
 import type { Event, EventDate, EventSection } from './events.domain';
-import type { EventDateStatus, EventSectionStatus } from './events.domain';
+import type { EventDateStatus, EventSectionStatus, EventStatus, EventCategory } from './events.domain';
 
 /**
  * Events repository interface
@@ -42,6 +42,22 @@ export interface IEventsRepository {
    * Get approved events
    */
   getApprovedEvents(ctx: Ctx): Promise<Event[]>;
+
+  /**
+   * List events with optional filters and pagination (DB-level).
+   * When approvedOnly is true, only approved events; otherwise all.
+   */
+  listEventsPaginated(
+    ctx: Ctx,
+    opts: {
+      approvedOnly: boolean;
+      status?: EventStatus;
+      category?: EventCategory;
+      search?: string;
+      limit: number;
+      offset: number;
+    },
+  ): Promise<{ events: Event[]; total: number }>;
 
   /**
    * Get pending events (for admin)

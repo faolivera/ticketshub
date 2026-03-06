@@ -565,6 +565,10 @@ model Offer {
   listing  TicketListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([listingId])
+  @@index([userId])
+  @@index([listingId, status])
+  @@index([userId, listingId, status])
   @@map("offers")
 }
 
@@ -650,6 +654,7 @@ model PricingSnapshot {
   selectedPaymentMethodId    String?
   createdAt                  DateTime @default(now())
 
+  @@index([listingId])
   @@map("pricing_snapshots")
 }
 
@@ -682,6 +687,8 @@ model WalletTransaction {
   // Relations
   wallet              Wallet                @relation(fields: [walletUserId], references: [userId])
 
+  @@index([walletUserId])
+  @@index([walletUserId, type])
   @@map("wallet_transactions")
 }
 
@@ -698,6 +705,9 @@ model Otp {
   // Relations
   user       User      @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, type, status])
   @@map("otps")
 }
 
@@ -718,6 +728,7 @@ model Review {
   reviewee      User        @relation("ReviewReviewee", fields: [revieweeId], references: [id])
 
   @@unique([transactionId, reviewerId])
+  @@index([revieweeId, revieweeRole])
   @@map("reviews")
 }
 
@@ -776,6 +787,9 @@ model IdentityVerificationRequest {
   // Relations
   user                 User                       @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
   @@map("identity_verification_requests")
 }
 
@@ -796,6 +810,8 @@ model SupportTicket {
   user          User                  @relation(fields: [userId], references: [id])
   messages      SupportMessage[]
 
+  @@index([userId])
+  @@index([status])
   @@map("support_tickets")
 }
 
@@ -810,6 +826,7 @@ model SupportMessage {
   // Relations
   ticket    SupportTicket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
+  @@index([ticketId])
   @@map("support_messages")
 }
 

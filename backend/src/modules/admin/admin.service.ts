@@ -188,15 +188,26 @@ export class AdminService {
     this.logger.log(ctx, 'Getting pending events list');
 
     const pendingEvents = await this.eventsService.getPendingEvents(ctx);
-    const allListings = await this.ticketsRepository.getAll(ctx);
+    if (pendingEvents.length === 0) {
+      return { events: [], total: 0 };
+    }
+
+    const eventIds = pendingEvents.map((e) => e.id);
+    const pendingListings = await this.ticketsRepository.getPendingByEventIds(
+      ctx,
+      eventIds,
+    );
+    const listingsByEventId = new Map<string, typeof pendingListings>();
+    for (const l of pendingListings) {
+      const arr = listingsByEventId.get(l.eventId) ?? [];
+      arr.push(l);
+      listingsByEventId.set(l.eventId, arr);
+    }
 
     const enrichedEvents: AdminPendingEventItem[] = [];
 
     for (const event of pendingEvents) {
-      const eventListings = allListings.filter((l) => l.eventId === event.id);
-      const pendingEventListings = eventListings.filter(
-        (l) => l.status === 'Pending',
-      );
+      const pendingEventListings = listingsByEventId.get(event.id) ?? [];
 
       const pendingDates: AdminPendingEventDateItem[] = [];
 
@@ -713,13 +724,9 @@ export class AdminService {
 
     const [sellers, listings] = await Promise.all([
       this.usersService.findByIds(ctx, sellerIds),
-      Promise.all(
-        listingIds.map((id) => this.ticketsService.getListingById(ctx, id)),
-      ),
+      this.ticketsService.getListingsByIds(ctx, listingIds),
     ]);
-    const listingMap = new Map(
-      listingIds.map((id, i) => [id, listings[i]]),
-    );
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
     const sellerMap = new Map(sellers.map((s) => [s.id, s]));
 
     const payouts: AdminSellerPayoutItem[] = [];

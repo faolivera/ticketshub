@@ -172,9 +172,16 @@ export class TransactionsService {
       throw new BadRequestException('Cannot buy your own listing');
     }
 
-    const buyer = await this.usersService.findById(ctx, buyerId);
+    const [buyer, seller, platformConfig] = await Promise.all([
+      this.usersService.findById(ctx, buyerId),
+      this.usersService.findById(ctx, listing.sellerId),
+      this.platformConfigService.getPlatformConfig(ctx),
+    ]);
     if (!buyer) {
       throw new ForbiddenException('User not found');
+    }
+    if (!seller) {
+      throw new NotFoundException('Seller not found');
     }
     if (!VerificationHelper.hasV1(buyer)) {
       throw new ForbiddenException('Email must be verified to purchase');
@@ -193,13 +200,17 @@ export class TransactionsService {
       quantityForRisk > 0
         ? (listing.pricePerTicket.amount * quantityForRisk) / 100
         : 0;
-    const risk = await this.riskEngine.evaluateCheckoutRisk(ctx, buyerId, {
-      quantity: quantityForRisk || 1,
-      amountUsd: amountMajor,
-      eventStartsAt: listing.eventDate,
-      paymentMethodId,
-      sellerId: listing.sellerId,
-    });
+    const risk = this.riskEngine.evaluate(
+      {
+        quantity: quantityForRisk || 1,
+        amountUsd: amountMajor,
+        eventStartsAt: listing.eventDate,
+        paymentMethodId,
+        buyerCreatedAt: buyer.createdAt,
+        seller,
+      },
+      platformConfig?.riskEngine?.buyer,
+    );
     if (risk.requireV2 && !VerificationHelper.hasV2(buyer)) {
       throw new ForbiddenException(
         'Phone verification is required for this purchase. Please verify your phone number.',
@@ -230,7 +241,6 @@ export class TransactionsService {
 
     const quantity = resolvedTicketUnitIds.length;
     const transactionId = this.generateId();
-    const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
 
     const { transaction, totalPaid } = await this.txManager.executeInTransaction(
       ctx,
@@ -275,7 +285,6 @@ export class TransactionsService {
           resolvedTicketUnitIds,
         );
 
-        const seller = await this.usersService.findById(txCtx, listing.sellerId);
         const tier = seller ? VerificationHelper.sellerTier(seller) : 0;
         const holdHours =
           tier === 2
@@ -1007,6 +1016,44 @@ export class TransactionsService {
   }
 
   /**
+   * Enrich multiple transactions with details (batch: 2 queries total).
+   */
+  private async enrichTransactions(
+    ctx: Ctx,
+    transactions: Transaction[],
+  ): Promise<TransactionWithDetails[]> {
+    if (transactions.length === 0) return [];
+
+    const listingIds = [...new Set(transactions.map((t) => t.listingId))];
+    const userIds = [
+      ...new Set(transactions.flatMap((t) => [t.buyerId, t.sellerId])),
+    ];
+
+    const [listings, userInfos] = await Promise.all([
+      this.ticketsService.getListingsByIds(ctx, listingIds),
+      this.usersService.getPublicUserInfoByIds(ctx, userIds),
+    ]);
+
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
+    const userInfoMap = new Map(userInfos.map((u) => [u.id, u]));
+
+    return transactions.map((t) => {
+      const listing = listingMap.get(t.listingId);
+      const buyerInfo = userInfoMap.get(t.buyerId);
+      const sellerInfo = userInfoMap.get(t.sellerId);
+      return {
+        ...t,
+        eventName: listing?.eventName ?? 'Unknown',
+        eventDate: listing?.eventDate ?? new Date(),
+        venue: listing?.venue ?? 'Unknown',
+        buyerName: buyerInfo?.publicName ?? 'Unknown',
+        sellerName: sellerInfo?.publicName ?? 'Unknown',
+        bannerUrls: listing?.bannerUrls,
+      };
+    });
+  }
+
+  /**
    * List user's transactions
    */
   async listTransactions(
@@ -1014,46 +1061,36 @@ export class TransactionsService {
     userId: string,
     query: ListTransactionsQuery,
   ): Promise<TransactionWithDetails[]> {
-    let transactions: Transaction[];
+    const offset = query.offset ?? 0;
+    const limit = query.limit ?? 20;
+    const status =
+      query.status !== undefined
+        ? (query.status as TransactionStatus)
+        : undefined;
+
+    let result: { transactions: Transaction[]; total: number };
 
     if (query.role === 'seller') {
-      transactions = await this.transactionsRepository.getBySellerId(
+      result = await this.transactionsRepository.getBySellerIdPaginated(
         ctx,
         userId,
+        { status, limit, offset },
       );
     } else if (query.role === 'buyer') {
-      transactions = await this.transactionsRepository.getByBuyerId(
+      result = await this.transactionsRepository.getByBuyerIdPaginated(
         ctx,
         userId,
+        { status, limit, offset },
       );
     } else {
-      const asBuyer = await this.transactionsRepository.getByBuyerId(
+      result = await this.transactionsRepository.getByUserIdPaginated(
         ctx,
         userId,
-      );
-      const asSeller = await this.transactionsRepository.getBySellerId(
-        ctx,
-        userId,
-      );
-      transactions = [...asBuyer, ...asSeller].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        { status, limit, offset },
       );
     }
 
-    // Apply filters
-    if (query.status) {
-      transactions = transactions.filter((t) => t.status === query.status);
-    }
-
-    // Pagination
-    const offset = query.offset || 0;
-    const limit = query.limit || 20;
-    transactions = transactions.slice(offset, offset + limit);
-
-    return await Promise.all(
-      transactions.map((t) => this.enrichTransaction(ctx, t)),
-    );
+    return this.enrichTransactions(ctx, result.transactions);
   }
 
   /**
@@ -1245,35 +1282,58 @@ export class TransactionsService {
   ): Promise<GetPendingPaymentsResponse> {
     this.logger.log(ctx, 'Getting pending manual payments');
 
-    const allTransactions = await this.transactionsRepository.getAll(ctx);
     const allPaymentMethods = await this.paymentMethodsService.findAll(ctx);
-
-    // Filter for transactions that are pending payment and use manual approval method
     const manualPaymentMethodIds = allPaymentMethods
       .filter((m) => m.type === 'manual_approval')
       .map((m) => m.id);
 
-    const pendingManual = allTransactions.filter(
-      (t) =>
-        t.status === TransactionStatus.PaymentPendingVerification &&
-        t.paymentMethodId &&
-        manualPaymentMethodIds.includes(t.paymentMethodId),
+    const pendingManual = await this.transactionsRepository.getByStatusAndPaymentMethodIds(
+      ctx,
+      TransactionStatus.PaymentPendingVerification,
+      manualPaymentMethodIds,
     );
 
-    // Enrich with details
-    const enriched: TransactionWithPaymentInfo[] = await Promise.all(
-      pendingManual.map(async (t) => {
-        const details = await this.enrichTransaction(ctx, t);
-        const paymentMethod = allPaymentMethods.find(
-          (m) => m.id === t.paymentMethodId,
-        );
-        return {
-          ...details,
-          paymentMethodId: t.paymentMethodId,
-          paymentMethodName: paymentMethod?.name || 'Unknown',
-        };
-      }),
+    if (pendingManual.length === 0) {
+      return { transactions: [], total: 0 };
+    }
+
+    const paymentMethodMap = new Map(
+      allPaymentMethods.map((m) => [m.id, m]),
     );
+
+    const [listings, userInfos] = await Promise.all([
+      this.ticketsService.getListingsByIds(
+        ctx,
+        [...new Set(pendingManual.map((t) => t.listingId))],
+      ),
+      this.usersService.getPublicUserInfoByIds(ctx, [
+        ...new Set(
+          pendingManual.flatMap((t) => [t.buyerId, t.sellerId]),
+        ),
+      ]),
+    ]);
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
+    const userInfoMap = new Map(userInfos.map((u) => [u.id, u]));
+
+    const enriched: TransactionWithPaymentInfo[] = pendingManual.map((t) => {
+      const listing = listingMap.get(t.listingId);
+      const buyerInfo = userInfoMap.get(t.buyerId);
+      const sellerInfo = userInfoMap.get(t.sellerId);
+      const paymentMethod = t.paymentMethodId
+        ? paymentMethodMap.get(t.paymentMethodId)
+        : undefined;
+      return {
+        ...t,
+        eventName: listing?.eventName ?? 'Unknown',
+        eventDate: listing?.eventDate ?? new Date(),
+        venue: listing?.venue ?? 'Unknown',
+        buyerName: buyerInfo?.publicName ?? 'Unknown',
+        sellerName: sellerInfo?.publicName ?? 'Unknown',
+        bannerUrls: listing?.bannerUrls,
+        paymentMethodId: t.paymentMethodId ?? undefined,
+        paymentMethodName: paymentMethod?.name ?? 'Unknown',
+      };
+    });
 
     return {
       transactions: enriched,

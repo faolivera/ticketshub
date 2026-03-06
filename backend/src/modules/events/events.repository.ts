@@ -95,6 +95,49 @@ export class EventsRepository implements IEventsRepository {
     return events.map((e) => this.mapToEvent(e));
   }
 
+  async listEventsPaginated(
+    _ctx: Ctx,
+    opts: {
+      approvedOnly: boolean;
+      status?: EventStatus;
+      category?: EventCategory;
+      search?: string;
+      limit: number;
+      offset: number;
+    },
+  ): Promise<{ events: Event[]; total: number }> {
+    const where: Record<string, unknown> = {};
+    if (opts.approvedOnly) {
+      where.status = 'approved';
+    }
+    if (opts.status !== undefined) {
+      where.status = this.mapEventStatusToDb(opts.status);
+    }
+    if (opts.category !== undefined) {
+      where.category = this.mapEventCategoryToDb(opts.category);
+    }
+    if (opts.search?.trim()) {
+      const term = opts.search.trim();
+      where.OR = [
+        { name: { contains: term, mode: 'insensitive' } },
+        { venue: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+    const [events, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: opts.offset,
+        take: opts.limit,
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+    return {
+      events: events.map((e) => this.mapToEvent(e)),
+      total,
+    };
+  }
+
   async getPendingEvents(_ctx: Ctx): Promise<Event[]> {
     const [pendingEvents, pendingDates, pendingSections] = await Promise.all([
       this.prisma.event.findMany({
