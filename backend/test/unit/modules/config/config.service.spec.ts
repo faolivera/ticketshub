@@ -38,6 +38,7 @@ describe('PlatformConfigService', () => {
       claims: {
         claimKycDeadlineHours: 24,
         claimInvalidEntryWindowHours: 2,
+        claimNotReceivedWindowHours: 24,
       },
     },
     exchangeRates: { usdToArs: 1000 },

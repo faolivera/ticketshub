@@ -9,6 +9,9 @@ import { randomBytes } from 'crypto';
 import type { ISupportRepository } from './support.repository.interface';
 import { SUPPORT_REPOSITORY } from './support.repository.interface';
 import { TransactionsService } from '../transactions/transactions.service';
+import { UsersService } from '../users/users.service';
+import { PlatformConfigService } from '../config/config.service';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -37,6 +40,10 @@ export class SupportService {
     private readonly supportRepository: ISupportRepository,
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
+    @Inject(UsersService)
+    private readonly usersService: UsersService,
+    @Inject(PlatformConfigService)
+    private readonly platformConfigService: PlatformConfigService,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -63,9 +70,26 @@ export class SupportService {
   ): Promise<SupportTicket> {
     this.logger.log(ctx, `Creating support ticket for user ${userId}`);
 
-    // If dispute, mark transaction as disputed
+    // Verification gate: V1+V2 required to open a claim (dispute)
+    if (data.category === SupportCategory.TicketDispute) {
+      const user = await this.usersService.findById(ctx, userId);
+      if (!user) {
+        throw new ForbiddenException('User not found');
+      }
+      if (!VerificationHelper.hasV1(user)) {
+        throw new ForbiddenException(
+          'Email must be verified to open a claim. Please verify your email first.',
+        );
+      }
+      if (!VerificationHelper.hasV2(user)) {
+        throw new ForbiddenException(
+          'Phone must be verified to open a claim. Please verify your phone number first.',
+        );
+      }
+    }
+
+    // If dispute with transaction, validate time windows and no duplicate
     if (data.category === SupportCategory.TicketDispute && data.transactionId) {
-      // Check if dispute already exists for this transaction
       const existingDispute =
         await this.supportRepository.getTicketByTransactionId(
           ctx,
@@ -78,6 +102,62 @@ export class SupportService {
         throw new BadRequestException(
           'A dispute already exists for this transaction',
         );
+      }
+
+      const transaction = await this.transactionsService.findById(
+        ctx,
+        data.transactionId,
+      );
+      if (!transaction) {
+        throw new BadRequestException('Transaction not found');
+      }
+      if (transaction.buyerId !== userId && transaction.sellerId !== userId) {
+        throw new ForbiddenException('You can only open a dispute for your own transaction');
+      }
+
+      const platformConfig =
+        await this.platformConfigService.getPlatformConfig(ctx);
+      const claimsConfig = platformConfig?.riskEngine?.claims;
+      const notReceivedHours =
+        claimsConfig?.claimNotReceivedWindowHours ?? 24;
+      const invalidEntryHours =
+        claimsConfig?.claimInvalidEntryWindowHours ?? 2;
+
+      const reason = data.disputeReason ?? DisputeReason.Other;
+
+      if (reason === DisputeReason.TicketNotReceived) {
+        const refDate =
+          transaction.ticketTransferredAt ??
+          transaction.paymentReceivedAt ??
+          transaction.createdAt;
+        const deadline = new Date(
+          refDate.getTime() + notReceivedHours * 60 * 60 * 1000,
+        );
+        if (new Date() > deadline) {
+          throw new BadRequestException(
+            `Claims for "ticket not received" must be opened within ${notReceivedHours} hours of the ticket transfer. The deadline has passed.`,
+          );
+        }
+      }
+
+      if (
+        reason === DisputeReason.TicketInvalid ||
+        reason === DisputeReason.WrongTicket
+      ) {
+        if (!transaction.buyerConfirmedAt) {
+          throw new BadRequestException(
+            'You must confirm receipt of the ticket before opening an "invalid ticket" or "wrong ticket" claim.',
+          );
+        }
+        const deadline = new Date(
+          transaction.buyerConfirmedAt.getTime() +
+            invalidEntryHours * 60 * 60 * 1000,
+        );
+        if (new Date() > deadline) {
+          throw new BadRequestException(
+            `Claims for invalid or wrong ticket must be opened within ${invalidEntryHours} hours of confirming receipt. The deadline has passed.`,
+          );
+        }
       }
     }
 
@@ -234,15 +314,38 @@ export class SupportService {
 
     // Handle resolution based on outcome
     if (ticket.transactionId) {
-      if (resolution === DisputeResolution.BuyerWins) {
-        // Refund buyer
-        await this.transactionsService.refundTransaction(
+      const transaction = await this.transactionsService.findById(
+        ctx,
+        ticket.transactionId,
+      );
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
+      if (
+        resolution === DisputeResolution.BuyerWins ||
+        resolution === DisputeResolution.SplitResolution
+      ) {
+        const buyer = await this.usersService.findById(ctx, transaction.buyerId);
+        if (!buyer) {
+          throw new BadRequestException('Buyer not found');
+        }
+        if (!VerificationHelper.hasV3(buyer)) {
+          throw new ForbiddenException(
+            'Buyer must complete identity verification (KYC) before a refund can be processed. Ask the buyer to complete verification in Profile > Seller verification.',
+          );
+        }
+        if (resolution === DisputeResolution.BuyerWins) {
+          await this.transactionsService.refundTransaction(
+            ctx,
+            ticket.transactionId,
+          );
+        }
+        // SplitResolution: partial refund could be implemented later; for now we only enforce V3
+      } else if (resolution === DisputeResolution.SellerWins) {
+        await this.transactionsService.resolveDisputeSellerWins(
           ctx,
           ticket.transactionId,
         );
-      } else if (resolution === DisputeResolution.SellerWins) {
-        // Complete transaction (release payment to seller)
-        // This would require adding a method to complete a disputed transaction
       }
     }
 

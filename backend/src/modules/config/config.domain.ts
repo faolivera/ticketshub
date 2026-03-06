@@ -30,11 +30,13 @@ export interface RiskEngineSellerConfig {
 }
 
 /**
- * Claims / disputes config: deadlines for KYC and invalid-entry window.
+ * Claims / disputes config: deadlines for KYC and time windows.
  */
 export interface RiskEngineClaimsConfig {
   claimKycDeadlineHours: number;
   claimInvalidEntryWindowHours: number;
+  /** Hours after ticket transfer (or payment) to allow "not received" claims. */
+  claimNotReceivedWindowHours: number;
 }
 
 /**

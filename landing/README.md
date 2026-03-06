@@ -84,4 +84,13 @@ Caddy will serve HTTPS on 443 and redirect HTTP to HTTPS. Ensure ports 80 and 44
 
 5. **DNS:** Point ticketshub.shop A record to the instance’s static IP.
 
+**Update to a new image (after pushing from GitHub Actions):** Copy `release/landing/deploy-on-server.sh` to the instance, then run:
+
+```bash
+chmod +x deploy-on-server.sh
+GITHUB_OWNER=faolivera ./deploy-on-server.sh
+```
+
+(Replace `faolivera` with your GitHub user/org.) The script pulls `ticketshub-landing:latest`, stops the old container, and starts a new one with the same options (ports, DOMAIN, volume).
+
 Using **Amazon Linux 2023** is recommended; it supports both x86_64 and ARM (Graviton). On an M2 Mac, build with `--platform linux/amd64` for standard Lightsail x86 instances, or `--platform linux/arm64` if you use an ARM-based instance.

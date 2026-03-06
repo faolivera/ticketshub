@@ -1,6 +1,6 @@
-# Serve static files. Default: HTTP on port 80 (no domain).
-# For automatic HTTPS, set DOMAIN=ticketshub.shop (or your hostname).
-{$DOMAIN:localhost} {
+# Serve static files. localhost always works (for curl/debug on server).
+# Set DOMAIN=ticketshub.shop so Caddy also serves and gets HTTPS for that hostname.
+localhost {$DOMAIN:} {
 	root * /srv
 	encode gzip
 	file_server

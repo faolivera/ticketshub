@@ -20,7 +20,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/app/components/ui/alert-dialog';
-import { transactionsService, paymentConfirmationsService, reviewsService, bffService } from '@/api/services';
+import { transactionsService, paymentConfirmationsService, reviewsService, bffService, supportService } from '@/api/services';
+import { SupportCategory, DisputeReason } from '@/api/types/support';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
@@ -66,6 +67,13 @@ export function MyTicket() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isPaymentExpiredLocally, setIsPaymentExpiredLocally] = useState(false);
+
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeReason, setDisputeReason] = useState<DisputeReason>(DisputeReason.TicketNotReceived);
+  const [disputeSubject, setDisputeSubject] = useState('');
+  const [disputeDescription, setDisputeDescription] = useState('');
+  const [disputeError, setDisputeError] = useState<string | null>(null);
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!transactionId) return;
@@ -328,6 +336,51 @@ export function MyTicket() {
       setReviewData(updatedReviews);
     } catch (err) {
       console.error('Failed to confirm receipt:', err);
+    }
+  };
+
+  const canOpenDispute =
+    transaction &&
+    (isBuyer || isSeller) &&
+    [TransactionStatus.PaymentReceived, TransactionStatus.TicketTransferred, TransactionStatus.DepositHold].includes(
+      transaction.status,
+    );
+
+  const handleOpenDisputeClick = () => {
+    setDisputeError(null);
+    setDisputeReason(DisputeReason.TicketNotReceived);
+    setDisputeSubject(transaction ? `${t('myTicket.disputeSubjectPrefix')} ${transaction.eventName}` : '');
+    setDisputeDescription('');
+    setShowDisputeModal(true);
+  };
+
+  const handleSubmitDispute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transactionId || !transaction) return;
+    setDisputeError(null);
+    const subject = disputeSubject.trim() || t('myTicket.disputeSubjectPrefix');
+    const description = disputeDescription.trim();
+    if (!description) {
+      setDisputeError(t('myTicket.disputeDescriptionRequired'));
+      return;
+    }
+    setIsSubmittingDispute(true);
+    try {
+      await supportService.createTicket({
+        transactionId,
+        category: SupportCategory.TicketDispute,
+        disputeReason: disputeReason,
+        subject,
+        description,
+      });
+      setShowDisputeModal(false);
+      const data = await bffService.getTransactionDetails(transactionId);
+      setTransaction(data.transaction);
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: string }).message) : t('myTicket.disputeSubmitFailed');
+      setDisputeError(msg);
+    } finally {
+      setIsSubmittingDispute(false);
     }
   };
 
@@ -1018,6 +1071,17 @@ export function MyTicket() {
                   {t('myTicket.confirmTicketTransferred')}
                 </button>
               )}
+
+              {/* Open dispute - buyer or seller when payment/ticket flow is active */}
+              {canOpenDispute && (
+                <button
+                  type="button"
+                  onClick={handleOpenDisputeClick}
+                  className="w-full border border-red-300 text-red-700 py-3 px-4 rounded-lg font-semibold hover:bg-red-50 transition-colors"
+                >
+                  {t('myTicket.reportProblem')}
+                </button>
+              )}
             </div>
 
             {/* Leave a Review Section - Only show when transaction is completed */}
@@ -1285,6 +1349,85 @@ export function MyTicket() {
           </div>
         </div>
       </div>
+
+      {/* Open dispute modal */}
+      {showDisputeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {t('myTicket.disputeTitle')}
+            </h3>
+            <p className="text-gray-600 text-sm mb-4">
+              {t('myTicket.disputeIntro')}
+            </p>
+            <form onSubmit={handleSubmitDispute} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  {t('myTicket.disputeReason')} <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={disputeReason}
+                  onChange={(e) => setDisputeReason(e.target.value as DisputeReason)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={DisputeReason.TicketNotReceived}>{t('myTicket.disputeReasonNotReceived')}</option>
+                  <option value={DisputeReason.TicketInvalid}>{t('myTicket.disputeReasonInvalid')}</option>
+                  <option value={DisputeReason.WrongTicket}>{t('myTicket.disputeReasonWrongTicket')}</option>
+                  <option value={DisputeReason.TicketDuplicate}>{t('myTicket.disputeReasonDuplicate')}</option>
+                  <option value={DisputeReason.EventCancelled}>{t('myTicket.disputeReasonEventCancelled')}</option>
+                  <option value={DisputeReason.Other}>{t('myTicket.disputeReasonOther')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  {t('myTicket.disputeSubject')}
+                </label>
+                <input
+                  type="text"
+                  value={disputeSubject}
+                  onChange={(e) => setDisputeSubject(e.target.value)}
+                  placeholder={t('myTicket.disputeSubjectPlaceholder')}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  {t('myTicket.disputeDescription')} <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={disputeDescription}
+                  onChange={(e) => setDisputeDescription(e.target.value)}
+                  placeholder={t('myTicket.disputeDescriptionPlaceholder')}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+              </div>
+              {disputeError && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {disputeError}
+                </p>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDisputeModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {t('myTicket.cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingDispute}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isSubmittingDispute ? t('myTicket.disputeSubmitting') : t('myTicket.disputeSubmit')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {showConfirmModal && (

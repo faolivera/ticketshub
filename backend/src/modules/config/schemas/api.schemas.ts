@@ -86,6 +86,7 @@ export const UpdatePlatformConfigRequestSchema = z.object({
         .object({
           claimKycDeadlineHours: z.number().min(1).max(72).optional(),
           claimInvalidEntryWindowHours: z.number().min(0).max(24).optional(),
+          claimNotReceivedWindowHours: z.number().min(1).max(168).optional(),
         })
         .optional(),
     })

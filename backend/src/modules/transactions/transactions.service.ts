@@ -1211,6 +1211,46 @@ export class TransactionsService {
   }
 
   /**
+   * Resolve dispute in favor of seller: transition from Disputed to DepositHold
+   * so the scheduler can release funds at depositReleaseAt. Used by support when
+   * admin resolves with SellerWins.
+   */
+  async resolveDisputeSellerWins(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<Transaction> {
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+    if (transaction.status !== TransactionStatus.Disputed) {
+      throw new BadRequestException(
+        'Transaction is not in Disputed status. Only disputed transactions can be resolved in favor of the seller.',
+      );
+    }
+
+    const newStatus = TransactionStatus.DepositHold;
+    const updated = await this.transactionsRepository.update(ctx, transactionId, {
+      status: newStatus,
+      requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+      disputeId: null as unknown as string,
+    });
+
+    if (!updated) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    this.logger.log(
+      ctx,
+      `Dispute resolved in favor of seller: transaction ${transactionId} -> DepositHold`,
+    );
+    return updated;
+  }
+
+  /**
    * Get transactions pending manual payment approval (admin)
    */
   async getPendingManualPayments(

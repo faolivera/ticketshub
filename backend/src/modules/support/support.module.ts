@@ -5,6 +5,7 @@ import { SupportRepository } from './support.repository';
 import { SUPPORT_REPOSITORY } from './support.repository.interface';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
+import { ConfigModule } from '../config/config.module';
 import { EventsModule } from '../events/events.module';
 import { TicketsModule } from '../tickets/tickets.module';
 import { ImagesModule } from '../images/images.module';
@@ -14,6 +15,7 @@ import { SupportSeedService } from './support-seed.service';
   imports: [
     TransactionsModule,
     UsersModule,
+    ConfigModule,
     EventsModule,
     TicketsModule,
     ImagesModule,

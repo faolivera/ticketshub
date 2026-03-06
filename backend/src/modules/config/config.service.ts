@@ -130,6 +130,7 @@ export class PlatformConfigService {
       claims: {
         claimKycDeadlineHours: get('platform.riskEngine.claims.claimKycDeadlineHours', 24),
         claimInvalidEntryWindowHours: get('platform.riskEngine.claims.claimInvalidEntryWindowHours', 2),
+        claimNotReceivedWindowHours: get('platform.riskEngine.claims.claimNotReceivedWindowHours', 24),
       },
     };
     const exchangeRates = {
@@ -258,6 +259,9 @@ export class PlatformConfigService {
     }
     if (c.claimInvalidEntryWindowHours < 0 || c.claimInvalidEntryWindowHours > 24) {
       throw new BadRequestException('riskEngine.claims.claimInvalidEntryWindowHours must be between 0 and 24');
+    }
+    if (c.claimNotReceivedWindowHours < 1 || c.claimNotReceivedWindowHours > 168) {
+      throw new BadRequestException('riskEngine.claims.claimNotReceivedWindowHours must be between 1 and 168');
     }
     const er = config.exchangeRates;
     if (er.usdToArs <= 0 || er.usdToArs > 1000000) {

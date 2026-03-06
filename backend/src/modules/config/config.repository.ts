@@ -47,6 +47,7 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       claims: {
         claimKycDeadlineHours: 24,
         claimInvalidEntryWindowHours: 2,
+        claimNotReceivedWindowHours: 24,
       },
     };
   }
