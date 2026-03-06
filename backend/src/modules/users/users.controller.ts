@@ -31,6 +31,8 @@ import type {
   RegisterResponse,
   UpgradeToSellerResponse,
   UploadAvatarResponse,
+  UpdateBankAccountRequest,
+  UpdateBankAccountResponse,
 } from './users.api';
 import {
   LoginResponseSchema,
@@ -83,7 +85,7 @@ export class UsersController {
     @Context() ctx: Ctx,
     @Body() body: RegisterRequest,
   ): Promise<ApiResponse<RegisterResponse>> {
-    const { email, password, firstName, lastName, termsAcceptance } = body;
+    const { email, password, firstName, lastName, termsAcceptance, phone } = body;
     const country = body.country ?? 'Argentina';
 
     if (!email || !password || !firstName || !lastName) {
@@ -102,6 +104,7 @@ export class UsersController {
       firstName,
       lastName,
       country,
+      phone,
       termsAcceptance,
     });
 
@@ -127,11 +130,11 @@ export class UsersController {
   @Put('upgrade-to-seller')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async upgradeToSeller(
+  async acceptSellerTerms(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<UpgradeToSellerResponse>> {
-    const updatedUser = await this.usersService.upgradeToSeller(ctx, user.id);
+    const updatedUser = await this.usersService.acceptSellerTerms(ctx, user.id);
 
     return {
       success: true,
@@ -176,6 +179,28 @@ export class UsersController {
       size: file.size,
     });
 
+    return {
+      success: true,
+      data: updatedUser,
+    };
+  }
+
+  @Put('bank-account')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateBankAccount(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Body() body: UpdateBankAccountRequest,
+  ): Promise<ApiResponse<UpdateBankAccountResponse>> {
+    if (!body.holderName?.trim() || !body.cbuOrCvu?.trim()) {
+      throw new BadRequestException('holderName and cbuOrCvu are required');
+    }
+    const updatedUser = await this.usersService.updateBankAccount(ctx, user.id, {
+      holderName: body.holderName.trim(),
+      cbuOrCvu: body.cbuOrCvu.trim(),
+      alias: body.alias?.trim(),
+    });
     return {
       success: true,
       data: updatedUser,

@@ -16,7 +16,7 @@ import {
 import { IdentityVerificationStatus } from '../../../../src/modules/identity-verification/identity-verification.domain';
 import type { IdentityVerificationRequest } from '../../../../src/modules/identity-verification/identity-verification.domain';
 import type { User } from '../../../../src/modules/users/users.domain';
-import { Language, UserLevel, Role, UserStatus } from '../../../../src/modules/users/users.domain';
+import { Language, Role, UserStatus } from '../../../../src/modules/users/users.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 
 describe('IdentityVerificationService', () => {
@@ -34,13 +34,13 @@ describe('IdentityVerificationService', () => {
     lastName: 'Doe',
     publicName: 'John Doe',
     role: Role.User,
-    level: UserLevel.Seller,
     status: UserStatus.Enabled,
     imageId: 'img_1',
     password: 'hashed',
     country: 'ES',
     currency: 'EUR',
     language: Language.ES,
+    acceptedSellerTermsAt: new Date(),
     emailVerified: true,
     phoneVerified: true,
     createdAt: new Date(),
@@ -58,6 +58,8 @@ describe('IdentityVerificationService', () => {
     documentFrontFilename: 'front.jpg',
     documentBackStorageKey: 'identity-docs/user_123_back_123_def.jpg',
     documentBackFilename: 'back.jpg',
+    selfieStorageKey: 'identity-docs/user_123_selfie_123.jpg',
+    selfieFilename: 'selfie.jpg',
     status: IdentityVerificationStatus.Pending,
     submittedAt: new Date(),
   };
@@ -82,7 +84,7 @@ describe('IdentityVerificationService', () => {
     const mockUsersService = {
       findById: jest.fn(),
       findByIds: jest.fn(),
-      upgradeToVerifiedSeller: jest.fn(),
+      setIdentityVerificationApproved: jest.fn(),
     };
 
     const mockStorageProvider = {
@@ -138,6 +140,7 @@ describe('IdentityVerificationService', () => {
         submitData,
         mockFile,
         mockFile,
+        mockFile,
       );
 
       expect(result.userId).toBe(mockUser.id);
@@ -157,12 +160,24 @@ describe('IdentityVerificationService', () => {
           submitData,
           mockFile,
           mockFile,
+          mockFile,
         ),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw ConflictException if user is already VerifiedSeller', async () => {
-      const verifiedUser = { ...mockUser, level: UserLevel.VerifiedSeller };
+    it('should throw ConflictException if user already has V3 (identity verified)', async () => {
+      const verifiedUser = {
+        ...mockUser,
+        identityVerification: {
+          status: IdentityVerificationStatus.Approved,
+          legalFirstName: 'John',
+          legalLastName: 'Doe',
+          dateOfBirth: '1990-01-15',
+          governmentIdNumber: '12345678A',
+          submittedAt: new Date(),
+          reviewedAt: new Date(),
+        },
+      };
       usersService.findById.mockResolvedValue(verifiedUser);
 
       await expect(
@@ -170,6 +185,7 @@ describe('IdentityVerificationService', () => {
           mockCtx,
           verifiedUser.id,
           submitData,
+          mockFile,
           mockFile,
           mockFile,
         ),
@@ -185,6 +201,7 @@ describe('IdentityVerificationService', () => {
           mockCtx,
           mockUser.id,
           submitData,
+          mockFile,
           mockFile,
           mockFile,
         ),
@@ -204,6 +221,7 @@ describe('IdentityVerificationService', () => {
           submitData,
           invalidFile,
           mockFile,
+          mockFile,
         ),
       ).rejects.toThrow(BadRequestException);
     });
@@ -221,6 +239,7 @@ describe('IdentityVerificationService', () => {
           submitData,
           largeFile,
           mockFile,
+          mockFile,
         ),
       ).rejects.toThrow(BadRequestException);
     });
@@ -236,6 +255,7 @@ describe('IdentityVerificationService', () => {
           mockCtx,
           mockUser.id,
           incompleteData,
+          mockFile,
           mockFile,
           mockFile,
         ),
@@ -346,10 +366,10 @@ describe('IdentityVerificationService', () => {
   });
 
   describe('updateStatus', () => {
-    it('should approve verification and upgrade user', async () => {
+    it('should approve verification and call setIdentityVerificationApproved', async () => {
       repository.findById.mockResolvedValue(mockVerification);
       repository.save.mockResolvedValue();
-      usersService.upgradeToVerifiedSeller.mockResolvedValue();
+      usersService.setIdentityVerificationApproved.mockResolvedValue();
 
       const result = await service.updateStatus(
         mockCtx,
@@ -360,7 +380,7 @@ describe('IdentityVerificationService', () => {
 
       expect(result.status).toBe(IdentityVerificationStatus.Approved);
       expect(result.reviewedBy).toBe('admin_1');
-      expect(usersService.upgradeToVerifiedSeller).toHaveBeenCalledWith(
+      expect(usersService.setIdentityVerificationApproved).toHaveBeenCalledWith(
         mockCtx,
         mockVerification.userId,
         {
@@ -386,7 +406,7 @@ describe('IdentityVerificationService', () => {
 
       expect(result.status).toBe(IdentityVerificationStatus.Rejected);
       expect(result.adminNotes).toBe('Document is unclear');
-      expect(usersService.upgradeToVerifiedSeller).not.toHaveBeenCalled();
+      expect(usersService.setIdentityVerificationApproved).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if verification not found', async () => {

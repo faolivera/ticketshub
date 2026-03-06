@@ -10,7 +10,6 @@ import type {
 } from './users.domain';
 import {
   UserStatus,
-  UserLevel,
   Role,
   Language,
   IdentityVerificationStatus,
@@ -73,9 +72,7 @@ export class UsersRepository implements IUsersRepository {
   async getSellers(_ctx: Ctx): Promise<User[]> {
     const users = await this.prisma.user.findMany({
       where: {
-        level: {
-          in: ['Seller', 'VerifiedSeller'],
-        },
+        acceptedSellerTermsAt: { not: null },
       },
     });
     return users.map((u) => this.mapToUser(u));
@@ -97,14 +94,14 @@ export class UsersRepository implements IUsersRepository {
         publicName: userData.publicName,
         password: userData.password,
         role: userData.role,
-        level: userData.level,
         status: userData.status ?? 'Enabled',
         imageId: userData.imageId,
         phone: userData.phone,
-      country: userData.country || 'Argentina',
+        country: userData.country || 'Argentina',
         currency: userData.currency || 'ARS',
         language: this.mapLanguageToDb(userData.language),
         address: userData.address ? (userData.address as object) : undefined,
+        acceptedSellerTermsAt: userData.acceptedSellerTermsAt ?? undefined,
         emailVerified: userData.emailVerified,
         phoneVerified: userData.phoneVerified,
         tosAcceptedAt: userData.tosAcceptedAt,
@@ -112,7 +109,7 @@ export class UsersRepository implements IUsersRepository {
           ? this.serializeIdentityVerification(userData.identityVerification)
           : undefined,
         bankAccount: userData.bankAccount
-          ? (userData.bankAccount as object)
+          ? this.serializeBankAccount(userData.bankAccount)
           : undefined,
       },
     });
@@ -181,24 +178,24 @@ export class UsersRepository implements IUsersRepository {
     }
   }
 
-  async updateLevel(
+  async setAcceptedSellerTermsAt(
     _ctx: Ctx,
     userId: string,
-    level: UserLevel,
+    acceptedSellerTermsAt: Date,
   ): Promise<User | undefined> {
     try {
       const user = await this.prisma.user.update({
         where: { id: userId },
-        data: { level },
+        data: { acceptedSellerTermsAt },
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updateLevel failed:', error);
+      console.error('setAcceptedSellerTermsAt failed:', error);
       return undefined;
     }
   }
 
-  async updateToVerifiedSeller(
+  async updateIdentityVerificationApproved(
     _ctx: Ctx,
     userId: string,
     identityData: VerifiedSellerIdentityData,
@@ -218,14 +215,63 @@ export class UsersRepository implements IUsersRepository {
       const user = await this.prisma.user.update({
         where: { id: userId },
         data: {
-          level: 'VerifiedSeller',
           identityVerification:
             this.serializeIdentityVerification(identityVerification),
         },
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updateToVerifiedSeller failed:', error);
+      console.error('updateIdentityVerificationApproved failed:', error);
+      return undefined;
+    }
+  }
+
+  async invalidateBankAccountVerification(
+    _ctx: Ctx,
+    userId: string,
+  ): Promise<User | undefined> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!user?.bankAccount || typeof user.bankAccount !== 'object') {
+        return user ? this.mapToUser(user) : undefined;
+      }
+      const bank = user.bankAccount as Record<string, unknown>;
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          bankAccount: {
+            ...bank,
+            verified: false,
+            verifiedAt: null,
+          } as object,
+        },
+      });
+      return this.mapToUser(updated);
+    } catch (error) {
+      console.error('invalidateBankAccountVerification failed:', error);
+      return undefined;
+    }
+  }
+
+  async updateBankAccount(
+    _ctx: Ctx,
+    userId: string,
+    bankAccount: User['bankAccount'],
+  ): Promise<User | undefined> {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          bankAccount: bankAccount
+            ? this.serializeBankAccount(bankAccount)
+            : undefined,
+        },
+      });
+      return this.mapToUser(user);
+    } catch (error) {
+      console.error('updateBankAccount failed:', error);
       return undefined;
     }
   }
@@ -237,7 +283,6 @@ export class UsersRepository implements IUsersRepository {
       firstName: prismaUser.firstName,
       lastName: prismaUser.lastName,
       role: prismaUser.role as Role,
-      level: prismaUser.level as UserLevel,
       status: prismaUser.status as UserStatus,
       publicName: prismaUser.publicName,
       imageId: prismaUser.imageId ?? 'default',
@@ -249,6 +294,7 @@ export class UsersRepository implements IUsersRepository {
       address: prismaUser.address
         ? (prismaUser.address as unknown as UserAddress)
         : undefined,
+      acceptedSellerTermsAt: prismaUser.acceptedSellerTermsAt ?? undefined,
       emailVerified: prismaUser.emailVerified,
       phoneVerified: prismaUser.phoneVerified,
       tosAcceptedAt: prismaUser.tosAcceptedAt ?? undefined,
@@ -256,10 +302,33 @@ export class UsersRepository implements IUsersRepository {
         ? this.parseIdentityVerification(prismaUser.identityVerification)
         : undefined,
       bankAccount: prismaUser.bankAccount
-        ? (prismaUser.bankAccount as unknown as BankAccount)
+        ? this.parseBankAccount(prismaUser.bankAccount)
         : undefined,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
+    };
+  }
+
+  private parseBankAccount(json: unknown): BankAccount {
+    const data = json as Record<string, unknown>;
+    return {
+      holderName: data.holderName as string,
+      cbuOrCvu: (data.cbuOrCvu ?? data.iban) as string,
+      alias: data.alias as string | undefined,
+      verified: data.verified === true,
+      verifiedAt: data.verifiedAt
+        ? new Date(data.verifiedAt as string)
+        : undefined,
+    };
+  }
+
+  private serializeBankAccount(bank: BankAccount): object {
+    return {
+      holderName: bank.holderName,
+      cbuOrCvu: bank.cbuOrCvu,
+      alias: bank.alias,
+      verified: bank.verified,
+      verifiedAt: bank.verifiedAt?.toISOString(),
     };
   }
 

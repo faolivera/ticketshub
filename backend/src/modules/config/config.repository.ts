@@ -18,7 +18,7 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       where: { id: PLATFORM_CONFIG_DEFAULT_ID },
     });
     if (!row) return null;
-    return {
+    return this.mergeWithVerificationDefaults({
       buyerPlatformFeePercentage: row.buyerPlatformFeePercentage,
       sellerPlatformFeePercentage: row.sellerPlatformFeePercentage,
       paymentTimeoutMinutes: row.paymentTimeoutMinutes,
@@ -27,6 +27,41 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
       transactionChatPollIntervalSeconds: row.transactionChatPollIntervalSeconds,
       transactionChatMaxMessages: row.transactionChatMaxMessages,
+    });
+  }
+
+  private getDefaultRiskEngine(): PlatformConfig['riskEngine'] {
+    return {
+      buyer: {
+        phoneRequiredEventHours: 72,
+        phoneRequiredAmountUsd: 120,
+        phoneRequiredQtyTickets: 2,
+        newAccountDays: 7,
+      },
+      seller: {
+        unverifiedSellerMaxSales: 2,
+        unverifiedSellerMaxAmount: { amount: 20000, currency: 'USD' }, // 200 USD in cents
+        payoutHoldHoursDefault: 24,
+        payoutHoldHoursUnverified: 48,
+      },
+      claims: {
+        claimKycDeadlineHours: 24,
+        claimInvalidEntryWindowHours: 2,
+      },
+    };
+  }
+
+  private getDefaultExchangeRates(): PlatformConfig['exchangeRates'] {
+    return { usdToArs: 1000 };
+  }
+
+  private mergeWithVerificationDefaults(
+    base: Omit<PlatformConfig, 'riskEngine' | 'exchangeRates'>,
+  ): PlatformConfig {
+    return {
+      ...base,
+      riskEngine: this.getDefaultRiskEngine(),
+      exchangeRates: this.getDefaultExchangeRates(),
     };
   }
 
@@ -56,7 +91,7 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         transactionChatMaxMessages: config.transactionChatMaxMessages,
       },
     });
-    return {
+    return this.mergeWithVerificationDefaults({
       buyerPlatformFeePercentage: row.buyerPlatformFeePercentage,
       sellerPlatformFeePercentage: row.sellerPlatformFeePercentage,
       paymentTimeoutMinutes: row.paymentTimeoutMinutes,
@@ -65,6 +100,6 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
       offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
       transactionChatPollIntervalSeconds: row.transactionChatPollIntervalSeconds,
       transactionChatMaxMessages: row.transactionChatMaxMessages,
-    };
+    });
   }
 }

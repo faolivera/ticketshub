@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import { UsersRepository } from '@/modules/users/users.repository';
 import {
   Role,
-  UserLevel,
   UserStatus,
   Language,
 } from '@/modules/users/users.domain';
@@ -26,7 +25,6 @@ describe('UsersRepository (Integration)', () => {
     publicName: 'johndoe',
     password: 'hashedpassword123',
     role: Role.User,
-    level: UserLevel.Basic,
     language: Language.EN,
     emailVerified: false,
     phoneVerified: false,
@@ -62,7 +60,7 @@ describe('UsersRepository (Integration)', () => {
       expect(user.firstName).toBe(userData.firstName);
       expect(user.lastName).toBe(userData.lastName);
       expect(user.role).toBe(Role.User);
-      expect(user.level).toBe(UserLevel.Basic);
+      expect(user.acceptedSellerTermsAt).toBeUndefined();
     });
 
     it('should create a user with all optional fields', async () => {
@@ -190,24 +188,24 @@ describe('UsersRepository (Integration)', () => {
 
   describe('getSellers', () => {
     it('should return empty array when no sellers exist', async () => {
-      await repository.add(ctx, createValidUserData({ level: UserLevel.Basic }));
-      await repository.add(ctx, createValidUserData({ email: 'buyer@test.com', level: UserLevel.Buyer }));
+      await repository.add(ctx, createValidUserData());
+      await repository.add(ctx, createValidUserData({ email: 'buyer@test.com' }));
 
       const sellers = await repository.getSellers(ctx);
 
       expect(sellers).toEqual([]);
     });
 
-    it('should return only sellers and verified sellers', async () => {
-      await repository.add(ctx, createValidUserData({ email: 'basic@test.com', level: UserLevel.Basic }));
-      await repository.add(ctx, createValidUserData({ email: 'seller@test.com', level: UserLevel.Seller }));
-      await repository.add(ctx, createValidUserData({ email: 'verified@test.com', level: UserLevel.VerifiedSeller }));
+    it('should return only users who accepted seller terms', async () => {
+      await repository.add(ctx, createValidUserData({ email: 'basic@test.com' }));
+      await repository.add(ctx, createValidUserData({ email: 'seller@test.com', acceptedSellerTermsAt: new Date() }));
+      await repository.add(ctx, createValidUserData({ email: 'verified@test.com', acceptedSellerTermsAt: new Date() }));
 
       const sellers = await repository.getSellers(ctx);
 
       expect(sellers).toHaveLength(2);
-      expect(sellers.some(s => s.level === UserLevel.Seller)).toBe(true);
-      expect(sellers.some(s => s.level === UserLevel.VerifiedSeller)).toBe(true);
+      expect(sellers.some(s => s.email === 'seller@test.com')).toBe(true);
+      expect(sellers.some(s => s.email === 'verified@test.com')).toBe(true);
     });
   });
 
@@ -324,32 +322,24 @@ describe('UsersRepository (Integration)', () => {
     });
   });
 
-  describe('updateLevel', () => {
+  describe('setAcceptedSellerTermsAt', () => {
     it('should return undefined for non-existent user', async () => {
-      const result = await repository.updateLevel(ctx, 'non-existent-id', UserLevel.Seller);
+      const result = await repository.setAcceptedSellerTermsAt(ctx, 'non-existent-id', new Date());
       expect(result).toBeUndefined();
     });
 
-    it('should upgrade user level from Basic to Buyer', async () => {
-      const user = await repository.add(ctx, createValidUserData({ level: UserLevel.Basic }));
+    it('should set accepted seller terms timestamp', async () => {
+      const user = await repository.add(ctx, createValidUserData());
 
-      const updated = await repository.updateLevel(ctx, user.id, UserLevel.Buyer);
+      const updated = await repository.setAcceptedSellerTermsAt(ctx, user.id, new Date());
 
-      expect(updated?.level).toBe(UserLevel.Buyer);
-    });
-
-    it('should upgrade user level from Buyer to Seller', async () => {
-      const user = await repository.add(ctx, createValidUserData({ level: UserLevel.Buyer }));
-
-      const updated = await repository.updateLevel(ctx, user.id, UserLevel.Seller);
-
-      expect(updated?.level).toBe(UserLevel.Seller);
+      expect(updated?.acceptedSellerTermsAt).toBeDefined();
     });
   });
 
-  describe('updateToVerifiedSeller', () => {
+  describe('updateIdentityVerificationApproved', () => {
     it('should return undefined for non-existent user', async () => {
-      const result = await repository.updateToVerifiedSeller(ctx, 'non-existent-id', {
+      const result = await repository.updateIdentityVerificationApproved(ctx, 'non-existent-id', {
         legalFirstName: 'John',
         legalLastName: 'Doe',
         dateOfBirth: '1990-01-01',
@@ -358,10 +348,10 @@ describe('UsersRepository (Integration)', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should upgrade user to verified seller with identity verification', async () => {
-      const user = await repository.add(ctx, createValidUserData({ level: UserLevel.Seller }));
+    it('should set identity verification approved on user', async () => {
+      const user = await repository.add(ctx, createValidUserData({ acceptedSellerTermsAt: new Date() }));
 
-      const updated = await repository.updateToVerifiedSeller(ctx, user.id, {
+      const updated = await repository.updateIdentityVerificationApproved(ctx, user.id, {
         legalFirstName: 'John',
         legalLastName: 'Doe',
         dateOfBirth: '1990-01-01',
@@ -369,7 +359,6 @@ describe('UsersRepository (Integration)', () => {
       });
 
       expect(updated).toBeDefined();
-      expect(updated?.level).toBe(UserLevel.VerifiedSeller);
       expect(updated?.identityVerification).toBeDefined();
       expect(updated?.identityVerification?.legalFirstName).toBe('John');
       expect(updated?.identityVerification?.legalLastName).toBe('Doe');

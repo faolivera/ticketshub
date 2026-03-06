@@ -24,7 +24,7 @@ import type {
   UserBadge,
 } from './reviews.domain';
 import { BADGE_THRESHOLDS } from './reviews.domain';
-import { UserLevel } from '../users/users.domain';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import type {
   CreateReviewRequest,
@@ -246,7 +246,7 @@ export class ReviewsService {
   ): Promise<UserBadge[]> {
     const user = await this.usersService.findById(ctx, userId);
     return this.computeBadges({
-      isVerifiedSeller: user?.level === UserLevel.VerifiedSeller,
+      isVerifiedSeller: user ? VerificationHelper.hasV3(user) : false,
       role,
       positiveReviews,
       totalReviews,
@@ -350,7 +350,7 @@ export class ReviewsService {
       const user = usersMap.get(sellerId);
 
       const badges = this.computeBadges({
-        isVerifiedSeller: user?.level === UserLevel.VerifiedSeller,
+        isVerifiedSeller: user ? VerificationHelper.hasV3(user) : false,
         role: 'seller',
         positiveReviews,
         totalReviews,

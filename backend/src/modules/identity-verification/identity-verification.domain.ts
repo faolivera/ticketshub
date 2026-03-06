@@ -49,6 +49,12 @@ export interface IdentityVerificationRequest {
   /** Original filename for back document */
   documentBackFilename: string;
 
+  /** Storage key for selfie with ID (required for V3) */
+  selfieStorageKey: string;
+
+  /** Original filename for selfie */
+  selfieFilename: string;
+
   /** Current status */
   status: IdentityVerificationStatus;
 

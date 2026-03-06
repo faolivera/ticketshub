@@ -21,10 +21,13 @@ import {
   EventDateStatus,
   EventSectionStatus,
 } from '../../../../src/modules/events/events.domain';
-import { UserLevel } from '../../../../src/modules/users/users.domain';
 import { UsersService } from '../../../../src/modules/users/users.service';
+import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import { TermsService } from '../../../../src/modules/terms/terms.service';
+import { PlatformConfigService } from '../../../../src/modules/config/config.service';
+import { ConversionService } from '../../../../src/modules/config/conversion.service';
+import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../src/modules/shared/money.domain';
 import type { Ctx } from '../../../../src/common/types/context';
@@ -192,6 +195,10 @@ describe('TicketsService', () => {
         id: 'seller_123',
         currency: 'ARS',
         country: 'Argentina',
+        acceptedSellerTermsAt: new Date(),
+        emailVerified: true,
+        phoneVerified: true,
+        identityVerification: { status: IdentityVerificationStatus.Approved },
       }),
     };
 
@@ -210,6 +217,40 @@ describe('TicketsService', () => {
       hasAcceptedCurrentTerms: jest.fn().mockResolvedValue(true),
     };
 
+    const mockPlatformConfigService = {
+      getPlatformConfig: jest.fn().mockResolvedValue({
+        riskEngine: {
+          buyer: {
+            phoneRequiredEventHours: 72,
+            phoneRequiredAmountUsd: 120,
+            phoneRequiredQtyTickets: 2,
+            newAccountDays: 7,
+          },
+          seller: {
+            unverifiedSellerMaxSales: 2,
+            unverifiedSellerMaxAmount: { amount: 20000, currency: 'USD' },
+            payoutHoldHoursDefault: 24,
+            payoutHoldHoursUnverified: 48,
+          },
+          claims: {
+            claimKycDeadlineHours: 24,
+            claimInvalidEntryWindowHours: 2,
+          },
+        },
+        exchangeRates: { usdToArs: 1000 },
+      }),
+    };
+
+    const mockConversionService = {
+      sumInCurrency: jest.fn().mockResolvedValue({ amount: 0, currency: 'USD' }),
+    };
+
+    const mockTransactionsService = {
+      getSellerCompletedSalesTotal: jest.fn().mockResolvedValue(0),
+      getSellerCompletedSalesAmountUsd: jest.fn().mockResolvedValue(0),
+      getSellerCompletedSalesAmounts: jest.fn().mockResolvedValue([]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
@@ -219,6 +260,9 @@ describe('TicketsService', () => {
         { provide: TransactionManager, useValue: mockTxManager },
         { provide: PromotionsService, useValue: mockPromotionsService },
         { provide: TermsService, useValue: mockTermsService },
+        { provide: PlatformConfigService, useValue: mockPlatformConfigService },
+        { provide: ConversionService, useValue: mockConversionService },
+        { provide: TransactionsService, useValue: mockTransactionsService },
       ],
     }).compile();
 
@@ -249,7 +293,6 @@ describe('TicketsService', () => {
       const result = await service.createListing(
         mockCtx,
         'seller_123',
-        UserLevel.Seller,
         baseCreateRequest,
       );
 
@@ -271,7 +314,6 @@ describe('TicketsService', () => {
       const result = await service.createListing(
         mockCtx,
         'seller_123',
-        UserLevel.Seller,
         { ...baseCreateRequest, eventDateId: 'edt_456' },
       );
 
@@ -287,7 +329,6 @@ describe('TicketsService', () => {
       const result = await service.createListing(
         mockCtx,
         'seller_123',
-        UserLevel.Seller,
         {
           ...baseCreateRequest,
           eventId: 'evt_pending',
@@ -309,7 +350,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           baseCreateRequest,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -333,7 +373,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           baseCreateRequest,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -348,7 +387,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           baseCreateRequest,
         ),
       ).rejects.toThrow(NotFoundException);
@@ -364,7 +402,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           requestWithoutType,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -380,7 +417,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           requestWithInvalidType,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -396,7 +432,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           requestWithoutDateId,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -412,7 +447,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           requestWithoutSectionId,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -426,7 +460,6 @@ describe('TicketsService', () => {
         service.createListing(
           mockCtx,
           'seller_123',
-          UserLevel.Seller,
           baseCreateRequest,
         ),
       ).rejects.toThrow('Must accept seller terms first');

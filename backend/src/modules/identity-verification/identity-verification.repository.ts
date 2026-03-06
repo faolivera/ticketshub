@@ -123,6 +123,10 @@ export class IdentityVerificationRepository
       documentFrontFilename: frontFilename,
       documentBackStorageKey: backKey,
       documentBackFilename: backFilename,
+      selfieStorageKey: record.selfieImageId ?? '',
+      selfieFilename: record.selfieImageId
+        ? this.extractFilenameFromKey(record.selfieImageId)
+        : '',
       status: this.mapStatusFromDb(record.status),
       adminNotes: record.rejectionReason ?? undefined,
       reviewedBy: record.reviewedBy ?? undefined,
@@ -156,7 +160,7 @@ export class IdentityVerificationRepository
         verification.documentFrontStorageKey,
         verification.documentBackStorageKey,
       ],
-      selfieImageId: null,
+      selfieImageId: verification.selfieStorageKey || null,
       submittedAt: verification.submittedAt,
       reviewedAt: verification.reviewedAt ?? null,
       reviewedBy: verification.reviewedBy ?? null,

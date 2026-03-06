@@ -20,7 +20,8 @@ import type {
   UserPublicInfo,
   AuthenticatedUserPublicInfo,
 } from './users.domain';
-import { Role, UserLevel, UserStatus, Language } from './users.domain';
+import { Role, UserStatus, Language } from './users.domain';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
 import { OTPType } from '../otp/otp.domain';
@@ -204,7 +205,7 @@ export class UsersService {
       userId: user.id,
       email: user.email,
       role: user.role,
-      level: user.level,
+      isSeller: VerificationHelper.isSeller(user),
     };
     return jwt.sign(payload, secret, { expiresIn: expiresIn ?? '7d' } as jwt.SignOptions);
   }
@@ -257,7 +258,8 @@ export class UsersService {
   }
 
   /**
-   * Register a new user or resume verification for existing unverified user
+   * Register a new user or resume verification for existing unverified user.
+   * Phone is optional and not verified at registration.
    */
   async register(
     ctx: Ctx,
@@ -267,6 +269,7 @@ export class UsersService {
       firstName: string;
       lastName: string;
       country: string;
+      phone?: string;
       termsAcceptance: TermsAcceptanceData;
     },
   ): Promise<LoginResponse> {
@@ -315,7 +318,7 @@ export class UsersService {
       };
     }
 
-    // Create new user (add() hashes password)
+    // Create new user (add() hashes password). Phone optional, not verified.
     const publicName = `${data.firstName} ${data.lastName[0]}.`;
     const now = new Date();
     const newUser = await this.add(ctx, {
@@ -325,12 +328,12 @@ export class UsersService {
       lastName: data.lastName,
       publicName,
       role: Role.User,
-      level: UserLevel.Basic,
       status: UserStatus.Enabled,
       imageId: 'default',
       country: data.country,
       currency: 'ARS',
       language: Language.ES,
+      phone: data.phone,
       emailVerified: false,
       phoneVerified: false,
       createdAt: now,
@@ -368,7 +371,7 @@ export class UsersService {
   }
 
   /**
-   * Mark user phone as verified and upgrade to Buyer level if Basic
+   * Mark user phone as verified (V2). No level change.
    */
   async markPhoneVerified(
     ctx: Ctx,
@@ -381,11 +384,6 @@ export class UsersService {
       true,
       phoneNumber,
     );
-
-    const user = await this.usersRepository.findById(ctx, userId);
-    if (user?.level === UserLevel.Basic) {
-      await this.usersRepository.updateLevel(ctx, userId, UserLevel.Buyer);
-    }
   }
 
   /**
@@ -476,9 +474,10 @@ export class UsersService {
   }
 
   /**
-   * Upgrade user to seller (requires seller terms to be accepted first)
+   * Accept seller terms (set intent to sell). Requires V1+V2 to be allowed to create listings;
+   * that is enforced at event/listing creation via VerificationHelper.canSell().
    */
-  async upgradeToSeller(
+  async acceptSellerTerms(
     ctx: Ctx,
     userId: string,
   ): Promise<AuthenticatedUserPublicInfo> {
@@ -487,7 +486,6 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
 
-    // Verify seller terms are accepted
     const hasAcceptedSellerTerms =
       await this.termsService.hasAcceptedCurrentTerms(
         ctx,
@@ -499,10 +497,8 @@ export class UsersService {
       throw new BadRequestException('Must accept seller terms first');
     }
 
-    // Upgrade level to Seller if currently Basic or Buyer
-    if (user.level === UserLevel.Basic || user.level === UserLevel.Buyer) {
-      await this.usersRepository.updateLevel(ctx, userId, UserLevel.Seller);
-    }
+    const now = new Date();
+    await this.usersRepository.setAcceptedSellerTermsAt(ctx, userId, now);
 
     const updatedUserInfo = await this.getAuthenticatedUserInfo(ctx, userId);
     if (!updatedUserInfo) {
@@ -513,9 +509,10 @@ export class UsersService {
   }
 
   /**
-   * Upgrade user to verified seller (called by identity verification service)
+   * Update user identity verification to approved (V3). Called by identity verification service.
+   * If legal name changed from previous V3, invalidates V4 (bank account).
    */
-  async upgradeToVerifiedSeller(
+  async setIdentityVerificationApproved(
     ctx: Ctx,
     userId: string,
     identityData: {
@@ -530,7 +527,22 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
 
-    await this.usersRepository.updateToVerifiedSeller(ctx, userId, identityData);
+    const prevLegalName =
+      user.identityVerification &&
+      `${user.identityVerification.legalFirstName ?? ''} ${user.identityVerification.legalLastName ?? ''}`.trim();
+    const newLegalName = `${identityData.legalFirstName} ${identityData.legalLastName}`.trim();
+    const legalNameChanged =
+      prevLegalName !== '' && prevLegalName !== newLegalName;
+
+    await this.usersRepository.updateIdentityVerificationApproved(
+      ctx,
+      userId,
+      identityData,
+    );
+
+    if (legalNameChanged && user.bankAccount) {
+      await this.usersRepository.invalidateBankAccountVerification(ctx, userId);
+    }
   }
 
   /**
@@ -610,6 +622,63 @@ export class UsersService {
     }
 
     return updatedUserInfo;
+  }
+
+  /**
+   * Add or update bank account (V4). Requires V3 (identity) approved.
+   * Holder name must match V3 legal name (normalized comparison).
+   */
+  async updateBankAccount(
+    ctx: Ctx,
+    userId: string,
+    data: { holderName: string; cbuOrCvu: string; alias?: string },
+  ): Promise<AuthenticatedUserPublicInfo> {
+    const user = await this.usersRepository.findById(ctx, userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if (!VerificationHelper.hasV3(user)) {
+      throw new BadRequestException(
+        'Identity must be verified before adding a bank account',
+      );
+    }
+    const legalFirstName = user.identityVerification?.legalFirstName ?? '';
+    const legalLastName = user.identityVerification?.legalLastName ?? '';
+    const legalFullName = this.normalizeNameForMatch(
+      `${legalFirstName} ${legalLastName}`,
+    );
+    const holderNormalized = this.normalizeNameForMatch(data.holderName.trim());
+    if (legalFullName !== holderNormalized) {
+      throw new BadRequestException(
+        'Bank account holder name must match your verified identity',
+      );
+    }
+    const cbuCvu = data.cbuOrCvu.replace(/\D/g, '');
+    if (cbuCvu.length !== 22) {
+      throw new BadRequestException('CBU/CVU must be 22 digits');
+    }
+    const bankAccount: User['bankAccount'] = {
+      holderName: data.holderName.trim(),
+      cbuOrCvu: cbuCvu,
+      alias: data.alias?.trim(),
+      verified: true,
+      verifiedAt: new Date(),
+    };
+    await this.usersRepository.updateBankAccount(ctx, userId, bankAccount);
+    const updated = await this.getAuthenticatedUserInfo(ctx, userId);
+    if (!updated) {
+      throw new BadRequestException('Failed to get updated user info');
+    }
+    return updated;
+  }
+
+  private normalizeNameForMatch(name: string): string {
+    return name
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '');
   }
 
   /**

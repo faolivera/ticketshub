@@ -31,8 +31,8 @@ import type {
   UpdateListingRequest,
   ListListingsQuery,
 } from './tickets.api';
-import { UserLevel } from '../users/users.domain';
 import { UsersService } from '../users/users.service';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 import {
   EventStatus,
   EventDateStatus,
@@ -42,6 +42,10 @@ import { PromotionsService } from '../promotions/promotions.service';
 import { PromotionType } from '../promotions/promotions.domain';
 import { TermsService } from '../terms/terms.service';
 import { TermsUserType } from '../terms/terms.domain';
+import type { Money as ConfigMoney } from '../config/config.domain';
+import { PlatformConfigService } from '../config/config.service';
+import { ConversionService } from '../config/conversion.service';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class TicketsService {
@@ -54,6 +58,10 @@ export class TicketsService {
     private readonly txManager: TransactionManager,
     private readonly promotionsService: PromotionsService,
     private readonly termsService: TermsService,
+    private readonly configService: PlatformConfigService,
+    private readonly conversionService: ConversionService,
+    @Inject(forwardRef(() => TransactionsService))
+    private readonly transactionsService: TransactionsService,
   ) {}
 
   /**
@@ -203,18 +211,42 @@ export class TicketsService {
   async createListing(
     ctx: Ctx,
     sellerId: string,
-    userLevel: UserLevel,
     data: CreateListingRequest,
   ): Promise<TicketListingWithEvent> {
-    // Check permissions
-    if (
-      userLevel !== UserLevel.Seller &&
-      userLevel !== UserLevel.VerifiedSeller
-    ) {
-      throw new ForbiddenException('Only sellers can create listings');
+    const user = await this.usersService.findById(ctx, sellerId);
+    if (!user || !VerificationHelper.canSell(user)) {
+      throw new ForbiddenException(
+        'Only sellers with verified email and phone can create listings',
+      );
     }
 
-    // Require seller terms to be accepted
+    // Tier 0 (no V3): enforce max sales count and max amount for unverified sellers
+    if (VerificationHelper.sellerTier(user) === 0) {
+      const config = await this.configService.getPlatformConfig(ctx);
+      const re = config.riskEngine.seller;
+      const [salesCount, salesAmounts] = await Promise.all([
+        this.transactionsService.getSellerCompletedSalesTotal(ctx, sellerId),
+        this.transactionsService.getSellerCompletedSalesAmounts(ctx, sellerId),
+      ]);
+      if (salesCount >= re.unverifiedSellerMaxSales) {
+        throw new ForbiddenException(
+          `Unverified sellers are limited to ${re.unverifiedSellerMaxSales} completed sales. Complete identity verification to list more.`,
+        );
+      }
+      const limitMoney = re.unverifiedSellerMaxAmount;
+      const totalInLimitCurrency = await this.conversionService.sumInCurrency(
+        ctx,
+        salesAmounts as ConfigMoney[],
+        limitMoney.currency,
+      );
+      if (totalInLimitCurrency.amount >= limitMoney.amount) {
+        const limitMajor = limitMoney.amount / 100;
+        throw new ForbiddenException(
+          `Unverified sellers are limited to ${limitMoney.currency} ${limitMajor} in total sales. Complete identity verification to list more.`,
+        );
+      }
+    }
+
     const hasAcceptedSellerTerms =
       await this.termsService.hasAcceptedCurrentTerms(
         ctx,

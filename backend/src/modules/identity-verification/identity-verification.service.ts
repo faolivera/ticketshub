@@ -30,7 +30,7 @@ import type {
   IdentityVerificationWithUser,
   ListIdentityVerificationsResponse,
 } from './identity-verification.api';
-import { UserLevel } from '../users/users.domain';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 
 @Injectable()
 export class IdentityVerificationService {
@@ -52,7 +52,7 @@ export class IdentityVerificationService {
 
   private generateStorageKey(
     userId: string,
-    side: 'front' | 'back',
+    side: 'front' | 'back' | 'selfie',
     originalFilename: string,
   ): string {
     const timestamp = Date.now();
@@ -106,6 +106,12 @@ export class IdentityVerificationService {
       mimetype: string;
       size: number;
     },
+    selfie: {
+      buffer: Buffer;
+      originalname: string;
+      mimetype: string;
+      size: number;
+    },
   ): Promise<IdentityVerificationRequest> {
     this.logger.log(ctx, `Submitting identity verification for user ${userId}`);
 
@@ -114,8 +120,8 @@ export class IdentityVerificationService {
       throw new NotFoundException('User not found');
     }
 
-    if (user.level === UserLevel.VerifiedSeller) {
-      throw new ConflictException('User is already a verified seller');
+    if (VerificationHelper.hasV3(user)) {
+      throw new ConflictException('Your identity is already verified');
     }
 
     const existing = await this.repository.findByUserId(ctx, userId);
@@ -132,6 +138,7 @@ export class IdentityVerificationService {
 
     this.validateFile(documentFront, 'documentFront');
     this.validateFile(documentBack, 'documentBack');
+    this.validateFile(selfie, 'selfie');
 
     if (
       !data.legalFirstName ||
@@ -152,6 +159,11 @@ export class IdentityVerificationService {
       'back',
       documentBack.originalname,
     );
+    const selfieStorageKey = this.generateStorageKey(
+      userId,
+      'selfie',
+      selfie.originalname,
+    );
 
     await Promise.all([
       this.storageProvider.store(frontStorageKey, documentFront.buffer, {
@@ -163,6 +175,11 @@ export class IdentityVerificationService {
         contentType: documentBack.mimetype,
         contentLength: documentBack.size,
         originalFilename: documentBack.originalname,
+      }),
+      this.storageProvider.store(selfieStorageKey, selfie.buffer, {
+        contentType: selfie.mimetype,
+        contentLength: selfie.size,
+        originalFilename: selfie.originalname,
       }),
     ]);
 
@@ -177,6 +194,8 @@ export class IdentityVerificationService {
       documentFrontFilename: documentFront.originalname,
       documentBackStorageKey: backStorageKey,
       documentBackFilename: documentBack.originalname,
+      selfieStorageKey,
+      selfieFilename: selfie.originalname,
       status: IdentityVerificationStatus.Pending,
       submittedAt: new Date(),
     };
@@ -315,7 +334,7 @@ export class IdentityVerificationService {
     await this.repository.save(ctx, updatedVerification);
 
     if (status === 'approved') {
-      await this.usersService.upgradeToVerifiedSeller(
+      await this.usersService.setIdentityVerificationApproved(
         ctx,
         verification.userId,
         {

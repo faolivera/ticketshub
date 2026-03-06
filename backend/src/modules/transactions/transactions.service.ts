@@ -1,6 +1,7 @@
 import {
   Injectable,
   Inject,
+  forwardRef,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
@@ -41,6 +42,8 @@ import { OffersService } from '../offers/offers.service';
 import type { Offer, OfferTickets } from '../offers/offers.domain';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { TransactionManager } from '../../common/database';
+import { RiskEngineService } from '../risk-engine/risk-engine.service';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 
 @Injectable()
 export class TransactionsService {
@@ -49,7 +52,7 @@ export class TransactionsService {
   constructor(
     @Inject(TRANSACTIONS_REPOSITORY)
     private readonly transactionsRepository: ITransactionsRepository,
-    @Inject(TicketsService)
+    @Inject(forwardRef(() => TicketsService))
     private readonly ticketsService: TicketsService,
     @Inject(PaymentsService)
     private readonly paymentsService: PaymentsService,
@@ -66,6 +69,8 @@ export class TransactionsService {
     private readonly notificationsService: NotificationsService,
     @Inject(OffersService)
     private readonly offersService: OffersService,
+    @Inject(RiskEngineService)
+    private readonly riskEngine: RiskEngineService,
     private readonly txManager: TransactionManager,
   ) {}
 
@@ -167,25 +172,44 @@ export class TransactionsService {
       throw new BadRequestException('Cannot buy your own listing');
     }
 
+    const buyer = await this.usersService.findById(ctx, buyerId);
+    if (!buyer) {
+      throw new ForbiddenException('User not found');
+    }
+    if (!VerificationHelper.hasV1(buyer)) {
+      throw new ForbiddenException('Email must be verified to purchase');
+    }
+
+    let quantityForRisk = ticketUnitIds?.length ?? 0;
+    const offer = offerId ? await this.getAndValidateOffer(ctx, offerId, buyerId, listingId) : undefined;
+    if (offer) {
+      if (offer?.tickets) {
+        quantityForRisk =
+          offer.tickets.type === 'numbered'
+            ? offer.tickets.seats.length : offer.tickets.count;
+      }
+    }
+    const amountMajor =
+      quantityForRisk > 0
+        ? (listing.pricePerTicket.amount * quantityForRisk) / 100
+        : 0;
+    const risk = await this.riskEngine.evaluateCheckoutRisk(ctx, buyerId, {
+      quantity: quantityForRisk || 1,
+      amountUsd: amountMajor,
+      eventStartsAt: listing.eventDate,
+      paymentMethodId,
+      sellerId: listing.sellerId,
+    });
+    if (risk.requireV2 && !VerificationHelper.hasV2(buyer)) {
+      throw new ForbiddenException(
+        'Phone verification is required for this purchase. Please verify your phone number.',
+      );
+    }
+
     let resolvedTicketUnitIds: string[];
     let resolvedPricingSnapshotId: string;
 
-    if (offerId) {
-      const offer = await this.offersService.getOfferById(ctx, offerId);
-      if (!offer) throw new NotFoundException('Offer not found');
-      if (offer.listingId !== listingId) {
-        throw new BadRequestException('Offer does not match listing');
-      }
-      if (offer.userId !== buyerId) {
-        throw new ForbiddenException('This offer belongs to another user');
-      }
-      if (offer.status !== 'accepted') {
-        throw new BadRequestException('Offer is not accepted or has expired');
-      }
-      const now = new Date();
-      if (offer.acceptedExpiresAt && offer.acceptedExpiresAt < now) {
-        throw new BadRequestException('Offer has expired; complete purchase before the deadline');
-      }
+    if (offer) {
       resolvedTicketUnitIds = this.resolveOfferToUnitIds(listing, offer.tickets);
       const snapshot = await this.pricingService.createSnapshot(ctx, listing, {
         offeredPricePerTicket: offer.offeredPrice,
@@ -338,7 +362,26 @@ export class TransactionsService {
       paymentIntentId: paymentIntent.id,
     };
   }
-
+  private async getAndValidateOffer(ctx: Ctx, offerId: string, buyerId: string, listingId: string): Promise<Offer> {
+    const offer = await this.offersService.getOfferById(ctx, offerId);
+    if (!offer) {
+      throw new NotFoundException('Offer not found');
+    }
+    if (offer.listingId !== listingId) {
+      throw new BadRequestException('Offer does not match listing');
+    }
+    if (offer.userId !== buyerId) {
+      throw new ForbiddenException('This offer belongs to another user');
+    }
+    if (offer.status !== 'accepted') {
+      throw new BadRequestException('Offer is not accepted or has expired');
+    }
+    const now = new Date();
+    if (offer.acceptedExpiresAt && offer.acceptedExpiresAt < now) {
+      throw new BadRequestException('Offer has expired; complete purchase before the deadline');
+    }
+    return offer;
+  }
   /**
    * Handle payment received (called by payment webhook or after confirmation)
    * Atomic with pessimistic lock to prevent double escrow hold
@@ -990,7 +1033,7 @@ export class TransactionsService {
   }
 
   /**
-   * Get total completed sales for a seller
+   * Get total completed sales (ticket count) for a seller.
    */
   async getSellerCompletedSalesTotal(
     ctx: Ctx,
@@ -1008,6 +1051,44 @@ export class TransactionsService {
         (total, transaction) => total + transaction.ticketUnitIds.length,
         0,
       );
+  }
+
+  /**
+   * Get total amount received by seller from completed sales (in major currency units, e.g. USD).
+   * @deprecated Prefer getSellerCompletedSalesAmounts + ConversionService.sumInCurrency for multi-currency comparison.
+   */
+  async getSellerCompletedSalesAmountUsd(
+    ctx: Ctx,
+    sellerId: string,
+  ): Promise<number> {
+    const amounts = await this.getSellerCompletedSalesAmounts(ctx, sellerId);
+    return amounts.reduce(
+      (total, m) => total + (m.amount ?? 0) / 100,
+      0,
+    );
+  }
+
+  /**
+   * Get list of sellerReceives (Money) for each completed transaction.
+   * Used with ConversionService.sumInCurrency to compare with config.riskEngine.unverifiedSellerMaxAmount.
+   */
+  async getSellerCompletedSalesAmounts(
+    ctx: Ctx,
+    sellerId: string,
+  ): Promise<Array<{ amount: number; currency: string }>> {
+    const transactions = await this.transactionsRepository.getBySellerId(
+      ctx,
+      sellerId,
+    );
+    return transactions
+      .filter(
+        (transaction) => transaction.status === TransactionStatus.Completed,
+      )
+      .filter((tx) => tx.sellerReceives != null)
+      .map((tx) => ({
+        amount: tx.sellerReceives!.amount,
+        currency: tx.sellerReceives!.currency,
+      }));
   }
 
   /**

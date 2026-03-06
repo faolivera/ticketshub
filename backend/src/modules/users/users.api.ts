@@ -24,6 +24,7 @@ export interface TermsAcceptanceData {
 /**
  * Request body for POST /users/register
  * country is optional; when omitted, backend uses default (Argentina).
+ * phone is optional and not verified at registration.
  */
 export interface RegisterRequest {
   email: string;
@@ -31,6 +32,7 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   country?: string;
+  phone?: string;
   termsAcceptance: TermsAcceptanceData;
 }
 
@@ -53,3 +55,17 @@ export type UpgradeToSellerResponse = AuthenticatedUserPublicInfo;
  * Response data for POST /users/profile/avatar
  */
 export type UploadAvatarResponse = AuthenticatedUserPublicInfo;
+
+/**
+ * Request body for PUT /users/bank-account (V4)
+ */
+export interface UpdateBankAccountRequest {
+  holderName: string;
+  cbuOrCvu: string;
+  alias?: string;
+}
+
+/**
+ * Response data for PUT /users/bank-account
+ */
+export type UpdateBankAccountResponse = AuthenticatedUserPublicInfo;

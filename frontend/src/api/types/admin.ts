@@ -548,6 +548,57 @@ export type AdminPaymentMethodResponse = PaymentMethodOption;
 
 // === Admin Platform Config (GET/PATCH /admin/config/platform) ===
 
+export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'ARS';
+
+export interface Money {
+  amount: number;
+  currency: CurrencyCode;
+}
+
+/**
+ * Buyer-facing risk config: when to require V2 (phone) at checkout.
+ */
+export interface RiskEngineBuyerConfig {
+  phoneRequiredEventHours: number;
+  phoneRequiredAmountUsd: number;
+  phoneRequiredQtyTickets: number;
+  newAccountDays: number;
+}
+
+/**
+ * Seller-facing risk config: Tier 0 limits and payout hold.
+ */
+export interface RiskEngineSellerConfig {
+  unverifiedSellerMaxSales: number;
+  unverifiedSellerMaxAmount: Money;
+  payoutHoldHoursDefault: number;
+  payoutHoldHoursUnverified: number;
+}
+
+/**
+ * Claims / disputes config.
+ */
+export interface RiskEngineClaimsConfig {
+  claimKycDeadlineHours: number;
+  claimInvalidEntryWindowHours: number;
+}
+
+/**
+ * Risk engine config, grouped by buyer / seller / claims.
+ */
+export interface RiskEngineConfig {
+  buyer: RiskEngineBuyerConfig;
+  seller: RiskEngineSellerConfig;
+  claims: RiskEngineClaimsConfig;
+}
+
+/**
+ * Exchange rates for currency conversion (admin-configured).
+ */
+export interface ExchangeRatesConfig {
+  usdToArs: number;
+}
+
 /**
  * Platform config (fees and timeouts). Admin-only.
  */
@@ -560,6 +611,8 @@ export interface PlatformConfig {
   offerAcceptedExpirationMinutes?: number;
   transactionChatPollIntervalSeconds: number;
   transactionChatMaxMessages: number;
+  riskEngine: RiskEngineConfig;
+  exchangeRates: ExchangeRatesConfig;
 }
 
 /**
@@ -574,6 +627,12 @@ export interface UpdatePlatformConfigRequest {
   offerAcceptedExpirationMinutes?: number;
   transactionChatPollIntervalSeconds?: number;
   transactionChatMaxMessages?: number;
+  riskEngine?: {
+    buyer?: Partial<RiskEngineBuyerConfig>;
+    seller?: Partial<RiskEngineSellerConfig> & { unverifiedSellerMaxAmount?: Money };
+    claims?: Partial<RiskEngineClaimsConfig>;
+  };
+  exchangeRates?: Partial<ExchangeRatesConfig>;
 }
 
 // === Admin Promotions (GET/POST /admin/promotions, PATCH /admin/promotions/:id/status) ===

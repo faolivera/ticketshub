@@ -40,6 +40,7 @@ export const AuthenticatedUserPublicInfoSchema = z.object({
   currency: CurrencyCodeSchema,
   address: UserAddressSchema.optional(),
   status: UserStatusSchema,
+  acceptedSellerTermsAt: z.date().nullable().optional(),
   emailVerified: z.boolean(),
   phoneVerified: z.boolean(),
 });
@@ -52,11 +53,14 @@ export const LoginResponseSchema = z.object({
 });
 
 export const GetMeResponseSchema = z.object({
-  userId: z.string(),
+  id: z.string(),
   email: z.string().email(),
   publicName: z.string(),
   pic: ImageSchema.nullable(),
   address: AddressSchema.optional(),
+  acceptedSellerTermsAt: z.date().nullable().optional(),
+  emailVerified: z.boolean(),
+  phoneVerified: z.boolean(),
 });
 
 export const UpdateProfileResponseSchema = z.object({

@@ -58,6 +58,7 @@ export class IdentityVerificationController {
       [
         { name: 'documentFront', maxCount: 1 },
         { name: 'documentBack', maxCount: 1 },
+        { name: 'selfie', maxCount: 1 },
       ],
       {
         limits: { fileSize: MAX_DOCUMENT_SIZE_BYTES },
@@ -88,6 +89,7 @@ export class IdentityVerificationController {
     files: {
       documentFront?: Multer.File[];
       documentBack?: Multer.File[];
+      selfie?: Multer.File[];
     },
   ): Promise<ApiResponse<SubmitIdentityVerificationResponse>> {
     if (!files?.documentFront?.[0]) {
@@ -96,9 +98,13 @@ export class IdentityVerificationController {
     if (!files?.documentBack?.[0]) {
       throw new BadRequestException('Back of ID document is required');
     }
+    if (!files?.selfie?.[0]) {
+      throw new BadRequestException('Selfie with ID is required');
+    }
 
     const frontFile = files.documentFront[0];
     const backFile = files.documentBack[0];
+    const selfieFile = files.selfie[0];
 
     const verification = await this.service.submitVerification(
       ctx,
@@ -120,6 +126,12 @@ export class IdentityVerificationController {
         originalname: backFile.originalname,
         mimetype: backFile.mimetype,
         size: backFile.size,
+      },
+      {
+        buffer: selfieFile.buffer,
+        originalname: selfieFile.originalname,
+        mimetype: selfieFile.mimetype,
+        size: selfieFile.size,
       },
     );
 

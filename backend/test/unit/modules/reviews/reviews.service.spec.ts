@@ -17,8 +17,6 @@ import { TicketType } from '../../../../src/modules/tickets/tickets.domain';
 import type { Review } from '../../../../src/modules/reviews/reviews.domain';
 import type { Transaction } from '../../../../src/modules/transactions/transactions.domain';
 import type { Ctx } from '../../../../src/common/types/context';
-import { UserLevel } from '../../../../src/modules/users/users.domain';
-
 describe('ReviewsService', () => {
   let service: ReviewsService;
   let reviewsRepository: jest.Mocked<IReviewsRepository>;
@@ -264,7 +262,7 @@ describe('ReviewsService', () => {
     it('should return correct metrics with no reviews', async () => {
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(5);
-      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
+      usersService.findById.mockResolvedValue({ acceptedSellerTermsAt: new Date() } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -292,7 +290,7 @@ describe('ReviewsService', () => {
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(10);
-      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
+      usersService.findById.mockResolvedValue({ acceptedSellerTermsAt: new Date() } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -312,7 +310,7 @@ describe('ReviewsService', () => {
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(10);
-      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
+      usersService.findById.mockResolvedValue({ acceptedSellerTermsAt: new Date() } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -323,7 +321,10 @@ describe('ReviewsService', () => {
     it('should include verified badge when user is VerifiedSeller', async () => {
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(0);
-      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
+      usersService.findById.mockResolvedValue({
+          acceptedSellerTermsAt: new Date(),
+          identityVerification: { status: 'approved', legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() },
+        } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -343,7 +344,7 @@ describe('ReviewsService', () => {
         positiveReviews,
       );
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(15);
-      usersService.findById.mockResolvedValue({ level: UserLevel.Seller } as any);
+      usersService.findById.mockResolvedValue({ acceptedSellerTermsAt: new Date() } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -363,7 +364,10 @@ describe('ReviewsService', () => {
         positiveReviews,
       );
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(55);
-      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
+      usersService.findById.mockResolvedValue({
+          acceptedSellerTermsAt: new Date(),
+          identityVerification: { status: 'approved', legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() },
+        } as any);
 
       const result = await service.getSellerMetrics(mockCtx, 'seller_123');
 
@@ -381,7 +385,10 @@ describe('ReviewsService', () => {
       ];
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
-      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
+      usersService.findById.mockResolvedValue({
+          acceptedSellerTermsAt: new Date(),
+          identityVerification: { status: 'approved', legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() },
+        } as any);
 
       const result = await service.getBuyerMetrics(mockCtx, 'buyer_123');
 
@@ -410,7 +417,10 @@ describe('ReviewsService', () => {
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(
         positiveReviews,
       );
-      usersService.findById.mockResolvedValue({ level: UserLevel.VerifiedSeller } as any);
+      usersService.findById.mockResolvedValue({
+          acceptedSellerTermsAt: new Date(),
+          identityVerification: { status: 'approved', legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() },
+        } as any);
 
       const result = await service.getBuyerMetrics(mockCtx, 'buyer_123');
 
@@ -458,7 +468,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 10]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.Seller },
+        { id: sellerId, acceptedSellerTermsAt: new Date() },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
@@ -496,8 +506,8 @@ describe('ReviewsService', () => {
         ]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: seller1, level: UserLevel.Seller },
-        { id: seller2, level: UserLevel.Seller },
+        { id: seller1, acceptedSellerTermsAt: new Date() },
+        { id: seller2, acceptedSellerTermsAt: new Date() },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [
@@ -533,7 +543,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 3]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.Seller },
+        { id: sellerId, acceptedSellerTermsAt: new Date() },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
@@ -557,7 +567,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 0]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.VerifiedSeller },
+        { id: sellerId, acceptedSellerTermsAt: new Date(), identityVerification: { status: 'approved', legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() } },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
@@ -576,7 +586,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 15]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.Seller },
+        { id: sellerId, acceptedSellerTermsAt: new Date() },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
@@ -595,7 +605,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 55]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.Seller },
+        { id: sellerId, acceptedSellerTermsAt: new Date() },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
@@ -611,7 +621,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 0]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.Seller },
+        { id: sellerId, acceptedSellerTermsAt: new Date() },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
@@ -627,7 +637,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 3]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.Seller },
+        { id: sellerId, acceptedSellerTermsAt: new Date() },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
@@ -643,7 +653,7 @@ describe('ReviewsService', () => {
         new Map([[sellerId, 0]]),
       );
       usersService.findByIds.mockResolvedValue([
-        { id: sellerId, level: UserLevel.VerifiedSeller },
+        { id: sellerId, acceptedSellerTermsAt: new Date(), identityVerification: { status: 'approved', legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() } },
       ] as any);
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);

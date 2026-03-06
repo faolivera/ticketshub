@@ -75,7 +75,6 @@ export class EventsController {
       ctx,
       user.id,
       user.role,
-      user.level,
       body,
     );
     return { success: true, data: event };

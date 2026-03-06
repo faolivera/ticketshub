@@ -152,9 +152,52 @@ export function UserProfile() {
                 {isSeller && <SellerBadge level={user.level} />}
               </div>
               <div className="space-y-1 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Mail className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate">{user.email}</span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                      user.emailVerified
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {user.emailVerified
+                      ? t('userProfile.badgeVerified')
+                      : t('userProfile.badgeNotVerified')}
+                  </span>
+                  {!user.emailVerified && (
+                    <Link
+                      to="/register"
+                      state={{ verifyEmail: true, email: user.email, from: '/user-profile' }}
+                      className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                    >
+                      {t('userProfile.verifyEmail')}
+                    </Link>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{user.phone ?? t('userProfile.phoneNotSet')}</span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                      user.phoneVerified
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {user.phoneVerified
+                      ? t('userProfile.badgeVerified')
+                      : t('userProfile.badgeNotVerified')}
+                  </span>
+                  {!user.phoneVerified && (
+                    <Link
+                      to="/phone-verification"
+                      className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                    >
+                      {t('userProfile.verifyPhone')}
+                    </Link>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
@@ -329,16 +372,6 @@ export function UserProfile() {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Tickets link */}
-          <div className="mt-5 pt-4 border-t border-gray-100">
-            <Link
-              to="/bought-tickets"
-              className="block w-full px-6 py-3 bg-blue-600 text-white text-center font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              {t('userProfile.viewAllTickets')}
-            </Link>
           </div>
         </div>
       </div>

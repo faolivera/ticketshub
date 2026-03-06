@@ -10,8 +10,18 @@ import {
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { adminService } from '../../../api/services/admin.service';
-import type { PlatformConfig as PlatformConfigType } from '../../../api/types/admin';
+import type {
+  PlatformConfig as PlatformConfigType,
+  CurrencyCode,
+} from '../../../api/types/admin';
 
 const MIN_FEE = 0;
 const MAX_FEE = 100;
@@ -23,6 +33,8 @@ const MIN_CHAT_POLL_SECONDS = 5;
 const MAX_CHAT_POLL_SECONDS = 120;
 const MIN_CHAT_MAX_MESSAGES = 10;
 const MAX_CHAT_MAX_MESSAGES = 500;
+
+const CURRENCIES: CurrencyCode[] = ['USD', 'ARS', 'EUR', 'GBP'];
 
 export function PlatformConfig() {
   const { t } = useTranslation();
@@ -38,6 +50,20 @@ export function PlatformConfig() {
   const [adminReviewHours, setAdminReviewHours] = useState('');
   const [chatPollIntervalSeconds, setChatPollIntervalSeconds] = useState('');
   const [chatMaxMessages, setChatMaxMessages] = useState('');
+  // Risk engine (defaults so section is usable even if API omits them)
+  const [phoneRequiredEventHours, setPhoneRequiredEventHours] = useState('72');
+  const [phoneRequiredAmountUsd, setPhoneRequiredAmountUsd] = useState('120');
+  const [phoneRequiredQtyTickets, setPhoneRequiredQtyTickets] = useState('2');
+  const [newAccountDays, setNewAccountDays] = useState('7');
+  const [unverifiedSellerMaxSales, setUnverifiedSellerMaxSales] = useState('2');
+  const [unverifiedSellerMaxAmountMajor, setUnverifiedSellerMaxAmountMajor] = useState('200');
+  const [unverifiedSellerMaxAmountCurrency, setUnverifiedSellerMaxAmountCurrency] =
+    useState<CurrencyCode>('USD');
+  const [payoutHoldHoursDefault, setPayoutHoldHoursDefault] = useState('24');
+  const [payoutHoldHoursUnverified, setPayoutHoldHoursUnverified] = useState('48');
+  const [claimKycDeadlineHours, setClaimKycDeadlineHours] = useState('24');
+  const [claimInvalidEntryWindowHours, setClaimInvalidEntryWindowHours] = useState('2');
+  const [usdToArs, setUsdToArs] = useState('1000');
 
   const fetchConfig = async () => {
     try {
@@ -51,6 +77,34 @@ export function PlatformConfig() {
       setAdminReviewHours(String(data.adminReviewTimeoutHours));
       setChatPollIntervalSeconds(String(data.transactionChatPollIntervalSeconds ?? 15));
       setChatMaxMessages(String(data.transactionChatMaxMessages ?? 100));
+      const re = data.riskEngine;
+      if (re) {
+        if (re.buyer) {
+          setPhoneRequiredEventHours(String(re.buyer.phoneRequiredEventHours ?? 72));
+          setPhoneRequiredAmountUsd(String(re.buyer.phoneRequiredAmountUsd ?? 120));
+          setPhoneRequiredQtyTickets(String(re.buyer.phoneRequiredQtyTickets ?? 2));
+          setNewAccountDays(String(re.buyer.newAccountDays ?? 7));
+        }
+        if (re.seller) {
+          setUnverifiedSellerMaxSales(String(re.seller.unverifiedSellerMaxSales ?? 2));
+          setUnverifiedSellerMaxAmountMajor(
+            String((re.seller.unverifiedSellerMaxAmount?.amount ?? 20000) / 100)
+          );
+          setUnverifiedSellerMaxAmountCurrency(
+            (re.seller.unverifiedSellerMaxAmount?.currency as CurrencyCode) ?? 'USD'
+          );
+          setPayoutHoldHoursDefault(String(re.seller.payoutHoldHoursDefault ?? 24));
+          setPayoutHoldHoursUnverified(String(re.seller.payoutHoldHoursUnverified ?? 48));
+        }
+        if (re.claims) {
+          setClaimKycDeadlineHours(String(re.claims.claimKycDeadlineHours ?? 24));
+          setClaimInvalidEntryWindowHours(String(re.claims.claimInvalidEntryWindowHours ?? 2));
+        }
+      }
+      const er = data.exchangeRates;
+      if (er) {
+        setUsdToArs(String(er.usdToArs ?? 1000));
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('admin.platformConfig.loadError')
@@ -116,18 +170,54 @@ export function PlatformConfig() {
       return;
     }
 
+    const maxAmountMajorNum = Number(unverifiedSellerMaxAmountMajor);
+    if (!Number.isNaN(maxAmountMajorNum) && (maxAmountMajorNum < 0 || maxAmountMajorNum > 100000)) {
+      setError('Unverified seller max amount must be between 0 and 100000.');
+      return;
+    }
+    const usdToArsNum = Number(usdToArs);
+    if (!Number.isNaN(usdToArsNum) && (usdToArsNum < 1 || usdToArsNum > 1000000)) {
+      setError('USD to ARS rate must be between 1 and 1000000.');
+      return;
+    }
+
     try {
       setSaving(true);
       setError(null);
       setSuccess(null);
-      await adminService.updatePlatformConfig({
+      const payload: Parameters<typeof adminService.updatePlatformConfig>[0] = {
         buyerPlatformFeePercentage: buyer,
         sellerPlatformFeePercentage: seller,
         paymentTimeoutMinutes: Math.round(payment),
         adminReviewTimeoutHours: Math.round(adminHours),
         transactionChatPollIntervalSeconds: Math.round(chatPoll),
         transactionChatMaxMessages: Math.round(chatMax),
-      });
+      };
+      payload.riskEngine = {
+        buyer: {
+          phoneRequiredEventHours: Math.round(Number(phoneRequiredEventHours) || 72),
+          phoneRequiredAmountUsd: Number(phoneRequiredAmountUsd) || 120,
+          phoneRequiredQtyTickets: Math.round(Number(phoneRequiredQtyTickets) || 2),
+          newAccountDays: Math.round(Number(newAccountDays) || 7),
+        },
+        seller: {
+          unverifiedSellerMaxSales: Math.round(Number(unverifiedSellerMaxSales) || 2),
+          unverifiedSellerMaxAmount: {
+            amount: Math.round((Number(unverifiedSellerMaxAmountMajor) || 200) * 100),
+            currency: unverifiedSellerMaxAmountCurrency,
+          },
+          payoutHoldHoursDefault: Math.round(Number(payoutHoldHoursDefault) || 24),
+          payoutHoldHoursUnverified: Math.round(Number(payoutHoldHoursUnverified) || 48),
+        },
+        claims: {
+          claimKycDeadlineHours: Math.round(Number(claimKycDeadlineHours) || 24),
+          claimInvalidEntryWindowHours: Math.round(Number(claimInvalidEntryWindowHours) || 2),
+        },
+      };
+      payload.exchangeRates = {
+        usdToArs: Number(usdToArs) || 1000,
+      };
+      await adminService.updatePlatformConfig(payload);
       setSuccess(t('admin.platformConfig.saved'));
     } catch (err) {
       setError(
@@ -256,6 +346,209 @@ export function PlatformConfig() {
                 max={MAX_CHAT_MAX_MESSAGES}
                 value={chatMaxMessages}
                 onChange={(e) => setChatMaxMessages(e.target.value)}
+              />
+            </div>
+          </div>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? t('admin.platformConfig.saving') : t('admin.platformConfig.save')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="border-2">
+        <CardHeader>
+          <CardTitle>{t('admin.platformConfig.riskEngineSectionTitle')}</CardTitle>
+          <CardDescription>
+            Verification triggers, seller limits, payout hold and claim deadlines. Stored in code defaults; edit via this section.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Buyer: checkout triggers */}
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <h3 className="mb-3 text-sm font-semibold">
+              {t('admin.platformConfig.riskEngineBuyerTitle')}
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="phoneRequiredEventHours">
+                  {t('admin.platformConfig.phoneRequiredEventHours')}
+                </Label>
+                <Input
+                  id="phoneRequiredEventHours"
+                  type="number"
+                  min={1}
+                  max={720}
+                  value={phoneRequiredEventHours}
+                  onChange={(e) => setPhoneRequiredEventHours(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phoneRequiredAmountUsd">
+                  {t('admin.platformConfig.phoneRequiredAmountUsd')}
+                </Label>
+                <Input
+                  id="phoneRequiredAmountUsd"
+                  type="number"
+                  min={0}
+                  value={phoneRequiredAmountUsd}
+                  onChange={(e) => setPhoneRequiredAmountUsd(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phoneRequiredQtyTickets">
+                  {t('admin.platformConfig.phoneRequiredQtyTickets')}
+                </Label>
+                <Input
+                  id="phoneRequiredQtyTickets"
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={phoneRequiredQtyTickets}
+                  onChange={(e) => setPhoneRequiredQtyTickets(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newAccountDays">
+                  {t('admin.platformConfig.newAccountDays')}
+                </Label>
+                <Input
+                  id="newAccountDays"
+                  type="number"
+                  min={0}
+                  max={365}
+                  value={newAccountDays}
+                  onChange={(e) => setNewAccountDays(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Seller: limits & payout */}
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <h3 className="mb-3 text-sm font-semibold">
+              {t('admin.platformConfig.riskEngineSellerTitle')}
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="unverifiedSellerMaxSales">
+                  {t('admin.platformConfig.unverifiedSellerMaxSales')}
+                </Label>
+                <Input
+                  id="unverifiedSellerMaxSales"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={unverifiedSellerMaxSales}
+                  onChange={(e) => setUnverifiedSellerMaxSales(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('admin.platformConfig.unverifiedSellerMaxAmount')}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100000}
+                    value={unverifiedSellerMaxAmountMajor}
+                    onChange={(e) => setUnverifiedSellerMaxAmountMajor(e.target.value)}
+                    placeholder="200"
+                  />
+                  <Select
+                    value={unverifiedSellerMaxAmountCurrency}
+                    onValueChange={(v) => setUnverifiedSellerMaxAmountCurrency(v as CurrencyCode)}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payoutHoldHoursDefault">
+                  {t('admin.platformConfig.payoutHoldHoursDefault')}
+                </Label>
+                <Input
+                  id="payoutHoldHoursDefault"
+                  type="number"
+                  min={0}
+                  max={168}
+                  value={payoutHoldHoursDefault}
+                  onChange={(e) => setPayoutHoldHoursDefault(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payoutHoldHoursUnverified">
+                  {t('admin.platformConfig.payoutHoldHoursUnverified')}
+                </Label>
+                <Input
+                  id="payoutHoldHoursUnverified"
+                  type="number"
+                  min={0}
+                  max={168}
+                  value={payoutHoldHoursUnverified}
+                  onChange={(e) => setPayoutHoldHoursUnverified(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Claims & disputes */}
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <h3 className="mb-3 text-sm font-semibold">
+              {t('admin.platformConfig.riskEngineClaimsTitle')}
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="claimKycDeadlineHours">
+                  {t('admin.platformConfig.claimKycDeadlineHours')}
+                </Label>
+                <Input
+                  id="claimKycDeadlineHours"
+                  type="number"
+                  min={1}
+                  max={72}
+                  value={claimKycDeadlineHours}
+                  onChange={(e) => setClaimKycDeadlineHours(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="claimInvalidEntryWindowHours">
+                  {t('admin.platformConfig.claimInvalidEntryWindowHours')}
+                </Label>
+                <Input
+                  id="claimInvalidEntryWindowHours"
+                  type="number"
+                  min={0}
+                  max={24}
+                  value={claimInvalidEntryWindowHours}
+                  onChange={(e) => setClaimInvalidEntryWindowHours(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <Label className="text-sm font-medium">
+              {t('admin.platformConfig.exchangeRatesSectionTitle')}
+            </Label>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">
+                {t('admin.platformConfig.usdToArs')}
+              </span>
+              <Input
+                type="number"
+                min={1}
+                max={1000000}
+                className="w-32"
+                value={usdToArs}
+                onChange={(e) => setUsdToArs(e.target.value)}
               />
             </div>
           </div>

@@ -34,6 +34,7 @@ import type {
   BuyPagePricingSnapshot,
   BuyPagePaymentMethodOption,
 } from './bff.domain';
+import { RiskEngineService } from '../risk-engine/risk-engine.service';
 import type { GetSellTicketConfigResponse } from './bff.api';
 
 @Injectable()
@@ -61,6 +62,8 @@ export class BffService {
     private readonly transactionChatService: TransactionChatService,
     @Inject(EventsService)
     private readonly eventsService: EventsService,
+    @Inject(RiskEngineService)
+    private readonly riskEngine: RiskEngineService,
   ) {}
 
   /**
@@ -187,8 +190,13 @@ export class BffService {
 
   /**
    * Get buy page data: listing, seller info, payment methods, and pricing snapshot.
+   * When buyerId is provided, includes checkoutRisk for step-up verification UX.
    */
-  async getBuyPageData(ctx: Ctx, ticketId: string): Promise<BuyPageData> {
+  async getBuyPageData(
+    ctx: Ctx,
+    ticketId: string,
+    buyerId?: string,
+  ): Promise<BuyPageData> {
     const listing = await this.ticketsService.getListingById(ctx, ticketId);
     const [publicInfo] = await this.usersService.getPublicUserInfoByIds(ctx, [
       listing.sellerId,
@@ -235,11 +243,29 @@ export class BffService {
       }),
     );
 
+    let checkoutRisk: BuyPageData['checkoutRisk'];
+    if (buyerId) {
+      const quantity = 1;
+      const amountMajor = (listing.pricePerTicket.amount * quantity) / 100;
+      const risk = await this.riskEngine.evaluateCheckoutRisk(ctx, buyerId, {
+        quantity,
+        amountUsd: amountMajor,
+        eventStartsAt: listing.eventDate,
+        paymentMethodId: '', // Not yet selected; use conservative default
+        sellerId: listing.sellerId,
+      });
+      checkoutRisk = {
+        requireV1: risk.requireV1,
+        requireV2: risk.requireV2,
+      };
+    }
+
     return {
       listing,
       seller,
       paymentMethods: buyPagePaymentMethods,
       pricingSnapshot,
+      ...(checkoutRisk && { checkoutRisk }),
     };
   }
 

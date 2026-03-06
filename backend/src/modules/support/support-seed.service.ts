@@ -14,7 +14,6 @@ import {
   IdentityVerificationStatus,
   Language,
   Role,
-  UserLevel,
   UserStatus,
 } from '../users/users.domain';
 import { EventCategory, EventSectionStatus } from '../events/events.domain';
@@ -90,7 +89,6 @@ export class SupportSeedService {
       lastName: 'User',
       publicName: 'TicketsHub Admin',
       role: Role.Admin,
-      level: UserLevel.Basic,
       status: UserStatus.Enabled,
       imageId: imageIds.admin,
       language: Language.ES,
@@ -105,10 +103,10 @@ export class SupportSeedService {
       lastName: 'Seller',
       publicName: 'Verified Seller',
       role: Role.User,
-      level: UserLevel.VerifiedSeller,
       status: UserStatus.Enabled,
       imageId: imageIds.seller,
       language: Language.ES,
+      acceptedSellerTermsAt: new Date(),
       emailVerified: true,
       phoneVerified: true,
       identityVerification: {
@@ -123,8 +121,7 @@ export class SupportSeedService {
       },
       bankAccount: {
         holderName: 'Verified Seller',
-        iban: 'DE89370400440532013000',
-        bic: 'COBADEFFXXX',
+        cbuOrCvu: '0000000000000000000000',
         verified: true,
         verifiedAt: new Date(),
       },
@@ -137,7 +134,6 @@ export class SupportSeedService {
       lastName: 'User',
       publicName: 'Buyer',
       role: Role.User,
-      level: UserLevel.Buyer,
       status: UserStatus.Enabled,
       imageId: imageIds.buyer,
       language: Language.ES,
@@ -161,7 +157,6 @@ export class SupportSeedService {
         ctx,
         admin.id,
         Role.Admin,
-        UserLevel.Basic,
         this.getBadBunnyEventRequest(imageIds.badBunny),
       ));
 
@@ -255,7 +250,6 @@ export class SupportSeedService {
       const listing = await this.ticketsService.createListing(
         ctx,
         seller.id,
-        seller.level,
         req,
       );
       createdListingIds.push(listing.id);

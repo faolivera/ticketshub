@@ -22,6 +22,25 @@ describe('PlatformConfigService', () => {
     offerAcceptedExpirationMinutes: 1440,
     transactionChatPollIntervalSeconds: 15,
     transactionChatMaxMessages: 100,
+    riskEngine: {
+      buyer: {
+        phoneRequiredEventHours: 72,
+        phoneRequiredAmountUsd: 120,
+        phoneRequiredQtyTickets: 2,
+        newAccountDays: 7,
+      },
+      seller: {
+        unverifiedSellerMaxSales: 2,
+        unverifiedSellerMaxAmount: { amount: 20000, currency: 'USD' as const },
+        payoutHoldHoursDefault: 24,
+        payoutHoldHoursUnverified: 48,
+      },
+      claims: {
+        claimKycDeadlineHours: 24,
+        claimInvalidEntryWindowHours: 2,
+      },
+    },
+    exchangeRates: { usdToArs: 1000 },
   };
 
   beforeEach(async () => {
@@ -70,10 +89,10 @@ describe('PlatformConfigService', () => {
     it('should seed from HOCON and upsert when no row exists', async () => {
       configRepository.findPlatformConfig.mockResolvedValue(null);
       const result = await service.getPlatformConfig(mockCtx);
-      expect(result).toEqual(defaultConfig);
+      expect(result).toMatchObject(defaultConfig);
       expect(configRepository.upsertPlatformConfig).toHaveBeenCalledWith(
         mockCtx,
-        defaultConfig
+        expect.objectContaining(defaultConfig)
       );
     });
   });

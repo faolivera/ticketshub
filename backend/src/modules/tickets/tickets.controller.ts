@@ -48,7 +48,6 @@ export class TicketsController {
     const listing = await this.ticketsService.createListing(
       ctx,
       user.id,
-      user.level,
       body,
     );
     return { success: true, data: listing };

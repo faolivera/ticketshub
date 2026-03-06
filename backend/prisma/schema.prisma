@@ -21,13 +21,6 @@ enum UserStatus {
   Suspended
 }
 
-enum UserLevel {
-  Basic
-  Buyer
-  Seller
-  VerifiedSeller
-}
-
 enum Language {
   es
   en
@@ -268,28 +261,28 @@ enum NotificationPriority {
 // =============================================================================
 
 model User {
-  id                    String     @id @default(uuid())
-  email                 String     @unique
-  firstName             String
-  lastName              String
-  role                  Role       @default(User)
-  level                 UserLevel  @default(Basic)
-  status                UserStatus @default(Enabled)
-  publicName            String
-  imageId               String?
-  phone                 String?
-  password              String
-  country               String     @default("Germany")
-  currency              String     @default("EUR")
-  language              Language   @default(en)
-  address               Json?
-  emailVerified         Boolean    @default(false)
-  phoneVerified         Boolean    @default(false)
-  tosAcceptedAt         DateTime?
-  identityVerification  Json?
-  bankAccount           Json?
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
+  id                     String     @id @default(uuid())
+  email                  String     @unique
+  firstName              String
+  lastName               String
+  role                   Role       @default(User)
+  status                 UserStatus @default(Enabled)
+  publicName             String
+  imageId                String?
+  phone                  String?
+  password               String
+  country                String     @default("Germany")
+  currency               String     @default("EUR")
+  language               Language   @default(en)
+  address                Json?
+  acceptedSellerTermsAt  DateTime?
+  emailVerified          Boolean    @default(false)
+  phoneVerified          Boolean    @default(false)
+  tosAcceptedAt          DateTime?
+  identityVerification   Json?
+  bankAccount            Json?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
 
   // Relations
   createdEvents         Event[]         @relation("EventCreator")

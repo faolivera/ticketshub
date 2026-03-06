@@ -1,6 +1,7 @@
 import {
   Injectable,
   Inject,
+  forwardRef,
   BadRequestException,
   ForbiddenException,
   NotFoundException,
@@ -33,7 +34,7 @@ export class OffersService {
   constructor(
     @Inject(OFFERS_REPOSITORY)
     private readonly offersRepository: IOffersRepository,
-    @Inject(TicketsService)
+    @Inject(forwardRef(() => TicketsService))
     private readonly ticketsService: TicketsService,
     @Inject(PlatformConfigService)
     private readonly platformConfigService: PlatformConfigService,

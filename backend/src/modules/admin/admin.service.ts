@@ -602,7 +602,7 @@ export class AdminService {
         if (config) {
           bankTransferDestination = {
             holderName: config.accountHolderName,
-            iban: config.cbu,
+            cbuOrCvu: config.cbu,
             bankName: config.bankName,
             cuitCuil: config.cuitCuil,
           };
@@ -620,8 +620,7 @@ export class AdminService {
     ) {
       bankTransferDestination = {
         holderName: seller.bankAccount.holderName,
-        iban: seller.bankAccount.iban,
-        bic: seller.bankAccount.bic,
+        cbuOrCvu: seller.bankAccount.cbuOrCvu,
       };
     }
 
@@ -735,8 +734,7 @@ export class AdminService {
         seller?.bankAccount
           ? {
               holderName: seller.bankAccount.holderName,
-              iban: seller.bankAccount.iban,
-              bic: seller.bankAccount.bic,
+              cbuOrCvu: seller.bankAccount.cbuOrCvu,
             }
           : undefined;
 

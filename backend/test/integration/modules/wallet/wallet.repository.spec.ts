@@ -8,7 +8,6 @@ import {
 } from '@/modules/wallet/wallet.domain';
 import {
   Role,
-  UserLevel,
   UserStatus,
 } from '@/modules/users/users.domain';
 import type { Ctx } from '@/common/types/context';
@@ -41,7 +40,6 @@ describe('WalletRepository (Integration)', () => {
         publicName: `testuser-${userId.slice(0, 8)}`,
         password: 'hashedpassword123',
         role: Role.User,
-        level: UserLevel.Basic,
         language: 'en',
         emailVerified: true,
         phoneVerified: false,

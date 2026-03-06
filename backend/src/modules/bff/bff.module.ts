@@ -11,6 +11,7 @@ import { ConfigModule } from '../config/config.module';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
 import { EventsModule } from '../events/events.module';
+import { RiskEngineModule } from '../risk-engine/risk-engine.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EventsModule } from '../events/events.module';
     ConfigModule,
     PromotionsModule,
     EventsModule,
+    RiskEngineModule,
   ],
   controllers: [BffController],
   providers: [BffService],

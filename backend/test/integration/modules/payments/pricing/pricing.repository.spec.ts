@@ -1,4 +1,4 @@
-import { PrismaClient, Role, UserLevel, SeatingType as PrismaSeatingType } from '@prisma/client';
+import { PrismaClient, Role, SeatingType as PrismaSeatingType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PricingRepository } from '@/modules/payments/pricing/pricing.repository';
 import type {
@@ -37,7 +37,7 @@ describe('PricingRepository (Integration)', () => {
   const createTestUser = async (overrides?: Partial<{
     email: string;
     role: Role;
-    level: UserLevel;
+    acceptedSellerTermsAt: Date | null;
   }>): Promise<string> => {
     const user = await prisma.user.create({
       data: {
@@ -47,7 +47,7 @@ describe('PricingRepository (Integration)', () => {
         publicName: `testuser-${randomUUID().slice(0, 8)}`,
         password: 'hashedpassword',
         role: overrides?.role ?? Role.User,
-        level: overrides?.level ?? UserLevel.Seller,
+        acceptedSellerTermsAt: overrides?.acceptedSellerTermsAt ?? new Date(),
         status: 'Enabled',
         country: 'Germany',
         currency: 'EUR',

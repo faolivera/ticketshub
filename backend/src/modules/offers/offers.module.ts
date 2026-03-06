@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { OffersController } from './offers.controller';
 import { OffersService } from './offers.service';
 import { OffersRepository } from './offers.repository';
@@ -8,7 +8,11 @@ import { ConfigModule as PlatformConfigModule } from '../config/config.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TicketsModule, PlatformConfigModule, UsersModule],
+  imports: [
+    forwardRef(() => TicketsModule),
+    PlatformConfigModule,
+    UsersModule,
+  ],
   controllers: [OffersController],
   providers: [
     OffersService,

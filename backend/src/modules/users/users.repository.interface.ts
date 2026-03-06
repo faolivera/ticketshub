@@ -1,5 +1,5 @@
 import type { Ctx } from '../../common/types/context';
-import type { User, UserAddress, UserLevel, UserStatus } from './users.domain';
+import type { User, UserAddress, UserStatus } from './users.domain';
 
 /**
  * Data required to create a new user
@@ -58,7 +58,7 @@ export interface IUsersRepository {
   findByEmailContaining(ctx: Ctx, searchTerm: string): Promise<User[]>;
 
   /**
-   * Get all sellers (users with Seller or VerifiedSeller level)
+   * Get all sellers (users who have accepted seller terms)
    */
   getSellers(ctx: Ctx): Promise<User[]>;
 
@@ -101,21 +101,36 @@ export interface IUsersRepository {
   ): Promise<User | undefined>;
 
   /**
-   * Update user level
+   * Set accepted seller terms timestamp (user intent to sell)
    */
-  updateLevel(
+  setAcceptedSellerTermsAt(
     ctx: Ctx,
     userId: string,
-    level: UserLevel,
+    acceptedSellerTermsAt: Date,
   ): Promise<User | undefined>;
 
   /**
-   * Upgrade user to verified seller with identity verification data
+   * Update user identity verification data on approval (V3). Does not change level.
+   * Optionally invalidate bank account (V4) if legal name changed.
    */
-  updateToVerifiedSeller(
+  updateIdentityVerificationApproved(
     ctx: Ctx,
     userId: string,
     identityData: VerifiedSellerIdentityData,
+  ): Promise<User | undefined>;
+
+  /**
+   * Invalidate V4 (bank account verified = false). Used when V3 legal name changes.
+   */
+  invalidateBankAccountVerification(ctx: Ctx, userId: string): Promise<User | undefined>;
+
+  /**
+   * Update or set bank account data
+   */
+  updateBankAccount(
+    ctx: Ctx,
+    userId: string,
+    bankAccount: User['bankAccount'],
   ): Promise<User | undefined>;
 }
 

@@ -54,8 +54,10 @@ import type {
   AdminUpdateEventResponse,
   AdminUpdateSectionRequest,
 } from '../admin/admin.api';
-import { Role, UserLevel } from '../users/users.domain';
+import { Role } from '../users/users.domain';
 import { SeatingType } from '../tickets/tickets.domain';
+import { UsersService } from '../users/users.service';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 
 @Injectable()
 export class EventsService {
@@ -72,6 +74,8 @@ export class EventsService {
     private readonly transactionsService: TransactionsService,
     @Inject(EventBannerStorageService)
     private readonly bannerStorage: EventBannerStorageService,
+    @Inject(UsersService)
+    private readonly usersService: UsersService,
   ) {}
 
   /**
@@ -99,18 +103,17 @@ export class EventsService {
     ctx: Ctx,
     userId: string,
     userRole: Role,
-    userLevel: UserLevel,
     data: CreateEventRequest,
   ): Promise<Event> {
-    // Check permissions: Admin can create approved events, Sellers create pending
     const isAdmin = userRole === Role.Admin;
-    const canCreate =
-      isAdmin ||
-      userLevel === UserLevel.Seller ||
-      userLevel === UserLevel.VerifiedSeller;
+    const user = await this.usersService.findById(ctx, userId);
+    const canSell = user ? VerificationHelper.canSell(user) : false;
+    const canCreate = isAdmin || canSell;
 
     if (!canCreate) {
-      throw new ForbiddenException('Only sellers and admins can create events');
+      throw new ForbiddenException(
+        'Only sellers (with email and phone verified) and admins can create events',
+      );
     }
 
     const event: Event = {

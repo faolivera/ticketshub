@@ -4,6 +4,41 @@ export const GetSellerPricingResponseSchema = z.object({
   sellerPlatformFeePercentage: z.number(),
 });
 
+const CurrencyCodeSchema = z.enum(['EUR', 'USD', 'GBP', 'ARS']);
+const MoneySchema = z.object({
+  amount: z.number().int(),
+  currency: CurrencyCodeSchema,
+});
+
+const RiskEngineBuyerConfigSchema = z.object({
+  phoneRequiredEventHours: z.number(),
+  phoneRequiredAmountUsd: z.number(),
+  phoneRequiredQtyTickets: z.number(),
+  newAccountDays: z.number(),
+});
+
+const RiskEngineSellerConfigSchema = z.object({
+  unverifiedSellerMaxSales: z.number(),
+  unverifiedSellerMaxAmount: MoneySchema,
+  payoutHoldHoursDefault: z.number(),
+  payoutHoldHoursUnverified: z.number(),
+});
+
+const RiskEngineClaimsConfigSchema = z.object({
+  claimKycDeadlineHours: z.number(),
+  claimInvalidEntryWindowHours: z.number(),
+});
+
+const RiskEngineConfigSchema = z.object({
+  buyer: RiskEngineBuyerConfigSchema,
+  seller: RiskEngineSellerConfigSchema,
+  claims: RiskEngineClaimsConfigSchema,
+});
+
+const ExchangeRatesConfigSchema = z.object({
+  usdToArs: z.number(),
+});
+
 export const GetPlatformConfigResponseSchema = z.object({
   buyerPlatformFeePercentage: z.number(),
   sellerPlatformFeePercentage: z.number(),
@@ -13,6 +48,8 @@ export const GetPlatformConfigResponseSchema = z.object({
   offerAcceptedExpirationMinutes: z.number(),
   transactionChatPollIntervalSeconds: z.number(),
   transactionChatMaxMessages: z.number(),
+  riskEngine: RiskEngineConfigSchema,
+  exchangeRates: ExchangeRatesConfigSchema,
 });
 
 const OFFER_EXPIRATION_MIN = 1;
@@ -27,6 +64,37 @@ export const UpdatePlatformConfigRequestSchema = z.object({
   offerAcceptedExpirationMinutes: z.number().min(OFFER_EXPIRATION_MIN).max(OFFER_EXPIRATION_MAX).optional(),
   transactionChatPollIntervalSeconds: z.number().min(5).max(120).optional(),
   transactionChatMaxMessages: z.number().min(10).max(500).optional(),
+  riskEngine: z
+    .object({
+      buyer: z
+        .object({
+          phoneRequiredEventHours: z.number().min(1).max(720).optional(),
+          phoneRequiredAmountUsd: z.number().min(0).max(10000).optional(),
+          phoneRequiredQtyTickets: z.number().min(1).max(50).optional(),
+          newAccountDays: z.number().min(0).max(365).optional(),
+        })
+        .optional(),
+      seller: z
+        .object({
+          unverifiedSellerMaxSales: z.number().min(0).max(100).optional(),
+          unverifiedSellerMaxAmount: MoneySchema.optional(),
+          payoutHoldHoursDefault: z.number().min(0).max(168).optional(),
+          payoutHoldHoursUnverified: z.number().min(0).max(168).optional(),
+        })
+        .optional(),
+      claims: z
+        .object({
+          claimKycDeadlineHours: z.number().min(1).max(72).optional(),
+          claimInvalidEntryWindowHours: z.number().min(0).max(24).optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+  exchangeRates: z
+    .object({
+      usdToArs: z.number().min(1).max(1000000).optional(),
+    })
+    .optional(),
 });
 
 export const UpdatePlatformConfigResponseSchema = GetPlatformConfigResponseSchema;

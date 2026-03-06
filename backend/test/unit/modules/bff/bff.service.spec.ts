@@ -12,6 +12,7 @@ import { PricingService } from '../../../../src/modules/payments/pricing/pricing
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import { TransactionChatService } from '../../../../src/modules/transaction-chat/transaction-chat.service';
+import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
 import {
   TransactionStatus,
   RequiredActor,
@@ -24,7 +25,7 @@ import {
   SeatingType,
   type TicketListingWithEvent,
 } from '../../../../src/modules/tickets/tickets.domain';
-import { Language, Role, UserLevel, UserStatus } from '../../../../src/modules/users/users.domain';
+import { Language, Role, UserStatus, IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import type { User } from '../../../../src/modules/users/users.domain';
 import type { UserReviewMetrics } from '../../../../src/modules/reviews/reviews.domain';
 import type { PublicPaymentMethodOption } from '../../../../src/modules/payments/payments.domain';
@@ -155,6 +156,14 @@ describe('BffService', () => {
       hasUnreadMessages: jest.fn().mockResolvedValue(false),
     };
 
+    const mockRiskEngineService = {
+      evaluateCheckoutRisk: jest.fn().mockResolvedValue({
+        riskLevel: 'LOW',
+        requireV1: true,
+        requireV2: false,
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BffService,
@@ -172,6 +181,7 @@ describe('BffService', () => {
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: PromotionsService, useValue: mockPromotionsService },
         { provide: TransactionChatService, useValue: mockTransactionChatService },
+        { provide: RiskEngineService, useValue: mockRiskEngineService },
       ],
     }).compile();
 
@@ -470,7 +480,7 @@ describe('BffService', () => {
       firstName: 'Jane',
       lastName: 'Seller',
       role: Role.User,
-      level: UserLevel.VerifiedSeller,
+       identityVerification: { status: IdentityVerificationStatus.Approved, legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() },
       status: UserStatus.Enabled,
       publicName: 'Jane Seller',
       imageId: 'img_123',

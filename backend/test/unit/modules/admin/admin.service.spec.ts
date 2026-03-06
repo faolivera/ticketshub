@@ -27,7 +27,7 @@ import type { PaymentConfirmationWithTransaction } from '../../../../src/modules
 import type { AdminUpdateEventResponse } from '../../../../src/modules/admin/admin.api';
 import type { Event } from '../../../../src/modules/events/events.domain';
 import type { User } from '../../../../src/modules/users/users.domain';
-import { Language, Role, UserLevel, UserStatus } from '../../../../src/modules/users/users.domain';
+import { Language, Role, UserStatus } from '../../../../src/modules/users/users.domain';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -565,7 +565,7 @@ describe('AdminService', () => {
       lastName: 'User',
       publicName: 'Test User',
       role: Role.User,
-      level: UserLevel.Seller,
+      acceptedSellerTermsAt: new Date(),
       status: UserStatus.Enabled,
       imageId: 'img_123',
       country: 'US',
@@ -791,7 +791,7 @@ describe('AdminService', () => {
       lastName: 'Seller',
       publicName: 'Test Seller',
       role: Role.User,
-      level: UserLevel.Seller,
+      acceptedSellerTermsAt: new Date(),
       status: UserStatus.Enabled,
       imageId: 'img_123',
       country: 'US',
@@ -1281,7 +1281,7 @@ describe('AdminService', () => {
         lastName: 'Seller',
         publicName: 'Jane',
         role: Role.User,
-        level: UserLevel.Seller,
+        acceptedSellerTermsAt: new Date(),
         status: UserStatus.Enabled,
         imageId: '',
         country: 'ES',
@@ -1293,8 +1293,7 @@ describe('AdminService', () => {
         updatedAt: new Date(),
         bankAccount: {
           holderName: 'Jane Seller',
-          iban: 'ES9121000418450200051332',
-          bic: 'CAIXESBBXXX',
+          cbuOrCvu: 'ES9121000418450200051332',
           verified: true,
         },
       };
@@ -1311,8 +1310,7 @@ describe('AdminService', () => {
       expect(result.bankTransferDestination).toBeDefined();
       expect(result.bankTransferDestination).toEqual({
         holderName: 'Jane Seller',
-        iban: 'ES9121000418450200051332',
-        bic: 'CAIXESBBXXX',
+        cbuOrCvu: 'ES9121000418450200051332',
       });
     });
 
@@ -1325,7 +1323,7 @@ describe('AdminService', () => {
         lastName: 'Seller',
         publicName: 'Jane',
         role: Role.User,
-        level: UserLevel.Seller,
+        acceptedSellerTermsAt: new Date(),
         status: UserStatus.Enabled,
         imageId: '',
         country: 'ES',
@@ -1358,7 +1356,7 @@ describe('AdminService', () => {
         lastName: 'Seller',
         publicName: 'Jane',
         role: Role.User,
-        level: UserLevel.Seller,
+        acceptedSellerTermsAt: new Date(),
         status: UserStatus.Enabled,
         imageId: '',
         country: 'ES',
@@ -1370,7 +1368,7 @@ describe('AdminService', () => {
         updatedAt: new Date(),
         bankAccount: {
           holderName: 'Jane Seller',
-          iban: 'ES9121000418450200051332',
+          cbuOrCvu: 'ES9121000418450200051332',
           verified: true,
         },
       };
@@ -1386,8 +1384,7 @@ describe('AdminService', () => {
 
       expect(result.bankTransferDestination).toEqual({
         holderName: 'Jane Seller',
-        iban: 'ES9121000418450200051332',
-        bic: undefined,
+        cbuOrCvu: 'ES9121000418450200051332',
       });
     });
 
@@ -1404,7 +1401,7 @@ describe('AdminService', () => {
         lastName: 'Seller',
         publicName: 'Jane',
         role: Role.User,
-        level: UserLevel.Seller,
+        acceptedSellerTermsAt: new Date(),
         status: UserStatus.Enabled,
         imageId: '',
         country: 'ES',
@@ -1416,8 +1413,7 @@ describe('AdminService', () => {
         updatedAt: new Date(),
         bankAccount: {
           holderName: 'Jane Seller',
-          iban: 'ES9121000418450200051332',
-          bic: 'CAIXESBBXXX',
+          cbuOrCvu: 'ES9121000418450200051332',
           verified: true,
         },
       };
@@ -1450,7 +1446,7 @@ describe('AdminService', () => {
       expect(result.bankTransferDestination).toBeDefined();
       expect(result.bankTransferDestination).toEqual({
         holderName: 'TicketsHub Plataforma',
-        iban: '0720000980000000001234',
+        cbuOrCvu: '0720000980000000001234',
         bankName: 'Banco Galicia',
         cuitCuil: '30-12345678-9',
       });

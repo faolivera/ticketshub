@@ -13,7 +13,7 @@ import {
   type FileStorageProvider,
 } from '../../../../src/common/storage/file-storage-provider.interface';
 import type { User } from '../../../../src/modules/users/users.domain';
-import { Language, UserLevel, Role, UserStatus } from '../../../../src/modules/users/users.domain';
+import { Language, Role, UserStatus } from '../../../../src/modules/users/users.domain';
 import type { Image } from '../../../../src/modules/images/images.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 import { AcceptanceMethod } from '../../../../src/modules/terms/terms.domain';
@@ -46,7 +46,6 @@ describe('UsersService', () => {
     lastName: 'Doe',
     publicName: 'John D.',
     role: Role.User,
-    level: UserLevel.Buyer,
     status: UserStatus.Enabled,
     imageId: 'default',
     password: '$2b$10$hashed',

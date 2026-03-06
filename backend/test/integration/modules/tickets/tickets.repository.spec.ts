@@ -35,7 +35,6 @@ describe('TicketsRepository (Integration)', () => {
         publicName: 'testuser',
         password: 'hashedpassword',
         role: 'User',
-        level: 'Basic',
         status: 'Enabled',
         country: 'Germany',
         currency: 'EUR',

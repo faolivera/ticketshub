@@ -12,6 +12,7 @@ import { EventsModule } from '../events/events.module';
 import { ConfigModule } from '../config/config.module';
 import { OffersModule } from '../offers/offers.module';
 import { TransactionManagerModule } from '../../common/database';
+import { RiskEngineModule } from '../risk-engine/risk-engine.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TransactionManagerModule } from '../../common/database';
     UsersModule,
     forwardRef(() => EventsModule),
     ConfigModule,
+    RiskEngineModule,
     OffersModule,
   ],
   controllers: [TransactionsController],

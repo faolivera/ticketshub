@@ -232,11 +232,17 @@ const BuyPageSellerInfoSchema = z.object({
   totalReviews: z.number(),
 });
 
+const CheckoutRiskSchema = z.object({
+  requireV1: z.boolean(),
+  requireV2: z.boolean(),
+});
+
 export const GetBuyPageResponseSchema = z.object({
   listing: TicketListingWithEventSchema,
   seller: BuyPageSellerInfoSchema,
   paymentMethods: z.array(BuyPagePaymentMethodOptionSchema),
   pricingSnapshot: BuyPagePricingSnapshotSchema,
+  checkoutRisk: CheckoutRiskSchema.optional(),
 });
 
 const PaymentConfirmationStatusSchema = z.enum([

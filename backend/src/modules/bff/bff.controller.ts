@@ -10,6 +10,7 @@ import { Context } from '../../common/decorators/ctx.decorator';
 import { User } from '../../common/decorators/user.decorator';
 import { ValidateResponse } from '../../common/decorators/validate-response.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import type { ApiResponse } from '../../common/types/api';
 import type { Ctx } from '../../common/types/context';
 import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
@@ -79,15 +80,18 @@ export class BffController {
   }
 
   /**
-   * Get buy page data: listing, seller info, and payment methods
+   * Get buy page data: listing, seller info, and payment methods.
+   * When authenticated, includes checkoutRisk for step-up verification UX.
    */
   @Get('buy/:ticketId')
+  @UseGuards(OptionalJwtAuthGuard)
   @ValidateResponse(GetBuyPageResponseSchema)
   async getBuyPage(
     @Context() ctx: Ctx,
     @Param('ticketId') ticketId: string,
+    @User() user?: { id: string },
   ): Promise<ApiResponse<GetBuyPageResponse>> {
-    const data = await this.bffService.getBuyPageData(ctx, ticketId);
+    const data = await this.bffService.getBuyPageData(ctx, ticketId, user?.id);
     return { success: true, data };
   }
 

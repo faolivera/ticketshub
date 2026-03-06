@@ -90,10 +90,18 @@ export interface BuyPagePaymentMethodOption {
   serviceFeePercent: number;
 }
 
+/** Checkout risk: which verifications are required (for step-up UX) */
+export interface CheckoutRisk {
+  requireV1: boolean;
+  requireV2: boolean;
+}
+
 /** Full buy page data (listing + seller + payment methods + pricing snapshot) */
 export interface BuyPageData {
   listing: TicketListingWithEvent;
   seller: BuyPageSellerInfo;
   paymentMethods: BuyPagePaymentMethodOption[];
   pricingSnapshot: BuyPagePricingSnapshot;
+  /** Present when request is authenticated; tells frontend which verifications to request before checkout */
+  checkoutRisk?: CheckoutRisk;
 }

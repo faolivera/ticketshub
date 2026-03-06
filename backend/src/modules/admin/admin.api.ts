@@ -483,8 +483,7 @@ export interface AdminTransactionDetailResponse {
   /** Bank transfer destination for proof validation (from payment method or seller bankAccount) */
   bankTransferDestination?: {
     holderName: string;
-    iban: string;
-    bic?: string;
+    cbuOrCvu: string;
     bankName?: string;
     cuitCuil?: string;
   };
@@ -516,8 +515,7 @@ export interface AdminSellerPayoutItem {
   /** Bank transfer destination (seller's bank account for payout) */
   bankTransferDestination?: {
     holderName: string;
-    iban: string;
-    bic?: string;
+    cbuOrCvu: string;
     bankName?: string;
     cuitCuil?: string;
   };

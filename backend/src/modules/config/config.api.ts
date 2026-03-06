@@ -1,3 +1,5 @@
+import type { RiskEngineConfig, ExchangeRatesConfig } from './config.domain';
+
 /**
  * Admin API types for platform config.
  */
@@ -22,6 +24,8 @@ export interface GetPlatformConfigResponse {
   offerAcceptedExpirationMinutes: number;
   transactionChatPollIntervalSeconds: number;
   transactionChatMaxMessages: number;
+  riskEngine: RiskEngineConfig;
+  exchangeRates: ExchangeRatesConfig;
 }
 
 /**
@@ -36,6 +40,14 @@ export interface UpdatePlatformConfigRequest {
   offerAcceptedExpirationMinutes?: number;
   transactionChatPollIntervalSeconds?: number;
   transactionChatMaxMessages?: number;
+  riskEngine?: {
+    buyer?: Partial<RiskEngineConfig['buyer']>;
+    seller?: Partial<RiskEngineConfig['seller']> & {
+      unverifiedSellerMaxAmount?: RiskEngineConfig['seller']['unverifiedSellerMaxAmount'];
+    };
+    claims?: Partial<RiskEngineConfig['claims']>;
+  };
+  exchangeRates?: Partial<ExchangeRatesConfig>;
 }
 
 /**

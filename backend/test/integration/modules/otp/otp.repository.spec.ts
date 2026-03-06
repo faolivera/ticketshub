@@ -25,7 +25,6 @@ describe('OTPRepository (Integration)', () => {
         publicName: 'testuser',
         password: 'hash',
         role: 'User',
-        level: 'Basic',
         status: 'Enabled',
         country: 'Germany',
         currency: 'EUR',

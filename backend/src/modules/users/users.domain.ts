@@ -13,13 +13,6 @@ export enum UserStatus {
   Suspended = 'Suspended',
 }
 
-export enum UserLevel {
-  Basic = 'Basic',
-  Buyer = 'Buyer',
-  Seller = 'Seller',
-  VerifiedSeller = 'VerifiedSeller',
-}
-
 /**
  * Supported languages for user interface and notifications
  */
@@ -62,12 +55,15 @@ export interface IdentityVerification {
 }
 
 /**
- * Bank account information for payouts
+ * Bank account information for payouts (Argentina: CBU/CVU)
  */
 export interface BankAccount {
+  /** Account holder full name; must match V3 legal name for verification */
   holderName: string;
-  iban: string;
-  bic?: string;
+  /** CBU (22 digits) or CVU (22 digits) */
+  cbuOrCvu: string;
+  /** Optional alias (e.g. Mercado Pago alias) */
+  alias?: string;
   verified: boolean;
   verifiedAt?: Date;
 }
@@ -78,7 +74,6 @@ export interface User {
   firstName: string;
   lastName: string;
   role: Role;
-  level: UserLevel;
   status: UserStatus;
   publicName: string;
   imageId: string;
@@ -89,17 +84,20 @@ export interface User {
   language: Language;
   address?: UserAddress;
 
-  // Verification fields
+  /** When set, user has accepted seller terms (intent to sell). Capability to sell requires V1+V2. */
+  acceptedSellerTermsAt?: Date;
+
+  // Verification fields (V1-V4)
   emailVerified: boolean;
   phoneVerified: boolean;
 
-  // Terms of Service acceptance
+  // Terms of Service acceptance (buyer terms)
   tosAcceptedAt?: Date;
 
-  // Identity verification (for VerifiedSeller)
+  // Identity verification (V3)
   identityVerification?: IdentityVerification;
 
-  // Bank account (for sellers to receive payouts)
+  // Bank account (V4, for sellers to receive payouts)
   bankAccount?: BankAccount;
 
   createdAt: Date;
@@ -132,7 +130,7 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: Role;
-  level: UserLevel;
+  isSeller: boolean;
 }
 
 export { Address, AddressWithGeoPoint } from '../shared/address.domain';
