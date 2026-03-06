@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Ticket, CheckCircle, AlertCircle } from 'lucide-react';
+import { Ticket, CheckCircle, AlertCircle, Circle } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
+import { VerificationHelper } from '@/lib/verification';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { termsService } from '@/api/services/terms.service';
@@ -23,7 +24,10 @@ interface SellerIntroModalProps {
 
 export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
   const { t } = useTranslation();
-  const { upgradeToLevel1 } = useUser();
+  const { user, upgradeToLevel1 } = useUser();
+  const hasV1 = VerificationHelper.hasV1(user);
+  const hasV2 = VerificationHelper.hasV2(user);
+  const canListAfterAccept = hasV1 && hasV2;
   const navigate = useNavigate();
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsVersionId, setTermsVersionId] = useState<string | null>(null);
@@ -76,6 +80,36 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
           </DialogHeader>
 
           <div className="flex flex-col gap-5">
+            {/* Verification checklist (V1, V2) — required to list after accepting terms */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-gray-700 mb-2">
+                {t('sellerIntro.toListTickets')}
+              </p>
+              <ul className="flex flex-col gap-2">
+                <li className="flex items-center gap-2 text-sm text-gray-700">
+                  {hasV1 ? (
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  )}
+                  <span>{t('sellerIntro.checklistEmail')}</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm text-gray-700">
+                  {hasV2 ? (
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  )}
+                  <span>{t('sellerIntro.checklistPhone')}</span>
+                </li>
+              </ul>
+              {!canListAfterAccept && (
+                <p className="text-xs text-amber-700 mt-2">
+                  {t('sellerIntro.completeChecklistToList')}
+                </p>
+              )}
+            </div>
+
             {/* What you can do */}
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-3">

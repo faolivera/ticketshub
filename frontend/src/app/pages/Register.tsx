@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, User, Globe, ArrowLeft, Lock } from 'lucide-react';
+import { Mail, User, Globe, ArrowLeft, Lock, Phone } from 'lucide-react';
 import { authService } from '@/api/services/auth.service';
 import { otpService } from '@/api/services/otp.service';
 import { termsService } from '@/api/services/terms.service';
@@ -31,6 +31,7 @@ export function Register() {
     password: '',
     firstName: '',
     lastName: '',
+    phone: '',
     country: 'Argentina',
   });
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
@@ -98,6 +99,7 @@ export function Register() {
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
+        phone: formData.phone || undefined,
         country: formData.country,
         termsAcceptance: {
           termsVersionId: termsVersionId!,
@@ -350,6 +352,26 @@ export function Register() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
+            </div>
+
+            {/* Phone (optional) */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  {t('register.phoneOptional')}
+                </div>
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder={t('register.phonePlaceholder')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {t('register.phoneOptionalHint')}
+              </p>
             </div>
 
             {/* Country (fixed to Argentina) */}

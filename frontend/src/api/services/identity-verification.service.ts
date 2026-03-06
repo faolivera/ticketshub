@@ -9,7 +9,7 @@ import type {
 
 export const identityVerificationService = {
   /**
-   * Submit identity verification request with documents
+   * Submit identity verification request with documents and selfie (V3)
    */
   async submitVerification(data: {
     legalFirstName: string;
@@ -18,6 +18,7 @@ export const identityVerificationService = {
     governmentIdNumber: string;
     documentFront: File;
     documentBack: File;
+    selfie: File;
   }): Promise<SubmitVerificationResponse> {
     const formData = new FormData();
     formData.append('legalFirstName', data.legalFirstName);
@@ -26,6 +27,7 @@ export const identityVerificationService = {
     formData.append('governmentIdNumber', data.governmentIdNumber);
     formData.append('documentFront', data.documentFront);
     formData.append('documentBack', data.documentBack);
+    formData.append('selfie', data.selfie);
 
     const response = await apiClient.post<SubmitVerificationResponse>(
       '/users/identity-verification',

@@ -1,0 +1,7 @@
+# Serve static files. Default: HTTP on port 80 (no domain).
+# For automatic HTTPS, set DOMAIN=ticketshub.shop (or your hostname).
+{$DOMAIN:localhost} {
+	root * /srv
+	encode gzip
+	file_server
+}

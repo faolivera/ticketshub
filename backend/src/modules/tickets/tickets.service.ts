@@ -319,6 +319,22 @@ export class TicketsService {
       );
     }
 
+    // Sellers without V3 cannot create listings for events within the configured proximity window (e.g. 72h)
+    if (!VerificationHelper.hasV3(user)) {
+      const platformConfig = await this.configService.getPlatformConfig(ctx);
+      const hoursUntilEvent =
+        (eventDate.date.getTime() - Date.now()) / (1000 * 60 * 60);
+      const proximityHours =
+        platformConfig?.riskEngine?.buyer?.phoneRequiredEventHours ?? 72;
+      if (hoursUntilEvent >= 0 && hoursUntilEvent <= proximityHours) {
+        throw new ForbiddenException(
+          'Identity verification (KYC) is required to list tickets for events starting within the next ' +
+            proximityHours +
+            ' hours. Please complete identity verification first.',
+        );
+      }
+    }
+
     // Validate physical ticket requirements
     if (data.type === TicketType.Physical) {
       if (!data.deliveryMethod) {

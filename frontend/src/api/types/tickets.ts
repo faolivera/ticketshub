@@ -282,12 +282,20 @@ export interface BuyPagePaymentMethodOption {
   serviceFeePercent: number;
 }
 
+/** Checkout risk: which verifications are required before purchase (from BFF risk engine) */
+export interface CheckoutRisk {
+  requireV1: boolean;
+  requireV2: boolean;
+}
+
 /** Full buy page data (listing + seller + payment methods + pricing snapshot) from BFF */
 export interface BuyPageData {
   listing: TicketListingWithEvent;
   seller: BuyPageSellerInfo;
   paymentMethods: BuyPagePaymentMethodOption[];
   pricingSnapshot: BuyPagePricingSnapshot;
+  /** Present when authenticated; tells frontend which verifications to request before checkout */
+  checkoutRisk?: CheckoutRisk;
 }
 
 /** Response from GET /api/buy/:ticketId */

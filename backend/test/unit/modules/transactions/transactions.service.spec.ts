@@ -17,7 +17,9 @@ import { PricingService } from '../../../../src/modules/payments/pricing/pricing
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import { OffersService } from '../../../../src/modules/offers/offers.service';
 import { TransactionManager } from '../../../../src/common/database';
+import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
 import { OptimisticLockException } from '../../../../src/common/exceptions/optimistic-lock.exception';
+import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import {
   TransactionStatus,
   RequiredActor,
@@ -31,6 +33,7 @@ import type { TxCtx } from '../../../../src/common/database/types';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
+  let moduleRef: TestingModule;
   let transactionsRepository: jest.Mocked<ITransactionsRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let walletService: jest.Mocked<WalletService>;
@@ -134,6 +137,14 @@ describe('TransactionsService', () => {
       cancelAffectedOffers: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockRiskEngineService = {
+      evaluateCheckoutRisk: jest.fn().mockResolvedValue({
+        riskLevel: 'LOW',
+        requireV1: true,
+        requireV2: false,
+      }),
+    };
+
     const mockTxManager = {
       executeInTransaction: jest.fn().mockImplementation(
         async (_ctx: Ctx, fn: (txCtx: TxCtx) => Promise<unknown>) => {
@@ -157,10 +168,12 @@ describe('TransactionsService', () => {
         { provide: PricingService, useValue: mockPricingService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: OffersService, useValue: mockOffersService },
+        { provide: RiskEngineService, useValue: mockRiskEngineService },
         { provide: TransactionManager, useValue: mockTxManager },
       ],
     }).compile();
 
+    moduleRef = module;
     service = module.get<TransactionsService>(TransactionsService);
     transactionsRepository = module.get(TRANSACTIONS_REPOSITORY);
     ticketsService = module.get(TicketsService);
@@ -763,6 +776,22 @@ describe('TransactionsService', () => {
       expect(count).toBe(0);
       expect(transactionsRepository.updateWithVersion).not.toHaveBeenCalled();
     });
+
+    it('should not transition Disputed transactions to TransferringFund', async () => {
+      const disputedTransaction = createMockTransaction({
+        status: TransactionStatus.Disputed,
+        depositReleaseAt: new Date(Date.now() - 1000),
+      });
+      transactionsRepository.getPendingDepositRelease.mockResolvedValue([
+        disputedTransaction,
+      ]);
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(disputedTransaction);
+
+      const count = await service.processDepositReleases(mockCtx);
+
+      expect(count).toBe(0);
+      expect(transactionsRepository.updateWithVersion).not.toHaveBeenCalled();
+    });
   });
 
   describe('completePayout', () => {
@@ -772,6 +801,12 @@ describe('TransactionsService', () => {
         requiredActor: RequiredActor.Platform,
       });
       transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      const usersService = moduleRef.get(UsersService) as jest.Mocked<UsersService>;
+      usersService.findById.mockResolvedValue({
+        id: 'seller_123',
+        identityVerification: { status: IdentityVerificationStatus.Approved },
+        bankAccount: { verified: true },
+      } as never);
       walletService.releaseFunds.mockResolvedValue({} as never);
       transactionsRepository.updateWithVersion.mockResolvedValue({
         ...transaction,
@@ -824,6 +859,29 @@ describe('TransactionsService', () => {
       await expect(service.completePayout(mockCtx, 'invalid_id')).rejects.toThrow(
         NotFoundException,
       );
+    });
+
+    it('should throw ForbiddenException when seller has not completed V3 and V4', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TransferringFund,
+        requiredActor: RequiredActor.Platform,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      const usersService = moduleRef.get(UsersService) as jest.Mocked<UsersService>;
+      usersService.findById.mockResolvedValue({
+        id: 'seller_123',
+        identityVerification: undefined,
+        bankAccount: undefined,
+      } as never);
+
+      const err = await service
+        .completePayout(mockCtx, 'txn_123')
+        .catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ForbiddenException);
+      expect((err as ForbiddenException).message).toMatch(
+        /identity verification.*bank account/i,
+      );
+      expect(walletService.releaseFunds).not.toHaveBeenCalled();
     });
   });
 

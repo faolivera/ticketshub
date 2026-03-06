@@ -3,11 +3,11 @@ import { authService } from '../../api/services/auth.service';
 import { usersService } from '../../api/services/users.service';
 import { getToken, removeToken } from '../../api/client';
 import { SELLER_UNVERIFIED_MODAL_DISMISSED_KEY } from '../components/SellerUnverifiedModal';
+import { VerificationHelper } from '../../lib/verification';
 import type {
   AuthenticatedUserPublicInfo,
   LoginRequest,
   LoginResponse,
-  UserLevel,
 } from '../../api/types';
 
 /**
@@ -16,23 +16,6 @@ import type {
 export interface User extends AuthenticatedUserPublicInfo {
   // Additional frontend-only fields
   hasSeenSellerIntro?: boolean;
-}
-
-/**
- * Map backend UserLevel to numeric level for UI compatibility
- */
-export function userLevelToNumber(level: UserLevel): 0 | 1 | 2 {
-  switch (level) {
-    case 'Basic':
-    case 'Buyer':
-      return 0;
-    case 'Seller':
-      return 1;
-    case 'VerifiedSeller':
-      return 2;
-    default:
-      return 0;
-  }
 }
 
 interface UserContextType {
@@ -46,7 +29,6 @@ interface UserContextType {
   refreshUser: () => Promise<void>;
   clearError: () => void;
   upgradeToLevel1: () => Promise<void>;
-  canBuy: () => boolean;
   canSell: () => boolean;
 }
 
@@ -185,19 +167,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   /**
-   * Check if user can buy tickets (level !== Basic)
-   */
-  const canBuy = useCallback((): boolean => {
-    if (!user) return false;
-    return user.level !== 'Basic';
-  }, [user]);
-
-  /**
-   * Check if user can sell tickets (level === Seller or VerifiedSeller)
+   * Check if user can sell (accepted seller terms + V1 + V2)
    */
   const canSell = useCallback((): boolean => {
-    if (!user) return false;
-    return user.level === 'Seller' || user.level === 'VerifiedSeller';
+    return VerificationHelper.canSell(user);
   }, [user]);
 
   return (
@@ -213,7 +186,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         refreshUser,
         clearError,
         upgradeToLevel1,
-        canBuy,
         canSell,
       }}
     >
@@ -231,10 +203,9 @@ export function useUser() {
 }
 
 /**
- * Hook to get numeric user level for UI components
+ * Hook to get seller tier (0, 1, 2) from V-flags for badges and UI
  */
-export function useUserLevel(): 0 | 1 | 2 {
+export function useSellerTier(): 0 | 1 | 2 {
   const { user } = useUser();
-  if (!user) return 0;
-  return userLevelToNumber(user.level);
+  return VerificationHelper.sellerTier(user);
 }

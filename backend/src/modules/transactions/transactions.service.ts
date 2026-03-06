@@ -275,6 +275,17 @@ export class TransactionsService {
           resolvedTicketUnitIds,
         );
 
+        const seller = await this.usersService.findById(txCtx, listing.sellerId);
+        const tier = seller ? VerificationHelper.sellerTier(seller) : 0;
+        const holdHours =
+          tier === 2
+            ? (platformConfig?.riskEngine?.seller?.payoutHoldHoursDefault ?? 24)
+            : (platformConfig?.riskEngine?.seller?.payoutHoldHoursUnverified ?? 48);
+        const eventDate = new Date(listing.eventDate);
+        const depositReleaseAt = new Date(
+          eventDate.getTime() + holdHours * 60 * 60 * 1000,
+        );
+
         const initialStatus = TransactionStatus.PendingPayment;
         const txn: Transaction = {
           id: transactionId,
@@ -299,10 +310,7 @@ export class TransactionsService {
             Date.now() + platformConfig.paymentTimeoutMinutes * 60 * 1000,
           ),
           updatedAt: new Date(),
-          depositReleaseAt: (() => {
-            const eventDate = new Date(listing.eventDate);
-            return new Date(eventDate.getTime() + 24 * 60 * 60 * 1000);
-          })(),
+          depositReleaseAt,
           deliveryMethod: listing.deliveryMethod,
           pickupAddress: listing.pickupAddress,
           paymentMethodId,
@@ -654,32 +662,39 @@ export class TransactionsService {
 
     for (const transaction of pending) {
       try {
-        await this.txManager.executeInTransaction(ctx, async (txCtx) => {
-          const txn = await this.transactionsRepository.findByIdForUpdate(
-            txCtx,
-            transaction.id,
-          );
-          if (
-            !txn ||
-            (txn.status !== TransactionStatus.TicketTransferred &&
-              txn.status !== TransactionStatus.DepositHold)
-          ) {
-            return;
-          }
+        const didTransition = await this.txManager.executeInTransaction(
+          ctx,
+          async (txCtx) => {
+            const txn = await this.transactionsRepository.findByIdForUpdate(
+              txCtx,
+              transaction.id,
+            );
+            if (
+              !txn ||
+              txn.status === TransactionStatus.Disputed ||
+              (txn.status !== TransactionStatus.TicketTransferred &&
+                txn.status !== TransactionStatus.DepositHold)
+            ) {
+              return false;
+            }
 
-          const newStatus = TransactionStatus.TransferringFund;
-          await this.transactionsRepository.updateWithVersion(
-            txCtx,
-            txn.id,
-            {
-              status: newStatus,
-              requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
-            },
-            txn.version,
-          );
-        });
-        count++;
-        this.logger.log(ctx, `Transaction ${transaction.id} -> TransferringFund`);
+            const newStatus = TransactionStatus.TransferringFund;
+            await this.transactionsRepository.updateWithVersion(
+              txCtx,
+              txn.id,
+              {
+                status: newStatus,
+                requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
+              },
+              txn.version,
+            );
+            return true;
+          },
+        );
+        if (didTransition) {
+          count++;
+          this.logger.log(ctx, `Transaction ${transaction.id} -> TransferringFund`);
+        }
       } catch (error) {
         this.logger.error(
           ctx,
@@ -712,6 +727,13 @@ export class TransactionsService {
       if (transaction.status !== TransactionStatus.TransferringFund) {
         throw new BadRequestException(
           'Transaction must be in TransferringFund status to complete payout',
+        );
+      }
+
+      const seller = await this.usersService.findById(txCtx, transaction.sellerId);
+      if (!seller || !VerificationHelper.canReceivePayout(seller)) {
+        throw new ForbiddenException(
+          'Seller must have completed identity verification (KYC) and bank account verification to receive payout',
         );
       }
 

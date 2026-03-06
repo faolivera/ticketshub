@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { SellerBadge } from '@/app/components/SellerBadge';
 import { useState, useEffect, useRef } from 'react';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
-import { UserLevel } from '@/api/types/users';
+import { VerificationHelper } from '@/lib/verification';
 import { identityVerificationService, usersService } from '@/api/services';
 import { ticketsService } from '@/api/services/tickets.service';
 import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
@@ -33,10 +33,10 @@ export function UserProfile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (user?.level === UserLevel.Seller) {
+    if (VerificationHelper.isSeller(user)) {
       loadIdentityVerification();
     }
-  }, [user?.level]);
+  }, [user?.acceptedSellerTermsAt]);
 
   useEffect(() => {
     ticketsService
@@ -96,7 +96,7 @@ export function UserProfile() {
     return null;
   }
 
-  const isSeller = user.level === UserLevel.Seller || user.level === UserLevel.VerifiedSeller;
+  const isSeller = VerificationHelper.isSeller(user);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,7 +149,7 @@ export function UserProfile() {
                 <h2 className="text-lg font-bold text-gray-900">
                   {user.firstName} {user.lastName}
                 </h2>
-                {isSeller && <SellerBadge level={user.level} />}
+                {isSeller && <SellerBadge user={user} />}
               </div>
               <div className="space-y-1 text-sm text-gray-500">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -286,7 +286,7 @@ export function UserProfile() {
             </div>
 
             {/* Become a Seller CTA */}
-            {(user.level === UserLevel.Basic || user.level === UserLevel.Buyer) && (
+            {!isSeller && (
               <button
                 onClick={() => setShowSellerModal(true)}
                 className="w-full px-6 py-3.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
@@ -295,8 +295,8 @@ export function UserProfile() {
               </button>
             )}
 
-            {/* Seller identity verification */}
-            {user.level === UserLevel.Seller && !verificationLoading && (
+            {/* Seller identity verification (accepted terms but V3 not yet approved) */}
+            {isSeller && !VerificationHelper.hasV3(user) && !verificationLoading && (
               <>
                 {identityVerification?.status === 'pending' ? (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -360,8 +360,8 @@ export function UserProfile() {
               </>
             )}
 
-            {/* Fully Verified Seller */}
-            {user.level === UserLevel.VerifiedSeller && (
+            {/* Fully Verified Seller (V3 + V4) */}
+            {isSeller && VerificationHelper.canReceivePayout(user) && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -371,6 +371,18 @@ export function UserProfile() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Bank account (sellers) */}
+            {isSeller && (
+              <Link
+                to="/bank-account"
+                className="block w-full px-6 py-3.5 border border-gray-200 rounded-lg text-center font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {user.bankAccount
+                  ? t('bankAccount.linkEdit')
+                  : t('bankAccount.linkAdd')}
+              </Link>
             )}
           </div>
         </div>

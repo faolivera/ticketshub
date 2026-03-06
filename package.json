@@ -20,7 +20,9 @@
     "start:frontend": "cd frontend && npm run preview",
     "prisma": "cd backend && npx prisma studio",
     "render:build": "./release/render/render-build.sh",
-    "render:publish": "./release/render/render-publish.sh"
+    "render:publish": "./release/render/render-publish.sh",
+    "landing:build": "./release/landing/build.sh",
+    "landing:publish": "./release/landing/landing-publish.sh"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

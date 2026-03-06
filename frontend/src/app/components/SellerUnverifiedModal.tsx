@@ -55,22 +55,20 @@ export interface SellerUnverifiedModalProps {
 }
 
 /**
- * Returns true when the user is a seller (Seller or VerifiedSeller) and does not
- * have both identity (DNI) and bank account verified — i.e. we need their data to pay them.
+ * Returns true when the user has accepted seller terms but cannot receive payout yet
+ * (missing V3 and/or V4 — identity and bank account verification).
  */
 export function isSellerUnverified(user: {
-  level: string;
+  acceptedSellerTermsAt?: Date | null;
   identityVerification?: { status: string };
   bankAccount?: { verified?: boolean };
 } | null): boolean {
   if (!user) return false;
-  const isSeller =
-    user.level === 'Seller' || user.level === 'VerifiedSeller';
+  const isSeller = user.acceptedSellerTermsAt != null;
   if (!isSeller) return false;
-  const identityApproved = user.identityVerification?.status === 'approved';
-  const hasVerifiedBank =
-    user.bankAccount && user.bankAccount.verified === true;
-  return !identityApproved || !hasVerifiedBank;
+  const hasV3 = user.identityVerification?.status === 'approved';
+  const hasV4 = user.bankAccount?.verified === true;
+  return !hasV3 || !hasV4;
 }
 
 export function SellerUnverifiedModal({ open, onClose }: SellerUnverifiedModalProps) {

@@ -20,6 +20,7 @@ import { CreateEvent } from '@/app/pages/CreateEvent';
 import { Login } from '@/app/pages/Login';
 import { Register } from '@/app/pages/Register';
 import { SellerVerification } from '@/app/pages/SellerVerification';
+import { BankAccountPage } from '@/app/pages/BankAccountPage';
 import { PhoneVerification } from '@/app/pages/PhoneVerification';
 import { MyTicket } from '@/app/pages/MyTicket';
 import { EditListing } from '@/app/pages/EditListing';
@@ -62,6 +63,7 @@ export default function App() {
               {/* <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} /> */}
               <Route path="/phone-verification" element={<ProtectedRoute><PhoneVerification /></ProtectedRoute>} />
               <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
+              <Route path="/bank-account" element={<ProtectedRoute><BankAccountPage /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
               <Route path="/buy/:ticketId" element={<BuyTicketPage />} />
 

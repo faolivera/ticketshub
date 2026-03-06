@@ -464,6 +464,68 @@ describe('TicketsService', () => {
         ),
       ).rejects.toThrow('Must accept seller terms first');
     });
+
+    it('should throw ForbiddenException when seller has no V3 and event is within proximity window (72h)', async () => {
+      const eventWithin72h = {
+        ...mockApprovedEvent,
+        dates: [
+          {
+            ...mockApprovedEvent.dates[0],
+            date: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h from now
+          },
+        ],
+      };
+      usersService.findById.mockResolvedValueOnce({
+        id: 'seller_123',
+        currency: 'ARS',
+        country: 'Argentina',
+        acceptedSellerTermsAt: new Date(),
+        emailVerified: true,
+        phoneVerified: true,
+        identityVerification: undefined, // no V3
+      } as any);
+      eventsService.getEventById.mockResolvedValue(eventWithin72h as any);
+
+      const err = await service
+        .createListing(mockCtx, 'seller_123', baseCreateRequest)
+        .catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ForbiddenException);
+      expect((err as ForbiddenException).message).toMatch(
+        /Identity verification.*hours/,
+      );
+    });
+
+    it('should allow listing when seller has no V3 but event is beyond proximity window', async () => {
+      const eventBeyond72h = {
+        ...mockApprovedEvent,
+        dates: [
+          {
+            ...mockApprovedEvent.dates[0],
+            date: new Date(Date.now() + 80 * 60 * 60 * 1000), // 80h from now
+          },
+        ],
+      };
+      usersService.findById.mockResolvedValueOnce({
+        id: 'seller_123',
+        currency: 'ARS',
+        country: 'Argentina',
+        acceptedSellerTermsAt: new Date(),
+        emailVerified: true,
+        phoneVerified: true,
+        identityVerification: undefined,
+      } as any);
+      eventsService.getEventById.mockResolvedValue(eventBeyond72h as any);
+      ticketsRepository.create.mockImplementation(async (ctx, listing) => listing);
+
+      const result = await service.createListing(
+        mockCtx,
+        'seller_123',
+        baseCreateRequest,
+      );
+
+      expect(result).toBeDefined();
+      expect(ticketsRepository.create).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('activatePendingListingsForEvent', () => {

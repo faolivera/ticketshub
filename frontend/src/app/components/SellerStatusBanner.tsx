@@ -2,15 +2,24 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
+import { VerificationHelper } from '@/lib/verification';
 
 export function SellerStatusBanner() {
   const { t } = useTranslation();
   const { user } = useUser();
 
-  if (!user || user.level === 0) return null;
+  const tier = VerificationHelper.sellerTier(user);
+  const verificationStatus =
+    user?.identityVerification?.status === 'approved'
+      ? 'verified'
+      : user?.identityVerification?.status === 'pending'
+        ? 'pending'
+        : undefined;
 
-  // Level 1 - Limited Seller
-  if (user.level === 1) {
+  if (!user || tier === 0) return null;
+
+  // Tier 1 - Seller without full verification (V3 and/or V4 missing)
+  if (tier === 1) {
     return (
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
         <div className="flex items-start gap-3">
@@ -34,8 +43,8 @@ export function SellerStatusBanner() {
     );
   }
 
-  // Level 2 - Verification Pending
-  if (user.level === 2 && user.verificationStatus === 'pending') {
+  // Tier 2 - Verification Pending (V3 submitted, not yet approved)
+  if (tier === 2 && verificationStatus === 'pending') {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div className="flex items-start gap-3">
@@ -53,8 +62,8 @@ export function SellerStatusBanner() {
     );
   }
 
-  // Level 2 - Verified
-  if (user.level === 2 && user.verificationStatus === 'verified') {
+  // Tier 2 - Verified (V3 + V4)
+  if (tier === 2 && verificationStatus === 'verified') {
     return (
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
         <div className="flex items-start gap-3">

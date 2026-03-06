@@ -59,7 +59,7 @@ export function BuyTicketPage() {
   const [searchParams] = useSearchParams();
   const offerIdFromUrl = searchParams.get('offerId');
   const navigate = useNavigate();
-  const { isAuthenticated, user, canBuy } = useUser();
+  const { isAuthenticated, user } = useUser();
 
   const [buyPageData, setBuyPageData] = useState<BuyPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,6 +82,12 @@ export function BuyTicketPage() {
   const seller = buyPageData?.seller ?? null;
   const paymentMethods = buyPageData?.paymentMethods ?? [];
   const pricingSnapshot = buyPageData?.pricingSnapshot ?? null;
+  const checkoutRisk = buyPageData?.checkoutRisk;
+
+  /** Purchase blocked when risk engine requires V1/V2 and user has not completed them */
+  const needsV1 = checkoutRisk?.requireV1 && !user?.emailVerified;
+  const needsV2 = checkoutRisk?.requireV2 && !user?.phoneVerified;
+  const cannotPurchaseDueToVerification = isAuthenticated && (needsV1 || needsV2);
 
   const isOwnListing = user?.id === listing?.sellerId;
   const isPendingOwnListing = isOwnListing && listing?.status === ListingStatus.Pending;
@@ -758,7 +764,13 @@ export function BuyTicketPage() {
               </div>
             )}
 
-            {isAuthenticated && !canBuy() && (
+            {needsV1 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <p className="font-semibold text-amber-800 mb-1">{t('buyTicket.emailVerificationRequired')}</p>
+                <p className="text-sm text-amber-700">{t('buyTicket.verifyEmailToPurchase')}</p>
+              </div>
+            )}
+            {needsV2 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-3">
                   <Phone className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -791,7 +803,7 @@ export function BuyTicketPage() {
                 isPurchasing ||
                 (acceptedOffer ? !selectedPaymentMethod : (availableUnits.length === 0 || selectedQuantity === 0 || !pricingSnapshot)) ||
                 isOwnListing ||
-                (isAuthenticated && !canBuy())
+                cannotPurchaseDueToVerification
               }
               className="w-full py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >

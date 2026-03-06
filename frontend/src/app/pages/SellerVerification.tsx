@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Shield, User, CheckCircle, Upload, X, Clock, AlertCircle } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
+import { VerificationHelper } from '@/lib/verification';
 import { BackButton } from '@/app/components/BackButton';
 import { identityVerificationService } from '@/api/services';
 import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
@@ -10,7 +11,7 @@ import { formatDateShort } from '@/lib/format-date';
 
 export function SellerVerification() {
   const { t } = useTranslation();
-  const { user, refetchUser } = useUser();
+  const { user, refreshUser } = useUser();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -26,11 +27,14 @@ export function SellerVerification() {
 
   const [documentFront, setDocumentFront] = useState<File | null>(null);
   const [documentBack, setDocumentBack] = useState<File | null>(null);
+  const [documentSelfie, setDocumentSelfie] = useState<File | null>(null);
   const [documentFrontPreview, setDocumentFrontPreview] = useState<string | null>(null);
   const [documentBackPreview, setDocumentBackPreview] = useState<string | null>(null);
+  const [documentSelfiePreview, setDocumentSelfiePreview] = useState<string | null>(null);
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
+  const selfieInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadExistingVerification();
@@ -50,7 +54,7 @@ export function SellerVerification() {
 
   const handleFileSelect = (
     file: File | null,
-    type: 'front' | 'back',
+    type: 'front' | 'back' | 'selfie',
   ) => {
     if (!file) return;
 
@@ -72,24 +76,33 @@ export function SellerVerification() {
       if (documentFrontPreview) URL.revokeObjectURL(documentFrontPreview);
       setDocumentFront(file);
       setDocumentFrontPreview(previewUrl);
-    } else {
+    } else if (type === 'back') {
       if (documentBackPreview) URL.revokeObjectURL(documentBackPreview);
       setDocumentBack(file);
       setDocumentBackPreview(previewUrl);
+    } else {
+      if (documentSelfiePreview) URL.revokeObjectURL(documentSelfiePreview);
+      setDocumentSelfie(file);
+      setDocumentSelfiePreview(previewUrl);
     }
   };
 
-  const removeFile = (type: 'front' | 'back') => {
+  const removeFile = (type: 'front' | 'back' | 'selfie') => {
     if (type === 'front') {
       if (documentFrontPreview) URL.revokeObjectURL(documentFrontPreview);
       setDocumentFront(null);
       setDocumentFrontPreview(null);
       if (frontInputRef.current) frontInputRef.current.value = '';
-    } else {
+    } else if (type === 'back') {
       if (documentBackPreview) URL.revokeObjectURL(documentBackPreview);
       setDocumentBack(null);
       setDocumentBackPreview(null);
       if (backInputRef.current) backInputRef.current.value = '';
+    } else {
+      if (documentSelfiePreview) URL.revokeObjectURL(documentSelfiePreview);
+      setDocumentSelfie(null);
+      setDocumentSelfiePreview(null);
+      if (selfieInputRef.current) selfieInputRef.current.value = '';
     }
   };
 
@@ -112,6 +125,11 @@ export function SellerVerification() {
       return;
     }
 
+    if (!documentSelfie) {
+      setError(t('verification.pleaseUploadSelfie'));
+      return;
+    }
+
     try {
       setSubmitting(true);
       const response = await identityVerificationService.submitVerification({
@@ -121,10 +139,11 @@ export function SellerVerification() {
         governmentIdNumber: identityData.governmentIdNumber,
         documentFront,
         documentBack,
+        selfie: documentSelfie,
       });
 
       setExistingVerification(response.verification);
-      await refetchUser();
+      await refreshUser();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('verification.submitFailed'));
     } finally {
@@ -144,7 +163,7 @@ export function SellerVerification() {
     );
   }
 
-  if (!user || user.level === 'Basic') {
+  if (!user || !VerificationHelper.isSeller(user)) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-2xl mx-auto px-4">
@@ -449,6 +468,48 @@ export function SellerVerification() {
                     </label>
                   )}
                 </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('verification.selfieTitle')}{' '}
+                  <span className="text-red-500">*</span>
+                </label>
+                <p className="text-sm text-gray-600 mb-2">
+                  {t('verification.selfieHint')}
+                </p>
+                {documentSelfiePreview ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={documentSelfiePreview}
+                      alt="Selfie"
+                      className="w-40 h-40 object-cover rounded-lg border border-gray-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFile('selfie')}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-500">
+                      {t('verification.uploadSelfie')}
+                    </span>
+                    <input
+                      ref={selfieInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      className="hidden"
+                      onChange={(e) =>
+                        handleFileSelect(e.target.files?.[0] || null, 'selfie')
+                      }
+                    />
+                  </label>
+                )}
               </div>
             </div>
 

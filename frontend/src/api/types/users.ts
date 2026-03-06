@@ -10,16 +10,6 @@ export enum Role {
 }
 
 /**
- * User verification levels
- */
-export enum UserLevel {
-  Basic = 'Basic',
-  Buyer = 'Buyer',
-  Seller = 'Seller',
-  VerifiedSeller = 'VerifiedSeller',
-}
-
-/**
  * Identity verification status
  */
 export enum IdentityVerificationStatus {
@@ -41,12 +31,12 @@ export interface IdentityVerification {
 }
 
 /**
- * Bank account information
+ * Bank account information (Argentina: CBU/CVU)
  */
 export interface BankAccount {
   holderName: string;
-  iban: string;
-  bic?: string;
+  cbuOrCvu: string;
+  alias?: string;
   verified: boolean;
   verifiedAt?: Date;
 }
@@ -60,7 +50,6 @@ export interface User {
   firstName: string;
   lastName: string;
   role: Role;
-  level: UserLevel;
   publicName: string;
   imageId: string;
   phone?: string;
@@ -68,17 +57,20 @@ export interface User {
   currency: CurrencyCode;
   address?: AddressWithGeoPoint;
 
-  // Verification fields
+  /** When set, user has accepted seller terms. Capability to sell requires V1+V2. */
+  acceptedSellerTermsAt?: Date | null;
+
+  // Verification fields (V1–V4)
   emailVerified: boolean;
   phoneVerified: boolean;
 
   // Terms of Service acceptance
   tosAcceptedAt?: Date;
 
-  // Identity verification (for VerifiedSeller)
+  // Identity verification (V3)
   identityVerification?: IdentityVerification;
 
-  // Bank account (for sellers)
+  // Bank account (V4, for sellers to receive payouts)
   bankAccount?: BankAccount;
 
   createdAt: Date;
@@ -130,6 +122,8 @@ export interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
+  /** Optional; not verified at registration. */
+  phone?: string;
   country?: string;
   termsAcceptance: TermsAcceptanceData;
 }
@@ -146,5 +140,5 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: Role;
-  level: UserLevel;
+  isSeller: boolean;
 }
