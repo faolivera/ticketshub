@@ -6,7 +6,7 @@ import { useUser } from '@/app/contexts/UserContext';
 import { VerificationHelper } from '@/lib/verification';
 import { BackButton } from '@/app/components/BackButton';
 import { identityVerificationService } from '@/api/services';
-import type { IdentityVerificationRequest } from '@/api/types/identity-verification';
+import type { IdentityVerificationPublic } from '@/api/types/identity-verification';
 import { formatDateShort } from '@/lib/format-date';
 
 export function SellerVerification() {
@@ -16,7 +16,7 @@ export function SellerVerification() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [existingVerification, setExistingVerification] = useState<IdentityVerificationRequest | null>(null);
+  const [existingVerification, setExistingVerification] = useState<IdentityVerificationPublic | null>(null);
 
   const [identityData, setIdentityData] = useState({
     legalFirstName: user?.firstName || '',
@@ -262,7 +262,7 @@ export function SellerVerification() {
               </p>
               <p className="text-sm text-gray-600">
                 <strong>{t('verification.governmentId')}:</strong>{' '}
-                ••••••{existingVerification.governmentIdNumber.slice(-4)}
+                {existingVerification.governmentIdNumber}
               </p>
               <p className="text-sm text-gray-600">
                 <strong>{t('verification.submittedAt')}:</strong>{' '}

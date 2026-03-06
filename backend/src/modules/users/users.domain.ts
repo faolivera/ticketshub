@@ -100,6 +100,9 @@ export interface User {
   // Bank account (V4, for sellers to receive payouts)
   bankAccount?: BankAccount;
 
+  /** Set to true when user opens a dispute as buyer; used to show identity verification on profile */
+  buyerDisputed: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -119,9 +122,26 @@ export interface AuthenticatedUserPublicInfo extends Omit<
   pic: Image | null;
 }
 
+/** Client-facing user shape: only identityVerified and bankDetailsVerified (GET /me, login, register). */
+export type PublicMeUser = Omit<
+  AuthenticatedUserPublicInfo,
+  'identityVerification' | 'bankAccount'
+> & {
+  identityVerified: boolean;
+  bankDetailsVerified: boolean;
+  /** Identity verification state for seller flows; 'none' = never submitted, 'pending' = awaiting admin, 'approved'/'rejected' from request. */
+  identityVerificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  /** Bank account state; 'none' = no account, 'pending' = submitted not approved, 'approved' = verified. */
+  bankAccountStatus?: 'none' | 'pending' | 'approved';
+  /** When true, user has opened a dispute as buyer; profile shows identity row for verification. */
+  buyerDisputed: boolean;
+  /** Last 4 digits of CBU/CVU for profile display when user has bank account; undefined otherwise. */
+  bankAccountLast4?: string;
+};
+
 export interface LoginResponse {
   token: string;
-  user: AuthenticatedUserPublicInfo;
+  user: PublicMeUser;
   /** When true, frontend should redirect to OTP verification flow */
   requiresEmailVerification?: boolean;
 }

@@ -34,13 +34,15 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { Badge } from '../../components/ui/badge';
-import { Shield, Check, X, User, Eye, Clock, CheckCircle, XCircle } from 'lucide-react';
-import { identityVerificationService } from '@/api/services';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Shield, Check, X, User, Eye, Clock, CheckCircle, XCircle, CreditCard } from 'lucide-react';
+import { identityVerificationService, usersService } from '@/api/services';
 import { formatDateTimeMedium } from '@/lib/format-date';
 import type {
   IdentityVerificationWithUser,
   IdentityVerificationStatus,
 } from '@/api/types/identity-verification';
+import type { AdminBankAccountVerificationItem } from '@/api/types/users';
 
 export function IdentityVerificationManagement() {
   const { t } = useTranslation();
@@ -54,9 +56,16 @@ export function IdentityVerificationManagement() {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
+  const [bankProcessingUserId, setBankProcessingUserId] = useState<string | null>(null);
+
+  const [activeTab, setActiveTab] = useState<'identity' | 'bank'>('identity');
+  const [bankItems, setBankItems] = useState<AdminBankAccountVerificationItem[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankError, setBankError] = useState<string | null>(null);
 
   const [frontImageUrl, setFrontImageUrl] = useState<string | null>(null);
   const [backImageUrl, setBackImageUrl] = useState<string | null>(null);
+  const [selfieImageUrl, setSelfieImageUrl] = useState<string | null>(null);
   const [imagesLoading, setImagesLoading] = useState(false);
 
   const fetchVerifications = async () => {
@@ -75,6 +84,23 @@ export function IdentityVerificationManagement() {
   useEffect(() => {
     fetchVerifications();
   }, [statusFilter]);
+
+  const fetchBankAccounts = async () => {
+    try {
+      setBankLoading(true);
+      setBankError(null);
+      const data = await usersService.listBankAccountsForAdmin();
+      setBankItems(data.items || []);
+    } catch (err) {
+      setBankError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setBankLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'bank') fetchBankAccounts();
+  }, [activeTab]);
 
   const handleApprove = async (verificationId: string) => {
     try {
@@ -114,12 +140,37 @@ export function IdentityVerificationManagement() {
     setIsRejectDialogOpen(true);
   };
 
+  const handleApproveBankItem = async (userId: string) => {
+    try {
+      setBankProcessingUserId(userId);
+      await usersService.updateBankAccountStatus(userId, 'approved');
+      await fetchBankAccounts();
+    } catch (err) {
+      setBankError(err instanceof Error ? err.message : 'Failed to approve bank account');
+    } finally {
+      setBankProcessingUserId(null);
+    }
+  };
+
+  const handleRejectBankItem = async (userId: string) => {
+    try {
+      setBankProcessingUserId(userId);
+      await usersService.updateBankAccountStatus(userId, 'rejected');
+      await fetchBankAccounts();
+    } catch (err) {
+      setBankError(err instanceof Error ? err.message : 'Failed to reject bank account');
+    } finally {
+      setBankProcessingUserId(null);
+    }
+  };
+
   const openPreviewDialog = async (verification: IdentityVerificationWithUser) => {
     setSelectedVerification(verification);
     setIsPreviewDialogOpen(true);
     setImagesLoading(true);
     setFrontImageUrl(null);
     setBackImageUrl(null);
+    setSelfieImageUrl(null);
 
     try {
       const [frontUrl, backUrl] = await Promise.all([
@@ -128,6 +179,13 @@ export function IdentityVerificationManagement() {
       ]);
       setFrontImageUrl(frontUrl);
       setBackImageUrl(backUrl);
+
+      try {
+        const selfieUrl = await identityVerificationService.getDocumentBlobUrl(verification.id, 'selfie');
+        setSelfieImageUrl(selfieUrl);
+      } catch {
+        setSelfieImageUrl(null);
+      }
     } catch (err) {
       console.error('Failed to load document images:', err);
     } finally {
@@ -144,6 +202,10 @@ export function IdentityVerificationManagement() {
     if (backImageUrl) {
       URL.revokeObjectURL(backImageUrl);
       setBackImageUrl(null);
+    }
+    if (selfieImageUrl) {
+      URL.revokeObjectURL(selfieImageUrl);
+      setSelfieImageUrl(null);
     }
   };
 
@@ -186,127 +248,239 @@ export function IdentityVerificationManagement() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'identity' | 'bank')}>
+        <TabsList>
+          <TabsTrigger value="identity" className="gap-2">
+            <Shield className="w-4 h-4" />
+            {t('admin.identityVerification.tabIdentity')}
+          </TabsTrigger>
+          <TabsTrigger value="bank" className="gap-2">
+            <CreditCard className="w-4 h-4" />
+            {t('admin.identityVerification.tabBankAccount')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="identity" className="mt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    {t('admin.identityVerification.verificationRequests')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('admin.identityVerification.description')}
+                  </CardDescription>
+                </div>
+                <div className="w-48">
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) => setStatusFilter(value as IdentityVerificationStatus | 'all')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('admin.identityVerification.filterByStatus')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('admin.identityVerification.allStatuses')}</SelectItem>
+                      <SelectItem value="pending">{t('admin.identityVerification.statusPending')}</SelectItem>
+                      <SelectItem value="approved">{t('admin.identityVerification.statusApproved')}</SelectItem>
+                      <SelectItem value="rejected">{t('admin.identityVerification.statusRejected')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8 text-red-500">{error}</div>
+              ) : verifications.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Shield className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                  {t('admin.identityVerification.noVerifications')}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('admin.identityVerification.user')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.legalName')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.dateOfBirth')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.govId')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.status')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.submittedAt')}</TableHead>
+                      <TableHead className="text-right">{t('admin.identityVerification.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {verifications.map((verification) => (
+                      <TableRow key={verification.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{verification.userPublicName}</p>
+                              <p className="text-sm text-muted-foreground">{verification.userEmail}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {verification.legalFirstName} {verification.legalLastName}
+                        </TableCell>
+                        <TableCell>{verification.dateOfBirth}</TableCell>
+                        <TableCell>
+                          <span className="font-mono">
+                            ••••{verification.governmentIdNumber.slice(-4)}
+                          </span>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(verification.status)}</TableCell>
+                        <TableCell>{formatDate(verification.submittedAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openPreviewDialog(verification)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              {t('admin.identityVerification.view')}
+                            </Button>
+                            {verification.status === 'pending' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => handleApprove(verification.id)}
+                                  disabled={processing === verification.id}
+                                >
+                                  <Check className="w-4 h-4 mr-1" />
+                                  {t('admin.identityVerification.approve')}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => openRejectDialog(verification)}
+                                  disabled={processing === verification.id}
+                                >
+                                  <X className="w-4 h-4 mr-1" />
+                                  {t('admin.identityVerification.reject')}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bank" className="mt-4">
+          <Card>
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                {t('admin.identityVerification.verificationRequests')}
+                <CreditCard className="w-5 h-5" />
+                {t('admin.identityVerification.bankAccountsTitle')}
               </CardTitle>
               <CardDescription>
-                {t('admin.identityVerification.description')}
+                {t('admin.identityVerification.bankAccountsDescription')}
               </CardDescription>
-            </div>
-            <div className="w-48">
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as IdentityVerificationStatus | 'all')}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('admin.identityVerification.filterByStatus')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('admin.identityVerification.allStatuses')}</SelectItem>
-                  <SelectItem value="pending">{t('admin.identityVerification.statusPending')}</SelectItem>
-                  <SelectItem value="approved">{t('admin.identityVerification.statusApproved')}</SelectItem>
-                  <SelectItem value="rejected">{t('admin.identityVerification.statusRejected')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-500">{error}</div>
-          ) : verifications.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Shield className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-              {t('admin.identityVerification.noVerifications')}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('admin.identityVerification.user')}</TableHead>
-                  <TableHead>{t('admin.identityVerification.legalName')}</TableHead>
-                  <TableHead>{t('admin.identityVerification.dateOfBirth')}</TableHead>
-                  <TableHead>{t('admin.identityVerification.govId')}</TableHead>
-                  <TableHead>{t('admin.identityVerification.status')}</TableHead>
-                  <TableHead>{t('admin.identityVerification.submittedAt')}</TableHead>
-                  <TableHead className="text-right">{t('admin.identityVerification.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {verifications.map((verification) => (
-                  <TableRow key={verification.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{verification.userPublicName}</p>
-                          <p className="text-sm text-muted-foreground">{verification.userEmail}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {verification.legalFirstName} {verification.legalLastName}
-                    </TableCell>
-                    <TableCell>{verification.dateOfBirth}</TableCell>
-                    <TableCell>
-                      <span className="font-mono">
-                        ••••{verification.governmentIdNumber.slice(-4)}
-                      </span>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(verification.status)}</TableCell>
-                    <TableCell>{formatDate(verification.submittedAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openPreviewDialog(verification)}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          {t('admin.identityVerification.view')}
-                        </Button>
-                        {verification.status === 'pending' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() => handleApprove(verification.id)}
-                              disabled={processing === verification.id}
-                            >
-                              <Check className="w-4 h-4 mr-1" />
-                              {t('admin.identityVerification.approve')}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => openRejectDialog(verification)}
-                              disabled={processing === verification.id}
-                            >
-                              <X className="w-4 h-4 mr-1" />
-                              {t('admin.identityVerification.reject')}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent>
+              {bankLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : bankError ? (
+                <div className="text-center py-8 text-red-500">{bankError}</div>
+              ) : bankItems.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CreditCard className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                  {t('admin.identityVerification.noBankAccounts')}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('admin.identityVerification.user')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.bankHolderName')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.bankCbuCvu')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.bankAlias')}</TableHead>
+                      <TableHead>{t('admin.identityVerification.status')}</TableHead>
+                      <TableHead className="text-right">{t('admin.identityVerification.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bankItems.map((item) => (
+                      <TableRow key={item.userId}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{item.userPublicName}</p>
+                              <p className="text-sm text-muted-foreground">{item.userEmail}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{item.bankAccount.holderName}</TableCell>
+                        <TableCell className="font-mono text-sm">{item.bankAccount.cbuOrCvu}</TableCell>
+                        <TableCell className="text-muted-foreground">{item.bankAccount.alias ?? '—'}</TableCell>
+                        <TableCell>
+                          {item.bankAccount.verified ? (
+                            <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50 w-fit">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              {t('admin.identityVerification.bankVerified')}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 w-fit">
+                              {t('admin.identityVerification.bankNotVerified')}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {!item.bankAccount.verified && (
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => handleApproveBankItem(item.userId)}
+                                disabled={bankProcessingUserId === item.userId}
+                              >
+                                <Check className="w-3 h-3 mr-1" />
+                                {t('admin.identityVerification.approveBank')}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleRejectBankItem(item.userId)}
+                                disabled={bankProcessingUserId === item.userId}
+                              >
+                                <X className="w-3 h-3 mr-1" />
+                                {t('admin.identityVerification.rejectBank')}
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Preview Dialog */}
       <Dialog open={isPreviewDialogOpen} onOpenChange={(open) => { if (!open) closePreviewDialog(); }}>
@@ -341,6 +515,32 @@ export function IdentityVerificationManagement() {
                   <div>
                     <p className="text-sm text-muted-foreground">{t('admin.identityVerification.status')}</p>
                     <div className="mt-1">{getStatusBadge(selectedVerification.status)}</div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('admin.identityVerification.bankAccount')}</p>
+                    {selectedVerification.bankAccountSummary ? (
+                      <div className="mt-1 space-y-1">
+                        <p className="font-medium">{selectedVerification.bankAccountSummary.holderName ?? '—'}</p>
+                        {selectedVerification.bankAccountSummary.cbuLast4 && (
+                          <p className="font-mono text-sm">••••{selectedVerification.bankAccountSummary.cbuLast4}</p>
+                        )}
+                        {selectedVerification.bankAccountSummary.verified ? (
+                          <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            {t('admin.identityVerification.bankVerified')}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+                            {t('admin.identityVerification.bankNotVerified')}
+                          </Badge>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('admin.identityVerification.bankManageInTab')}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">{t('admin.identityVerification.bankNotSet')}</p>
+                    )}
                   </div>
                   {selectedVerification.adminNotes && (
                     <div className="col-span-2">
@@ -384,6 +584,24 @@ export function IdentityVerificationManagement() {
                     ) : (
                       <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg text-muted-foreground">
                         {t('common.errorLoading')}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-span-2">
+                    <h4 className="font-medium mb-2">{t('admin.identityVerification.documentSelfie')}</h4>
+                    {imagesLoading ? (
+                      <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    ) : selfieImageUrl ? (
+                      <img
+                        src={selfieImageUrl}
+                        alt="Selfie"
+                        className="w-full h-auto max-h-64 object-contain border rounded-lg"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg text-muted-foreground">
+                        {t('admin.identityVerification.selfieNotAvailable')}
                       </div>
                     )}
                   </div>

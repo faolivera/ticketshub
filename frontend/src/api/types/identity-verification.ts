@@ -4,7 +4,23 @@
 export type IdentityVerificationStatus = 'pending' | 'approved' | 'rejected';
 
 /**
- * Identity verification request entity
+ * Public (non-admin) verification summary returned by GET/POST my verification.
+ * Excludes document storage keys, filenames, reviewer id; government ID is masked.
+ */
+export interface IdentityVerificationPublic {
+  id: string;
+  status: IdentityVerificationStatus;
+  legalFirstName: string;
+  legalLastName: string;
+  dateOfBirth: string;
+  /** Masked government ID (e.g. "••••••1234") */
+  governmentIdNumber: string;
+  submittedAt: string;
+  reviewedAt?: string;
+}
+
+/**
+ * Full identity verification request (admin list/detail only)
  */
 export interface IdentityVerificationRequest {
   id: string;
@@ -17,6 +33,8 @@ export interface IdentityVerificationRequest {
   documentFrontFilename: string;
   documentBackStorageKey: string;
   documentBackFilename: string;
+  selfieStorageKey: string;
+  selfieFilename: string;
   status: IdentityVerificationStatus;
   adminNotes?: string;
   reviewedBy?: string;
@@ -28,14 +46,23 @@ export interface IdentityVerificationRequest {
  * Response for getting current user's verification status
  */
 export interface GetMyVerificationResponse {
-  verification: IdentityVerificationRequest | null;
+  verification: IdentityVerificationPublic | null;
 }
 
 /**
  * Response after submitting verification
  */
 export interface SubmitVerificationResponse {
-  verification: IdentityVerificationRequest;
+  verification: IdentityVerificationPublic;
+}
+
+/**
+ * Bank account summary for admin list (masked for privacy)
+ */
+export interface BankAccountSummary {
+  verified: boolean;
+  holderName?: string;
+  cbuLast4?: string;
 }
 
 /**
@@ -44,6 +71,8 @@ export interface SubmitVerificationResponse {
 export interface IdentityVerificationWithUser extends IdentityVerificationRequest {
   userEmail: string;
   userPublicName: string;
+  /** Seller bank account summary for payout; from User.bankAccount */
+  bankAccountSummary?: BankAccountSummary | null;
 }
 
 /**

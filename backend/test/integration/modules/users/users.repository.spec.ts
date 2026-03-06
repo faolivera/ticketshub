@@ -28,6 +28,7 @@ describe('UsersRepository (Integration)', () => {
     language: Language.EN,
     emailVerified: false,
     phoneVerified: false,
+    buyerDisputed: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     imageId: 'default',

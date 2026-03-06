@@ -94,6 +94,7 @@ export class SupportSeedService {
       language: Language.ES,
       emailVerified: true,
       phoneVerified: true,
+      buyerDisputed: false,
     });
 
     const seller = await this.upsertUser(ctx, {
@@ -125,6 +126,7 @@ export class SupportSeedService {
         verified: true,
         verifiedAt: new Date(),
       },
+      buyerDisputed: false,
     });
 
     const buyer = await this.upsertUser(ctx, {
@@ -139,6 +141,7 @@ export class SupportSeedService {
       language: Language.ES,
       emailVerified: true,
       phoneVerified: true,
+      buyerDisputed: false,
     });
 
     // Event: BAD BUNNY

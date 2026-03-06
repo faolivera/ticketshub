@@ -43,6 +43,7 @@ describe('IdentityVerificationService', () => {
     acceptedSellerTermsAt: new Date(),
     emailVerified: true,
     phoneVerified: true,
+    buyerDisputed: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -143,10 +144,13 @@ describe('IdentityVerificationService', () => {
         mockFile,
       );
 
-      expect(result.userId).toBe(mockUser.id);
       expect(result.legalFirstName).toBe(submitData.legalFirstName);
+      expect(result.legalLastName).toBe(submitData.legalLastName);
       expect(result.status).toBe(IdentityVerificationStatus.Pending);
-      expect(storageProvider.store).toHaveBeenCalledTimes(2);
+      expect(result.governmentIdNumber).toBe('••••••678A');
+      expect(result).not.toHaveProperty('userId');
+      expect(result).not.toHaveProperty('documentFrontStorageKey');
+      expect(storageProvider.store).toHaveBeenCalledTimes(3);
       expect(repository.save).toHaveBeenCalledTimes(1);
     });
 
@@ -264,13 +268,25 @@ describe('IdentityVerificationService', () => {
   });
 
   describe('getMyVerification', () => {
-    it('should return verification for user', async () => {
+    it('should return public verification shape with masked government ID', async () => {
       repository.findByUserId.mockResolvedValue(mockVerification);
 
       const result = await service.getMyVerification(mockCtx, mockUser.id);
 
-      expect(result).toEqual(mockVerification);
       expect(repository.findByUserId).toHaveBeenCalledWith(mockCtx, mockUser.id);
+      expect(result).not.toBeNull();
+      expect(result).toMatchObject({
+        id: mockVerification.id,
+        status: mockVerification.status,
+        legalFirstName: mockVerification.legalFirstName,
+        legalLastName: mockVerification.legalLastName,
+        dateOfBirth: mockVerification.dateOfBirth,
+        governmentIdNumber: '••••••678A',
+        submittedAt: expect.any(String),
+      });
+      expect(result).not.toHaveProperty('documentFrontStorageKey');
+      expect(result).not.toHaveProperty('userId');
+      expect(result).not.toHaveProperty('reviewedBy');
     });
 
     it('should return null if no verification exists', async () => {

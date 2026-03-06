@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Ticket, CheckCircle, AlertCircle, Circle } from 'lucide-react';
+import { Ticket, CheckCircle, AlertCircle } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
 import { VerificationHelper } from '@/lib/verification';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +27,7 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
   const { user, upgradeToLevel1 } = useUser();
   const hasV1 = VerificationHelper.hasV1(user);
   const hasV2 = VerificationHelper.hasV2(user);
-  const canListAfterAccept = hasV1 && hasV2;
+  const isReadyToSell = hasV1 && hasV2;
   const navigate = useNavigate();
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsVersionId, setTermsVersionId] = useState<string | null>(null);
@@ -79,126 +79,117 @@ export function SellerIntroModal({ onClose }: SellerIntroModalProps) {
             </div>
           </DialogHeader>
 
-          <div className="flex flex-col gap-5">
-            {/* Verification checklist (V1, V2) — required to list after accepting terms */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <p className="text-sm font-semibold text-gray-700 mb-2">
-                {t('sellerIntro.toListTickets')}
-              </p>
-              <ul className="flex flex-col gap-2">
-                <li className="flex items-center gap-2 text-sm text-gray-700">
-                  {hasV1 ? (
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  )}
-                  <span>{t('sellerIntro.checklistEmail')}</span>
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-700">
-                  {hasV2 ? (
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  )}
-                  <span>{t('sellerIntro.checklistPhone')}</span>
-                </li>
-              </ul>
-              {!canListAfterAccept && (
-                <p className="text-xs text-amber-700 mt-2">
+          {!isReadyToSell ? (
+            <>
+              <div className="flex flex-col gap-4">
+                <p className="text-sm font-semibold text-gray-700">
+                  {t('sellerIntro.toListTickets')}
+                </p>
+                <ul className="list-disc list-inside flex flex-col gap-1 text-sm text-gray-700">
+                  <li>{t('sellerIntro.checklistEmail')}</li>
+                  <li>{t('sellerIntro.checklistPhone')}</li>
+                </ul>
+                <p className="text-sm text-gray-600">
                   {t('sellerIntro.completeChecklistToList')}
                 </p>
-              )}
-            </div>
-
-            {/* What you can do */}
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-3">
-                {t('sellerIntro.whatYouCanDo')}
-              </p>
-              <ul className="flex flex-col gap-2">
-                {['canList', 'canSell'].map((key) => (
-                  <li key={key} className="flex items-start gap-2 text-sm text-gray-700">
-                    <CheckCircle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
-                    <span>{t(`sellerIntro.${key}`)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Restrictions until verified */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              </div>
+              <DialogFooter>
+                <Button onClick={onClose}>{t('sellerIntro.close')}</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col gap-5">
+                {/* What you can do */}
                 <div>
-                  <p className="text-sm font-semibold text-amber-900 mb-2">
-                    {t('sellerIntro.untilVerified')}
+                  <p className="text-sm font-semibold text-gray-700 mb-3">
+                    {t('sellerIntro.whatYouCanDo')}
                   </p>
-                  <ul className="flex flex-col gap-1">
-                    {['limitListings', 'limitWithdraw'].map((key) => (
-                      <li key={key} className="text-sm text-amber-800">
-                        · {t(`sellerIntro.${key}`)}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="text-sm font-semibold text-amber-900 mt-3 mb-1">
-                    {t('sellerIntro.verifyAccountRequires')}
-                  </p>
-                  <ul className="flex flex-col gap-1">
-                    {['verifyAccountPhone', 'verifyAccountDni', 'verifyAccountBank'].map((key) => (
-                      <li key={key} className="text-sm text-amber-800">
-                        · {t(`sellerIntro.${key}`)}
+                  <ul className="flex flex-col gap-2">
+                    {['canList', 'canSell'].map((key) => (
+                      <li key={key} className="flex items-start gap-2 text-sm text-gray-700">
+                        <CheckCircle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+                        <span>{t(`sellerIntro.${key}`)}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
+
+                {/* Restrictions until verified */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-900 mb-2">
+                        {t('sellerIntro.untilVerified')}
+                      </p>
+                      <ul className="flex flex-col gap-1">
+                        {['limitListings', 'limitWithdraw'].map((key) => (
+                          <li key={key} className="text-sm text-amber-800">
+                            · {t(`sellerIntro.${key}`)}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-sm font-semibold text-amber-900 mt-3 mb-1">
+                        {t('sellerIntro.verifyAccountRequires')}
+                      </p>
+                      <ul className="flex flex-col gap-1">
+                        {['verifyAccountDni', 'verifyAccountBank'].map((key) => (
+                          <li key={key} className="text-sm text-amber-800">
+                            · {t(`sellerIntro.${key}`)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Verify later note */}
+                <p className="text-xs text-muted-foreground">
+                  {t('sellerIntro.verifyLater')}
+                </p>
+
+                <hr className="border-gray-200" />
+
+                {/* Terms checkbox */}
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="seller-terms"
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="seller-terms" className="text-sm font-normal cursor-pointer leading-relaxed">
+                    {t('sellerIntro.agreeToTerms')}{' '}
+                    <button
+                      type="button"
+                      onClick={() => termsVersionId && setShowTermsModal(true)}
+                      disabled={!termsVersionId}
+                      className="text-indigo-600 hover:text-indigo-700 font-semibold underline disabled:opacity-50"
+                    >
+                      {t('sellerIntro.sellerTermsLink')}
+                    </button>
+                  </Label>
+                </div>
+
+                {error && (
+                  <p className="text-sm text-red-600">{error}</p>
+                )}
               </div>
-            </div>
 
-            {/* Verify later note */}
-            <p className="text-xs text-muted-foreground">
-              {t('sellerIntro.verifyLater')}
-            </p>
-
-            <hr className="border-gray-200" />
-
-            {/* Terms checkbox */}
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="seller-terms"
-                checked={termsAccepted}
-                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                className="mt-0.5"
-              />
-              <Label htmlFor="seller-terms" className="text-sm font-normal cursor-pointer leading-relaxed">
-                {t('sellerIntro.agreeToTerms')}{' '}
-                <button
-                  type="button"
-                  onClick={() => termsVersionId && setShowTermsModal(true)}
-                  disabled={!termsVersionId}
-                  className="text-indigo-600 hover:text-indigo-700 font-semibold underline disabled:opacity-50"
+              <DialogFooter>
+                <Button variant="outline" onClick={onClose}>
+                  {t('sellerIntro.cancel')}
+                </Button>
+                <Button
+                  onClick={handleStartSelling}
+                  disabled={!termsAccepted || !termsVersionId || isLoading}
                 >
-                  {t('sellerIntro.sellerTermsLink')}
-                </button>
-              </Label>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
-              {t('sellerIntro.cancel')}
-            </Button>
-            <Button
-              onClick={handleStartSelling}
-              disabled={!termsAccepted || !termsVersionId || isLoading}
-            >
-              {isLoading ? '...' : t('sellerIntro.startSelling')}
-            </Button>
-          </DialogFooter>
+                  {isLoading ? '...' : t('sellerIntro.startSelling')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

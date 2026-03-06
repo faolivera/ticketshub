@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { IdentityVerificationController } from './identity-verification.controller';
 import { IdentityVerificationService } from './identity-verification.service';
 import { IdentityVerificationRepository } from './identity-verification.repository';
@@ -7,7 +7,7 @@ import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule],
+  imports: [forwardRef(() => UsersModule), PrismaModule],
   controllers: [IdentityVerificationController],
   providers: [
     IdentityVerificationService,

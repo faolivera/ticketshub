@@ -1,5 +1,9 @@
 import apiClient from '../client';
-import type { AuthenticatedUserPublicInfo } from '../types';
+import type {
+  AuthenticatedUserPublicInfo,
+  MyBankAccount,
+  ListAdminBankAccountsResponse,
+} from '../types';
 
 export interface UpdateBankAccountRequest {
   holderName: string;
@@ -41,6 +45,14 @@ export const usersService = {
   },
 
   /**
+   * Get current user's bank account (for profile/bank-account form). Returns null if none.
+   */
+  async getBankAccount(): Promise<MyBankAccount | null> {
+    const response = await apiClient.get<MyBankAccount | null>('/users/bank-account');
+    return response.data;
+  },
+
+  /**
    * Update current user's bank account (V4). Used for payouts.
    */
   async updateBankAccount(
@@ -49,6 +61,30 @@ export const usersService = {
     const response = await apiClient.put<AuthenticatedUserPublicInfo>(
       '/users/bank-account',
       data
+    );
+    return response.data;
+  },
+
+  /**
+   * List all users with bank account and full bank data (admin only).
+   */
+  async listBankAccountsForAdmin(): Promise<ListAdminBankAccountsResponse> {
+    const response = await apiClient.get<ListAdminBankAccountsResponse>(
+      '/users/admin/bank-accounts'
+    );
+    return response.data;
+  },
+
+  /**
+   * Update bank account verification status (admin only).
+   */
+  async updateBankAccountStatus(
+    userId: string,
+    status: 'approved' | 'rejected',
+  ): Promise<AuthenticatedUserPublicInfo> {
+    const response = await apiClient.patch<AuthenticatedUserPublicInfo>(
+      `/users/admin/bank-account-status/${userId}`,
+      { status },
     );
     return response.data;
   },

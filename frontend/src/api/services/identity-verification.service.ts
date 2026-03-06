@@ -70,7 +70,7 @@ export const identityVerificationService = {
    */
   async getDocumentBlobUrl(
     verificationId: string,
-    documentType: 'front' | 'back',
+    documentType: 'front' | 'back' | 'selfie',
   ): Promise<string> {
     const token = getToken();
     const response = await fetch(

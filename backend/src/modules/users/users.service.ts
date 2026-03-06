@@ -25,7 +25,13 @@ import { VerificationHelper } from '../../common/utils/verification-helper';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
 import { OTPType } from '../otp/otp.domain';
-import type { TermsAcceptanceData } from './users.api';
+import type {
+  TermsAcceptanceData,
+  PublicMeUser,
+  GetBankAccountResponse,
+  ListAdminBankAccountsResponse,
+  AdminBankAccountVerificationItem,
+} from './users.api';
 import { TermsUserType } from '../terms/terms.domain';
 import {
   PUBLIC_STORAGE_PROVIDER,
@@ -78,6 +84,57 @@ export class UsersService {
       3600,
     );
     return { ...image, src: signedUrl };
+  }
+
+  /**
+   * Map full authenticated user to public shape (identityVerified and bankDetailsVerified only).
+   * When identityVerificationStatus and bankAccountStatus are provided (e.g. from GET /me), they are included for frontend to decide what to show.
+   */
+  toPublicMeResponse(
+    user: AuthenticatedUserPublicInfo,
+    identityVerificationStatus?: 'none' | 'pending' | 'approved' | 'rejected',
+    bankAccountStatus?: 'none' | 'pending' | 'approved',
+  ): PublicMeUser {
+    const identityVerified = user.identityVerification?.status === 'approved';
+    const bankDetailsVerified = user.bankAccount?.verified === true;
+    const bankAccountLast4 =
+      user.bankAccount?.cbuOrCvu?.length >= 4
+        ? user.bankAccount.cbuOrCvu.slice(-4)
+        : undefined;
+    const { identityVerification: _iv, bankAccount: _ba, ...rest } = user;
+    const response: PublicMeUser = {
+      ...rest,
+      identityVerified,
+      bankDetailsVerified,
+      buyerDisputed: user.buyerDisputed ?? false,
+      bankAccountLast4,
+    };
+    if (identityVerificationStatus !== undefined) {
+      response.identityVerificationStatus = identityVerificationStatus;
+    }
+    if (bankAccountStatus !== undefined) {
+      response.bankAccountStatus = bankAccountStatus;
+    }
+    return response;
+  }
+
+  /**
+   * Get current user's bank account (for profile/bank-account form). Returns null if none.
+   */
+  async getMyBankAccount(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<GetBankAccountResponse | null> {
+    const user = await this.usersRepository.findById(ctx, userId);
+    if (!user?.bankAccount) return null;
+    const ba = user.bankAccount;
+    return {
+      holderName: ba.holderName,
+      cbuOrCvu: ba.cbuOrCvu,
+      alias: ba.alias,
+      verified: ba.verified,
+      verifiedAt: ba.verifiedAt?.toISOString(),
+    };
   }
 
   /**
@@ -252,7 +309,7 @@ export class UsersService {
 
     return {
       token,
-      user: userInfo,
+      user: this.toPublicMeResponse(userInfo),
       requiresEmailVerification: !user.emailVerified,
     };
   }
@@ -313,7 +370,7 @@ export class UsersService {
       }
       return {
         token,
-        user: userInfo,
+        user: this.toPublicMeResponse(userInfo),
         requiresEmailVerification: true,
       };
     }
@@ -336,6 +393,7 @@ export class UsersService {
       phone: data.phone,
       emailVerified: false,
       phoneVerified: false,
+      buyerDisputed: false,
       createdAt: now,
       updatedAt: now,
     });
@@ -358,7 +416,7 @@ export class UsersService {
 
     return {
       token,
-      user: userInfo,
+      user: this.toPublicMeResponse(userInfo),
       requiresEmailVerification: true,
     };
   }
@@ -474,16 +532,27 @@ export class UsersService {
   }
 
   /**
-   * Accept seller terms (set intent to sell). Requires V1+V2 to be allowed to create listings;
-   * that is enforced at event/listing creation via VerificationHelper.canSell().
+   * Accept seller terms (set intent to sell). Requires V1 (email) and V2 (phone) to be verified
+   * before becoming a seller. Listing creation also enforces canSell() (V1+V2) at creation time.
    */
   async acceptSellerTerms(
     ctx: Ctx,
     userId: string,
-  ): Promise<AuthenticatedUserPublicInfo> {
+  ): Promise<PublicMeUser> {
     const user = await this.usersRepository.findById(ctx, userId);
     if (!user) {
       throw new BadRequestException('User not found');
+    }
+
+    if (!VerificationHelper.hasV1(user)) {
+      throw new BadRequestException(
+        'Email must be verified before becoming a seller. Please verify your email first.',
+      );
+    }
+    if (!VerificationHelper.hasV2(user)) {
+      throw new BadRequestException(
+        'Phone number must be verified before becoming a seller. Please verify your phone first.',
+      );
     }
 
     const hasAcceptedSellerTerms =
@@ -505,7 +574,7 @@ export class UsersService {
       throw new BadRequestException('Failed to get updated user info');
     }
 
-    return updatedUserInfo;
+    return this.toPublicMeResponse(updatedUserInfo);
   }
 
   /**
@@ -557,7 +626,7 @@ export class UsersService {
       mimetype: string;
       size: number;
     },
-  ): Promise<AuthenticatedUserPublicInfo> {
+  ): Promise<PublicMeUser> {
     const user = await this.usersRepository.findById(ctx, userId);
     if (!user) {
       throw new BadRequestException('User not found');
@@ -621,7 +690,7 @@ export class UsersService {
       throw new BadRequestException('Failed to get updated user info');
     }
 
-    return updatedUserInfo;
+    return this.toPublicMeResponse(updatedUserInfo);
   }
 
   /**
@@ -632,7 +701,7 @@ export class UsersService {
     ctx: Ctx,
     userId: string,
     data: { holderName: string; cbuOrCvu: string; alias?: string },
-  ): Promise<AuthenticatedUserPublicInfo> {
+  ): Promise<PublicMeUser> {
     const user = await this.usersRepository.findById(ctx, userId);
     if (!user) {
       throw new BadRequestException('User not found');
@@ -661,15 +730,72 @@ export class UsersService {
       holderName: data.holderName.trim(),
       cbuOrCvu: cbuCvu,
       alias: data.alias?.trim(),
-      verified: true,
-      verifiedAt: new Date(),
+      verified: false,
     };
     await this.usersRepository.updateBankAccount(ctx, userId, bankAccount);
     const updated = await this.getAuthenticatedUserInfo(ctx, userId);
     if (!updated) {
       throw new BadRequestException('Failed to get updated user info');
     }
-    return updated;
+    return this.toPublicMeResponse(updated);
+  }
+
+  /**
+   * Set buyerDisputed to true when user opens a dispute as buyer. Used so the profile can show identity verification row.
+   */
+  async setBuyerDisputed(ctx: Ctx, userId: string): Promise<void> {
+    await this.usersRepository.setBuyerDisputed(ctx, userId);
+  }
+
+  /**
+   * Set bank account verification status (admin only). Used to approve or reject
+   * a user's submitted bank account (V4).
+   */
+  async setBankAccountVerificationStatus(
+    ctx: Ctx,
+    userId: string,
+    status: 'approved' | 'rejected',
+  ): Promise<PublicMeUser> {
+    const user = await this.usersRepository.findById(ctx, userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if (!user.bankAccount) {
+      throw new BadRequestException('User has no bank account to review');
+    }
+    const bankAccount: User['bankAccount'] = {
+      ...user.bankAccount,
+      verified: status === 'approved',
+      verifiedAt: status === 'approved' ? new Date() : undefined,
+    };
+    await this.usersRepository.updateBankAccount(ctx, userId, bankAccount);
+    const updated = await this.getAuthenticatedUserInfo(ctx, userId);
+    if (!updated) {
+      throw new BadRequestException('Failed to get updated user info');
+    }
+    return this.toPublicMeResponse(updated);
+  }
+
+  /**
+   * List all users with bank account and full bank data (admin only). Used for bank account verification.
+   */
+  async getUsersWithBankAccountForAdmin(
+    ctx: Ctx,
+  ): Promise<ListAdminBankAccountsResponse> {
+    const users = await this.usersRepository.findUsersWithBankAccount(ctx);
+    const items: AdminBankAccountVerificationItem[] = users.map((u) => ({
+      userId: u.id,
+      userEmail: u.email,
+      userPublicName: u.publicName,
+      bankAccount: {
+        holderName: u.bankAccount!.holderName,
+        cbuOrCvu: u.bankAccount!.cbuOrCvu,
+        alias: u.bankAccount!.alias,
+        verified: u.bankAccount!.verified,
+        verifiedAt: u.bankAccount!.verifiedAt?.toISOString(),
+      },
+    }));
+    return { items };
   }
 
   private normalizeNameForMatch(name: string): string {

@@ -13,7 +13,7 @@ import {
   type FileStorageProvider,
 } from '../../../../src/common/storage/file-storage-provider.interface';
 import type { User } from '../../../../src/modules/users/users.domain';
-import { Language, Role, UserStatus } from '../../../../src/modules/users/users.domain';
+import { Language, Role, UserStatus, IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import type { Image } from '../../../../src/modules/images/images.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 import { AcceptanceMethod } from '../../../../src/modules/terms/terms.domain';
@@ -54,6 +54,7 @@ describe('UsersService', () => {
     language: Language.ES,
     emailVerified: true,
     phoneVerified: true,
+    buyerDisputed: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -84,6 +85,7 @@ describe('UsersService', () => {
       updatePhoneVerified: jest.fn(),
       updateLevel: jest.fn(),
       updateToVerifiedSeller: jest.fn(),
+      updateBankAccount: jest.fn(),
     };
 
     const mockImagesRepository = {
@@ -497,6 +499,119 @@ describe('UsersService', () => {
         expect.any(Buffer),
         expect.any(Object),
       );
+    });
+  });
+
+  describe('setBankAccountVerificationStatus', () => {
+    const userWithBank: User = {
+      ...mockUser,
+      id: 'user-with-bank',
+      identityVerification: {
+        status: IdentityVerificationStatus.Approved,
+        legalFirstName: 'John',
+        legalLastName: 'Doe',
+        dateOfBirth: '1990-01-01',
+        governmentIdNumber: '12345678',
+        submittedAt: new Date(),
+      },
+      bankAccount: {
+        holderName: 'John Doe',
+        cbuOrCvu: '0123456789012345678901',
+        verified: false,
+      },
+    };
+
+    beforeEach(() => {
+      imagesRepository.findById.mockResolvedValue(mockImage);
+    });
+
+    it('should set verified true and verifiedAt when status is approved', async () => {
+      let savedBank: User['bankAccount'];
+      usersRepository.findById.mockImplementation((_ctx, id) =>
+        Promise.resolve({
+          ...userWithBank,
+          id,
+          bankAccount: savedBank ?? userWithBank.bankAccount,
+        }),
+      );
+      usersRepository.updateBankAccount.mockImplementation(
+        (_ctx, _userId, bankAccount) => {
+          savedBank = bankAccount;
+          return Promise.resolve({ ...userWithBank, bankAccount });
+        },
+      );
+
+      const result = await service.setBankAccountVerificationStatus(
+        mockCtx,
+        userWithBank.id,
+        'approved',
+      );
+
+      expect(result.bankDetailsVerified).toBe(true);
+      expect(usersRepository.updateBankAccount).toHaveBeenCalledWith(
+        mockCtx,
+        userWithBank.id,
+        expect.objectContaining({
+          holderName: 'John Doe',
+          cbuOrCvu: '0123456789012345678901',
+          verified: true,
+        }),
+      );
+      const callArg = usersRepository.updateBankAccount.mock.calls[0][2];
+      expect(callArg.verifiedAt).toBeInstanceOf(Date);
+    });
+
+    it('should set verified false and clear verifiedAt when status is rejected', async () => {
+      const userVerified = {
+        ...userWithBank,
+        bankAccount: {
+          ...userWithBank.bankAccount!,
+          verified: true,
+          verifiedAt: new Date(),
+        },
+      };
+      usersRepository.findById.mockResolvedValue(userVerified);
+      usersRepository.updateBankAccount.mockImplementation(
+        (_ctx, _userId, bankAccount) =>
+          Promise.resolve({
+            ...userVerified,
+            bankAccount,
+          }),
+      );
+
+      await service.setBankAccountVerificationStatus(
+        mockCtx,
+        userWithBank.id,
+        'rejected',
+      );
+
+      expect(usersRepository.updateBankAccount).toHaveBeenCalledWith(
+        mockCtx,
+        userWithBank.id,
+        expect.objectContaining({
+          verified: false,
+          verifiedAt: undefined,
+        }),
+      );
+    });
+
+    it('should throw when user not found', async () => {
+      usersRepository.findById.mockResolvedValue(undefined);
+
+      await expect(
+        service.setBankAccountVerificationStatus(mockCtx, 'nonexistent', 'approved'),
+      ).rejects.toThrow(BadRequestException);
+      expect(usersRepository.updateBankAccount).not.toHaveBeenCalled();
+    });
+
+    it('should throw when user has no bank account', async () => {
+      const userNoBank = { ...mockUser, id: 'no-bank', bankAccount: undefined };
+      usersRepository.findById.mockResolvedValue(userNoBank);
+
+      await expect(
+        service.setBankAccountVerificationStatus(mockCtx, userNoBank.id, 'approved'),
+      ).rejects.toThrow(BadRequestException);
+      expect(usersRepository.updateBankAccount).not.toHaveBeenCalled();
     });
   });
 });

@@ -118,6 +118,7 @@ describe('OffersService', () => {
         language: 'es' as any,
         emailVerified: true,
         phoneVerified: false,
+        buyerDisputed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -202,6 +203,7 @@ describe('OffersService', () => {
         country: 'ES',
         currency: 'EUR' as any,
         language: 'en' as any,
+        buyerDisputed: false,
         emailVerified: true,
         phoneVerified: false,
         createdAt: new Date(),

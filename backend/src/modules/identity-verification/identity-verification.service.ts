@@ -27,6 +27,7 @@ import {
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import type {
+  IdentityVerificationPublic,
   IdentityVerificationWithUser,
   ListIdentityVerificationsResponse,
 } from './identity-verification.api';
@@ -112,7 +113,7 @@ export class IdentityVerificationService {
       mimetype: string;
       size: number;
     },
-  ): Promise<IdentityVerificationRequest> {
+  ): Promise<IdentityVerificationPublic> {
     this.logger.log(ctx, `Submitting identity verification for user ${userId}`);
 
     const user = await this.usersService.findById(ctx, userId);
@@ -207,18 +208,56 @@ export class IdentityVerificationService {
       `Identity verification ${verification.id} submitted for user ${userId}`,
     );
 
-    return verification;
+    return this.toPublic(verification);
+  }
+
+  private toPublic(
+    verification: IdentityVerificationRequest,
+  ): IdentityVerificationPublic {
+    const maskedGovId =
+      verification.governmentIdNumber.length >= 4
+        ? `••••••${verification.governmentIdNumber.slice(-4)}`
+        : '••••';
+    return {
+      id: verification.id,
+      status: verification.status,
+      legalFirstName: verification.legalFirstName,
+      legalLastName: verification.legalLastName,
+      dateOfBirth: verification.dateOfBirth,
+      governmentIdNumber: maskedGovId,
+      submittedAt:
+        verification.submittedAt instanceof Date
+          ? verification.submittedAt.toISOString()
+          : String(verification.submittedAt),
+      reviewedAt: verification.reviewedAt
+        ? (verification.reviewedAt instanceof Date
+            ? verification.reviewedAt.toISOString()
+            : String(verification.reviewedAt))
+        : undefined,
+    };
   }
 
   /**
-   * Get current user's verification request
+   * Get current user's verification request (public shape: no document keys, masked government ID).
    */
   async getMyVerification(
     ctx: Ctx,
     userId: string,
-  ): Promise<IdentityVerificationRequest | null> {
+  ): Promise<IdentityVerificationPublic | null> {
     const verification = await this.repository.findByUserId(ctx, userId);
-    return verification || null;
+    return verification ? this.toPublic(verification) : null;
+  }
+
+  /**
+   * Get identity verification status for a user (for GET /me). Returns 'none' when no request exists.
+   */
+  async getVerificationStatusForUser(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<'none' | 'pending' | 'approved' | 'rejected'> {
+    const verification = await this.repository.findByUserId(ctx, userId);
+    if (!verification) return 'none';
+    return verification.status as 'none' | 'pending' | 'approved' | 'rejected';
   }
 
   /**
@@ -237,10 +276,22 @@ export class IdentityVerificationService {
     const verificationsWithUsers: IdentityVerificationWithUser[] =
       verifications.map((v) => {
         const user = usersMap.get(v.userId);
+        const bankAccountSummary =
+          user?.bankAccount
+            ? {
+                verified: user.bankAccount.verified,
+                holderName: user.bankAccount.holderName,
+                cbuLast4:
+                  user.bankAccount.cbuOrCvu?.length >= 4
+                    ? user.bankAccount.cbuOrCvu.slice(-4)
+                    : undefined,
+              }
+            : null;
         return {
           ...v,
           userEmail: user?.email ?? 'Unknown',
           userPublicName: user?.publicName ?? 'Unknown',
+          bankAccountSummary: bankAccountSummary ?? undefined,
         };
       });
 
@@ -256,12 +307,12 @@ export class IdentityVerificationService {
   }
 
   /**
-   * Get document file content (admin only)
+   * Get document file content (admin only). Supports front, back, and selfie.
    */
   async getDocumentFile(
     ctx: Ctx,
     verificationId: string,
-    documentType: 'front' | 'back',
+    documentType: 'front' | 'back' | 'selfie',
   ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
     const verification = await this.repository.findById(ctx, verificationId);
     if (!verification) {
@@ -271,12 +322,20 @@ export class IdentityVerificationService {
     const storageKey =
       documentType === 'front'
         ? verification.documentFrontStorageKey
-        : verification.documentBackStorageKey;
+        : documentType === 'back'
+          ? verification.documentBackStorageKey
+          : verification.selfieStorageKey;
 
     const filename =
       documentType === 'front'
         ? verification.documentFrontFilename
-        : verification.documentBackFilename;
+        : documentType === 'back'
+          ? verification.documentBackFilename
+          : verification.selfieFilename;
+
+    if (!storageKey && documentType === 'selfie') {
+      return null;
+    }
 
     const buffer = await this.storageProvider.retrieve(storageKey);
     if (!buffer) {

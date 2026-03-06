@@ -4,7 +4,6 @@ import { Ticket, Phone, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { SellerIntroModal } from '@/app/components/SellerIntroModal';
-import { SellerStatusBanner } from '@/app/components/SellerStatusBanner';
 import { EmptyState } from '@/app/components/EmptyState';
 import { eventsService } from '@/api/services/events.service';
 import type { EventWithDates } from '@/api/types';
@@ -111,8 +110,6 @@ export function SellTicket() {
 
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <SellerStatusBanner />
-
           <div className="bg-white rounded-lg shadow-md p-8">
             {step === 'select-event' && (
               <>

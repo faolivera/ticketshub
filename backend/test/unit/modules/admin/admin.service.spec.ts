@@ -573,6 +573,7 @@ describe('AdminService', () => {
       language: Language.ES,
       emailVerified: true,
       phoneVerified: false,
+      buyerDisputed: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -799,6 +800,7 @@ describe('AdminService', () => {
       language: Language.ES,
       emailVerified: true,
       phoneVerified: false,
+      buyerDisputed: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1289,6 +1291,7 @@ describe('AdminService', () => {
         language: Language.ES,
         emailVerified: true,
         phoneVerified: false,
+        buyerDisputed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         bankAccount: {
@@ -1331,6 +1334,7 @@ describe('AdminService', () => {
         language: Language.ES,
         emailVerified: true,
         phoneVerified: false,
+        buyerDisputed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -1364,6 +1368,7 @@ describe('AdminService', () => {
         language: Language.ES,
         emailVerified: true,
         phoneVerified: false,
+        buyerDisputed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         bankAccount: {
@@ -1409,6 +1414,7 @@ describe('AdminService', () => {
         language: Language.ES,
         emailVerified: true,
         phoneVerified: false,
+        buyerDisputed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         bankAccount: {

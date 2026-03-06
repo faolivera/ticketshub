@@ -3,7 +3,9 @@ import {
   Post,
   Get,
   Put,
+  Patch,
   Body,
+  Param,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -12,16 +14,20 @@ import {
   BadRequestException,
   UnauthorizedException,
   Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import type { Multer } from 'multer';
 import { UsersService } from './users.service';
+import { IdentityVerificationService } from '../identity-verification/identity-verification.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { User } from '../../common/decorators/user.decorator';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { ValidateResponse } from '../../common/decorators/validate-response.decorator';
-import { AuthenticatedUserPublicInfo } from './users.domain';
+import { AuthenticatedUserPublicInfo, Role } from './users.domain';
 import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
 import type {
@@ -33,6 +39,11 @@ import type {
   UploadAvatarResponse,
   UpdateBankAccountRequest,
   UpdateBankAccountResponse,
+  GetBankAccountResponse,
+  UpdateBankAccountStatusRequest,
+  UpdateBankAccountStatusResponse,
+  ListAdminBankAccountsResponse,
+  PublicMeUser,
 } from './users.api';
 import {
   LoginResponseSchema,
@@ -52,6 +63,8 @@ export class UsersController {
   constructor(
     @Inject(UsersService)
     private readonly usersService: UsersService,
+    @Inject(forwardRef(() => IdentityVerificationService))
+    private readonly identityVerificationService: IdentityVerificationService,
   ) {}
 
   @Post('login')
@@ -70,6 +83,34 @@ export class UsersController {
     const result = await this.usersService.login(ctx, email, password);
     if (!result) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const fullUser = await this.usersService.getAuthenticatedUserInfo(
+      ctx,
+      result.user.id,
+    );
+    if (fullUser) {
+      const identityVerificationStatus =
+        await this.identityVerificationService.getVerificationStatusForUser(
+          ctx,
+          result.user.id,
+        );
+      const bankAccountStatus = fullUser.bankAccount
+        ? fullUser.bankAccount.verified
+          ? 'approved'
+          : 'pending'
+        : 'none';
+      return {
+        success: true,
+        data: {
+          ...result,
+          user: this.usersService.toPublicMeResponse(
+            fullUser,
+            identityVerificationStatus,
+            bankAccountStatus,
+          ),
+        },
+      };
     }
 
     return {
@@ -120,10 +161,37 @@ export class UsersController {
   async getMe(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
-  ): Promise<ApiResponse<AuthenticatedUserPublicInfo>> {
+  ): Promise<ApiResponse<PublicMeUser>> {
+    const identityVerificationStatus =
+      await this.identityVerificationService.getVerificationStatusForUser(
+        ctx,
+        user.id,
+      );
+    const bankAccountStatus = user.bankAccount
+      ? user.bankAccount.verified
+        ? 'approved'
+        : 'pending'
+      : 'none';
     return {
       success: true,
-      data: user,
+      data: this.usersService.toPublicMeResponse(
+        user,
+        identityVerificationStatus,
+        bankAccountStatus,
+      ),
+    };
+  }
+
+  @Get('bank-account')
+  @UseGuards(JwtAuthGuard)
+  async getBankAccount(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+  ): Promise<ApiResponse<GetBankAccountResponse | null>> {
+    const bankAccount = await this.usersService.getMyBankAccount(ctx, user.id);
+    return {
+      success: true,
+      data: bankAccount,
     };
   }
 
@@ -201,6 +269,48 @@ export class UsersController {
       cbuOrCvu: body.cbuOrCvu.trim(),
       alias: body.alias?.trim(),
     });
+    return {
+      success: true,
+      data: updatedUser,
+    };
+  }
+
+  /**
+   * List all users with bank account and full bank data (admin only)
+   */
+  @Get('admin/bank-accounts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  async listBankAccountsForAdmin(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<ListAdminBankAccountsResponse>> {
+    const data = await this.usersService.getUsersWithBankAccountForAdmin(ctx);
+    return {
+      success: true,
+      data,
+    };
+  }
+
+  /**
+   * Update bank account verification status (admin only)
+   */
+  @Patch('admin/bank-account-status/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @HttpCode(HttpStatus.OK)
+  async updateBankAccountStatus(
+    @Context() ctx: Ctx,
+    @Param('userId') userId: string,
+    @Body() body: UpdateBankAccountStatusRequest,
+  ): Promise<ApiResponse<UpdateBankAccountStatusResponse>> {
+    if (body.status !== 'approved' && body.status !== 'rejected') {
+      throw new BadRequestException('Status must be "approved" or "rejected"');
+    }
+    const updatedUser = await this.usersService.setBankAccountVerificationStatus(
+      ctx,
+      userId,
+      body.status,
+    );
     return {
       success: true,
       data: updatedUser,

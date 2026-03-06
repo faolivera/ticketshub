@@ -191,10 +191,13 @@ export class SupportService {
         ticket.id,
       );
 
-      // Get transaction details for notification
+      // Get transaction details for notification and set buyerDisputed when buyer opens dispute
       const transaction = await this.transactionsService.findById(ctx, data.transactionId);
       if (transaction) {
         const openedBy: 'buyer' | 'seller' = transaction.buyerId === userId ? 'buyer' : 'seller';
+        if (openedBy === 'buyer') {
+          await this.usersService.setBuyerDisputed(ctx, userId);
+        }
         this.notificationsService
           .emit(ctx, NotificationEventType.DISPUTE_OPENED, {
             transactionId: data.transactionId,

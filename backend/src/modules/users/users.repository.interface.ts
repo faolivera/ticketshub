@@ -5,7 +5,7 @@ import type { User, UserAddress, UserStatus } from './users.domain';
  * Data required to create a new user
  */
 export type CreateUserData = Omit<User, 'id' | 'country' | 'currency' | 'status'> &
-  Partial<Pick<User, 'country' | 'currency'>> & { status?: UserStatus };
+  Partial<Pick<User, 'country' | 'currency' | 'buyerDisputed'>> & { status?: UserStatus };
 
 /**
  * Data for updating basic user information
@@ -132,6 +132,16 @@ export interface IUsersRepository {
     userId: string,
     bankAccount: User['bankAccount'],
   ): Promise<User | undefined>;
+
+  /**
+   * Find all users that have a bank account set (for admin list with full bank data).
+   */
+  findUsersWithBankAccount(ctx: Ctx): Promise<User[]>;
+
+  /**
+   * Set buyerDisputed to true (when user opens a dispute as buyer).
+   */
+  setBuyerDisputed(ctx: Ctx, userId: string): Promise<User | undefined>;
 }
 
 /**

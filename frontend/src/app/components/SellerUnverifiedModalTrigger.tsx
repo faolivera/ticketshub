@@ -39,5 +39,5 @@ export function SellerUnverifiedModalTrigger({ showWhen = true }: SellerUnverifi
 
   if (!shouldShow) return null;
 
-  return <SellerUnverifiedModal open onClose={handleClose} />;
+  return <SellerUnverifiedModal open onClose={handleClose} user={user} />;
 }

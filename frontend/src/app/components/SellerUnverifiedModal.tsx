@@ -52,26 +52,43 @@ function setDismissedWithExpiry(): void {
 export interface SellerUnverifiedModalProps {
   open: boolean;
   onClose: () => void;
+  /** Current user (for showing which items need verification); from useUser(). */
+  user?: {
+    identityVerificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+    bankAccountStatus?: 'none' | 'pending' | 'approved';
+  } | null;
 }
 
 /**
  * Returns true when the user has accepted seller terms but cannot receive payout yet
  * (missing V3 and/or V4 — identity and bank account verification).
+ * Only shows when at least one verification needs user action (not submitted or rejected).
+ * If both are pending or approved, returns false (don't show modal).
+ * Uses identityVerificationStatus and bankAccountStatus from GET /me when present.
  */
 export function isSellerUnverified(user: {
   acceptedSellerTermsAt?: Date | null;
-  identityVerification?: { status: string };
-  bankAccount?: { verified?: boolean };
+  identityVerified?: boolean;
+  bankDetailsVerified?: boolean;
+  identityVerificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  bankAccountStatus?: 'none' | 'pending' | 'approved';
 } | null): boolean {
   if (!user) return false;
   const isSeller = user.acceptedSellerTermsAt != null;
   if (!isSeller) return false;
-  const hasV3 = user.identityVerification?.status === 'approved';
-  const hasV4 = user.bankAccount?.verified === true;
+  const idStatus = user.identityVerificationStatus;
+  const bankStatus = user.bankAccountStatus;
+  if (idStatus !== undefined && bankStatus !== undefined) {
+    const needsIdentityAction = idStatus === 'none' || idStatus === 'rejected';
+    const needsBankAction = bankStatus === 'none';
+    return needsIdentityAction || needsBankAction;
+  }
+  const hasV3 = user.identityVerified === true;
+  const hasV4 = user.bankDetailsVerified === true;
   return !hasV3 || !hasV4;
 }
 
-export function SellerUnverifiedModal({ open, onClose }: SellerUnverifiedModalProps) {
+export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedModalProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -80,11 +97,17 @@ export function SellerUnverifiedModal({ open, onClose }: SellerUnverifiedModalPr
     onClose();
   };
 
-  const handleVerify = () => {
+  const handleGoToProfile = () => {
     setDismissedWithExpiry();
     onClose();
-    navigate('/seller-verification');
+    navigate('/user-profile');
   };
+
+  const needsDni =
+    user &&
+    (user.identityVerificationStatus === 'none' || user.identityVerificationStatus === 'rejected');
+  const needsBank = user && user.bankAccountStatus === 'none';
+  const hasStatus = user && user.identityVerificationStatus !== undefined && user.bankAccountStatus !== undefined;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
@@ -96,15 +119,32 @@ export function SellerUnverifiedModal({ open, onClose }: SellerUnverifiedModalPr
           <DialogTitle className="text-blue-900 text-xl font-semibold leading-tight sm:text-2xl">
             {t('sellerUnverifiedModal.title')}
           </DialogTitle>
-          <DialogDescription className="text-blue-800/90 min-h-0 flex-1 overflow-y-auto text-sm leading-relaxed sm:text-base">
-            {t('sellerUnverifiedModal.message')}
+          <DialogDescription className="text-blue-800/90 min-h-0 flex-1 overflow-y-auto text-sm leading-relaxed sm:text-base space-y-3">
+            <p>{t('sellerUnverifiedModal.message')}</p>
+            {hasStatus && (needsDni || needsBank) && (
+              <ul className="list-disc list-inside space-y-1">
+                {needsDni && <li>{t('sellerUnverifiedModal.itemDni')}</li>}
+                {needsBank && <li>{t('sellerUnverifiedModal.itemBank')}</li>}
+              </ul>
+            )}
+            <p>
+              {t('sellerUnverifiedModal.goToProfile')}{' '}
+              <button
+                type="button"
+                onClick={handleGoToProfile}
+                className="font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+              >
+                {t('sellerUnverifiedModal.linkProfile')}
+              </button>
+              {t('sellerUnverifiedModal.goToProfileSuffix')}
+            </p>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex shrink-0 justify-center pt-4 pb-2">
           <Button
             type="button"
             className="bg-blue-600 text-white hover:bg-blue-700 font-semibold px-6"
-            onClick={handleVerify}
+            onClick={handleGoToProfile}
           >
             {t('sellerUnverifiedModal.verifyAccount')}
           </Button>

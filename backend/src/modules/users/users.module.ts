@@ -6,12 +6,14 @@ import { USERS_REPOSITORY } from './users.repository.interface';
 import { ImagesModule } from '../images/images.module';
 import { OTPModule } from '../otp/otp.module';
 import { TermsModule } from '../terms/terms.module';
+import { IdentityVerificationModule } from '../identity-verification/identity-verification.module';
 
 @Module({
   imports: [
     ImagesModule,
     forwardRef(() => OTPModule),
     forwardRef(() => TermsModule),
+    forwardRef(() => IdentityVerificationModule),
   ],
   controllers: [UsersController],
   providers: [

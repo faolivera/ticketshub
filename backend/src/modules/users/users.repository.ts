@@ -111,6 +111,7 @@ export class UsersRepository implements IUsersRepository {
         bankAccount: userData.bankAccount
           ? this.serializeBankAccount(userData.bankAccount)
           : undefined,
+        buyerDisputed: userData.buyerDisputed ?? false,
       },
     });
     return this.mapToUser(user);
@@ -276,6 +277,32 @@ export class UsersRepository implements IUsersRepository {
     }
   }
 
+  async findUsersWithBankAccount(_ctx: Ctx): Promise<User[]> {
+    const rows = await this.prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM users WHERE "bankAccount" IS NOT NULL
+    `;
+    const ids = rows.map((r) => r.id);
+    if (ids.length === 0) return [];
+    const users = await this.findByIds(_ctx, ids);
+    return users.filter((u) => u.bankAccount != null);
+  }
+
+  async setBuyerDisputed(
+    _ctx: Ctx,
+    userId: string,
+  ): Promise<User | undefined> {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { buyerDisputed: true },
+      });
+      return this.mapToUser(user);
+    } catch (error) {
+      console.error('setBuyerDisputed failed:', error);
+      return undefined;
+    }
+  }
+
   private mapToUser(prismaUser: PrismaUser): User {
     return {
       id: prismaUser.id,
@@ -304,6 +331,7 @@ export class UsersRepository implements IUsersRepository {
       bankAccount: prismaUser.bankAccount
         ? this.parseBankAccount(prismaUser.bankAccount)
         : undefined,
+      buyerDisputed: prismaUser.buyerDisputed ?? false,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
     };

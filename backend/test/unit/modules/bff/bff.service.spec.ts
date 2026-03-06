@@ -491,6 +491,7 @@ describe('BffService', () => {
       emailVerified: true,
       phoneVerified: false,
       tosAcceptedAt: new Date(),
+      buyerDisputed: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

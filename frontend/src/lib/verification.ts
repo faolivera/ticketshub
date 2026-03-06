@@ -1,9 +1,9 @@
-import { IdentityVerificationStatus } from '@/api/types/users';
 import type { User } from '@/api/types/users';
 
 /**
  * Frontend verification helper: V1–V4 and derived seller state.
  * Mirrors backend VerificationHelper logic for UI and guards.
+ * GET /users/me exposes only identityVerified and bankDetailsVerified (booleans).
  */
 export const VerificationHelper = {
   hasV1(user: User | null | undefined): boolean {
@@ -15,11 +15,11 @@ export const VerificationHelper = {
   },
 
   hasV3(user: User | null | undefined): boolean {
-    return user?.identityVerification?.status === IdentityVerificationStatus.Approved;
+    return user?.identityVerified === true;
   },
 
   hasV4(user: User | null | undefined): boolean {
-    return user?.bankAccount?.verified === true;
+    return user?.bankDetailsVerified === true;
   },
 
   isSeller(user: User | null | undefined): boolean {

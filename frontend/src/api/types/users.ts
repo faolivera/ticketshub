@@ -42,7 +42,7 @@ export interface BankAccount {
 }
 
 /**
- * Full user entity
+ * Full user entity (internal/admin). Current user from API uses AuthenticatedUserPublicInfo with booleans only.
  */
 export interface User {
   id: string;
@@ -67,11 +67,17 @@ export interface User {
   // Terms of Service acceptance
   tosAcceptedAt?: Date;
 
-  // Identity verification (V3)
-  identityVerification?: IdentityVerification;
-
-  // Bank account (V4, for sellers to receive payouts)
-  bankAccount?: BankAccount;
+  // Identity verification (V3) – only status booleans exposed in GET /me
+  identityVerified?: boolean;
+  bankDetailsVerified?: boolean;
+  /** Identity verification state; present when GET /me includes it. */
+  identityVerificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  /** Bank account state; present when GET /me includes it. */
+  bankAccountStatus?: 'none' | 'pending' | 'approved';
+  /** True when user has opened a dispute as buyer; profile shows identity row. */
+  buyerDisputed?: boolean;
+  /** Last 4 digits of CBU/CVU for profile display when user has bank account. */
+  bankAccountLast4?: string;
 
   createdAt: Date;
   updatedAt: Date;
@@ -88,11 +94,23 @@ export interface UserPublicInfo {
 }
 
 /**
- * Authenticated user info (returned after login)
+ * Authenticated user info (GET /users/me, login, register).
+ * Exposes only identityVerified and bankDetailsVerified, not full identityVerification or bankAccount.
  */
 export interface AuthenticatedUserPublicInfo extends Omit<User, 'password' | 'imageId'> {
   /** User profile image; null when none set */
   pic: Image | null;
+}
+
+/**
+ * Current user's bank account (GET /users/bank-account), for profile/bank-account form.
+ */
+export interface MyBankAccount {
+  holderName: string;
+  cbuOrCvu: string;
+  alias?: string;
+  verified: boolean;
+  verifiedAt?: string;
 }
 
 /**
@@ -141,4 +159,32 @@ export interface JWTPayload {
   email: string;
   role: Role;
   isSeller: boolean;
+}
+
+/**
+ * Full bank account item for admin verification list (admin only).
+ */
+export interface AdminBankAccountItem {
+  holderName: string;
+  cbuOrCvu: string;
+  alias?: string;
+  verified: boolean;
+  verifiedAt?: string;
+}
+
+/**
+ * User with full bank account for admin list (GET /users/admin/bank-accounts).
+ */
+export interface AdminBankAccountVerificationItem {
+  userId: string;
+  userEmail: string;
+  userPublicName: string;
+  bankAccount: AdminBankAccountItem;
+}
+
+/**
+ * Response for GET /users/admin/bank-accounts (admin only).
+ */
+export interface ListAdminBankAccountsResponse {
+  items: AdminBankAccountVerificationItem[];
 }

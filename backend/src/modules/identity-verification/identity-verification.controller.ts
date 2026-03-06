@@ -182,7 +182,7 @@ export class IdentityVerificationController {
     @Param('type') documentType: string,
     @Res() res: Response,
   ): Promise<void> {
-    if (documentType !== 'front' && documentType !== 'back') {
+    if (documentType !== 'front' && documentType !== 'back' && documentType !== 'selfie') {
       res.status(400).json({
         success: false,
         error: { code: 'BAD_REQUEST', message: 'Invalid document type' },

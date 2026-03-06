@@ -10,9 +10,9 @@ export function SellerStatusBanner() {
 
   const tier = VerificationHelper.sellerTier(user);
   const verificationStatus =
-    user?.identityVerification?.status === 'approved'
+    user?.identityVerified === true
       ? 'verified'
-      : user?.identityVerification?.status === 'pending'
+      : user?.identityVerified === false
         ? 'pending'
         : undefined;
 
