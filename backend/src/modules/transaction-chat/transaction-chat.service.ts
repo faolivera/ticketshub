@@ -175,6 +175,39 @@ export class TransactionChatService {
     );
   }
 
+  /**
+   * Create a structured delivery event in chat (system message when seller confirms transfer with payload type).
+   * Called after confirmTransfer when payloadType is provided. Does not count toward message limit for user messages.
+   */
+  async createDeliveryMessage(
+    ctx: Ctx,
+    transactionId: string,
+    sellerId: string,
+    payloadType: 'qr' | 'pdf' | 'text',
+  ): Promise<TransactionChatMessageItem> {
+    const transaction =
+      await this.transactionsService.getTransactionById(
+        ctx,
+        transactionId,
+        sellerId,
+      );
+    if (transaction.sellerId !== sellerId) {
+      throw new ForbiddenException('Only seller can create delivery message');
+    }
+    const entity = await this.chatRepository.create(
+      ctx,
+      transactionId,
+      sellerId,
+      '', // no text content for delivery event
+      { messageType: 'delivery', payloadType },
+    );
+    return this.toMessageItem(
+      entity,
+      transaction.buyerId,
+      transaction.sellerId,
+    );
+  }
+
   private toMessageItem(
     entity: TransactionChatMessageEntity,
     buyerId: string,
@@ -187,6 +220,8 @@ export class TransactionChatService {
       senderId: entity.senderId,
       senderRole,
       content: entity.content,
+      messageType: entity.messageType,
+      payloadType: entity.payloadType ?? undefined,
       createdAt: entity.createdAt,
     };
   }

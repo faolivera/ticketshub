@@ -25,12 +25,15 @@ export const transactionsService = {
   },
 
   /**
-   * Confirm ticket transfer (seller action)
+   * Confirm ticket transfer (seller action). Optionally pass how the ticket was sent (payloadType).
    */
-  async confirmTransfer(id: string, transferProof?: string): Promise<ConfirmTransferResponse> {
+  async confirmTransfer(
+    id: string,
+    options?: { transferProof?: string; payloadType?: 'qr' | 'pdf' | 'text' }
+  ): Promise<ConfirmTransferResponse> {
     const response = await apiClient.post<ConfirmTransferResponse>(
       `/transactions/${id}/transfer`,
-      { transferProof }
+      options ?? {}
     );
     return response.data;
   },

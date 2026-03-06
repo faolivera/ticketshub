@@ -529,12 +529,13 @@ export class TransactionsService {
   }
 
   /**
-   * Seller confirms ticket transfer (atomic)
+   * Seller confirms ticket transfer (atomic). Optionally records how the ticket was sent (payload type).
    */
   async confirmTransfer(
     ctx: Ctx,
     transactionId: string,
     sellerId: string,
+    payloadType?: 'qr' | 'pdf' | 'text',
   ): Promise<Transaction> {
     this.logger.log(
       ctx,
@@ -566,6 +567,7 @@ export class TransactionsService {
           status: newStatus,
           requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
           ticketTransferredAt: new Date(),
+          ...(payloadType && { sellerSentPayloadType: payloadType }),
         },
         transaction.version,
       );
@@ -1073,21 +1075,6 @@ export class TransactionsService {
         (total, transaction) => total + transaction.ticketUnitIds.length,
         0,
       );
-  }
-
-  /**
-   * Get total amount received by seller from completed sales (in major currency units, e.g. USD).
-   * @deprecated Prefer getSellerCompletedSalesAmounts + ConversionService.sumInCurrency for multi-currency comparison.
-   */
-  async getSellerCompletedSalesAmountUsd(
-    ctx: Ctx,
-    sellerId: string,
-  ): Promise<number> {
-    const amounts = await this.getSellerCompletedSalesAmounts(ctx, sellerId);
-    return amounts.reduce(
-      (total, m) => total + (m.amount ?? 0) / 100,
-      0,
-    );
   }
 
   /**

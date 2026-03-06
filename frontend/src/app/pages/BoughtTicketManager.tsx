@@ -1288,5 +1288,3 @@ export function SellerDashboardPage() {
   );
 }
 
-/** @deprecated Use MyTicketsPage for /my-tickets. Kept for backwards compatibility. */
-export const BoughtTicketManager = MyTicketsPage;

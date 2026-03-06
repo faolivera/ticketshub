@@ -13,6 +13,7 @@ import { ConfigModule } from '../config/config.module';
 import { OffersModule } from '../offers/offers.module';
 import { TransactionManagerModule } from '../../common/database';
 import { RiskEngineModule } from '../risk-engine/risk-engine.module';
+import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RiskEngineModule } from '../risk-engine/risk-engine.module';
     ConfigModule,
     RiskEngineModule,
     OffersModule,
+    forwardRef(() => TransactionChatModule),
   ],
   controllers: [TransactionsController],
   providers: [

@@ -7,10 +7,12 @@ import {
   Body,
   UseGuards,
   Inject,
+  forwardRef,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
+import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -24,6 +26,7 @@ import { RequiredActor, CancellationReason } from './transactions.domain';
 import type {
   InitiatePurchaseRequest,
   InitiatePurchaseResponse,
+  ConfirmTransferRequest,
   ConfirmTransferResponse,
   ConfirmReceiptRequest,
   ConfirmReceiptResponse,
@@ -38,6 +41,8 @@ export class TransactionsController {
   constructor(
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
+    @Inject(forwardRef(() => TransactionChatService))
+    private readonly transactionChatService: TransactionChatService,
   ) {}
 
   /**
@@ -81,7 +86,7 @@ export class TransactionsController {
   }
 
   /**
-   * Confirm ticket transfer (seller)
+   * Confirm ticket transfer (seller). Optional payloadType records how the ticket was sent (qr/pdf/text).
    */
   @Post(':id/transfer')
   @UseGuards(JwtAuthGuard)
@@ -89,12 +94,21 @@ export class TransactionsController {
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
+    @Body() body: ConfirmTransferRequest,
   ): Promise<ApiResponse<ConfirmTransferResponse>> {
     const transaction = await this.transactionsService.confirmTransfer(
       ctx,
       id,
       user.id,
+      body.payloadType,
     );
+    if (body.payloadType) {
+      this.transactionChatService
+        .createDeliveryMessage(ctx, id, user.id, body.payloadType)
+        .catch(() => {
+          // Non-blocking: delivery event in chat is best-effort; transaction is already updated
+        });
+    }
     return { success: true, data: transaction };
   }
 

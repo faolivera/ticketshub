@@ -23,7 +23,7 @@ export class ResponseValidationInterceptor implements NestInterceptor {
       context.getHandler(),
     );
 
-    // If no schema defined, skip validation (for backwards compatibility)
+    // If no schema defined, skip validation (validation is optional per route)
     if (!schema) {
       return next.handle();
     }

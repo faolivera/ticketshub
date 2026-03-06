@@ -75,6 +75,10 @@ export function MyTicket() {
   const [disputeError, setDisputeError] = useState<string | null>(null);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
+  const [showConfirmTransferModal, setShowConfirmTransferModal] = useState(false);
+  const [confirmTransferPayloadType, setConfirmTransferPayloadType] = useState<'qr' | 'pdf' | 'text'>('pdf');
+  const [isConfirmingTransfer, setIsConfirmingTransfer] = useState(false);
+
   const refetch = useCallback(async () => {
     if (!transactionId) return;
     try {
@@ -678,6 +682,16 @@ export function MyTicket() {
                         }`}>
                           {statusInfo.description}
                         </p>
+                        {transaction.sellerSentPayloadType && (
+                          <p className="text-xs mt-2 opacity-90">
+                            {t('myTicket.sentAs')}:{' '}
+                            {transaction.sellerSentPayloadType === 'qr'
+                              ? t('myTicket.sentAsQr')
+                              : transaction.sellerSentPayloadType === 'pdf'
+                                ? t('myTicket.sentAsPdf')
+                                : t('myTicket.sentAsText')}
+                          </p>
+                        )}
                         {/* Countdown Timer - Show inside disclaimer when status is PendingPayment and not expired */}
                         {effectiveStatus === TransactionStatus.PendingPayment && (
                           <div className="mt-3 pt-3 border-t border-yellow-200">
@@ -1058,14 +1072,8 @@ export function MyTicket() {
 
               {transaction.status === TransactionStatus.PaymentReceived && isSeller && (
                 <button
-                  onClick={async () => {
-                    try {
-                      const updated = await transactionsService.confirmTransfer(transaction.id);
-                      setTransaction(prev => prev ? { ...prev, ...updated } : null);
-                    } catch (err) {
-                      console.error('Failed to confirm transfer:', err);
-                    }
-                  }}
+                  type="button"
+                  onClick={() => setShowConfirmTransferModal(true)}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
                   {t('myTicket.confirmTicketTransferred')}
@@ -1349,6 +1357,68 @@ export function MyTicket() {
           </div>
         </div>
       </div>
+
+      {/* Confirm transfer modal: how did you send the ticket? */}
+      {showConfirmTransferModal && transaction && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {t('myTicket.confirmTransferTitle')}
+            </h3>
+            <p className="text-gray-600 text-sm mb-4">
+              {t('myTicket.confirmTransferPayloadHint')}
+            </p>
+            <div className="space-y-2 mb-6">
+              {(['qr', 'pdf', 'text'] as const).map((type) => (
+                <label
+                  key={type}
+                  className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+                >
+                  <input
+                    type="radio"
+                    name="payloadType"
+                    value={type}
+                    checked={confirmTransferPayloadType === type}
+                    onChange={() => setConfirmTransferPayloadType(type)}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <span className="font-medium">{t(`myTicket.payloadType_${type}`)}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirmTransferModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                {t('myTicket.cancel')}
+              </button>
+              <button
+                type="button"
+                disabled={isConfirmingTransfer}
+                onClick={async () => {
+                  try {
+                    setIsConfirmingTransfer(true);
+                    const updated = await transactionsService.confirmTransfer(transaction.id, {
+                      payloadType: confirmTransferPayloadType,
+                    });
+                    setTransaction(prev => prev ? { ...prev, ...updated } : null);
+                    setShowConfirmTransferModal(false);
+                  } catch (err) {
+                    console.error('Failed to confirm transfer:', err);
+                  } finally {
+                    setIsConfirmingTransfer(false);
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isConfirmingTransfer ? t('myTicket.confirmingTransfer') : t('myTicket.confirmTransferSubmit')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Open dispute modal */}
       {showDisputeModal && (

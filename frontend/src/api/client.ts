@@ -114,17 +114,16 @@ function createApiClient(): AxiosInstance {
 }
 
 /**
- * Backend error response structure
+ * Backend error response structure (from HttpExceptionFilter and controllers).
  */
 interface BackendErrorResponse {
   success: false;
   error?: ApiErrorDetails;
-  message?: string;
-  errors?: Record<string, string[]>;
 }
 
 /**
- * Extract structured error data from axios error
+ * Extract structured error data from axios error.
+ * Backend always returns { success: false, error: { code, message, details? } }.
  */
 function extractErrorData(error: AxiosError): {
   message: string;
@@ -134,7 +133,6 @@ function extractErrorData(error: AxiosError): {
 } {
   const data = error.response?.data as BackendErrorResponse | undefined;
 
-  // New structured error format: { success: false, error: { code, message, details } }
   if (data?.error && typeof data.error === 'object') {
     return {
       message: data.error.message || 'An unexpected error occurred',
@@ -144,14 +142,11 @@ function extractErrorData(error: AxiosError): {
     };
   }
 
-  // Legacy format: { message, errors }
   return {
-    message: data?.message ? String(data.message) : error.message || 'An unexpected error occurred',
+    message: error.message || 'An unexpected error occurred',
     code: undefined,
     details: undefined,
-    errors: data?.errors && typeof data.errors === 'object'
-      ? data.errors as Record<string, string[]>
-      : undefined,
+    errors: undefined,
   };
 }
 

@@ -166,6 +166,8 @@ describe('SocketGateway', () => {
         senderId: 'user_1',
         senderRole: 'buyer' as const,
         content: 'Hi',
+        messageType: 'text' as const,
+        payloadType: null as string | null,
         createdAt: new Date(),
       };
       transactionChatService.sendMessage.mockResolvedValue(message);

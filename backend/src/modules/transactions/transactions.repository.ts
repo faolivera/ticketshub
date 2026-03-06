@@ -67,6 +67,7 @@ export class TransactionsRepository
           : undefined,
         paymentReceivedAt: transaction.paymentReceivedAt,
         ticketTransferredAt: transaction.ticketTransferredAt,
+        sellerSentPayloadType: transaction.sellerSentPayloadType ?? undefined,
         buyerConfirmedAt: transaction.buyerConfirmedAt,
         completedAt: transaction.completedAt,
         cancelledAt: transaction.cancelledAt,
@@ -270,6 +271,9 @@ export class TransactionsRepository
     if (updates.ticketTransferredAt !== undefined) {
       data.ticketTransferredAt = updates.ticketTransferredAt;
     }
+    if (updates.sellerSentPayloadType !== undefined) {
+      data.sellerSentPayloadType = updates.sellerSentPayloadType;
+    }
     if (updates.buyerConfirmedAt !== undefined) {
       data.buyerConfirmedAt = updates.buyerConfirmedAt;
     }
@@ -464,6 +468,7 @@ export class TransactionsRepository
       createdAt: prismaTransaction.createdAt,
       paymentReceivedAt: prismaTransaction.paymentReceivedAt ?? undefined,
       ticketTransferredAt: prismaTransaction.ticketTransferredAt ?? undefined,
+      sellerSentPayloadType: (prismaTransaction.sellerSentPayloadType as Transaction['sellerSentPayloadType']) ?? undefined,
       buyerConfirmedAt: prismaTransaction.buyerConfirmedAt ?? undefined,
       completedAt: prismaTransaction.completedAt ?? undefined,
       cancelledAt: prismaTransaction.cancelledAt ?? undefined,

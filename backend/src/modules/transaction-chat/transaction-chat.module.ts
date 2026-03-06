@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TransactionChatController } from './transaction-chat.controller';
 import { TransactionChatService } from './transaction-chat.service';
 import { TransactionChatRepository } from './transaction-chat.repository';
@@ -12,7 +12,7 @@ import { UsersModule } from '../users/users.module';
 import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
-  imports: [TransactionsModule, ConfigModule, UsersModule, RealtimeModule],
+  imports: [forwardRef(() => TransactionsModule), ConfigModule, UsersModule, RealtimeModule],
   controllers: [TransactionChatController],
   providers: [
     TransactionChatService,

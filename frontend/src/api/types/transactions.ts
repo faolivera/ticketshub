@@ -112,6 +112,8 @@ export interface Transaction {
   createdAt: Date;
   paymentReceivedAt?: Date;
   ticketTransferredAt?: Date;
+  /** How the seller sent the ticket (QR, PDF, or text). Set when seller confirms transfer. */
+  sellerSentPayloadType?: 'qr' | 'pdf' | 'text';
   buyerConfirmedAt?: Date;
   completedAt?: Date;
   cancelledAt?: Date;
@@ -195,6 +197,8 @@ export interface InitiatePurchaseResponse {
  */
 export interface ConfirmTransferRequest {
   transferProof?: string;
+  /** How the seller sent the ticket (for delivery tracking). */
+  payloadType?: 'qr' | 'pdf' | 'text';
 }
 
 /**
@@ -231,12 +235,17 @@ export interface GetMyTicketsResponse {
 /** Transaction chat: sender role for display */
 export type TransactionChatSenderRole = 'buyer' | 'seller';
 
+/** Chat message type: regular text or structured delivery event */
+export type TransactionChatMessageType = 'text' | 'delivery';
+
 /** Single message in transaction chat */
 export interface TransactionChatMessage {
   id: string;
   senderId: string;
   senderRole: TransactionChatSenderRole;
   content: string;
+  messageType?: TransactionChatMessageType;
+  payloadType?: string | null;
   createdAt: string;
 }
 

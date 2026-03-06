@@ -32,6 +32,8 @@ export interface InitiatePurchaseResponse {
  */
 export interface ConfirmTransferRequest {
   transferProof?: string; // URL to proof image/document
+  /** How the seller sent the ticket (QR, PDF, or text). Used for delivery tracking. */
+  payloadType?: 'qr' | 'pdf' | 'text';
 }
 
 /**

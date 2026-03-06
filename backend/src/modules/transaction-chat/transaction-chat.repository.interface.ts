@@ -1,10 +1,14 @@
 import type { Ctx } from '../../common/types/context';
 
+export type ChatMessageType = 'text' | 'delivery';
+
 export interface TransactionChatMessageEntity {
   id: string;
   transactionId: string;
   senderId: string;
   content: string;
+  messageType: ChatMessageType;
+  payloadType: string | null;
   createdAt: Date;
   readByBuyerAt: Date | null;
   readBySellerAt: Date | null;
@@ -16,6 +20,7 @@ export interface ITransactionChatRepository {
     transactionId: string,
     senderId: string,
     content: string,
+    options?: { messageType?: ChatMessageType; payloadType?: string },
   ): Promise<TransactionChatMessageEntity>;
 
   findByTransaction(

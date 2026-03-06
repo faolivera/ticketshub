@@ -4,11 +4,15 @@
 
 export type ChatSenderRole = 'buyer' | 'seller';
 
+export type ChatMessageType = 'text' | 'delivery';
+
 export interface TransactionChatMessageItem {
   id: string;
   senderId: string;
   senderRole: ChatSenderRole;
   content: string;
+  messageType: ChatMessageType;
+  payloadType?: string | null;
   createdAt: Date;
 }
 

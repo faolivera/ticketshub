@@ -10,7 +10,7 @@ export interface SellerUnverifiedModalTriggerProps {
   /**
    * When true, the modal may show (if user is unverified seller and not dismissed).
    * Use this to show only on specific routes, e.g. seller-dashboard?tab=sold or transaction as seller.
-   * Defaults to true for backward compatibility.
+   * Defaults to true so the modal can show on any relevant page when not specified.
    */
   showWhen?: boolean;
 }

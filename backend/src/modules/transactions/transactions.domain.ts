@@ -66,6 +66,11 @@ export enum TransactionStatus {
 }
 
 /**
+ * How the seller sent the ticket to the buyer (for delivery tracking).
+ */
+export type SellerSentPayloadType = 'qr' | 'pdf' | 'text';
+
+/**
  * Actor required to advance the transaction to the next status
  */
 export enum RequiredActor {
@@ -132,15 +137,6 @@ export function canSendTransactionChat(status: TransactionStatus): boolean {
 }
 
 /**
- * @deprecated Use getTransactionChatMode / canReadTransactionChat / canSendTransactionChat instead.
- * Whether buyer-seller chat is allowed for this transaction status.
- * Chat is only allowed between payment confirmed and buyer confirming receipt.
- */
-export function isTransactionChatAllowed(status: TransactionStatus): boolean {
-  return canReadTransactionChat(status);
-}
-
-/**
  * Mapping of transaction status to required actor
  */
 export const STATUS_REQUIRED_ACTOR: Record<TransactionStatus, RequiredActor> = {
@@ -192,6 +188,8 @@ export interface Transaction {
   createdAt: Date;
   paymentReceivedAt?: Date;
   ticketTransferredAt?: Date;
+  /** How the seller sent the ticket (QR, PDF, or text/link). Set when seller confirms transfer. */
+  sellerSentPayloadType?: SellerSentPayloadType;
   buyerConfirmedAt?: Date;
   completedAt?: Date;
   cancelledAt?: Date;

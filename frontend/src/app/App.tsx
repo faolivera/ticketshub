@@ -13,7 +13,7 @@ import { EventTickets } from '@/app/pages/EventTickets';
 import { UserProfile } from '@/app/pages/UserProfile';
 import { SellerProfile } from '@/app/pages/SellerProfile';
 import { BuyTicketPage } from '@/app/pages/BuyTicketPage';
-import { BoughtTicketManager, MyTicketsPage, SellerDashboardPage } from '@/app/pages/BoughtTicketManager';
+import { MyTicketsPage, SellerDashboardPage } from '@/app/pages/BoughtTicketManager';
 import { HowItWorks } from '@/app/pages/HowItWorks';
 import { SellTicket } from '@/app/pages/SellTicket';
 import { CreateEvent } from '@/app/pages/CreateEvent';

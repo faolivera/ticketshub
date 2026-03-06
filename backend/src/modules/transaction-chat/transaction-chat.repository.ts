@@ -23,6 +23,7 @@ export class TransactionChatRepository
     transactionId: string,
     senderId: string,
     content: string,
+    options?: { messageType?: 'text' | 'delivery'; payloadType?: string },
   ): Promise<TransactionChatMessageEntity> {
     const client = this.getClient(ctx);
     const row = await client.transactionChatMessage.create({
@@ -30,6 +31,8 @@ export class TransactionChatRepository
         transactionId,
         senderId,
         content,
+        messageType: options?.messageType ?? 'text',
+        payloadType: options?.payloadType ?? null,
       },
     });
     return this.mapToEntity(row);
@@ -121,6 +124,8 @@ export class TransactionChatRepository
     transactionId: string;
     senderId: string;
     content: string;
+    messageType: string;
+    payloadType: string | null;
     createdAt: Date;
     readByBuyerAt: Date | null;
     readBySellerAt: Date | null;
@@ -130,6 +135,8 @@ export class TransactionChatRepository
       transactionId: row.transactionId,
       senderId: row.senderId,
       content: row.content,
+      messageType: (row.messageType === 'delivery' ? 'delivery' : 'text') as TransactionChatMessageEntity['messageType'],
+      payloadType: row.payloadType,
       createdAt: row.createdAt,
       readByBuyerAt: row.readByBuyerAt,
       readBySellerAt: row.readBySellerAt,

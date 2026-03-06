@@ -183,7 +183,10 @@ export class IdentityVerificationController {
     @Res() res: Response,
   ): Promise<void> {
     if (documentType !== 'front' && documentType !== 'back') {
-      res.status(400).json({ success: false, error: 'Invalid document type' });
+      res.status(400).json({
+        success: false,
+        error: { code: 'BAD_REQUEST', message: 'Invalid document type' },
+      });
       return;
     }
 
@@ -194,7 +197,10 @@ export class IdentityVerificationController {
     );
 
     if (!result) {
-      res.status(404).json({ success: false, error: 'Document not found' });
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Document not found' },
+      });
       return;
     }
 

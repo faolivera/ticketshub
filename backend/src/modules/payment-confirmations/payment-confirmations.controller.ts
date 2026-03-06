@@ -138,7 +138,10 @@ export class PaymentConfirmationsController {
     );
 
     if (!result) {
-      res.status(404).json({ success: false, error: 'File not found' });
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'File not found' },
+      });
       return;
     }
 

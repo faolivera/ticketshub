@@ -173,6 +173,7 @@ const BffTransactionWithDetailsSchema = z.object({
   createdAt: z.coerce.date(),
   paymentReceivedAt: z.coerce.date().optional(),
   ticketTransferredAt: z.coerce.date().optional(),
+  sellerSentPayloadType: z.enum(['qr', 'pdf', 'text']).optional(),
   buyerConfirmedAt: z.coerce.date().optional(),
   completedAt: z.coerce.date().optional(),
   cancelledAt: z.coerce.date().optional(),

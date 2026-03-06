@@ -498,6 +498,7 @@ model Transaction {
   cancellationReason        CancellationReason?
   paymentReceivedAt         DateTime?
   ticketTransferredAt       DateTime?
+  sellerSentPayloadType     String?             @map("seller_sent_payload_type")
   buyerConfirmedAt          DateTime?
   completedAt               DateTime?
   cancelledAt               DateTime?
@@ -531,6 +532,8 @@ model TransactionChatMessage {
   transactionId   String    @map("transaction_id")
   senderId        String    @map("sender_id")
   content         String
+  messageType     String    @default("text") @map("message_type")
+  payloadType     String?   @map("payload_type")
   createdAt       DateTime  @default(now()) @map("created_at")
   readByBuyerAt   DateTime? @map("read_by_buyer_at")
   readBySellerAt  DateTime? @map("read_by_seller_at")

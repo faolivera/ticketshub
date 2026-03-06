@@ -266,6 +266,15 @@ export function TicketChat({
             ) : (
               messages.map((message) => {
                 const isCurrentUser = message.senderRole === currentUserRole;
+                const isDelivery = message.messageType === 'delivery' && message.payloadType;
+                const deliveryLabel =
+                  message.payloadType === 'qr'
+                    ? t('chat.deliverySentQr')
+                    : message.payloadType === 'pdf'
+                      ? t('chat.deliverySentPdf')
+                      : message.payloadType === 'text'
+                        ? t('chat.deliverySentText')
+                        : t('chat.deliverySent');
                 return (
                   <div
                     key={message.id}
@@ -286,12 +295,18 @@ export function TicketChat({
                       <div>
                         <div
                           className={`rounded-2xl px-3 py-2 ${
-                            isCurrentUser
-                              ? 'bg-blue-600 text-white rounded-br-sm'
-                              : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
+                            isDelivery
+                              ? 'bg-green-50 text-green-800 border border-green-200 text-center'
+                              : isCurrentUser
+                                ? 'bg-blue-600 text-white rounded-br-sm'
+                                : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                          {isDelivery ? (
+                            <p className="text-sm font-medium">{deliveryLabel}</p>
+                          ) : (
+                            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                          )}
                         </div>
                         <p
                           className={`text-xs text-gray-500 mt-0.5 ${

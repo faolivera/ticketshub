@@ -247,7 +247,6 @@ describe('TicketsService', () => {
 
     const mockTransactionsService = {
       getSellerCompletedSalesTotal: jest.fn().mockResolvedValue(0),
-      getSellerCompletedSalesAmountUsd: jest.fn().mockResolvedValue(0),
       getSellerCompletedSalesAmounts: jest.fn().mockResolvedValue([]),
     };
 
