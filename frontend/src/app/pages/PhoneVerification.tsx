@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Phone, MessageSquare, ArrowLeft, Loader2 } from 'lucide-react';
@@ -12,7 +12,8 @@ export function PhoneVerification() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { refreshUser } = useUser();
+  const { user, refreshUser } = useUser();
+  const hasPrefilledPhone = useRef(false);
 
   const returnTo = (location.state as { returnTo?: string })?.returnTo 
     || searchParams.get('returnTo') 
@@ -26,6 +27,14 @@ export function PhoneVerification() {
   const [canResend, setCanResend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pre-fill phone when user has a saved but unverified number (e.g. from registration)
+  useEffect(() => {
+    if (user?.phone && !user.phoneVerified && !hasPrefilledPhone.current) {
+      setPhoneNumber(user.phone);
+      hasPrefilledPhone.current = true;
+    }
+  }, [user?.phone, user?.phoneVerified]);
 
   // Timer for resend
   useEffect(() => {

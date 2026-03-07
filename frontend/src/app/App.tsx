@@ -39,9 +39,9 @@ export default function App() {
     <UserProvider>
       <SocketProvider>
       <BrowserRouter>
-        <div className="min-h-screen flex flex-col">
+        <div className="h-full flex flex-col">
           <Header />
-          <main className="flex-1 pb-16 sm:pb-0">
+          <main className="flex-1 overflow-y-auto min-h-0">
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
@@ -83,8 +83,8 @@ export default function App() {
               {/* Catch-all: unknown routes */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Footer />
           </main>
-          <Footer />
           <MobileNav />
         </div>
       </BrowserRouter>
