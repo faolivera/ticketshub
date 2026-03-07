@@ -15,7 +15,7 @@ export function MobileNav() {
   const activeClass = 'text-indigo-600';
 
   return (
-    <nav className="sm:hidden bg-white border-t border-gray-200 flex items-stretch shrink-0">
+    <nav className="sm:hidden fixed bottom-0 left-0 right-0 w-full z-50 bg-white border-t border-gray-200 flex items-stretch pb-[env(safe-area-inset-bottom)]">
       <NavLink
         to="/my-tickets"
         className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}

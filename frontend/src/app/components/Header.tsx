@@ -107,11 +107,11 @@ export function Header() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
               >
-                <User className="w-4 h-4" />
-                <span>{user?.firstName} {user?.lastName}</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <User className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">{user?.firstName} {user?.lastName}</span>
+                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isDropdownOpen && (
