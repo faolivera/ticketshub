@@ -30,6 +30,7 @@ import type { ListSupportTicketsQuery } from './support.api';
 import { Role } from '../users/users.domain';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
+import { TicketsService } from '../tickets/tickets.service';
 
 @Injectable()
 export class SupportService {
@@ -45,6 +46,8 @@ export class SupportService {
     @Inject(PlatformConfigService)
     private readonly platformConfigService: PlatformConfigService,
     private readonly notificationsService: NotificationsService,
+    @Inject(TicketsService)
+    private readonly ticketsService: TicketsService,
   ) {}
 
   /**
@@ -125,6 +128,34 @@ export class SupportService {
         );
       }
 
+      let refDate: Date;
+
+      if (reason === DisputeReason.TicketNotReceived) {
+        if (!transaction.ticketTransferredAt) {
+          throw new BadRequestException(
+            'You can only open a "ticket not received" claim after the ticket has been transferred.',
+          );
+        }
+        refDate = transaction.ticketTransferredAt;
+      } else {
+        if (!transaction.buyerConfirmedAt) {
+          throw new BadRequestException(
+            'You must confirm receipt of the ticket before opening a "ticket did not work" claim.',
+          );
+        }
+        const listing = await this.ticketsService.getListingById(
+          ctx,
+          transaction.listingId,
+        );
+        const eventDate = listing?.eventDate;
+        if (!eventDate) {
+          throw new BadRequestException(
+            'Cannot open a "ticket did not work" claim: event date could not be determined.',
+          );
+        }
+        refDate = eventDate instanceof Date ? eventDate : new Date(eventDate);
+      }
+
       const platformConfig =
         await this.platformConfigService.getPlatformConfig(ctx);
       const claimsConfig = platformConfig?.riskEngine?.claims;
@@ -134,22 +165,6 @@ export class SupportService {
           : claimsConfig?.ticketDidntWork;
       const minHours = windowConfig?.minimumClaimHours ?? 1;
       const maxHours = windowConfig?.maximumClaimHours ?? 168;
-
-      const refDate =
-        reason === DisputeReason.TicketNotReceived
-          ? transaction.ticketTransferredAt ??
-            transaction.paymentReceivedAt ??
-            transaction.createdAt
-          : transaction.buyerConfirmedAt ??
-            transaction.ticketTransferredAt ??
-            transaction.paymentReceivedAt ??
-            transaction.createdAt;
-
-      if (reason === DisputeReason.TicketDidntWork && !transaction.buyerConfirmedAt) {
-        throw new BadRequestException(
-          'You must confirm receipt of the ticket before opening a "ticket did not work" claim.',
-        );
-      }
 
       const now = new Date();
       const refTime = refDate.getTime();
