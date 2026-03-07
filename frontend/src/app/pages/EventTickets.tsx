@@ -410,18 +410,25 @@ export function EventTickets() {
               <div className="space-y-8">
                 {Object.entries(ticketsByShowTime).map(([showTimeKey, showTimeTickets]) => {
                   const [date, time] = showTimeKey.split('|');
+                  const totalTickets = showTimeTickets.reduce((sum, t) => sum + t.available, 0);
                   return (
                     <div key={showTimeKey}>
                       <div className="sticky top-0 z-10 bg-gray-50 flex items-center justify-between gap-2 mb-4 pb-3 pt-3 -mt-2 px-4 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-5 h-5 text-blue-600" />
-                          <h3 className="text-lg font-bold text-gray-900">
+                          <Calendar className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                          <h3 className="text-sm md:text-lg font-bold text-gray-900">
                             {showTimeTickets[0] ? formatDateTime(showTimeTickets[0].showTime.dateObj) : `${date} ${time}`}
                           </h3>
                         </div>
-                        <span className="text-sm text-gray-500">
-                          {t('eventTickets.listingsCount', { count: showTimeTickets.length })}
-                        </span>
+                        <>
+                          <span className="flex items-center gap-1.5 text-sm text-gray-500 md:hidden">
+                            <Ticket className="w-4 h-4 text-blue-600" />
+                            {totalTickets}
+                          </span>
+                          <span className="hidden md:inline text-sm text-gray-500">
+                            {t('eventTickets.ticketsCount', { count: totalTickets })}
+                          </span>
+                        </>
                       </div>
 
                       {effectiveViewMode === 'card' ? (

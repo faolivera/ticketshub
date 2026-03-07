@@ -14,6 +14,9 @@ import { DisputeOpenedProcessor } from './dispute-opened.processor';
 import { DisputeResolvedProcessor } from './dispute-resolved.processor';
 import { IdentityVerifiedProcessor } from './identity-verified.processor';
 import { IdentityRejectedProcessor } from './identity-rejected.processor';
+import { IdentitySubmittedProcessor } from './identity-submitted.processor';
+import { BankAccountSubmittedProcessor } from './bank-account-submitted.processor';
+import { SellerVerificationCompleteProcessor } from './seller-verification-complete.processor';
 import { EventApprovedProcessor } from './event-approved.processor';
 import { EventRejectedProcessor } from './event-rejected.processor';
 import { ReviewReceivedProcessor } from './review-received.processor';
@@ -36,6 +39,9 @@ export {
   DisputeResolvedProcessor,
   IdentityVerifiedProcessor,
   IdentityRejectedProcessor,
+  IdentitySubmittedProcessor,
+  BankAccountSubmittedProcessor,
+  SellerVerificationCompleteProcessor,
   EventApprovedProcessor,
   EventRejectedProcessor,
   ReviewReceivedProcessor,
@@ -62,6 +68,9 @@ export const ALL_PROCESSORS = [
   DisputeResolvedProcessor,
   IdentityVerifiedProcessor,
   IdentityRejectedProcessor,
+  IdentitySubmittedProcessor,
+  BankAccountSubmittedProcessor,
+  SellerVerificationCompleteProcessor,
   EventApprovedProcessor,
   EventRejectedProcessor,
   ReviewReceivedProcessor,

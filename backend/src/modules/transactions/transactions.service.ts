@@ -172,10 +172,11 @@ export class TransactionsService {
       throw new BadRequestException('Cannot buy your own listing');
     }
 
-    const [buyer, seller, platformConfig] = await Promise.all([
+    const [buyer, seller, platformConfig, paymentMethod] = await Promise.all([
       this.usersService.findById(ctx, buyerId),
       this.usersService.findById(ctx, listing.sellerId),
       this.platformConfigService.getPlatformConfig(ctx),
+      this.paymentMethodsService.findById(ctx, paymentMethodId).catch(() => null),
     ]);
     if (!buyer) {
       throw new ForbiddenException('User not found');
@@ -205,7 +206,7 @@ export class TransactionsService {
         quantity: quantityForRisk || 1,
         amountUsd: amountMajor,
         eventStartsAt: listing.eventDate,
-        paymentMethodId,
+        paymentMethodType: paymentMethod?.type,
         buyerCreatedAt: buyer.createdAt,
         seller,
       },
@@ -214,6 +215,11 @@ export class TransactionsService {
     if (risk.requireV2 && !VerificationHelper.hasV2(buyer)) {
       throw new ForbiddenException(
         'Phone verification is required for this purchase. Please verify your phone number.',
+      );
+    }
+    if (risk.requireV3 && !VerificationHelper.hasV3(buyer)) {
+      throw new ForbiddenException(
+        'Identity verification is required for this purchase. Please verify your identity (ID document).',
       );
     }
 

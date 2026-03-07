@@ -208,6 +208,18 @@ export class IdentityVerificationService {
       `Identity verification ${verification.id} submitted for user ${userId}`,
     );
 
+    this.notificationsService
+      .emit(ctx, NotificationEventType.IDENTITY_SUBMITTED, {
+        userId,
+        userName: `${data.legalFirstName} ${data.legalLastName}`.trim(),
+      })
+      .catch((err) =>
+        this.logger.error(
+          ctx,
+          `Failed to emit IDENTITY_SUBMITTED: ${String(err)}`,
+        ),
+      );
+
     return this.toPublic(verification);
   }
 
@@ -411,6 +423,22 @@ export class IdentityVerificationService {
           userName: `${verification.legalFirstName} ${verification.legalLastName}`,
         })
         .catch((err) => this.logger.error(ctx, `Failed to emit IDENTITY_VERIFIED: ${err}`));
+
+      // If bank is already approved, seller verification is complete
+      const userAfter = await this.usersService.findById(ctx, verification.userId);
+      if (userAfter?.bankAccount?.verified === true) {
+        this.notificationsService
+          .emit(ctx, NotificationEventType.SELLER_VERIFICATION_COMPLETE, {
+            userId: verification.userId,
+            userName: `${verification.legalFirstName} ${verification.legalLastName}`,
+          })
+          .catch((err) =>
+            this.logger.error(
+              ctx,
+              `Failed to emit SELLER_VERIFICATION_COMPLETE: ${String(err)}`,
+            ),
+          );
+      }
     }
 
     this.logger.log(

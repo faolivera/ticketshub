@@ -37,6 +37,8 @@ import {
   PUBLIC_STORAGE_PROVIDER,
   type FileStorageProvider,
 } from '../../common/storage/file-storage-provider.interface';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
 export class UsersService {
@@ -49,6 +51,8 @@ export class UsersService {
     private readonly otpService: OTPService,
     @Inject(TermsService)
     private readonly termsService: TermsService,
+    @Inject(NotificationsService)
+    private readonly notificationsService: NotificationsService,
     @Inject(PUBLIC_STORAGE_PROVIDER)
     private readonly publicStorageProvider: FileStorageProvider,
     private readonly configService: ConfigService,
@@ -694,8 +698,8 @@ export class UsersService {
   }
 
   /**
-   * Add or update bank account (V4). Requires V3 (identity) approved.
-   * Holder name must match V3 legal name (normalized comparison).
+   * Add or update bank account (V4). Can be submitted before identity is approved.
+   * When identity is already approved, holder name must match V3 legal name (normalized comparison).
    */
   async updateBankAccount(
     ctx: Ctx,
@@ -706,21 +710,18 @@ export class UsersService {
     if (!user) {
       throw new BadRequestException('User not found');
     }
-    if (!VerificationHelper.hasV3(user)) {
-      throw new BadRequestException(
-        'Identity must be verified before adding a bank account',
+    if (VerificationHelper.hasV3(user)) {
+      const legalFirstName = user.identityVerification?.legalFirstName ?? '';
+      const legalLastName = user.identityVerification?.legalLastName ?? '';
+      const legalFullName = this.normalizeNameForMatch(
+        `${legalFirstName} ${legalLastName}`,
       );
-    }
-    const legalFirstName = user.identityVerification?.legalFirstName ?? '';
-    const legalLastName = user.identityVerification?.legalLastName ?? '';
-    const legalFullName = this.normalizeNameForMatch(
-      `${legalFirstName} ${legalLastName}`,
-    );
-    const holderNormalized = this.normalizeNameForMatch(data.holderName.trim());
-    if (legalFullName !== holderNormalized) {
-      throw new BadRequestException(
-        'Bank account holder name must match your verified identity',
-      );
+      const holderNormalized = this.normalizeNameForMatch(data.holderName.trim());
+      if (legalFullName !== holderNormalized) {
+        throw new BadRequestException(
+          'Bank account holder name must match your verified identity',
+        );
+      }
     }
     const cbuCvu = data.cbuOrCvu.replace(/\D/g, '');
     if (cbuCvu.length !== 22) {
@@ -733,6 +734,19 @@ export class UsersService {
       verified: false,
     };
     await this.usersRepository.updateBankAccount(ctx, userId, bankAccount);
+
+    this.notificationsService
+      .emit(ctx, NotificationEventType.BANK_ACCOUNT_SUBMITTED, {
+        userId,
+        userName: `${user.firstName} ${user.lastName}`.trim() || user.publicName,
+      })
+      .catch((err) =>
+        console.error(
+          `[UsersService] Failed to emit BANK_ACCOUNT_SUBMITTED:`,
+          err,
+        ),
+      );
+
     const updated = await this.getAuthenticatedUserInfo(ctx, userId);
     if (!updated) {
       throw new BadRequestException('Failed to get updated user info');
@@ -769,6 +783,24 @@ export class UsersService {
       verifiedAt: status === 'approved' ? new Date() : undefined,
     };
     await this.usersRepository.updateBankAccount(ctx, userId, bankAccount);
+
+    if (status === 'approved' && VerificationHelper.hasV3(user)) {
+      const userName = user.identityVerification
+        ? `${user.identityVerification.legalFirstName} ${user.identityVerification.legalLastName}`.trim()
+        : `${user.firstName} ${user.lastName}`.trim() || user.publicName;
+      this.notificationsService
+        .emit(ctx, NotificationEventType.SELLER_VERIFICATION_COMPLETE, {
+          userId,
+          userName,
+        })
+        .catch((err) =>
+          console.error(
+            `[UsersService] Failed to emit SELLER_VERIFICATION_COMPLETE:`,
+            err,
+          ),
+        );
+    }
+
     const updated = await this.getAuthenticatedUserInfo(ctx, userId);
     if (!updated) {
       throw new BadRequestException('Failed to get updated user info');

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye, AlertTriangle, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye, AlertTriangle, MessageCircle, IdCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -84,10 +84,11 @@ export function BuyTicketPage() {
   const pricingSnapshot = buyPageData?.pricingSnapshot ?? null;
   const checkoutRisk = buyPageData?.checkoutRisk;
 
-  /** Purchase blocked when risk engine requires V1/V2 and user has not completed them */
+  /** Purchase blocked when risk engine requires V1/V2/V3 and user has not completed them */
   const needsV1 = checkoutRisk?.requireV1 && !user?.emailVerified;
   const needsV2 = checkoutRisk?.requireV2 && !user?.phoneVerified;
-  const cannotPurchaseDueToVerification = isAuthenticated && (needsV1 || needsV2);
+  const needsV3 = checkoutRisk?.requireV3 && !user?.identityVerified;
+  const cannotPurchaseDueToVerification = isAuthenticated && (needsV1 || needsV2 || needsV3);
 
   const isOwnListing = user?.id === listing?.sellerId;
   const isPendingOwnListing = isOwnListing && listing?.status === ListingStatus.Pending;
@@ -246,6 +247,10 @@ export function BuyTicketPage() {
 
     if (!user?.phoneVerified) {
       setPurchaseError(t('buyTicket.phoneRequiredToPurchase'));
+      return;
+    }
+    if (checkoutRisk?.requireV3 && !user?.identityVerified) {
+      setPurchaseError(t('buyTicket.identityRequiredToPurchase'));
       return;
     }
 
@@ -770,7 +775,7 @@ export function BuyTicketPage() {
                 <p className="text-sm text-amber-700">{t('buyTicket.verifyEmailToPurchase')}</p>
               </div>
             )}
-            {needsV2 && (
+            {needsV2 && !needsV3 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-3">
                   <Phone className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -787,6 +792,32 @@ export function BuyTicketPage() {
                       className="inline-block px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded-lg hover:bg-yellow-700 transition-colors"
                     >
                       {t('buyTicket.verifyPhoneNow')}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+            {needsV3 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <IdCard className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-amber-800 mb-1">
+                      {t('buyTicket.identityRequired')}
+                    </p>
+                    <p className="text-sm text-amber-700 mb-3">
+                      {t('buyTicket.identityRequiredDescription')}
+                    </p>
+                    <Link
+                      to="/verify-user"
+                      state={{
+                        verifyPhone: needsV2,
+                        verifyIdentity: true,
+                        returnTo: `/buy/${ticketId}`,
+                      }}
+                      className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
+                    >
+                      {t('buyTicket.verifyIdentityNow')}
                     </Link>
                   </div>
                 </div>

@@ -11,8 +11,9 @@ export function MobileNav() {
   if (!isAuthenticated) return null;
 
   const baseClass =
-    'flex flex-col items-center justify-center gap-0.5 flex-1 py-2 text-gray-500 transition-colors';
+    'flex flex-col items-center justify-center gap-1 flex-1 py-3 text-gray-500 transition-colors';
   const activeClass = 'text-indigo-600';
+  const iconClass = 'w-6 h-6';
 
   return (
     <nav className="sm:hidden fixed bottom-0 left-0 right-0 w-full z-50 bg-white border-t border-gray-200 flex items-stretch pb-[env(safe-area-inset-bottom)]">
@@ -20,7 +21,7 @@ export function MobileNav() {
         to="/"
         className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
       >
-        <Home className="w-5 h-5" />
+        <Home className={iconClass} />
         <span className="text-xs font-medium">{t('header.home')}</span>
       </NavLink>
 
@@ -28,7 +29,7 @@ export function MobileNav() {
         to="/my-tickets"
         className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
       >
-        <Ticket className="w-5 h-5" />
+        <Ticket className={iconClass} />
         <span className="text-xs font-medium">{t('header.myTickets')}</span>
       </NavLink>
 
@@ -37,7 +38,7 @@ export function MobileNav() {
         state={{ from: location.pathname }}
         className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
       >
-        <Tag className="w-5 h-5" />
+        <Tag className={iconClass} />
         <span className="text-xs font-medium">{t('header.sellTickets')}</span>
       </NavLink>
 
@@ -46,7 +47,7 @@ export function MobileNav() {
           to="/seller-dashboard"
           className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
         >
-          <TrendingUp className="w-5 h-5" />
+          <TrendingUp className={iconClass} />
           <span className="text-xs font-medium">{t('header.mySales')}</span>
         </NavLink>
       )}

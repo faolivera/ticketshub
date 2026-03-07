@@ -215,21 +215,6 @@ export function NotificationBell() {
               </ul>
             )}
           </div>
-
-          {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate('/notifications');
-                }}
-                className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-1"
-              >
-                {t('notifications.viewAll')}
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

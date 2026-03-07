@@ -234,7 +234,7 @@ export function UserProfile() {
                   >
                     {badgeLabel(idStatus === 'approved', idStatus === 'pending')}
                   </span>
-                  {idStatus !== 'approved' && (
+                  {(idStatus === 'none' || idStatus === 'rejected') && (
                     <Link
                       to="/seller-verification"
                       className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
@@ -264,7 +264,7 @@ export function UserProfile() {
                   >
                     {badgeLabel(bankStatus === 'approved', bankStatus === 'pending')}
                   </span>
-                  {bankStatus !== 'approved' && (
+                  {bankStatus === 'none' && (
                     <Link
                       to="/bank-account"
                       className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"

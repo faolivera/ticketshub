@@ -10,6 +10,7 @@ export enum RiskLevel {
 /**
  * Result of checkout risk evaluation.
  * Used by backend to enforce gates and by BFF to tell frontend which verifications to request.
+ * Outcome: nothing extra, phone (V2), or phone + DNI (V2 + V3).
  */
 export interface RiskEvaluation {
   riskLevel: RiskLevel;
@@ -17,4 +18,6 @@ export interface RiskEvaluation {
   requireV1: true;
   /** When true, phone (V2) must be verified before purchase. */
   requireV2: boolean;
+  /** When true, identity/DNI (V3) must be verified before purchase. Implies requireV2. */
+  requireV3: boolean;
 }

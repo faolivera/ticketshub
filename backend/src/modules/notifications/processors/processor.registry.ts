@@ -14,6 +14,9 @@ import { DisputeOpenedProcessor } from './dispute-opened.processor';
 import { DisputeResolvedProcessor } from './dispute-resolved.processor';
 import { IdentityVerifiedProcessor } from './identity-verified.processor';
 import { IdentityRejectedProcessor } from './identity-rejected.processor';
+import { IdentitySubmittedProcessor } from './identity-submitted.processor';
+import { BankAccountSubmittedProcessor } from './bank-account-submitted.processor';
+import { SellerVerificationCompleteProcessor } from './seller-verification-complete.processor';
 import { EventApprovedProcessor } from './event-approved.processor';
 import { EventRejectedProcessor } from './event-rejected.processor';
 import { ReviewReceivedProcessor } from './review-received.processor';
@@ -43,6 +46,9 @@ export class ProcessorRegistry {
     private readonly disputeResolved: DisputeResolvedProcessor,
     private readonly identityVerified: IdentityVerifiedProcessor,
     private readonly identityRejected: IdentityRejectedProcessor,
+    private readonly identitySubmitted: IdentitySubmittedProcessor,
+    private readonly bankAccountSubmitted: BankAccountSubmittedProcessor,
+    private readonly sellerVerificationComplete: SellerVerificationCompleteProcessor,
     private readonly eventApproved: EventApprovedProcessor,
     private readonly eventRejected: EventRejectedProcessor,
     private readonly reviewReceived: ReviewReceivedProcessor,
@@ -70,6 +76,9 @@ export class ProcessorRegistry {
       this.disputeResolved,
       this.identityVerified,
       this.identityRejected,
+      this.identitySubmitted,
+      this.bankAccountSubmitted,
+      this.sellerVerificationComplete,
       this.eventApproved,
       this.eventRejected,
       this.reviewReceived,

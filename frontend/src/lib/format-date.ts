@@ -36,30 +36,34 @@ export function formatDate(
 }
 
 /**
- * Format time for display. Uses current UI language (24h in es-AR, 12h in en-US by locale).
+ * Format time for display. Uses current UI language, always 24h.
  */
 export function formatTime(
   value: DateInput,
-  options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: undefined }
+  options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: false }
 ): string {
   const date = toDate(value);
   if (Number.isNaN(date.getTime())) return String(value);
   const locale = getDateLocale();
-  const opts = { ...options };
-  if (opts.hour12 === undefined) opts.hour12 = locale.startsWith('en');
+  const opts = { ...options, hour12: false };
   return date.toLocaleTimeString(locale, opts);
 }
 
 /**
- * Format date and time in one string. Uses current UI language.
- * @example "March 31, 2026 at 10:00 PM" / "31 de marzo de 2026, 22:00"
+ * Format date and time in one string. Uses current UI language, time in 24h.
+ * @example "March 31, 2026, 22:00" / "31 de marzo de 2026, 22:00"
  */
 export function formatDateTime(value: DateInput): string {
   const date = toDate(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleString(getDateLocale(), {
-    dateStyle: 'long',
-    timeStyle: 'short',
+  const locale = getDateLocale();
+  return date.toLocaleString(locale, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   });
 }
 
@@ -90,8 +94,8 @@ export function formatDateShort(value: DateInput): string {
 }
 
 /**
- * Short date + time for compact contexts like filter chips.
- * @example "Mar 30 · 8:00 PM" / "30 mar · 20:00"
+ * Short date + time for compact contexts like filter chips. Time always 24h.
+ * @example "Mar 30 · 20:00" / "30 mar · 20:00"
  */
 export function formatDateTimeShort(value: DateInput): string {
   const date = toDate(value);
@@ -101,19 +105,23 @@ export function formatDateTimeShort(value: DateInput): string {
   const timePart = date.toLocaleTimeString(locale, {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: locale.startsWith('en'),
+    hour12: false,
   });
   return `${datePart} · ${timePart}`;
 }
 
 /**
- * Medium date + short time for admin tables.
+ * Medium date + short time for admin tables. Time always 24h.
  */
 export function formatDateTimeMedium(value: DateInput): string {
   const date = toDate(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleString(getDateLocale(), {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+  const locale = getDateLocale();
+  const datePart = date.toLocaleDateString(locale, { dateStyle: 'medium' });
+  const timePart = date.toLocaleTimeString(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   });
+  return `${datePart}, ${timePart}`;
 }

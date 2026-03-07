@@ -25,6 +25,7 @@ import { UsersService } from '../../../../src/modules/users/users.service';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import { TermsService } from '../../../../src/modules/terms/terms.service';
+import { ConfigService as NestConfigService } from '@nestjs/config';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import { ConversionService } from '../../../../src/modules/config/conversion.service';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
@@ -224,6 +225,10 @@ describe('TicketsService', () => {
             phoneRequiredAmountUsd: 120,
             phoneRequiredQtyTickets: 2,
             newAccountDays: 7,
+            dniRequiredEventHours: 24,
+            dniRequiredAmountUsd: 250,
+            dniRequiredQtyTickets: 4,
+            dniNewAccountDays: 3,
           },
           seller: {
             unverifiedSellerMaxSales: 2,
@@ -232,12 +237,18 @@ describe('TicketsService', () => {
             payoutHoldHoursUnverified: 48,
           },
           claims: {
-            claimKycDeadlineHours: 24,
-            claimInvalidEntryWindowHours: 2,
+            ticketNotReceived: { minimumClaimHours: 1, maximumClaimHours: 168 },
+            ticketDidntWork: { minimumClaimHours: 1, maximumClaimHours: 168 },
           },
         },
         exchangeRates: { usdToArs: 1000 },
       }),
+    };
+
+    const mockNestConfig = {
+      get: jest.fn((key: string) =>
+        key === 'platform.riskEngine.buyer.phoneRequiredEventHours' ? 72 : undefined
+      ),
     };
 
     const mockConversionService = {
@@ -255,6 +266,7 @@ describe('TicketsService', () => {
         { provide: TermsService, useValue: mockTermsService },
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: ConversionService, useValue: mockConversionService },
+        { provide: NestConfigService, useValue: mockNestConfig },
       ],
     }).compile();
 

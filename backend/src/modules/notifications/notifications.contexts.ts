@@ -139,6 +139,24 @@ export interface IdentityRejectedContext {
   rejectionReason: string;
 }
 
+/** Emitted when user submits identity documents for review. Recipients: admins. */
+export interface IdentitySubmittedContext {
+  userId: string;
+  userName: string;
+}
+
+/** Emitted when user submits bank account for review. Recipients: admins. */
+export interface BankAccountSubmittedContext {
+  userId: string;
+  userName: string;
+}
+
+/** Emitted when both identity and bank are approved (seller verification complete). Recipients: the seller. */
+export interface SellerVerificationCompleteContext {
+  userId: string;
+  userName: string;
+}
+
 // ============================================================================
 // EVENT CONTEXTS
 // ============================================================================
@@ -228,6 +246,9 @@ export interface NotificationContextMap {
   [NotificationEventType.DISPUTE_RESOLVED]: DisputeResolvedContext;
   [NotificationEventType.IDENTITY_VERIFIED]: IdentityVerifiedContext;
   [NotificationEventType.IDENTITY_REJECTED]: IdentityRejectedContext;
+  [NotificationEventType.IDENTITY_SUBMITTED]: IdentitySubmittedContext;
+  [NotificationEventType.BANK_ACCOUNT_SUBMITTED]: BankAccountSubmittedContext;
+  [NotificationEventType.SELLER_VERIFICATION_COMPLETE]: SellerVerificationCompleteContext;
   [NotificationEventType.EVENT_APPROVED]: EventApprovedContext;
   [NotificationEventType.EVENT_REJECTED]: EventRejectedContext;
   [NotificationEventType.REVIEW_RECEIVED]: ReviewReceivedContext;

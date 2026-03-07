@@ -18,8 +18,8 @@ export function BecomeSellerProgressBar({
   const labels: Record<WizardStep, string> = {
     1: t('becomeSeller.progress.phone'),
     2: t('becomeSeller.progress.terms'),
-    3: t('becomeSeller.progress.identity'),
-    4: t('becomeSeller.progress.bank'),
+    3: t('becomeSeller.progress.bank'),
+    4: t('becomeSeller.progress.identity'),
   };
 
   return (

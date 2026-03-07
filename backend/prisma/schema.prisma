@@ -220,6 +220,9 @@ enum NotificationEventType {
   DISPUTE_RESOLVED
   IDENTITY_VERIFIED
   IDENTITY_REJECTED
+  IDENTITY_SUBMITTED
+  BANK_ACCOUNT_SUBMITTED
+  SELLER_VERIFICATION_COMPLETE
   EVENT_APPROVED
   EVENT_REJECTED
   REVIEW_RECEIVED
@@ -928,8 +931,9 @@ model PlatformConfig {
   adminReviewTimeoutHours              Int      @map("admin_review_timeout_hours")
   offerPendingExpirationMinutes        Int      @map("offer_pending_expiration_minutes")
   offerAcceptedExpirationMinutes       Int      @map("offer_accepted_expiration_minutes")
-  transactionChatPollIntervalSeconds    Int      @map("transaction_chat_poll_interval_seconds")
+  transactionChatPollIntervalSeconds   Int      @map("transaction_chat_poll_interval_seconds")
   transactionChatMaxMessages           Int      @map("transaction_chat_max_messages")
+  riskEngine                           Json?    @map("risk_engine")
   updatedAt                            DateTime @updatedAt
 
   @@map("platform_config")

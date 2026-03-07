@@ -17,6 +17,7 @@ import { Language, Role, UserStatus, IdentityVerificationStatus } from '../../..
 import type { Image } from '../../../../src/modules/images/images.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 import { AcceptanceMethod } from '../../../../src/modules/terms/terms.domain';
+import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn().mockImplementation((plain: string) => Promise.resolve(`hashed:${plain}`)),
@@ -124,6 +125,10 @@ describe('UsersService', () => {
       }),
     };
 
+    const mockNotificationsService = {
+      emit: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -133,6 +138,7 @@ describe('UsersService', () => {
         { provide: TermsService, useValue: mockTermsService },
         { provide: PUBLIC_STORAGE_PROVIDER, useValue: mockStorageProvider },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 

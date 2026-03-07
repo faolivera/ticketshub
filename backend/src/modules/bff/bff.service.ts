@@ -250,12 +250,12 @@ export class BffService {
         quantity,
         amountUsd: amountMajor,
         eventStartsAt: listing.eventDate,
-        paymentMethodId: '', // Not yet selected; use conservative default
         sellerId: listing.sellerId,
       });
       checkoutRisk = {
         requireV1: risk.requireV1,
         requireV2: risk.requireV2,
+        requireV3: risk.requireV3,
       };
     }
 

@@ -102,6 +102,9 @@ export class NotificationsSeeder implements OnModuleInit {
       { eventType: NotificationEventType.DISPUTE_RESOLVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.IDENTITY_VERIFIED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.IDENTITY_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
+      { eventType: NotificationEventType.IDENTITY_SUBMITTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
+      { eventType: NotificationEventType.BANK_ACCOUNT_SUBMITTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
+      { eventType: NotificationEventType.SELLER_VERIFICATION_COMPLETE, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.EVENT_APPROVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
       { eventType: NotificationEventType.EVENT_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
       { eventType: NotificationEventType.REVIEW_RECEIVED, inAppEnabled: true, emailEnabled: false, priority: NotificationPriority.LOW, updatedAt: new Date() },
@@ -273,8 +276,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Venta completada - Fondos liberados',
-        bodyTemplate: '¡Tu venta de "{{eventName}}" se ha completado exitosamente! Se han liberado {{amountFormatted}} a tu wallet.',
-        actionUrlTemplate: '/wallet',
+        bodyTemplate: 'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amountFormatted}}',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // TRANSACTION_CANCELLED
@@ -356,7 +359,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Identidad verificada',
         bodyTemplate: '¡Tu identidad ha sido verificada exitosamente!',
-        actionUrlTemplate: '/profile',
+        actionUrlTemplate: '/user-profile',
       },
       {
         eventType: NotificationEventType.IDENTITY_VERIFIED,
@@ -364,7 +367,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: '¡Tu identidad ha sido verificada!',
         bodyTemplate: '¡Felicidades {{userName}}! Tu identidad ha sido verificada exitosamente. Ahora puedes acceder a todas las funcionalidades de vendedor verificado.',
-        actionUrlTemplate: '/profile',
+        actionUrlTemplate: '/user-profile',
       },
 
       // IDENTITY_REJECTED
@@ -374,7 +377,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Verificación rechazada',
         bodyTemplate: 'Tu solicitud de verificación de identidad fue rechazada',
-        actionUrlTemplate: '/profile/verification',
+        actionUrlTemplate: '/user-profile',
       },
       {
         eventType: NotificationEventType.IDENTITY_REJECTED,
@@ -382,7 +385,61 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Verificación de identidad rechazada',
         bodyTemplate: 'Hola {{userName}}, lamentablemente tu solicitud de verificación de identidad fue rechazada. Motivo: {{rejectionReason}}. Puedes volver a intentarlo corrigiendo los datos.',
-        actionUrlTemplate: '/profile/verification',
+        actionUrlTemplate: '/user-profile',
+      },
+
+      // IDENTITY_SUBMITTED (admin)
+      {
+        eventType: NotificationEventType.IDENTITY_SUBMITTED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Documentos de identidad enviados',
+        bodyTemplate: '{{userName}} ha enviado documentos para verificación de identidad.',
+        actionUrlTemplate: '/admin/identity-verifications?verify=identity',
+      },
+      {
+        eventType: NotificationEventType.IDENTITY_SUBMITTED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Nueva solicitud de verificación de identidad',
+        bodyTemplate: '{{userName}} ha enviado documentos para verificación. Revisa en el panel de administración.',
+        actionUrlTemplate: '/admin/identity-verifications?verify=identity',
+      },
+
+      // BANK_ACCOUNT_SUBMITTED (admin)
+      {
+        eventType: NotificationEventType.BANK_ACCOUNT_SUBMITTED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Datos bancarios enviados',
+        bodyTemplate: '{{userName}} ha enviado datos bancarios para validación.',
+        actionUrlTemplate: '/admin/identity-verifications?verify=bank',
+      },
+      {
+        eventType: NotificationEventType.BANK_ACCOUNT_SUBMITTED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Nuevos datos bancarios para validar',
+        bodyTemplate: '{{userName}} ha enviado datos bancarios para validación. Revisa en el panel de administración.',
+        actionUrlTemplate: '/admin/identity-verifications?verify=bank',
+      },
+
+      // SELLER_VERIFICATION_COMPLETE (seller)
+      {
+        eventType: NotificationEventType.SELLER_VERIFICATION_COMPLETE,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Verificación completa',
+        bodyTemplate: '¡Felicidades {{userName}}! Tu identidad y datos bancarios han sido verificados. Ya puedes vender entradas.',
+        actionUrlTemplate: '/sell-ticket',
+      },
+      {
+        eventType: NotificationEventType.SELLER_VERIFICATION_COMPLETE,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: '¡Verificación de vendedor completa!',
+        bodyTemplate: 'Hola {{userName}}, tu identidad y datos bancarios han sido aprobados. Ya puedes publicar y vender entradas en TicketsHub.',
+        actionUrlTemplate: '/sell-ticket',
       },
 
       // EVENT_APPROVED
@@ -392,7 +449,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Evento aprobado',
         bodyTemplate: 'Tu evento "{{eventName}}" ha sido aprobado',
-        actionUrlTemplate: '/events/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventId}}',
       },
       {
         eventType: NotificationEventType.EVENT_APPROVED,
@@ -400,7 +457,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu evento "{{eventName}}" ha sido aprobado',
         bodyTemplate: '¡Buenas noticias! Tu evento "{{eventName}}" ha sido aprobado y ya está visible para los usuarios.',
-        actionUrlTemplate: '/events/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventId}}',
       },
 
       // EVENT_REJECTED
@@ -410,7 +467,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Evento rechazado',
         bodyTemplate: 'Tu evento "{{eventName}}" fue rechazado',
-        actionUrlTemplate: '/events/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventId}}',
       },
       {
         eventType: NotificationEventType.EVENT_REJECTED,
@@ -418,7 +475,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu evento "{{eventName}}" fue rechazado',
         bodyTemplate: 'Lamentablemente tu evento "{{eventName}}" fue rechazado. Motivo: {{rejectionReason}}. Puedes editar el evento y volver a enviarlo.',
-        actionUrlTemplate: '/events/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventId}}',
       },
 
       // REVIEW_RECEIVED
@@ -428,7 +485,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Nueva reseña recibida',
         bodyTemplate: '{{reviewerName}} te dejó una reseña de {{rating}} estrellas',
-        actionUrlTemplate: '/profile/reviews',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
       // OFFER_RECEIVED (seller notified when someone makes an offer on their listing)

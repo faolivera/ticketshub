@@ -13,11 +13,7 @@ export enum SupportCategory {
  */
 export enum DisputeReason {
   TicketNotReceived = 'TicketNotReceived',
-  TicketInvalid = 'TicketInvalid',
-  TicketDuplicate = 'TicketDuplicate',
-  WrongTicket = 'WrongTicket',
-  EventCancelled = 'EventCancelled',
-  Other = 'Other',
+  TicketDidntWork = 'TicketDidntWork',
 }
 
 /**

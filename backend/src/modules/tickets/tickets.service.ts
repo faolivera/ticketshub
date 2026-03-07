@@ -43,6 +43,7 @@ import { PromotionType } from '../promotions/promotions.domain';
 import { TermsService } from '../terms/terms.service';
 import { TermsUserType } from '../terms/terms.domain';
 import type { Money as ConfigMoney } from '../config/config.domain';
+import { ConfigService as NestConfigService } from '@nestjs/config';
 import { PlatformConfigService } from '../config/config.service';
 import { ConversionService } from '../config/conversion.service';
 
@@ -59,6 +60,7 @@ export class TicketsService {
     private readonly termsService: TermsService,
     private readonly configService: PlatformConfigService,
     private readonly conversionService: ConversionService,
+    private readonly nestConfigService: NestConfigService,
   ) {}
 
   /**
@@ -349,7 +351,8 @@ export class TicketsService {
       const hoursUntilEvent =
         (eventDate.date.getTime() - Date.now()) / (1000 * 60 * 60);
       const proximityHours =
-        platformConfig?.riskEngine?.buyer?.phoneRequiredEventHours ?? 72;
+        platformConfig?.riskEngine?.buyer?.phoneRequiredEventHours ??
+        this.nestConfigService.get<number>('platform.riskEngine.buyer.phoneRequiredEventHours')!;
       if (hoursUntilEvent >= 0 && hoursUntilEvent <= proximityHours) {
         throw new ForbiddenException(
           'Identity verification (KYC) is required to list tickets for events starting within the next ' +

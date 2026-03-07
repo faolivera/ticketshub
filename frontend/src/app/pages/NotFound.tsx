@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { SearchX, Home, Ticket } from 'lucide-react';
+import { SearchX, Ticket } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 
 export function NotFound() {
@@ -31,14 +31,8 @@ export function NotFound() {
           {t('notFound.description')}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+        <div className="flex justify-center">
           <Button asChild size="lg" className="min-w-[180px]">
-            <Link to="/">
-              <Home className="w-4 h-4 mr-2" aria-hidden />
-              {t('notFound.goHome')}
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="min-w-[180px]">
             <Link to="/">
               <Ticket className="w-4 h-4 mr-2" aria-hidden />
               {t('notFound.browseEvents')}

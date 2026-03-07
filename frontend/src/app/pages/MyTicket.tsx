@@ -557,74 +557,76 @@ export function MyTicket() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">{t('myTicket.ticketStatus')}</h2>
 
-              {/* Status Timeline: buyer 3 steps (Pago, Transferida, Completada), seller 5 steps (Pago, Transferida, Recibida, Fondos liberados, Completado) */}
-              <div className="mb-6">
-                <div className="relative">
-                  <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200">
-                    <div
-                      className="h-full bg-blue-600 transition-all duration-500"
-                      style={{ width: `${maxSteps > 0 ? (statusStep / maxSteps) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <div className="relative grid gap-2" style={{ gridTemplateColumns: `repeat(${maxSteps}, minmax(0, 1fr))` }}>
-                    {isBuyer ? (
-                      <>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 1 ? 'bg-blue-600 text-white' : statusStep === 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 1 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+              {/* Status Timeline: hide when in dispute; buyer 3 steps (Pago, Transferida, Completada), seller 5 steps (Pago, Transferida, Recibida, Fondos liberados, Completado) */}
+              {effectiveStatus !== TransactionStatus.Disputed && (
+                <div className="mb-6">
+                  <div className="relative">
+                    <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200">
+                      <div
+                        className="h-full bg-blue-600 transition-all duration-500"
+                        style={{ width: `${maxSteps > 0 ? (statusStep / maxSteps) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <div className="relative grid gap-2" style={{ gridTemplateColumns: `repeat(${maxSteps}, minmax(0, 1fr))` }}>
+                      {isBuyer ? (
+                        <>
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 1 ? 'bg-blue-600 text-white' : statusStep === 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 1 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 1 ? 'text-gray-900' : statusStep === 0 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepPaid')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 1 ? 'text-gray-900' : statusStep === 0 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepPaid')}</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 2 ? 'bg-blue-600 text-white' : statusStep === 1 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 2 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 2 ? 'bg-blue-600 text-white' : statusStep === 1 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 2 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 2 ? 'text-gray-900' : statusStep === 1 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepTransferred')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 2 ? 'text-gray-900' : statusStep === 1 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepTransferred')}</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 3 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 3 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 3 ? 'text-gray-900' : 'text-gray-400'}`}>{t('myTicket.statusStepCompleted')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 3 ? 'text-gray-900' : 'text-gray-400'}`}>{t('myTicket.statusStepCompleted')}</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 1 ? 'bg-blue-600 text-white' : statusStep === 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 1 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 1 ? 'bg-blue-600 text-white' : statusStep === 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 1 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 1 ? 'text-gray-900' : statusStep === 0 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepPaid')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 1 ? 'text-gray-900' : statusStep === 0 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepPaid')}</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 2 ? 'bg-blue-600 text-white' : statusStep === 1 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 2 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 2 ? 'bg-blue-600 text-white' : statusStep === 1 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 2 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 2 ? 'text-gray-900' : statusStep === 1 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepTransferred')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 2 ? 'text-gray-900' : statusStep === 1 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepTransferred')}</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 3 ? 'bg-blue-600 text-white' : statusStep === 2 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 3 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 3 ? 'bg-blue-600 text-white' : statusStep === 2 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 3 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 3 ? 'text-gray-900' : statusStep === 2 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepReceived')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 3 ? 'text-gray-900' : statusStep === 2 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepReceived')}</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 4 ? 'bg-blue-600 text-white' : statusStep === 3 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 4 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 4 ? 'bg-blue-600 text-white' : statusStep === 3 ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 4 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 4 ? 'text-gray-900' : statusStep === 3 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepFundsReleased')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 4 ? 'text-gray-900' : statusStep === 3 ? 'text-yellow-600' : 'text-gray-400'}`}>{t('myTicket.statusStepFundsReleased')}</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 5 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            {statusStep >= 5 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${statusStep >= 5 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              {statusStep >= 5 ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                            </div>
+                            <p className={`text-xs text-center font-medium ${statusStep >= 5 ? 'text-gray-900' : 'text-gray-400'}`}>{t('myTicket.statusStepCompleted')}</p>
                           </div>
-                          <p className={`text-xs text-center font-medium ${statusStep >= 5 ? 'text-gray-900' : 'text-gray-400'}`}>{t('myTicket.statusStepCompleted')}</p>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Current Status Description - one disclaimer: normal message if verified, orange verify CTA if seller unverified in DepositHold/TransferringFund */}
               {!(isBuyer && paymentConfirmation?.status === 'Pending' && transaction.status === TransactionStatus.PaymentPendingVerification) && !isBankTransferPendingUpload && (
@@ -1441,11 +1443,7 @@ export function MyTicket() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value={DisputeReason.TicketNotReceived}>{t('myTicket.disputeReasonNotReceived')}</option>
-                  <option value={DisputeReason.TicketInvalid}>{t('myTicket.disputeReasonInvalid')}</option>
-                  <option value={DisputeReason.WrongTicket}>{t('myTicket.disputeReasonWrongTicket')}</option>
-                  <option value={DisputeReason.TicketDuplicate}>{t('myTicket.disputeReasonDuplicate')}</option>
-                  <option value={DisputeReason.EventCancelled}>{t('myTicket.disputeReasonEventCancelled')}</option>
-                  <option value={DisputeReason.Other}>{t('myTicket.disputeReasonOther')}</option>
+                  <option value={DisputeReason.TicketDidntWork}>{t('myTicket.disputeReasonDidntWork')}</option>
                 </select>
               </div>
               <div>

@@ -556,13 +556,17 @@ export interface Money {
 }
 
 /**
- * Buyer-facing risk config: when to require V2 (phone) at checkout.
+ * Buyer-facing risk config: when to require V2 (phone) and V3 (DNI) at checkout.
  */
 export interface RiskEngineBuyerConfig {
   phoneRequiredEventHours: number;
   phoneRequiredAmountUsd: number;
   phoneRequiredQtyTickets: number;
   newAccountDays: number;
+  dniRequiredEventHours: number;
+  dniRequiredAmountUsd: number;
+  dniRequiredQtyTickets: number;
+  dniNewAccountDays: number;
 }
 
 /**
@@ -576,11 +580,19 @@ export interface RiskEngineSellerConfig {
 }
 
 /**
- * Claims / disputes config.
+ * Time window for one claim type (min/max hours from reference date).
+ */
+export interface ClaimTypeWindowConfig {
+  minimumClaimHours: number;
+  maximumClaimHours: number;
+}
+
+/**
+ * Claims / disputes config: time window per claim type.
  */
 export interface RiskEngineClaimsConfig {
-  claimKycDeadlineHours: number;
-  claimInvalidEntryWindowHours: number;
+  ticketNotReceived: ClaimTypeWindowConfig;
+  ticketDidntWork: ClaimTypeWindowConfig;
 }
 
 /**

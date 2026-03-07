@@ -15,6 +15,10 @@ const RiskEngineBuyerConfigSchema = z.object({
   phoneRequiredAmountUsd: z.number(),
   phoneRequiredQtyTickets: z.number(),
   newAccountDays: z.number(),
+  dniRequiredEventHours: z.number(),
+  dniRequiredAmountUsd: z.number(),
+  dniRequiredQtyTickets: z.number(),
+  dniNewAccountDays: z.number(),
 });
 
 const RiskEngineSellerConfigSchema = z.object({
@@ -24,9 +28,14 @@ const RiskEngineSellerConfigSchema = z.object({
   payoutHoldHoursUnverified: z.number(),
 });
 
+const ClaimTypeWindowConfigSchema = z.object({
+  minimumClaimHours: z.number(),
+  maximumClaimHours: z.number(),
+});
+
 const RiskEngineClaimsConfigSchema = z.object({
-  claimKycDeadlineHours: z.number(),
-  claimInvalidEntryWindowHours: z.number(),
+  ticketNotReceived: ClaimTypeWindowConfigSchema,
+  ticketDidntWork: ClaimTypeWindowConfigSchema,
 });
 
 const RiskEngineConfigSchema = z.object({
@@ -72,6 +81,10 @@ export const UpdatePlatformConfigRequestSchema = z.object({
           phoneRequiredAmountUsd: z.number().min(0).max(10000).optional(),
           phoneRequiredQtyTickets: z.number().min(1).max(50).optional(),
           newAccountDays: z.number().min(0).max(365).optional(),
+          dniRequiredEventHours: z.number().min(1).max(720).optional(),
+          dniRequiredAmountUsd: z.number().min(0).max(10000).optional(),
+          dniRequiredQtyTickets: z.number().min(1).max(50).optional(),
+          dniNewAccountDays: z.number().min(0).max(365).optional(),
         })
         .optional(),
       seller: z
@@ -84,9 +97,18 @@ export const UpdatePlatformConfigRequestSchema = z.object({
         .optional(),
       claims: z
         .object({
-          claimKycDeadlineHours: z.number().min(1).max(72).optional(),
-          claimInvalidEntryWindowHours: z.number().min(0).max(24).optional(),
-          claimNotReceivedWindowHours: z.number().min(1).max(168).optional(),
+          ticketNotReceived: z
+            .object({
+              minimumClaimHours: z.number().min(0).max(720).optional(),
+              maximumClaimHours: z.number().min(1).max(720).optional(),
+            })
+            .optional(),
+          ticketDidntWork: z
+            .object({
+              minimumClaimHours: z.number().min(0).max(720).optional(),
+              maximumClaimHours: z.number().min(1).max(720).optional(),
+            })
+            .optional(),
         })
         .optional(),
     })

@@ -188,7 +188,7 @@ export function TicketChat({
 
   const containerClass =
     'fixed z-50 overflow-hidden bg-white flex flex-col ' +
-    'inset-0 md:inset-auto md:bottom-4 md:right-4 md:w-[380px] md:max-h-[90vh] md:rounded-lg md:shadow-2xl';
+    'inset-x-0 top-0 left-0 right-0 bottom-16 sm:inset-0 md:inset-auto md:bottom-4 md:right-4 md:w-[380px] md:max-h-[90vh] md:rounded-lg md:shadow-2xl';
 
   return (
     <div
@@ -219,11 +219,6 @@ export function TicketChat({
                 <Shield className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0" />
               )}
             </div>
-            <div className="flex items-center gap-1 text-xs text-blue-100">
-              <span>⭐ {counterpartRating.toFixed(1)}</span>
-              <span>•</span>
-              <span>{t('chat.online')}</span>
-            </div>
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
@@ -233,7 +228,7 @@ export function TicketChat({
               e.stopPropagation();
               setIsMinimized(!isMinimized);
             }}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
+            className="hidden md:flex p-1.5 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
           >
             <Minus className="w-4 h-4" />
           </button>

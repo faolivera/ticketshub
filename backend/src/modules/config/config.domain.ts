@@ -9,13 +9,22 @@ export interface Money {
 }
 
 /**
- * Buyer-facing risk config: when to require V2 (phone) at checkout.
+ * Buyer-facing risk config: when to require V2 (phone) and V3 (DNI) at checkout.
+ * Same condition types for both; DNI thresholds are typically stricter (e.g. higher amount, fewer hours).
  */
 export interface RiskEngineBuyerConfig {
   phoneRequiredEventHours: number;
   phoneRequiredAmountUsd: number;
   phoneRequiredQtyTickets: number;
   newAccountDays: number;
+  /** Event within N hours → require V3 (and V2). Stricter than phone. */
+  dniRequiredEventHours: number;
+  /** Amount >= N USD → require V3 (and V2). */
+  dniRequiredAmountUsd: number;
+  /** Quantity >= N tickets → require V3 (and V2). */
+  dniRequiredQtyTickets: number;
+  /** Account age < N days → require V3 (and V2). */
+  dniNewAccountDays: number;
 }
 
 /**
@@ -30,13 +39,20 @@ export interface RiskEngineSellerConfig {
 }
 
 /**
- * Claims / disputes config: deadlines for KYC and time windows.
+ * Time window for one claim type: claim can only be opened when
+ * refDate + minimumClaimHours <= now <= refDate + maximumClaimHours.
+ */
+export interface ClaimTypeWindowConfig {
+  minimumClaimHours: number;
+  maximumClaimHours: number;
+}
+
+/**
+ * Claims / disputes config: time window per claim type (TicketNotReceived, TicketDidntWork).
  */
 export interface RiskEngineClaimsConfig {
-  claimKycDeadlineHours: number;
-  claimInvalidEntryWindowHours: number;
-  /** Hours after ticket transfer (or payment) to allow "not received" claims. */
-  claimNotReceivedWindowHours: number;
+  ticketNotReceived: ClaimTypeWindowConfig;
+  ticketDidntWork: ClaimTypeWindowConfig;
 }
 
 /**

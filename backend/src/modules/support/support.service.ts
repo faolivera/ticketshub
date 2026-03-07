@@ -115,49 +115,55 @@ export class SupportService {
         throw new ForbiddenException('You can only open a dispute for your own transaction');
       }
 
+      const reason = data.disputeReason;
+      if (
+        reason !== DisputeReason.TicketNotReceived &&
+        reason !== DisputeReason.TicketDidntWork
+      ) {
+        throw new BadRequestException(
+          'Invalid dispute reason. Allowed: TicketNotReceived, TicketDidntWork.',
+        );
+      }
+
       const platformConfig =
         await this.platformConfigService.getPlatformConfig(ctx);
       const claimsConfig = platformConfig?.riskEngine?.claims;
-      const notReceivedHours =
-        claimsConfig?.claimNotReceivedWindowHours ?? 24;
-      const invalidEntryHours =
-        claimsConfig?.claimInvalidEntryWindowHours ?? 2;
+      const windowConfig =
+        reason === DisputeReason.TicketNotReceived
+          ? claimsConfig?.ticketNotReceived
+          : claimsConfig?.ticketDidntWork;
+      const minHours = windowConfig?.minimumClaimHours ?? 1;
+      const maxHours = windowConfig?.maximumClaimHours ?? 168;
 
-      const reason = data.disputeReason ?? DisputeReason.Other;
+      const refDate =
+        reason === DisputeReason.TicketNotReceived
+          ? transaction.ticketTransferredAt ??
+            transaction.paymentReceivedAt ??
+            transaction.createdAt
+          : transaction.buyerConfirmedAt ??
+            transaction.ticketTransferredAt ??
+            transaction.paymentReceivedAt ??
+            transaction.createdAt;
 
-      if (reason === DisputeReason.TicketNotReceived) {
-        const refDate =
-          transaction.ticketTransferredAt ??
-          transaction.paymentReceivedAt ??
-          transaction.createdAt;
-        const deadline = new Date(
-          refDate.getTime() + notReceivedHours * 60 * 60 * 1000,
+      if (reason === DisputeReason.TicketDidntWork && !transaction.buyerConfirmedAt) {
+        throw new BadRequestException(
+          'You must confirm receipt of the ticket before opening a "ticket did not work" claim.',
         );
-        if (new Date() > deadline) {
-          throw new BadRequestException(
-            `Claims for "ticket not received" must be opened within ${notReceivedHours} hours of the ticket transfer. The deadline has passed.`,
-          );
-        }
       }
 
-      if (
-        reason === DisputeReason.TicketInvalid ||
-        reason === DisputeReason.WrongTicket
-      ) {
-        if (!transaction.buyerConfirmedAt) {
-          throw new BadRequestException(
-            'You must confirm receipt of the ticket before opening an "invalid ticket" or "wrong ticket" claim.',
-          );
-        }
-        const deadline = new Date(
-          transaction.buyerConfirmedAt.getTime() +
-            invalidEntryHours * 60 * 60 * 1000,
+      const now = new Date();
+      const refTime = refDate.getTime();
+      const minDeadline = new Date(refTime + minHours * 60 * 60 * 1000);
+      const maxDeadline = new Date(refTime + maxHours * 60 * 60 * 1000);
+      if (now < minDeadline) {
+        throw new BadRequestException(
+          `Claims can only be opened at least ${minHours} hours after the reference date. Please try again later.`,
         );
-        if (new Date() > deadline) {
-          throw new BadRequestException(
-            `Claims for invalid or wrong ticket must be opened within ${invalidEntryHours} hours of confirming receipt. The deadline has passed.`,
-          );
-        }
+      }
+      if (now > maxDeadline) {
+        throw new BadRequestException(
+          `Claims must be opened within ${maxHours} hours of the reference date. The deadline has passed.`,
+        );
       }
     }
 
@@ -206,7 +212,7 @@ export class SupportService {
             buyerId: transaction.buyerId,
             sellerId: transaction.sellerId,
             openedBy,
-            reason: data.disputeReason || DisputeReason.Other,
+            reason: data.disputeReason!,
           })
           .catch((err) => this.logger.error(ctx, `Failed to emit DISPUTE_OPENED: ${err}`));
       }

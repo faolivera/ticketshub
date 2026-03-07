@@ -25,17 +25,18 @@ function useWizardState() {
     const bankStatus = user.bankAccountStatus;
     const identitySubmitted =
       idStatus === 'pending' || idStatus === 'approved' || idStatus === 'rejected';
-    const identityApproved = idStatus === 'approved';
     const bankSubmitted =
       bankStatus === 'pending' || bankStatus === 'approved';
 
+    // Step order: 1=phone, 2=terms, 3=bank, 4=identity. Wizard is complete when all four are filled (no admin approval required).
     const completedSteps = new Set<WizardStep>();
     if (phoneVerified) completedSteps.add(1);
     if (isSeller) completedSteps.add(2);
-    if (identitySubmitted) completedSteps.add(3);
-    if (bankSubmitted) completedSteps.add(4);
+    if (bankSubmitted) completedSteps.add(3);
+    if (identitySubmitted) completedSteps.add(4);
 
-    if (isSeller && bankSubmitted) {
+    const allStepsFilled = isSeller && bankSubmitted && identitySubmitted;
+    if (allStepsFilled) {
       return {
         status: 'completed' as const,
         currentStep: 4 as WizardStep,
@@ -51,13 +52,10 @@ function useWizardState() {
     if (!isSeller) {
       return { status: 'steps' as const, currentStep: 2 as WizardStep, completedSteps, user, refreshUser };
     }
-    if (!identitySubmitted || idStatus === 'rejected') {
-      return { status: 'steps' as const, currentStep: 3 as WizardStep, completedSteps, user, refreshUser };
-    }
-    if (!identityApproved) {
-      return { status: 'steps' as const, currentStep: 3 as WizardStep, completedSteps, user, refreshUser };
-    }
     if (!bankSubmitted) {
+      return { status: 'steps' as const, currentStep: 3 as WizardStep, completedSteps, user, refreshUser };
+    }
+    if (!identitySubmitted || idStatus === 'rejected') {
       return { status: 'steps' as const, currentStep: 4 as WizardStep, completedSteps, user, refreshUser };
     }
 
@@ -140,14 +138,14 @@ export function BecomeSellerWizard() {
           />
         )}
         {currentStep === 3 && (
-          <StepIdentity
+          <StepBank
             onComplete={async () => {
               await refreshUser();
             }}
           />
         )}
         {currentStep === 4 && (
-          <StepBank
+          <StepIdentity
             onComplete={async () => {
               await refreshUser();
             }}

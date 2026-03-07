@@ -7,6 +7,7 @@ import { ImagesModule } from '../images/images.module';
 import { OTPModule } from '../otp/otp.module';
 import { TermsModule } from '../terms/terms.module';
 import { IdentityVerificationModule } from '../identity-verification/identity-verification.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { IdentityVerificationModule } from '../identity-verification/identity-ve
     forwardRef(() => OTPModule),
     forwardRef(() => TermsModule),
     forwardRef(() => IdentityVerificationModule),
+    forwardRef(() => NotificationsModule),
   ],
   controllers: [UsersController],
   providers: [

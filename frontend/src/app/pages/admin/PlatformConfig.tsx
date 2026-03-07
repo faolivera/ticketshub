@@ -50,20 +50,26 @@ export function PlatformConfig() {
   const [adminReviewHours, setAdminReviewHours] = useState('');
   const [chatPollIntervalSeconds, setChatPollIntervalSeconds] = useState('');
   const [chatMaxMessages, setChatMaxMessages] = useState('');
-  // Risk engine (defaults so section is usable even if API omits them)
-  const [phoneRequiredEventHours, setPhoneRequiredEventHours] = useState('72');
-  const [phoneRequiredAmountUsd, setPhoneRequiredAmountUsd] = useState('120');
-  const [phoneRequiredQtyTickets, setPhoneRequiredQtyTickets] = useState('2');
-  const [newAccountDays, setNewAccountDays] = useState('7');
-  const [unverifiedSellerMaxSales, setUnverifiedSellerMaxSales] = useState('2');
-  const [unverifiedSellerMaxAmountMajor, setUnverifiedSellerMaxAmountMajor] = useState('200');
+  // Risk engine (initial values from API; backend is single source of defaults)
+  const [phoneRequiredEventHours, setPhoneRequiredEventHours] = useState('');
+  const [phoneRequiredAmountUsd, setPhoneRequiredAmountUsd] = useState('');
+  const [phoneRequiredQtyTickets, setPhoneRequiredQtyTickets] = useState('');
+  const [newAccountDays, setNewAccountDays] = useState('');
+  const [dniRequiredEventHours, setDniRequiredEventHours] = useState('');
+  const [dniRequiredAmountUsd, setDniRequiredAmountUsd] = useState('');
+  const [dniRequiredQtyTickets, setDniRequiredQtyTickets] = useState('');
+  const [dniNewAccountDays, setDniNewAccountDays] = useState('');
+  const [unverifiedSellerMaxSales, setUnverifiedSellerMaxSales] = useState('');
+  const [unverifiedSellerMaxAmountMajor, setUnverifiedSellerMaxAmountMajor] = useState('');
   const [unverifiedSellerMaxAmountCurrency, setUnverifiedSellerMaxAmountCurrency] =
     useState<CurrencyCode>('USD');
-  const [payoutHoldHoursDefault, setPayoutHoldHoursDefault] = useState('24');
-  const [payoutHoldHoursUnverified, setPayoutHoldHoursUnverified] = useState('48');
-  const [claimKycDeadlineHours, setClaimKycDeadlineHours] = useState('24');
-  const [claimInvalidEntryWindowHours, setClaimInvalidEntryWindowHours] = useState('2');
-  const [usdToArs, setUsdToArs] = useState('1000');
+  const [payoutHoldHoursDefault, setPayoutHoldHoursDefault] = useState('');
+  const [payoutHoldHoursUnverified, setPayoutHoldHoursUnverified] = useState('');
+  const [ticketNotReceivedMinHours, setTicketNotReceivedMinHours] = useState('');
+  const [ticketNotReceivedMaxHours, setTicketNotReceivedMaxHours] = useState('');
+  const [ticketDidntWorkMinHours, setTicketDidntWorkMinHours] = useState('');
+  const [ticketDidntWorkMaxHours, setTicketDidntWorkMaxHours] = useState('');
+  const [usdToArs, setUsdToArs] = useState('');
 
   const fetchConfig = async () => {
     try {
@@ -75,35 +81,38 @@ export function PlatformConfig() {
       setSellerFee(String(data.sellerPlatformFeePercentage));
       setPaymentTimeout(String(data.paymentTimeoutMinutes));
       setAdminReviewHours(String(data.adminReviewTimeoutHours));
-      setChatPollIntervalSeconds(String(data.transactionChatPollIntervalSeconds ?? 15));
-      setChatMaxMessages(String(data.transactionChatMaxMessages ?? 100));
+      setChatPollIntervalSeconds(String(data.transactionChatPollIntervalSeconds));
+      setChatMaxMessages(String(data.transactionChatMaxMessages));
       const re = data.riskEngine;
-      if (re) {
-        if (re.buyer) {
-          setPhoneRequiredEventHours(String(re.buyer.phoneRequiredEventHours ?? 72));
-          setPhoneRequiredAmountUsd(String(re.buyer.phoneRequiredAmountUsd ?? 120));
-          setPhoneRequiredQtyTickets(String(re.buyer.phoneRequiredQtyTickets ?? 2));
-          setNewAccountDays(String(re.buyer.newAccountDays ?? 7));
-        }
-        if (re.seller) {
-          setUnverifiedSellerMaxSales(String(re.seller.unverifiedSellerMaxSales ?? 2));
-          setUnverifiedSellerMaxAmountMajor(
-            String((re.seller.unverifiedSellerMaxAmount?.amount ?? 20000) / 100)
-          );
-          setUnverifiedSellerMaxAmountCurrency(
-            (re.seller.unverifiedSellerMaxAmount?.currency as CurrencyCode) ?? 'USD'
-          );
-          setPayoutHoldHoursDefault(String(re.seller.payoutHoldHoursDefault ?? 24));
-          setPayoutHoldHoursUnverified(String(re.seller.payoutHoldHoursUnverified ?? 48));
-        }
-        if (re.claims) {
-          setClaimKycDeadlineHours(String(re.claims.claimKycDeadlineHours ?? 24));
-          setClaimInvalidEntryWindowHours(String(re.claims.claimInvalidEntryWindowHours ?? 2));
-        }
+      if (re?.buyer) {
+        setPhoneRequiredEventHours(String(re.buyer.phoneRequiredEventHours));
+        setPhoneRequiredAmountUsd(String(re.buyer.phoneRequiredAmountUsd));
+        setPhoneRequiredQtyTickets(String(re.buyer.phoneRequiredQtyTickets));
+        setNewAccountDays(String(re.buyer.newAccountDays));
+        setDniRequiredEventHours(String(re.buyer.dniRequiredEventHours));
+        setDniRequiredAmountUsd(String(re.buyer.dniRequiredAmountUsd));
+        setDniRequiredQtyTickets(String(re.buyer.dniRequiredQtyTickets));
+        setDniNewAccountDays(String(re.buyer.dniNewAccountDays));
       }
-      const er = data.exchangeRates;
-      if (er) {
-        setUsdToArs(String(er.usdToArs ?? 1000));
+      if (re?.seller) {
+        setUnverifiedSellerMaxSales(String(re.seller.unverifiedSellerMaxSales));
+        setUnverifiedSellerMaxAmountMajor(
+          String((re.seller.unverifiedSellerMaxAmount?.amount ?? 0) / 100)
+        );
+        setUnverifiedSellerMaxAmountCurrency(
+          (re.seller.unverifiedSellerMaxAmount?.currency as CurrencyCode) ?? 'USD'
+        );
+        setPayoutHoldHoursDefault(String(re.seller.payoutHoldHoursDefault));
+        setPayoutHoldHoursUnverified(String(re.seller.payoutHoldHoursUnverified));
+      }
+      if (re?.claims) {
+        setTicketNotReceivedMinHours(String(re.claims.ticketNotReceived?.minimumClaimHours ?? ''));
+        setTicketNotReceivedMaxHours(String(re.claims.ticketNotReceived?.maximumClaimHours ?? ''));
+        setTicketDidntWorkMinHours(String(re.claims.ticketDidntWork?.minimumClaimHours ?? ''));
+        setTicketDidntWorkMaxHours(String(re.claims.ticketDidntWork?.maximumClaimHours ?? ''));
+      }
+      if (data.exchangeRates) {
+        setUsdToArs(String(data.exchangeRates.usdToArs));
       }
     } catch (err) {
       setError(
@@ -193,29 +202,43 @@ export function PlatformConfig() {
         transactionChatPollIntervalSeconds: Math.round(chatPoll),
         transactionChatMaxMessages: Math.round(chatMax),
       };
+      const cur = config?.riskEngine;
       payload.riskEngine = {
         buyer: {
-          phoneRequiredEventHours: Math.round(Number(phoneRequiredEventHours) || 72),
-          phoneRequiredAmountUsd: Number(phoneRequiredAmountUsd) || 120,
-          phoneRequiredQtyTickets: Math.round(Number(phoneRequiredQtyTickets) || 2),
-          newAccountDays: Math.round(Number(newAccountDays) || 7),
+          phoneRequiredEventHours: (Math.round(Number(phoneRequiredEventHours)) || cur?.buyer?.phoneRequiredEventHours) ?? 0,
+          phoneRequiredAmountUsd: (Number(phoneRequiredAmountUsd) || cur?.buyer?.phoneRequiredAmountUsd) ?? 0,
+          phoneRequiredQtyTickets: (Math.round(Number(phoneRequiredQtyTickets)) || cur?.buyer?.phoneRequiredQtyTickets) ?? 0,
+          newAccountDays: (Math.round(Number(newAccountDays)) || cur?.buyer?.newAccountDays) ?? 0,
+          dniRequiredEventHours: (Math.round(Number(dniRequiredEventHours)) || cur?.buyer?.dniRequiredEventHours) ?? 0,
+          dniRequiredAmountUsd: (Number(dniRequiredAmountUsd) || cur?.buyer?.dniRequiredAmountUsd) ?? 0,
+          dniRequiredQtyTickets: (Math.round(Number(dniRequiredQtyTickets)) || cur?.buyer?.dniRequiredQtyTickets) ?? 0,
+          dniNewAccountDays: (Math.round(Number(dniNewAccountDays)) || cur?.buyer?.dniNewAccountDays) ?? 0,
         },
         seller: {
-          unverifiedSellerMaxSales: Math.round(Number(unverifiedSellerMaxSales) || 2),
-          unverifiedSellerMaxAmount: {
-            amount: Math.round((Number(unverifiedSellerMaxAmountMajor) || 200) * 100),
-            currency: unverifiedSellerMaxAmountCurrency,
-          },
-          payoutHoldHoursDefault: Math.round(Number(payoutHoldHoursDefault) || 24),
-          payoutHoldHoursUnverified: Math.round(Number(payoutHoldHoursUnverified) || 48),
+          unverifiedSellerMaxSales: (Math.round(Number(unverifiedSellerMaxSales)) || cur?.seller?.unverifiedSellerMaxSales) ?? 0,
+          unverifiedSellerMaxAmount: (() => {
+            const major = Number(unverifiedSellerMaxAmountMajor);
+            const amountCents = !Number.isNaN(major) && major > 0
+              ? Math.round(major * 100)
+              : (cur?.seller?.unverifiedSellerMaxAmount?.amount ?? 0);
+            return { amount: amountCents, currency: unverifiedSellerMaxAmountCurrency };
+          })(),
+          payoutHoldHoursDefault: (Math.round(Number(payoutHoldHoursDefault)) || cur?.seller?.payoutHoldHoursDefault) ?? 0,
+          payoutHoldHoursUnverified: (Math.round(Number(payoutHoldHoursUnverified)) || cur?.seller?.payoutHoldHoursUnverified) ?? 0,
         },
         claims: {
-          claimKycDeadlineHours: Math.round(Number(claimKycDeadlineHours) || 24),
-          claimInvalidEntryWindowHours: Math.round(Number(claimInvalidEntryWindowHours) || 2),
+          ticketNotReceived: {
+            minimumClaimHours: (Math.round(Number(ticketNotReceivedMinHours)) || cur?.claims?.ticketNotReceived?.minimumClaimHours) ?? 0,
+            maximumClaimHours: (Math.round(Number(ticketNotReceivedMaxHours)) || cur?.claims?.ticketNotReceived?.maximumClaimHours) ?? 0,
+          },
+          ticketDidntWork: {
+            minimumClaimHours: (Math.round(Number(ticketDidntWorkMinHours)) || cur?.claims?.ticketDidntWork?.minimumClaimHours) ?? 0,
+            maximumClaimHours: (Math.round(Number(ticketDidntWorkMaxHours)) || cur?.claims?.ticketDidntWork?.maximumClaimHours) ?? 0,
+          },
         },
       };
       payload.exchangeRates = {
-        usdToArs: Number(usdToArs) || 1000,
+        usdToArs: (Number(usdToArs) || config?.exchangeRates?.usdToArs) ?? 0,
       };
       await adminService.updatePlatformConfig(payload);
       setSuccess(t('admin.platformConfig.saved'));
@@ -421,6 +444,62 @@ export function PlatformConfig() {
                 />
               </div>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {t('admin.platformConfig.riskEngineDniSubtitle')}
+            </p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="dniRequiredEventHours">
+                  {t('admin.platformConfig.dniRequiredEventHours')}
+                </Label>
+                <Input
+                  id="dniRequiredEventHours"
+                  type="number"
+                  min={1}
+                  max={720}
+                  value={dniRequiredEventHours}
+                  onChange={(e) => setDniRequiredEventHours(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dniRequiredAmountUsd">
+                  {t('admin.platformConfig.dniRequiredAmountUsd')}
+                </Label>
+                <Input
+                  id="dniRequiredAmountUsd"
+                  type="number"
+                  min={0}
+                  value={dniRequiredAmountUsd}
+                  onChange={(e) => setDniRequiredAmountUsd(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dniRequiredQtyTickets">
+                  {t('admin.platformConfig.dniRequiredQtyTickets')}
+                </Label>
+                <Input
+                  id="dniRequiredQtyTickets"
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={dniRequiredQtyTickets}
+                  onChange={(e) => setDniRequiredQtyTickets(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dniNewAccountDays">
+                  {t('admin.platformConfig.dniNewAccountDays')}
+                </Label>
+                <Input
+                  id="dniNewAccountDays"
+                  type="number"
+                  min={0}
+                  max={365}
+                  value={dniNewAccountDays}
+                  onChange={(e) => setDniNewAccountDays(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Seller: limits & payout */}
@@ -504,32 +583,72 @@ export function PlatformConfig() {
             <h3 className="mb-3 text-sm font-semibold">
               {t('admin.platformConfig.riskEngineClaimsTitle')}
             </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="claimKycDeadlineHours">
-                  {t('admin.platformConfig.claimKycDeadlineHours')}
-                </Label>
-                <Input
-                  id="claimKycDeadlineHours"
-                  type="number"
-                  min={1}
-                  max={72}
-                  value={claimKycDeadlineHours}
-                  onChange={(e) => setClaimKycDeadlineHours(e.target.value)}
-                />
+            <div className="space-y-4">
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  {t('admin.platformConfig.claimsTicketNotReceived')}
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="ticketNotReceivedMinHours">
+                      {t('admin.platformConfig.minimumClaimHours')}
+                    </Label>
+                    <Input
+                      id="ticketNotReceivedMinHours"
+                      type="number"
+                      min={0}
+                      max={720}
+                      value={ticketNotReceivedMinHours}
+                      onChange={(e) => setTicketNotReceivedMinHours(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ticketNotReceivedMaxHours">
+                      {t('admin.platformConfig.maximumClaimHours')}
+                    </Label>
+                    <Input
+                      id="ticketNotReceivedMaxHours"
+                      type="number"
+                      min={1}
+                      max={720}
+                      value={ticketNotReceivedMaxHours}
+                      onChange={(e) => setTicketNotReceivedMaxHours(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="claimInvalidEntryWindowHours">
-                  {t('admin.platformConfig.claimInvalidEntryWindowHours')}
-                </Label>
-                <Input
-                  id="claimInvalidEntryWindowHours"
-                  type="number"
-                  min={0}
-                  max={24}
-                  value={claimInvalidEntryWindowHours}
-                  onChange={(e) => setClaimInvalidEntryWindowHours(e.target.value)}
-                />
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  {t('admin.platformConfig.claimsTicketDidntWork')}
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="ticketDidntWorkMinHours">
+                      {t('admin.platformConfig.minimumClaimHours')}
+                    </Label>
+                    <Input
+                      id="ticketDidntWorkMinHours"
+                      type="number"
+                      min={0}
+                      max={720}
+                      value={ticketDidntWorkMinHours}
+                      onChange={(e) => setTicketDidntWorkMinHours(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ticketDidntWorkMaxHours">
+                      {t('admin.platformConfig.maximumClaimHours')}
+                    </Label>
+                    <Input
+                      id="ticketDidntWorkMaxHours"
+                      type="number"
+                      min={1}
+                      max={720}
+                      value={ticketDidntWorkMaxHours}
+                      onChange={(e) => setTicketDidntWorkMaxHours(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

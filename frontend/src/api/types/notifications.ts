@@ -11,6 +11,9 @@ export type NotificationEventType =
   | 'DISPUTE_RESOLVED'
   | 'IDENTITY_VERIFIED'
   | 'IDENTITY_REJECTED'
+  | 'IDENTITY_SUBMITTED'
+  | 'BANK_ACCOUNT_SUBMITTED'
+  | 'SELLER_VERIFICATION_COMPLETE'
   | 'EVENT_APPROVED'
   | 'EVENT_REJECTED'
   | 'REVIEW_RECEIVED'
@@ -81,6 +84,9 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
   DISPUTE_RESOLVED: ['eventName', 'resolution', 'resolvedInFavorOf', 'disputeId', 'transactionId'],
   IDENTITY_VERIFIED: ['userName'],
   IDENTITY_REJECTED: ['userName', 'rejectionReason'],
+  IDENTITY_SUBMITTED: ['userName'],
+  BANK_ACCOUNT_SUBMITTED: ['userName'],
+  SELLER_VERIFICATION_COMPLETE: ['userName'],
   EVENT_APPROVED: ['eventName'],
   EVENT_REJECTED: ['eventName', 'rejectionReason'],
   REVIEW_RECEIVED: ['reviewerName', 'rating', 'comment', 'transactionId'],
@@ -103,6 +109,9 @@ export const ALL_EVENT_TYPES: NotificationEventType[] = [
   'DISPUTE_RESOLVED',
   'IDENTITY_VERIFIED',
   'IDENTITY_REJECTED',
+  'IDENTITY_SUBMITTED',
+  'BANK_ACCOUNT_SUBMITTED',
+  'SELLER_VERIFICATION_COMPLETE',
   'EVENT_APPROVED',
   'EVENT_REJECTED',
   'REVIEW_RECEIVED',

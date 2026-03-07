@@ -23,6 +23,7 @@ import { SellerVerification } from '@/app/pages/SellerVerification';
 import { BankAccountPage } from '@/app/pages/BankAccountPage';
 import { PhoneVerification } from '@/app/pages/PhoneVerification';
 import { BecomeSellerWizard } from '@/app/pages/BecomeSellerWizard';
+import { VerifyUserWizard } from '@/app/pages/VerifyUserWizard';
 import { MyTicket } from '@/app/pages/MyTicket';
 import { EditListing } from '@/app/pages/EditListing';
 import { AdminDashboard } from '@/app/pages/admin/AdminDashboard';
@@ -63,6 +64,7 @@ export default function App() {
               {/* Wallet route hidden from UI (backend still has wallet); uncomment to re-enable */}
               {/* <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} /> */}
               <Route path="/phone-verification" element={<ProtectedRoute><PhoneVerification /></ProtectedRoute>} />
+              <Route path="/verify-user" element={<ProtectedRoute><VerifyUserWizard /></ProtectedRoute>} />
               <Route path="/become-seller" element={<ProtectedRoute><BecomeSellerWizard /></ProtectedRoute>} />
               <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
               <Route path="/bank-account" element={<ProtectedRoute><BankAccountPage /></ProtectedRoute>} />

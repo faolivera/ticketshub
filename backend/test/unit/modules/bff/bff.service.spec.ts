@@ -161,6 +161,7 @@ describe('BffService', () => {
         riskLevel: 'LOW',
         requireV1: true,
         requireV2: false,
+        requireV3: false,
       }),
     };
 
