@@ -116,6 +116,11 @@ export function Header() {
 
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="sm:hidden px-4 py-2 border-b border-gray-200">
+                    <span className="font-semibold text-gray-900 truncate block">
+                      {user?.firstName} {user?.lastName}
+                    </span>
+                  </div>
                   <Link
                     to="/my-tickets"
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"

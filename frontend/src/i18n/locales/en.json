@@ -1,5 +1,6 @@
 {
   "header": {
+    "home": "Home",
     "myTickets": "My Tickets",
     "mySales": "My Sales",
     "myProfile": "My Profile",
@@ -846,6 +847,80 @@
     "linkText": "Bank account",
     "linkAdd": "Add bank account",
     "linkEdit": "Edit bank account"
+  },
+  "becomeSeller": {
+    "title": "Become a seller",
+    "progress": {
+      "phone": "Phone",
+      "terms": "Terms",
+      "identity": "Identity",
+      "bank": "Bank"
+    },
+    "step1": {
+      "title": "Verify your phone",
+      "description": "We'll send you a code to confirm your number.",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "+54 11 1234-5678",
+      "sendCode": "Send code",
+      "sending": "Sending...",
+      "enterCode": "Enter the 6-digit code",
+      "codeSent": "We sent a code to {{phone}}",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "resendCode": "Resend code",
+      "resendIn": "Resend in {{seconds}}s",
+      "backToProfile": "Back to profile",
+      "pleaseEnterPhone": "Please enter your phone number",
+      "pleaseEnterCompleteCode": "Please enter the complete 6-digit code",
+      "sendError": "Failed to send code. Please try again.",
+      "verifyError": "Verification failed. Please check the code."
+    },
+    "step2": {
+      "title": "Terms and conditions",
+      "whatYouCanDo": "What you can do starting today",
+      "canList": "Publish your tickets",
+      "canSell": "Confirm sales",
+      "untilVerified": "Until you verify your account",
+      "limitListings": "Limited number of listings",
+      "limitWithdraw": "You cannot withdraw the money from sales",
+      "verifyAccountRequires": "To verify your account we need:",
+      "verifyAccountDni": "Your verified ID",
+      "verifyAccountBank": "Your bank details",
+      "verifyLater": "You can complete verification anytime from your profile.",
+      "agreeToTerms": "I agree to the",
+      "sellerTermsLink": "Seller Terms",
+      "startSelling": "Start selling",
+      "pleaseAcceptTerms": "Please accept the Seller Terms to continue",
+      "successTitle": "You can start selling",
+      "successMessage": "You can now publish tickets. We recommend completing the next steps to become a verified seller and receive payouts without limits.",
+      "continue": "Continue"
+    },
+    "step3": {
+      "title": "Verify your identity",
+      "subtitle": "We need to confirm your identity to protect buyers and sellers.",
+      "identityUnderReview": "Your identity is under review",
+      "identityUnderReviewMessage": "We're reviewing your documents. This usually takes 1–2 business days. You can continue to the next step once approved.",
+      "next": "Next"
+    },
+    "step4": {
+      "title": "Bank account",
+      "subtitle": "Add your bank details to receive payouts.",
+      "successTitle": "All set",
+      "successMessage": "Your seller verification is complete. We'll review your details and notify you when payouts are enabled.",
+      "goToSell": "Go to sell tickets",
+      "backToProfile": "Back to profile"
+    },
+    "completed": {
+      "title": "Verification in progress",
+      "message": "Your seller verification is in progress. We'll notify you when it's ready.",
+      "goToProfile": "Back to profile",
+      "goToSell": "Sell tickets"
+    },
+    "cta": {
+      "becomeSeller": "Become a seller",
+      "verifySellerData": "Verify your seller data",
+      "completeVerification": "Complete your seller verification"
+    }
   },
   "verification": {
     "title": "Seller Verification",

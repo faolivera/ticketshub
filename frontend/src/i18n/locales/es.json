@@ -1,5 +1,6 @@
 {
   "header": {
+    "home": "Inicio",
     "myTickets": "Mis Entradas",
     "mySales": "Mis Ventas",
     "myProfile": "Mi Perfil",
@@ -830,6 +831,80 @@
     "linkText": "Cuenta bancaria",
     "linkAdd": "Agregar cuenta bancaria",
     "linkEdit": "Editar cuenta bancaria"
+  },
+  "becomeSeller": {
+    "title": "Convertirse en vendedor",
+    "progress": {
+      "phone": "Teléfono",
+      "terms": "Términos",
+      "identity": "Identidad",
+      "bank": "Datos bancarios"
+    },
+    "step1": {
+      "title": "Verificá tu teléfono",
+      "description": "Te enviaremos un código para confirmar tu número.",
+      "phoneLabel": "Número de teléfono",
+      "phonePlaceholder": "+54 11 1234-5678",
+      "sendCode": "Enviar código",
+      "sending": "Enviando...",
+      "enterCode": "Ingresá el código de 6 dígitos",
+      "codeSent": "Enviamos un código a {{phone}}",
+      "verify": "Verificar",
+      "verifying": "Verificando...",
+      "resendCode": "Reenviar código",
+      "resendIn": "Reenviar en {{seconds}}s",
+      "backToProfile": "Volver al perfil",
+      "pleaseEnterPhone": "Ingresá tu número de teléfono",
+      "pleaseEnterCompleteCode": "Ingresá el código completo de 6 dígitos",
+      "sendError": "No se pudo enviar el código. Intentá de nuevo.",
+      "verifyError": "Verificación fallida. Revisá el código."
+    },
+    "step2": {
+      "title": "Términos y condiciones",
+      "whatYouCanDo": "Lo que podés hacer desde hoy",
+      "canList": "Publicar tus entradas",
+      "canSell": "Confirmar ventas",
+      "untilVerified": "Hasta que verifiques tu cuenta",
+      "limitListings": "Cantidad limitada de anuncios",
+      "limitWithdraw": "No podés retirar el dinero de las ventas",
+      "verifyAccountRequires": "Para verificar tu cuenta necesitamos:",
+      "verifyAccountDni": "Tu DNI verificado",
+      "verifyAccountBank": "Tus datos bancarios",
+      "verifyLater": "Podés completar la verificación cuando quieras desde tu perfil.",
+      "agreeToTerms": "Acepto los",
+      "sellerTermsLink": "Términos del Vendedor",
+      "startSelling": "Comenzar a vender",
+      "pleaseAcceptTerms": "Aceptá los Términos del Vendedor para continuar",
+      "successTitle": "Ya podés vender",
+      "successMessage": "Ahora podés publicar entradas. Te recomendamos completar los siguientes pasos para ser vendedor verificado y recibir pagos sin límites.",
+      "continue": "Continuar"
+    },
+    "step3": {
+      "title": "Verificá tu identidad",
+      "subtitle": "Necesitamos confirmar tu identidad para proteger compradores y vendedores.",
+      "identityUnderReview": "Tu identidad está en revisión",
+      "identityUnderReviewMessage": "Estamos revisando tus documentos. Suele tardar 1 o 2 días hábiles. Podrás continuar al siguiente paso cuando sea aprobada.",
+      "next": "Siguiente"
+    },
+    "step4": {
+      "title": "Cuenta bancaria",
+      "subtitle": "Agregá tus datos bancarios para recibir pagos.",
+      "successTitle": "Listo",
+      "successMessage": "Tu verificación de vendedor está completa. Revisaremos tus datos y te avisaremos cuando los pagos estén habilitados.",
+      "goToSell": "Ir a vender entradas",
+      "backToProfile": "Volver al perfil"
+    },
+    "completed": {
+      "title": "Verificación en curso",
+      "message": "Tu verificación de vendedor está en curso. Te avisaremos cuando esté lista.",
+      "goToProfile": "Volver al perfil",
+      "goToSell": "Vender entradas"
+    },
+    "cta": {
+      "becomeSeller": "Convertirse en vendedor",
+      "verifySellerData": "Verificá tus datos de vendedor",
+      "completeVerification": "Completá tu verificación como vendedor"
+    }
   },
   "verification": {
     "title": "Verificación de Vendedor",

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Ticket, Phone, Loader2 } from 'lucide-react';
+import { Link, useLocation, Navigate } from 'react-router-dom';
+import { Ticket, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
-import { SellerIntroModal } from '@/app/components/SellerIntroModal';
 import { EmptyState } from '@/app/components/EmptyState';
 import { eventsService } from '@/api/services/events.service';
 import type { EventWithDates } from '@/api/types';
@@ -14,20 +13,12 @@ type WizardStep = 'select-event' | 'ticket-details';
 export function SellTicket() {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
   const newEvent = location.state?.newEvent;
   const { user, isAuthenticated, canSell } = useUser();
 
-  const [showSellerIntroModal, setShowSellerIntroModal] = useState(false);
   const [step, setStep] = useState<WizardStep>('select-event');
   const [selectedEvent, setSelectedEvent] = useState<EventWithDates | null>(null);
   const [isLoadingEvent, setIsLoadingEvent] = useState(false);
-
-  useEffect(() => {
-    if (user && !canSell() && !user.hasSeenSellerIntro) {
-      setShowSellerIntroModal(true);
-    }
-  }, [user, canSell]);
 
   useEffect(() => {
     if (newEvent?.id) {
@@ -69,36 +60,12 @@ export function SellTicket() {
     );
   }
 
-  if (user && !user.phoneVerified) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md text-center">
-          <Phone className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('sellTicket.phoneRequired')}</h2>
-          <p className="text-gray-600 mb-6">{t('sellTicket.phoneRequiredDescription')}</p>
-          <Link
-            to="/phone-verification"
-            state={{ returnTo: '/sell-ticket' }}
-            className="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            {t('sellTicket.verifyPhoneNow')}
-          </Link>
-        </div>
-      </div>
-    );
+  if (user && !canSell()) {
+    return <Navigate to="/become-seller" replace />;
   }
 
   return (
     <>
-      {showSellerIntroModal && (
-        <SellerIntroModal
-          onClose={() => {
-            setShowSellerIntroModal(false);
-            navigate((location.state as { from?: string } | null)?.from ?? '/');
-          }}
-        />
-      )}
-
       {isLoadingEvent && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg">

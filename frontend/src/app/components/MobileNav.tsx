@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Ticket, Tag, TrendingUp, User } from 'lucide-react';
+import { Home, Ticket, Tag, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 
@@ -16,6 +16,14 @@ export function MobileNav() {
 
   return (
     <nav className="sm:hidden fixed bottom-0 left-0 right-0 w-full z-50 bg-white border-t border-gray-200 flex items-stretch pb-[env(safe-area-inset-bottom)]">
+      <NavLink
+        to="/"
+        className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
+      >
+        <Home className="w-5 h-5" />
+        <span className="text-xs font-medium">{t('header.home')}</span>
+      </NavLink>
+
       <NavLink
         to="/my-tickets"
         className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
@@ -42,14 +50,6 @@ export function MobileNav() {
           <span className="text-xs font-medium">{t('header.mySales')}</span>
         </NavLink>
       )}
-
-      <NavLink
-        to="/user-profile"
-        className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
-      >
-        <User className="w-5 h-5" />
-        <span className="text-xs font-medium">{t('header.myProfile')}</span>
-      </NavLink>
     </nav>
   );
 }

@@ -4,7 +4,6 @@ import { useUser } from '@/app/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
 import { SellerBadge } from '@/app/components/SellerBadge';
 import { useState, useEffect, useRef } from 'react';
-import { SellerIntroModal } from '@/app/components/SellerIntroModal';
 import { VerificationHelper } from '@/lib/verification';
 import { usersService } from '@/api/services';
 import { ticketsService } from '@/api/services/tickets.service';
@@ -22,7 +21,6 @@ interface TicketStats {
 export function UserProfile() {
   const { user, logout, refreshUser } = useUser();
   const { t } = useTranslation();
-  const [showSellerModal, setShowSellerModal] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [ticketStats, setTicketStats] = useState<TicketStats | null>(null);
@@ -79,6 +77,15 @@ export function UserProfile() {
   const showIdentityRow = isSeller || user.buyerDisputed === true;
   const idStatus = user.identityVerificationStatus ?? 'none';
   const bankStatus = user.bankAccountStatus ?? 'none';
+  const identitySubmitted =
+    idStatus === 'pending' || idStatus === 'approved' || idStatus === 'rejected';
+  const bankSubmitted =
+    bankStatus === 'pending' || bankStatus === 'approved';
+  const becomeSellerCtaLabel = !isSeller
+    ? t('becomeSeller.cta.becomeSeller')
+    : !identitySubmitted
+      ? t('becomeSeller.cta.verifySellerData')
+      : t('becomeSeller.cta.completeVerification');
 
   const badgeClass = (verified: boolean, pending: boolean) => {
     if (verified) return 'bg-green-100 text-green-800';
@@ -270,15 +277,15 @@ export function UserProfile() {
             )}
           </div>
 
-          {/* Become a Seller CTA */}
-          {!isSeller && (
+          {/* Become a Seller / Verify seller data CTA */}
+          {(!isSeller || !bankSubmitted) && (
             <div className="mt-6 pt-4 border-t border-gray-100">
-              <button
-                onClick={() => setShowSellerModal(true)}
-                className="w-full px-6 py-3.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+              <Link
+                to="/become-seller"
+                className="block w-full px-6 py-3.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-center"
               >
-                {t('userProfile.becomeSeller')}
-              </button>
+                {becomeSellerCtaLabel}
+              </Link>
             </div>
           )}
 
@@ -305,8 +312,6 @@ export function UserProfile() {
           </div>
         </div>
       </div>
-
-      {showSellerModal && <SellerIntroModal onClose={() => setShowSellerModal(false)} />}
     </div>
   );
 }
