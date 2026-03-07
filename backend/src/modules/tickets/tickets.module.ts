@@ -8,7 +8,6 @@ import { UsersModule } from '../users/users.module';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { TermsModule } from '../terms/terms.module';
 import { ConfigModule } from '../config/config.module';
-import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
   imports: [
@@ -17,7 +16,6 @@ import { TransactionsModule } from '../transactions/transactions.module';
     PromotionsModule,
     TermsModule,
     ConfigModule,
-    forwardRef(() => TransactionsModule),
   ],
   controllers: [TicketsController],
   providers: [

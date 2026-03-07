@@ -112,6 +112,15 @@ describe('TransactionsService', () => {
         adminReviewTimeoutHours: 24,
         offerPendingExpirationMinutes: 1440,
         offerAcceptedExpirationMinutes: 1440,
+        riskEngine: {
+          buyer: {},
+          seller: {
+            unverifiedSellerMaxSales: 2,
+            unverifiedSellerMaxAmount: { amount: 20000, currency: 'USD' },
+            payoutHoldHoursDefault: 24,
+            payoutHoldHoursUnverified: 48,
+          },
+        },
       }),
     };
 
@@ -139,6 +148,11 @@ describe('TransactionsService', () => {
 
     const mockRiskEngineService = {
       evaluateCheckoutRisk: jest.fn().mockResolvedValue({
+        riskLevel: 'LOW',
+        requireV1: true,
+        requireV2: false,
+      }),
+      evaluate: jest.fn().mockReturnValue({
         riskLevel: 'LOW',
         requireV1: true,
         requireV2: false,

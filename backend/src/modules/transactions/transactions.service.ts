@@ -279,13 +279,13 @@ export class TransactionsService {
           currency: ticketPriceTotal.currency,
         };
 
+        const tier = seller ? VerificationHelper.sellerTier(seller) : 0;
         await this.ticketsService.reserveTickets(
           txCtx,
           listingId,
           resolvedTicketUnitIds,
         );
 
-        const tier = seller ? VerificationHelper.sellerTier(seller) : 0;
         const holdHours =
           tier === 2
             ? (platformConfig?.riskEngine?.seller?.payoutHoldHoursDefault ?? 24)
@@ -1114,28 +1114,6 @@ export class TransactionsService {
       );
   }
 
-  /**
-   * Get list of sellerReceives (Money) for each completed transaction.
-   * Used with ConversionService.sumInCurrency to compare with config.riskEngine.unverifiedSellerMaxAmount.
-   */
-  async getSellerCompletedSalesAmounts(
-    ctx: Ctx,
-    sellerId: string,
-  ): Promise<Array<{ amount: number; currency: string }>> {
-    const transactions = await this.transactionsRepository.getBySellerId(
-      ctx,
-      sellerId,
-    );
-    return transactions
-      .filter(
-        (transaction) => transaction.status === TransactionStatus.Completed,
-      )
-      .filter((tx) => tx.sellerReceives != null)
-      .map((tx) => ({
-        amount: tx.sellerReceives!.amount,
-        currency: tx.sellerReceives!.currency,
-      }));
-  }
 
   /**
    * Get total completed sales (ticket units sold) for multiple sellers (batch).

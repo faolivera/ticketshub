@@ -45,7 +45,6 @@ import { TermsUserType } from '../terms/terms.domain';
 import type { Money as ConfigMoney } from '../config/config.domain';
 import { PlatformConfigService } from '../config/config.service';
 import { ConversionService } from '../config/conversion.service';
-import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class TicketsService {
@@ -60,8 +59,6 @@ export class TicketsService {
     private readonly termsService: TermsService,
     private readonly configService: PlatformConfigService,
     private readonly conversionService: ConversionService,
-    @Inject(forwardRef(() => TransactionsService))
-    private readonly transactionsService: TransactionsService,
   ) {}
 
   /**
@@ -79,6 +76,28 @@ export class TicketsService {
     return listing.ticketUnits
       .filter((unit) => unit.status === TicketUnitStatus.Available)
       .map((unit) => unit.id);
+  }
+
+  /**
+   * Total value and count of active listings for a seller (Tier 0 limit).
+   * Value per listing = pricePerTicket.amount * ticketUnits.length (minor units).
+   * Optionally exclude one listing by id (e.g. when updating that listing).
+   */
+  private async getActiveListingsTotalsForSeller(
+    ctx: Ctx,
+    sellerId: string,
+    excludeListingId?: string,
+  ): Promise<{ count: number; amounts: ConfigMoney[] }> {
+    const listings = await this.ticketsRepository.getBySellerId(ctx, sellerId);
+    const active = listings.filter((l) => l.status === ListingStatus.Active);
+    const toSum = excludeListingId
+      ? active.filter((l) => l.id !== excludeListingId)
+      : active;
+    const amounts: ConfigMoney[] = toSum.map((l) => ({
+      amount: l.pricePerTicket.amount * l.ticketUnits.length,
+      currency: l.pricePerTicket.currency,
+    }));
+    return { count: toSum.length, amounts };
   }
 
   private validateListingSeatingConsistency(
@@ -220,29 +239,34 @@ export class TicketsService {
       );
     }
 
-    // Tier 0 (no V3): enforce max sales count and max amount for unverified sellers
+    // Tier 0 (no V3): enforce max count and max total value of active listings.
     if (VerificationHelper.sellerTier(user) === 0) {
       const config = await this.configService.getPlatformConfig(ctx);
       const re = config.riskEngine.seller;
-      const [salesCount, salesAmounts] = await Promise.all([
-        this.transactionsService.getSellerCompletedSalesTotal(ctx, sellerId),
-        this.transactionsService.getSellerCompletedSalesAmounts(ctx, sellerId),
-      ]);
-      if (salesCount >= re.unverifiedSellerMaxSales) {
+      const { count: activeCount, amounts: activeAmounts } =
+        await this.getActiveListingsTotalsForSeller(ctx, sellerId);
+      const newListingQuantity =
+        data.quantity ?? data.ticketUnits?.length ?? 0;
+      const newCount = activeCount + 1;
+      if (newCount > re.unverifiedSellerMaxSales) {
         throw new ForbiddenException(
-          `Unverified sellers are limited to ${re.unverifiedSellerMaxSales} completed sales. Complete identity verification to list more.`,
+          `Unverified sellers are limited to ${re.unverifiedSellerMaxSales} active listings. Complete identity verification to list more.`,
         );
       }
       const limitMoney = re.unverifiedSellerMaxAmount;
+      const newListingValue: ConfigMoney = {
+        amount: data.pricePerTicket.amount * newListingQuantity,
+        currency: data.pricePerTicket.currency,
+      };
       const totalInLimitCurrency = await this.conversionService.sumInCurrency(
         ctx,
-        salesAmounts as ConfigMoney[],
+        [...activeAmounts, newListingValue],
         limitMoney.currency,
       );
-      if (totalInLimitCurrency.amount >= limitMoney.amount) {
+      if (totalInLimitCurrency.amount > limitMoney.amount) {
         const limitMajor = limitMoney.amount / 100;
         throw new ForbiddenException(
-          `Unverified sellers are limited to ${limitMoney.currency} ${limitMajor} in total sales. Complete identity verification to list more.`,
+          `Unverified sellers are limited to ${limitMoney.currency} ${limitMajor} total value in active listings. Complete identity verification to list more.`,
         );
       }
     }
@@ -647,6 +671,42 @@ export class TicketsService {
         effectivePrice,
         effectivePrice.currency,
       );
+
+      // Tier 0: ensure updated total value of active listings does not exceed limit
+      const user = await this.usersService.findById(txCtx, sellerId);
+      if (user && VerificationHelper.sellerTier(user) === 0) {
+        const config = await this.configService.getPlatformConfig(txCtx);
+        const re = config.riskEngine.seller;
+        const { count: otherActiveCount, amounts: otherAmounts } =
+          await this.getActiveListingsTotalsForSeller(
+            txCtx,
+            listing.sellerId,
+            listing.id,
+          );
+        const thisListingValue: ConfigMoney = {
+          amount:
+            effectivePrice.amount * listing.ticketUnits.length,
+          currency: effectivePrice.currency,
+        };
+        const newCount = otherActiveCount + 1;
+        if (newCount > re.unverifiedSellerMaxSales) {
+          throw new ForbiddenException(
+            `Unverified sellers are limited to ${re.unverifiedSellerMaxSales} active listings. Complete identity verification to list more.`,
+          );
+        }
+        const limitMoney = re.unverifiedSellerMaxAmount;
+        const totalInLimitCurrency = await this.conversionService.sumInCurrency(
+          txCtx,
+          [...otherAmounts, thisListingValue],
+          limitMoney.currency,
+        );
+        if (totalInLimitCurrency.amount > limitMoney.amount) {
+          const limitMajor = limitMoney.amount / 100;
+          throw new ForbiddenException(
+            `Unverified sellers are limited to ${limitMoney.currency} ${limitMajor} total value in active listings. Complete identity verification to list more.`,
+          );
+        }
+      }
 
       const updatesToApply =
         updates.bestOfferConfig === null

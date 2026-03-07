@@ -27,7 +27,6 @@ import { PromotionsService } from '../../../../src/modules/promotions/promotions
 import { TermsService } from '../../../../src/modules/terms/terms.service';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import { ConversionService } from '../../../../src/modules/config/conversion.service';
-import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../src/modules/shared/money.domain';
 import type { Ctx } from '../../../../src/common/types/context';
@@ -152,7 +151,7 @@ describe('TicketsService', () => {
       getActiveListings: jest.fn(),
       getByEventId: jest.fn(),
       getByEventDateId: jest.fn(),
-      getBySellerId: jest.fn(),
+      getBySellerId: jest.fn().mockResolvedValue([]),
       update: jest.fn(),
       delete: jest.fn(),
       reserveUnits: jest.fn(),
@@ -245,11 +244,6 @@ describe('TicketsService', () => {
       sumInCurrency: jest.fn().mockResolvedValue({ amount: 0, currency: 'USD' }),
     };
 
-    const mockTransactionsService = {
-      getSellerCompletedSalesTotal: jest.fn().mockResolvedValue(0),
-      getSellerCompletedSalesAmounts: jest.fn().mockResolvedValue([]),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
@@ -261,7 +255,6 @@ describe('TicketsService', () => {
         { provide: TermsService, useValue: mockTermsService },
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: ConversionService, useValue: mockConversionService },
-        { provide: TransactionsService, useValue: mockTransactionsService },
       ],
     }).compile();
 
