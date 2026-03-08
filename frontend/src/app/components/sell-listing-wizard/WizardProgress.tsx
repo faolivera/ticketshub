@@ -18,7 +18,7 @@ const STEP_KEYS = [
 
 interface WizardProgressProps {
   currentStep: WizardStepIndex;
-  /** Desktop: show full stepper. Mobile: show bar + step label only */
+  /** Mobile: bar + step label below. Desktop: circles + connectors, then step label below (titles never truncated). */
   isMobile: boolean;
 }
 
@@ -70,6 +70,7 @@ export const WizardProgress: FC<WizardProgressProps> = ({ currentStep, isMobile 
       })}
       className="border-b pb-6"
     >
+      {/* Step circles and connectors only — no inline labels to avoid truncation */}
       <ol className="flex flex-wrap items-center justify-between gap-2">
         {STEP_KEYS.map((key, index) => {
           const isCompleted = index < currentStep;
@@ -93,14 +94,6 @@ export const WizardProgress: FC<WizardProgressProps> = ({ currentStep, isMobile 
               >
                 {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
               </span>
-              <span
-                className={cn(
-                  'truncate text-sm font-medium',
-                  isCurrent ? 'text-foreground' : 'text-muted-foreground'
-                )}
-              >
-                {t(key)}
-              </span>
               {index < WIZARD_TOTAL_STEPS - 1 && (
                 <span
                   className="mx-1 h-px flex-1 min-w-[8px] bg-border"
@@ -111,6 +104,15 @@ export const WizardProgress: FC<WizardProgressProps> = ({ currentStep, isMobile 
           );
         })}
       </ol>
+      {/* Step title below the bar (same as mobile) so it’s never truncated */}
+      <p className="mt-2 text-sm font-medium text-foreground">
+        {t('sellListingWizard.progressStep', {
+          current: currentStep + 1,
+          total: WIZARD_TOTAL_STEPS,
+        })}
+        {' · '}
+        {t(STEP_KEYS[currentStep])}
+      </p>
     </nav>
   );
 };
