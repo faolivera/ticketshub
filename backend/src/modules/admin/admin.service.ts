@@ -51,9 +51,20 @@ import type {
   AdminUpdateSupportTicketStatusResponse,
   AdminResolveSupportDisputeResponse,
   AdminAddSupportTicketMessageResponse,
+  AdminDashboardMetricsResponse,
+  AdminUsersQuery,
+  AdminUsersResponse,
+  AdminUserListItem,
+  AdminUserDetailResponse,
+  AdminUpdateUserRequest,
 } from './admin.api';
 import { EventDateStatus, EventSectionStatus } from '../events/events.domain';
-import { IdentityVerificationStatus, Role } from '../users/users.domain';
+import {
+  IdentityVerificationStatus,
+  Language,
+  Role,
+} from '../users/users.domain';
+import type { User } from '../users/users.domain';
 import type { Transaction } from '../transactions/transactions.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import { SupportService } from '../support/support.service';
@@ -110,6 +121,261 @@ export class AdminService {
       id: u.id,
       email: u.email,
     }));
+  }
+
+  /**
+   * Get dashboard metrics with minimal DB load (single raw query with counts).
+   */
+  async getDashboardMetrics(ctx: Ctx): Promise<AdminDashboardMetricsResponse> {
+    type Row = {
+      users_total: bigint;
+      users_phone_verified: bigint;
+      users_dni_verified: bigint;
+      users_sellers: bigint;
+      users_verified_sellers: bigint;
+      events_published: bigint;
+      events_active: bigint;
+      events_today: bigint;
+      events_awaiting_approval: bigint;
+      st_open: bigint;
+      st_in_progress: bigint;
+      st_resolved: bigint;
+      st_total: bigint;
+      pending_identity: bigint;
+      pending_bank: bigint;
+      pending_events: bigint;
+      pending_buyer_payments: bigint;
+      pending_seller_payouts: bigint;
+    };
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+    const rows = await this.prisma.$queryRaw<Row[]>`
+      SELECT
+        (SELECT COUNT(*)::bigint FROM users) AS users_total,
+        (SELECT COUNT(*)::bigint FROM users WHERE "phoneVerified" = true) AS users_phone_verified,
+        (SELECT COUNT(*)::bigint FROM users WHERE "identityVerification" IS NOT NULL AND ("identityVerification"::jsonb->>'status') = 'approved') AS users_dni_verified,
+        (SELECT COUNT(*)::bigint FROM users WHERE "acceptedSellerTermsAt" IS NOT NULL) AS users_sellers,
+        (SELECT COUNT(*)::bigint FROM users WHERE "emailVerified" = true AND "phoneVerified" = true AND "identityVerification" IS NOT NULL AND ("identityVerification"::jsonb->>'status') = 'approved' AND "bankAccount" IS NOT NULL AND ("bankAccount"::jsonb->>'verified') = 'true') AS users_verified_sellers,
+        (SELECT COUNT(*)::bigint FROM events WHERE status = 'approved') AS events_published,
+        (SELECT COUNT(*)::bigint FROM events e WHERE e.status = 'approved' AND EXISTS (SELECT 1 FROM event_dates ed WHERE ed."eventId" = e.id AND ed.date >= ${now} AND ed.status = 'approved')) AS events_active,
+        (SELECT COUNT(*)::bigint FROM event_dates WHERE date >= ${todayStart} AND date < ${todayEnd} AND status = 'approved') AS events_today,
+        (SELECT COUNT(*)::bigint FROM events WHERE status = 'pending') AS events_awaiting_approval,
+        (SELECT COUNT(*)::bigint FROM support_tickets WHERE status = 'open') AS st_open,
+        (SELECT COUNT(*)::bigint FROM support_tickets WHERE status = 'in_progress') AS st_in_progress,
+        (SELECT COUNT(*)::bigint FROM support_tickets WHERE status IN ('resolved', 'closed')) AS st_resolved,
+        (SELECT COUNT(*)::bigint FROM support_tickets) AS st_total,
+        (SELECT COUNT(*)::bigint FROM identity_verification_requests WHERE status = 'pending') AS pending_identity,
+        (SELECT COUNT(*)::bigint FROM users WHERE "bankAccount" IS NOT NULL AND (("bankAccount"::jsonb->>'verified') IS NULL OR ("bankAccount"::jsonb->>'verified') = 'false')) AS pending_bank,
+        (SELECT COUNT(*)::bigint FROM events WHERE status = 'pending') + (SELECT COUNT(*)::bigint FROM event_dates WHERE status = 'pending') + (SELECT COUNT(*)::bigint FROM event_sections WHERE status = 'pending') AS pending_events,
+        (SELECT COUNT(*)::bigint FROM payment_confirmations WHERE status = 'pending') AS pending_buyer_payments,
+        (SELECT COUNT(*)::bigint FROM transactions WHERE status = 'TransferringFund') AS pending_seller_payouts
+    `;
+    const r = rows[0];
+    const toNum = (x: bigint | undefined): number => (x != null ? Number(x) : 0);
+    return {
+      users: {
+        total: toNum(r?.users_total),
+        phoneVerified: toNum(r?.users_phone_verified),
+        dniVerified: toNum(r?.users_dni_verified),
+        sellers: toNum(r?.users_sellers),
+        verifiedSellers: toNum(r?.users_verified_sellers),
+      },
+      events: {
+        totalPublished: toNum(r?.events_published),
+        totalActive: toNum(r?.events_active),
+        eventsToday: toNum(r?.events_today),
+        awaitingApproval: toNum(r?.events_awaiting_approval),
+      },
+      supportTickets: {
+        totalOpen: toNum(r?.st_open),
+        totalInProgress: toNum(r?.st_in_progress),
+        totalResolved: toNum(r?.st_resolved),
+        total: toNum(r?.st_total),
+      },
+      pending: {
+        identityVerifications: toNum(r?.pending_identity),
+        bankAccounts: toNum(r?.pending_bank),
+        eventsAwaitingApproval: toNum(r?.pending_events),
+        buyerPaymentsPending: toNum(r?.pending_buyer_payments),
+        sellerPayoutsPending: toNum(r?.pending_seller_payouts),
+      },
+    };
+  }
+
+  /**
+   * Get paginated admin user list with optional search.
+   */
+  async getUsersList(
+    ctx: Ctx,
+    params: AdminUsersQuery,
+  ): Promise<AdminUsersResponse> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 20;
+    const { users, total } = await this.usersService.getListForAdmin(ctx, {
+      page,
+      limit,
+      search: params.search,
+    });
+    const totalPages = Math.ceil(total / limit);
+    const list: AdminUserListItem[] = users.map((u) => ({
+      id: u.id,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      status: u.status,
+      role: u.role,
+      emailVerified: u.emailVerified,
+      phoneVerified: u.phoneVerified,
+      identityVerificationStatus: this.identityStatusForAdmin(u),
+      bankAccountVerified: !!(u.bankAccount?.verified),
+      acceptedSellerTermsAt: u.acceptedSellerTermsAt,
+      createdAt: u.createdAt,
+    }));
+    return {
+      users: list,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  /**
+   * Get full user detail for admin view/edit.
+   */
+  async getUserById(ctx: Ctx, userId: string): Promise<AdminUserDetailResponse> {
+    const user = await this.usersService.findById(ctx, userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return this.toAdminUserDetail(user);
+  }
+
+  /**
+   * Update user by admin (allowed fields only).
+   */
+  async updateUser(
+    ctx: Ctx,
+    userId: string,
+    data: AdminUpdateUserRequest,
+  ): Promise<AdminUserDetailResponse> {
+    const allowed: Parameters<UsersService['updateByAdmin']>[2] = {};
+    if (data.firstName !== undefined) allowed.firstName = data.firstName;
+    if (data.lastName !== undefined) allowed.lastName = data.lastName;
+    if (data.publicName !== undefined) allowed.publicName = data.publicName;
+    if (data.email !== undefined) allowed.email = data.email;
+    if (data.role !== undefined) allowed.role = data.role as Role;
+    if (data.status !== undefined) allowed.status = data.status as User['status'];
+    if (data.phone !== undefined) allowed.phone = data.phone;
+    if (data.emailVerified !== undefined)
+      allowed.emailVerified = data.emailVerified;
+    if (data.phoneVerified !== undefined)
+      allowed.phoneVerified = data.phoneVerified;
+    if (data.country !== undefined) allowed.country = data.country;
+    if (data.currency !== undefined)
+      allowed.currency = data.currency as User['currency'];
+    if (data.language !== undefined)
+      allowed.language =
+        data.language === 'es' ? Language.ES : Language.EN;
+    if (data.tosAcceptedAt !== undefined)
+      allowed.tosAcceptedAt =
+        data.tosAcceptedAt == null
+          ? null
+          : typeof data.tosAcceptedAt === 'string'
+            ? new Date(data.tosAcceptedAt)
+            : data.tosAcceptedAt;
+    if (data.acceptedSellerTermsAt !== undefined)
+      allowed.acceptedSellerTermsAt =
+        data.acceptedSellerTermsAt == null
+          ? null
+          : typeof data.acceptedSellerTermsAt === 'string'
+            ? new Date(data.acceptedSellerTermsAt)
+            : data.acceptedSellerTermsAt;
+    if (data.buyerDisputed !== undefined)
+      allowed.buyerDisputed = data.buyerDisputed;
+    if (data.identityVerification !== undefined) {
+      allowed.identityVerification = {
+        status:
+          data.identityVerification.status as
+            | IdentityVerificationStatus
+            | undefined,
+        rejectionReason: data.identityVerification.rejectionReason,
+        reviewedAt:
+          data.identityVerification.reviewedAt != null
+            ? typeof data.identityVerification.reviewedAt === 'string'
+              ? new Date(data.identityVerification.reviewedAt)
+              : data.identityVerification.reviewedAt
+            : undefined,
+      };
+    }
+    if (data.bankAccount !== undefined) {
+      allowed.bankAccount = {
+        ...data.bankAccount,
+        verifiedAt:
+          data.bankAccount.verifiedAt != null
+            ? typeof data.bankAccount.verifiedAt === 'string'
+              ? new Date(data.bankAccount.verifiedAt)
+              : data.bankAccount.verifiedAt
+            : undefined,
+      };
+    }
+    const updated = await this.usersService.updateByAdmin(ctx, userId, allowed);
+    return this.toAdminUserDetail(updated);
+  }
+
+  private identityStatusForAdmin(u: {
+    identityVerification?: { status: string };
+  }): 'none' | 'pending' | 'approved' | 'rejected' {
+    if (!u.identityVerification) return 'none';
+    const s = u.identityVerification.status;
+    if (s === 'approved') return 'approved';
+    if (s === 'rejected') return 'rejected';
+    return 'pending';
+  }
+
+  private toAdminUserDetail(user: User): AdminUserDetailResponse {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      publicName: user.publicName,
+      role: user.role,
+      status: user.status,
+      phone: user.phone,
+      country: user.country,
+      currency: user.currency,
+      language: user.language,
+      emailVerified: user.emailVerified,
+      phoneVerified: user.phoneVerified,
+      tosAcceptedAt: user.tosAcceptedAt,
+      acceptedSellerTermsAt: user.acceptedSellerTermsAt,
+      identityVerification: user.identityVerification
+        ? {
+            status: user.identityVerification.status,
+            legalFirstName: user.identityVerification.legalFirstName,
+            legalLastName: user.identityVerification.legalLastName,
+            dateOfBirth: user.identityVerification.dateOfBirth,
+            governmentIdNumber: user.identityVerification.governmentIdNumber,
+            submittedAt: user.identityVerification.submittedAt,
+            reviewedAt: user.identityVerification.reviewedAt,
+            rejectionReason: user.identityVerification.rejectionReason,
+          }
+        : undefined,
+      bankAccount: user.bankAccount
+        ? {
+            holderName: user.bankAccount.holderName,
+            cbuOrCvu: user.bankAccount.cbuOrCvu,
+            verified: user.bankAccount.verified,
+            verifiedAt: user.bankAccount.verifiedAt,
+          }
+        : undefined,
+      buyerDisputed: user.buyerDisputed,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 
   /**

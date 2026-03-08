@@ -37,6 +37,11 @@ import type {
   AdminResolveSupportDisputeRequest,
   AdminAddSupportTicketMessageRequest,
   AdminAddSupportTicketMessageResponse,
+  AdminDashboardMetricsResponse,
+  AdminUsersQuery,
+  AdminUsersResponse,
+  AdminUserDetailResponse,
+  AdminUpdateUserRequest,
 } from '../types/admin';
 
 /**
@@ -44,6 +49,54 @@ import type {
  * Handles admin-specific endpoints
  */
 export const adminService = {
+  /**
+   * Get dashboard metrics (users, events, support tickets, pending counts).
+   */
+  async getDashboardMetrics(): Promise<AdminDashboardMetricsResponse> {
+    const response = await apiClient.get<AdminDashboardMetricsResponse>(
+      '/admin/dashboard-metrics'
+    );
+    return response.data;
+  },
+
+  /**
+   * Get paginated user list with optional search by name or email.
+   */
+  async getUsers(query: AdminUsersQuery = {}): Promise<AdminUsersResponse> {
+    const params = new URLSearchParams();
+    if (query.page !== undefined) params.append('page', String(query.page));
+    if (query.limit !== undefined) params.append('limit', String(query.limit));
+    if (query.search) params.append('search', query.search);
+    const queryString = params.toString();
+    const url = `/admin/users${queryString ? `?${queryString}` : ''}`;
+    const response = await apiClient.get<AdminUsersResponse>(url);
+    return response.data;
+  },
+
+  /**
+   * Get user detail for admin view/edit.
+   */
+  async getUserById(userId: string): Promise<AdminUserDetailResponse> {
+    const response = await apiClient.get<AdminUserDetailResponse>(
+      `/admin/users/${userId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Update user (admin only). Allowed fields: firstName, lastName, publicName, email, role, status, phone, emailVerified, phoneVerified.
+   */
+  async updateUser(
+    userId: string,
+    data: AdminUpdateUserRequest
+  ): Promise<AdminUserDetailResponse> {
+    const response = await apiClient.patch<AdminUserDetailResponse>(
+      `/admin/users/${userId}`,
+      data
+    );
+    return response.data;
+  },
+
   /**
    * Get enriched payment confirmations for admin payments page
    */

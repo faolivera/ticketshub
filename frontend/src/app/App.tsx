@@ -29,6 +29,7 @@ import { MyTicket } from '@/app/pages/MyTicket';
 import { EditListing } from '@/app/pages/EditListing';
 import { AdminDashboard } from '@/app/pages/admin/AdminDashboard';
 import { EventManagement } from '@/app/pages/admin/EventManagement';
+import { UserManagement } from '@/app/pages/admin/UserManagement';
 import TransactionManagement from '@/app/pages/admin/TransactionManagement';
 import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManagement';
 import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerificationManagement';
@@ -78,6 +79,7 @@ export default function App() {
               {/* Admin routes — require Admin role */}
               <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="users" element={<UserManagement />} />
                 <Route path="events" element={<EventManagement />} />
                 <Route path="transactions" element={<TransactionManagement />} />
                 <Route path="seller-payouts" element={<SellerPayouts />} />

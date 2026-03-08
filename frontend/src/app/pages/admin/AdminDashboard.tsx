@@ -1,91 +1,192 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Calendar, CreditCard, Users, Ticket, Banknote } from 'lucide-react';
+import {
+  Calendar,
+  Users,
+  Ticket,
+  MessageSquare,
+  Shield,
+  ChevronRight,
+  Loader2,
+} from 'lucide-react';
+import { adminService } from '@/api/services/admin.service';
+import type { AdminDashboardMetricsResponse } from '@/api/types/admin';
+
+function MetricRow({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5 text-sm">
+      <span className="text-muted-foreground truncate">{label}</span>
+      <span className="font-semibold tabular-nums shrink-0">{value}</span>
+    </div>
+  );
+}
+
+function MetricSection({
+  title,
+  icon: Icon,
+  items,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: { label: string; value: number }[];
+}) {
+  return (
+    <section>
+      <h2 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+        <Icon className="w-4 h-4 text-muted-foreground" />
+        {title}
+      </h2>
+      <div className="rounded-lg border bg-muted/30 px-3 py-2">
+        <div className="divide-y divide-border/60">
+          {items.map((item, i) => (
+            <MetricRow key={i} label={item.label} value={item.value} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PendingLink({
+  to,
+  label,
+  count,
+}: {
+  to: string;
+  label: string;
+  count: number;
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center justify-between rounded-md border px-2.5 py-2 text-left transition-colors hover:bg-muted/50"
+    >
+      <span className="text-xs font-medium">{label}</span>
+      <span className="flex items-center gap-1 shrink-0">
+        <span className="text-sm font-semibold tabular-nums">{count}</span>
+        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+      </span>
+    </Link>
+  );
+}
 
 export function AdminDashboard() {
   const { t } = useTranslation();
+  const [metrics, setMetrics] = useState<AdminDashboardMetricsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const stats = [
-    {
-      title: t('admin.dashboard.pendingEvents'),
-      value: '-',
-      icon: <Calendar className="w-5 h-5 text-blue-500" />,
-      description: t('admin.dashboard.awaitingApproval'),
-    },
-    {
-      title: t('admin.dashboard.pendingPayments'),
-      value: '-',
-      icon: <CreditCard className="w-5 h-5 text-green-500" />,
-      description: t('admin.dashboard.manualApproval'),
-    },
-    {
-      title: t('admin.dashboard.totalUsers'),
-      value: '-',
-      icon: <Users className="w-5 h-5 text-purple-500" />,
-      description: t('admin.dashboard.registeredUsers'),
-    },
-    {
-      title: t('admin.dashboard.activeListings'),
-      value: '-',
-      icon: <Ticket className="w-5 h-5 text-orange-500" />,
-      description: t('admin.dashboard.currentlyActive'),
-    },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    adminService
+      .getDashboardMetrics()
+      .then((data) => {
+        if (!cancelled) setMetrics(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load metrics');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-10 h-10 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error || !metrics) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">{t('admin.dashboard.title')}</h1>
+        <p className="text-destructive">{error ?? 'No metrics data'}</p>
+      </div>
+    );
+  }
+
+  const { users: u, events: e, supportTickets: st, pending: p } = metrics;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t('admin.dashboard.title')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('admin.dashboard.subtitle')}
-        </p>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-0.5">
+        <h1 className="text-xl font-semibold">{t('admin.dashboard.title')}</h1>
+        <p className="text-xs text-muted-foreground">{t('admin.dashboard.subtitle')}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              {stat.icon}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Pending (with links) - first for quick access */}
+      <section className="space-y-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold">{t('admin.dashboard.sectionPending')}</h2>
+          <span className="text-xs text-muted-foreground">— {t('admin.dashboard.pendingDescription')}</span>
+        </div>
+        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          <PendingLink
+            to="/admin/identity-verifications"
+            label={t('admin.dashboard.pendingIdentity')}
+            count={p.identityVerifications}
+          />
+          <PendingLink
+            to="/admin/identity-verifications?tab=bank"
+            label={t('admin.dashboard.pendingBankAccounts')}
+            count={p.bankAccounts}
+          />
+          <PendingLink
+            to="/admin/events"
+            label={t('admin.dashboard.pendingEventsApproval')}
+            count={p.eventsAwaitingApproval}
+          />
+          <PendingLink
+            to="/admin/transactions"
+            label={t('admin.dashboard.pendingBuyerPayments')}
+            count={p.buyerPaymentsPending}
+          />
+          <PendingLink
+            to="/admin/seller-payouts"
+            label={t('admin.dashboard.pendingSellerPayouts')}
+            count={p.sellerPayoutsPending}
+          />
+        </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin.dashboard.recentActivity')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {t('admin.dashboard.noRecentActivity')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin.dashboard.quickActions')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              {t('admin.dashboard.useNavigation')}
-            </p>
-            <Link
-              to="/admin/seller-payouts"
-              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-            >
-              <Banknote className="w-4 h-4" />
-              {t('admin.sidebar.sellerPayouts')}
-            </Link>
-          </CardContent>
-        </Card>
+      {/* Users · Events · Support — separate sections, compact list style */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <MetricSection
+          title={t('admin.dashboard.sectionUsers')}
+          icon={Users}
+          items={[
+            { label: t('admin.dashboard.usersTotal'), value: u.total },
+            { label: t('admin.dashboard.usersPhoneVerified'), value: u.phoneVerified },
+            { label: t('admin.dashboard.usersDniVerified'), value: u.dniVerified },
+            { label: t('admin.dashboard.usersSellers'), value: u.sellers },
+            { label: t('admin.dashboard.usersVerifiedSellers'), value: u.verifiedSellers },
+          ]}
+        />
+        <MetricSection
+          title={t('admin.dashboard.sectionEvents')}
+          icon={Calendar}
+          items={[
+            { label: t('admin.dashboard.eventsPublished'), value: e.totalPublished },
+            { label: t('admin.dashboard.eventsActive'), value: e.totalActive },
+            { label: t('admin.dashboard.eventsToday'), value: e.eventsToday },
+            { label: t('admin.dashboard.eventsAwaitingApproval'), value: e.awaitingApproval },
+          ]}
+        />
+        <MetricSection
+          title={t('admin.dashboard.sectionSupportTickets')}
+          icon={MessageSquare}
+          items={[
+            { label: t('admin.dashboard.stOpen'), value: st.totalOpen },
+            { label: t('admin.dashboard.stInProgress'), value: st.totalInProgress },
+            { label: t('admin.dashboard.stResolved'), value: st.totalResolved },
+            { label: t('admin.dashboard.stTotal'), value: st.total },
+          ]}
+        />
       </div>
     </div>
   );

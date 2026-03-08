@@ -12,6 +12,7 @@ import {
   Tag,
   Banknote,
   MessageSquare,
+  Users,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -36,6 +37,11 @@ const navItems: NavItem[] = [
     to: '/admin',
     icon: <LayoutDashboard className="w-4 h-4" />,
     labelKey: 'admin.sidebar.dashboard',
+  },
+  {
+    to: '/admin/users',
+    icon: <Users className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.users',
   },
   {
     to: '/admin/events',

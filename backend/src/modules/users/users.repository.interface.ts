@@ -1,5 +1,12 @@
 import type { Ctx } from '../../common/types/context';
-import type { User, UserAddress, UserStatus } from './users.domain';
+import type {
+  User,
+  UserAddress,
+  UserStatus,
+  IdentityVerification,
+  BankAccount,
+  Language,
+} from './users.domain';
 
 /**
  * Data required to create a new user
@@ -56,6 +63,14 @@ export interface IUsersRepository {
    * Find users whose email contains the search term (case-insensitive)
    */
   findByEmailContaining(ctx: Ctx, searchTerm: string): Promise<User[]>;
+
+  /**
+   * Find users with pagination and optional search by name or email
+   */
+  findManyPaginated(
+    ctx: Ctx,
+    params: { page: number; limit: number; search?: string },
+  ): Promise<{ users: User[]; total: number }>;
 
   /**
    * Get all sellers (users who have accepted seller terms)
@@ -142,6 +157,43 @@ export interface IUsersRepository {
    * Set buyerDisputed to true (when user opens a dispute as buyer).
    */
   setBuyerDisputed(ctx: Ctx, userId: string): Promise<User | undefined>;
+
+  /**
+   * Update user fields allowed for admin (role, status, email, phone, emailVerified, phoneVerified, basicInfo).
+   */
+  updateForAdmin(
+    ctx: Ctx,
+    userId: string,
+    data: UpdateUserForAdminData,
+  ): Promise<User | undefined>;
+}
+
+/**
+ * Data allowed for admin user update.
+ * identityVerification and bankAccount are merged with existing data when provided.
+ */
+export interface UpdateUserForAdminData {
+  firstName?: string;
+  lastName?: string;
+  publicName?: string;
+  email?: string;
+  role?: User['role'];
+  status?: UserStatus;
+  phone?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  country?: string;
+  currency?: User['currency'];
+  language?: Language;
+  tosAcceptedAt?: Date | null;
+  acceptedSellerTermsAt?: Date | null;
+  buyerDisputed?: boolean;
+  identityVerification?: Partial<
+    Pick<IdentityVerification, 'status' | 'rejectionReason' | 'reviewedAt'>
+  >;
+  bankAccount?: Partial<
+    Pick<BankAccount, 'holderName' | 'cbuOrCvu' | 'alias' | 'verified' | 'verifiedAt'>
+  >;
 }
 
 /**

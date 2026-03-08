@@ -689,6 +689,143 @@ export interface AdminUserSearchItem {
   email: string;
 }
 
+// === Admin Dashboard Metrics (GET /admin/dashboard-metrics) ===
+
+export interface AdminDashboardMetricsUsers {
+  total: number;
+  phoneVerified: number;
+  dniVerified: number;
+  sellers: number;
+  verifiedSellers: number;
+}
+
+export interface AdminDashboardMetricsEvents {
+  totalPublished: number;
+  totalActive: number;
+  eventsToday: number;
+  awaitingApproval: number;
+}
+
+export interface AdminDashboardMetricsSupportTickets {
+  totalOpen: number;
+  totalInProgress: number;
+  totalResolved: number;
+  total: number;
+}
+
+export interface AdminDashboardMetricsPending {
+  identityVerifications: number;
+  bankAccounts: number;
+  eventsAwaitingApproval: number;
+  buyerPaymentsPending: number;
+  sellerPayoutsPending: number;
+}
+
+export interface AdminDashboardMetricsResponse {
+  users: AdminDashboardMetricsUsers;
+  events: AdminDashboardMetricsEvents;
+  supportTickets: AdminDashboardMetricsSupportTickets;
+  pending: AdminDashboardMetricsPending;
+}
+
+// === Admin User Management ===
+
+export interface AdminUsersQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface AdminUserListItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: string;
+  role: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  identityVerificationStatus: 'none' | 'pending' | 'approved' | 'rejected';
+  bankAccountVerified: boolean;
+  acceptedSellerTermsAt?: string;
+  createdAt: string;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUserListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminUserDetailResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  publicName: string;
+  role: string;
+  status: string;
+  phone?: string;
+  country: string;
+  currency: string;
+  language: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  tosAcceptedAt?: string;
+  acceptedSellerTermsAt?: string;
+  identityVerification?: {
+    status: string;
+    legalFirstName: string;
+    legalLastName: string;
+    dateOfBirth: string;
+    governmentIdNumber: string;
+    submittedAt: string;
+    reviewedAt?: string;
+    rejectionReason?: string;
+  };
+  bankAccount?: {
+    holderName: string;
+    cbuOrCvu: string;
+    verified: boolean;
+    verifiedAt?: string;
+  };
+  buyerDisputed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminUpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  publicName?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+  phone?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  country?: string;
+  currency?: string;
+  language?: string;
+  tosAcceptedAt?: string | null;
+  acceptedSellerTermsAt?: string | null;
+  buyerDisputed?: boolean;
+  identityVerification?: {
+    status?: string;
+    rejectionReason?: string;
+    reviewedAt?: string | null;
+  };
+  bankAccount?: {
+    holderName?: string;
+    cbuOrCvu?: string;
+    alias?: string;
+    verified?: boolean;
+    verifiedAt?: string | null;
+  };
+}
+
 // === Admin Seller Payouts (GET /admin/seller-payouts, POST /admin/transactions/:id/complete-payout) ===
 
 export interface AdminSellerPayoutTicketLine {

@@ -9,6 +9,7 @@ import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import type { IUsersRepository } from './users.repository.interface';
+import type { UpdateUserForAdminData } from './users.repository.interface';
 import { USERS_REPOSITORY } from './users.repository.interface';
 import type { IImagesRepository } from '../images/images.repository.interface';
 import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
@@ -21,6 +22,7 @@ import type {
   AuthenticatedUserPublicInfo,
 } from './users.domain';
 import { Role, UserStatus, Language } from './users.domain';
+import { IdentityVerificationStatus } from './users.domain';
 import { VerificationHelper } from '../../common/utils/verification-helper';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
@@ -206,6 +208,16 @@ export class UsersService {
    */
   async getSellers(ctx: Ctx): Promise<User[]> {
     return await this.usersRepository.getSellers(ctx);
+  }
+
+  /**
+   * Get paginated user list for admin with optional search by name or email.
+   */
+  async getListForAdmin(
+    ctx: Ctx,
+    params: { page: number; limit: number; search?: string },
+  ): Promise<{ users: User[]; total: number }> {
+    return await this.usersRepository.findManyPaginated(ctx, params);
   }
 
   /**
@@ -533,6 +545,32 @@ export class UsersService {
       pic: image,
       address: updatedUser.address,
     };
+  }
+
+  /**
+   * Update user by admin (role, status, email, phone, verifications, basic info).
+   * Used only by admin module.
+   */
+  async updateByAdmin(
+    ctx: Ctx,
+    userId: string,
+    data: UpdateUserForAdminData,
+  ): Promise<User> {
+    const existing = await this.usersRepository.findById(ctx, userId);
+    if (!existing) {
+      throw new BadRequestException('User not found');
+    }
+    if (data.email !== undefined && data.email !== existing.email) {
+      const byEmail = await this.usersRepository.findByEmail(ctx, data.email);
+      if (byEmail) {
+        throw new ConflictException('Email already in use');
+      }
+    }
+    const updated = await this.usersRepository.updateForAdmin(ctx, userId, data);
+    if (!updated) {
+      throw new BadRequestException('Failed to update user');
+    }
+    return updated;
   }
 
   /**

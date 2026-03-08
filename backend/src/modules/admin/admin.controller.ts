@@ -59,6 +59,11 @@ import type {
   AdminResolveSupportDisputeResponse,
   AdminAddSupportTicketMessageRequest,
   AdminAddSupportTicketMessageResponse,
+  AdminDashboardMetricsResponse,
+  AdminUsersResponse,
+  AdminUserDetailResponse,
+  AdminUpdateUserRequest,
+  AdminUpdateUserResponse,
 } from './admin.api';
 import {
   AdminPendingEventsResponseSchema,
@@ -80,6 +85,11 @@ import {
   AdminUpdateSupportTicketStatusResponseSchema,
   AdminResolveSupportDisputeResponseSchema,
   AdminAddSupportTicketMessageResponseSchema,
+  AdminDashboardMetricsResponseSchema,
+  AdminUsersResponseSchema,
+  AdminUserDetailResponseSchema,
+  AdminUpdateUserRequestSchema,
+  AdminUpdateUserResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { SeatingType } from '../tickets/tickets.domain';
@@ -104,6 +114,18 @@ export class AdminController {
     @Inject(EventsService)
     private readonly eventsService: EventsService,
   ) {}
+
+  /**
+   * Get dashboard metrics (users, events, support tickets, pending counts).
+   */
+  @Get('dashboard-metrics')
+  @ValidateResponse(AdminDashboardMetricsResponseSchema)
+  async getDashboardMetrics(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<AdminDashboardMetricsResponse>> {
+    const data = await this.adminService.getDashboardMetrics(ctx);
+    return { success: true, data };
+  }
 
   /**
    * Get pending events and event dates for admin approval page.
@@ -428,6 +450,52 @@ export class AdminController {
     @Query('q') q?: string,
   ): Promise<ApiResponse<AdminUserSearchResponse>> {
     const data = await this.adminService.searchUsersByEmail(ctx, q ?? '');
+    return { success: true, data };
+  }
+
+  /**
+   * Get paginated user list with optional search by name or email.
+   */
+  @Get('users')
+  @ValidateResponse(AdminUsersResponseSchema)
+  async getUsers(
+    @Context() ctx: Ctx,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<ApiResponse<AdminUsersResponse>> {
+    const data = await this.adminService.getUsersList(ctx, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      search,
+    });
+    return { success: true, data };
+  }
+
+  /**
+   * Get user detail for admin view/edit.
+   */
+  @Get('users/:id')
+  @ValidateResponse(AdminUserDetailResponseSchema)
+  async getUserById(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+  ): Promise<ApiResponse<AdminUserDetailResponse>> {
+    const data = await this.adminService.getUserById(ctx, id);
+    return { success: true, data };
+  }
+
+  /**
+   * Update user (admin only). Allowed fields: firstName, lastName, publicName, email, role, status, phone, emailVerified, phoneVerified.
+   */
+  @Patch('users/:id')
+  @ValidateResponse(AdminUpdateUserResponseSchema)
+  async updateUser(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+    @Body() body: AdminUpdateUserRequest,
+  ): Promise<ApiResponse<AdminUpdateUserResponse>> {
+    const data = await this.adminService.updateUser(ctx, id, body);
     return { success: true, data };
   }
 

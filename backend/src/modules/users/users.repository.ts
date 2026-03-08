@@ -18,6 +18,7 @@ import type {
   IUsersRepository,
   CreateUserData,
   UpdateBasicInfoData,
+  UpdateUserForAdminData,
   VerifiedSellerIdentityData,
 } from './users.repository.interface';
 
@@ -67,6 +68,37 @@ export class UsersRepository implements IUsersRepository {
       },
     });
     return users.map((u) => this.mapToUser(u));
+  }
+
+  async findManyPaginated(
+    _ctx: Ctx,
+    params: { page: number; limit: number; search?: string },
+  ): Promise<{ users: User[]; total: number }> {
+    const { page, limit, search } = params;
+    const skip = (page - 1) * limit;
+    const term = search?.trim();
+    const where = term
+      ? {
+          OR: [
+            { email: { contains: term, mode: 'insensitive' as const } },
+            { firstName: { contains: term, mode: 'insensitive' as const } },
+            { lastName: { contains: term, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+    return {
+      users: users.map((u) => this.mapToUser(u)),
+      total,
+    };
   }
 
   async getSellers(_ctx: Ctx): Promise<User[]> {
@@ -299,6 +331,84 @@ export class UsersRepository implements IUsersRepository {
       return this.mapToUser(user);
     } catch (error) {
       console.error('setBuyerDisputed failed:', error);
+      return undefined;
+    }
+  }
+
+  async updateForAdmin(
+    _ctx: Ctx,
+    userId: string,
+    data: UpdateUserForAdminData,
+  ): Promise<User | undefined> {
+    try {
+      const updateData: Record<string, unknown> = {};
+      if (data.firstName !== undefined) updateData.firstName = data.firstName;
+      if (data.lastName !== undefined) updateData.lastName = data.lastName;
+      if (data.publicName !== undefined) updateData.publicName = data.publicName;
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.role !== undefined) updateData.role = data.role;
+      if (data.status !== undefined) updateData.status = data.status;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+      if (data.emailVerified !== undefined)
+        updateData.emailVerified = data.emailVerified;
+      if (data.phoneVerified !== undefined)
+        updateData.phoneVerified = data.phoneVerified;
+      if (data.country !== undefined) updateData.country = data.country;
+      if (data.currency !== undefined) updateData.currency = data.currency;
+      if (data.language !== undefined)
+        updateData.language = this.mapLanguageToDb(data.language);
+      if (data.tosAcceptedAt !== undefined)
+        updateData.tosAcceptedAt = data.tosAcceptedAt;
+      if (data.acceptedSellerTermsAt !== undefined)
+        updateData.acceptedSellerTermsAt = data.acceptedSellerTermsAt;
+      if (data.buyerDisputed !== undefined)
+        updateData.buyerDisputed = data.buyerDisputed;
+
+      if (data.identityVerification !== undefined) {
+        const current = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { identityVerification: true },
+        });
+        const existing = current?.identityVerification
+          ? this.parseIdentityVerification(current.identityVerification)
+          : null;
+        if (existing) {
+          const merged: IdentityVerification = {
+            ...existing,
+            ...data.identityVerification,
+          };
+          updateData.identityVerification =
+            this.serializeIdentityVerification(merged);
+        }
+      }
+
+      if (data.bankAccount !== undefined) {
+        const current = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { bankAccount: true },
+        });
+        const existing = current?.bankAccount
+          ? this.parseBankAccount(current.bankAccount)
+          : null;
+        const merged: BankAccount = existing
+          ? { ...existing, ...data.bankAccount }
+          : {
+              holderName: data.bankAccount.holderName ?? '',
+              cbuOrCvu: data.bankAccount.cbuOrCvu ?? '',
+              alias: data.bankAccount.alias,
+              verified: data.bankAccount.verified ?? false,
+              verifiedAt: data.bankAccount.verifiedAt,
+            };
+        updateData.bankAccount = this.serializeBankAccount(merged);
+      }
+
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: updateData,
+      });
+      return this.mapToUser(user);
+    } catch (error) {
+      console.error('updateForAdmin failed:', error);
       return undefined;
     }
   }

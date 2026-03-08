@@ -456,6 +456,153 @@ export const AdminUserSearchItemSchema = z.object({
 
 export const AdminUserSearchResponseSchema = z.array(AdminUserSearchItemSchema);
 
+// ==================== Admin Dashboard Metrics ====================
+
+const AdminDashboardMetricsUsersSchema = z.object({
+  total: z.number(),
+  phoneVerified: z.number(),
+  dniVerified: z.number(),
+  sellers: z.number(),
+  verifiedSellers: z.number(),
+});
+
+const AdminDashboardMetricsEventsSchema = z.object({
+  totalPublished: z.number(),
+  totalActive: z.number(),
+  eventsToday: z.number(),
+  awaitingApproval: z.number(),
+});
+
+const AdminDashboardMetricsSupportTicketsSchema = z.object({
+  totalOpen: z.number(),
+  totalInProgress: z.number(),
+  totalResolved: z.number(),
+  total: z.number(),
+});
+
+const AdminDashboardMetricsPendingSchema = z.object({
+  identityVerifications: z.number(),
+  bankAccounts: z.number(),
+  eventsAwaitingApproval: z.number(),
+  buyerPaymentsPending: z.number(),
+  sellerPayoutsPending: z.number(),
+});
+
+export const AdminDashboardMetricsResponseSchema = z.object({
+  users: AdminDashboardMetricsUsersSchema,
+  events: AdminDashboardMetricsEventsSchema,
+  supportTickets: AdminDashboardMetricsSupportTicketsSchema,
+  pending: AdminDashboardMetricsPendingSchema,
+});
+
+// ==================== Admin User Management ====================
+
+export const AdminUsersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  search: z.string().optional(),
+});
+
+const AdminUserListItemSchema = z.object({
+  id: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string(),
+  status: z.string(),
+  role: z.string(),
+  emailVerified: z.boolean(),
+  phoneVerified: z.boolean(),
+  identityVerificationStatus: z.enum(['none', 'pending', 'approved', 'rejected']),
+  bankAccountVerified: z.boolean(),
+  acceptedSellerTermsAt: z.coerce.date().optional(),
+  createdAt: z.coerce.date(),
+});
+
+export const AdminUsersResponseSchema = z.object({
+  users: z.array(AdminUserListItemSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
+const AdminUserDetailIdentitySchema = z.object({
+  status: z.string(),
+  legalFirstName: z.string(),
+  legalLastName: z.string(),
+  dateOfBirth: z.string(),
+  governmentIdNumber: z.string(),
+  submittedAt: z.coerce.date(),
+  reviewedAt: z.coerce.date().optional(),
+  rejectionReason: z.string().optional(),
+});
+
+const AdminUserDetailBankAccountSchema = z.object({
+  holderName: z.string(),
+  cbuOrCvu: z.string(),
+  verified: z.boolean(),
+  verifiedAt: z.coerce.date().optional(),
+});
+
+export const AdminUserDetailResponseSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  publicName: z.string(),
+  role: z.string(),
+  status: z.string(),
+  phone: z.string().optional(),
+  country: z.string(),
+  currency: z.string(),
+  language: z.string(),
+  emailVerified: z.boolean(),
+  phoneVerified: z.boolean(),
+  tosAcceptedAt: z.coerce.date().optional(),
+  acceptedSellerTermsAt: z.coerce.date().optional(),
+  identityVerification: AdminUserDetailIdentitySchema.optional(),
+  bankAccount: AdminUserDetailBankAccountSchema.optional(),
+  buyerDisputed: z.boolean(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+
+const AdminUpdateUserIdentityVerificationSchema = z.object({
+  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+  rejectionReason: z.string().max(500).optional(),
+  reviewedAt: z.coerce.date().nullable().optional(),
+});
+
+const AdminUpdateUserBankAccountSchema = z.object({
+  holderName: z.string().min(1).max(120).optional(),
+  cbuOrCvu: z.string().max(30).optional(),
+  alias: z.string().max(50).optional(),
+  verified: z.boolean().optional(),
+  verifiedAt: z.coerce.date().nullable().optional(),
+});
+
+export const AdminUpdateUserRequestSchema = z.object({
+  firstName: z.string().min(1).max(120).optional(),
+  lastName: z.string().min(1).max(120).optional(),
+  publicName: z.string().min(1).max(120).optional(),
+  email: z.string().email().optional(),
+  role: z.enum(['User', 'Admin']).optional(),
+  status: z.enum(['Enabled', 'Disabled', 'Suspended']).optional(),
+  phone: z.string().max(30).optional(),
+  emailVerified: z.boolean().optional(),
+  phoneVerified: z.boolean().optional(),
+  country: z.string().min(1).max(100).optional(),
+  currency: z.string().min(3).max(3).optional(),
+  language: z.enum(['es', 'en']).optional(),
+  tosAcceptedAt: z.coerce.date().nullable().optional(),
+  acceptedSellerTermsAt: z.coerce.date().nullable().optional(),
+  buyerDisputed: z.boolean().optional(),
+  identityVerification: AdminUpdateUserIdentityVerificationSchema.optional(),
+  bankAccount: AdminUpdateUserBankAccountSchema.optional(),
+});
+
+export const AdminUpdateUserResponseSchema = AdminUserDetailResponseSchema;
+
 // ==================== Admin Support Tickets ====================
 
 const AdminSupportTicketItemSchema = z.object({

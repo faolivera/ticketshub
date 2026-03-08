@@ -9,9 +9,11 @@ import { Button } from '@/app/components/ui/button';
 
 export interface StepPhoneProps {
   onComplete: () => void;
+  /** When true, hides the "Back to profile" link (e.g. on /verify-user page). */
+  hideBackToProfile?: boolean;
 }
 
-export function StepPhone({ onComplete }: StepPhoneProps) {
+export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
   const { t } = useTranslation();
   const { user, refreshUser } = useUser();
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -132,12 +134,14 @@ export function StepPhone({ onComplete }: StepPhoneProps) {
         </div>
       </div>
 
-      <Link
-        to="/user-profile"
-        className="mb-4 inline-block text-sm text-blue-600 hover:text-blue-700"
-      >
-        {t('becomeSeller.step1.backToProfile')}
-      </Link>
+      {!hideBackToProfile && (
+        <Link
+          to="/user-profile"
+          className="mb-4 inline-block text-sm text-blue-600 hover:text-blue-700"
+        >
+          {t('becomeSeller.step1.backToProfile')}
+        </Link>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">

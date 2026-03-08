@@ -552,6 +552,145 @@ export interface AdminUserSearchItem {
 
 export type AdminUserSearchResponse = AdminUserSearchItem[];
 
+// ==================== Admin Dashboard Metrics ====================
+
+export interface AdminDashboardMetricsUsers {
+  total: number;
+  phoneVerified: number;
+  dniVerified: number;
+  sellers: number;
+  verifiedSellers: number;
+}
+
+export interface AdminDashboardMetricsEvents {
+  totalPublished: number;
+  totalActive: number;
+  eventsToday: number;
+  awaitingApproval: number;
+}
+
+export interface AdminDashboardMetricsSupportTickets {
+  totalOpen: number;
+  totalInProgress: number;
+  totalResolved: number;
+  total: number;
+}
+
+export interface AdminDashboardMetricsPending {
+  identityVerifications: number;
+  bankAccounts: number;
+  eventsAwaitingApproval: number;
+  buyerPaymentsPending: number;
+  sellerPayoutsPending: number;
+}
+
+export interface AdminDashboardMetricsResponse {
+  users: AdminDashboardMetricsUsers;
+  events: AdminDashboardMetricsEvents;
+  supportTickets: AdminDashboardMetricsSupportTickets;
+  pending: AdminDashboardMetricsPending;
+}
+
+// ==================== Admin User Management ====================
+
+export interface AdminUsersQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface AdminUserListItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: string;
+  role: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  identityVerificationStatus: 'none' | 'pending' | 'approved' | 'rejected';
+  bankAccountVerified: boolean;
+  acceptedSellerTermsAt?: Date;
+  createdAt: Date;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUserListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminUserDetailResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  publicName: string;
+  role: string;
+  status: string;
+  phone?: string;
+  country: string;
+  currency: string;
+  language: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  tosAcceptedAt?: Date;
+  acceptedSellerTermsAt?: Date;
+  identityVerification?: {
+    status: string;
+    legalFirstName: string;
+    legalLastName: string;
+    dateOfBirth: string;
+    governmentIdNumber: string;
+    submittedAt: Date;
+    reviewedAt?: Date;
+    rejectionReason?: string;
+  };
+  bankAccount?: {
+    holderName: string;
+    cbuOrCvu: string;
+    verified: boolean;
+    verifiedAt?: Date;
+  };
+  buyerDisputed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AdminUpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  publicName?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+  phone?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  country?: string;
+  currency?: string;
+  language?: string;
+  tosAcceptedAt?: Date | string | null;
+  acceptedSellerTermsAt?: Date | string | null;
+  buyerDisputed?: boolean;
+  identityVerification?: {
+    status?: string;
+    rejectionReason?: string;
+    reviewedAt?: Date | string | null;
+  };
+  bankAccount?: {
+    holderName?: string;
+    cbuOrCvu?: string;
+    alias?: string;
+    verified?: boolean;
+    verifiedAt?: Date | string | null;
+  };
+}
+
+export type AdminUpdateUserResponse = AdminUserDetailResponse;
+
 // ==================== Admin Support Tickets ====================
 
 /**
