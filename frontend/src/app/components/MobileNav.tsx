@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Ticket, Tag, TrendingUp } from 'lucide-react';
+import { Home, Ticket, Tag, TrendingUp, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 
@@ -31,6 +31,14 @@ export function MobileNav() {
       >
         <Ticket className={iconClass} />
         <span className="text-xs font-medium">{t('header.myTickets')}</span>
+      </NavLink>
+
+      <NavLink
+        to="/support"
+        className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ''}`}
+      >
+        <MessageCircle className={iconClass} />
+        <span className="text-xs font-medium">{t('header.support')}</span>
       </NavLink>
 
       <NavLink

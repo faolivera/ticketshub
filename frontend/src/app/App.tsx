@@ -16,7 +16,9 @@ import { BuyTicketPage } from '@/app/pages/BuyTicketPage';
 import { MyTicketsPage, SellerDashboardPage } from '@/app/pages/BoughtTicketManager';
 import { HowItWorks } from '@/app/pages/HowItWorks';
 import { Contact } from '@/app/pages/Contact';
-import { SellTicket } from '@/app/pages/SellTicket';
+import { SupportListPage } from '@/app/pages/SupportListPage';
+import { SupportCaseDetail } from '@/app/pages/SupportCaseDetail';
+import { SellListingWizard } from '@/app/pages/SellListingWizard';
 import { CreateEvent } from '@/app/pages/CreateEvent';
 import { Login } from '@/app/pages/Login';
 import { Register } from '@/app/pages/Register';
@@ -58,13 +60,16 @@ export default function App() {
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/contact" element={<Contact />} />
 
+              <Route path="/support" element={<ProtectedRoute><SupportListPage /></ProtectedRoute>} />
+              <Route path="/support/:id" element={<ProtectedRoute><SupportCaseDetail /></ProtectedRoute>} />
+
               {/* Protected routes — require authentication */}
               <Route path="/my-tickets" element={<ProtectedRoute><MyTicketsPage /></ProtectedRoute>} />
               <Route path="/bought-tickets" element={<Navigate to="/my-tickets" replace />} />
               <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboardPage /></ProtectedRoute>} />
               <Route path="/transaction/:transactionId" element={<ProtectedRoute><MyTicket /></ProtectedRoute>} />
               <Route path="/edit-listing/:listingId" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
-              <Route path="/sell-ticket" element={<ProtectedRoute><SellTicket /></ProtectedRoute>} />
+              <Route path="/sell-ticket" element={<ProtectedRoute><SellListingWizard /></ProtectedRoute>} />
               <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               {/* Wallet route hidden from UI (backend still has wallet); uncomment to re-enable */}
               {/* <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} /> */}

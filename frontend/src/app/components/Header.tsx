@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { User, Ticket, ChevronDown, LogOut, Languages, Shield } from 'lucide-react';
+import { User, Ticket, ChevronDown, LogOut, Languages, Shield, MessageCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
@@ -139,6 +139,14 @@ export function Header() {
                       <span>{t('header.mySales')}</span>
                     </Link>
                   )}
+                  <Link
+                    to="/support"
+                    className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>{t('header.support')}</span>
+                  </Link>
                   <Link
                     to="/user-profile"
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
