@@ -19,12 +19,14 @@ import { OffersService } from '../../../../src/modules/offers/offers.service';
 import { TransactionManager } from '../../../../src/common/database';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
 import { OptimisticLockException } from '../../../../src/common/exceptions/optimistic-lock.exception';
+import { PRIVATE_STORAGE_PROVIDER } from '../../../../src/common/storage/file-storage-provider.interface';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import {
   TransactionStatus,
   RequiredActor,
   CancellationReason,
   STATUS_REQUIRED_ACTOR,
+  PROOF_FILE_MAX_SIZE_BYTES,
 } from '../../../../src/modules/transactions/transactions.domain';
 import { TicketType } from '../../../../src/modules/tickets/tickets.domain';
 import type { Transaction } from '../../../../src/modules/transactions/transactions.domain';
@@ -171,6 +173,13 @@ describe('TransactionsService', () => {
       getClient: jest.fn(),
     };
 
+    const mockPrivateStorage = {
+      store: jest.fn().mockResolvedValue({ key: 'test-key', metadata: {}, location: '' }),
+      retrieve: jest.fn(),
+      delete: jest.fn(),
+      exists: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -186,6 +195,7 @@ describe('TransactionsService', () => {
         { provide: OffersService, useValue: mockOffersService },
         { provide: RiskEngineService, useValue: mockRiskEngineService },
         { provide: TransactionManager, useValue: mockTxManager },
+        { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage },
       ],
     }).compile();
 
@@ -751,6 +761,218 @@ describe('TransactionsService', () => {
         3,
       );
     });
+
+    it('should persist receiptProofStorageKey and receiptProofOriginalFilename when provided', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        requiredActor: RequiredActor.Buyer,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.DepositHold,
+        requiredActor: RequiredActor.None,
+        buyerConfirmedAt: expect.any(Date),
+        receiptProofStorageKey: 'receipt-proofs/txn_123/xyz.pdf',
+        receiptProofOriginalFilename: 'receipt.pdf',
+        version: 2,
+      });
+
+      const result = await service.confirmReceipt(
+        mockCtx,
+        'txn_123',
+        'buyer_123',
+        'receipt-proofs/txn_123/xyz.pdf',
+        'receipt.pdf',
+      );
+
+      expect(result.receiptProofStorageKey).toBe('receipt-proofs/txn_123/xyz.pdf');
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.anything(),
+        'txn_123',
+        expect.objectContaining({
+          receiptProofStorageKey: 'receipt-proofs/txn_123/xyz.pdf',
+          receiptProofOriginalFilename: 'receipt.pdf',
+        }),
+        1,
+      );
+    });
+  });
+
+  describe('uploadTransferProof', () => {
+    const validFile = {
+      buffer: Buffer.from('proof'),
+      originalname: 'proof.pdf',
+      mimetype: 'application/pdf',
+      size: 1024,
+    };
+
+    it('should return storageKey when seller uploads and status is PaymentReceived', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        sellerId: 'seller_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      const result = await service.uploadTransferProof(
+        mockCtx,
+        'txn_123',
+        'seller_123',
+        validFile,
+      );
+
+      expect(result.storageKey).toMatch(/^transfer-proofs\/txn_123\/[a-f0-9]+\.pdf$/);
+    });
+
+    it('should throw NotFoundException when transaction not found', async () => {
+      transactionsRepository.findById.mockResolvedValue(undefined);
+
+      await expect(
+        service.uploadTransferProof(mockCtx, 'txn_123', 'seller_123', validFile),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException when non-seller uploads', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        sellerId: 'seller_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadTransferProof(mockCtx, 'txn_123', 'other_user', validFile),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when status is not PaymentReceived', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        sellerId: 'seller_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadTransferProof(mockCtx, 'txn_123', 'seller_123', validFile),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when file exceeds max size', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        sellerId: 'seller_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadTransferProof(mockCtx, 'txn_123', 'seller_123', {
+          ...validFile,
+          size: PROOF_FILE_MAX_SIZE_BYTES + 1,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when MIME type not allowed', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        sellerId: 'seller_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadTransferProof(mockCtx, 'txn_123', 'seller_123', {
+          ...validFile,
+          mimetype: 'application/zip',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('uploadReceiptProof', () => {
+    const validFile = {
+      buffer: Buffer.from('proof'),
+      originalname: 'receipt.pdf',
+      mimetype: 'application/pdf',
+      size: 1024,
+    };
+
+    it('should return storageKey when buyer uploads and status is TicketTransferred', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        buyerId: 'buyer_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      const result = await service.uploadReceiptProof(
+        mockCtx,
+        'txn_123',
+        'buyer_123',
+        validFile,
+      );
+
+      expect(result.storageKey).toMatch(/^receipt-proofs\/txn_123\/[a-f0-9]+\.pdf$/);
+    });
+
+    it('should throw NotFoundException when transaction not found', async () => {
+      transactionsRepository.findById.mockResolvedValue(undefined);
+
+      await expect(
+        service.uploadReceiptProof(mockCtx, 'txn_123', 'buyer_123', validFile),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException when non-buyer uploads', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        buyerId: 'buyer_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadReceiptProof(mockCtx, 'txn_123', 'other_user', validFile),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when status is not TicketTransferred', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        buyerId: 'buyer_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadReceiptProof(mockCtx, 'txn_123', 'buyer_123', validFile),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when file exceeds max size', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        buyerId: 'buyer_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadReceiptProof(mockCtx, 'txn_123', 'buyer_123', {
+          ...validFile,
+          size: PROOF_FILE_MAX_SIZE_BYTES + 1,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when MIME type not allowed', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+        buyerId: 'buyer_123',
+      });
+      transactionsRepository.findById.mockResolvedValue(transaction);
+
+      await expect(
+        service.uploadReceiptProof(mockCtx, 'txn_123', 'buyer_123', {
+          ...validFile,
+          mimetype: 'text/plain',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('processDepositReleases', () => {
@@ -948,6 +1170,49 @@ describe('TransactionsService', () => {
       await expect(
         service.confirmTransfer(mockCtx, 'txn_123', 'seller_123'),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should persist transferProofStorageKey and transferProofOriginalFilename when provided', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        requiredActor: RequiredActor.Seller,
+      });
+      transactionsRepository.findByIdForUpdate.mockResolvedValue(transaction);
+      transactionsRepository.updateWithVersion.mockResolvedValue({
+        ...transaction,
+        status: TransactionStatus.TicketTransferred,
+        requiredActor: RequiredActor.Buyer,
+        ticketTransferredAt: expect.any(Date),
+        transferProofStorageKey: 'transfer-proofs/txn_123/abc.pdf',
+        transferProofOriginalFilename: 'proof.pdf',
+        version: 2,
+      });
+      ticketsService.getListingById.mockResolvedValue({
+        id: 'listing_123',
+        eventName: 'Test Event',
+        eventDate: new Date(),
+        venue: 'Test Venue',
+      } as never);
+
+      const result = await service.confirmTransfer(
+        mockCtx,
+        'txn_123',
+        'seller_123',
+        undefined,
+        'transfer-proofs/txn_123/abc.pdf',
+        'proof.pdf',
+      );
+
+      expect(result.transferProofStorageKey).toBe('transfer-proofs/txn_123/abc.pdf');
+      expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
+        expect.anything(),
+        'txn_123',
+        expect.objectContaining({
+          transferProofStorageKey: 'transfer-proofs/txn_123/abc.pdf',
+          transferProofOriginalFilename: 'proof.pdf',
+        }),
+        1,
+      );
     });
   });
 

@@ -510,10 +510,15 @@ model Transaction {
   paymentReceivedAt         DateTime?
   ticketTransferredAt       DateTime?
   sellerSentPayloadType     String?             @map("seller_sent_payload_type")
+  sellerSentPayloadTypeOtherText String?         @map("seller_sent_payload_type_other_text")
   buyerConfirmedAt          DateTime?
   completedAt               DateTime?
   cancelledAt               DateTime?
   refundedAt                DateTime?
+  transferProofStorageKey       String?   @map("transfer_proof_storage_key")
+  transferProofOriginalFilename String?   @map("transfer_proof_original_filename")
+  receiptProofStorageKey        String?   @map("receipt_proof_storage_key")
+  receiptProofOriginalFilename  String?   @map("receipt_proof_original_filename")
   createdAt                 DateTime          @default(now())
   updatedAt                 DateTime          @updatedAt
 

@@ -31,9 +31,14 @@ export interface InitiatePurchaseResponse {
  * Request to confirm ticket transfer
  */
 export interface ConfirmTransferRequest {
-  transferProof?: string; // URL to proof image/document
-  /** How the seller sent the ticket (QR, PDF, or text). Used for delivery tracking. */
-  payloadType?: 'qr' | 'pdf' | 'text';
+  /** Storage key from POST /transactions/:id/transfer-proof upload (optional) */
+  transferProof?: string;
+  /** Original filename for display when transferProof is provided */
+  transferProofOriginalFilename?: string;
+  /** How the seller sent the ticket. Used for delivery tracking. */
+  payloadType?: 'ticketera' | 'pdf_or_image' | 'other';
+  /** Free text when payloadType is 'other'. */
+  payloadTypeOtherText?: string;
 }
 
 /**
@@ -46,12 +51,30 @@ export type ConfirmTransferResponse = Transaction;
  */
 export interface ConfirmReceiptRequest {
   confirmed: boolean;
+  /** Storage key from POST /transactions/:id/receipt-proof upload (optional) */
+  receiptProof?: string;
+  /** Original filename for display when receiptProof is provided */
+  receiptProofOriginalFilename?: string;
 }
 
 /**
  * Response after confirming receipt
  */
 export type ConfirmReceiptResponse = Transaction;
+
+/**
+ * Response after uploading transfer proof
+ */
+export interface UploadTransferProofResponse {
+  storageKey: string;
+}
+
+/**
+ * Response after uploading receipt proof
+ */
+export interface UploadReceiptProofResponse {
+  storageKey: string;
+}
 
 /**
  * Response for getting transaction details

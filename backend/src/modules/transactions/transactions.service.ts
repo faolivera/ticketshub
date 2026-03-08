@@ -44,6 +44,15 @@ import { NotificationEventType } from '../notifications/notifications.domain';
 import { TransactionManager } from '../../common/database';
 import { RiskEngineService } from '../risk-engine/risk-engine.service';
 import { VerificationHelper } from '../../common/utils/verification-helper';
+import {
+  PRIVATE_STORAGE_PROVIDER,
+  type FileStorageProvider,
+} from '../../common/storage/file-storage-provider.interface';
+import {
+  PROOF_ALLOWED_MIME_TYPES,
+  PROOF_FILE_MAX_SIZE_BYTES,
+  type ProofFileMimeType,
+} from './transactions.domain';
 
 @Injectable()
 export class TransactionsService {
@@ -72,6 +81,8 @@ export class TransactionsService {
     @Inject(RiskEngineService)
     private readonly riskEngine: RiskEngineService,
     private readonly txManager: TransactionManager,
+    @Inject(PRIVATE_STORAGE_PROVIDER)
+    private readonly privateStorage: FileStorageProvider,
   ) {}
 
   /**
@@ -548,13 +559,17 @@ export class TransactionsService {
   }
 
   /**
-   * Seller confirms ticket transfer (atomic). Optionally records how the ticket was sent (payload type).
+   * Seller confirms ticket transfer (atomic). Optionally records how the ticket was sent (payload type)
+   * and optional transfer proof storage key from upload.
    */
   async confirmTransfer(
     ctx: Ctx,
     transactionId: string,
     sellerId: string,
-    payloadType?: 'qr' | 'pdf' | 'text',
+    payloadType?: 'ticketera' | 'pdf_or_image' | 'other',
+    transferProof?: string,
+    transferProofOriginalFilename?: string,
+    payloadTypeOtherText?: string,
   ): Promise<Transaction> {
     this.logger.log(
       ctx,
@@ -587,6 +602,14 @@ export class TransactionsService {
           requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
           ticketTransferredAt: new Date(),
           ...(payloadType && { sellerSentPayloadType: payloadType }),
+          ...(payloadTypeOtherText !== undefined && payloadTypeOtherText !== '' && {
+            sellerSentPayloadTypeOtherText: payloadTypeOtherText,
+          }),
+          ...(transferProof && { transferProofStorageKey: transferProof }),
+          ...(transferProof &&
+            transferProofOriginalFilename && {
+              transferProofOriginalFilename,
+            }),
         },
         transaction.version,
       );
@@ -615,13 +638,16 @@ export class TransactionsService {
   }
 
   /**
-   * Buyer confirms receipt (for Physical and Digital tickets)
-   * Atomic with lock to prevent concurrent updates
+   * Buyer confirms receipt (for Physical and Digital tickets).
+   * Atomic with lock to prevent concurrent updates.
+   * Optionally persists receipt proof storage key from upload.
    */
   async confirmReceipt(
     ctx: Ctx,
     transactionId: string,
     buyerId: string,
+    receiptProof?: string,
+    receiptProofOriginalFilename?: string,
   ): Promise<Transaction> {
     this.logger.log(
       ctx,
@@ -654,6 +680,11 @@ export class TransactionsService {
           status: newStatus,
           requiredActor: STATUS_REQUIRED_ACTOR[newStatus],
           buyerConfirmedAt: new Date(),
+          ...(receiptProof && { receiptProofStorageKey: receiptProof }),
+          ...(receiptProof &&
+            receiptProofOriginalFilename && {
+              receiptProofOriginalFilename,
+            }),
         },
         transaction.version,
       );
@@ -949,6 +980,137 @@ export class TransactionsService {
   async findById(ctx: Ctx, id: string): Promise<Transaction | null> {
     const transaction = await this.transactionsRepository.findById(ctx, id);
     return transaction ?? null;
+  }
+
+  /**
+   * Upload transfer proof file (seller only).
+   * Allowed when status is PaymentReceived (returns key for confirmTransfer body) or TicketTransferred (persists proof after transfer).
+   */
+  async uploadTransferProof(
+    ctx: Ctx,
+    transactionId: string,
+    sellerId: string,
+    file: {
+      buffer: Buffer;
+      originalname: string;
+      mimetype: string;
+      size: number;
+    },
+  ): Promise<{ storageKey: string }> {
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+    if (transaction.sellerId !== sellerId) {
+      throw new ForbiddenException('Only the seller can upload transfer proof');
+    }
+    const allowedStatuses = [
+      TransactionStatus.PaymentReceived,
+      TransactionStatus.TicketTransferred,
+    ];
+    if (!allowedStatuses.includes(transaction.status)) {
+      throw new BadRequestException(
+        'Transfer proof can only be uploaded when status is PaymentReceived or TicketTransferred',
+      );
+    }
+    if (file.size > PROOF_FILE_MAX_SIZE_BYTES) {
+      throw new BadRequestException(
+        `File size must not exceed ${PROOF_FILE_MAX_SIZE_BYTES / 1024 / 1024}MB`,
+      );
+    }
+    if (
+      !PROOF_ALLOWED_MIME_TYPES.includes(file.mimetype as ProofFileMimeType)
+    ) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed: ${PROOF_ALLOWED_MIME_TYPES.join(', ')}`,
+      );
+    }
+
+    const ext = file.originalname.split('.').pop() || 'bin';
+    const uuid = randomBytes(8).toString('hex');
+    const storageKey = `transfer-proofs/${transactionId}/${uuid}.${ext}`;
+
+    await this.privateStorage.store(storageKey, file.buffer, {
+      contentType: file.mimetype,
+      contentLength: file.size,
+      originalFilename: file.originalname,
+    });
+
+    if (transaction.status === TransactionStatus.TicketTransferred) {
+      await this.transactionsRepository.update(ctx, transactionId, {
+        transferProofStorageKey: storageKey,
+        transferProofOriginalFilename: file.originalname,
+      });
+    }
+
+    this.logger.log(
+      ctx,
+      `Uploaded transfer proof for transaction ${transactionId}`,
+    );
+    return { storageKey };
+  }
+
+  /**
+   * Upload receipt proof file (buyer only, status must be TicketTransferred).
+   * Returns storage key to be sent in confirmReceipt body.
+   */
+  async uploadReceiptProof(
+    ctx: Ctx,
+    transactionId: string,
+    buyerId: string,
+    file: {
+      buffer: Buffer;
+      originalname: string;
+      mimetype: string;
+      size: number;
+    },
+  ): Promise<{ storageKey: string }> {
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+    if (transaction.buyerId !== buyerId) {
+      throw new ForbiddenException('Only the buyer can upload receipt proof');
+    }
+    if (transaction.status !== TransactionStatus.TicketTransferred) {
+      throw new BadRequestException(
+        'Receipt proof can only be uploaded when transaction status is TicketTransferred',
+      );
+    }
+    if (file.size > PROOF_FILE_MAX_SIZE_BYTES) {
+      throw new BadRequestException(
+        `File size must not exceed ${PROOF_FILE_MAX_SIZE_BYTES / 1024 / 1024}MB`,
+      );
+    }
+    if (
+      !PROOF_ALLOWED_MIME_TYPES.includes(file.mimetype as ProofFileMimeType)
+    ) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed: ${PROOF_ALLOWED_MIME_TYPES.join(', ')}`,
+      );
+    }
+
+    const ext = file.originalname.split('.').pop() || 'bin';
+    const uuid = randomBytes(8).toString('hex');
+    const storageKey = `receipt-proofs/${transactionId}/${uuid}.${ext}`;
+
+    await this.privateStorage.store(storageKey, file.buffer, {
+      contentType: file.mimetype,
+      contentLength: file.size,
+      originalFilename: file.originalname,
+    });
+
+    this.logger.log(
+      ctx,
+      `Uploaded receipt proof for transaction ${transactionId}`,
+    );
+    return { storageKey };
   }
 
   /**

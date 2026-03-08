@@ -68,7 +68,7 @@ export enum TransactionStatus {
 /**
  * How the seller sent the ticket to the buyer (for delivery tracking).
  */
-export type SellerSentPayloadType = 'qr' | 'pdf' | 'text';
+export type SellerSentPayloadType = 'ticketera' | 'pdf_or_image' | 'other';
 
 /**
  * Actor required to advance the transaction to the next status
@@ -188,8 +188,10 @@ export interface Transaction {
   createdAt: Date;
   paymentReceivedAt?: Date;
   ticketTransferredAt?: Date;
-  /** How the seller sent the ticket (QR, PDF, or text/link). Set when seller confirms transfer. */
+  /** How the seller sent the ticket. Set when seller confirms transfer. */
   sellerSentPayloadType?: SellerSentPayloadType;
+  /** Free text when sellerSentPayloadType is 'other'. */
+  sellerSentPayloadTypeOtherText?: string;
   buyerConfirmedAt?: Date;
   completedAt?: Date;
   cancelledAt?: Date;
@@ -228,6 +230,15 @@ export interface Transaction {
   paymentApprovedBy?: string;
   paymentApprovedAt?: Date;
 
+  /** Optional proof file storage key (seller confirms transfer) */
+  transferProofStorageKey?: string;
+  /** Original filename of transfer proof for display */
+  transferProofOriginalFilename?: string;
+  /** Optional proof file storage key (buyer confirms receipt) */
+  receiptProofStorageKey?: string;
+  /** Original filename of receipt proof for display */
+  receiptProofOriginalFilename?: string;
+
   updatedAt: Date;
 
   /** Optimistic locking version for concurrency control */
@@ -253,3 +264,17 @@ export interface TransactionWithDetails extends Transaction {
   sellerName: string;
   bannerUrls?: BannerUrls;
 }
+
+/** Allowed MIME types for transfer/receipt proof uploads (images and PDF) */
+export const PROOF_ALLOWED_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+  'application/pdf',
+] as const;
+
+export type ProofFileMimeType = (typeof PROOF_ALLOWED_MIME_TYPES)[number];
+
+/** Max file size for proof uploads: 5MB */
+export const PROOF_FILE_MAX_SIZE_BYTES = 5 * 1024 * 1024;

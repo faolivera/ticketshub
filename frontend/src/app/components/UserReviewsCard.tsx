@@ -113,7 +113,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-gray-900 truncate">{publicName}</h3>
 
-        {metrics.badges.length > 0 && (
+        {role === 'seller' && metrics.badges.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
             {metrics.badges.map((badge) => (
               <span

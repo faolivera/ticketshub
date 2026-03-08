@@ -410,6 +410,12 @@ export class BffService {
       };
     }
 
+    let counterpartyEmail: string | undefined;
+    if (isSeller && transaction.buyerId) {
+      const buyer = await this.usersService.findById(ctx, transaction.buyerId);
+      counterpartyEmail = buyer?.email;
+    }
+
     return {
       transaction: bffTransaction,
       paymentConfirmation,
@@ -418,6 +424,7 @@ export class BffService {
       ticketUnits,
       paymentMethodPublicName,
       ...(chat && { chat }),
+      ...(counterpartyEmail !== undefined && { counterpartyEmail }),
     };
   }
 

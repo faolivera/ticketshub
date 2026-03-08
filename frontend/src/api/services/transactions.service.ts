@@ -2,6 +2,7 @@ import apiClient from '../client';
 import type {
   InitiatePurchaseRequest,
   InitiatePurchaseResponse,
+  ConfirmTransferRequest,
   ConfirmTransferResponse,
   ConfirmReceiptRequest,
   ConfirmReceiptResponse,
@@ -25,11 +26,43 @@ export const transactionsService = {
   },
 
   /**
-   * Confirm ticket transfer (seller action). Optionally pass how the ticket was sent (payloadType).
+   * Upload transfer proof (seller). Multipart file; returns storage key for confirmTransfer.
+   */
+  async uploadTransferProof(
+    transactionId: string,
+    file: File
+  ): Promise<{ storageKey: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<{ storageKey: string }>(
+      `/transactions/${transactionId}/transfer-proof`,
+      formData
+    );
+    return response.data;
+  },
+
+  /**
+   * Upload receipt proof (buyer). Multipart file; returns storage key for confirmReceipt.
+   */
+  async uploadReceiptProof(
+    transactionId: string,
+    file: File
+  ): Promise<{ storageKey: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<{ storageKey: string }>(
+      `/transactions/${transactionId}/receipt-proof`,
+      formData
+    );
+    return response.data;
+  },
+
+  /**
+   * Confirm ticket transfer (seller action). Optionally pass how the ticket was sent (payloadType) and/or proof storage key.
    */
   async confirmTransfer(
     id: string,
-    options?: { transferProof?: string; payloadType?: 'qr' | 'pdf' | 'text' }
+    options?: ConfirmTransferRequest
   ): Promise<ConfirmTransferResponse> {
     const response = await apiClient.post<ConfirmTransferResponse>(
       `/transactions/${id}/transfer`,

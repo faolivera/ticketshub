@@ -160,60 +160,72 @@ export function PlatformConfig() {
       Number.isNaN(chatPoll) ||
       Number.isNaN(chatMax)
     ) {
-      setError('All fields must be numbers.');
+      setError(t('admin.platformConfig.validation.allFieldsMustBeNumbers'));
       return;
     }
     if (buyer < MIN_FEE || buyer > MAX_FEE) {
-      setError(`Buyer fee must be between ${MIN_FEE} and ${MAX_FEE}.`);
+      setError(t('admin.platformConfig.validation.buyerFeeBetween', { min: MIN_FEE, max: MAX_FEE }));
       return;
     }
     if (seller < MIN_FEE || seller > MAX_FEE) {
-      setError(`Seller fee must be between ${MIN_FEE} and ${MAX_FEE}.`);
+      setError(t('admin.platformConfig.validation.sellerFeeBetween', { min: MIN_FEE, max: MAX_FEE }));
       return;
     }
     if (payment < MIN_PAYMENT_MINUTES || payment > MAX_PAYMENT_MINUTES) {
       setError(
-        `Payment timeout must be between ${MIN_PAYMENT_MINUTES} and ${MAX_PAYMENT_MINUTES}.`
+        t('admin.platformConfig.validation.paymentTimeoutBetween', {
+          min: MIN_PAYMENT_MINUTES,
+          max: MAX_PAYMENT_MINUTES,
+        })
       );
       return;
     }
     if (adminHours < MIN_ADMIN_HOURS || adminHours > MAX_ADMIN_HOURS) {
       setError(
-        `Admin review timeout must be between ${MIN_ADMIN_HOURS} and ${MAX_ADMIN_HOURS}.`
+        t('admin.platformConfig.validation.adminReviewBetween', {
+          min: MIN_ADMIN_HOURS,
+          max: MAX_ADMIN_HOURS,
+        })
       );
       return;
     }
     if (chatPoll < MIN_CHAT_POLL_SECONDS || chatPoll > MAX_CHAT_POLL_SECONDS) {
       setError(
-        `Chat poll interval must be between ${MIN_CHAT_POLL_SECONDS} and ${MAX_CHAT_POLL_SECONDS} seconds.`
+        t('admin.platformConfig.validation.chatPollBetween', {
+          min: MIN_CHAT_POLL_SECONDS,
+          max: MAX_CHAT_POLL_SECONDS,
+        })
       );
       return;
     }
     if (chatMax < MIN_CHAT_MAX_MESSAGES || chatMax > MAX_CHAT_MAX_MESSAGES) {
       setError(
-        `Max chat messages must be between ${MIN_CHAT_MAX_MESSAGES} and ${MAX_CHAT_MAX_MESSAGES}.`
+        t('admin.platformConfig.validation.chatMaxBetween', {
+          min: MIN_CHAT_MAX_MESSAGES,
+          max: MAX_CHAT_MAX_MESSAGES,
+        })
       );
       return;
     }
 
     const maxAmountMajorNum = Number(unverifiedSellerMaxAmountMajor);
     if (!Number.isNaN(maxAmountMajorNum) && (maxAmountMajorNum < 0 || maxAmountMajorNum > 100000)) {
-      setError('Unverified seller max amount must be between 0 and 100000.');
+      setError(t('admin.platformConfig.validation.unverifiedSellerAmountBetween'));
       return;
     }
     const phoneAmountNum = Number(phoneRequiredAmountMajor);
     if (!Number.isNaN(phoneAmountNum) && (phoneAmountNum < 0 || phoneAmountNum > 100000)) {
-      setError('Require phone amount must be between 0 and 100000.');
+      setError(t('admin.platformConfig.validation.phoneAmountBetween'));
       return;
     }
     const dniAmountNum = Number(dniRequiredAmountMajor);
     if (!Number.isNaN(dniAmountNum) && (dniAmountNum < 0 || dniAmountNum > 100000)) {
-      setError('Require DNI amount must be between 0 and 100000.');
+      setError(t('admin.platformConfig.validation.dniAmountBetween'));
       return;
     }
     const usdToArsNum = Number(usdToArs);
     if (!Number.isNaN(usdToArsNum) && (usdToArsNum < 1 || usdToArsNum > 1000000)) {
-      setError('USD to ARS rate must be between 1 and 1000000.');
+      setError(t('admin.platformConfig.validation.usdToArsBetween'));
       return;
     }
 
@@ -301,7 +313,7 @@ export function PlatformConfig() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{t('admin.platformConfig.title')}</h1>
-          <p className="text-muted-foreground mt-1">Loading...</p>
+          <p className="text-muted-foreground mt-1">{t('common.loading')}</p>
         </div>
       </div>
     );

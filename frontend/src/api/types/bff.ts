@@ -60,4 +60,6 @@ export interface GetTransactionDetailsResponse {
   paymentMethodPublicName: string | null;
   /** Present when user is buyer/seller and chat is allowed for this transaction */
   chat?: TransactionDetailsChatConfig;
+  /** Buyer email, present when the requester is the seller (for transfer confirmation disclaimer) */
+  counterpartyEmail?: string;
 }

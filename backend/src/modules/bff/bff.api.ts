@@ -115,4 +115,6 @@ export interface GetTransactionDetailsResponse {
   paymentMethodPublicName: string | null;
   /** Present when user is buyer/seller and transaction status allows chat */
   chat?: TransactionDetailsChatConfig;
+  /** Buyer email; only present when requester is the seller (for transfer disclaimer) */
+  counterpartyEmail?: string;
 }

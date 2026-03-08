@@ -367,6 +367,9 @@ export class TransactionsRepository
     if (updates.sellerSentPayloadType !== undefined) {
       data.sellerSentPayloadType = updates.sellerSentPayloadType;
     }
+    if (updates.sellerSentPayloadTypeOtherText !== undefined) {
+      data.sellerSentPayloadTypeOtherText = updates.sellerSentPayloadTypeOtherText;
+    }
     if (updates.buyerConfirmedAt !== undefined) {
       data.buyerConfirmedAt = updates.buyerConfirmedAt;
     }
@@ -378,6 +381,18 @@ export class TransactionsRepository
     }
     if (updates.refundedAt !== undefined) {
       data.refundedAt = updates.refundedAt;
+    }
+    if (updates.transferProofStorageKey !== undefined) {
+      data.transferProofStorageKey = updates.transferProofStorageKey;
+    }
+    if (updates.transferProofOriginalFilename !== undefined) {
+      data.transferProofOriginalFilename = updates.transferProofOriginalFilename;
+    }
+    if (updates.receiptProofStorageKey !== undefined) {
+      data.receiptProofStorageKey = updates.receiptProofStorageKey;
+    }
+    if (updates.receiptProofOriginalFilename !== undefined) {
+      data.receiptProofOriginalFilename = updates.receiptProofOriginalFilename;
     }
 
     return data;
@@ -582,6 +597,7 @@ export class TransactionsRepository
       paymentReceivedAt: prismaTransaction.paymentReceivedAt ?? undefined,
       ticketTransferredAt: prismaTransaction.ticketTransferredAt ?? undefined,
       sellerSentPayloadType: (prismaTransaction.sellerSentPayloadType as Transaction['sellerSentPayloadType']) ?? undefined,
+      sellerSentPayloadTypeOtherText: (prismaTransaction as { sellerSentPayloadTypeOtherText?: string | null }).sellerSentPayloadTypeOtherText ?? undefined,
       buyerConfirmedAt: prismaTransaction.buyerConfirmedAt ?? undefined,
       completedAt: prismaTransaction.completedAt ?? undefined,
       cancelledAt: prismaTransaction.cancelledAt ?? undefined,
@@ -607,6 +623,12 @@ export class TransactionsRepository
         prismaTransaction.paymentConfirmationId ?? undefined,
       paymentApprovedBy: prismaTransaction.paymentApprovedBy ?? undefined,
       paymentApprovedAt: prismaTransaction.paymentApprovedAt ?? undefined,
+      transferProofStorageKey: prismaTransaction.transferProofStorageKey ?? undefined,
+      transferProofOriginalFilename:
+        prismaTransaction.transferProofOriginalFilename ?? undefined,
+      receiptProofStorageKey: prismaTransaction.receiptProofStorageKey ?? undefined,
+      receiptProofOriginalFilename:
+        prismaTransaction.receiptProofOriginalFilename ?? undefined,
       updatedAt: prismaTransaction.updatedAt,
       version: prismaTransaction.version,
     };

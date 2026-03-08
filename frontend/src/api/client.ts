@@ -67,12 +67,16 @@ function createApiClient(): AxiosInstance {
     },
   });
 
-  // Request interceptor: attach auth token
+  // Request interceptor: attach auth token; allow multipart when sending FormData
   client.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
       const token = getToken();
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+      // When sending FormData, do not force application/json so the browser sets multipart/form-data with boundary
+      if (config.data instanceof FormData && config.headers) {
+        delete config.headers['Content-Type'];
       }
       return config;
     },

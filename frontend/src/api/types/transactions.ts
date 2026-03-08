@@ -112,8 +112,10 @@ export interface Transaction {
   createdAt: Date;
   paymentReceivedAt?: Date;
   ticketTransferredAt?: Date;
-  /** How the seller sent the ticket (QR, PDF, or text). Set when seller confirms transfer. */
-  sellerSentPayloadType?: 'qr' | 'pdf' | 'text';
+  /** How the seller sent the ticket. Set when seller confirms transfer. */
+  sellerSentPayloadType?: 'ticketera' | 'pdf_or_image' | 'other';
+  /** Free text when sellerSentPayloadType is 'other'. */
+  sellerSentPayloadTypeOtherText?: string;
   buyerConfirmedAt?: Date;
   completedAt?: Date;
   cancelledAt?: Date;
@@ -144,6 +146,13 @@ export interface Transaction {
   // Admin approval for manual payments
   paymentApprovedBy?: string;
   paymentApprovedAt?: Date;
+
+  /** Transfer proof file (seller); set when uploaded after transfer */
+  transferProofStorageKey?: string;
+  transferProofOriginalFilename?: string;
+  /** Receipt proof file (buyer); set when confirming receipt */
+  receiptProofStorageKey?: string;
+  receiptProofOriginalFilename?: string;
 
   updatedAt: Date;
 }
@@ -197,8 +206,11 @@ export interface InitiatePurchaseResponse {
  */
 export interface ConfirmTransferRequest {
   transferProof?: string;
+  transferProofOriginalFilename?: string;
   /** How the seller sent the ticket (for delivery tracking). */
-  payloadType?: 'qr' | 'pdf' | 'text';
+  payloadType?: 'ticketera' | 'pdf_or_image' | 'other';
+  /** Free text when payloadType is 'other'. */
+  payloadTypeOtherText?: string;
 }
 
 /**
@@ -211,6 +223,8 @@ export type ConfirmTransferResponse = Transaction;
  */
 export interface ConfirmReceiptRequest {
   confirmed: boolean;
+  receiptProof?: string;
+  receiptProofOriginalFilename?: string;
 }
 
 /**

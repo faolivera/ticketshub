@@ -6,11 +6,16 @@ import {
   Param,
   Body,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   Inject,
   forwardRef,
+  BadRequestException,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Multer } from 'multer';
 import { TransactionsService } from './transactions.service';
 import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -22,7 +27,13 @@ import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
 import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
 import { Role } from '../users/users.domain';
-import { RequiredActor, CancellationReason } from './transactions.domain';
+import {
+  RequiredActor,
+  CancellationReason,
+  PROOF_ALLOWED_MIME_TYPES,
+  PROOF_FILE_MAX_SIZE_BYTES,
+  type ProofFileMimeType,
+} from './transactions.domain';
 import type {
   InitiatePurchaseRequest,
   InitiatePurchaseResponse,
@@ -30,6 +41,8 @@ import type {
   ConfirmTransferResponse,
   ConfirmReceiptRequest,
   ConfirmReceiptResponse,
+  UploadTransferProofResponse,
+  UploadReceiptProofResponse,
   GetTransactionResponse,
   GetPendingPaymentsResponse,
   ApprovePaymentRequest,
@@ -86,7 +99,55 @@ export class TransactionsController {
   }
 
   /**
-   * Confirm ticket transfer (seller). Optional payloadType records how the ticket was sent (qr/pdf/text).
+   * Upload transfer proof file (seller only, status PaymentReceived).
+   * Returns storageKey to send in confirmTransfer body.
+   */
+  @Post(':id/transfer-proof')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: PROOF_FILE_MAX_SIZE_BYTES },
+      fileFilter: (_req, file, cb) => {
+        if (
+          PROOF_ALLOWED_MIME_TYPES.includes(file.mimetype as ProofFileMimeType)
+        ) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              `Invalid file type. Allowed: ${PROOF_ALLOWED_MIME_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async uploadTransferProof(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') id: string,
+    @UploadedFile() file: Multer.File,
+  ): Promise<ApiResponse<UploadTransferProofResponse>> {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const result = await this.transactionsService.uploadTransferProof(
+      ctx,
+      id,
+      user.id,
+      {
+        buffer: file.buffer,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      },
+    );
+    return { success: true, data: result };
+  }
+
+  /**
+   * Confirm ticket transfer (seller). Optional payloadType and optional transferProof (from transfer-proof upload).
    */
   @Post(':id/transfer')
   @UseGuards(JwtAuthGuard)
@@ -101,6 +162,9 @@ export class TransactionsController {
       id,
       user.id,
       body.payloadType,
+      body.transferProof,
+      body.transferProofOriginalFilename,
+      body.payloadTypeOtherText,
     );
     if (body.payloadType) {
       this.transactionChatService
@@ -113,7 +177,55 @@ export class TransactionsController {
   }
 
   /**
-   * Confirm receipt (buyer)
+   * Upload receipt proof file (buyer only, status TicketTransferred).
+   * Returns storageKey to send in confirmReceipt body.
+   */
+  @Post(':id/receipt-proof')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: PROOF_FILE_MAX_SIZE_BYTES },
+      fileFilter: (_req, file, cb) => {
+        if (
+          PROOF_ALLOWED_MIME_TYPES.includes(file.mimetype as ProofFileMimeType)
+        ) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              `Invalid file type. Allowed: ${PROOF_ALLOWED_MIME_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async uploadReceiptProof(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') id: string,
+    @UploadedFile() file: Multer.File,
+  ): Promise<ApiResponse<UploadReceiptProofResponse>> {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const result = await this.transactionsService.uploadReceiptProof(
+      ctx,
+      id,
+      user.id,
+      {
+        buffer: file.buffer,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      },
+    );
+    return { success: true, data: result };
+  }
+
+  /**
+   * Confirm receipt (buyer). Optional receiptProof (from receipt-proof upload).
    */
   @Post(':id/confirm')
   @UseGuards(JwtAuthGuard)
@@ -124,12 +236,14 @@ export class TransactionsController {
     @Body() body: ConfirmReceiptRequest,
   ): Promise<ApiResponse<ConfirmReceiptResponse>> {
     if (!body.confirmed) {
-      throw new Error('Receipt must be confirmed');
+      throw new BadRequestException('Receipt must be confirmed');
     }
     const transaction = await this.transactionsService.confirmReceipt(
       ctx,
       id,
       user.id,
+      body.receiptProof,
+      body.receiptProofOriginalFilename,
     );
     return { success: true, data: transaction };
   }

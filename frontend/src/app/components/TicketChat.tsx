@@ -263,12 +263,12 @@ export function TicketChat({
                 const isCurrentUser = message.senderRole === currentUserRole;
                 const isDelivery = message.messageType === 'delivery' && message.payloadType;
                 const deliveryLabel =
-                  message.payloadType === 'qr'
-                    ? t('chat.deliverySentQr')
-                    : message.payloadType === 'pdf'
-                      ? t('chat.deliverySentPdf')
-                      : message.payloadType === 'text'
-                        ? t('chat.deliverySentText')
+                  message.payloadType === 'ticketera'
+                    ? t('chat.deliverySentTicketera')
+                    : message.payloadType === 'pdf_or_image'
+                      ? t('chat.deliverySentPdfEmail')
+                      : message.payloadType === 'other'
+                        ? t('chat.deliverySentOther')
                         : t('chat.deliverySent');
                 return (
                   <div

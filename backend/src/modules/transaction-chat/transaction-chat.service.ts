@@ -183,7 +183,7 @@ export class TransactionChatService {
     ctx: Ctx,
     transactionId: string,
     sellerId: string,
-    payloadType: 'qr' | 'pdf' | 'text',
+    payloadType: string,
   ): Promise<TransactionChatMessageItem> {
     const transaction =
       await this.transactionsService.getTransactionById(

@@ -10,6 +10,13 @@ import { EventBanner } from '@/app/components/EventBanner';
 import { PaymentCountdown } from '@/app/components/PaymentCountdown';
 import { Button } from '@/app/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -20,6 +27,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/app/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/app/components/ui/tooltip';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService, supportService } from '@/api/services';
 import type { ApiError } from '@/api/client';
 import { SupportCategory, DisputeReason } from '@/api/types/support';
@@ -64,6 +76,7 @@ export function MyTicket() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [copiedCbu, setCopiedCbu] = useState(false);
+  const [copiedTransactionId, setCopiedTransactionId] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -77,8 +90,17 @@ export function MyTicket() {
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const [showConfirmTransferModal, setShowConfirmTransferModal] = useState(false);
-  const [confirmTransferPayloadType, setConfirmTransferPayloadType] = useState<'qr' | 'pdf' | 'text'>('pdf');
+  const [confirmTransferPayloadType, setConfirmTransferPayloadType] = useState<'ticketera' | 'pdf_or_image' | 'other'>('ticketera');
+  const [confirmTransferPayloadTypeOtherText, setConfirmTransferPayloadTypeOtherText] = useState('');
   const [isConfirmingTransfer, setIsConfirmingTransfer] = useState(false);
+  const [transferProofFile, setTransferProofFile] = useState<File | null>(null);
+  const [transferProofError, setTransferProofError] = useState<string | null>(null);
+  const [isUploadingTransferProof, setIsUploadingTransferProof] = useState(false);
+  const [counterpartyEmail, setCounterpartyEmail] = useState<string | null>(null);
+
+  const [receiptProofFile, setReceiptProofFile] = useState<File | null>(null);
+  const [receiptProofError, setReceiptProofError] = useState<string | null>(null);
+  const [isConfirmingReceipt, setIsConfirmingReceipt] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!transactionId) return;
@@ -91,6 +113,7 @@ export function MyTicket() {
       setTicketUnits(data.ticketUnits ?? []);
       setPaymentMethodPublicName(data.paymentMethodPublicName ?? null);
       setChatConfig(data.chat ?? null);
+      setCounterpartyEmail(data.counterpartyEmail ?? null);
     } catch (err) {
       console.error('Failed to refetch transaction:', err);
     }
@@ -105,6 +128,17 @@ export function MyTicket() {
       console.error('Failed to copy CBU:', err);
     }
   };
+
+  const copyTransactionId = useCallback(() => {
+    if (!transaction?.id) return;
+    try {
+      navigator.clipboard.writeText(transaction.id);
+      setCopiedTransactionId(true);
+      setTimeout(() => setCopiedTransactionId(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy transaction ID:', err);
+    }
+  }, [transaction?.id]);
 
   const isBuyer = transaction?.buyerId === user?.id;
   const isSeller = transaction?.sellerId === user?.id;
@@ -133,6 +167,7 @@ export function MyTicket() {
         setTicketUnits(data.ticketUnits ?? []);
         setPaymentMethodPublicName(data.paymentMethodPublicName ?? null);
         setChatConfig(data.chat ?? null);
+        setCounterpartyEmail(data.counterpartyEmail ?? null);
         if (data.chat?.hasUnreadMessages) {
           setIsChatOpen(true);
         }
@@ -332,15 +367,47 @@ export function MyTicket() {
   const handleConfirmReceipt = async () => {
     if (!transactionId) return;
 
+    const ACCEPTED_TYPES = ['image/', 'application/pdf'];
+    const MAX_SIZE_MB = 10;
+    if (receiptProofFile) {
+      const validType = ACCEPTED_TYPES.some(
+        (t) => receiptProofFile.type === t || (t.endsWith('/') && receiptProofFile.type.startsWith(t))
+      );
+      if (!validType) {
+        setReceiptProofError(t('myTicket.invalidFileType'));
+        return;
+      }
+      if (receiptProofFile.size > MAX_SIZE_MB * 1024 * 1024) {
+        setReceiptProofError(t('myTicket.fileTooLarge', { maxMb: MAX_SIZE_MB }));
+        return;
+      }
+    }
+
     try {
-      const updated = await transactionsService.confirmReceipt(transactionId, { confirmed: true });
+      setIsConfirmingReceipt(true);
+      setReceiptProofError(null);
+      let receiptProof: string | undefined;
+      let receiptProofOriginalFilename: string | undefined;
+      if (receiptProofFile) {
+        const { storageKey } = await transactionsService.uploadReceiptProof(transactionId, receiptProofFile);
+        receiptProof = storageKey;
+        receiptProofOriginalFilename = receiptProofFile.name;
+      }
+      const updated = await transactionsService.confirmReceipt(transactionId, {
+        confirmed: true,
+        ...(receiptProof && { receiptProof, receiptProofOriginalFilename }),
+      });
       setTransaction(prev => prev ? { ...prev, ...updated } : null);
       setShowConfirmModal(false);
-      
+      setReceiptProofFile(null);
+
       const updatedReviews = await reviewsService.getTransactionReviews(transactionId);
       setReviewData(updatedReviews);
     } catch (err) {
       console.error('Failed to confirm receipt:', err);
+      setReceiptProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+    } finally {
+      setIsConfirmingReceipt(false);
     }
   };
 
@@ -381,6 +448,7 @@ export function MyTicket() {
       setShowDisputeModal(false);
       const data = await bffService.getTransactionDetails(transactionId);
       setTransaction(data.transaction);
+      setCounterpartyEmail(data.counterpartyEmail ?? null);
     } catch (err: unknown) {
       let msg: string;
       const apiErr = err as ApiError | undefined;
@@ -566,7 +634,7 @@ export function MyTicket() {
               </div>
 
               <div className="p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                   <div>
                     <p className="text-xs text-gray-500 mb-1">{t('myTicket.quantity')}</p>
                     <p className="font-semibold text-gray-900">{transaction.quantity}</p>
@@ -576,14 +644,43 @@ export function MyTicket() {
                     <p className="font-semibold text-gray-900">{transaction.ticketType}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">{t('myTicket.role')}</p>
-                    <p className="font-semibold text-gray-900">
-                      {isBuyer ? t('myTicket.buyer') : t('myTicket.seller')}
-                    </p>
-                  </div>
-                  <div>
                     <p className="text-xs text-gray-500 mb-1">{t('myTicket.transactionId')}</p>
-                    <p className="font-mono text-xs text-gray-900 truncate">{transaction.id}</p>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="font-mono text-xs text-gray-900 truncate block min-w-0" title={transaction.id}>
+                            {transaction.id.length > 16
+                              ? `${transaction.id.slice(0, 8)}…${transaction.id.slice(-8)}`
+                              : transaction.id}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="font-mono text-xs max-w-xs break-all">
+                          {transaction.id}
+                        </TooltipContent>
+                      </Tooltip>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className={`shrink-0 h-8 w-8 ${
+                          copiedTransactionId
+                            ? 'text-green-600 hover:text-green-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                        onClick={copyTransactionId}
+                        aria-label={t('myTicket.copy')}
+                        title={t('myTicket.copy')}
+                      >
+                        {copiedTransactionId ? (
+                          <Check className="w-4 h-4" aria-hidden />
+                        ) : (
+                          <Copy className="w-4 h-4" aria-hidden />
+                        )}
+                      </Button>
+                      {copiedTransactionId && (
+                        <span className="text-xs text-green-600 font-medium whitespace-nowrap">{t('myTicket.copied')}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -723,11 +820,13 @@ export function MyTicket() {
                         {transaction.sellerSentPayloadType && (
                           <p className="text-xs mt-2 opacity-90">
                             {t('myTicket.sentAs')}:{' '}
-                            {transaction.sellerSentPayloadType === 'qr'
-                              ? t('myTicket.sentAsQr')
-                              : transaction.sellerSentPayloadType === 'pdf'
-                                ? t('myTicket.sentAsPdf')
-                                : t('myTicket.sentAsText')}
+                            {transaction.sellerSentPayloadType === 'ticketera'
+                              ? t('myTicket.sentAsTicketera')
+                              : transaction.sellerSentPayloadType === 'pdf_or_image'
+                                ? t('myTicket.sentAsPdfOrImage')
+                                : transaction.sellerSentPayloadType === 'other'
+                                  ? (transaction.sellerSentPayloadTypeOtherText?.trim() || t('myTicket.sentAsOther'))
+                                  : t('myTicket.sentAsOther')}
                           </p>
                         )}
                         {/* Countdown Timer - Show inside disclaimer when status is PendingPayment and not expired */}
@@ -1155,13 +1254,92 @@ export function MyTicket() {
               )}
 
               {transaction.status === TransactionStatus.PaymentReceived && isSeller && (
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmTransferModal(true)}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  {t('myTicket.confirmTicketTransferred')}
-                </button>
+                <>
+                  <div className="mb-4 p-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="font-medium mb-1">{t('myTicket.buyerDisclaimerTitle')}</p>
+                    <p>{t('myTicket.buyerDisclaimerName', { name: transaction.buyerName })}</p>
+                    {counterpartyEmail && (
+                      <p className="mt-0.5">{t('myTicket.buyerDisclaimerEmail', { email: counterpartyEmail })}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmTransferModal(true)}
+                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    {t('myTicket.confirmTicketTransferred')}
+                  </button>
+                </>
+              )}
+
+              {/* Seller: attach transfer proof (optional) after transfer is confirmed */}
+              {transaction.status === TransactionStatus.TicketTransferred && isSeller && (
+                <div className="mt-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('myTicket.attachTransferProofAfterTransfer')}
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      setTransferProofFile(file ?? null);
+                      setTransferProofError(null);
+                    }}
+                    className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  {transferProofFile && (
+                    <p className="mt-1 text-sm text-gray-500">{transferProofFile.name}</p>
+                  )}
+                  {transferProofError && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {transferProofError}
+                    </p>
+                  )}
+                  {transaction.transferProofStorageKey && (
+                    <p className="mt-2 text-sm text-green-700">
+                      {t('myTicket.transferProofUploaded')}
+                    </p>
+                  )}
+                  {transferProofFile && (
+                    <button
+                      type="button"
+                      disabled={isUploadingTransferProof}
+                      onClick={async () => {
+                        const ACCEPTED_TYPES = ['image/', 'application/pdf'];
+                        const MAX_SIZE_MB = 10;
+                        const validType = ACCEPTED_TYPES.some(
+                          (type) => transferProofFile.type === type || (type.endsWith('/') && transferProofFile.type.startsWith(type))
+                        );
+                        if (!validType) {
+                          setTransferProofError(t('myTicket.invalidFileType'));
+                          return;
+                        }
+                        if (transferProofFile.size > MAX_SIZE_MB * 1024 * 1024) {
+                          setTransferProofError(t('myTicket.fileTooLarge', { maxMb: MAX_SIZE_MB }));
+                          return;
+                        }
+                        try {
+                          setIsUploadingTransferProof(true);
+                          setTransferProofError(null);
+                          await transactionsService.uploadTransferProof(transaction.id, transferProofFile);
+                          setTransferProofFile(null);
+                          const data = await bffService.getTransactionDetails(transactionId!);
+                          setTransaction(data.transaction);
+                        } catch (err) {
+                          console.error('Failed to upload transfer proof:', err);
+                          setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+                        } finally {
+                          setIsUploadingTransferProof(false);
+                        }
+                      }}
+                      className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
+                    </button>
+                  )}
+                </div>
               )}
 
               {/* Open dispute - buyer or seller when payment/ticket flow is active */}
@@ -1354,7 +1532,7 @@ export function MyTicket() {
                 </div>
               </div>
 
-              {transaction.paymentMethodId && (
+              {isBuyer && transaction.paymentMethodId && (
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">{t('myTicket.paymentMethod')}</span>
@@ -1368,10 +1546,12 @@ export function MyTicket() {
                 </div>
               )}
 
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-start gap-2">
-                <Shield className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-blue-900">{t('myTicket.buyerProtection')}</p>
-              </div>
+              {isBuyer && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-start gap-2">
+                  <Shield className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-900">{t('myTicket.buyerProtection')}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1408,7 +1588,7 @@ export function MyTicket() {
               <h2 className="text-lg font-bold text-gray-900 mb-4">{t('myTicket.needHelp')}</h2>
               
               <p className="text-sm text-gray-600 mb-4">
-                {t('myTicket.supportDescription')}
+                {isBuyer ? t('myTicket.supportDescription') : t('myTicket.supportDescriptionSeller')}
               </p>
 
               <Link
@@ -1443,7 +1623,7 @@ export function MyTicket() {
         </div>
       </div>
 
-      {/* Confirm transfer modal: how did you send the ticket? */}
+      {/* Confirm transfer modal (step 1): how did you send the ticket? No file here; attach proof is step 2 after transfer. */}
       {showConfirmTransferModal && transaction && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
@@ -1453,8 +1633,13 @@ export function MyTicket() {
             <p className="text-gray-600 text-sm mb-4">
               {t('myTicket.confirmTransferPayloadHint')}
             </p>
-            <div className="space-y-2 mb-6">
-              {(['qr', 'pdf', 'text'] as const).map((type) => (
+            {counterpartyEmail && (
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+                {t('myTicket.transferDisclaimerBuyerEmail', { email: counterpartyEmail })}
+              </p>
+            )}
+            <div className="space-y-2 mb-4">
+              {(['ticketera', 'pdf_or_image', 'other'] as const).map((type) => (
                 <label
                   key={type}
                   className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
@@ -1471,10 +1656,24 @@ export function MyTicket() {
                 </label>
               ))}
             </div>
+            {confirmTransferPayloadType === 'other' && (
+              <div className="mb-6">
+                <input
+                  type="text"
+                  value={confirmTransferPayloadTypeOtherText}
+                  onChange={(e) => setConfirmTransferPayloadTypeOtherText(e.target.value)}
+                  placeholder={t('myTicket.payloadTypeOtherPlaceholder')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => setShowConfirmTransferModal(false)}
+                onClick={() => {
+                  setShowConfirmTransferModal(false);
+                  setConfirmTransferPayloadTypeOtherText('');
+                }}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 {t('myTicket.cancel')}
@@ -1485,13 +1684,19 @@ export function MyTicket() {
                 onClick={async () => {
                   try {
                     setIsConfirmingTransfer(true);
+                    setTransferProofError(null);
                     const updated = await transactionsService.confirmTransfer(transaction.id, {
                       payloadType: confirmTransferPayloadType,
+                      ...(confirmTransferPayloadType === 'other' && confirmTransferPayloadTypeOtherText.trim() && {
+                        payloadTypeOtherText: confirmTransferPayloadTypeOtherText.trim(),
+                      }),
                     });
                     setTransaction(prev => prev ? { ...prev, ...updated } : null);
                     setShowConfirmTransferModal(false);
+                    setConfirmTransferPayloadTypeOtherText('');
                   } catch (err) {
                     console.error('Failed to confirm transfer:', err);
+                    setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
                   } finally {
                     setIsConfirmingTransfer(false);
                   }
@@ -1520,14 +1725,22 @@ export function MyTicket() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   {t('myTicket.disputeReason')} <span className="text-red-500">*</span>
                 </label>
-                <select
+                <Select
                   value={disputeReason}
-                  onChange={(e) => setDisputeReason(e.target.value as DisputeReason)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  onValueChange={(v) => setDisputeReason(v as DisputeReason)}
                 >
-                  <option value={DisputeReason.TicketNotReceived}>{t('myTicket.disputeReasonNotReceived')}</option>
-                  <option value={DisputeReason.TicketDidntWork}>{t('myTicket.disputeReasonDidntWork')}</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t('myTicket.disputeReason')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={DisputeReason.TicketNotReceived}>
+                      {t('myTicket.disputeReasonNotReceived')}
+                    </SelectItem>
+                    <SelectItem value={DisputeReason.TicketDidntWork}>
+                      {t('myTicket.disputeReasonDidntWork')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -1587,21 +1800,52 @@ export function MyTicket() {
             <h3 className="text-xl font-bold text-gray-900 mb-4">
               {t('myTicket.confirmReceiptTitle')}
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               {t('myTicket.confirmReceiptMessage')}
             </p>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('myTicket.attachReceiptProof')}
+              </label>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  setReceiptProofFile(file ?? null);
+                  setReceiptProofError(null);
+                }}
+                className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {receiptProofFile && (
+                <p className="mt-1 text-sm text-gray-500">{receiptProofFile.name}</p>
+              )}
+              {receiptProofError && (
+                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {receiptProofError}
+                </p>
+              )}
+            </div>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowConfirmModal(false)}
+                type="button"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setReceiptProofFile(null);
+                  setReceiptProofError(null);
+                }}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 {t('myTicket.cancel')}
               </button>
               <button
+                type="button"
                 onClick={handleConfirmReceipt}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={isConfirmingReceipt}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                {t('myTicket.confirm')}
+                {isConfirmingReceipt ? t('myTicket.confirmingReceipt') : t('myTicket.confirm')}
               </button>
             </div>
           </div>

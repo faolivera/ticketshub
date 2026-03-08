@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Eye, AlertTriangle, MessageCircle, IdCard } from 'lucide-react';
+import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Eye, AlertTriangle, MessageCircle, IdCard, Minus, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -51,6 +51,16 @@ function getPendingReasonI18nKey(reason: string): string | null {
 
 function isPricingSnapshotError(errorCode: string | undefined): boolean {
   return errorCode?.startsWith('PRICING_SNAPSHOT_') ?? false;
+}
+
+/** Backend may return BAD_REQUEST with this message when snapshot expired; then we refresh the buy page. */
+function isPricingSnapshotExpiredError(err: unknown): boolean {
+  const code = (err as { code?: string })?.code;
+  const message = (err as { message?: string })?.message;
+  return (
+    isPricingSnapshotError(code) ||
+    (code === 'BAD_REQUEST' && typeof message === 'string' && message.includes('Pricing snapshot has expired'))
+  );
 }
 
 export function BuyTicketPage() {
@@ -290,9 +300,8 @@ export function BuyTicketPage() {
       navigate(`/transaction/${response.transaction.id}`, { state: { from: '/my-tickets' } });
     } catch (err: unknown) {
       console.error('Purchase failed:', err);
-      
-      const errorCode = (err as { code?: string })?.code;
-      if (isPricingSnapshotError(errorCode)) {
+
+      if (isPricingSnapshotExpiredError(err)) {
         setPurchaseError(t('buyTicket.pricesChanged'));
         await refreshBuyPageData();
       } else {
@@ -484,26 +493,45 @@ export function BuyTicketPage() {
 
                 {!isNumberedListing ? (
                   <div>
-                    <label className="text-sm text-gray-600 block mb-2">
-                      {t('buyTicket.quantity')}
-                    </label>
+                    {listing.sellTogether && (
+                      <label className="text-sm text-gray-600 block mb-2">
+                        {t('buyTicket.quantity')}
+                      </label>
+                    )}
                     {listing.sellTogether ? (
                       <div className="px-4 py-2 bg-gray-100 rounded-lg">
                         <span className="font-semibold">{availableUnits.length}</span>
                       </div>
                     ) : (
-                      <select
-                        value={quantity}
-                        onChange={(e) => setQuantity(Number(e.target.value))}
-                        disabled={!!acceptedOffer}
-                        className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${acceptedOffer ? 'opacity-70 cursor-not-allowed bg-gray-50' : ''}`}
-                      >
-                        {quantityOptions.map((num) => (
-                          <option key={num} value={num}>
-                            {num}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-gray-600 w-full sm:w-auto sm:min-w-[4rem]">{t('buyTicket.quantity')}</span>
+                        <div className="flex items-center rounded-lg border border-gray-300 bg-white overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                            disabled={!!acceptedOffer || quantity <= 1}
+                            aria-label={t('buyTicket.quantityDecrease')}
+                            className="p-2.5 text-gray-700 border-r border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors touch-manipulation"
+                          >
+                            <Minus className="w-4 h-4" aria-hidden />
+                          </button>
+                          <span
+                            className="min-w-[2.5rem] px-3 py-2 text-center text-base font-medium text-gray-900 tabular-nums"
+                            aria-live="polite"
+                          >
+                            {quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+                            disabled={!!acceptedOffer || quantity >= maxQuantity}
+                            aria-label={t('buyTicket.quantityIncrease')}
+                            className="p-2.5 text-gray-700 border-l border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors touch-manipulation"
+                          >
+                            <Plus className="w-4 h-4" aria-hidden />
+                          </button>
+                        </div>
+                      </div>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
                       {listing.sellTogether
