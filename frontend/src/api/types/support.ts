@@ -40,18 +40,34 @@ export enum DisputeResolution {
 }
 
 /**
+ * Origin of the support ticket
+ */
+export enum SupportTicketSource {
+  Dispute = 'Dispute',
+  ContactFromTransaction = 'ContactFromTransaction',
+  ContactForm = 'ContactForm',
+}
+
+/**
  * Support ticket entity
  */
 export interface SupportTicket {
   id: string;
-  userId: string;
+  userId?: string;
   transactionId?: string;
 
   category: SupportCategory;
   disputeReason?: DisputeReason;
+  source?: SupportTicketSource;
 
   subject: string;
   description: string;
+
+  /** Guest contact when ticket is anonymous */
+  guestName?: string;
+  guestEmail?: string;
+  /** Guest identifier: "guest:{client_ip}" */
+  guestId?: string;
 
   status: SupportTicketStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -90,14 +106,26 @@ export interface SupportTicketWithMessages extends SupportTicket {
 // === API Types ===
 
 /**
- * Request to create a support ticket
+ * Request to create a support ticket (authenticated)
  */
 export interface CreateSupportTicketRequest {
   transactionId?: string;
   category: SupportCategory;
   disputeReason?: DisputeReason;
+  source?: SupportTicketSource;
   subject: string;
   description: string;
+}
+
+/**
+ * Request for public contact form (no auth)
+ */
+export interface PublicContactRequest {
+  name: string;
+  email: string;
+  subject: string;
+  description: string;
+  transactionId?: string;
 }
 
 /**

@@ -10,6 +10,7 @@ interface ShowTime {
 
 interface EventCardProps {
   id: string;
+  slug: string;
   name: string;
   artist: string;
   location: string;
@@ -27,6 +28,7 @@ interface EventCardProps {
 
 export function EventCard({
   id,
+  slug,
   name,
   location,
   venue,
@@ -53,7 +55,7 @@ export function EventCard({
 
   return (
     <Link
-      to={`/event/${id}`}
+      to={`/event/${slug}`}
       className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col h-full"
     >
       <div className="relative h-48 overflow-hidden flex-shrink-0">

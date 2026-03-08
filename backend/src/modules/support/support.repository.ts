@@ -5,11 +5,16 @@ import type {
   SupportMessage as PrismaSupportMessage,
   SupportTicketStatus as PrismaSupportTicketStatus,
   SupportTicketCategory as PrismaSupportTicketCategory,
+  SupportTicketSource as PrismaSupportTicketSource,
   SupportMessageSender as PrismaSupportMessageSender,
 } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
 import type { SupportTicket, SupportMessage } from './support.domain';
-import { SupportTicketStatus, SupportCategory } from './support.domain';
+import {
+  SupportTicketStatus,
+  SupportCategory,
+  SupportTicketSource,
+} from './support.domain';
 import type { ISupportRepository } from './support.repository.interface';
 
 @Injectable()
@@ -22,9 +27,13 @@ export class SupportRepository implements ISupportRepository {
     const prismaTicket = await this.prisma.supportTicket.create({
       data: {
         id: ticket.id,
-        userId: ticket.userId,
+        userId: ticket.userId ?? undefined,
+        guestId: ticket.guestId ?? undefined,
+        guestName: ticket.guestName ?? undefined,
+        guestEmail: ticket.guestEmail ?? undefined,
         transactionId: ticket.transactionId,
         category: this.mapCategoryToDb(ticket.category),
+        source: ticket.source ? this.mapSourceToDb(ticket.source) : undefined,
         subject: ticket.subject,
         status: this.mapStatusToDb(ticket.status),
         assignedTo: ticket.resolvedBy,
@@ -80,6 +89,68 @@ export class SupportRepository implements ISupportRepository {
       orderBy: { createdAt: 'desc' },
     });
     return tickets.map((t) => this.mapToTicket(t));
+  }
+
+  async getTicketsAdmin(
+    _ctx: Ctx,
+    params: {
+      page: number;
+      limit: number;
+      status?: string;
+      category?: string;
+      source?: string;
+    },
+  ): Promise<{ tickets: SupportTicket[]; total: number }> {
+    const where: Parameters<typeof this.prisma.supportTicket.findMany>[0]['where'] = {};
+    if (params.status) {
+      const toDomainStatus: Record<string, SupportTicketStatus> = {
+        open: SupportTicketStatus.Open,
+        inProgress: SupportTicketStatus.InProgress,
+        waitingForCustomer: SupportTicketStatus.WaitingForCustomer,
+        resolved: SupportTicketStatus.Resolved,
+        closed: SupportTicketStatus.Closed,
+      };
+      const domainStatus = toDomainStatus[params.status];
+      if (domainStatus !== undefined) {
+        where.status = this.mapStatusToDb(domainStatus);
+      }
+    }
+    if (params.category) {
+      const categoryMap: Record<string, PrismaSupportTicketCategory> = {
+        TicketDispute: 'transaction',
+        PaymentIssue: 'transaction',
+        AccountIssue: 'account',
+        Other: 'other',
+      };
+      const dbCategory = categoryMap[params.category];
+      if (dbCategory !== undefined) {
+        where.category = dbCategory;
+      }
+    }
+    if (params.source) {
+      const sourceMap: Record<string, PrismaSupportTicketSource> = {
+        Dispute: 'dispute',
+        ContactFromTransaction: 'contact_from_transaction',
+        ContactForm: 'contact_form',
+      };
+      const dbSource = sourceMap[params.source];
+      if (dbSource !== undefined) {
+        where.source = dbSource;
+      }
+    }
+    const [tickets, total] = await Promise.all([
+      this.prisma.supportTicket.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (params.page - 1) * params.limit,
+        take: params.limit,
+      }),
+      this.prisma.supportTicket.count({ where }),
+    ]);
+    return {
+      tickets: tickets.map((t) => this.mapToTicket(t)),
+      total,
+    };
   }
 
   async getTicketByTransactionId(
@@ -155,16 +226,23 @@ export class SupportRepository implements ISupportRepository {
     prismaTicket: PrismaSupportTicket,
     domainOverrides?: Partial<SupportTicket>,
   ): SupportTicket {
+    const source = domainOverrides?.source ?? this.mapSourceFromDb(prismaTicket.source);
+    const priority =
+      domainOverrides?.priority ?? this.priorityFromSource(source);
     return {
       id: prismaTicket.id,
-      userId: prismaTicket.userId,
+      userId: prismaTicket.userId ?? undefined,
+      guestId: prismaTicket.guestId ?? undefined,
+      guestName: prismaTicket.guestName ?? undefined,
+      guestEmail: prismaTicket.guestEmail ?? undefined,
       transactionId: prismaTicket.transactionId ?? undefined,
       category: domainOverrides?.category ?? this.mapCategoryFromDb(prismaTicket.category),
       disputeReason: domainOverrides?.disputeReason,
+      source,
       subject: prismaTicket.subject,
       description: domainOverrides?.description ?? '',
       status: this.mapStatusFromDb(prismaTicket.status),
-      priority: domainOverrides?.priority ?? 'medium',
+      priority,
       resolution: domainOverrides?.resolution,
       resolutionNotes: domainOverrides?.resolutionNotes,
       resolvedBy: prismaTicket.assignedTo ?? undefined,
@@ -172,6 +250,45 @@ export class SupportRepository implements ISupportRepository {
       updatedAt: prismaTicket.updatedAt,
       resolvedAt: prismaTicket.resolvedAt ?? undefined,
     };
+  }
+
+  private priorityFromSource(
+    source: SupportTicketSource | undefined,
+  ): 'low' | 'medium' | 'high' | 'urgent' {
+    if (!source) return 'medium';
+    switch (source) {
+      case SupportTicketSource.Dispute:
+        return 'high';
+      case SupportTicketSource.ContactFromTransaction:
+        return 'medium';
+      case SupportTicketSource.ContactForm:
+        return 'low';
+      default:
+        return 'medium';
+    }
+  }
+
+  private mapSourceToDb(
+    source: SupportTicketSource,
+  ): PrismaSupportTicketSource {
+    const map: Record<SupportTicketSource, PrismaSupportTicketSource> = {
+      [SupportTicketSource.Dispute]: 'dispute',
+      [SupportTicketSource.ContactFromTransaction]: 'contact_from_transaction',
+      [SupportTicketSource.ContactForm]: 'contact_form',
+    };
+    return map[source];
+  }
+
+  private mapSourceFromDb(
+    source: PrismaSupportTicketSource | null | undefined,
+  ): SupportTicketSource | undefined {
+    if (!source) return undefined;
+    const map: Record<PrismaSupportTicketSource, SupportTicketSource> = {
+      dispute: SupportTicketSource.Dispute,
+      contact_from_transaction: SupportTicketSource.ContactFromTransaction,
+      contact_form: SupportTicketSource.ContactForm,
+    };
+    return map[source];
   }
 
   private mapToMessage(prismaMessage: PrismaSupportMessage): SupportMessage {

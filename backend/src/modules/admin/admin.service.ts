@@ -44,11 +44,21 @@ import type {
   AdminSellerPayoutsResponse,
   AdminSellerPayoutItem,
   AdminCompletePayoutResponse,
+  AdminSupportTicketsQuery,
+  AdminSupportTicketsResponse,
+  AdminSupportTicketItem,
+  AdminSupportTicketDetailResponse,
+  AdminUpdateSupportTicketStatusResponse,
+  AdminResolveSupportDisputeResponse,
+  AdminAddSupportTicketMessageResponse,
 } from './admin.api';
 import { EventDateStatus, EventSectionStatus } from '../events/events.domain';
-import { IdentityVerificationStatus } from '../users/users.domain';
+import { IdentityVerificationStatus, Role } from '../users/users.domain';
 import type { Transaction } from '../transactions/transactions.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
+import { SupportService } from '../support/support.service';
+import { SupportTicketStatus, DisputeResolution } from '../support/support.domain';
+import type { SupportTicket, SupportTicketWithMessages, SupportMessage } from '../support/support.domain';
 
 @Injectable()
 export class AdminService {
@@ -72,6 +82,8 @@ export class AdminService {
     @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly privateStorage: FileStorageProvider,
     private readonly prisma: PrismaService,
+    @Inject(SupportService)
+    private readonly supportService: SupportService,
   ) {}
 
   private static readonly USER_SEARCH_LIMIT = 20;
@@ -414,6 +426,7 @@ export class AdminService {
 
       return {
         id: listing.id,
+        eventSlug: eventWithDates.slug,
         createdBy: {
           id: listing.sellerId,
           publicName: seller?.publicName || 'Unknown User',
@@ -588,6 +601,7 @@ export class AdminService {
     };
     const listingRef: AdminTransactionListingRef = {
       id: listing.id,
+      eventSlug: listing.eventSlug,
       eventName: listing.eventName,
       eventDate: listing.eventDate,
       sectionName: listing.sectionName,
@@ -941,6 +955,7 @@ export class AdminService {
       };
       const listingRef: AdminTransactionListingRef = {
         id: t.listingId,
+        eventSlug: listing?.eventSlug ?? 'event-unknown',
         eventName: listing?.eventName ?? 'Unknown Event',
         eventDate: listing?.eventDate ?? new Date(),
         sectionName: listing?.sectionName ?? 'Unknown',
@@ -974,5 +989,131 @@ export class AdminService {
         paymentConfirmation,
       };
     });
+  }
+
+  // ==================== Support Tickets (admin) ====================
+
+  private mapTicketToAdminItem(t: SupportTicket): AdminSupportTicketItem {
+    return {
+      id: t.id,
+      userId: t.userId,
+      transactionId: t.transactionId,
+      category: t.category,
+      disputeReason: t.disputeReason,
+      source: t.source,
+      subject: t.subject,
+      description: t.description,
+      guestName: t.guestName,
+      guestEmail: t.guestEmail,
+      guestId: t.guestId,
+      status: t.status,
+      priority: t.priority,
+      resolution: t.resolution,
+      resolutionNotes: t.resolutionNotes,
+      resolvedBy: t.resolvedBy,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+      resolvedAt: t.resolvedAt,
+    };
+  }
+
+  private mapMessageToAdminItem(m: SupportMessage): AdminSupportTicketDetailResponse['messages'][0] {
+    return {
+      id: m.id,
+      ticketId: m.ticketId,
+      userId: m.userId,
+      isAdmin: m.isAdmin,
+      message: m.message,
+      attachmentUrls: m.attachmentUrls,
+      createdAt: m.createdAt,
+    };
+  }
+
+  async getSupportTickets(
+    ctx: Ctx,
+    query: AdminSupportTicketsQuery,
+  ): Promise<AdminSupportTicketsResponse> {
+    const page = query.page ?? 1;
+    const limit = Math.min(query.limit ?? 20, 100);
+    const { tickets, total } = await this.supportService.listTicketsAdmin(ctx, {
+      page,
+      limit,
+      status: query.status,
+      category: query.category,
+      source: query.source,
+    });
+    const totalPages = Math.ceil(total / limit);
+    return {
+      tickets: tickets.map((t) => this.mapTicketToAdminItem(t)),
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  async getSupportTicketById(
+    ctx: Ctx,
+    ticketId: string,
+    adminId: string,
+  ): Promise<AdminSupportTicketDetailResponse> {
+    const ticket = await this.supportService.getTicketById(
+      ctx,
+      ticketId,
+      adminId,
+      Role.Admin,
+    );
+    return {
+      ...this.mapTicketToAdminItem(ticket),
+      messages: ticket.messages.map((m) => this.mapMessageToAdminItem(m)),
+    };
+  }
+
+  async updateSupportTicketStatus(
+    ctx: Ctx,
+    ticketId: string,
+    status: string,
+  ): Promise<AdminUpdateSupportTicketStatusResponse> {
+    const statusEnum = status as SupportTicketStatus;
+    const ticket = await this.supportService.updateTicketStatus(
+      ctx,
+      ticketId,
+      statusEnum,
+    );
+    return this.mapTicketToAdminItem(ticket);
+  }
+
+  async resolveSupportDispute(
+    ctx: Ctx,
+    ticketId: string,
+    adminId: string,
+    body: { resolution: string; resolutionNotes: string },
+  ): Promise<AdminResolveSupportDisputeResponse> {
+    const resolution = body.resolution as DisputeResolution;
+    const ticket = await this.supportService.resolveDispute(
+      ctx,
+      ticketId,
+      adminId,
+      resolution,
+      body.resolutionNotes,
+    );
+    return this.mapTicketToAdminItem(ticket);
+  }
+
+  async addSupportTicketMessage(
+    ctx: Ctx,
+    ticketId: string,
+    adminId: string,
+    body: { message: string; attachmentUrls?: string[] },
+  ): Promise<AdminAddSupportTicketMessageResponse> {
+    const message = await this.supportService.addMessage(
+      ctx,
+      ticketId,
+      adminId,
+      true,
+      body.message,
+      body.attachmentUrls,
+    );
+    return { success: true, messageId: message.id };
   }
 }

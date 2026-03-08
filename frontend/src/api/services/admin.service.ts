@@ -29,6 +29,14 @@ import type {
   AdminUserSearchItem,
   AdminSellerPayoutsResponse,
   AdminCompletePayoutResponse,
+  AdminSupportTicketsQuery,
+  AdminSupportTicketsResponse,
+  AdminSupportTicketItem,
+  AdminSupportTicketDetailResponse,
+  AdminUpdateSupportTicketStatusRequest,
+  AdminResolveSupportDisputeRequest,
+  AdminAddSupportTicketMessageRequest,
+  AdminAddSupportTicketMessageResponse,
 } from '../types/admin';
 
 /**
@@ -425,6 +433,80 @@ export const adminService = {
     const response = await apiClient.patch<{ status: string }>(
       `/admin/promotions/${id}/status`,
       { status }
+    );
+    return response.data;
+  },
+
+  // === Support Tickets (admin) ===
+
+  /**
+   * List support tickets with pagination and filters
+   */
+  async getSupportTickets(
+    query: AdminSupportTicketsQuery = {}
+  ): Promise<AdminSupportTicketsResponse> {
+    const params = new URLSearchParams();
+    if (query.page !== undefined) params.append('page', String(query.page));
+    if (query.limit !== undefined) params.append('limit', String(query.limit));
+    if (query.status) params.append('status', query.status);
+    if (query.category) params.append('category', query.category);
+    if (query.source) params.append('source', query.source);
+    const queryString = params.toString();
+    const url = `/admin/support-tickets${queryString ? `?${queryString}` : ''}`;
+    const response = await apiClient.get<AdminSupportTicketsResponse>(url);
+    return response.data;
+  },
+
+  /**
+   * Get support ticket detail with messages
+   */
+  async getSupportTicketById(
+    ticketId: string
+  ): Promise<AdminSupportTicketDetailResponse> {
+    const response = await apiClient.get<AdminSupportTicketDetailResponse>(
+      `/admin/support-tickets/${ticketId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Update support ticket status
+   */
+  async updateSupportTicketStatus(
+    ticketId: string,
+    data: AdminUpdateSupportTicketStatusRequest
+  ): Promise<AdminSupportTicketItem> {
+    const response = await apiClient.patch<AdminSupportTicketItem>(
+      `/admin/support-tickets/${ticketId}/status`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Resolve a dispute ticket
+   */
+  async resolveSupportDispute(
+    ticketId: string,
+    data: AdminResolveSupportDisputeRequest
+  ): Promise<AdminSupportTicketItem> {
+    const response = await apiClient.patch<AdminSupportTicketItem>(
+      `/admin/support-tickets/${ticketId}/resolve`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Add admin reply to a support ticket
+   */
+  async addSupportTicketMessage(
+    ticketId: string,
+    data: AdminAddSupportTicketMessageRequest
+  ): Promise<AdminAddSupportTicketMessageResponse> {
+    const response = await apiClient.post<AdminAddSupportTicketMessageResponse>(
+      `/admin/support-tickets/${ticketId}/messages`,
+      data
     );
     return response.data;
   },

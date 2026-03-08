@@ -96,15 +96,15 @@ export class BffController {
   }
 
   /**
-   * Get event page data: event details + enriched listings in a single call
+   * Get event page data by slug: event details + enriched listings in a single call
    */
-  @Get('event-page/:eventId')
+  @Get('event-page/:eventSlug')
   @ValidateResponse(GetEventPageResponseSchema)
   async getEventPage(
     @Context() ctx: Ctx,
-    @Param('eventId') eventId: string,
+    @Param('eventSlug') eventSlug: string,
   ): Promise<ApiResponse<GetEventPageResponse>> {
-    const data = await this.bffService.getEventPageData(ctx, eventId);
+    const data = await this.bffService.getEventPageData(ctx, eventSlug);
     return { success: true, data };
   }
 

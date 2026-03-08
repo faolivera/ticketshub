@@ -45,9 +45,19 @@ import type {
   NotificationEventType,
   NotificationPriority,
 } from '../../../api/types/notifications';
-import { TEMPLATE_VARIABLES } from '../../../api/types/notifications';
+import { ALL_EVENT_TYPES, TEMPLATE_VARIABLES } from '../../../api/types/notifications';
 
 const PRIORITY_OPTIONS: NotificationPriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
+
+/** Stable order for channel configs (backend returns undefined order). */
+function sortChannelConfigsByEventType(
+  configs: NotificationChannelConfig[]
+): NotificationChannelConfig[] {
+  const order = new Map(ALL_EVENT_TYPES.map((t, i) => [t, i]));
+  return [...configs].sort(
+    (a, b) => (order.get(a.eventType) ?? 999) - (order.get(b.eventType) ?? 999)
+  );
+}
 
 export function NotificationManagement() {
   const { t } = useTranslation();
@@ -66,6 +76,8 @@ export function NotificationManagement() {
   });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  /** Tracks which channel config is being updated (e.g. 'PAYMENT_REQUIRED-inApp') for loading state */
+  const [updatingConfigKey, setUpdatingConfigKey] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -75,7 +87,7 @@ export function NotificationManagement() {
         notificationsAdminService.getChannelConfigs(),
         notificationsAdminService.getTemplates(),
       ]);
-      setChannelConfigs(configs);
+      setChannelConfigs(sortChannelConfigsByEventType(configs));
       setTemplates(templateList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -92,16 +104,40 @@ export function NotificationManagement() {
     config: NotificationChannelConfig,
     channel: 'inApp' | 'email'
   ) => {
+    const key = `${config.eventType}-${channel}`;
+    const newInApp = channel === 'inApp' ? !config.inAppEnabled : config.inAppEnabled;
+    const newEmail = channel === 'email' ? !config.emailEnabled : config.emailEnabled;
+
+    setError(null);
+    setUpdatingConfigKey(key);
+
+    // Optimistic update so the toggle flips immediately
+    setChannelConfigs((prev) =>
+      prev.map((c) =>
+        c.id === config.id
+          ? { ...c, inAppEnabled: newInApp, emailEnabled: newEmail }
+          : c
+      )
+    );
+
     try {
-      const newData = {
-        inAppEnabled: channel === 'inApp' ? !config.inAppEnabled : config.inAppEnabled,
-        emailEnabled: channel === 'email' ? !config.emailEnabled : config.emailEnabled,
+      await notificationsAdminService.updateChannelConfig(config.eventType, {
+        inAppEnabled: newInApp,
+        emailEnabled: newEmail,
         priority: config.priority,
-      };
-      await notificationsAdminService.updateChannelConfig(config.eventType, newData);
+      });
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update channel config');
+      setChannelConfigs((prev) =>
+        prev.map((c) =>
+          c.id === config.id
+            ? { ...c, inAppEnabled: config.inAppEnabled, emailEnabled: config.emailEnabled }
+            : c
+        )
+      );
+    } finally {
+      setUpdatingConfigKey(null);
     }
   };
 
@@ -109,6 +145,14 @@ export function NotificationManagement() {
     config: NotificationChannelConfig,
     priority: NotificationPriority
   ) => {
+    const key = `${config.eventType}-priority`;
+    setError(null);
+    setUpdatingConfigKey(key);
+
+    setChannelConfigs((prev) =>
+      prev.map((c) => (c.id === config.id ? { ...c, priority } : c))
+    );
+
     try {
       await notificationsAdminService.updateChannelConfig(config.eventType, {
         inAppEnabled: config.inAppEnabled,
@@ -118,6 +162,11 @@ export function NotificationManagement() {
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update priority');
+      setChannelConfigs((prev) =>
+        prev.map((c) => (c.id === config.id ? { ...c, priority: config.priority } : c))
+      );
+    } finally {
+      setUpdatingConfigKey(null);
     }
   };
 
@@ -164,26 +213,29 @@ export function NotificationManagement() {
     }
   };
 
-  const getTemplatesGroupedByEventType = () => {
-    const grouped: Record<NotificationEventType, NotificationTemplate[]> = {} as Record<
-      NotificationEventType,
-      NotificationTemplate[]
-    >;
-    templates.forEach((template) => {
-      if (!grouped[template.eventType]) {
-        grouped[template.eventType] = [];
-      }
+  /** Active templates only, split by channel (for editing in Templates tab). */
+  const getActiveTemplatesByChannel = () => {
+    const active = templates.filter((t) => t.isActive);
+    const inApp = active.filter((t) => t.channel === 'IN_APP');
+    const email = active.filter((t) => t.channel === 'EMAIL');
+    const order = new Map(ALL_EVENT_TYPES.map((t, i) => [t, i]));
+    const sortByEventType = (a: NotificationTemplate, b: NotificationTemplate) =>
+      (order.get(a.eventType) ?? 999) - (order.get(b.eventType) ?? 999);
+    return {
+      inApp: [...inApp].sort(sortByEventType),
+      email: [...email].sort(sortByEventType),
+    };
+  };
+
+  const getTemplatesGroupedByEventTypeForChannel = (
+    channelTemplates: NotificationTemplate[]
+  ): Record<string, NotificationTemplate[]> => {
+    const grouped: Record<string, NotificationTemplate[]> = {};
+    channelTemplates.forEach((template) => {
+      if (!grouped[template.eventType]) grouped[template.eventType] = [];
       grouped[template.eventType].push(template);
     });
     return grouped;
-  };
-
-  const getChannelIcon = (channel: 'IN_APP' | 'EMAIL') => {
-    return channel === 'IN_APP' ? (
-      <Bell className="h-4 w-4" />
-    ) : (
-      <Mail className="h-4 w-4" />
-    );
   };
 
   const getPriorityBadgeVariant = (priority: NotificationPriority) => {
@@ -209,7 +261,8 @@ export function NotificationManagement() {
     );
   }
 
-  const groupedTemplates = getTemplatesGroupedByEventType();
+  const { inApp: inAppTemplates, email: emailTemplates } = getActiveTemplatesByChannel();
+  const hasAnyActiveTemplates = inAppTemplates.length > 0 || emailTemplates.length > 0;
 
   return (
     <div className="space-y-6">
@@ -265,6 +318,7 @@ export function NotificationManagement() {
                         <div className="flex justify-center">
                           <Switch
                             checked={config.inAppEnabled}
+                            disabled={updatingConfigKey === `${config.eventType}-inApp`}
                             onCheckedChange={() => handleToggleChannel(config, 'inApp')}
                           />
                         </div>
@@ -273,6 +327,7 @@ export function NotificationManagement() {
                         <div className="flex justify-center">
                           <Switch
                             checked={config.emailEnabled}
+                            disabled={updatingConfigKey === `${config.eventType}-email`}
                             onCheckedChange={() => handleToggleChannel(config, 'email')}
                           />
                         </div>
@@ -280,6 +335,7 @@ export function NotificationManagement() {
                       <TableCell>
                         <Select
                           value={config.priority}
+                          disabled={updatingConfigKey === `${config.eventType}-priority`}
                           onValueChange={(value: NotificationPriority) =>
                             handlePriorityChange(config, value)
                           }
@@ -313,56 +369,113 @@ export function NotificationManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {Object.keys(groupedTemplates).length === 0 ? (
+              {!hasAnyActiveTemplates ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {t('admin.notifications.templates.noTemplates')}
+                  {t('admin.notifications.templates.noActiveTemplates')}
                 </div>
               ) : (
-                <div className="space-y-6">
-                  {Object.entries(groupedTemplates).map(([eventType, eventTemplates]) => (
-                    <div key={eventType} className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">
-                        {t(`admin.notifications.eventTypes.${eventType}`)}
-                      </h3>
-                      <div className="grid gap-2">
-                        {eventTemplates.map((template) => (
-                          <div
-                            key={template.id}
-                            className="flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              {getChannelIcon(template.channel)}
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm">
-                                    {template.channel === 'IN_APP' ? 'In-App' : 'Email'}
-                                  </span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {template.locale.toUpperCase()}
-                                  </Badge>
-                                  {!template.isActive && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      {t('common.pending')}
-                                    </Badge>
-                                  )}
+                <div className="space-y-8">
+                  <section className="space-y-4">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Bell className="h-4 w-4" />
+                      {t('admin.notifications.templates.inAppSection')}
+                    </h3>
+                    {inAppTemplates.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t('admin.notifications.templates.noTemplatesForChannel')}
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {Object.entries(
+                          getTemplatesGroupedByEventTypeForChannel(inAppTemplates)
+                        ).map(([eventType, eventTemplates]) => (
+                          <div key={`inApp-${eventType}`} className="space-y-2">
+                            <h4 className="text-xs font-medium text-muted-foreground">
+                              {t(`admin.notifications.eventTypes.${eventType}`)}
+                            </h4>
+                            <div className="grid gap-2">
+                              {eventTemplates.map((template) => (
+                                <div
+                                  key={template.id}
+                                  className="flex items-center justify-between p-3 border rounded-lg"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Bell className="h-4 w-4 text-muted-foreground" />
+                                    <div>
+                                      <Badge variant="outline" className="text-xs">
+                                        {template.locale.toUpperCase()}
+                                      </Badge>
+                                      <p className="text-sm mt-1 truncate max-w-md">
+                                        {template.titleTemplate}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleOpenEditTemplate(template)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
                                 </div>
-                                <p className="text-xs text-muted-foreground truncate max-w-md">
-                                  {template.titleTemplate}
-                                </p>
-                              </div>
+                              ))}
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleOpenEditTemplate(template)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      {t('admin.notifications.templates.emailSection')}
+                    </h3>
+                    {emailTemplates.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t('admin.notifications.templates.noTemplatesForChannel')}
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {Object.entries(
+                          getTemplatesGroupedByEventTypeForChannel(emailTemplates)
+                        ).map(([eventType, eventTemplates]) => (
+                          <div key={`email-${eventType}`} className="space-y-2">
+                            <h4 className="text-xs font-medium text-muted-foreground">
+                              {t(`admin.notifications.eventTypes.${eventType}`)}
+                            </h4>
+                            <div className="grid gap-2">
+                              {eventTemplates.map((template) => (
+                                <div
+                                  key={template.id}
+                                  className="flex items-center justify-between p-3 border rounded-lg"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Mail className="h-4 w-4 text-muted-foreground" />
+                                    <div>
+                                      <Badge variant="outline" className="text-xs">
+                                        {template.locale.toUpperCase()}
+                                      </Badge>
+                                      <p className="text-sm mt-1 truncate max-w-md">
+                                        {template.titleTemplate}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleOpenEditTemplate(template)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 </div>
               )}
             </CardContent>

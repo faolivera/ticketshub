@@ -69,6 +69,7 @@ export interface EventBannerUrls {
  */
 export interface Event {
   id: string;
+  slug: string;
   name: string;
   category: EventCategory;
   venue: string;

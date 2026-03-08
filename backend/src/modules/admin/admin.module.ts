@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { TicketsModule } from '../tickets/tickets.module';
 import { EventsModule } from '../events/events.module';
 import { IdentityVerificationModule } from '../identity-verification/identity-verification.module';
+import { SupportModule } from '../support/support.module';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
     TicketsModule,
     EventsModule,
     IdentityVerificationModule,
+    SupportModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

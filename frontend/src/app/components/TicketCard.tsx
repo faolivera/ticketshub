@@ -15,6 +15,7 @@ export interface ShowTime {
 
 export interface TransformedTicket {
   id: string;
+  eventSlug: string;
   type: string;
   price: number;
   currency: string;
@@ -207,7 +208,7 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
         </div>
         <p className="text-base font-semibold text-gray-900 whitespace-nowrap shrink-0">{formattedPrice}</p>
         <Link
-          to={`/buy/${ticket.id}`}
+          to={`/buy/${ticket.eventSlug}/${ticket.id}`}
           className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
         >
           {t('eventTickets.buyTicket')}
@@ -253,7 +254,7 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
         </div>
 
         <Link
-          to={`/buy/${ticket.id}`}
+          to={`/buy/${ticket.eventSlug}/${ticket.id}`}
           className="block w-full px-4 py-3 bg-blue-600 text-white text-center font-semibold rounded-lg hover:bg-blue-700 transition-colors"
         >
           {t('eventTickets.buyTicketForPrice', { price: formattedPrice })}

@@ -197,14 +197,18 @@ export class TransactionsService {
             ? offer.tickets.seats.length : offer.tickets.count;
       }
     }
-    const amountMajor =
+    const amountMinor =
       quantityForRisk > 0
-        ? (listing.pricePerTicket.amount * quantityForRisk) / 100
+        ? listing.pricePerTicket.amount * quantityForRisk
         : 0;
-    const risk = this.riskEngine.evaluate(
+    const risk = await this.riskEngine.evaluate(
+      ctx,
       {
         quantity: quantityForRisk || 1,
-        amountUsd: amountMajor,
+        amount: {
+          amount: amountMinor,
+          currency: listing.pricePerTicket.currency,
+        },
         eventStartsAt: listing.eventDate,
         paymentMethodType: paymentMethod?.type,
         buyerCreatedAt: buyer.createdAt,

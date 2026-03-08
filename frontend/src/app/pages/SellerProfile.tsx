@@ -1,13 +1,21 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Minus, Calendar, Ticket, MessageSquare } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Minus, Calendar, Ticket, MessageSquare, Shield, TrendingUp } from 'lucide-react';
 import { sellersService } from '../../api/services/sellers.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '../components/ui/card';
+import { Separator } from '../components/ui/separator';
 import type { SellerProfile as SellerProfileData } from '../../api/types';
 import { formatMonthYear } from '@/lib/format-date';
 
@@ -66,22 +74,22 @@ export function SellerProfile() {
   const getReviewIcon = (type: 'positive' | 'neutral' | 'negative') => {
     switch (type) {
       case 'positive':
-        return <ThumbsUp className="w-5 h-5 text-green-600" />;
+        return <ThumbsUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
       case 'neutral':
-        return <Minus className="w-5 h-5 text-gray-500" />;
+        return <Minus className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
       case 'negative':
-        return <ThumbsDown className="w-5 h-5 text-red-500" />;
+        return <ThumbsDown className="w-5 h-5 text-destructive" />;
     }
   };
 
   const getReviewBadgeColor = (type: 'positive' | 'neutral' | 'negative') => {
     switch (type) {
       case 'positive':
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
       case 'neutral':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-muted text-muted-foreground border-border';
       case 'negative':
-        return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
     }
   };
 
@@ -93,98 +101,139 @@ export function SellerProfile() {
     : formatMonthYear(seller.memberSince);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6" />
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 lg:py-16">
+        <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-8" />
 
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-          <div className="flex items-start gap-6">
-            <UserAvatar name={seller.publicName} src={seller.pic?.src} className="h-24 w-24" />
+        {/* Seller identity & trust block */}
+        <Card className="mb-10 overflow-hidden border-border">
+          <div className="p-6 sm:p-8 space-y-8">
+            {/* Identity: compact row on mobile, larger/centered on desktop */}
+            <div className="flex flex-row items-center gap-4 sm:gap-6 sm:items-start">
+              <UserAvatar
+                name={seller.publicName}
+                src={seller.pic?.src}
+                className="h-16 w-16 sm:h-28 sm:w-28 lg:h-32 lg:w-32 rounded-full ring-2 ring-border shrink-0"
+              />
+              <div className="text-left sm:text-left flex-1 min-w-0">
+                <CardHeader className="p-0">
+                  <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight break-words leading-tight">
+                    {seller.publicName}
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-1.5 sm:mt-2 text-sm text-muted-foreground flex-wrap">
+                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span>{t('sellerProfile.memberSince')} {memberSinceLabel}</span>
+                  </CardDescription>
+                </CardHeader>
+              </div>
+            </div>
 
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{seller.publicName}</h1>
-              <p className="text-gray-600 mb-4">{t('sellerProfile.memberSince')} {memberSinceLabel}</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">{t('sellerProfile.totalSales')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{seller.totalSales}</p>
+            {/* Trust signals: full-width grid below identity to avoid overlap */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                  <Shield className="w-5 h-5" />
                 </div>
-
-                <div className="bg-gray-50 rounded-lg p-4 col-span-2">
-                  <p className="text-sm text-gray-600 mb-2">{t('sellerProfile.reviewsTitle')}</p>
-                  <div className="flex items-center gap-4 mb-3">
-                    <p className="text-2xl font-bold text-gray-900">{positivePercentage}%</p>
-                    <span className="text-sm text-gray-600">{t('sellerProfile.positive')}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1 text-green-600">
-                      <ThumbsUp className="w-4 h-4" />
-                      <span className="font-semibold">{seller.reviewStats.positive}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-gray-500">
-                      <Minus className="w-4 h-4" />
-                      <span className="font-semibold">{seller.reviewStats.neutral}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-red-500">
-                      <ThumbsDown className="w-4 h-4" />
-                      <span className="font-semibold">{seller.reviewStats.negative}</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">{t('sellerProfile.totalReviewsLabel', { count: totalReviews })}</p>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {t('sellerProfile.totalSales')}
+                  </p>
+                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">{seller.totalSales}</p>
                 </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {t('sellerProfile.reviewsTitle')}
+                  </p>
+                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">{positivePercentage}%</p>
+                  <p className="text-xs text-muted-foreground">{t('sellerProfile.positive')}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 p-4 rounded-lg bg-muted/50 border border-border sm:col-span-2 lg:col-span-1">
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                  <ThumbsUp className="w-4 h-4" />
+                  <span className="font-semibold tabular-nums">{seller.reviewStats.positive}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <Minus className="w-4 h-4" />
+                  <span className="font-semibold tabular-nums">{seller.reviewStats.neutral}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-destructive">
+                  <ThumbsDown className="w-4 h-4" />
+                  <span className="font-semibold tabular-nums">{seller.reviewStats.negative}</span>
+                </div>
+                <p className="text-xs text-muted-foreground w-full">
+                  {t('sellerProfile.totalReviewsLabel', { count: totalReviews })}
+                </p>
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('sellerProfile.customerReviews')}</h2>
+        {/* Customer reviews */}
+        <Card className="border-border">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-foreground">
+              {t('sellerProfile.customerReviews')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {seller.reviews.length === 0 ? (
+              <EmptyState
+                icon={MessageSquare}
+                title={t('sellerProfile.noReviewsYet')}
+                description={t('sellerProfile.noReviewsDescription')}
+              />
+            ) : (
+              <ul className="space-y-6">
+                {seller.reviews.map((review) => (
+                  <li key={review.id}>
+                    <article
+                      className="rounded-lg border border-border bg-card p-5 sm:p-6 transition-colors hover:bg-muted/30"
+                      aria-label={`${t(`sellerProfile.${review.type}`)} review by ${review.buyerName}`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                        <div>
+                          <p className="font-semibold text-foreground">{review.buyerName}</p>
+                          <p className="text-sm text-muted-foreground mt-0.5">{review.reviewDate}</p>
+                        </div>
+                        <div
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm font-medium w-fit shrink-0 ${getReviewBadgeColor(review.type)}`}
+                        >
+                          {getReviewIcon(review.type)}
+                          <span>{t(`sellerProfile.${review.type}`)}</span>
+                        </div>
+                      </div>
 
-          {seller.reviews.length === 0 ? (
-            <EmptyState
-              icon={MessageSquare}
-              title={t('sellerProfile.noReviewsYet')}
-              description={t('sellerProfile.noReviewsDescription')}
-            />
-          ) : (
-            <div className="space-y-6">
-              {seller.reviews.map((review) => (
-                <div 
-                  key={review.id}
-                  className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="font-semibold text-gray-900">{review.buyerName}</p>
-                      <p className="text-sm text-gray-500">{review.reviewDate}</p>
-                    </div>
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border-2 ${getReviewBadgeColor(review.type)}`}>
-                      {getReviewIcon(review.type)}
-                      <span className="text-sm font-semibold">{t(`sellerProfile.${review.type}`)}</span>
-                    </div>
-                  </div>
+                      <p className="text-foreground text-[15px] leading-relaxed mb-4">{review.comment}</p>
 
-                  <p className="text-gray-700 mb-3">{review.comment}</p>
+                      <Separator className="my-4 bg-border" />
 
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Ticket className="w-4 h-4" />
-                      <span>{review.eventName}</span>
-                    </div>
-                    <div className="text-gray-600">
-                      <span className="font-medium">{t('sellerProfile.ticket')}:</span> {review.ticketType}
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-4 h-4" />
-                      <span>{review.eventDate}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-2">
+                          <Ticket className="w-4 h-4 shrink-0" />
+                          {review.eventName}
+                        </span>
+                        <span>
+                          <span className="font-medium text-foreground">{t('sellerProfile.ticket')}:</span>{' '}
+                          {review.ticketType}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 shrink-0" />
+                          {review.eventDate}
+                        </span>
+                      </div>
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

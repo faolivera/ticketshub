@@ -57,10 +57,10 @@ export const ticketsService = {
   },
 
   /**
-   * Get event page data: event + enriched listings (single BFF call)
+   * Get event page data by slug: event + enriched listings (single BFF call)
    */
-  async getEventPage(eventId: string): Promise<GetEventPageResponse> {
-    const response = await apiClient.get<GetEventPageResponse>(`/event-page/${eventId}`);
+  async getEventPage(eventSlug: string): Promise<GetEventPageResponse> {
+    const response = await apiClient.get<GetEventPageResponse>(`/event-page/${eventSlug}`);
     return response.data;
   },
 
@@ -73,10 +73,11 @@ export const ticketsService = {
   },
 
   /**
-   * Get buy page data: listing, seller info, and payment methods (BFF endpoint)
+   * Get buy page data: listing, seller info, and payment methods (BFF endpoint).
+   * API uses listingId; URL is /buy/:eventSlug/:listingId for SEO.
    */
-  async getBuyPage(ticketId: string): Promise<GetBuyPageResponse> {
-    const response = await apiClient.get<GetBuyPageResponse>(`/buy/${ticketId}`);
+  async getBuyPage(listingId: string): Promise<GetBuyPageResponse> {
+    const response = await apiClient.get<GetBuyPageResponse>(`/buy/${listingId}`);
     return response.data;
   },
 };

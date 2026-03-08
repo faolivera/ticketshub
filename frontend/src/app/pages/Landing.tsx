@@ -47,6 +47,7 @@ function transformEventForCard(event: EventWithDates) {
 
   return {
     id: event.id,
+    slug: event.slug,
     name: event.name,
     artist: event.name, // Use event name as artist since backend doesn't have artist field
     location: locationStr,

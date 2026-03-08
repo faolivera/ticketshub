@@ -4,17 +4,31 @@ import type {
   SupportTicket,
   SupportTicketWithMessages,
   DisputeResolution,
+  SupportTicketSource,
 } from './support.domain';
 
 /**
- * Request to create a support ticket
+ * Request to create a support ticket (authenticated)
  */
 export interface CreateSupportTicketRequest {
   transactionId?: string;
   category: SupportCategory;
   disputeReason?: DisputeReason;
+  /** Origin hint for contact flows; ignored when category is TicketDispute */
+  source?: SupportTicketSource;
   subject: string;
   description: string;
+}
+
+/**
+ * Request for public (anonymous) contact form - no auth
+ */
+export interface PublicContactRequest {
+  name: string;
+  email: string;
+  subject: string;
+  description: string;
+  transactionId?: string;
 }
 
 /**

@@ -81,7 +81,16 @@ export class PlatformConfigService {
       riskEngine: body.riskEngine
         ? {
             buyer: body.riskEngine.buyer
-              ? { ...current.riskEngine.buyer, ...body.riskEngine.buyer }
+              ? {
+                  ...current.riskEngine.buyer,
+                  ...body.riskEngine.buyer,
+                  phoneRequiredAmount:
+                    body.riskEngine.buyer.phoneRequiredAmount ??
+                    current.riskEngine.buyer.phoneRequiredAmount,
+                  dniRequiredAmount:
+                    body.riskEngine.buyer.dniRequiredAmount ??
+                    current.riskEngine.buyer.dniRequiredAmount,
+                }
               : current.riskEngine.buyer,
             seller: body.riskEngine.seller
               ? {
@@ -119,14 +128,16 @@ export class PlatformConfigService {
   private getDefaultsFromHocon(): PlatformConfig {
     const get = (path: string) => this.nestConfigService.get<number>(path)!;
     const amountUsd = get('platform.riskEngine.seller.unverifiedSellerMaxAmountUsd');
+    const phoneUsd = get('platform.riskEngine.buyer.phoneRequiredAmountUsd');
+    const dniUsd = get('platform.riskEngine.buyer.dniRequiredAmountUsd');
     const riskEngine = {
       buyer: {
         phoneRequiredEventHours: get('platform.riskEngine.buyer.phoneRequiredEventHours'),
-        phoneRequiredAmountUsd: get('platform.riskEngine.buyer.phoneRequiredAmountUsd'),
+        phoneRequiredAmount: { amount: Math.round(phoneUsd * 100), currency: 'USD' as const },
         phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
         newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
         dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
-        dniRequiredAmountUsd: get('platform.riskEngine.buyer.dniRequiredAmountUsd'),
+        dniRequiredAmount: { amount: Math.round(dniUsd * 100), currency: 'USD' as const },
         dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
         dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
       },
@@ -233,8 +244,14 @@ export class PlatformConfigService {
     if (b.phoneRequiredEventHours < 1 || b.phoneRequiredEventHours > 720) {
       throw new BadRequestException('riskEngine.buyer.phoneRequiredEventHours must be between 1 and 720');
     }
-    if (b.phoneRequiredAmountUsd < 0 || b.phoneRequiredAmountUsd > 10000) {
-      throw new BadRequestException('riskEngine.buyer.phoneRequiredAmountUsd must be between 0 and 10000');
+    if (b.phoneRequiredAmount.currency !== 'USD' && b.phoneRequiredAmount.currency !== 'ARS') {
+      throw new BadRequestException('riskEngine.buyer.phoneRequiredAmount.currency must be USD or ARS');
+    }
+    const phoneAmountMajor = b.phoneRequiredAmount.amount / 100;
+    if (phoneAmountMajor < 0 || phoneAmountMajor > 100000) {
+      throw new BadRequestException(
+        'riskEngine.buyer.phoneRequiredAmount must be between 0 and 100000 (in major units)',
+      );
     }
     if (b.phoneRequiredQtyTickets < 1 || b.phoneRequiredQtyTickets > 50) {
       throw new BadRequestException('riskEngine.buyer.phoneRequiredQtyTickets must be between 1 and 50');
@@ -245,11 +262,14 @@ export class PlatformConfigService {
     if (b.dniRequiredEventHours < 1 || b.dniRequiredEventHours > 720) {
       throw new BadRequestException('riskEngine.buyer.dniRequiredEventHours must be between 1 and 720');
     }
-    if (b.dniRequiredAmountUsd < 0 || b.dniRequiredAmountUsd > 10000) {
-      throw new BadRequestException('riskEngine.buyer.dniRequiredAmountUsd must be between 0 and 10000');
+    if (b.dniRequiredAmount.currency !== 'USD' && b.dniRequiredAmount.currency !== 'ARS') {
+      throw new BadRequestException('riskEngine.buyer.dniRequiredAmount.currency must be USD or ARS');
     }
-    if (b.dniRequiredQtyTickets < 1 || b.dniRequiredQtyTickets > 50) {
-      throw new BadRequestException('riskEngine.buyer.dniRequiredQtyTickets must be between 1 and 50');
+    const dniAmountMajor = b.dniRequiredAmount.amount / 100;
+    if (dniAmountMajor < 0 || dniAmountMajor > 100000) {
+      throw new BadRequestException(
+        'riskEngine.buyer.dniRequiredAmount must be between 0 and 100000 (in major units)',
+      );
     }
     if (b.dniNewAccountDays < 0 || b.dniNewAccountDays > 365) {
       throw new BadRequestException('riskEngine.buyer.dniNewAccountDays must be between 0 and 365');

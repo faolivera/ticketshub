@@ -43,6 +43,7 @@ describe('ReviewsRepository (Integration)', () => {
     sellerId = sId;
     const event = await prisma.event.create({
       data: {
+        slug: `test-event-${randomUUID().slice(0, 8)}`,
         name: 'E',
         category: 'Concert',
         venue: 'V',

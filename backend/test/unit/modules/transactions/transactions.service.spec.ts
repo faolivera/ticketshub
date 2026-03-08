@@ -153,7 +153,7 @@ describe('TransactionsService', () => {
         requireV2: false,
         requireV3: false,
       }),
-      evaluate: jest.fn().mockReturnValue({
+      evaluate: jest.fn().mockResolvedValue({
         riskLevel: 'LOW',
         requireV1: true,
         requireV2: false,

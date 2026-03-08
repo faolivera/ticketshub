@@ -25,6 +25,7 @@ export class EventApprovedProcessor
   ): Record<string, string> {
     return {
       eventName: context.eventName,
+      eventSlug: context.eventSlug,
     };
   }
 }

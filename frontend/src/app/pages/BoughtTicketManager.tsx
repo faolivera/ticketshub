@@ -352,7 +352,7 @@ function OfferCard({ offer, t }: OfferCardProps) {
         </div>
         {offer.status === 'accepted' && (
           <Link
-            to={`/buy/${offer.listingId}?offerId=${offer.id}`}
+            to={`/buy/${offer.listingSummary.eventSlug}/${offer.listingId}?offerId=${offer.id}`}
             className="mt-4 block w-full py-2.5 text-center bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
@@ -363,7 +363,7 @@ function OfferCard({ offer, t }: OfferCardProps) {
     </>
   );
 
-  const to = offer.status === 'accepted' ? `/buy/${offer.listingId}?offerId=${offer.id}` : `/buy/${offer.listingId}`;
+  const to = offer.status === 'accepted' ? `/buy/${offer.listingSummary.eventSlug}/${offer.listingId}?offerId=${offer.id}` : `/buy/${offer.listingSummary.eventSlug}/${offer.listingId}`;
   return (
     <Link
       to={to}
@@ -712,7 +712,7 @@ interface ListedTicketsGridProps {
   listed: TicketListingWithEvent[];
   isPast?: boolean;
   t: (key: string, options?: Record<string, string>) => string;
-  onCopyLink: (listingId: string) => void;
+  onCopyLink: (listing: TicketListingWithEvent) => void;
   copiedListingId: string | null;
 }
 
@@ -810,14 +810,14 @@ function ListedTicketsGrid({
                     {t('boughtTickets.editListing')}
                   </Link>
                   <Link
-                    to={`/buy/${listing.id}`}
+                    to={`/buy/${listing.eventSlug}/${listing.id}`}
                     className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   >
                     <Eye className="w-4 h-4" />
                     {t('boughtTickets.viewListing')}
                   </Link>
                   <button
-                    onClick={() => onCopyLink(listing.id)}
+                    onClick={() => onCopyLink(listing)}
                     className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   >
                     <LinkIcon className="w-4 h-4" />
@@ -1093,10 +1093,10 @@ export function SellerDashboardPage() {
     return receivedOffers.filter((o) => o.id === offerIdFromUrl);
   }, [receivedOffers, offerIdFromUrl]);
 
-  const handleCopyLink = async (listingId: string) => {
+  const handleCopyLink = async (listing: TicketListingWithEvent) => {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/buy/${listingId}`);
-      setCopiedListingId(listingId);
+      await navigator.clipboard.writeText(`${window.location.origin}/buy/${listing.eventSlug}/${listing.id}`);
+      setCopiedListingId(listing.id);
       setTimeout(() => setCopiedListingId(null), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);

@@ -38,18 +38,35 @@ export enum DisputeResolution {
 }
 
 /**
+ * Origin of the support ticket (for prioritization and filtering)
+ */
+export enum SupportTicketSource {
+  Dispute = 'Dispute',
+  ContactFromTransaction = 'ContactFromTransaction',
+  ContactForm = 'ContactForm',
+}
+
+/**
  * Support ticket entity
  */
 export interface SupportTicket {
   id: string;
-  userId: string;
+  userId?: string; // Optional for anonymous (guest) tickets
   transactionId?: string; // If related to a transaction
 
   category: SupportCategory;
   disputeReason?: DisputeReason; // If category is TicketDispute
+  /** Origin of the ticket: dispute, contact from /transaction, or contact form */
+  source?: SupportTicketSource;
 
   subject: string;
   description: string;
+
+  /** Guest contact info when userId is not set (anonymous contact) */
+  guestName?: string;
+  guestEmail?: string;
+  /** Guest identifier for anonymous tickets: "guest:{client_ip}" */
+  guestId?: string;
 
   status: SupportTicketStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';

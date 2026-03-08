@@ -47,6 +47,7 @@ describe('EventsService', () => {
 
   const mockPendingEvent: Event = {
     id: 'evt_123',
+    slug: 'test-event-evt_123',
     name: 'Test Event',
     category: 'Concert' as any,
     venue: 'Test Venue',
@@ -145,6 +146,7 @@ describe('EventsService', () => {
   describe('listEvents', () => {
     const mockApprovedEvent: Event = {
       id: 'evt_123',
+      slug: 'test-event-evt_123',
       name: 'Test Event',
       category: EventCategory.Concert,
       venue: 'Test Venue',
@@ -442,6 +444,7 @@ describe('EventsService', () => {
   describe('adminUpdateEventWithDates', () => {
     const mockApprovedEvent: Event = {
       id: 'evt_123',
+      slug: 'test-event-evt_123',
       name: 'Test Event',
       category: EventCategory.Concert,
       venue: 'Test Venue',
@@ -863,6 +866,7 @@ describe('EventsService', () => {
   describe('uploadBanner', () => {
     const mockEventWithoutBanners: Event = {
       id: 'evt_123',
+      slug: 'test-event-evt_123',
       name: 'Test Event',
       category: EventCategory.Concert,
       venue: 'Test Venue',
@@ -957,6 +961,7 @@ describe('EventsService', () => {
   describe('deleteBanner', () => {
     const mockEventWithBanner: Event = {
       id: 'evt_123',
+      slug: 'test-event-evt_123',
       name: 'Test Event',
       category: EventCategory.Concert,
       venue: 'Test Venue',
@@ -1064,6 +1069,7 @@ describe('EventsService', () => {
     it('should return empty response when event has no banners', async () => {
       const eventWithoutBanners: Event = {
         id: 'evt_123',
+        slug: 'test-event-evt_123',
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
@@ -1097,6 +1103,7 @@ describe('EventsService', () => {
       };
       const eventWithBanner: Event = {
         id: 'evt_123',
+        slug: 'test-event-evt_123',
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
@@ -1125,6 +1132,7 @@ describe('EventsService', () => {
     it('should throw BadRequestException when approving event without square banner', async () => {
       const eventWithoutBanner: Event = {
         id: 'evt_123',
+        slug: 'test-event-evt_123',
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
@@ -1145,6 +1153,7 @@ describe('EventsService', () => {
     it('should approve event successfully when square banner exists', async () => {
       const eventWithBanner: Event = {
         id: 'evt_123',
+        slug: 'test-event-evt_123',
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
@@ -1187,6 +1196,7 @@ describe('EventsService', () => {
     it('should allow rejecting event without square banner', async () => {
       const eventWithoutBanner: Event = {
         id: 'evt_123',
+        slug: 'test-event-evt_123',
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',

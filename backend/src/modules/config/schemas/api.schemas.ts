@@ -10,13 +10,20 @@ const MoneySchema = z.object({
   currency: CurrencyCodeSchema,
 });
 
+/** Only USD and ARS allowed for buyer amount thresholds (conversion uses configured rate). */
+const BuyerAmountCurrencySchema = z.enum(['USD', 'ARS']);
+const BuyerAmountMoneySchema = z.object({
+  amount: z.number().int(),
+  currency: BuyerAmountCurrencySchema,
+});
+
 const RiskEngineBuyerConfigSchema = z.object({
   phoneRequiredEventHours: z.number(),
-  phoneRequiredAmountUsd: z.number(),
+  phoneRequiredAmount: BuyerAmountMoneySchema,
   phoneRequiredQtyTickets: z.number(),
   newAccountDays: z.number(),
   dniRequiredEventHours: z.number(),
-  dniRequiredAmountUsd: z.number(),
+  dniRequiredAmount: BuyerAmountMoneySchema,
   dniRequiredQtyTickets: z.number(),
   dniNewAccountDays: z.number(),
 });
@@ -78,11 +85,11 @@ export const UpdatePlatformConfigRequestSchema = z.object({
       buyer: z
         .object({
           phoneRequiredEventHours: z.number().min(1).max(720).optional(),
-          phoneRequiredAmountUsd: z.number().min(0).max(10000).optional(),
+          phoneRequiredAmount: BuyerAmountMoneySchema.optional(),
           phoneRequiredQtyTickets: z.number().min(1).max(50).optional(),
           newAccountDays: z.number().min(0).max(365).optional(),
           dniRequiredEventHours: z.number().min(1).max(720).optional(),
-          dniRequiredAmountUsd: z.number().min(0).max(10000).optional(),
+          dniRequiredAmount: BuyerAmountMoneySchema.optional(),
           dniRequiredQtyTickets: z.number().min(1).max(50).optional(),
           dniNewAccountDays: z.number().min(0).max(365).optional(),
         })

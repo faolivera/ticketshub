@@ -2,6 +2,7 @@ import apiClient from '../client';
 import type {
   CreateSupportTicketRequest,
   CreateSupportTicketResponse,
+  PublicContactRequest,
   GetSupportTicketResponse,
   ListSupportTicketsResponse,
   ListSupportTicketsQuery,
@@ -14,10 +15,18 @@ import type {
  */
 export const supportService = {
   /**
-   * Create a support ticket
+   * Create a support ticket (authenticated)
    */
   async createTicket(data: CreateSupportTicketRequest): Promise<CreateSupportTicketResponse> {
     const response = await apiClient.post<CreateSupportTicketResponse>('/support', data);
+    return response.data;
+  },
+
+  /**
+   * Submit contact form (no auth). Creates a ticket with guest name/email.
+   */
+  async createContactTicket(data: PublicContactRequest): Promise<CreateSupportTicketResponse> {
+    const response = await apiClient.post<CreateSupportTicketResponse>('/support/contact', data);
     return response.data;
   },
 

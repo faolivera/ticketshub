@@ -47,6 +47,7 @@ export enum EventCategory {
  */
 export interface Event {
   id: string;
+  slug: string;
   name: string;
   category: EventCategory;
   venue: string;
@@ -62,6 +63,23 @@ export interface Event {
 
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Generate a URL-safe slug from event name, venue, and a unique suffix.
+ * Used for default slug on event creation; admin can change it on approval.
+ */
+export function generateEventSlug(name: string, venue: string, id: string): string {
+  const base = [name, venue].filter(Boolean).join(' ');
+  const slugified = base
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  const suffix = id.length >= 8 ? id.slice(0, 8) : id;
+  return (slugified || 'event') + '-' + suffix;
 }
 
 /**

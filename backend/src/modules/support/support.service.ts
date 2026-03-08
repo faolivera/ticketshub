@@ -24,6 +24,7 @@ import {
   DisputeReason,
   SupportTicketStatus,
   DisputeResolution,
+  SupportTicketSource,
 } from './support.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import type { ListSupportTicketsQuery } from './support.api';
@@ -50,11 +51,29 @@ export class SupportService {
     private readonly ticketsService: TicketsService,
   ) {}
 
+  /** Sentinel senderId for guest (anonymous) ticket messages */
+  private static readonly GUEST_SENDER_ID = '__guest__';
+
   /**
    * Generate a unique ID
    */
   private generateId(prefix: string): string {
     return `${prefix}_${Date.now()}_${randomBytes(4).toString('hex')}`;
+  }
+
+  private priorityFromSource(
+    source: SupportTicketSource,
+  ): 'low' | 'medium' | 'high' | 'urgent' {
+    switch (source) {
+      case SupportTicketSource.Dispute:
+        return 'high';
+      case SupportTicketSource.ContactFromTransaction:
+        return 'medium';
+      case SupportTicketSource.ContactForm:
+        return 'low';
+      default:
+        return 'medium';
+    }
   }
 
   /**
@@ -67,6 +86,7 @@ export class SupportService {
       transactionId?: string;
       category: SupportCategory;
       disputeReason?: DisputeReason;
+      source?: SupportTicketSource;
       subject: string;
       description: string;
     },
@@ -182,11 +202,15 @@ export class SupportService {
       }
     }
 
-    // Determine priority based on category
-    let priority: 'low' | 'medium' | 'high' | 'urgent' = 'medium';
-    if (data.category === SupportCategory.TicketDispute) {
-      priority = 'high';
-    }
+    // Source and priority: dispute is always high; contact flows use request or inferred source
+    const source: SupportTicketSource =
+      data.category === SupportCategory.TicketDispute
+        ? SupportTicketSource.Dispute
+        : data.source ??
+          (data.transactionId
+            ? SupportTicketSource.ContactFromTransaction
+            : SupportTicketSource.ContactForm);
+    const priority = this.priorityFromSource(source);
 
     const ticket: SupportTicket = {
       id: this.generateId('spt'),
@@ -194,6 +218,7 @@ export class SupportService {
       transactionId: data.transactionId,
       category: data.category,
       disputeReason: data.disputeReason,
+      source,
       subject: data.subject,
       description: data.description,
       status: SupportTicketStatus.Open,
@@ -241,6 +266,80 @@ export class SupportService {
   }
 
   /**
+   * Create a support ticket from the public contact form (anonymous or unauthenticated).
+   * Does not require auth; stores guest name, email, and guestId (guest:{clientIp}) on the ticket.
+   */
+  async createContactTicket(
+    ctx: Ctx,
+    data: {
+      name: string;
+      email: string;
+      subject: string;
+      description: string;
+      transactionId?: string;
+    },
+    clientIp: string,
+  ): Promise<SupportTicket> {
+    this.logger.log(ctx, 'Creating contact ticket (anonymous)');
+
+    const name = data.name?.trim();
+    const email = data.email?.trim();
+    const subject = data.subject?.trim();
+    const description = data.description?.trim();
+    if (!name) {
+      throw new BadRequestException('Name is required');
+    }
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    if (!subject) {
+      throw new BadRequestException('Subject is required');
+    }
+    if (!description) {
+      throw new BadRequestException('Description is required');
+    }
+
+    const source: SupportTicketSource = data.transactionId
+      ? SupportTicketSource.ContactFromTransaction
+      : SupportTicketSource.ContactForm;
+    const priority = this.priorityFromSource(source);
+
+    const guestId = `guest:${clientIp}`;
+
+    const ticket: SupportTicket = {
+      id: this.generateId('spt'),
+      userId: undefined,
+      guestId,
+      guestName: name,
+      guestEmail: email,
+      transactionId: data.transactionId,
+      category: SupportCategory.Other,
+      source,
+      subject,
+      description,
+      status: SupportTicketStatus.Open,
+      priority,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await this.supportRepository.createTicket(ctx, ticket);
+
+    // Create initial message with guest sentinel as sender
+    await this.supportRepository.createMessage(ctx, {
+      id: this.generateId('msg'),
+      ticketId: ticket.id,
+      userId: SupportService.GUEST_SENDER_ID,
+      isAdmin: false,
+      message: description,
+      createdAt: new Date(),
+    });
+
+    this.logger.log(ctx, `Contact ticket ${ticket.id} created`);
+    return ticket;
+  }
+
+  /**
    * Get ticket by ID with messages
    */
   async getTicketById(
@@ -254,8 +353,12 @@ export class SupportService {
       throw new NotFoundException('Support ticket not found');
     }
 
-    // Only owner or admin can view
-    if (ticket.userId !== userId && userRole !== Role.Admin) {
+    // Guest tickets: only admin can view. Owned tickets: owner or admin.
+    if (!ticket.userId) {
+      if (userRole !== Role.Admin) {
+        throw new ForbiddenException('Access denied');
+      }
+    } else if (ticket.userId !== userId && userRole !== Role.Admin) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -438,6 +541,30 @@ export class SupportService {
    */
   async listActiveTickets(ctx: Ctx): Promise<SupportTicket[]> {
     return await this.supportRepository.getActiveTickets(ctx);
+  }
+
+  /**
+   * List tickets for admin with pagination and filters
+   */
+  async listTicketsAdmin(
+    ctx: Ctx,
+    params: {
+      page: number;
+      limit: number;
+      status?: string;
+      category?: string;
+      source?: string;
+    },
+  ): Promise<{ tickets: SupportTicket[]; total: number }> {
+    const page = Math.max(1, params.page);
+    const limit = Math.min(100, Math.max(1, params.limit));
+    return this.supportRepository.getTicketsAdmin(ctx, {
+      page,
+      limit,
+      status: params.status,
+      category: params.category,
+      source: params.source,
+    });
   }
 
   /**

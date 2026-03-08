@@ -285,6 +285,7 @@ export interface AdminEventListingItem {
   eventSection: AdminListingEventSection;
   totalTickets: number;
   ticketsByStatus: AdminTicketStatusCounts;
+  eventSlug: string;
   status: string;
   pricePerTicket: {
     amount: number;
@@ -330,6 +331,7 @@ export interface AdminTransactionListItem {
   status: string;
   listing: {
     id: string;
+    eventSlug: string;
     eventName: string;
     eventDate: string;
     sectionName: string;
@@ -404,6 +406,7 @@ export interface AdminTransactionDetail {
   status: string;
   listing: {
     id: string;
+    eventSlug: string;
     eventName: string;
     eventDate: string;
     sectionName: string;
@@ -560,11 +563,13 @@ export interface Money {
  */
 export interface RiskEngineBuyerConfig {
   phoneRequiredEventHours: number;
-  phoneRequiredAmountUsd: number;
+  /** Require phone when order total >= this amount (USD or ARS only). */
+  phoneRequiredAmount: Money;
   phoneRequiredQtyTickets: number;
   newAccountDays: number;
   dniRequiredEventHours: number;
-  dniRequiredAmountUsd: number;
+  /** Require DNI when order total >= this amount (USD or ARS only). */
+  dniRequiredAmount: Money;
   dniRequiredQtyTickets: number;
   dniNewAccountDays: number;
 }
@@ -720,4 +725,77 @@ export interface AdminSellerPayoutsResponse {
 export interface AdminCompletePayoutResponse {
   id: string;
   status: string;
+}
+
+// === Admin Support Tickets ===
+
+export interface AdminSupportTicketsQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+  category?: string;
+  source?: string;
+}
+
+export interface AdminSupportTicketItem {
+  id: string;
+  userId?: string;
+  transactionId?: string;
+  category: string;
+  disputeReason?: string;
+  source?: string;
+  subject: string;
+  description: string;
+  guestName?: string;
+  guestEmail?: string;
+  guestId?: string;
+  status: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  resolution?: string;
+  resolutionNotes?: string;
+  resolvedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+export interface AdminSupportTicketsResponse {
+  tickets: AdminSupportTicketItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminSupportMessageItem {
+  id: string;
+  ticketId: string;
+  userId: string;
+  isAdmin: boolean;
+  message: string;
+  attachmentUrls?: string[];
+  createdAt: string;
+}
+
+export interface AdminSupportTicketDetailResponse extends AdminSupportTicketItem {
+  messages: AdminSupportMessageItem[];
+}
+
+export interface AdminUpdateSupportTicketStatusRequest {
+  status: string;
+}
+
+export interface AdminResolveSupportDisputeRequest {
+  resolution: string;
+  resolutionNotes: string;
+}
+
+export interface AdminAddSupportTicketMessageRequest {
+  message: string;
+  attachmentUrls?: string[];
+}
+
+export interface AdminAddSupportTicketMessageResponse {
+  success: boolean;
+  messageId: string;
 }

@@ -135,6 +135,7 @@ export interface BannerUrls {
 export interface TicketListingWithEvent extends TicketListing {
   seatingType: SeatingType;
   eventName: string;
+  eventSlug: string;
   eventDate: Date;
   venue: string;
   sectionName: string;

@@ -27,6 +27,7 @@ export class EventsRepository implements IEventsRepository {
     const created = await this.prisma.event.create({
       data: {
         id: event.id,
+        slug: event.slug,
         name: event.name,
         category: this.mapEventCategoryToDb(event.category),
         venue: event.venue,
@@ -47,6 +48,13 @@ export class EventsRepository implements IEventsRepository {
   async findEventById(_ctx: Ctx, id: string): Promise<Event | undefined> {
     const event = await this.prisma.event.findUnique({
       where: { id },
+    });
+    return event ? this.mapToEvent(event) : undefined;
+  }
+
+  async findEventBySlug(_ctx: Ctx, slug: string): Promise<Event | undefined> {
+    const event = await this.prisma.event.findUnique({
+      where: { slug },
     });
     return event ? this.mapToEvent(event) : undefined;
   }
@@ -192,6 +200,7 @@ export class EventsRepository implements IEventsRepository {
       const data: Record<string, unknown> = {};
 
       if (updates.name !== undefined) data.name = updates.name;
+      if (updates.slug !== undefined) data.slug = updates.slug;
       if (updates.category !== undefined) {
         data.category = this.mapEventCategoryToDb(updates.category);
       }
@@ -555,6 +564,7 @@ export class EventsRepository implements IEventsRepository {
   private mapToEvent(prismaEvent: PrismaEvent): Event {
     return {
       id: prismaEvent.id,
+      slug: prismaEvent.slug,
       name: prismaEvent.name,
       category: this.mapEventCategoryFromDb(prismaEvent.category),
       venue: prismaEvent.venue,

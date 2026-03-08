@@ -8,6 +8,7 @@ import { ImagesModule } from '../images/images.module';
 import { UsersModule } from '../users/users.module';
 import { TicketsModule } from '../tickets/tickets.module';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     UsersModule,
     forwardRef(() => TicketsModule),
     forwardRef(() => TransactionsModule),
+    NotificationsModule,
   ],
   controllers: [EventsController],
   providers: [

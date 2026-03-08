@@ -135,6 +135,7 @@ export const ListingWithSellerSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   eventName: z.string(),
+  eventSlug: z.string(),
   eventDate: z.coerce.date(),
   venue: z.string(),
   sectionName: z.string(),
@@ -236,6 +237,10 @@ const BuyPageSellerInfoSchema = z.object({
 const CheckoutRiskSchema = z.object({
   requireV1: z.boolean(),
   requireV2: z.boolean(),
+  requireV3: z.boolean(),
+  missingV1: z.boolean(),
+  missingV2: z.boolean(),
+  missingV3: z.boolean(),
 });
 
 export const GetBuyPageResponseSchema = z.object({

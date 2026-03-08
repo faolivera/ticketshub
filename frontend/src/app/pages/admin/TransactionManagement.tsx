@@ -454,7 +454,7 @@ export default function TransactionManagement() {
             <span className="text-muted-foreground">{t('admin.transactions.listingId')}:</span>
             <p className="font-medium">
               <Link
-                to={`/buy/${detail.listing.id}`}
+                to={`/buy/${detail.listing.eventSlug}/${detail.listing.id}`}
                 className="text-primary hover:underline font-mono"
               >
                 {detail.listing.id}

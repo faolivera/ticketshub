@@ -111,6 +111,12 @@ const AdminEventDateUpdateSchema = z.object({
 
 export const AdminUpdateEventRequestSchema = z.object({
   name: z.string().min(3).max(200).optional(),
+  slug: z
+    .string()
+    .min(2)
+    .max(120)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase letters, numbers, and hyphens only')
+    .optional(),
   description: z.string().min(10).max(5000).optional(),
   category: z
     .enum([
@@ -132,8 +138,9 @@ export const AdminUpdateEventRequestSchema = z.object({
 
 const AdminEventResponseSchema = z.object({
   id: z.string(),
+  slug: z.string(),
   name: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   category: z.string(),
   venue: z.string(),
   location: AdminEventAddressSchema,
@@ -261,6 +268,7 @@ export const AdminListingCreatorInfoSchema = z.object({
 
 export const AdminEventListingItemSchema = z.object({
   id: z.string(),
+  eventSlug: z.string(),
   createdBy: AdminListingCreatorInfoSchema,
   eventDate: AdminListingEventDateSchema,
   eventSection: AdminListingEventSectionSchema,
@@ -292,6 +300,7 @@ const AdminTransactionUserRefSchema = z.object({
 
 const AdminTransactionListingRefSchema = z.object({
   id: z.string(),
+  eventSlug: z.string(),
   eventName: z.string(),
   eventDate: z.coerce.date(),
   sectionName: z.string(),
@@ -446,3 +455,61 @@ export const AdminUserSearchItemSchema = z.object({
 });
 
 export const AdminUserSearchResponseSchema = z.array(AdminUserSearchItemSchema);
+
+// ==================== Admin Support Tickets ====================
+
+const AdminSupportTicketItemSchema = z.object({
+  id: z.string(),
+  userId: z.string().optional(),
+  transactionId: z.string().optional(),
+  category: z.string(),
+  disputeReason: z.string().optional(),
+  source: z.string().optional(),
+  subject: z.string(),
+  description: z.string(),
+  guestName: z.string().optional(),
+  guestEmail: z.string().optional(),
+  guestId: z.string().optional(),
+  status: z.string(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']),
+  resolution: z.string().optional(),
+  resolutionNotes: z.string().optional(),
+  resolvedBy: z.string().optional(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  resolvedAt: z.coerce.date().optional(),
+});
+
+export const AdminSupportTicketsResponseSchema = z.object({
+  tickets: z.array(AdminSupportTicketItemSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
+const AdminSupportMessageItemSchema = z.object({
+  id: z.string(),
+  ticketId: z.string(),
+  userId: z.string(),
+  isAdmin: z.boolean(),
+  message: z.string(),
+  attachmentUrls: z.array(z.string()).optional(),
+  createdAt: z.coerce.date(),
+});
+
+export const AdminSupportTicketDetailResponseSchema =
+  AdminSupportTicketItemSchema.merge(
+    z.object({ messages: z.array(AdminSupportMessageItemSchema) }),
+  );
+
+export const AdminUpdateSupportTicketStatusResponseSchema =
+  AdminSupportTicketItemSchema;
+
+export const AdminResolveSupportDisputeResponseSchema =
+  AdminSupportTicketItemSchema;
+
+export const AdminAddSupportTicketMessageResponseSchema = z.object({
+  success: z.boolean(),
+  messageId: z.string(),
+});

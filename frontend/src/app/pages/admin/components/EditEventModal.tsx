@@ -99,6 +99,7 @@ export function EditEventModal({
   const { t } = useTranslation();
 
   const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<EventCategory>(EventCategory.Other);
   const [venue, setVenue] = useState('');
@@ -133,6 +134,7 @@ export function EditEventModal({
   useEffect(() => {
     if (event && open) {
       setName(event.name);
+      setSlug(event.slug ?? '');
       setDescription(event.description);
       setCategory(event.category);
       setVenue(event.venue);
@@ -375,6 +377,7 @@ export function EditEventModal({
 
       const request: AdminUpdateEventRequest = {
         name,
+        ...(slug.trim() && { slug: slug.trim() }),
         description,
         category,
         venue,
@@ -467,6 +470,21 @@ export function EditEventModal({
                       onChange={(e) => setName(e.target.value)}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="slug">{t('admin.events.edit.slug')}</Label>
+                    <Input
+                      id="slug"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      placeholder="event-name-venue-id"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('admin.events.edit.slugHint')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="category">{t('admin.events.edit.category')}</Label>
                     <Select

@@ -15,6 +15,7 @@ import { SellerProfile } from '@/app/pages/SellerProfile';
 import { BuyTicketPage } from '@/app/pages/BuyTicketPage';
 import { MyTicketsPage, SellerDashboardPage } from '@/app/pages/BoughtTicketManager';
 import { HowItWorks } from '@/app/pages/HowItWorks';
+import { Contact } from '@/app/pages/Contact';
 import { SellTicket } from '@/app/pages/SellTicket';
 import { CreateEvent } from '@/app/pages/CreateEvent';
 import { Login } from '@/app/pages/Login';
@@ -35,6 +36,8 @@ import { NotificationManagement } from '@/app/pages/admin/NotificationManagement
 import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
 import { PromotionsManagement } from '@/app/pages/admin/PromotionsManagement';
 import { SellerPayouts } from '@/app/pages/admin/SellerPayouts';
+import SupportTicketsManagement from '@/app/pages/admin/SupportTicketsManagement';
+import SupportTicketDetail from '@/app/pages/admin/SupportTicketDetail';
 import { NotFound } from '@/app/pages/NotFound';
 export default function App() {
   return (
@@ -49,9 +52,10 @@ export default function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/event/:eventId" element={<EventTickets />} />
+              <Route path="/event/:eventSlug" element={<EventTickets />} />
               <Route path="/seller/:sellerId" element={<SellerProfile />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/contact" element={<Contact />} />
 
               {/* Protected routes — require authentication */}
               <Route path="/my-tickets" element={<ProtectedRoute><MyTicketsPage /></ProtectedRoute>} />
@@ -69,7 +73,7 @@ export default function App() {
               <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
               <Route path="/bank-account" element={<ProtectedRoute><BankAccountPage /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
-              <Route path="/buy/:ticketId" element={<BuyTicketPage />} />
+              <Route path="/buy/:eventSlug/:listingId" element={<BuyTicketPage />} />
 
               {/* Admin routes — require Admin role */}
               <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
@@ -82,6 +86,8 @@ export default function App() {
                 <Route path="notifications" element={<NotificationManagement />} />
                 <Route path="platform-config" element={<PlatformConfig />} />
                 <Route path="promotions" element={<PromotionsManagement />} />
+                <Route path="support-tickets" element={<SupportTicketsManagement />} />
+                <Route path="support-tickets/:id" element={<SupportTicketDetail />} />
               </Route>
 
               {/* Catch-all: unknown routes */}

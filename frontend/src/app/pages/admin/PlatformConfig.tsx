@@ -36,6 +36,9 @@ const MAX_CHAT_MAX_MESSAGES = 500;
 
 const CURRENCIES: CurrencyCode[] = ['USD', 'ARS', 'EUR', 'GBP'];
 
+/** Only USD and ARS allowed for phone/DNI amount thresholds (conversion uses configured rate). */
+const BUYER_AMOUNT_CURRENCIES: ('USD' | 'ARS')[] = ['USD', 'ARS'];
+
 export function PlatformConfig() {
   const { t } = useTranslation();
   const [config, setConfig] = useState<PlatformConfigType | null>(null);
@@ -52,11 +55,15 @@ export function PlatformConfig() {
   const [chatMaxMessages, setChatMaxMessages] = useState('');
   // Risk engine (initial values from API; backend is single source of defaults)
   const [phoneRequiredEventHours, setPhoneRequiredEventHours] = useState('');
-  const [phoneRequiredAmountUsd, setPhoneRequiredAmountUsd] = useState('');
+  const [phoneRequiredAmountMajor, setPhoneRequiredAmountMajor] = useState('');
+  const [phoneRequiredAmountCurrency, setPhoneRequiredAmountCurrency] =
+    useState<'USD' | 'ARS'>('USD');
   const [phoneRequiredQtyTickets, setPhoneRequiredQtyTickets] = useState('');
   const [newAccountDays, setNewAccountDays] = useState('');
   const [dniRequiredEventHours, setDniRequiredEventHours] = useState('');
-  const [dniRequiredAmountUsd, setDniRequiredAmountUsd] = useState('');
+  const [dniRequiredAmountMajor, setDniRequiredAmountMajor] = useState('');
+  const [dniRequiredAmountCurrency, setDniRequiredAmountCurrency] =
+    useState<'USD' | 'ARS'>('USD');
   const [dniRequiredQtyTickets, setDniRequiredQtyTickets] = useState('');
   const [dniNewAccountDays, setDniNewAccountDays] = useState('');
   const [unverifiedSellerMaxSales, setUnverifiedSellerMaxSales] = useState('');
@@ -86,11 +93,21 @@ export function PlatformConfig() {
       const re = data.riskEngine;
       if (re?.buyer) {
         setPhoneRequiredEventHours(String(re.buyer.phoneRequiredEventHours));
-        setPhoneRequiredAmountUsd(String(re.buyer.phoneRequiredAmountUsd));
+        setPhoneRequiredAmountMajor(
+          String((re.buyer.phoneRequiredAmount?.amount ?? 0) / 100)
+        );
+        setPhoneRequiredAmountCurrency(
+          (re.buyer.phoneRequiredAmount?.currency === 'ARS' ? 'ARS' : 'USD') as 'USD' | 'ARS'
+        );
         setPhoneRequiredQtyTickets(String(re.buyer.phoneRequiredQtyTickets));
         setNewAccountDays(String(re.buyer.newAccountDays));
         setDniRequiredEventHours(String(re.buyer.dniRequiredEventHours));
-        setDniRequiredAmountUsd(String(re.buyer.dniRequiredAmountUsd));
+        setDniRequiredAmountMajor(
+          String((re.buyer.dniRequiredAmount?.amount ?? 0) / 100)
+        );
+        setDniRequiredAmountCurrency(
+          (re.buyer.dniRequiredAmount?.currency === 'ARS' ? 'ARS' : 'USD') as 'USD' | 'ARS'
+        );
         setDniRequiredQtyTickets(String(re.buyer.dniRequiredQtyTickets));
         setDniNewAccountDays(String(re.buyer.dniNewAccountDays));
       }
@@ -184,6 +201,16 @@ export function PlatformConfig() {
       setError('Unverified seller max amount must be between 0 and 100000.');
       return;
     }
+    const phoneAmountNum = Number(phoneRequiredAmountMajor);
+    if (!Number.isNaN(phoneAmountNum) && (phoneAmountNum < 0 || phoneAmountNum > 100000)) {
+      setError('Require phone amount must be between 0 and 100000.');
+      return;
+    }
+    const dniAmountNum = Number(dniRequiredAmountMajor);
+    if (!Number.isNaN(dniAmountNum) && (dniAmountNum < 0 || dniAmountNum > 100000)) {
+      setError('Require DNI amount must be between 0 and 100000.');
+      return;
+    }
     const usdToArsNum = Number(usdToArs);
     if (!Number.isNaN(usdToArsNum) && (usdToArsNum < 1 || usdToArsNum > 1000000)) {
       setError('USD to ARS rate must be between 1 and 1000000.');
@@ -206,11 +233,23 @@ export function PlatformConfig() {
       payload.riskEngine = {
         buyer: {
           phoneRequiredEventHours: (Math.round(Number(phoneRequiredEventHours)) || cur?.buyer?.phoneRequiredEventHours) ?? 0,
-          phoneRequiredAmountUsd: (Number(phoneRequiredAmountUsd) || cur?.buyer?.phoneRequiredAmountUsd) ?? 0,
+          phoneRequiredAmount: (() => {
+            const major = Number(phoneRequiredAmountMajor);
+            const amountCents = !Number.isNaN(major)
+              ? Math.round(major * 100)
+              : (cur?.buyer?.phoneRequiredAmount?.amount ?? 0);
+            return { amount: amountCents, currency: phoneRequiredAmountCurrency };
+          })(),
           phoneRequiredQtyTickets: (Math.round(Number(phoneRequiredQtyTickets)) || cur?.buyer?.phoneRequiredQtyTickets) ?? 0,
           newAccountDays: (Math.round(Number(newAccountDays)) || cur?.buyer?.newAccountDays) ?? 0,
           dniRequiredEventHours: (Math.round(Number(dniRequiredEventHours)) || cur?.buyer?.dniRequiredEventHours) ?? 0,
-          dniRequiredAmountUsd: (Number(dniRequiredAmountUsd) || cur?.buyer?.dniRequiredAmountUsd) ?? 0,
+          dniRequiredAmount: (() => {
+            const major = Number(dniRequiredAmountMajor);
+            const amountCents = !Number.isNaN(major)
+              ? Math.round(major * 100)
+              : (cur?.buyer?.dniRequiredAmount?.amount ?? 0);
+            return { amount: amountCents, currency: dniRequiredAmountCurrency };
+          })(),
           dniRequiredQtyTickets: (Math.round(Number(dniRequiredQtyTickets)) || cur?.buyer?.dniRequiredQtyTickets) ?? 0,
           dniNewAccountDays: (Math.round(Number(dniNewAccountDays)) || cur?.buyer?.dniNewAccountDays) ?? 0,
         },
@@ -406,16 +445,32 @@ export function PlatformConfig() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phoneRequiredAmountUsd">
-                  {t('admin.platformConfig.phoneRequiredAmountUsd')}
-                </Label>
-                <Input
-                  id="phoneRequiredAmountUsd"
-                  type="number"
-                  min={0}
-                  value={phoneRequiredAmountUsd}
-                  onChange={(e) => setPhoneRequiredAmountUsd(e.target.value)}
-                />
+                <Label>{t('admin.platformConfig.phoneRequiredAmountUsd')}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    placeholder="0"
+                    className="max-w-[140px]"
+                    value={phoneRequiredAmountMajor}
+                    onChange={(e) => setPhoneRequiredAmountMajor(e.target.value)}
+                  />
+                  <Select
+                    value={phoneRequiredAmountCurrency}
+                    onValueChange={(v) => setPhoneRequiredAmountCurrency(v as 'USD' | 'ARS')}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUYER_AMOUNT_CURRENCIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phoneRequiredQtyTickets">
@@ -462,16 +517,32 @@ export function PlatformConfig() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dniRequiredAmountUsd">
-                  {t('admin.platformConfig.dniRequiredAmountUsd')}
-                </Label>
-                <Input
-                  id="dniRequiredAmountUsd"
-                  type="number"
-                  min={0}
-                  value={dniRequiredAmountUsd}
-                  onChange={(e) => setDniRequiredAmountUsd(e.target.value)}
-                />
+                <Label>{t('admin.platformConfig.dniRequiredAmountUsd')}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    placeholder="0"
+                    className="max-w-[140px]"
+                    value={dniRequiredAmountMajor}
+                    onChange={(e) => setDniRequiredAmountMajor(e.target.value)}
+                  />
+                  <Select
+                    value={dniRequiredAmountCurrency}
+                    onValueChange={(v) => setDniRequiredAmountCurrency(v as 'USD' | 'ARS')}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUYER_AMOUNT_CURRENCIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dniRequiredQtyTickets">

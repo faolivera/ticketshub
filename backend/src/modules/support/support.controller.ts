@@ -8,7 +8,9 @@ import {
   Query,
   UseGuards,
   Inject,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { SupportService } from './support.service';
 import { SupportSeedService } from './support-seed.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -23,6 +25,7 @@ import { Role } from '../users/users.domain';
 import type {
   CreateSupportTicketRequest,
   CreateSupportTicketResponse,
+  PublicContactRequest,
   AddMessageRequest,
   AddMessageResponse,
   ResolveDisputeRequest,
@@ -44,7 +47,24 @@ export class SupportController {
   ) {}
 
   /**
-   * Create a support ticket
+   * Public contact form (no auth). Creates a ticket with guest name/email and guestId (guest:{ip}).
+   */
+  @Post('contact')
+  async createContactTicket(
+    @Context() ctx: Ctx,
+    @Req() req: Request,
+    @Body() body: PublicContactRequest,
+  ): Promise<ApiResponse<CreateSupportTicketResponse>> {
+    const clientIp =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown';
+    const ticket = await this.supportService.createContactTicket(ctx, body, clientIp);
+    return { success: true, data: ticket };
+  }
+
+  /**
+   * Create a support ticket (authenticated)
    */
   @Post()
   @UseGuards(JwtAuthGuard)

@@ -1,10 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { StepPhone } from '@/app/components/become-seller/StepPhone';
 import { StepIdentity } from '@/app/components/become-seller/StepIdentity';
-import { Button } from '@/app/components/ui/button';
+import { BackButton } from '@/app/components/BackButton';
 
 export type VerifyUserStepType = 'phone' | 'identity';
 
@@ -113,9 +113,7 @@ export function VerifyUserWizard() {
         )}
 
         <div className="mt-6">
-          <Button variant="outline" asChild>
-            <Link to={returnTo}>{t('verifyUser.backToProfile')}</Link>
-          </Button>
+          <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700" />
         </div>
       </div>
     </div>

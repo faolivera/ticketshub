@@ -51,6 +51,14 @@ import type {
   AdminUserSearchResponse,
   AdminSellerPayoutsResponse,
   AdminCompletePayoutResponse,
+  AdminSupportTicketsResponse,
+  AdminSupportTicketDetailResponse,
+  AdminUpdateSupportTicketStatusRequest,
+  AdminUpdateSupportTicketStatusResponse,
+  AdminResolveSupportDisputeRequest,
+  AdminResolveSupportDisputeResponse,
+  AdminAddSupportTicketMessageRequest,
+  AdminAddSupportTicketMessageResponse,
 } from './admin.api';
 import {
   AdminPendingEventsResponseSchema,
@@ -67,6 +75,11 @@ import {
   AdminUserSearchResponseSchema,
   AdminSellerPayoutsResponseSchema,
   AdminCompletePayoutResponseSchema,
+  AdminSupportTicketsResponseSchema,
+  AdminSupportTicketDetailResponseSchema,
+  AdminUpdateSupportTicketStatusResponseSchema,
+  AdminResolveSupportDisputeResponseSchema,
+  AdminAddSupportTicketMessageResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { SeatingType } from '../tickets/tickets.domain';
@@ -415,6 +428,103 @@ export class AdminController {
     @Query('q') q?: string,
   ): Promise<ApiResponse<AdminUserSearchResponse>> {
     const data = await this.adminService.searchUsersByEmail(ctx, q ?? '');
+    return { success: true, data };
+  }
+
+  // ==================== Support Tickets (Admin) ====================
+
+  /**
+   * List support tickets with pagination and optional filters.
+   */
+  @Get('support-tickets')
+  @ValidateResponse(AdminSupportTicketsResponseSchema)
+  async getSupportTickets(
+    @Context() ctx: Ctx,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('category') category?: string,
+    @Query('source') source?: string,
+  ): Promise<ApiResponse<AdminSupportTicketsResponse>> {
+    const data = await this.adminService.getSupportTickets(ctx, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      status,
+      category,
+      source,
+    });
+    return { success: true, data };
+  }
+
+  /**
+   * Get support ticket detail by ID (with messages).
+   */
+  @Get('support-tickets/:id')
+  @ValidateResponse(AdminSupportTicketDetailResponseSchema)
+  async getSupportTicketById(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') id: string,
+  ): Promise<ApiResponse<AdminSupportTicketDetailResponse>> {
+    const data = await this.adminService.getSupportTicketById(ctx, id, user.id);
+    return { success: true, data };
+  }
+
+  /**
+   * Update support ticket status (admin).
+   */
+  @Patch('support-tickets/:id/status')
+  @ValidateResponse(AdminUpdateSupportTicketStatusResponseSchema)
+  async updateSupportTicketStatus(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+    @Body() body: AdminUpdateSupportTicketStatusRequest,
+  ): Promise<ApiResponse<AdminUpdateSupportTicketStatusResponse>> {
+    const data = await this.adminService.updateSupportTicketStatus(
+      ctx,
+      id,
+      body.status,
+    );
+    return { success: true, data };
+  }
+
+  /**
+   * Resolve a dispute ticket (admin only).
+   */
+  @Patch('support-tickets/:id/resolve')
+  @ValidateResponse(AdminResolveSupportDisputeResponseSchema)
+  async resolveSupportDispute(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') id: string,
+    @Body() body: AdminResolveSupportDisputeRequest,
+  ): Promise<ApiResponse<AdminResolveSupportDisputeResponse>> {
+    const data = await this.adminService.resolveSupportDispute(
+      ctx,
+      id,
+      user.id,
+      body,
+    );
+    return { success: true, data };
+  }
+
+  /**
+   * Add admin reply to a support ticket.
+   */
+  @Post('support-tickets/:id/messages')
+  @ValidateResponse(AdminAddSupportTicketMessageResponseSchema)
+  async addSupportTicketMessage(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') id: string,
+    @Body() body: AdminAddSupportTicketMessageRequest,
+  ): Promise<ApiResponse<AdminAddSupportTicketMessageResponse>> {
+    const data = await this.adminService.addSupportTicketMessage(
+      ctx,
+      id,
+      user.id,
+      body,
+    );
     return { success: true, data };
   }
 

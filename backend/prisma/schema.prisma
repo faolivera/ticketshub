@@ -175,6 +175,12 @@ enum SupportTicketCategory {
   other
 }
 
+enum SupportTicketSource {
+  dispute
+  contact_from_transaction
+  contact_form
+}
+
 enum SupportMessageSender {
   user
   admin
@@ -326,6 +332,7 @@ model Image {
 
 model Event {
   id              String        @id @default(uuid())
+  slug            String        @unique
   name            String
   category        EventCategory
   venue           String
@@ -797,10 +804,14 @@ model IdentityVerificationRequest {
 }
 
 model SupportTicket {
-  id            String                @id @default(uuid())
-  userId        String
+  id            String                 @id @default(uuid())
+  userId        String?
+  guestId       String?
+  guestName     String?
+  guestEmail    String?
   transactionId String?
   category      SupportTicketCategory
+  source        SupportTicketSource?
   subject       String
   status        SupportTicketStatus   @default(open)
   assignedTo    String?
@@ -810,7 +821,7 @@ model SupportTicket {
   updatedAt     DateTime              @updatedAt
 
   // Relations
-  user          User                  @relation(fields: [userId], references: [id])
+  user          User?                  @relation(fields: [userId], references: [id])
   messages      SupportMessage[]
 
   @@index([userId])

@@ -25,6 +25,7 @@ export class EventRejectedProcessor
   ): Record<string, string> {
     return {
       eventName: context.eventName,
+      eventSlug: context.eventSlug,
       rejectionReason: context.rejectionReason,
     };
   }

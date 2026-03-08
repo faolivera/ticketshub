@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Phone, Eye, AlertTriangle, MessageCircle, IdCard } from 'lucide-react';
+import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Eye, AlertTriangle, MessageCircle, IdCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -55,7 +55,7 @@ function isPricingSnapshotError(errorCode: string | undefined): boolean {
 
 export function BuyTicketPage() {
   const { t } = useTranslation();
-  const { ticketId } = useParams<{ ticketId: string }>();
+  const { eventSlug, listingId } = useParams<{ eventSlug: string; listingId: string }>();
   const [searchParams] = useSearchParams();
   const offerIdFromUrl = searchParams.get('offerId');
   const navigate = useNavigate();
@@ -84,11 +84,11 @@ export function BuyTicketPage() {
   const pricingSnapshot = buyPageData?.pricingSnapshot ?? null;
   const checkoutRisk = buyPageData?.checkoutRisk;
 
-  /** Purchase blocked when risk engine requires V1/V2/V3 and user has not completed them */
-  const needsV1 = checkoutRisk?.requireV1 && !user?.emailVerified;
-  const needsV2 = checkoutRisk?.requireV2 && !user?.phoneVerified;
-  const needsV3 = checkoutRisk?.requireV3 && !user?.identityVerified;
-  const cannotPurchaseDueToVerification = isAuthenticated && (needsV1 || needsV2 || needsV3);
+  /** Purchase blocked when risk engine requires V1/V2/V3 and user has not completed them. Use backend missing* when present. */
+  const missingV1 = checkoutRisk?.missingV1 ?? (checkoutRisk?.requireV1 && !user?.emailVerified);
+  const missingV2 = checkoutRisk?.missingV2 ?? (checkoutRisk?.requireV2 && !user?.phoneVerified);
+  const missingV3 = checkoutRisk?.missingV3 ?? (checkoutRisk?.requireV3 && !user?.identityVerified);
+  const cannotPurchaseDueToVerification = isAuthenticated && (missingV1 || missingV2 || missingV3);
 
   const isOwnListing = user?.id === listing?.sellerId;
   const isPendingOwnListing = isOwnListing && listing?.status === ListingStatus.Pending;
@@ -100,16 +100,16 @@ export function BuyTicketPage() {
       : [];
   const hasSpecificPendingReasons = pendingReasonI18nKeys.length > 0;
 
-  // Fetch buy page data from BFF
+  // Fetch buy page data from BFF (API uses listingId)
   useEffect(() => {
     async function fetchBuyPage() {
-      if (!ticketId) return;
+      if (!listingId) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        const data = await ticketsService.getBuyPage(ticketId);
+        const data = await ticketsService.getBuyPage(listingId);
         setBuyPageData(data);
         if (data.paymentMethods.length > 0) {
           setSelectedPaymentMethod(data.paymentMethods[0]);
@@ -125,7 +125,7 @@ export function BuyTicketPage() {
     }
 
     fetchBuyPage();
-  }, [ticketId, t]);
+  }, [listingId, t]);
 
   const availableUnits =
     listing?.ticketUnits.filter((unit) => unit.status === TicketUnitStatus.Available) ?? [];
@@ -163,12 +163,12 @@ export function BuyTicketPage() {
   // Resolve my offer for this listing: accepted (complete purchase) or pending (waiting for seller).
   // When URL has offerId, prefer that accepted offer; otherwise fetch my offers and detect state on load/refresh.
   useEffect(() => {
-    if (!ticketId || !isAuthenticated || !listing) return;
+    if (!listingId || !isAuthenticated || !listing) return;
     let cancelled = false;
     (async () => {
       try {
         const offers = await offersService.listMyOffers();
-        const forListing = offers.filter((o) => o.listingId === ticketId);
+        const forListing = offers.filter((o) => o.listingId === listingId);
         const accepted = offerIdFromUrl
           ? forListing.find((o) => o.id === offerIdFromUrl && o.status === 'accepted')
           : forListing.find((o) => o.status === 'accepted');
@@ -185,7 +185,7 @@ export function BuyTicketPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [offerIdFromUrl, ticketId, isAuthenticated, listing?.id]);
+  }, [offerIdFromUrl, listingId, isAuthenticated, listing?.id]);
 
   // When we have an accepted offer, sync quantity and selectedUnitIds to the offer's selection
   // so the UI shows exactly what was agreed (disabled controls display the offer's choice).
@@ -216,13 +216,13 @@ export function BuyTicketPage() {
   };
 
   const refreshBuyPageData = async () => {
-    if (!ticketId) return;
+    if (!listingId) return;
     
     setIsLoading(true);
     setError(null);
     
     try {
-      const data = await ticketsService.getBuyPage(ticketId);
+      const data = await ticketsService.getBuyPage(listingId);
       setBuyPageData(data);
       if (data.paymentMethods.length > 0) {
         setSelectedPaymentMethod(data.paymentMethods[0]);
@@ -236,12 +236,12 @@ export function BuyTicketPage() {
   };
 
   const handlePurchase = async () => {
-    if (!listing || !ticketId) return;
+    if (!listing || !listingId) return;
     const useOffer = acceptedOffer != null;
     if (!useOffer && !pricingSnapshot) return;
 
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/buy/${ticketId}` } });
+      navigate('/login', { state: { from: `/buy/${eventSlug}/${listingId}` } });
       return;
     }
 
@@ -249,7 +249,7 @@ export function BuyTicketPage() {
       setPurchaseError(t('buyTicket.phoneRequiredToPurchase'));
       return;
     }
-    if (checkoutRisk?.requireV3 && !user?.identityVerified) {
+    if (missingV2 || missingV3) {
       setPurchaseError(t('buyTicket.identityRequiredToPurchase'));
       return;
     }
@@ -260,7 +260,7 @@ export function BuyTicketPage() {
     try {
       if (useOffer) {
         const response = await transactionsService.initiatePurchase({
-          listingId: ticketId,
+          listingId: listingId,
           paymentMethodId: selectedPaymentMethod?.id ?? 'payway',
           offerId: acceptedOffer.id,
         });
@@ -281,7 +281,7 @@ export function BuyTicketPage() {
       }
 
       const response = await transactionsService.initiatePurchase({
-        listingId: ticketId,
+        listingId: listingId,
         ticketUnitIds: unitsToPurchase,
         paymentMethodId: selectedPaymentMethod?.id ?? 'payway',
         pricingSnapshotId: pricingSnapshot!.id,
@@ -337,9 +337,9 @@ export function BuyTicketPage() {
   const grandTotal = subtotal + servicePrice;
 
   const handleSubmitOffer = async () => {
-    if (!ticketId || !listing?.bestOfferConfig?.enabled || !user) return;
+    if (!listingId || !listing?.bestOfferConfig?.enabled || !user) return;
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/buy/${ticketId}` } });
+      navigate('/login', { state: { from: `/buy/${eventSlug}/${listingId}` } });
       return;
     }
     const minCents = listing.bestOfferConfig.minimumPrice.amount ?? 0;
@@ -365,7 +365,7 @@ export function BuyTicketPage() {
     setOfferError(null);
     try {
       const created = await offersService.create({
-        listingId: ticketId,
+        listingId: listingId,
         offeredPrice: { amount: offerPriceCents, currency: listing.pricePerTicket.currency },
         tickets: ticketsPayload,
       });
@@ -440,7 +440,7 @@ export function BuyTicketPage() {
         )}
 
         <Link
-          to={isOwnListing ? '/seller-dashboard?tab=listed' : `/event/${listing.eventId}`}
+          to={isOwnListing ? '/seller-dashboard?tab=listed' : `/event/${listing.eventSlug}`}
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -769,56 +769,46 @@ export function BuyTicketPage() {
               </div>
             )}
 
-            {needsV1 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                <p className="font-semibold text-amber-800 mb-1">{t('buyTicket.emailVerificationRequired')}</p>
-                <p className="text-sm text-amber-700">{t('buyTicket.verifyEmailToPurchase')}</p>
-              </div>
-            )}
-            {needsV2 && !needsV3 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-yellow-800 mb-1">
-                      {t('buyTicket.phoneRequired')}
-                    </p>
-                    <p className="text-sm text-yellow-700 mb-3">
-                      {t('buyTicket.phoneRequiredDescription')}
-                    </p>
-                    <Link
-                      to="/phone-verification"
-                      state={{ returnTo: `/buy/${ticketId}` }}
-                      className="inline-block px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded-lg hover:bg-yellow-700 transition-colors"
-                    >
-                      {t('buyTicket.verifyPhoneNow')}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-            {needsV3 && (
+            {(missingV1 || missingV2 || missingV3) && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-3">
                   <IdCard className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-semibold text-amber-800 mb-1">
-                      {t('buyTicket.identityRequired')}
+                      {t('buyTicket.verificationRequiredTitle')}
                     </p>
                     <p className="text-sm text-amber-700 mb-3">
-                      {t('buyTicket.identityRequiredDescription')}
+                      {t('buyTicket.verificationRequiredIntro')}{' '}
+                      {[missingV1 && t('buyTicket.missingEmail'), missingV2 && t('buyTicket.missingPhone'), missingV3 && t('buyTicket.missingIdentity')]
+                        .filter(Boolean)
+                        .join(', ')}
+                      .
                     </p>
-                    <Link
-                      to="/verify-user"
-                      state={{
-                        verifyPhone: needsV2,
-                        verifyIdentity: true,
-                        returnTo: `/buy/${ticketId}`,
-                      }}
-                      className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
-                    >
-                      {t('buyTicket.verifyIdentityNow')}
-                    </Link>
+                    {missingV1 && !missingV2 && !missingV3 ? (
+                      <Link
+                        to="/register"
+                        state={{ verifyEmail: true, email: user?.email ?? '', from: `/buy/${eventSlug}/${listingId}` }}
+                        className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
+                      >
+                        {t('buyTicket.verifyEmailNow')}
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/verify-user"
+                        state={{
+                          verifyPhone: missingV2,
+                          verifyIdentity: missingV3,
+                          returnTo: `/buy/${eventSlug}/${listingId}`,
+                        }}
+                        className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
+                      >
+                        {missingV2 && missingV3
+                          ? t('buyTicket.completeVerification')
+                          : missingV2
+                            ? t('buyTicket.verifyPhoneNow')
+                            : t('buyTicket.verifyIdentityNow')}
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

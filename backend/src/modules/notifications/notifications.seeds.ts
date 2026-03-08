@@ -449,7 +449,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Evento aprobado',
         bodyTemplate: 'Tu evento "{{eventName}}" ha sido aprobado',
-        actionUrlTemplate: '/event/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventSlug}}',
       },
       {
         eventType: NotificationEventType.EVENT_APPROVED,
@@ -457,7 +457,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu evento "{{eventName}}" ha sido aprobado',
         bodyTemplate: '¡Buenas noticias! Tu evento "{{eventName}}" ha sido aprobado y ya está visible para los usuarios.',
-        actionUrlTemplate: '/event/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventSlug}}',
       },
 
       // EVENT_REJECTED
@@ -467,7 +467,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Evento rechazado',
         bodyTemplate: 'Tu evento "{{eventName}}" fue rechazado',
-        actionUrlTemplate: '/event/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventSlug}}',
       },
       {
         eventType: NotificationEventType.EVENT_REJECTED,
@@ -475,7 +475,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Tu evento "{{eventName}}" fue rechazado',
         bodyTemplate: 'Lamentablemente tu evento "{{eventName}}" fue rechazado. Motivo: {{rejectionReason}}. Puedes editar el evento y volver a enviarlo.',
-        actionUrlTemplate: '/event/{{eventId}}',
+        actionUrlTemplate: '/event/{{eventSlug}}',
       },
 
       // REVIEW_RECEIVED

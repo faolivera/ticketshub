@@ -270,7 +270,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
           : undefined,
       });
 
-      navigate(`/buy/${listing.id}`);
+      navigate(`/buy/${listing.eventSlug}/${listing.id}`);
     } catch (err) {
       console.error('Failed to create listing:', err);
       setError(err instanceof Error ? err.message : t('sellTicket.createListingFailed'));

@@ -47,8 +47,10 @@ describe('TicketsRepository (Integration)', () => {
   };
 
   const createTestEvent = async (createdById: string): Promise<string> => {
+    const slug = `test-event-${randomUUID().slice(0, 8)}`;
     const event = await prisma.event.create({
       data: {
+        slug,
         name: `Test Event ${Date.now()}`,
         category: 'Concert',
         venue: 'Test Venue',

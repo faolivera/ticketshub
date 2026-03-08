@@ -256,8 +256,8 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
   [NotificationEventType.IDENTITY_SUBMITTED]: ['userName'],
   [NotificationEventType.BANK_ACCOUNT_SUBMITTED]: ['userName'],
   [NotificationEventType.SELLER_VERIFICATION_COMPLETE]: ['userName'],
-  [NotificationEventType.EVENT_APPROVED]: ['eventName'],
-  [NotificationEventType.EVENT_REJECTED]: ['eventName', 'rejectionReason'],
+  [NotificationEventType.EVENT_APPROVED]: ['eventName', 'eventSlug'],
+  [NotificationEventType.EVENT_REJECTED]: ['eventName', 'eventSlug', 'rejectionReason'],
   [NotificationEventType.REVIEW_RECEIVED]: [
     'reviewerName',
     'rating',

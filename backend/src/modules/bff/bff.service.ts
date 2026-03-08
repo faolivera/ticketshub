@@ -36,6 +36,7 @@ import type {
 } from './bff.domain';
 import { RiskEngineService } from '../risk-engine/risk-engine.service';
 import type { GetSellTicketConfigResponse } from './bff.api';
+import { VerificationHelper } from '../../common/utils/verification-helper';
 
 @Injectable()
 export class BffService {
@@ -67,16 +68,14 @@ export class BffService {
   ) {}
 
   /**
-   * Get event page data: event details + enriched listings in a single call.
+   * Get event page data by slug: event details + enriched listings in a single call.
    */
   async getEventPageData(
     ctx: Ctx,
-    eventId: string,
+    eventSlug: string,
   ): Promise<EventPageData> {
-    const [event, listings] = await Promise.all([
-      this.eventsService.getEventById(ctx, eventId),
-      this.getEventListings(ctx, eventId),
-    ]);
+    const event = await this.eventsService.getEventBySlug(ctx, eventSlug);
+    const listings = await this.getEventListings(ctx, event.id);
     return { event, listings };
   }
 
@@ -245,17 +244,27 @@ export class BffService {
     let checkoutRisk: BuyPageData['checkoutRisk'];
     if (buyerId) {
       const quantity = 1;
-      const amountMajor = (listing.pricePerTicket.amount * quantity) / 100;
-      const risk = await this.riskEngine.evaluateCheckoutRisk(ctx, buyerId, {
-        quantity,
-        amountUsd: amountMajor,
-        eventStartsAt: listing.eventDate,
-        sellerId: listing.sellerId,
-      });
+      const totalMinor = listing.pricePerTicket.amount * quantity;
+      const amount: { amount: number; currency: 'USD' | 'ARS' | 'EUR' | 'GBP' } = {
+        amount: totalMinor,
+        currency: listing.pricePerTicket.currency,
+      };
+      const [risk, buyer] = await Promise.all([
+        this.riskEngine.evaluateCheckoutRisk(ctx, buyerId, {
+          quantity,
+          amount,
+          eventStartsAt: listing.eventDate,
+          sellerId: listing.sellerId,
+        }),
+        this.usersService.findById(ctx, buyerId),
+      ]);
       checkoutRisk = {
         requireV1: risk.requireV1,
         requireV2: risk.requireV2,
         requireV3: risk.requireV3,
+        missingV1: risk.requireV1 && (!buyer || !VerificationHelper.hasV1(buyer)),
+        missingV2: risk.requireV2 && (!buyer || !VerificationHelper.hasV2(buyer)),
+        missingV3: risk.requireV3 && (!buyer || !VerificationHelper.hasV3(buyer)),
       };
     }
 

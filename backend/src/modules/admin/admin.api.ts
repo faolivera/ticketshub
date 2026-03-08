@@ -145,6 +145,7 @@ export interface AdminEventDateUpdate {
  */
 export interface AdminUpdateEventRequest {
   name?: string;
+  slug?: string; // Only admin can set/edit; used in /event/{slug} URL
   category?: string;
   venue?: string;
   location?: AdminEventAddress;
@@ -159,6 +160,7 @@ export interface AdminUpdateEventRequest {
 export interface AdminUpdateEventResponse {
   event: {
     id: string;
+    slug: string;
     name: string;
     category: string;
     venue: string;
@@ -316,6 +318,7 @@ export interface AdminListingCreatorInfo {
  */
 export interface AdminEventListingItem {
   id: string;
+  eventSlug: string;
   createdBy: AdminListingCreatorInfo;
   eventDate: AdminListingEventDate;
   eventSection: AdminListingEventSection;
@@ -359,6 +362,7 @@ export interface AdminTransactionUserRef {
  */
 export interface AdminTransactionListingRef {
   id: string;
+  eventSlug: string;
   eventName: string;
   eventDate: Date;
   sectionName: string;
@@ -547,3 +551,132 @@ export interface AdminUserSearchItem {
 }
 
 export type AdminUserSearchResponse = AdminUserSearchItem[];
+
+// ==================== Admin Support Tickets ====================
+
+/**
+ * Query params for GET /api/admin/support-tickets
+ */
+export interface AdminSupportTicketsQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+  category?: string;
+  source?: string;
+}
+
+/**
+ * Support ticket list item for admin (matches SupportTicket shape)
+ */
+export interface AdminSupportTicketItem {
+  id: string;
+  userId?: string;
+  transactionId?: string;
+  category: string;
+  disputeReason?: string;
+  source?: string;
+  subject: string;
+  description: string;
+  guestName?: string;
+  guestEmail?: string;
+  guestId?: string;
+  status: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  resolution?: string;
+  resolutionNotes?: string;
+  resolvedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  resolvedAt?: Date;
+}
+
+/**
+ * Response for GET /api/admin/support-tickets
+ */
+export interface AdminSupportTicketsResponse {
+  tickets: AdminSupportTicketItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * Support message for admin ticket detail
+ */
+export interface AdminSupportMessageItem {
+  id: string;
+  ticketId: string;
+  userId: string;
+  isAdmin: boolean;
+  message: string;
+  attachmentUrls?: string[];
+  createdAt: Date;
+}
+
+/**
+ * Response for GET /api/admin/support-tickets/:id
+ */
+export interface AdminSupportTicketDetailResponse {
+  id: string;
+  userId?: string;
+  transactionId?: string;
+  category: string;
+  disputeReason?: string;
+  source?: string;
+  subject: string;
+  description: string;
+  guestName?: string;
+  guestEmail?: string;
+  guestId?: string;
+  status: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  resolution?: string;
+  resolutionNotes?: string;
+  resolvedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  resolvedAt?: Date;
+  messages: AdminSupportMessageItem[];
+}
+
+/**
+ * Request for PATCH /api/admin/support-tickets/:id/status
+ */
+export interface AdminUpdateSupportTicketStatusRequest {
+  status: string;
+}
+
+/**
+ * Response for PATCH /api/admin/support-tickets/:id/status
+ */
+export type AdminUpdateSupportTicketStatusResponse = AdminSupportTicketItem;
+
+/**
+ * Request for PATCH /api/admin/support-tickets/:id/resolve
+ */
+export interface AdminResolveSupportDisputeRequest {
+  resolution: string;
+  resolutionNotes: string;
+}
+
+/**
+ * Response for PATCH /api/admin/support-tickets/:id/resolve
+ */
+export type AdminResolveSupportDisputeResponse = AdminSupportTicketItem;
+
+/**
+ * Request for POST /api/admin/support-tickets/:id/messages
+ */
+export interface AdminAddSupportTicketMessageRequest {
+  message: string;
+  attachmentUrls?: string[];
+}
+
+/**
+ * Response for POST /api/admin/support-tickets/:id/messages
+ */
+export interface AdminAddSupportTicketMessageResponse {
+  success: boolean;
+  messageId: string;
+}

@@ -11,6 +11,7 @@ import {
   Settings,
   Tag,
   Banknote,
+  MessageSquare,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -75,6 +76,11 @@ const navItems: NavItem[] = [
     to: '/admin/promotions',
     icon: <Tag className="w-4 h-4" />,
     labelKey: 'admin.sidebar.promotions',
+  },
+  {
+    to: '/admin/support-tickets',
+    icon: <MessageSquare className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.supportTickets',
   },
 ];
 

@@ -25,11 +25,11 @@ describe('PlatformConfigService', () => {
     riskEngine: {
       buyer: {
         phoneRequiredEventHours: 72,
-        phoneRequiredAmountUsd: 120,
+        phoneRequiredAmount: { amount: 12000, currency: 'USD' as const },
         phoneRequiredQtyTickets: 2,
         newAccountDays: 7,
         dniRequiredEventHours: 24,
-        dniRequiredAmountUsd: 250,
+        dniRequiredAmount: { amount: 25000, currency: 'USD' as const },
         dniRequiredQtyTickets: 4,
         dniNewAccountDays: 3,
       },

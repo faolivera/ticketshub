@@ -48,6 +48,7 @@ export type ListOffersByListingResponse = Offer[];
 /** Listing summary attached to each offer in GET /offers/me */
 export interface OfferListingSummary {
   eventName: string;
+  eventSlug: string;
   eventDate: string;
   sellerName: string;
   bannerUrls?: { square?: string; rectangle?: string };
@@ -65,6 +66,7 @@ export type ListMyOffersResponse = OfferWithListingSummary[];
 export interface OfferReceivedContext {
   listingId: string;
   eventName: string;
+  eventSlug: string;
   eventDate: string;
   listingPrice: { amount: number; currency: string };
   bannerUrls?: { square?: string; rectangle?: string };

@@ -20,20 +20,24 @@ describe('EventsService - getEventsForSelection', () => {
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
-  const createMockEvent = (overrides: Partial<Event> = {}): Event => ({
-    id: `evt_${Math.random().toString(36).substr(2, 9)}`,
-    name: 'Test Event',
-    category: EventCategory.Concert,
-    venue: 'Test Venue',
-    location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
-    imageIds: [],
-    status: EventStatus.Approved,
-    createdBy: 'user_123',
-    approvedBy: 'admin_123',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  });
+  const createMockEvent = (overrides: Partial<Event> = {}): Event => {
+    const id = overrides?.id ?? `evt_${Math.random().toString(36).substr(2, 9)}`;
+    return {
+      id,
+      slug: overrides?.slug ?? `test-event-${id.slice(0, 8)}`,
+      name: 'Test Event',
+      category: EventCategory.Concert,
+      venue: 'Test Venue',
+      location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+      imageIds: [],
+      status: EventStatus.Approved,
+      createdBy: 'user_123',
+      approvedBy: 'admin_123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    };
+  };
 
   beforeEach(async () => {
     const mockEventsRepository = {

@@ -11,16 +11,18 @@ export interface Money {
 /**
  * Buyer-facing risk config: when to require V2 (phone) and V3 (DNI) at checkout.
  * Same condition types for both; DNI thresholds are typically stricter (e.g. higher amount, fewer hours).
+ * Amount thresholds are Money (USD or ARS only); comparison uses ConversionService with configured exchange rate.
  */
 export interface RiskEngineBuyerConfig {
   phoneRequiredEventHours: number;
-  phoneRequiredAmountUsd: number;
+  /** Require phone when order total >= this amount (USD or ARS). */
+  phoneRequiredAmount: Money;
   phoneRequiredQtyTickets: number;
   newAccountDays: number;
   /** Event within N hours → require V3 (and V2). Stricter than phone. */
   dniRequiredEventHours: number;
-  /** Amount >= N USD → require V3 (and V2). */
-  dniRequiredAmountUsd: number;
+  /** Require DNI when order total >= this amount (USD or ARS). */
+  dniRequiredAmount: Money;
   /** Quantity >= N tickets → require V3 (and V2). */
   dniRequiredQtyTickets: number;
   /** Account age < N days → require V3 (and V2). */

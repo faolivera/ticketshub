@@ -163,12 +163,14 @@ export interface SellerVerificationCompleteContext {
 
 export interface EventApprovedContext {
   eventId: string;
+  eventSlug: string;
   eventName: string;
   organizerId: string;
 }
 
 export interface EventRejectedContext {
   eventId: string;
+  eventSlug: string;
   eventName: string;
   organizerId: string;
   rejectionReason: string;

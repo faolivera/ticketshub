@@ -48,14 +48,16 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
   private getDefaultRiskEngine(): RiskEngineConfig {
     const get = (path: string) => this.nestConfigService.get<number>(path)!;
     const amountUsd = get('platform.riskEngine.seller.unverifiedSellerMaxAmountUsd');
+    const phoneUsd = get('platform.riskEngine.buyer.phoneRequiredAmountUsd');
+    const dniUsd = get('platform.riskEngine.buyer.dniRequiredAmountUsd');
     return {
       buyer: {
         phoneRequiredEventHours: get('platform.riskEngine.buyer.phoneRequiredEventHours'),
-        phoneRequiredAmountUsd: get('platform.riskEngine.buyer.phoneRequiredAmountUsd'),
+        phoneRequiredAmount: { amount: Math.round(phoneUsd * 100), currency: 'USD' },
         phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
         newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
         dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
-        dniRequiredAmountUsd: get('platform.riskEngine.buyer.dniRequiredAmountUsd'),
+        dniRequiredAmount: { amount: Math.round(dniUsd * 100), currency: 'USD' },
         dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
         dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
       },
@@ -108,15 +110,20 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
     stored?: Partial<RiskEngineBuyerConfig>,
   ): RiskEngineBuyerConfig {
     if (!stored) return defaultCfg;
+    const phoneAmount = stored.phoneRequiredAmount;
+    const dniAmount = stored.dniRequiredAmount;
+    const allowedCurrency = (c: string): c is 'USD' | 'ARS' => c === 'USD' || c === 'ARS';
     return {
       phoneRequiredEventHours:
         typeof stored.phoneRequiredEventHours === 'number'
           ? stored.phoneRequiredEventHours
           : defaultCfg.phoneRequiredEventHours,
-      phoneRequiredAmountUsd:
-        typeof stored.phoneRequiredAmountUsd === 'number'
-          ? stored.phoneRequiredAmountUsd
-          : defaultCfg.phoneRequiredAmountUsd,
+      phoneRequiredAmount:
+        phoneAmount &&
+        typeof phoneAmount.amount === 'number' &&
+        allowedCurrency(phoneAmount.currency)
+          ? { amount: phoneAmount.amount, currency: phoneAmount.currency }
+          : defaultCfg.phoneRequiredAmount,
       phoneRequiredQtyTickets:
         typeof stored.phoneRequiredQtyTickets === 'number'
           ? stored.phoneRequiredQtyTickets
@@ -129,10 +136,12 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         typeof stored.dniRequiredEventHours === 'number'
           ? stored.dniRequiredEventHours
           : defaultCfg.dniRequiredEventHours,
-      dniRequiredAmountUsd:
-        typeof stored.dniRequiredAmountUsd === 'number'
-          ? stored.dniRequiredAmountUsd
-          : defaultCfg.dniRequiredAmountUsd,
+      dniRequiredAmount:
+        dniAmount &&
+        typeof dniAmount.amount === 'number' &&
+        allowedCurrency(dniAmount.currency)
+          ? { amount: dniAmount.amount, currency: dniAmount.currency }
+          : defaultCfg.dniRequiredAmount,
       dniRequiredQtyTickets:
         typeof stored.dniRequiredQtyTickets === 'number'
           ? stored.dniRequiredQtyTickets

@@ -431,6 +431,7 @@ describe('AdminService', () => {
     const mockUpdateResponse: AdminUpdateEventResponse = {
       event: {
         id: 'evt_123',
+        slug: 'updated-event-evt_123',
         name: 'Updated Event',
         category: 'Concert',
         venue: 'Updated Venue',
@@ -542,6 +543,7 @@ describe('AdminService', () => {
   describe('getAllEvents', () => {
     const mockEvent: Event = {
       id: 'evt_123',
+      slug: 'test-concert-evt_123',
       name: 'Test Concert',
       category: EventCategory.Concert,
       venue: 'Test Venue',

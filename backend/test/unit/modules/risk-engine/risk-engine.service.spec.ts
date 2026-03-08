@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
+import { ConversionService } from '../../../../src/modules/config/conversion.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { RiskLevel } from '../../../../src/modules/risk-engine/risk-engine.domain';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
@@ -17,11 +18,11 @@ describe('RiskEngineService', () => {
 
   const defaultBuyerConfig = {
     phoneRequiredEventHours: 72,
-    phoneRequiredAmountUsd: 120,
+    phoneRequiredAmount: { amount: 12000, currency: 'USD' as const }, // 120 USD
     phoneRequiredQtyTickets: 2,
     newAccountDays: 7,
     dniRequiredEventHours: 24,
-    dniRequiredAmountUsd: 250,
+    dniRequiredAmount: { amount: 25000, currency: 'USD' as const }, // 250 USD
     dniRequiredQtyTickets: 4,
     dniNewAccountDays: 3,
   };
@@ -51,19 +52,31 @@ describe('RiskEngineService', () => {
     identityVerification: undefined,
   } as User;
 
+  /** 50 USD in minor units */
   const baseInput = {
     quantity: 1,
-    amountUsd: 50,
+    amount: { amount: 5000, currency: 'USD' as const },
     eventStartsAt: new Date(Date.now() + 100 * 60 * 60 * 1000), // 100h from now
     buyerCreatedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
     seller: sellerWithV3,
-    paymentMethodType: undefined,
+    paymentMethodType: undefined as undefined,
   };
 
   beforeEach(async () => {
     const mockConfigService = {
       getPlatformConfig: jest.fn().mockResolvedValue({
         riskEngine: { buyer: defaultBuyerConfig },
+      }),
+    };
+
+    const mockConversionService = {
+      convert: jest.fn().mockImplementation(async (_ctx, money: { amount: number; currency: string }, toCurrency: string) => {
+        if (money.currency === toCurrency) return money;
+        if (money.currency === 'USD' && toCurrency === 'USD') return money;
+        if (money.currency === 'ARS' && toCurrency === 'USD') {
+          return { amount: Math.round(money.amount / 1000), currency: 'USD' as const };
+        }
+        return money;
       }),
     };
 
@@ -79,6 +92,7 @@ describe('RiskEngineService', () => {
       providers: [
         RiskEngineService,
         { provide: PlatformConfigService, useValue: mockConfigService },
+        { provide: ConversionService, useValue: mockConversionService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: NestConfigService, useValue: mockNestConfig },
       ],
@@ -90,8 +104,8 @@ describe('RiskEngineService', () => {
   });
 
   describe('evaluate', () => {
-    it('should return LOW risk and requireV2/requireV3 false when no triggers fire', () => {
-      const result = service.evaluate(baseInput, defaultBuyerConfig);
+    it('should return LOW risk and requireV2/requireV3 false when no triggers fire', async () => {
+      const result = await service.evaluate(mockCtx, baseInput, defaultBuyerConfig);
 
       expect(result.riskLevel).toBe(RiskLevel.LOW);
       expect(result.requireV1).toBe(true);
@@ -99,8 +113,9 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(false);
     });
 
-    it('should require V2 only (no V3) when payment method type is manual_approval', () => {
-      const result = service.evaluate(
+    it('should require V2 only (no V3) when payment method type is manual_approval', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         { ...baseInput, paymentMethodType: 'manual_approval' as const },
         defaultBuyerConfig,
       );
@@ -110,8 +125,9 @@ describe('RiskEngineService', () => {
       expect(result.riskLevel).toBe(RiskLevel.MED);
     });
 
-    it('should not require V2 when payment method type is payment_gateway', () => {
-      const result = service.evaluate(
+    it('should not require V2 when payment method type is payment_gateway', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         { ...baseInput, paymentMethodType: 'payment_gateway' as const },
         defaultBuyerConfig,
       );
@@ -120,8 +136,9 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(false);
     });
 
-    it('should require V2+V3 when event is within DNI hours (e.g. 24h)', () => {
-      const result = service.evaluate(
+    it('should require V2+V3 when event is within DNI hours (e.g. 24h)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         {
           ...baseInput,
           eventStartsAt: new Date(Date.now() + 12 * 60 * 60 * 1000), // 12h from now, within dni 24h
@@ -134,8 +151,9 @@ describe('RiskEngineService', () => {
       expect(result.riskLevel).toBe(RiskLevel.MED);
     });
 
-    it('should require V2 only when event is within phone hours but beyond DNI hours', () => {
-      const result = service.evaluate(
+    it('should require V2 only when event is within phone hours but beyond DNI hours', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         {
           ...baseInput,
           eventStartsAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48h from now (within 72h, not 24h)
@@ -148,9 +166,10 @@ describe('RiskEngineService', () => {
       expect(result.riskLevel).toBe(RiskLevel.MED);
     });
 
-    it('should require V2+V3 when amount meets DNI threshold (250)', () => {
-      const result = service.evaluate(
-        { ...baseInput, amountUsd: 250 },
+    it('should require V2+V3 when amount meets DNI threshold (250 USD)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
+        { ...baseInput, amount: { amount: 25000, currency: 'USD' } },
         defaultBuyerConfig,
       );
 
@@ -158,9 +177,10 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(true);
     });
 
-    it('should require V2 only when amount meets phone threshold but not DNI (120)', () => {
-      const result = service.evaluate(
-        { ...baseInput, amountUsd: 120 },
+    it('should require V2 only when amount meets phone threshold but not DNI (120 USD)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
+        { ...baseInput, amount: { amount: 12000, currency: 'USD' } },
         defaultBuyerConfig,
       );
 
@@ -168,8 +188,9 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(false);
     });
 
-    it('should require V2+V3 when quantity meets DNI threshold (4)', () => {
-      const result = service.evaluate(
+    it('should require V2+V3 when quantity meets DNI threshold (4)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         { ...baseInput, quantity: 4 },
         defaultBuyerConfig,
       );
@@ -178,8 +199,9 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(true);
     });
 
-    it('should require V2 only when quantity meets phone threshold but not DNI (2)', () => {
-      const result = service.evaluate(
+    it('should require V2 only when quantity meets phone threshold but not DNI (2)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         { ...baseInput, quantity: 2 },
         defaultBuyerConfig,
       );
@@ -188,8 +210,9 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(false);
     });
 
-    it('should require V2+V3 when buyer account is very new (within dniNewAccountDays)', () => {
-      const result = service.evaluate(
+    it('should require V2+V3 when buyer account is very new (within dniNewAccountDays)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         {
           ...baseInput,
           buyerCreatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago, within dni 3
@@ -201,8 +224,9 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(true);
     });
 
-    it('should require V2 only when buyer account is new but beyond DNI days (e.g. 5 days)', () => {
-      const result = service.evaluate(
+    it('should require V2 only when buyer account is new but beyond DNI days (e.g. 5 days)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         {
           ...baseInput,
           buyerCreatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
@@ -214,8 +238,9 @@ describe('RiskEngineService', () => {
       expect(result.requireV3).toBe(false);
     });
 
-    it('should require V2 only when seller has no V3 (no DNI condition for seller)', () => {
-      const result = service.evaluate(
+    it('should require V2 only when seller has no V3 (no DNI condition for seller)', async () => {
+      const result = await service.evaluate(
+        mockCtx,
         { ...baseInput, seller: sellerWithoutV3 },
         defaultBuyerConfig,
       );
@@ -225,10 +250,10 @@ describe('RiskEngineService', () => {
       expect(result.riskLevel).toBe(RiskLevel.MED);
     });
 
-    it('should use fallback config when buyerConfig is not provided', () => {
-      const result = service.evaluate({
+    it('should use fallback config when buyerConfig is not provided', async () => {
+      const result = await service.evaluate(mockCtx, {
         ...baseInput,
-        amountUsd: 200, // above default 120, triggers phone
+        amount: { amount: 20000, currency: 'USD' }, // 200 USD, above default 120, triggers phone
       });
 
       expect(result.requireV2).toBe(true);
@@ -247,7 +272,7 @@ describe('RiskEngineService', () => {
         'missing_buyer',
         {
           quantity: 1,
-          amountUsd: 50,
+          amount: { amount: 5000, currency: 'USD' },
           eventStartsAt: baseInput.eventStartsAt,
           sellerId: 'seller_1',
         },
@@ -277,7 +302,7 @@ describe('RiskEngineService', () => {
         'buyer_1',
         {
           quantity: 1,
-          amountUsd: 50,
+          amount: { amount: 5000, currency: 'USD' },
           eventStartsAt: baseInput.eventStartsAt,
           sellerId: 'seller_1',
         },
@@ -309,7 +334,7 @@ describe('RiskEngineService', () => {
         'buyer_1',
         {
           quantity: 1,
-          amountUsd: 50,
+          amount: { amount: 5000, currency: 'USD' },
           eventStartsAt: baseInput.eventStartsAt,
           sellerId: 'seller_1',
         },

@@ -35,6 +35,7 @@ import {
   EventCategory,
   BANNER_CONSTRAINTS,
   ALLOWED_BANNER_MIME_TYPES,
+  generateEventSlug,
 } from './events.domain';
 import type {
   CreateEventRequest,
@@ -58,6 +59,8 @@ import { Role } from '../users/users.domain';
 import { SeatingType } from '../tickets/tickets.domain';
 import { UsersService } from '../users/users.service';
 import { VerificationHelper } from '../../common/utils/verification-helper';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
 export class EventsService {
@@ -76,6 +79,8 @@ export class EventsService {
     private readonly bannerStorage: EventBannerStorageService,
     @Inject(UsersService)
     private readonly usersService: UsersService,
+    @Inject(NotificationsService)
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -116,8 +121,10 @@ export class EventsService {
       );
     }
 
+    const eventId = this.generateId('evt');
     const event: Event = {
-      id: this.generateId('evt'),
+      id: eventId,
+      slug: generateEventSlug(data.name, data.venue, eventId),
       name: data.name,
       category: data.category,
       venue: data.venue,
@@ -145,6 +152,25 @@ export class EventsService {
     const [dates, sections] = await Promise.all([
       this.eventsRepository.getDatesByEventId(ctx, id),
       this.eventsRepository.getSectionsByEventId(ctx, id),
+    ]);
+    const [eventWithImages] = await this.attachImages(ctx, [
+      { ...event, dates, sections },
+    ]);
+    return eventWithImages;
+  }
+
+  /**
+   * Get event by slug with dates and sections (for public event page URL)
+   */
+  async getEventBySlug(ctx: Ctx, slug: string): Promise<EventWithDatesResponse> {
+    const event = await this.eventsRepository.findEventBySlug(ctx, slug);
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const [dates, sections] = await Promise.all([
+      this.eventsRepository.getDatesByEventId(ctx, event.id),
+      this.eventsRepository.getSectionsByEventId(ctx, event.id),
     ]);
     const [eventWithImages] = await this.attachImages(ctx, [
       { ...event, dates, sections },
@@ -348,6 +374,19 @@ export class EventsService {
     if (approved) {
       await this.ticketsService.activatePendingListingsForEvent(ctx, eventId);
     }
+
+    await this.notificationsService.emit(
+      ctx,
+      approved ? NotificationEventType.EVENT_APPROVED : NotificationEventType.EVENT_REJECTED,
+      {
+        eventId: updated.id,
+        eventSlug: updated.slug,
+        eventName: updated.name,
+        organizerId: updated.createdBy,
+        ...(approved ? {} : { rejectionReason: rejectionReason ?? '' }),
+      },
+      adminId,
+    );
 
     return updated;
   }
@@ -846,6 +885,7 @@ export class EventsService {
     // 2. Update event fields
     const eventUpdates: Partial<Event> = {};
     if (data.name !== undefined) eventUpdates.name = data.name;
+    if (data.slug !== undefined) eventUpdates.slug = data.slug;
     if (data.category !== undefined)
       eventUpdates.category = data.category as EventCategory;
     if (data.venue !== undefined) eventUpdates.venue = data.venue;
@@ -972,6 +1012,7 @@ export class EventsService {
     return {
       event: {
         id: finalEvent.id,
+        slug: finalEvent.slug,
         name: finalEvent.name,
         category: finalEvent.category,
         venue: finalEvent.venue,

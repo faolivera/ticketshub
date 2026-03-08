@@ -369,7 +369,7 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
                                           <TableRow key={listing.id}>
                                             <TableCell>
                                               <Link
-                                                to={`/buy/${listing.id}`}
+                                                to={`/buy/${listing.eventSlug}/${listing.id}`}
                                                 className="text-blue-600 hover:text-blue-800 hover:underline font-mono text-xs"
                                               >
                                                 {listing.id}

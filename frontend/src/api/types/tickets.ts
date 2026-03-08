@@ -114,6 +114,7 @@ export interface BannerUrls {
  */
 export interface TicketListingWithEvent extends TicketListing {
   eventName: string;
+  eventSlug: string;
   eventDate: Date;
   venue: string;
   sectionName?: string;
@@ -208,7 +209,7 @@ export interface EventPageData {
   listings: ListingWithSeller[];
 }
 
-/** Response from GET /api/event-page/:eventId */
+/** Response from GET /api/event-page/:eventSlug */
 export type GetEventPageResponse = EventPageData;
 
 /** How the payment method is processed */
@@ -282,11 +283,17 @@ export interface BuyPagePaymentMethodOption {
   serviceFeePercent: number;
 }
 
-/** Checkout risk: which verifications are required before purchase (from BFF risk engine). Outcome: nothing, phone, or phone + DNI. */
+/** Checkout risk: which verifications are required and which are missing for the current user (from BFF). */
 export interface CheckoutRisk {
   requireV1: boolean;
   requireV2: boolean;
   requireV3: boolean;
+  /** True when V1 is required but the buyer has not verified email. Omitted in older API; frontend falls back to requireV1 && !user.emailVerified. */
+  missingV1?: boolean;
+  /** True when V2 is required but the buyer has not verified phone. */
+  missingV2?: boolean;
+  /** True when V3 is required but the buyer has not verified identity (ID document). */
+  missingV3?: boolean;
 }
 
 /** Full buy page data (listing + seller + payment methods + pricing snapshot) from BFF */
@@ -299,7 +306,7 @@ export interface BuyPageData {
   checkoutRisk?: CheckoutRisk;
 }
 
-/** Response from GET /api/buy/:ticketId */
+/** Response from GET /api/buy/:listingId */
 export type GetBuyPageResponse = BuyPageData;
 
 /**

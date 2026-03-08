@@ -34,6 +34,20 @@ export interface ISupportRepository {
   getActiveTickets(ctx: Ctx): Promise<SupportTicket[]>;
 
   /**
+   * Get tickets for admin list with optional filters and pagination
+   */
+  getTicketsAdmin(
+    ctx: Ctx,
+    params: {
+      page: number;
+      limit: number;
+      status?: string;
+      category?: string;
+      source?: string;
+    },
+  ): Promise<{ tickets: SupportTicket[]; total: number }>;
+
+  /**
    * Get ticket by transaction ID
    */
   getTicketByTransactionId(

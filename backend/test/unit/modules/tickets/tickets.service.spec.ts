@@ -222,11 +222,11 @@ describe('TicketsService', () => {
         riskEngine: {
           buyer: {
             phoneRequiredEventHours: 72,
-            phoneRequiredAmountUsd: 120,
+            phoneRequiredAmount: { amount: 12000, currency: 'USD' },
             phoneRequiredQtyTickets: 2,
             newAccountDays: 7,
             dniRequiredEventHours: 24,
-            dniRequiredAmountUsd: 250,
+            dniRequiredAmount: { amount: 25000, currency: 'USD' },
             dniRequiredQtyTickets: 4,
             dniNewAccountDays: 3,
           },

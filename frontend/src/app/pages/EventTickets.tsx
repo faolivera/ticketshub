@@ -30,6 +30,7 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
 
   return {
     id: listing.id,
+    eventSlug: listing.eventSlug,
     type: listing.sectionName || typeDisplay,
     price: listing.pricePerTicket.amount / 100,
     currency: listing.pricePerTicket.currency,
@@ -53,7 +54,7 @@ function transformListing(listing: ListingWithSeller, eventDates: EventWithDates
 
 export function EventTickets() {
   const { t } = useTranslation();
-  const { eventId } = useParams<{ eventId: string }>();
+  const { eventSlug } = useParams<{ eventSlug: string }>();
   const { user } = useUser();
   
   const [event, setEvent] = useState<EventWithDates | null>(null);
@@ -74,13 +75,13 @@ export function EventTickets() {
   // Fetch event and listings
   useEffect(() => {
     async function fetchData() {
-      if (!eventId) return;
+      if (!eventSlug) return;
       
       setIsLoading(true);
       setError(null);
       
       try {
-        const { event: eventData, listings: listingsData } = await ticketsService.getEventPage(eventId);
+        const { event: eventData, listings: listingsData } = await ticketsService.getEventPage(eventSlug);
 
         setEvent(eventData);
         setListings(listingsData);
@@ -93,7 +94,7 @@ export function EventTickets() {
     }
 
     fetchData();
-  }, [eventId, t]);
+  }, [eventSlug, t]);
 
   // Transform listings to UI format (BFF already filters for active + available)
   // Also filter out the current user's own listings so sellers don't see their own tickets

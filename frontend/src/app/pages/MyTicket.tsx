@@ -1329,12 +1329,13 @@ export function MyTicket() {
                 {t('myTicket.supportDescription')}
               </p>
 
-              <button
+              <Link
+                to={`/contact${transactionId ? `?transactionId=${encodeURIComponent(transactionId)}` : ''}`}
                 className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
               >
                 <Mail className="w-4 h-4" />
                 {t('myTicket.contactSupport')}
-              </button>
+              </Link>
             </div>
 
             {/* Transaction Info */}

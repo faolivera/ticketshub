@@ -19,6 +19,11 @@ export interface IEventsRepository {
   findEventById(ctx: Ctx, id: string): Promise<Event | undefined>;
 
   /**
+   * Find event by slug
+   */
+  findEventBySlug(ctx: Ctx, slug: string): Promise<Event | undefined>;
+
+  /**
    * Get all events
    */
   getAllEvents(ctx: Ctx): Promise<Event[]>;

@@ -13,6 +13,7 @@ import { PlatformConfigService } from '../../../../src/modules/config/config.ser
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import { TransactionChatService } from '../../../../src/modules/transaction-chat/transaction-chat.service';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
+import { RiskLevel } from '../../../../src/modules/risk-engine/risk-engine.domain';
 import {
   TransactionStatus,
   RequiredActor,
@@ -44,6 +45,7 @@ describe('BffService', () => {
   let reviewsService: jest.Mocked<ReviewsService>;
   let paymentMethodsService: jest.Mocked<PaymentMethodsService>;
   let pricingService: jest.Mocked<PricingService>;
+  let riskEngine: jest.Mocked<RiskEngineService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -195,6 +197,7 @@ describe('BffService', () => {
     reviewsService = module.get(ReviewsService);
     paymentMethodsService = module.get(PaymentMethodsService);
     pricingService = module.get(PricingService);
+    riskEngine = module.get(RiskEngineService);
   });
 
   describe('getTransactionDetails', () => {
@@ -464,6 +467,7 @@ describe('BffService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       eventName: 'Test Event',
+      eventSlug: 'test-event-event_123',
       eventDate: new Date(),
       venue: 'Test Venue',
       sectionName: 'VIP Section',
@@ -556,6 +560,48 @@ describe('BffService', () => {
         promotionSnapshot: mockListing.promotionSnapshot,
       });
     });
+
+    it('should include checkoutRisk with missingV1/missingV2/missingV3 when buyerId is provided', async () => {
+      const mockBuyer: User = {
+        ...mockUser,
+        id: 'buyer_123',
+        email: 'buyer@example.com',
+        emailVerified: false,
+        phoneVerified: false,
+        identityVerification: undefined,
+      };
+      ticketsService.getListingById.mockResolvedValue(mockListing);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
+      usersService.findById
+        .mockResolvedValueOnce(mockUser)
+        .mockResolvedValueOnce(mockBuyer);
+      transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(50);
+      reviewsService.getSellerMetrics.mockResolvedValue(mockSellerMetrics);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(
+        mockPaymentMethods,
+      );
+      pricingService.createSnapshot.mockResolvedValue(mockPricingSnapshot);
+      riskEngine.evaluateCheckoutRisk.mockResolvedValue({
+        riskLevel: RiskLevel.MED,
+        requireV1: true,
+        requireV2: true,
+        requireV3: true,
+      });
+
+      const result = await service.getBuyPageData(
+        mockCtx,
+        'listing_123',
+        'buyer_123',
+      );
+
+      expect(result.checkoutRisk).toBeDefined();
+      expect(result.checkoutRisk?.requireV1).toBe(true);
+      expect(result.checkoutRisk?.requireV2).toBe(true);
+      expect(result.checkoutRisk?.requireV3).toBe(true);
+      expect(result.checkoutRisk?.missingV1).toBe(true);
+      expect(result.checkoutRisk?.missingV2).toBe(true);
+      expect(result.checkoutRisk?.missingV3).toBe(true);
+    });
   });
 
   describe('getEventListings', () => {
@@ -577,6 +623,7 @@ describe('BffService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       eventName: 'Test Event',
+      eventSlug: 'test-event-event_123',
       eventDate: new Date(),
       venue: 'Test Venue',
       sectionName: 'General',
@@ -709,6 +756,7 @@ describe('BffService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       eventName: 'Test Event',
+      eventSlug: 'test-event-event_123',
       eventDate: new Date(),
       venue: 'Test Venue',
       sectionName: 'General',

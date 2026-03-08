@@ -42,25 +42,29 @@ describe('EventsRepository (Integration)', () => {
     return user.id;
   };
 
-  const createValidEvent = (overrides?: Partial<Event>): Event => ({
-    id: randomUUID(),
-    name: 'Test Event',
-    category: EventCategory.Concert,
-    venue: 'Test Venue',
-    location: {
-      line1: '123 Main St',
-      city: 'Berlin',
-      state: 'Berlin',
-      postalCode: '10115',
-      countryCode: 'DE',
-    },
-    imageIds: [],
-    status: EventStatus.Pending,
-    createdBy: testUserId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  });
+  const createValidEvent = (overrides?: Partial<Event>): Event => {
+    const id = overrides?.id ?? randomUUID();
+    return {
+      id,
+      slug: overrides?.slug ?? `test-event-${id.slice(0, 8)}`,
+      name: 'Test Event',
+      category: EventCategory.Concert,
+      venue: 'Test Venue',
+      location: {
+        line1: '123 Main St',
+        city: 'Berlin',
+        state: 'Berlin',
+        postalCode: '10115',
+        countryCode: 'DE',
+      },
+      imageIds: [],
+      status: EventStatus.Pending,
+      createdBy: testUserId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    };
+  };
 
   const createValidEventDate = (eventId: string, overrides?: Partial<EventDate>): EventDate => ({
     id: randomUUID(),

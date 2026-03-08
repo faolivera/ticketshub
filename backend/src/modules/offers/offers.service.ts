@@ -201,6 +201,7 @@ export class OffersService {
         ? {
             listingId: listing.id,
             eventName: listing.eventName,
+            eventSlug: listing.eventSlug,
             eventDate:
               listing.eventDate instanceof Date
                 ? listing.eventDate.toISOString()
@@ -212,6 +213,7 @@ export class OffersService {
         : {
             listingId: offer.listingId,
             eventName: 'Unknown Event',
+            eventSlug: 'event-' + offer.listingId,
             eventDate: new Date().toISOString(),
             listingPrice: { amount: 0, currency: 'EUR' },
             buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
@@ -240,6 +242,7 @@ export class OffersService {
       const summary: OfferListingSummary = listing
         ? {
             eventName: listing.eventName,
+            eventSlug: listing.eventSlug,
             eventDate:
               listing.eventDate instanceof Date
                 ? listing.eventDate.toISOString()
@@ -249,6 +252,7 @@ export class OffersService {
           }
         : {
             eventName: 'Unknown Event',
+            eventSlug: 'event-unknown',
             eventDate: new Date().toISOString(),
             sellerName: 'Unknown',
           };
