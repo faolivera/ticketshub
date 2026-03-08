@@ -1,39 +1,23 @@
-import { Mail, Calendar, Ticket, Phone, Camera, Loader2, Shield, CreditCard } from 'lucide-react';
+import { Mail, Calendar, Phone, Camera, Loader2, Shield, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
 import { SellerBadge } from '@/app/components/SellerBadge';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { VerificationHelper } from '@/lib/verification';
 import { usersService } from '@/api/services';
-import { ticketsService } from '@/api/services/tickets.service';
 import { UserAvatar } from '@/app/components/UserAvatar';
 import { formatMonthYear } from '@/lib/format-date';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE_MB = 5;
 
-interface TicketStats {
-  bought: number;
-  sold: number;
-}
-
 export function UserProfile() {
   const { user, logout, refreshUser } = useUser();
   const { t } = useTranslation();
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
-  const [ticketStats, setTicketStats] = useState<TicketStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    ticketsService
-      .getMyTickets()
-      .then((data) => setTicketStats({ bought: data.bought.length, sold: data.sold.length }))
-      .catch(() => setTicketStats(null))
-      .finally(() => setStatsLoading(false));
-  }, []);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -213,7 +197,8 @@ export function UserProfile() {
               </span>
               {!user.phoneVerified && (
                 <Link
-                  to="/phone-verification"
+                  to="/verify-user"
+                  state={{ verifyPhone: true, returnTo: '/user-profile' }}
                   className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
                 >
                   {t('userProfile.verifyLink')}
@@ -236,7 +221,8 @@ export function UserProfile() {
                   </span>
                   {(idStatus === 'none' || idStatus === 'rejected') && (
                     <Link
-                      to="/seller-verification"
+                      to="/verify-user"
+                      state={{ verifyIdentity: true, returnTo: '/user-profile' }}
                       className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
                     >
                       {t('userProfile.verifyLink')}
@@ -288,28 +274,6 @@ export function UserProfile() {
               </Link>
             </div>
           )}
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 pt-4 mt-4 border-t border-gray-100">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Ticket className="w-4 h-4 text-blue-600" />
-                <p className="text-xs font-medium text-gray-600">{t('userProfile.ticketsPurchased')}</p>
-              </div>
-              <p className="text-3xl font-bold text-blue-600">
-                {statsLoading ? '—' : (ticketStats?.bought ?? '—')}
-              </p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Ticket className="w-4 h-4 text-green-600" />
-                <p className="text-xs font-medium text-gray-600">{t('userProfile.ticketsSold')}</p>
-              </div>
-              <p className="text-3xl font-bold text-green-600">
-                {statsLoading ? '—' : (ticketStats?.sold ?? '—')}
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

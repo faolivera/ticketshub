@@ -13,6 +13,11 @@ import { UsersService } from '../users/users.service';
 import { PlatformConfigService } from '../config/config.service';
 import { VerificationHelper } from '../../common/utils/verification-helper';
 import { ContextLogger } from '../../common/logger/context-logger';
+import { ClaimTooEarlyException } from '../../common/exceptions/claim-too-early.exception';
+import { ClaimTooLateException } from '../../common/exceptions/claim-too-late.exception';
+import { ClaimTicketNotTransferredException } from '../../common/exceptions/claim-ticket-not-transferred.exception';
+import { ClaimConfirmReceiptFirstException } from '../../common/exceptions/claim-confirm-receipt-first.exception';
+import type { ClaimRefDateType } from '../../common/exceptions/claim-too-early.exception';
 import type { Ctx } from '../../common/types/context';
 import type {
   SupportTicket,
@@ -152,16 +157,12 @@ export class SupportService {
 
       if (reason === DisputeReason.TicketNotReceived) {
         if (!transaction.ticketTransferredAt) {
-          throw new BadRequestException(
-            'You can only open a "ticket not received" claim after the ticket has been transferred.',
-          );
+          throw new ClaimTicketNotTransferredException();
         }
         refDate = transaction.ticketTransferredAt;
       } else {
         if (!transaction.buyerConfirmedAt) {
-          throw new BadRequestException(
-            'You must confirm receipt of the ticket before opening a "ticket did not work" claim.',
-          );
+          throw new ClaimConfirmReceiptFirstException();
         }
         const listing = await this.ticketsService.getListingById(
           ctx,
@@ -190,15 +191,15 @@ export class SupportService {
       const refTime = refDate.getTime();
       const minDeadline = new Date(refTime + minHours * 60 * 60 * 1000);
       const maxDeadline = new Date(refTime + maxHours * 60 * 60 * 1000);
+      const refDateType: ClaimRefDateType =
+        reason === DisputeReason.TicketNotReceived
+          ? 'ticket_transfer'
+          : 'event_date';
       if (now < minDeadline) {
-        throw new BadRequestException(
-          `Claims can only be opened at least ${minHours} hours after the reference date. Please try again later.`,
-        );
+        throw new ClaimTooEarlyException(minHours, refDateType);
       }
       if (now > maxDeadline) {
-        throw new BadRequestException(
-          `Claims must be opened within ${maxHours} hours of the reference date. The deadline has passed.`,
-        );
+        throw new ClaimTooLateException(maxHours, refDateType);
       }
     }
 

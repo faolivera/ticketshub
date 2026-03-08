@@ -103,9 +103,6 @@ export function StepBank({ onComplete }: StepBankProps) {
           <Button asChild className="w-full sm:w-auto">
             <Link to="/sell-ticket">{t('becomeSeller.step4.goToSell')}</Link>
           </Button>
-          <Button asChild variant="outline" className="w-full sm:w-auto">
-            <Link to="/user-profile">{t('becomeSeller.step4.backToProfile')}</Link>
-          </Button>
         </div>
       </div>
     );

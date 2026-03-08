@@ -728,6 +728,12 @@
     "disputeSubmit": "Enviar disputa",
     "disputeSubmitting": "Enviando...",
     "disputeSubmitFailed": "Error al enviar. Intentá de nuevo.",
+    "claimTooEarly": "Los reclamos solo pueden abrirse al menos {{minHours}} hora(s) después de la {{referenceDate}}. Por favor, intentá más tarde.",
+    "claimTooLate": "Los reclamos deben abrirse dentro de las {{maxHours}} horas desde la {{referenceDate}}. El plazo venció.",
+    "claimTicketNotTransferred": "Solo podés abrir un reclamo de \"no recibí la entrada\" después de que el ticket haya sido transferido.",
+    "claimConfirmReceiptFirst": "Debés confirmar la recepción de la entrada antes de abrir un reclamo de \"el ticket no funcionó\".",
+    "referenceDateTransfer": "fecha de transferencia del ticket",
+    "referenceDateEvent": "fecha del evento",
     "statusStepPaid": "Pago",
     "statusStepTransferred": "Transferida",
     "statusStepConfirmed": "Confirmada",
@@ -1915,7 +1921,10 @@
         "OFFER_RECEIVED": "Oferta Recibida",
         "OFFER_ACCEPTED": "Oferta Aceptada",
         "OFFER_REJECTED": "Oferta Rechazada",
-        "OFFER_CANCELLED": "Oferta Cancelada"
+        "OFFER_CANCELLED": "Oferta Cancelada",
+        "IDENTITY_SUBMITTED": "Identidad Enviada",
+        "BANK_ACCOUNT_SUBMITTED": "Cuenta Bancaria Enviada",
+        "SELLER_VERIFICATION_COMPLETE": "Verificación de Vendedor Completa"
       },
       "priority": {
         "LOW": "Baja",

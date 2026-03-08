@@ -2,3 +2,7 @@ export * from './optimistic-lock.exception';
 export * from './insufficient-funds.exception';
 export * from './resource-conflict.exception';
 export * from './ticket-not-available.exception';
+export * from './claim-too-early.exception';
+export * from './claim-too-late.exception';
+export * from './claim-ticket-not-transferred.exception';
+export * from './claim-confirm-receipt-first.exception';

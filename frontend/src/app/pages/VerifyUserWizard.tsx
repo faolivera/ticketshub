@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
+import { WizardProgressBar, type WizardStepConfig } from '@/app/components/wizard/WizardProgressBar';
 import { StepPhone } from '@/app/components/become-seller/StepPhone';
 import { StepIdentity } from '@/app/components/become-seller/StepIdentity';
 import { BackButton } from '@/app/components/BackButton';
@@ -25,8 +26,13 @@ function buildSteps(state: VerifyUserLocationState | null): VerifyUserStepType[]
   return steps;
 }
 
-function getStepLabelKey(step: VerifyUserStepType): string {
-  return step === 'phone' ? 'verifyUser.progress.phone' : 'verifyUser.progress.identity';
+const STEP_CONFIG: Record<VerifyUserStepType, WizardStepConfig> = {
+  phone: { id: 'phone', labelKey: 'verifyUser.progress.phone' },
+  identity: { id: 'identity', labelKey: 'verifyUser.progress.identity' },
+};
+
+function buildProgressSteps(stepTypes: VerifyUserStepType[]): WizardStepConfig[] {
+  return stepTypes.map((s) => STEP_CONFIG[s]);
 }
 
 export function VerifyUserWizard() {
@@ -37,11 +43,17 @@ export function VerifyUserWizard() {
 
   const state = location.state as VerifyUserLocationState | null;
   const steps = useMemo(() => buildSteps(state), [state?.verifyPhone, state?.verifyIdentity]);
+  const progressSteps = useMemo(() => buildProgressSteps(steps), [steps]);
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const currentStep = steps[currentStepIndex] ?? null;
   const totalSteps = steps.length;
   const returnTo = state?.returnTo ?? '/user-profile';
+
+  const completedStepIndices = useMemo(
+    () => new Set(Array.from({ length: currentStepIndex }, (_, i) => i)),
+    [currentStepIndex],
+  );
 
   // If no steps requested, redirect to profile
   useEffect(() => {
@@ -80,31 +92,13 @@ export function VerifyUserWizard() {
         <h1 className="mb-6 text-xl font-semibold text-gray-900">
           {t('verifyUser.title')}
         </h1>
-
         {totalSteps > 1 && (
           <div className="mb-8">
-            <p className="text-sm font-medium text-gray-600">
-              {t('verifyUser.stepIndicator', {
-                current: currentStepIndex + 1,
-                total: totalSteps,
-              })}
-            </p>
-            <div className="mt-2 flex gap-2">
-              {steps.map((step, index) => (
-                <span
-                  key={step}
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                    index < currentStepIndex
-                      ? 'bg-green-100 text-green-800'
-                      : index === currentStepIndex
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {t(getStepLabelKey(step))}
-                </span>
-              ))}
-            </div>
+            <WizardProgressBar
+              steps={progressSteps}
+              currentStepIndex={currentStepIndex}
+              completedStepIndices={completedStepIndices}
+            />
           </div>
         )}
 

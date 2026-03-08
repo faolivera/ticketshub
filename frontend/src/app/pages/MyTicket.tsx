@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from '@/app/components/ui/alert-dialog';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService, supportService } from '@/api/services';
+import type { ApiError } from '@/api/client';
 import { SupportCategory, DisputeReason } from '@/api/types/support';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate, formatDateTime } from '@/lib/format-date';
@@ -381,7 +382,42 @@ export function MyTicket() {
       const data = await bffService.getTransactionDetails(transactionId);
       setTransaction(data.transaction);
     } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: string }).message) : t('myTicket.disputeSubmitFailed');
+      let msg: string;
+      const apiErr = err as ApiError | undefined;
+      if (
+        apiErr?.code === 'CLAIM_TOO_EARLY' &&
+        typeof apiErr.details?.minHours === 'number'
+      ) {
+        const refDateKey =
+          apiErr.details?.refDateType === 'event_date'
+            ? 'myTicket.referenceDateEvent'
+            : 'myTicket.referenceDateTransfer';
+        msg = t('myTicket.claimTooEarly', {
+          minHours: apiErr.details.minHours,
+          referenceDate: t(refDateKey),
+        });
+      } else if (
+        apiErr?.code === 'CLAIM_TOO_LATE' &&
+        typeof apiErr.details?.maxHours === 'number'
+      ) {
+        const refDateKey =
+          apiErr.details?.refDateType === 'event_date'
+            ? 'myTicket.referenceDateEvent'
+            : 'myTicket.referenceDateTransfer';
+        msg = t('myTicket.claimTooLate', {
+          maxHours: apiErr.details.maxHours,
+          referenceDate: t(refDateKey),
+        });
+      } else if (apiErr?.code === 'CLAIM_TICKET_NOT_TRANSFERRED') {
+        msg = t('myTicket.claimTicketNotTransferred');
+      } else if (apiErr?.code === 'CLAIM_CONFIRM_RECEIPT_FIRST') {
+        msg = t('myTicket.claimConfirmReceiptFirst');
+      } else {
+        msg =
+          apiErr && typeof apiErr === 'object' && 'message' in apiErr
+            ? String(apiErr.message)
+            : t('myTicket.disputeSubmitFailed');
+      }
       setDisputeError(msg);
     } finally {
       setIsSubmittingDispute(false);
@@ -763,8 +799,8 @@ export function MyTicket() {
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                   <div className="flex items-start gap-3">
                     <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-blue-900 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-blue-900 mb-1 break-words">
                         {t('myTicket.bankTransferCompletePaymentTitle')}
                       </p>
                       <p className="text-sm text-blue-800 mb-3">
@@ -778,25 +814,48 @@ export function MyTicket() {
                         />
                       </div>
                       <div className="space-y-2 text-sm mt-3 p-3 bg-blue-100/50 rounded-lg">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                           <span className="text-blue-700">{t('myTicket.bankName')}</span>
                           <span className="font-medium text-blue-900">{bankTransferConfig.bankName}</span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                           <span className="text-blue-700">{t('myTicket.accountHolder')}</span>
                           <span className="font-medium text-blue-900">{bankTransferConfig.accountHolderName}</span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                           <span className="text-blue-700">{t('myTicket.cuitCuil')}</span>
                           <span className="font-medium text-blue-900">{bankTransferConfig.cuitCuil}</span>
                         </div>
-                        <div className="flex justify-between items-center gap-2 pt-2 border-t border-blue-200">
-                          <span className="text-blue-700">{t('myTicket.cbu')}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-medium text-blue-900">{bankTransferConfig.cbu}</span>
+                        <div className="flex flex-col gap-1 pt-2 border-t border-blue-200 sm:flex-row sm:justify-between sm:items-center sm:gap-2">
+                          <div className="flex items-center justify-between gap-2 sm:contents">
+                            <span className="text-blue-700">{t('myTicket.cbu')}</span>
                             <button
                               onClick={() => handleCopyCbu(bankTransferConfig.cbu)}
-                              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                              className={`sm:hidden flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
+                                copiedCbu
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 active:scale-95'
+                              }`}
+                              title={t('myTicket.copyCbu')}
+                            >
+                              {copiedCbu ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  {t('myTicket.copied')}
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  {t('myTicket.copy')}
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                            <span className="font-mono font-medium text-blue-900 break-all">{bankTransferConfig.cbu}</span>
+                            <button
+                              onClick={() => handleCopyCbu(bankTransferConfig.cbu)}
+                              className={`hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
                                 copiedCbu
                                   ? 'bg-green-100 text-green-700'
                                   : 'bg-blue-100 text-blue-700 hover:bg-blue-200 active:scale-95'
@@ -829,7 +888,7 @@ export function MyTicket() {
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={isUploading}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                         >
                           {isUploading ? (
                             <>
@@ -838,7 +897,7 @@ export function MyTicket() {
                             </>
                           ) : (
                             <>
-                              <Upload className="w-4 h-4" />
+                              <Upload className="w-4 h-4 flex-shrink-0" />
                               {t('myTicket.uploadPaymentConfirmation')}
                             </>
                           )}
@@ -894,31 +953,54 @@ export function MyTicket() {
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                   <div className="flex items-start gap-3">
                     <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-blue-900 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-blue-900 mb-3 break-words">
                         {t('myTicket.bankTransferDetails')}
                       </p>
                       
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                           <span className="text-blue-700">{t('myTicket.bankName')}</span>
                           <span className="font-medium text-blue-900">{bankTransferConfig.bankName}</span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                           <span className="text-blue-700">{t('myTicket.accountHolder')}</span>
                           <span className="font-medium text-blue-900">{bankTransferConfig.accountHolderName}</span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                           <span className="text-blue-700">{t('myTicket.cuitCuil')}</span>
                           <span className="font-medium text-blue-900">{bankTransferConfig.cuitCuil}</span>
                         </div>
-                        <div className="flex justify-between items-center gap-2 pt-2 border-t border-blue-200">
-                          <span className="text-blue-700">{t('myTicket.cbu')}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-medium text-blue-900">{bankTransferConfig.cbu}</span>
+                        <div className="flex flex-col gap-1 pt-2 border-t border-blue-200 sm:flex-row sm:justify-between sm:items-center sm:gap-2">
+                          <div className="flex items-center justify-between gap-2 sm:contents">
+                            <span className="text-blue-700">{t('myTicket.cbu')}</span>
                             <button
                               onClick={() => handleCopyCbu(bankTransferConfig.cbu)}
-                              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                              className={`sm:hidden flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
+                                copiedCbu
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 active:scale-95'
+                              }`}
+                              title={t('myTicket.copyCbu')}
+                            >
+                              {copiedCbu ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  {t('myTicket.copied')}
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  {t('myTicket.copy')}
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                            <span className="font-mono font-medium text-blue-900 break-all">{bankTransferConfig.cbu}</span>
+                            <button
+                              onClick={() => handleCopyCbu(bankTransferConfig.cbu)}
+                              className={`hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
                                 copiedCbu
                                   ? 'bg-green-100 text-green-700'
                                   : 'bg-blue-100 text-blue-700 hover:bg-blue-200 active:scale-95'
@@ -969,7 +1051,7 @@ export function MyTicket() {
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm sm:text-base bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
                       >
                         {isUploading ? (
                           <>
@@ -978,7 +1060,7 @@ export function MyTicket() {
                           </>
                         ) : (
                           <>
-                            <Upload className="w-4 h-4" />
+                            <Upload className="w-4 h-4 flex-shrink-0" />
                             {t('myTicket.selectFile')}
                           </>
                         )}

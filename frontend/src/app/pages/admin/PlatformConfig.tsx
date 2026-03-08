@@ -241,7 +241,10 @@ export function PlatformConfig() {
             return { amount: amountCents, currency: phoneRequiredAmountCurrency };
           })(),
           phoneRequiredQtyTickets: (Math.round(Number(phoneRequiredQtyTickets)) || cur?.buyer?.phoneRequiredQtyTickets) ?? 0,
-          newAccountDays: (Math.round(Number(newAccountDays)) || cur?.buyer?.newAccountDays) ?? 0,
+          newAccountDays:
+            newAccountDays !== '' && !Number.isNaN(Number(newAccountDays))
+              ? Math.round(Number(newAccountDays))
+              : (cur?.buyer?.newAccountDays ?? 0),
           dniRequiredEventHours: (Math.round(Number(dniRequiredEventHours)) || cur?.buyer?.dniRequiredEventHours) ?? 0,
           dniRequiredAmount: (() => {
             const major = Number(dniRequiredAmountMajor);
@@ -251,7 +254,10 @@ export function PlatformConfig() {
             return { amount: amountCents, currency: dniRequiredAmountCurrency };
           })(),
           dniRequiredQtyTickets: (Math.round(Number(dniRequiredQtyTickets)) || cur?.buyer?.dniRequiredQtyTickets) ?? 0,
-          dniNewAccountDays: (Math.round(Number(dniNewAccountDays)) || cur?.buyer?.dniNewAccountDays) ?? 0,
+          dniNewAccountDays:
+            dniNewAccountDays !== '' && !Number.isNaN(Number(dniNewAccountDays))
+              ? Math.round(Number(dniNewAccountDays))
+              : (cur?.buyer?.dniNewAccountDays ?? 0),
         },
         seller: {
           unverifiedSellerMaxSales: (Math.round(Number(unverifiedSellerMaxSales)) || cur?.seller?.unverifiedSellerMaxSales) ?? 0,

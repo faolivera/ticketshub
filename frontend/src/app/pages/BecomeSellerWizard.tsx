@@ -128,6 +128,7 @@ export function BecomeSellerWizard() {
             onComplete={async () => {
               await refreshUser();
             }}
+            hideBackToProfile
           />
         )}
         {currentStep === 2 && (

@@ -744,6 +744,12 @@
     "disputeSubmit": "Submit dispute",
     "disputeSubmitting": "Submitting...",
     "disputeSubmitFailed": "Failed to submit. Please try again.",
+    "claimTooEarly": "Claims can only be opened at least {{minHours}} hour(s) after the {{referenceDate}}. Please try again later.",
+    "claimTooLate": "Claims must be opened within {{maxHours}} hours of the {{referenceDate}}. The deadline has passed.",
+    "claimTicketNotTransferred": "You can only open a \"ticket not received\" claim after the ticket has been transferred.",
+    "claimConfirmReceiptFirst": "You must confirm receipt of the ticket before opening a \"ticket did not work\" claim.",
+    "referenceDateTransfer": "ticket transfer date",
+    "referenceDateEvent": "event date",
     "statusStepPaid": "Payment",
     "statusStepTransferred": "Transferred",
     "statusStepConfirmed": "Confirmed",
@@ -1936,7 +1942,10 @@
         "OFFER_RECEIVED": "Offer Received",
         "OFFER_ACCEPTED": "Offer Accepted",
         "OFFER_REJECTED": "Offer Rejected",
-        "OFFER_CANCELLED": "Offer Cancelled"
+        "OFFER_CANCELLED": "Offer Cancelled",
+        "IDENTITY_SUBMITTED": "Identity Submitted",
+        "BANK_ACCOUNT_SUBMITTED": "Bank Account Submitted",
+        "SELLER_VERIFICATION_COMPLETE": "Seller Verification Complete"
       },
       "priority": {
         "LOW": "Low",
