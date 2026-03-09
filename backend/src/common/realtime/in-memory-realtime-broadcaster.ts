@@ -16,13 +16,21 @@ export class InMemoryRealtimeBroadcaster implements IRealtimeBroadcaster {
     this.server = server;
   }
 
-  async emitToUser(userId: string, event: string, payload: unknown): Promise<void> {
+  async emitToUser(
+    userId: string,
+    event: string,
+    payload: unknown,
+  ): Promise<void> {
     if (!this.server) return;
     const roomId = USER_ROOM_PREFIX + userId;
     this.server.to(roomId).emit(event, payload);
   }
 
-  async emitToRoom(roomId: string, event: string, payload: unknown): Promise<void> {
+  async emitToRoom(
+    roomId: string,
+    event: string,
+    payload: unknown,
+  ): Promise<void> {
     if (!this.server) return;
     this.server.to(roomId).emit(event, payload);
   }

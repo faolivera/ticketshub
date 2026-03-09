@@ -1,5 +1,9 @@
 import type { Ctx } from '../../common/types/context';
-import type { Promotion, PromotionStatus, PromotionType } from './promotions.domain';
+import type {
+  Promotion,
+  PromotionStatus,
+  PromotionType,
+} from './promotions.domain';
 
 export interface ListPromotionsFilters {
   status?: PromotionStatus;
@@ -8,7 +12,10 @@ export interface ListPromotionsFilters {
 }
 
 export interface IPromotionsRepository {
-  create(ctx: Ctx, promotion: Omit<Promotion, 'id' | 'createdAt'>): Promise<Promotion>;
+  create(
+    ctx: Ctx,
+    promotion: Omit<Promotion, 'id' | 'createdAt'>,
+  ): Promise<Promotion>;
 
   findById(ctx: Ctx, id: string): Promise<Promotion | undefined>;
 
@@ -20,7 +27,11 @@ export interface IPromotionsRepository {
 
   list(ctx: Ctx, filters?: ListPromotionsFilters): Promise<Promotion[]>;
 
-  updateStatus(ctx: Ctx, id: string, status: PromotionStatus): Promise<Promotion | undefined>;
+  updateStatus(
+    ctx: Ctx,
+    id: string,
+    status: PromotionStatus,
+  ): Promise<Promotion | undefined>;
 
   /**
    * Increment usedCount and append listingId to usedInListingIds.

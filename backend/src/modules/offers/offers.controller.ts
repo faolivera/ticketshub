@@ -41,7 +41,11 @@ export class OffersController {
     @Body() body: unknown,
   ): Promise<ApiResponse<CreateOfferResponse>> {
     const parsed = CreateOfferRequestSchema.parse(body);
-    const offer = await this.offersService.createOffer(ctx, user.id, parsed as CreateOfferRequest);
+    const offer = await this.offersService.createOffer(
+      ctx,
+      user.id,
+      parsed as CreateOfferRequest,
+    );
     return { success: true, data: offer };
   }
 

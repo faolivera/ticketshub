@@ -7,9 +7,7 @@ import type { EventProcessor } from './processor.interface';
 import { UsersService } from '../../users/users.service';
 
 @Injectable()
-export class IdentitySubmittedProcessor
-  implements EventProcessor<IdentitySubmittedContext>
-{
+export class IdentitySubmittedProcessor implements EventProcessor<IdentitySubmittedContext> {
   readonly eventType = NotificationEventType.IDENTITY_SUBMITTED;
 
   constructor(private readonly usersService: UsersService) {}

@@ -84,7 +84,13 @@ export class IdentityVerificationController {
   async submitVerification(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
-    @Body() body: { legalFirstName: string; legalLastName: string; dateOfBirth: string; governmentIdNumber: string },
+    @Body()
+    body: {
+      legalFirstName: string;
+      legalLastName: string;
+      dateOfBirth: string;
+      governmentIdNumber: string;
+    },
     @UploadedFiles()
     files: {
       documentFront?: Multer.File[];
@@ -162,7 +168,12 @@ export class IdentityVerificationController {
     @Query('status') status?: string,
   ): Promise<ApiResponse<ListIdentityVerificationsResponse>> {
     let statusFilter: IdentityVerificationStatus | undefined;
-    if (status && Object.values(IdentityVerificationStatus).includes(status as IdentityVerificationStatus)) {
+    if (
+      status &&
+      Object.values(IdentityVerificationStatus).includes(
+        status as IdentityVerificationStatus,
+      )
+    ) {
       statusFilter = status as IdentityVerificationStatus;
     }
 
@@ -182,7 +193,11 @@ export class IdentityVerificationController {
     @Param('type') documentType: string,
     @Res() res: Response,
   ): Promise<void> {
-    if (documentType !== 'front' && documentType !== 'back' && documentType !== 'selfie') {
+    if (
+      documentType !== 'front' &&
+      documentType !== 'back' &&
+      documentType !== 'selfie'
+    ) {
       res.status(400).json({
         success: false,
         error: { code: 'BAD_REQUEST', message: 'Invalid document type' },

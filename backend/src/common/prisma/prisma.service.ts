@@ -12,7 +12,9 @@ export class PrismaService
   constructor(private readonly configService: ConfigService) {
     const connectionString = configService.get<string>('database.url');
     if (!connectionString) {
-      throw new Error('database.url is required. Set DATABASE_URL or configure in HOCON.');
+      throw new Error(
+        'database.url is required. Set DATABASE_URL or configure in HOCON.',
+      );
     }
     const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);

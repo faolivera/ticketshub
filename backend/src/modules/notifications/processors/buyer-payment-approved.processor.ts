@@ -6,9 +6,7 @@ import type { BuyerPaymentApprovedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class BuyerPaymentApprovedProcessor
-  implements EventProcessor<BuyerPaymentApprovedContext>
-{
+export class BuyerPaymentApprovedProcessor implements EventProcessor<BuyerPaymentApprovedContext> {
   readonly eventType = NotificationEventType.BUYER_PAYMENT_APPROVED;
 
   async getRecipients(
@@ -16,10 +14,7 @@ export class BuyerPaymentApprovedProcessor
     context: BuyerPaymentApprovedContext,
   ): Promise<NotificationRecipient[]> {
     // Both buyer and seller receive a notification when payment is approved
-    return [
-      { userId: context.buyerId },
-      { userId: context.sellerId },
-    ];
+    return [{ userId: context.buyerId }, { userId: context.sellerId }];
   }
 
   getTemplateVariables(

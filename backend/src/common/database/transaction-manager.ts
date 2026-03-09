@@ -4,7 +4,11 @@ import { Ctx } from '../types/context';
 import { TxCtx, PrismaTransactionClient, hasTx } from './types';
 
 export interface TransactionOptions {
-  isolationLevel?: 'ReadUncommitted' | 'ReadCommitted' | 'RepeatableRead' | 'Serializable';
+  isolationLevel?:
+    | 'ReadUncommitted'
+    | 'ReadCommitted'
+    | 'RepeatableRead'
+    | 'Serializable';
   timeout?: number;
 }
 

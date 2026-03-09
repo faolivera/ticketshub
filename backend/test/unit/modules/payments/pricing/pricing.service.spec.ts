@@ -49,15 +49,25 @@ describe('PricingService', () => {
     },
   ];
 
-  const createMockSnapshot = (overrides: Partial<PricingSnapshot> = {}): PricingSnapshot => ({
+  const createMockSnapshot = (
+    overrides: Partial<PricingSnapshot> = {},
+  ): PricingSnapshot => ({
     id: 'ps_test_123',
     listingId: 'listing_123',
     pricePerTicket: { amount: 10000, currency: 'USD' },
     buyerPlatformFeePercentage: 10,
     sellerPlatformFeePercentage: 5,
     paymentMethodCommissions: [
-      { paymentMethodId: 'pm_payway', paymentMethodName: 'Payway', commissionPercent: 12 },
-      { paymentMethodId: 'pm_bank_transfer', paymentMethodName: 'Bank Transfer', commissionPercent: 0 },
+      {
+        paymentMethodId: 'pm_payway',
+        paymentMethodName: 'Payway',
+        commissionPercent: 12,
+      },
+      {
+        paymentMethodId: 'pm_bank_transfer',
+        paymentMethodName: 'Bank Transfer',
+        commissionPercent: 0,
+      },
     ],
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 15 * 60 * 1000),
@@ -126,17 +136,24 @@ describe('PricingService', () => {
         commissionPercent: 12,
       });
       expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
-      expect(repository.create).toHaveBeenCalledWith(mockCtx, expect.objectContaining({
-        listingId,
-        pricePerTicket,
-      }));
+      expect(repository.create).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({
+          listingId,
+          pricePerTicket,
+        }),
+      );
     });
   });
 
   describe('validateAndConsume', () => {
     it('should validate and consume a valid snapshot using atomic operation', async () => {
       const snapshot = createMockSnapshot();
-      const consumedSnapshot = { ...snapshot, consumedAt: new Date(), consumedByTransactionId: 'txn_123' };
+      const consumedSnapshot = {
+        ...snapshot,
+        consumedAt: new Date(),
+        consumedByTransactionId: 'txn_123',
+      };
       repository.findById.mockResolvedValue(snapshot);
       repository.consumeAtomic.mockResolvedValue(consumedSnapshot);
 
@@ -163,11 +180,23 @@ describe('PricingService', () => {
       repository.findById.mockResolvedValue(undefined);
 
       await expect(
-        service.validateAndConsume(mockCtx, 'nonexistent', 'listing_123', 'pm_payway', 'txn_123'),
+        service.validateAndConsume(
+          mockCtx,
+          'nonexistent',
+          'listing_123',
+          'pm_payway',
+          'txn_123',
+        ),
       ).rejects.toThrow(BadRequestException);
 
       try {
-        await service.validateAndConsume(mockCtx, 'nonexistent', 'listing_123', 'pm_payway', 'txn_123');
+        await service.validateAndConsume(
+          mockCtx,
+          'nonexistent',
+          'listing_123',
+          'pm_payway',
+          'txn_123',
+        );
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
           code: PricingSnapshotError.NOT_FOUND,
@@ -187,7 +216,13 @@ describe('PricingService', () => {
       repository.consumeAtomic.mockResolvedValue(undefined);
 
       await expect(
-        service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123'),
+        service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_payway',
+          'txn_123',
+        ),
       ).rejects.toThrow(BadRequestException);
 
       try {
@@ -195,7 +230,13 @@ describe('PricingService', () => {
           .mockResolvedValueOnce(snapshot)
           .mockResolvedValueOnce(consumedSnapshot);
         repository.consumeAtomic.mockResolvedValue(undefined);
-        await service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123');
+        await service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_payway',
+          'txn_123',
+        );
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
           code: PricingSnapshotError.ALREADY_CONSUMED,
@@ -215,7 +256,13 @@ describe('PricingService', () => {
       repository.consumeAtomic.mockResolvedValue(undefined);
 
       await expect(
-        service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123'),
+        service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_payway',
+          'txn_123',
+        ),
       ).rejects.toThrow(BadRequestException);
 
       try {
@@ -223,7 +270,13 @@ describe('PricingService', () => {
           .mockResolvedValueOnce(snapshot)
           .mockResolvedValueOnce(expiredSnapshot);
         repository.consumeAtomic.mockResolvedValue(undefined);
-        await service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123');
+        await service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_payway',
+          'txn_123',
+        );
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
           code: PricingSnapshotError.EXPIRED,
@@ -240,7 +293,13 @@ describe('PricingService', () => {
       repository.consumeAtomic.mockResolvedValue(undefined);
 
       await expect(
-        service.validateAndConsume(mockCtx, snapshot.id, 'different_listing', 'pm_payway', 'txn_123'),
+        service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          'different_listing',
+          'pm_payway',
+          'txn_123',
+        ),
       ).rejects.toThrow(BadRequestException);
 
       try {
@@ -248,7 +307,13 @@ describe('PricingService', () => {
           .mockResolvedValueOnce(snapshot)
           .mockResolvedValueOnce(snapshot);
         repository.consumeAtomic.mockResolvedValue(undefined);
-        await service.validateAndConsume(mockCtx, snapshot.id, 'different_listing', 'pm_payway', 'txn_123');
+        await service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          'different_listing',
+          'pm_payway',
+          'txn_123',
+        );
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
           code: PricingSnapshotError.LISTING_MISMATCH,
@@ -262,11 +327,23 @@ describe('PricingService', () => {
       repository.findById.mockResolvedValue(snapshot);
 
       await expect(
-        service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_unknown', 'txn_123'),
+        service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_unknown',
+          'txn_123',
+        ),
       ).rejects.toThrow(BadRequestException);
 
       try {
-        await service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_unknown', 'txn_123');
+        await service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_unknown',
+          'txn_123',
+        );
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
           code: PricingSnapshotError.PAYMENT_METHOD_NOT_AVAILABLE,
@@ -278,7 +355,11 @@ describe('PricingService', () => {
     it('should return 0 commission if payment method has null commission', async () => {
       const snapshot = createMockSnapshot({
         paymentMethodCommissions: [
-          { paymentMethodId: 'pm_null', paymentMethodName: 'No Commission', commissionPercent: null },
+          {
+            paymentMethodId: 'pm_null',
+            paymentMethodName: 'No Commission',
+            commissionPercent: null,
+          },
         ],
       });
       const consumedSnapshot = { ...snapshot, consumedAt: new Date() };
@@ -304,7 +385,13 @@ describe('PricingService', () => {
       repository.consumeAtomic.mockResolvedValue(undefined);
 
       await expect(
-        service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123'),
+        service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_payway',
+          'txn_123',
+        ),
       ).rejects.toThrow(BadRequestException);
 
       try {
@@ -312,7 +399,13 @@ describe('PricingService', () => {
           .mockResolvedValueOnce(snapshot)
           .mockResolvedValueOnce(undefined);
         repository.consumeAtomic.mockResolvedValue(undefined);
-        await service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_123');
+        await service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_payway',
+          'txn_123',
+        );
       } catch (error) {
         expect((error as BadRequestException).getResponse()).toEqual({
           code: PricingSnapshotError.NOT_FOUND,
@@ -323,7 +416,11 @@ describe('PricingService', () => {
 
     it('should handle concurrent consumption - only first request succeeds', async () => {
       const snapshot = createMockSnapshot();
-      const consumedSnapshot = { ...snapshot, consumedAt: new Date(), consumedByTransactionId: 'txn_first' };
+      const consumedSnapshot = {
+        ...snapshot,
+        consumedAt: new Date(),
+        consumedByTransactionId: 'txn_first',
+      };
 
       repository.findById.mockResolvedValue(snapshot);
       repository.consumeAtomic
@@ -341,10 +438,19 @@ describe('PricingService', () => {
 
       repository.findById
         .mockResolvedValueOnce(snapshot)
-        .mockResolvedValueOnce({ ...snapshot, consumedByTransactionId: 'txn_first' });
+        .mockResolvedValueOnce({
+          ...snapshot,
+          consumedByTransactionId: 'txn_first',
+        });
 
       await expect(
-        service.validateAndConsume(mockCtx, snapshot.id, snapshot.listingId, 'pm_payway', 'txn_second'),
+        service.validateAndConsume(
+          mockCtx,
+          snapshot.id,
+          snapshot.listingId,
+          'pm_payway',
+          'txn_second',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });

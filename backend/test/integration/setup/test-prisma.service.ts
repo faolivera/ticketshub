@@ -2,7 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-const TEST_DATABASE_URL = 'postgresql://ticketshub:ticketshub@localhost:5433/ticketshubtest';
+const TEST_DATABASE_URL =
+  'postgresql://ticketshub:ticketshub@localhost:5433/ticketshubtest';
 
 let prismaInstance: PrismaClient | null = null;
 let poolInstance: Pool | null = null;

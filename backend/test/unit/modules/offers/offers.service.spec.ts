@@ -231,8 +231,13 @@ describe('OffersService', () => {
           bannerUrls: { rectangle: 'https://example.com/rect.jpg' },
         },
       });
-      expect(ticketsService.getMyListings).toHaveBeenCalledWith(mockCtx, 'seller_1');
-      expect(offersRepository.findByListingIds).toHaveBeenCalledWith(mockCtx, ['listing_1']);
+      expect(ticketsService.getMyListings).toHaveBeenCalledWith(
+        mockCtx,
+        'seller_1',
+      );
+      expect(offersRepository.findByListingIds).toHaveBeenCalledWith(mockCtx, [
+        'listing_1',
+      ]);
     });
 
     it('should return empty array when seller has no listings', async () => {

@@ -231,7 +231,9 @@ export class SupportSeedService {
       ctx,
       seller.id,
     );
-    const existingForEvent = sellerListings.filter((l) => l.eventId === event.id);
+    const existingForEvent = sellerListings.filter(
+      (l) => l.eventId === event.id,
+    );
     const existingSignatures = new Set(
       existingForEvent.map(
         (l) => `${l.eventSectionId}-${l.pricePerTicket.amount}`,

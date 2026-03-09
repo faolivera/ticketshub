@@ -104,7 +104,9 @@ describe('PaymentMethodsRepository (Integration)', () => {
       expect(result.id).toBe(paymentMethod.id);
       expect(result.name).toBe(paymentMethod.name);
       expect(result.type).toBe('manual_approval');
-      expect(result.bankTransferConfig).toEqual(paymentMethod.bankTransferConfig);
+      expect(result.bankTransferConfig).toEqual(
+        paymentMethod.bankTransferConfig,
+      );
     });
 
     it('should create a payment method with null commission', async () => {
@@ -240,7 +242,9 @@ describe('PaymentMethodsRepository (Integration)', () => {
 
       const result = await repository.findById(ctx, paymentMethod.id);
 
-      expect(result!.bankTransferConfig).toEqual(paymentMethod.bankTransferConfig);
+      expect(result!.bankTransferConfig).toEqual(
+        paymentMethod.bankTransferConfig,
+      );
     });
   });
 
@@ -295,7 +299,9 @@ describe('PaymentMethodsRepository (Integration)', () => {
   // ==================== update ====================
   describe('update', () => {
     it('should return undefined when payment method does not exist', async () => {
-      const result = await repository.update(ctx, randomUUID(), { name: 'new-name' });
+      const result = await repository.update(ctx, randomUUID(), {
+        name: 'new-name',
+      });
 
       expect(result).toBeUndefined();
     });
@@ -324,7 +330,9 @@ describe('PaymentMethodsRepository (Integration)', () => {
     });
 
     it('should update payment method type', async () => {
-      const paymentMethod = createValidPaymentMethod({ type: 'payment_gateway' });
+      const paymentMethod = createValidPaymentMethod({
+        type: 'payment_gateway',
+      });
       await repository.create(ctx, paymentMethod);
 
       const result = await repository.update(ctx, paymentMethod.id, {
@@ -335,7 +343,9 @@ describe('PaymentMethodsRepository (Integration)', () => {
     });
 
     it('should update buyer commission percent', async () => {
-      const paymentMethod = createValidPaymentMethod({ buyerCommissionPercent: 2.5 });
+      const paymentMethod = createValidPaymentMethod({
+        buyerCommissionPercent: 2.5,
+      });
       await repository.create(ctx, paymentMethod);
 
       const result = await repository.update(ctx, paymentMethod.id, {
@@ -428,7 +438,9 @@ describe('PaymentMethodsRepository (Integration)', () => {
         name: 'updated-name',
       });
 
-      expect(result!.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
+      expect(result!.updatedAt.getTime()).toBeGreaterThan(
+        originalUpdatedAt.getTime(),
+      );
     });
 
     it('should preserve existing instructions when updating other fields', async () => {
@@ -447,7 +459,9 @@ describe('PaymentMethodsRepository (Integration)', () => {
     });
 
     it('should set commission to 0 when updating to null', async () => {
-      const paymentMethod = createValidPaymentMethod({ buyerCommissionPercent: 5.0 });
+      const paymentMethod = createValidPaymentMethod({
+        buyerCommissionPercent: 5.0,
+      });
       await repository.create(ctx, paymentMethod);
 
       const result = await repository.update(ctx, paymentMethod.id, {

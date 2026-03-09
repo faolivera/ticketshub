@@ -69,7 +69,9 @@ const PublicMeUserSchema = z.object({
   tosAcceptedAt: z.date().optional(),
   identityVerified: z.boolean(),
   bankDetailsVerified: z.boolean(),
-  identityVerificationStatus: z.enum(['none', 'pending', 'approved', 'rejected']).optional(),
+  identityVerificationStatus: z
+    .enum(['none', 'pending', 'approved', 'rejected'])
+    .optional(),
   bankAccountStatus: z.enum(['none', 'pending', 'approved']).optional(),
   buyerDisputed: z.boolean(),
   bankAccountLast4: z.string().optional(),

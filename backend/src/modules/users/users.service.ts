@@ -15,7 +15,8 @@ import type { IImagesRepository } from '../images/images.repository.interface';
 import { IMAGES_REPOSITORY } from '../images/images.repository.interface';
 import { OTPService } from '../otp/otp.service';
 import { TermsService } from '../terms/terms.service';
-import type { Ctx } from '../../common/types/context';
+import { type Ctx, ON_APP_INIT_CTX } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { User, UserAddress } from './users.domain';
 import type {
   UserPublicInfo,
@@ -44,6 +45,8 @@ import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new ContextLogger(UsersService.name);
+
   constructor(
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: IUsersRepository,
@@ -85,10 +88,7 @@ export class UsersService {
     if (!this.publicStorageProvider.getSignedUrl) {
       return image;
     }
-    const signedUrl = await this.publicStorageProvider.getSignedUrl(
-      key,
-      3600,
-    );
+    const signedUrl = await this.publicStorageProvider.getSignedUrl(key, 3600);
     return { ...image, src: signedUrl };
   }
 
@@ -196,10 +196,7 @@ export class UsersService {
    * Find users whose email contains the search term (case-insensitive).
    * Used for admin transaction search.
    */
-  async findByEmailContaining(
-    ctx: Ctx,
-    searchTerm: string,
-  ): Promise<User[]> {
+  async findByEmailContaining(ctx: Ctx, searchTerm: string): Promise<User[]> {
     return await this.usersRepository.findByEmailContaining(ctx, searchTerm);
   }
 
@@ -272,7 +269,9 @@ export class UsersService {
     const secret = this.configService.get<string>('jwt.secret');
     const expiresIn = this.configService.get<string>('jwt.expiresIn');
     if (!secret) {
-      throw new Error('jwt.secret is required. Set JWT_SECRET or configure in HOCON.');
+      throw new Error(
+        'jwt.secret is required. Set JWT_SECRET or configure in HOCON.',
+      );
     }
     const payload: JWTPayload = {
       userId: user.id,
@@ -280,7 +279,9 @@ export class UsersService {
       role: user.role,
       isSeller: VerificationHelper.isSeller(user),
     };
-    return jwt.sign(payload, secret, { expiresIn: expiresIn ?? '7d' } as jwt.SignOptions);
+    return jwt.sign(payload, secret, {
+      expiresIn: expiresIn ?? '7d',
+    } as jwt.SignOptions);
   }
 
   /**
@@ -293,7 +294,7 @@ export class UsersService {
       const decoded = jwt.verify(token, secret) as JWTPayload;
       return decoded;
     } catch (error) {
-      console.error('JWT verify failed:', error);
+      this.logger.error(ON_APP_INIT_CTX, 'JWT verify failed:', error);
       return null;
     }
   }
@@ -540,7 +541,10 @@ export class UsersService {
     }
 
     // Get updated user info
-    const image = await this.imagesRepository.findById(ctx, updatedUser.imageId);
+    const image = await this.imagesRepository.findById(
+      ctx,
+      updatedUser.imageId,
+    );
     if (!image) {
       return null;
     }
@@ -573,7 +577,11 @@ export class UsersService {
         throw new ConflictException('Email already in use');
       }
     }
-    const updated = await this.usersRepository.updateForAdmin(ctx, userId, data);
+    const updated = await this.usersRepository.updateForAdmin(
+      ctx,
+      userId,
+      data,
+    );
     if (!updated) {
       throw new BadRequestException('Failed to update user');
     }
@@ -584,10 +592,7 @@ export class UsersService {
    * Accept seller terms (set intent to sell). Requires V1 (email) and V2 (phone) to be verified
    * before becoming a seller. Listing creation also enforces canSell() (V1+V2) at creation time.
    */
-  async acceptSellerTerms(
-    ctx: Ctx,
-    userId: string,
-  ): Promise<PublicMeUser> {
+  async acceptSellerTerms(ctx: Ctx, userId: string): Promise<PublicMeUser> {
     const user = await this.usersRepository.findById(ctx, userId);
     if (!user) {
       throw new BadRequestException('User not found');
@@ -648,7 +653,8 @@ export class UsersService {
     const prevLegalName =
       user.identityVerification &&
       `${user.identityVerification.legalFirstName ?? ''} ${user.identityVerification.legalLastName ?? ''}`.trim();
-    const newLegalName = `${identityData.legalFirstName} ${identityData.legalLastName}`.trim();
+    const newLegalName =
+      `${identityData.legalFirstName} ${identityData.legalLastName}`.trim();
     const legalNameChanged =
       prevLegalName !== '' && prevLegalName !== newLegalName;
 
@@ -681,13 +687,12 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
 
-    const allowedMimeTypes = this.configService.get<string[]>('users.allowedAvatarMimeTypes') ?? [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'image/gif',
-    ];
-    const maxSizeBytes = this.configService.get<number>('users.maxAvatarSizeBytes') ?? 5 * 1024 * 1024;
+    const allowedMimeTypes = this.configService.get<string[]>(
+      'users.allowedAvatarMimeTypes',
+    ) ?? ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const maxSizeBytes =
+      this.configService.get<number>('users.maxAvatarSizeBytes') ??
+      5 * 1024 * 1024;
     if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException(
         `Invalid file type. Allowed: ${allowedMimeTypes.join(', ')}`,
@@ -761,7 +766,9 @@ export class UsersService {
       const legalFullName = this.normalizeNameForMatch(
         `${legalFirstName} ${legalLastName}`,
       );
-      const holderNormalized = this.normalizeNameForMatch(data.holderName.trim());
+      const holderNormalized = this.normalizeNameForMatch(
+        data.holderName.trim(),
+      );
       if (legalFullName !== holderNormalized) {
         throw new BadRequestException(
           'Bank account holder name must match your verified identity',
@@ -783,11 +790,13 @@ export class UsersService {
     this.notificationsService
       .emit(ctx, NotificationEventType.BANK_ACCOUNT_SUBMITTED, {
         userId,
-        userName: `${user.firstName} ${user.lastName}`.trim() || user.publicName,
+        userName:
+          `${user.firstName} ${user.lastName}`.trim() || user.publicName,
       })
       .catch((err) =>
-        console.error(
-          `[UsersService] Failed to emit BANK_ACCOUNT_SUBMITTED:`,
+        this.logger.error(
+          ctx,
+          'Failed to emit BANK_ACCOUNT_SUBMITTED:',
           err,
         ),
       );
@@ -839,8 +848,9 @@ export class UsersService {
           userName,
         })
         .catch((err) =>
-          console.error(
-            `[UsersService] Failed to emit SELLER_VERIFICATION_COMPLETE:`,
+          this.logger.error(
+            ctx,
+            'Failed to emit SELLER_VERIFICATION_COMPLETE:',
             err,
           ),
         );

@@ -96,21 +96,39 @@ describe('OTPRepository (Integration)', () => {
 
   describe('findLatestPendingByUserAndType', () => {
     it('should return undefined when no pending OTP', async () => {
-      const found = await repository.findLatestPendingByUserAndType(ctx, testUserId, OTPType.EmailVerification);
+      const found = await repository.findLatestPendingByUserAndType(
+        ctx,
+        testUserId,
+        OTPType.EmailVerification,
+      );
       expect(found).toBeUndefined();
     });
 
     it('should return undefined when OTP expired', async () => {
       const otp = createValidOTP({ expiresAt: new Date(Date.now() - 1000) });
       await repository.create(ctx, otp);
-      const found = await repository.findLatestPendingByUserAndType(ctx, testUserId, OTPType.EmailVerification);
+      const found = await repository.findLatestPendingByUserAndType(
+        ctx,
+        testUserId,
+        OTPType.EmailVerification,
+      );
       expect(found).toBeUndefined();
     });
 
     it('should return latest pending OTP', async () => {
-      await repository.create(ctx, createValidOTP({ id: randomUUID(), code: '111111' }));
-      const latest = await repository.create(ctx, createValidOTP({ id: randomUUID(), code: '222222' }));
-      const found = await repository.findLatestPendingByUserAndType(ctx, testUserId, OTPType.EmailVerification);
+      await repository.create(
+        ctx,
+        createValidOTP({ id: randomUUID(), code: '111111' }),
+      );
+      const latest = await repository.create(
+        ctx,
+        createValidOTP({ id: randomUUID(), code: '222222' }),
+      );
+      const found = await repository.findLatestPendingByUserAndType(
+        ctx,
+        testUserId,
+        OTPType.EmailVerification,
+      );
       expect(found?.id).toBe(latest.id);
       expect(found?.code).toBe('222222');
     });
@@ -120,28 +138,48 @@ describe('OTPRepository (Integration)', () => {
     it('should expire all pending OTPs for user and type', async () => {
       await repository.create(ctx, createValidOTP({ id: randomUUID() }));
       await repository.create(ctx, createValidOTP({ id: randomUUID() }));
-      await repository.expireAllPendingByUserAndType(ctx, testUserId, OTPType.EmailVerification);
-      const found = await repository.findLatestPendingByUserAndType(ctx, testUserId, OTPType.EmailVerification);
+      await repository.expireAllPendingByUserAndType(
+        ctx,
+        testUserId,
+        OTPType.EmailVerification,
+      );
+      const found = await repository.findLatestPendingByUserAndType(
+        ctx,
+        testUserId,
+        OTPType.EmailVerification,
+      );
       expect(found).toBeUndefined();
     });
   });
 
   describe('updateStatus', () => {
     it('should return undefined for non-existent OTP', async () => {
-      const result = await repository.updateStatus(ctx, 'non-existent-id', OTPStatus.Verified);
+      const result = await repository.updateStatus(
+        ctx,
+        'non-existent-id',
+        OTPStatus.Verified,
+      );
       expect(result).toBeUndefined();
     });
 
     it('should update status to verified', async () => {
       const otp = await repository.create(ctx, createValidOTP());
-      const updated = await repository.updateStatus(ctx, otp.id, OTPStatus.Verified);
+      const updated = await repository.updateStatus(
+        ctx,
+        otp.id,
+        OTPStatus.Verified,
+      );
       expect(updated?.status).toBe(OTPStatus.Verified);
       expect(updated?.verifiedAt).toBeDefined();
     });
 
     it('should update status to expired', async () => {
       const otp = await repository.create(ctx, createValidOTP());
-      const updated = await repository.updateStatus(ctx, otp.id, OTPStatus.Expired);
+      const updated = await repository.updateStatus(
+        ctx,
+        otp.id,
+        OTPStatus.Expired,
+      );
       expect(updated?.status).toBe(OTPStatus.Expired);
     });
   });
@@ -155,7 +193,9 @@ describe('OTPRepository (Integration)', () => {
     });
 
     it('should not throw when deleting non-existent OTP', async () => {
-      await expect(repository.delete(ctx, 'non-existent-id')).resolves.not.toThrow();
+      await expect(
+        repository.delete(ctx, 'non-existent-id'),
+      ).resolves.not.toThrow();
     });
   });
 });

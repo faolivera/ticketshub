@@ -1,4 +1,8 @@
-import { PrismaClient, Role, SeatingType as PrismaSeatingType } from '@prisma/client';
+import {
+  PrismaClient,
+  Role,
+  SeatingType as PrismaSeatingType,
+} from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PaymentConfirmationsRepository } from '@/modules/payment-confirmations/payment-confirmations.repository';
 import {
@@ -27,14 +31,17 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
   let testPricingSnapshotId: string;
   let testTransactionId: string;
 
-  const createTestUser = async (overrides?: Partial<{
-    email: string;
-    role: Role;
-    acceptedSellerTermsAt: Date | null;
-  }>): Promise<string> => {
+  const createTestUser = async (
+    overrides?: Partial<{
+      email: string;
+      role: Role;
+      acceptedSellerTermsAt: Date | null;
+    }>,
+  ): Promise<string> => {
     const user = await prisma.user.create({
       data: {
-        email: overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
+        email:
+          overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
         firstName: 'Test',
         lastName: 'User',
         publicName: `testuser-${randomUUID().slice(0, 8)}`,
@@ -75,7 +82,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     return event.id;
   };
 
-  const createTestEventDate = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventDate = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const eventDate = await prisma.eventDate.create({
       data: {
         event: { connect: { id: eventId } },
@@ -87,7 +97,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     return eventDate.id;
   };
 
-  const createTestEventSection = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventSection = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const section = await prisma.eventSection.create({
       data: {
         event: { connect: { id: eventId } },
@@ -116,7 +129,9 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     return listing.id;
   };
 
-  const createTestPricingSnapshot = async (listingId: string): Promise<string> => {
+  const createTestPricingSnapshot = async (
+    listingId: string,
+  ): Promise<string> => {
     const id = randomUUID();
     await prisma.pricingSnapshot.create({
       data: {
@@ -132,7 +147,12 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     return id;
   };
 
-  const createTestTransaction = async (buyerId: string, sellerId: string, listingId: string, pricingSnapshotId: string): Promise<string> => {
+  const createTestTransaction = async (
+    buyerId: string,
+    sellerId: string,
+    listingId: string,
+    pricingSnapshotId: string,
+  ): Promise<string> => {
     const transaction = await prisma.transaction.create({
       data: {
         id: randomUUID(),
@@ -158,7 +178,9 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     return transaction.id;
   };
 
-  const createValidPaymentConfirmation = (overrides?: Partial<PaymentConfirmation>): PaymentConfirmation => {
+  const createValidPaymentConfirmation = (
+    overrides?: Partial<PaymentConfirmation>,
+  ): PaymentConfirmation => {
     const now = new Date();
     return {
       id: randomUUID(),
@@ -183,14 +205,26 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     await truncateAllTables(prisma);
     ctx = createTestContext();
 
-    testBuyerId = await createTestUser({ email: `buyer-${Date.now()}@test.com` });
-    testSellerId = await createTestUser({ email: `seller-${Date.now()}@test.com` });
+    testBuyerId = await createTestUser({
+      email: `buyer-${Date.now()}@test.com`,
+    });
+    testSellerId = await createTestUser({
+      email: `seller-${Date.now()}@test.com`,
+    });
     testEventId = await createTestEvent(testSellerId);
     testEventDateId = await createTestEventDate(testEventId, testSellerId);
-    testEventSectionId = await createTestEventSection(testEventId, testSellerId);
+    testEventSectionId = await createTestEventSection(
+      testEventId,
+      testSellerId,
+    );
     testListingId = await createTestListing(testSellerId);
     testPricingSnapshotId = await createTestPricingSnapshot(testListingId);
-    testTransactionId = await createTestTransaction(testBuyerId, testSellerId, testListingId, testPricingSnapshotId);
+    testTransactionId = await createTestTransaction(
+      testBuyerId,
+      testSellerId,
+      testListingId,
+      testPricingSnapshotId,
+    );
   });
 
   afterAll(async () => {
@@ -232,7 +266,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
       const confirmationData = createValidPaymentConfirmation();
       const created = await repository.save(ctx, confirmationData);
 
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
       const reviewedAt = new Date();
 
       const updated = await repository.save(ctx, {
@@ -254,7 +291,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
       const confirmationData = createValidPaymentConfirmation();
       const created = await repository.save(ctx, confirmationData);
 
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
       const reviewedAt = new Date();
 
       const updated = await repository.save(ctx, {
@@ -291,7 +331,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should find payment confirmation by id', async () => {
-      const created = await repository.save(ctx, createValidPaymentConfirmation());
+      const created = await repository.save(
+        ctx,
+        createValidPaymentConfirmation(),
+      );
 
       const found = await repository.findById(ctx, created.id);
 
@@ -302,7 +345,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should return all fields correctly', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
       const reviewedAt = new Date();
       const confirmationData = createValidPaymentConfirmation({
         status: PaymentConfirmationStatus.Accepted,
@@ -325,14 +371,23 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
 
   describe('findByTransactionId', () => {
     it('should return null when no confirmation exists for transaction', async () => {
-      const confirmation = await repository.findByTransactionId(ctx, 'non-existent-transaction');
+      const confirmation = await repository.findByTransactionId(
+        ctx,
+        'non-existent-transaction',
+      );
       expect(confirmation).toBeNull();
     });
 
     it('should find payment confirmation by transaction id', async () => {
-      const created = await repository.save(ctx, createValidPaymentConfirmation());
+      const created = await repository.save(
+        ctx,
+        createValidPaymentConfirmation(),
+      );
 
-      const found = await repository.findByTransactionId(ctx, testTransactionId);
+      const found = await repository.findByTransactionId(
+        ctx,
+        testTransactionId,
+      );
 
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
@@ -347,10 +402,19 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      await repository.save(ctx, createValidPaymentConfirmation({ transactionId: testTransactionId }));
-      await repository.save(ctx, createValidPaymentConfirmation({ transactionId: transaction2Id }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({ transactionId: testTransactionId }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({ transactionId: transaction2Id }),
+      );
 
-      const found1 = await repository.findByTransactionId(ctx, testTransactionId);
+      const found1 = await repository.findByTransactionId(
+        ctx,
+        testTransactionId,
+      );
       const found2 = await repository.findByTransactionId(ctx, transaction2Id);
 
       expect(found1?.transactionId).toBe(testTransactionId);
@@ -368,7 +432,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should return only pending confirmations', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
 
       const transaction2Id = await createTestTransaction(
         testBuyerId,
@@ -383,36 +450,53 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: testTransactionId,
-        status: PaymentConfirmationStatus.Pending,
-      }));
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: transaction2Id,
-        status: PaymentConfirmationStatus.Accepted,
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
-      }));
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: transaction3Id,
-        status: PaymentConfirmationStatus.Pending,
-      }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: testTransactionId,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: transaction2Id,
+          status: PaymentConfirmationStatus.Accepted,
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: transaction3Id,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
 
       const pending = await repository.findAllPending(ctx);
 
       expect(pending).toHaveLength(2);
-      expect(pending.every(c => c.status === PaymentConfirmationStatus.Pending)).toBe(true);
+      expect(
+        pending.every((c) => c.status === PaymentConfirmationStatus.Pending),
+      ).toBe(true);
     });
 
     it('should not return rejected confirmations', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
 
-      await repository.save(ctx, createValidPaymentConfirmation({
-        status: PaymentConfirmationStatus.Rejected,
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
-        adminNotes: 'Invalid image',
-      }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          status: PaymentConfirmationStatus.Rejected,
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+          adminNotes: 'Invalid image',
+        }),
+      );
 
       const pending = await repository.findAllPending(ctx);
 
@@ -429,7 +513,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should count only pending confirmations', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
 
       const transaction2Id = await createTestTransaction(
         testBuyerId,
@@ -444,20 +531,29 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: testTransactionId,
-        status: PaymentConfirmationStatus.Pending,
-      }));
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: transaction2Id,
-        status: PaymentConfirmationStatus.Accepted,
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
-      }));
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: transaction3Id,
-        status: PaymentConfirmationStatus.Pending,
-      }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: testTransactionId,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: transaction2Id,
+          status: PaymentConfirmationStatus.Accepted,
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: transaction3Id,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
 
       const count = await repository.countPending(ctx);
 
@@ -465,14 +561,20 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should return correct count after status changes', async () => {
-      const confirmation = await repository.save(ctx, createValidPaymentConfirmation({
-        status: PaymentConfirmationStatus.Pending,
-      }));
+      const confirmation = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
 
       let count = await repository.countPending(ctx);
       expect(count).toBe(1);
 
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
       await repository.save(ctx, {
         ...confirmation,
         status: PaymentConfirmationStatus.Accepted,
@@ -501,14 +603,20 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: testTransactionId,
-        status: PaymentConfirmationStatus.Pending,
-      }));
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: transaction2Id,
-        status: PaymentConfirmationStatus.Pending,
-      }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: testTransactionId,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: transaction2Id,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
 
       const ids = await repository.getPendingTransactionIds(ctx);
 
@@ -518,7 +626,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should not include transaction ids of non-pending confirmations', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
 
       const transaction2Id = await createTestTransaction(
         testBuyerId,
@@ -527,16 +638,22 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: testTransactionId,
-        status: PaymentConfirmationStatus.Pending,
-      }));
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: transaction2Id,
-        status: PaymentConfirmationStatus.Accepted,
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
-      }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: testTransactionId,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: transaction2Id,
+          status: PaymentConfirmationStatus.Accepted,
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+        }),
+      );
 
       const ids = await repository.getPendingTransactionIds(ctx);
 
@@ -555,7 +672,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should return empty array when no confirmations match', async () => {
-      const confirmations = await repository.findByTransactionIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const confirmations = await repository.findByTransactionIds(ctx, [
+        'non-existent-1',
+        'non-existent-2',
+      ]);
       expect(confirmations).toEqual([]);
     });
 
@@ -573,20 +693,41 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      await repository.save(ctx, createValidPaymentConfirmation({ transactionId: testTransactionId }));
-      await repository.save(ctx, createValidPaymentConfirmation({ transactionId: transaction2Id }));
-      await repository.save(ctx, createValidPaymentConfirmation({ transactionId: transaction3Id }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({ transactionId: testTransactionId }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({ transactionId: transaction2Id }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({ transactionId: transaction3Id }),
+      );
 
-      const confirmations = await repository.findByTransactionIds(ctx, [testTransactionId, transaction2Id]);
+      const confirmations = await repository.findByTransactionIds(ctx, [
+        testTransactionId,
+        transaction2Id,
+      ]);
 
       expect(confirmations).toHaveLength(2);
-      expect(confirmations.map(c => c.transactionId)).toContain(testTransactionId);
-      expect(confirmations.map(c => c.transactionId)).toContain(transaction2Id);
-      expect(confirmations.map(c => c.transactionId)).not.toContain(transaction3Id);
+      expect(confirmations.map((c) => c.transactionId)).toContain(
+        testTransactionId,
+      );
+      expect(confirmations.map((c) => c.transactionId)).toContain(
+        transaction2Id,
+      );
+      expect(confirmations.map((c) => c.transactionId)).not.toContain(
+        transaction3Id,
+      );
     });
 
     it('should return confirmations regardless of status', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
 
       const transaction2Id = await createTestTransaction(
         testBuyerId,
@@ -595,18 +736,27 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: testTransactionId,
-        status: PaymentConfirmationStatus.Pending,
-      }));
-      await repository.save(ctx, createValidPaymentConfirmation({
-        transactionId: transaction2Id,
-        status: PaymentConfirmationStatus.Accepted,
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
-      }));
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: testTransactionId,
+          status: PaymentConfirmationStatus.Pending,
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          transactionId: transaction2Id,
+          status: PaymentConfirmationStatus.Accepted,
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+        }),
+      );
 
-      const confirmations = await repository.findByTransactionIds(ctx, [testTransactionId, transaction2Id]);
+      const confirmations = await repository.findByTransactionIds(ctx, [
+        testTransactionId,
+        transaction2Id,
+      ]);
 
       expect(confirmations).toHaveLength(2);
     });
@@ -616,7 +766,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
 
   describe('delete', () => {
     it('should delete an existing payment confirmation', async () => {
-      const created = await repository.save(ctx, createValidPaymentConfirmation());
+      const created = await repository.save(
+        ctx,
+        createValidPaymentConfirmation(),
+      );
 
       await repository.delete(ctx, created.id);
 
@@ -625,9 +778,7 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
     });
 
     it('should throw when trying to delete non-existent confirmation', async () => {
-      await expect(
-        repository.delete(ctx, 'non-existent-id'),
-      ).rejects.toThrow();
+      await expect(repository.delete(ctx, 'non-existent-id')).rejects.toThrow();
     });
 
     it('should only delete the specified confirmation', async () => {
@@ -638,8 +789,14 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         testPricingSnapshotId,
       );
 
-      const confirmation1 = await repository.save(ctx, createValidPaymentConfirmation({ transactionId: testTransactionId }));
-      const confirmation2 = await repository.save(ctx, createValidPaymentConfirmation({ transactionId: transaction2Id }));
+      const confirmation1 = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({ transactionId: testTransactionId }),
+      );
+      const confirmation2 = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({ transactionId: transaction2Id }),
+      );
 
       await repository.delete(ctx, confirmation1.id);
 
@@ -671,17 +828,23 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
           testPricingSnapshotId,
         );
 
-        const confirmation = await repository.save(ctx, createValidPaymentConfirmation({
-          transactionId,
-          contentType: contentTypes[i],
-        }));
+        const confirmation = await repository.save(
+          ctx,
+          createValidPaymentConfirmation({
+            transactionId,
+            contentType: contentTypes[i],
+          }),
+        );
 
         expect(confirmation.contentType).toBe(contentTypes[i]);
       }
     });
 
     it('should handle all payment confirmation statuses', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
       const statuses = [
         PaymentConfirmationStatus.Pending,
         PaymentConfirmationStatus.Accepted,
@@ -697,7 +860,10 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
         );
 
         const confirmationData: PaymentConfirmation = {
-          ...createValidPaymentConfirmation({ transactionId, status: statuses[i] }),
+          ...createValidPaymentConfirmation({
+            transactionId,
+            status: statuses[i],
+          }),
         };
 
         if (statuses[i] !== PaymentConfirmationStatus.Pending) {
@@ -713,52 +879,74 @@ describe('PaymentConfirmationsRepository (Integration)', () => {
 
     it('should handle large file sizes', async () => {
       const largeFileSize = 10 * 1024 * 1024;
-      const confirmation = await repository.save(ctx, createValidPaymentConfirmation({
-        sizeBytes: largeFileSize,
-      }));
+      const confirmation = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          sizeBytes: largeFileSize,
+        }),
+      );
 
       expect(confirmation.sizeBytes).toBe(largeFileSize);
     });
 
     it('should handle special characters in original filename', async () => {
       const specialFilename = 'receipt (copy) - 2026_März.png';
-      const confirmation = await repository.save(ctx, createValidPaymentConfirmation({
-        originalFilename: specialFilename,
-      }));
+      const confirmation = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          originalFilename: specialFilename,
+        }),
+      );
 
       expect(confirmation.originalFilename).toBe(specialFilename);
     });
 
     it('should handle long storage keys', async () => {
       const longStorageKey = `confirmations/${randomUUID()}/${randomUUID()}/${randomUUID()}/very-long-filename-with-uuid-${randomUUID()}.png`;
-      const confirmation = await repository.save(ctx, createValidPaymentConfirmation({
-        storageKey: longStorageKey,
-      }));
+      const confirmation = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          storageKey: longStorageKey,
+        }),
+      );
 
       expect(confirmation.storageKey).toBe(longStorageKey);
     });
 
     it('should handle admin notes with special characters', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
-      const adminNotes = 'Rejected: Image quality poor. Contains special chars: "quotes", <tags>, & ampersands, émojis: 📧';
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
+      const adminNotes =
+        'Rejected: Image quality poor. Contains special chars: "quotes", <tags>, & ampersands, émojis: 📧';
 
-      const confirmation = await repository.save(ctx, createValidPaymentConfirmation({
-        status: PaymentConfirmationStatus.Rejected,
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
-        adminNotes,
-      }));
+      const confirmation = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          status: PaymentConfirmationStatus.Rejected,
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+          adminNotes,
+        }),
+      );
 
       expect(confirmation.adminNotes).toBe(adminNotes);
     });
 
     it('should preserve createdAt timestamp on update', async () => {
       const originalCreatedAt = new Date('2026-01-15T10:00:00Z');
-      const created = await repository.save(ctx, createValidPaymentConfirmation({
-        createdAt: originalCreatedAt,
-      }));
+      const created = await repository.save(
+        ctx,
+        createValidPaymentConfirmation({
+          createdAt: originalCreatedAt,
+        }),
+      );
 
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
       const updated = await repository.save(ctx, {
         ...created,
         status: PaymentConfirmationStatus.Accepted,

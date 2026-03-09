@@ -59,7 +59,11 @@ export class SupportController {
       (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
       req.socket?.remoteAddress ||
       'unknown';
-    const ticket = await this.supportService.createContactTicket(ctx, body, clientIp);
+    const ticket = await this.supportService.createContactTicket(
+      ctx,
+      body,
+      clientIp,
+    );
     return { success: true, data: ticket };
   }
 

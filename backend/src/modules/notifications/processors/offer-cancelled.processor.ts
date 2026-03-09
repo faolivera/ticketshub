@@ -6,9 +6,7 @@ import type { OfferCancelledContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class OfferCancelledProcessor
-  implements EventProcessor<OfferCancelledContext>
-{
+export class OfferCancelledProcessor implements EventProcessor<OfferCancelledContext> {
   readonly eventType = NotificationEventType.OFFER_CANCELLED;
 
   async getRecipients(

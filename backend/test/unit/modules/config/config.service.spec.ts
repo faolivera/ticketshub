@@ -113,7 +113,11 @@ describe('PlatformConfigService', () => {
       const result = await service.getPlatformConfig(mockCtx);
       expect(result).toMatchObject({
         buyerPlatformFeePercentage: 10,
-        riskEngine: { buyer: { phoneRequiredEventHours: 72 }, seller: {}, claims: {} },
+        riskEngine: {
+          buyer: { phoneRequiredEventHours: 72 },
+          seller: {},
+          claims: {},
+        },
         exchangeRates: { usdToArs: 1000 },
       });
       expect(configRepository.upsertPlatformConfig).toHaveBeenCalledWith(
@@ -121,7 +125,7 @@ describe('PlatformConfigService', () => {
         expect.objectContaining({
           buyerPlatformFeePercentage: 10,
           exchangeRates: { usdToArs: 1000 },
-        })
+        }),
       );
     });
   });
@@ -141,7 +145,7 @@ describe('PlatformConfigService', () => {
       expect(result.transactionChatMaxMessages).toBe(100);
       expect(configRepository.upsertPlatformConfig).toHaveBeenCalledWith(
         mockCtx,
-        expect.objectContaining({ buyerPlatformFeePercentage: 15 })
+        expect.objectContaining({ buyerPlatformFeePercentage: 15 }),
       );
     });
 
@@ -149,7 +153,7 @@ describe('PlatformConfigService', () => {
       await expect(
         service.updatePlatformConfig(mockCtx, {
           buyerPlatformFeePercentage: 101,
-        })
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -157,7 +161,7 @@ describe('PlatformConfigService', () => {
       await expect(
         service.updatePlatformConfig(mockCtx, {
           sellerPlatformFeePercentage: -1,
-        })
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -165,7 +169,7 @@ describe('PlatformConfigService', () => {
       await expect(
         service.updatePlatformConfig(mockCtx, {
           transactionChatPollIntervalSeconds: 200,
-        })
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -173,7 +177,7 @@ describe('PlatformConfigService', () => {
       await expect(
         service.updatePlatformConfig(mockCtx, {
           transactionChatMaxMessages: 5,
-        })
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });

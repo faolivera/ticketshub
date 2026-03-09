@@ -7,9 +7,7 @@ import type { PaymentRequiredContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class PaymentRequiredProcessor
-  implements EventProcessor<PaymentRequiredContext>
-{
+export class PaymentRequiredProcessor implements EventProcessor<PaymentRequiredContext> {
   readonly eventType = NotificationEventType.PAYMENT_REQUIRED;
 
   async getRecipients(

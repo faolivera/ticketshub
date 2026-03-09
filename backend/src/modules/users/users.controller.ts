@@ -81,7 +81,11 @@ export class UsersController {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const result = await this.usersService.login(ctx, normalizedEmail, password);
+    const result = await this.usersService.login(
+      ctx,
+      normalizedEmail,
+      password,
+    );
     if (!result) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -127,7 +131,8 @@ export class UsersController {
     @Context() ctx: Ctx,
     @Body() body: RegisterRequest,
   ): Promise<ApiResponse<RegisterResponse>> {
-    const { email, password, firstName, lastName, termsAcceptance, phone } = body;
+    const { email, password, firstName, lastName, termsAcceptance, phone } =
+      body;
     const country = body.country ?? 'Argentina';
 
     if (!email || !password || !firstName || !lastName) {
@@ -266,11 +271,15 @@ export class UsersController {
     if (!body.holderName?.trim() || !body.cbuOrCvu?.trim()) {
       throw new BadRequestException('holderName and cbuOrCvu are required');
     }
-    const updatedUser = await this.usersService.updateBankAccount(ctx, user.id, {
-      holderName: body.holderName.trim(),
-      cbuOrCvu: body.cbuOrCvu.trim(),
-      alias: body.alias?.trim(),
-    });
+    const updatedUser = await this.usersService.updateBankAccount(
+      ctx,
+      user.id,
+      {
+        holderName: body.holderName.trim(),
+        cbuOrCvu: body.cbuOrCvu.trim(),
+        alias: body.alias?.trim(),
+      },
+    );
     return {
       success: true,
       data: updatedUser,
@@ -308,11 +317,12 @@ export class UsersController {
     if (body.status !== 'approved' && body.status !== 'rejected') {
       throw new BadRequestException('Status must be "approved" or "rejected"');
     }
-    const updatedUser = await this.usersService.setBankAccountVerificationStatus(
-      ctx,
-      userId,
-      body.status,
-    );
+    const updatedUser =
+      await this.usersService.setBankAccountVerificationStatus(
+        ctx,
+        userId,
+        body.status,
+      );
     return {
       success: true,
       data: updatedUser,

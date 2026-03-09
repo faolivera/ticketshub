@@ -6,9 +6,7 @@ import type { OfferRejectedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class OfferRejectedProcessor
-  implements EventProcessor<OfferRejectedContext>
-{
+export class OfferRejectedProcessor implements EventProcessor<OfferRejectedContext> {
   readonly eventType = NotificationEventType.OFFER_REJECTED;
 
   async getRecipients(

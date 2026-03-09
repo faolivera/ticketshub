@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PaymentConfirmationsService } from '../payment-confirmations/payment-confirmations.service';
 import {
@@ -68,10 +73,21 @@ import {
 } from '../users/users.domain';
 import type { User } from '../users/users.domain';
 import type { Transaction } from '../transactions/transactions.domain';
-import { TransactionStatus, RequiredActor, CancellationReason } from '../transactions/transactions.domain';
+import {
+  TransactionStatus,
+  RequiredActor,
+  CancellationReason,
+} from '../transactions/transactions.domain';
 import { SupportService } from '../support/support.service';
-import { SupportTicketStatus, DisputeResolution } from '../support/support.domain';
-import type { SupportTicket, SupportTicketWithMessages, SupportMessage } from '../support/support.domain';
+import {
+  SupportTicketStatus,
+  DisputeResolution,
+} from '../support/support.domain';
+import type {
+  SupportTicket,
+  SupportTicketWithMessages,
+  SupportMessage,
+} from '../support/support.domain';
 
 @Injectable()
 export class AdminService {
@@ -115,7 +131,10 @@ export class AdminService {
    * Search users by email (contains, case-insensitive) for admin autocomplete.
    * Returns at most USER_SEARCH_LIMIT results with id and email only.
    */
-  async searchUsersByEmail(ctx: Ctx, searchTerm: string): Promise<AdminUserSearchResponse> {
+  async searchUsersByEmail(
+    ctx: Ctx,
+    searchTerm: string,
+  ): Promise<AdminUserSearchResponse> {
     const term = searchTerm?.trim() ?? '';
     if (term.length < 2) return [];
     const users = await this.usersService.findByEmailContaining(ctx, term);
@@ -150,7 +169,11 @@ export class AdminService {
       pending_seller_payouts: bigint;
     };
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
     const rows = await this.prisma.$queryRaw<Row[]>`
@@ -175,7 +198,8 @@ export class AdminService {
         (SELECT COUNT(*)::bigint FROM transactions WHERE status = 'TransferringFund') AS pending_seller_payouts
     `;
     const r = rows[0];
-    const toNum = (x: bigint | undefined): number => (x != null ? Number(x) : 0);
+    const toNum = (x: bigint | undefined): number =>
+      x != null ? Number(x) : 0;
     return {
       users: {
         total: toNum(r?.users_total),
@@ -231,7 +255,7 @@ export class AdminService {
       emailVerified: u.emailVerified,
       phoneVerified: u.phoneVerified,
       identityVerificationStatus: this.identityStatusForAdmin(u),
-      bankAccountVerified: !!(u.bankAccount?.verified),
+      bankAccountVerified: !!u.bankAccount?.verified,
       acceptedSellerTermsAt: u.acceptedSellerTermsAt,
       createdAt: u.createdAt,
     }));
@@ -247,7 +271,10 @@ export class AdminService {
   /**
    * Get full user detail for admin view/edit.
    */
-  async getUserById(ctx: Ctx, userId: string): Promise<AdminUserDetailResponse> {
+  async getUserById(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<AdminUserDetailResponse> {
     const user = await this.usersService.findById(ctx, userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -269,7 +296,8 @@ export class AdminService {
     if (data.publicName !== undefined) allowed.publicName = data.publicName;
     if (data.email !== undefined) allowed.email = data.email;
     if (data.role !== undefined) allowed.role = data.role as Role;
-    if (data.status !== undefined) allowed.status = data.status as User['status'];
+    if (data.status !== undefined)
+      allowed.status = data.status as User['status'];
     if (data.phone !== undefined) allowed.phone = data.phone;
     if (data.emailVerified !== undefined)
       allowed.emailVerified = data.emailVerified;
@@ -279,8 +307,7 @@ export class AdminService {
     if (data.currency !== undefined)
       allowed.currency = data.currency as User['currency'];
     if (data.language !== undefined)
-      allowed.language =
-        data.language === 'es' ? Language.ES : Language.EN;
+      allowed.language = data.language === 'es' ? Language.ES : Language.EN;
     if (data.tosAcceptedAt !== undefined)
       allowed.tosAcceptedAt =
         data.tosAcceptedAt == null
@@ -299,10 +326,9 @@ export class AdminService {
       allowed.buyerDisputed = data.buyerDisputed;
     if (data.identityVerification !== undefined) {
       allowed.identityVerification = {
-        status:
-          data.identityVerification.status as
-            | IdentityVerificationStatus
-            | undefined,
+        status: data.identityVerification.status as
+          | IdentityVerificationStatus
+          | undefined,
         rejectionReason: data.identityVerification.rejectionReason,
         reviewedAt:
           data.identityVerification.reviewedAt != null
@@ -679,44 +705,46 @@ export class AdminService {
     const sectionsMap = new Map(eventWithDates.sections.map((s) => [s.id, s]));
 
     // Build response
-    const enrichedListings: AdminEventListingItem[] = listings.map((listing) => {
-      const seller = sellersMap.get(listing.sellerId);
-      const eventDate = datesMap.get(listing.eventDateId);
-      const eventSection = sectionsMap.get(listing.eventSectionId);
+    const enrichedListings: AdminEventListingItem[] = listings.map(
+      (listing) => {
+        const seller = sellersMap.get(listing.sellerId);
+        const eventDate = datesMap.get(listing.eventDateId);
+        const eventSection = sectionsMap.get(listing.eventSectionId);
 
-      const ticketsByStatus = {
-        available: listing.ticketUnits.filter((u) => u.status === 'available')
-          .length,
-        reserved: listing.ticketUnits.filter((u) => u.status === 'reserved')
-          .length,
-        sold: listing.ticketUnits.filter((u) => u.status === 'sold').length,
-      };
+        const ticketsByStatus = {
+          available: listing.ticketUnits.filter((u) => u.status === 'available')
+            .length,
+          reserved: listing.ticketUnits.filter((u) => u.status === 'reserved')
+            .length,
+          sold: listing.ticketUnits.filter((u) => u.status === 'sold').length,
+        };
 
-      return {
-        id: listing.id,
-        eventSlug: eventWithDates.slug,
-        createdBy: {
-          id: listing.sellerId,
-          publicName: seller?.publicName || 'Unknown User',
-        },
-        eventDate: {
-          id: listing.eventDateId,
-          date: eventDate?.date || new Date(),
-        },
-        eventSection: {
-          id: listing.eventSectionId,
-          name: eventSection?.name || 'Unknown Section',
-        },
-        totalTickets: listing.ticketUnits.length,
-        ticketsByStatus,
-        status: listing.status,
-        pricePerTicket: {
-          amount: listing.pricePerTicket.amount,
-          currency: listing.pricePerTicket.currency,
-        },
-        createdAt: listing.createdAt,
-      };
-    });
+        return {
+          id: listing.id,
+          eventSlug: eventWithDates.slug,
+          createdBy: {
+            id: listing.sellerId,
+            publicName: seller?.publicName || 'Unknown User',
+          },
+          eventDate: {
+            id: listing.eventDateId,
+            date: eventDate?.date || new Date(),
+          },
+          eventSection: {
+            id: listing.eventSectionId,
+            name: eventSection?.name || 'Unknown Section',
+          },
+          totalTickets: listing.ticketUnits.length,
+          ticketsByStatus,
+          status: listing.status,
+          pricePerTicket: {
+            amount: listing.pricePerTicket.amount,
+            currency: listing.pricePerTicket.currency,
+          },
+          createdAt: listing.createdAt,
+        };
+      },
+    );
 
     this.logger.log(
       ctx,
@@ -745,10 +773,17 @@ export class AdminService {
       `Getting transactions - page: ${page}, limit: ${limit}, search: ${query.search || 'none'}`,
     );
 
-    const filters = await this.resolveTransactionSearchFilters(ctx, query.search);
+    const filters = await this.resolveTransactionSearchFilters(
+      ctx,
+      query.search,
+    );
 
-    const { transactions, total } =
-      await this.transactionsService.getPaginated(ctx, page, limit, filters);
+    const { transactions, total } = await this.transactionsService.getPaginated(
+      ctx,
+      page,
+      limit,
+      filters,
+    );
 
     if (transactions.length === 0) {
       return {
@@ -760,15 +795,9 @@ export class AdminService {
       };
     }
 
-    const enriched = await this.enrichTransactionsForList(
-      ctx,
-      transactions,
-    );
+    const enriched = await this.enrichTransactionsForList(ctx, transactions);
 
-    this.logger.log(
-      ctx,
-      `Found ${total} transactions, returning page ${page}`,
-    );
+    this.logger.log(ctx, `Found ${total} transactions, returning page ${page}`);
 
     return {
       transactions: enriched,
@@ -785,15 +814,13 @@ export class AdminService {
   async getTransactionsPendingSummary(
     ctx: Ctx,
   ): Promise<AdminTransactionsPendingSummaryResponse> {
-    const [
-      pendingConfirmationTransactionIds,
-      pendingTransactionIds,
-    ] = await Promise.all([
-      this.paymentConfirmationsService.getPendingTransactionIds(ctx),
-      this.transactionsService.getIdsByStatuses(ctx, [
-        TransactionStatus.PaymentPendingVerification,
-      ]),
-    ]);
+    const [pendingConfirmationTransactionIds, pendingTransactionIds] =
+      await Promise.all([
+        this.paymentConfirmationsService.getPendingTransactionIds(ctx),
+        this.transactionsService.getIdsByStatuses(ctx, [
+          TransactionStatus.PaymentPendingVerification,
+        ]),
+      ]);
 
     return {
       pendingConfirmationsCount: pendingConfirmationTransactionIds.length,
@@ -907,10 +934,7 @@ export class AdminService {
         );
       }
     }
-    if (
-      !bankTransferDestination &&
-      seller?.bankAccount
-    ) {
+    if (!bankTransferDestination && seller?.bankAccount) {
       bankTransferDestination = {
         holderName: seller.bankAccount.holderName,
         cbuOrCvu: seller.bankAccount.cbuOrCvu,
@@ -922,7 +946,10 @@ export class AdminService {
           id: listing.promotionSnapshot.id,
           name: listing.promotionSnapshot.name,
           type: listing.promotionSnapshot.type,
-          config: listing.promotionSnapshot.config as unknown as Record<string, unknown>,
+          config: listing.promotionSnapshot.config as unknown as Record<
+            string,
+            unknown
+          >,
         }
       : undefined;
 
@@ -973,29 +1000,56 @@ export class AdminService {
     };
 
     const updates: Partial<Transaction> = {};
-    if (body.status !== undefined) updates.status = body.status as TransactionStatus;
+    if (body.status !== undefined)
+      updates.status = body.status as TransactionStatus;
     if (body.quantity !== undefined) updates.quantity = body.quantity;
-    if (body.ticketPrice !== undefined) updates.ticketPrice = body.ticketPrice as Transaction['ticketPrice'];
-    if (body.buyerPlatformFee !== undefined) updates.buyerPlatformFee = body.buyerPlatformFee as Transaction['buyerPlatformFee'];
-    if (body.sellerPlatformFee !== undefined) updates.sellerPlatformFee = body.sellerPlatformFee as Transaction['sellerPlatformFee'];
-    if (body.paymentMethodCommission !== undefined) updates.paymentMethodCommission = body.paymentMethodCommission as Transaction['paymentMethodCommission'];
-    if (body.totalPaid !== undefined) updates.totalPaid = body.totalPaid as Transaction['totalPaid'];
-    if (body.sellerReceives !== undefined) updates.sellerReceives = body.sellerReceives as Transaction['sellerReceives'];
-    if (body.paymentReceivedAt !== undefined) updates.paymentReceivedAt = parseDate(body.paymentReceivedAt) ?? undefined;
-    if (body.ticketTransferredAt !== undefined) updates.ticketTransferredAt = parseDate(body.ticketTransferredAt) ?? undefined;
-    if (body.buyerConfirmedAt !== undefined) updates.buyerConfirmedAt = parseDate(body.buyerConfirmedAt) ?? undefined;
-    if (body.completedAt !== undefined) updates.completedAt = parseDate(body.completedAt) ?? undefined;
-    if (body.cancelledAt !== undefined) updates.cancelledAt = parseDate(body.cancelledAt) ?? undefined;
-    if (body.refundedAt !== undefined) updates.refundedAt = parseDate(body.refundedAt) ?? undefined;
-    if (body.paymentApprovedAt !== undefined) updates.paymentApprovedAt = parseDate(body.paymentApprovedAt) ?? undefined;
-    if (body.paymentApprovedBy !== undefined) updates.paymentApprovedBy = body.paymentApprovedBy ?? undefined;
-    if (body.disputeId !== undefined) updates.disputeId = body.disputeId ?? undefined;
+    if (body.ticketPrice !== undefined)
+      updates.ticketPrice = body.ticketPrice as Transaction['ticketPrice'];
+    if (body.buyerPlatformFee !== undefined)
+      updates.buyerPlatformFee =
+        body.buyerPlatformFee as Transaction['buyerPlatformFee'];
+    if (body.sellerPlatformFee !== undefined)
+      updates.sellerPlatformFee =
+        body.sellerPlatformFee as Transaction['sellerPlatformFee'];
+    if (body.paymentMethodCommission !== undefined)
+      updates.paymentMethodCommission =
+        body.paymentMethodCommission as Transaction['paymentMethodCommission'];
+    if (body.totalPaid !== undefined)
+      updates.totalPaid = body.totalPaid as Transaction['totalPaid'];
+    if (body.sellerReceives !== undefined)
+      updates.sellerReceives =
+        body.sellerReceives as Transaction['sellerReceives'];
+    if (body.paymentReceivedAt !== undefined)
+      updates.paymentReceivedAt =
+        parseDate(body.paymentReceivedAt) ?? undefined;
+    if (body.ticketTransferredAt !== undefined)
+      updates.ticketTransferredAt =
+        parseDate(body.ticketTransferredAt) ?? undefined;
+    if (body.buyerConfirmedAt !== undefined)
+      updates.buyerConfirmedAt = parseDate(body.buyerConfirmedAt) ?? undefined;
+    if (body.completedAt !== undefined)
+      updates.completedAt = parseDate(body.completedAt) ?? undefined;
+    if (body.cancelledAt !== undefined)
+      updates.cancelledAt = parseDate(body.cancelledAt) ?? undefined;
+    if (body.refundedAt !== undefined)
+      updates.refundedAt = parseDate(body.refundedAt) ?? undefined;
+    if (body.paymentApprovedAt !== undefined)
+      updates.paymentApprovedAt =
+        parseDate(body.paymentApprovedAt) ?? undefined;
+    if (body.paymentApprovedBy !== undefined)
+      updates.paymentApprovedBy = body.paymentApprovedBy ?? undefined;
+    if (body.disputeId !== undefined)
+      updates.disputeId = body.disputeId ?? undefined;
     if (body.buyerId !== undefined) updates.buyerId = body.buyerId;
     if (body.sellerId !== undefined) updates.sellerId = body.sellerId;
     if (body.listingId !== undefined) updates.listingId = body.listingId;
-    if (body.requiredActor !== undefined) updates.requiredActor = body.requiredActor as RequiredActor;
-    if (body.cancellationReason !== undefined) updates.cancellationReason = (body.cancellationReason as CancellationReason) ?? undefined;
-    if (body.cancelledBy !== undefined) updates.cancelledBy = (body.cancelledBy as RequiredActor) ?? undefined;
+    if (body.requiredActor !== undefined)
+      updates.requiredActor = body.requiredActor as RequiredActor;
+    if (body.cancellationReason !== undefined)
+      updates.cancellationReason =
+        (body.cancellationReason as CancellationReason) ?? undefined;
+    if (body.cancelledBy !== undefined)
+      updates.cancelledBy = (body.cancelledBy as RequiredActor) ?? undefined;
 
     await this.transactionsService.updateForAdmin(ctx, transactionId, updates);
     return this.getTransactionById(ctx, transactionId);
@@ -1042,8 +1096,7 @@ export class AdminService {
       return { payouts: [] };
     }
 
-    const transactions =
-      await this.transactionsService.findByIds(ctx, ids);
+    const transactions = await this.transactionsService.findByIds(ctx, ids);
     const sellerIds = [...new Set(transactions.map((t) => t.sellerId))];
     const listingIds = [...new Set(transactions.map((t) => t.listingId))];
 
@@ -1072,7 +1125,9 @@ export class AdminService {
 
       // Build ticket line for "Entradas" column: section, quantity, unit price, optional seat labels.
       const unitIdsSet = new Set(transaction.ticketUnitIds);
-      const unitsForTxn = listing.ticketUnits.filter((u) => unitIdsSet.has(u.id));
+      const unitsForTxn = listing.ticketUnits.filter((u) =>
+        unitIdsSet.has(u.id),
+      );
       const seatLabels = unitsForTxn
         .filter((u) => u.seat)
         .map((u) => `${u.seat!.row}${u.seat!.seatNumber}`)
@@ -1092,7 +1147,8 @@ export class AdminService {
       };
 
       const sellerVerified =
-        seller?.identityVerification?.status === IdentityVerificationStatus.Approved;
+        seller?.identityVerification?.status ===
+        IdentityVerificationStatus.Approved;
 
       payouts.push({
         transactionId: transaction.id,
@@ -1119,7 +1175,12 @@ export class AdminService {
     ctx: Ctx,
     transactionId: string,
     adminUserId: string,
-    files?: Array<{ buffer: Buffer; originalname: string; mimetype: string; size: number }>,
+    files?: Array<{
+      buffer: Buffer;
+      originalname: string;
+      mimetype: string;
+      size: number;
+    }>,
   ): Promise<AdminCompletePayoutResponse> {
     if (files?.length) {
       for (const file of files) {
@@ -1162,8 +1223,10 @@ export class AdminService {
         `Uploaded ${files.length} payout receipt(s) for transaction ${transactionId}`,
       );
     }
-    const transaction =
-      await this.transactionsService.completePayout(ctx, transactionId);
+    const transaction = await this.transactionsService.completePayout(
+      ctx,
+      transactionId,
+    );
     return {
       id: transaction.id,
       status: transaction.status,
@@ -1193,7 +1256,10 @@ export class AdminService {
 
     // Support comma-separated transaction IDs (e.g. from pending summary click).
     if (term.includes(',')) {
-      const ids = term.split(',').map((id) => id.trim()).filter(Boolean);
+      const ids = term
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
       if (ids.length > 0) {
         filters.transactionIds = ids;
         return filters;
@@ -1203,21 +1269,29 @@ export class AdminService {
     // Single transaction ID or email search.
     filters.transactionIds = [term];
 
-    const usersByEmail =
-      await this.usersService.findByEmailContaining(ctx, term);
+    const usersByEmail = await this.usersService.findByEmailContaining(
+      ctx,
+      term,
+    );
     if (usersByEmail.length > 0) {
       const userIds = usersByEmail.map((u) => u.id);
       filters.buyerIds = userIds;
       filters.sellerIds = userIds;
     }
 
-    if (!filters.buyerIds && !filters.sellerIds && (!filters.transactionIds || filters.transactionIds.length === 0)) {
+    if (
+      !filters.buyerIds &&
+      !filters.sellerIds &&
+      (!filters.transactionIds || filters.transactionIds.length === 0)
+    ) {
       return { transactionIds: ['__no_match__'] };
     }
 
     const hasEmailMatches =
-      (filters.buyerIds?.length ?? 0) > 0 || (filters.sellerIds?.length ?? 0) > 0;
-    const hasTransactionIds = filters.transactionIds && filters.transactionIds.length > 0;
+      (filters.buyerIds?.length ?? 0) > 0 ||
+      (filters.sellerIds?.length ?? 0) > 0;
+    const hasTransactionIds =
+      filters.transactionIds && filters.transactionIds.length > 0;
     if (!hasEmailMatches && hasTransactionIds && !term.startsWith('txn_')) {
       // For non transaction-id text (e.g. random keyword) with no email matches,
       // avoid returning all rows by forcing a no-match filter.
@@ -1239,7 +1313,10 @@ export class AdminService {
     const [users, listings, confirmations] = await Promise.all([
       this.usersService.findByIds(ctx, [...buyerIds, ...sellerIds]),
       this.ticketsService.getListingsByIds(ctx, listingIds),
-      this.paymentConfirmationsService.findByTransactionIds(ctx, transactionIds),
+      this.paymentConfirmationsService.findByTransactionIds(
+        ctx,
+        transactionIds,
+      ),
     ]);
 
     const usersMap = new Map(users.map((u) => [u.id, u]));
@@ -1277,17 +1354,18 @@ export class AdminService {
         },
       };
 
-      const paymentConfirmation: AdminTransactionPaymentConfirmationRef | undefined =
-        confirmation
-          ? {
-              id: confirmation.id,
-              status: confirmation.status,
-              originalFilename: confirmation.originalFilename,
-              createdAt: confirmation.createdAt,
-              reviewedAt: confirmation.reviewedAt,
-              adminNotes: confirmation.adminNotes,
-            }
-          : undefined;
+      const paymentConfirmation:
+        | AdminTransactionPaymentConfirmationRef
+        | undefined = confirmation
+        ? {
+            id: confirmation.id,
+            status: confirmation.status,
+            originalFilename: confirmation.originalFilename,
+            createdAt: confirmation.createdAt,
+            reviewedAt: confirmation.reviewedAt,
+            adminNotes: confirmation.adminNotes,
+          }
+        : undefined;
 
       return {
         id: t.id,
@@ -1327,7 +1405,9 @@ export class AdminService {
     };
   }
 
-  private mapMessageToAdminItem(m: SupportMessage): AdminSupportTicketDetailResponse['messages'][0] {
+  private mapMessageToAdminItem(
+    m: SupportMessage,
+  ): AdminSupportTicketDetailResponse['messages'][0] {
     return {
       id: m.id,
       ticketId: m.ticketId,
@@ -1352,9 +1432,14 @@ export class AdminService {
       category: query.category,
       source: query.source,
     });
-    const userIds = [...new Set(tickets.map((t) => t.userId).filter(Boolean))] as string[];
-    const users = userIds.length > 0 ? await this.usersService.findByIds(ctx, userIds) : [];
-    const userMap = new Map(users.map((u) => [u.id, { name: u.publicName, email: u.email }]));
+    const userIds = [
+      ...new Set(tickets.map((t) => t.userId).filter(Boolean)),
+    ] as string[];
+    const users =
+      userIds.length > 0 ? await this.usersService.findByIds(ctx, userIds) : [];
+    const userMap = new Map(
+      users.map((u) => [u.id, { name: u.publicName, email: u.email }]),
+    );
     const totalPages = Math.ceil(total / limit);
     return {
       tickets: tickets.map((t) => ({

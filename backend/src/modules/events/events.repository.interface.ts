@@ -1,6 +1,11 @@
 import type { Ctx } from '../../common/types/context';
 import type { Event, EventDate, EventSection } from './events.domain';
-import type { EventDateStatus, EventSectionStatus, EventStatus, EventCategory } from './events.domain';
+import type {
+  EventDateStatus,
+  EventSectionStatus,
+  EventStatus,
+  EventCategory,
+} from './events.domain';
 
 /**
  * Events repository interface
@@ -174,10 +179,7 @@ export interface IEventsRepository {
   /**
    * Find event section by ID
    */
-  findEventSectionById(
-    ctx: Ctx,
-    id: string,
-  ): Promise<EventSection | undefined>;
+  findEventSectionById(ctx: Ctx, id: string): Promise<EventSection | undefined>;
 
   /**
    * Get sections for an event

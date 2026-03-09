@@ -90,7 +90,10 @@ export class TransactionsScheduler {
     );
 
     if (count !== null && count > 0) {
-      this.logger.log(ctx, `Deposit releases processed: ${count} transactions -> TransferringFund`);
+      this.logger.log(
+        ctx,
+        `Deposit releases processed: ${count} transactions -> TransferringFund`,
+      );
     }
   }
 }

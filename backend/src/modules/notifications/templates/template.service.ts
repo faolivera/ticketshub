@@ -6,8 +6,14 @@ import {
   NOTIFICATIONS_REPOSITORY,
 } from '../notifications.repository.interface';
 import { TemplateRenderer } from './template.renderer';
-import type { NotificationTemplate, ChannelContent } from '../notifications.domain';
-import { NotificationEventType, NotificationChannel } from '../notifications.domain';
+import type {
+  NotificationTemplate,
+  ChannelContent,
+} from '../notifications.domain';
+import {
+  NotificationEventType,
+  NotificationChannel,
+} from '../notifications.domain';
 
 @Injectable()
 export class TemplateService {
@@ -62,10 +68,7 @@ export class TemplateService {
     }
 
     if (!template.isActive) {
-      this.logger.warn(
-        ctx,
-        `Template ${template.id} is not active`,
-      );
+      this.logger.warn(ctx, `Template ${template.id} is not active`);
       return null;
     }
 

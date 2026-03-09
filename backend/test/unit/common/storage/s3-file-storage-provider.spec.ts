@@ -7,15 +7,27 @@ jest.mock('@aws-sdk/client-s3', () => ({
   S3Client: jest.fn().mockImplementation(() => ({
     send: mockSend,
   })),
-  PutObjectCommand: jest.fn().mockImplementation((opts: unknown) => ({ _put: opts })),
-  GetObjectCommand: jest.fn().mockImplementation((opts: unknown) => ({ _get: opts })),
-  DeleteObjectCommand: jest.fn().mockImplementation((opts: unknown) => ({ _del: opts })),
-  HeadObjectCommand: jest.fn().mockImplementation((opts: unknown) => ({ _head: opts })),
-  CreateBucketCommand: jest.fn().mockImplementation((opts: unknown) => ({ _create: opts })),
+  PutObjectCommand: jest
+    .fn()
+    .mockImplementation((opts: unknown) => ({ _put: opts })),
+  GetObjectCommand: jest
+    .fn()
+    .mockImplementation((opts: unknown) => ({ _get: opts })),
+  DeleteObjectCommand: jest
+    .fn()
+    .mockImplementation((opts: unknown) => ({ _del: opts })),
+  HeadObjectCommand: jest
+    .fn()
+    .mockImplementation((opts: unknown) => ({ _head: opts })),
+  CreateBucketCommand: jest
+    .fn()
+    .mockImplementation((opts: unknown) => ({ _create: opts })),
 }));
 
 jest.mock('@aws-sdk/s3-request-presigner', () => ({
-  getSignedUrl: jest.fn().mockResolvedValue('https://s3.example.com/signed-url'),
+  getSignedUrl: jest
+    .fn()
+    .mockResolvedValue('https://s3.example.com/signed-url'),
 }));
 
 describe('S3FileStorageProvider', () => {
@@ -54,10 +66,14 @@ describe('S3FileStorageProvider', () => {
 
     it('should return StoredFile with s3 location', async () => {
       mockSend.mockResolvedValue({});
-      const result = await provider.store('path/file.txt', Buffer.from('data'), {
-        contentType: 'text/plain',
-        contentLength: 4,
-      });
+      const result = await provider.store(
+        'path/file.txt',
+        Buffer.from('data'),
+        {
+          contentType: 'text/plain',
+          contentLength: 4,
+        },
+      );
       expect(result).toEqual({
         key: 'path/file.txt',
         metadata: { contentType: 'text/plain', contentLength: 4 },
@@ -123,10 +139,14 @@ describe('S3FileStorageProvider', () => {
 
     it('should return location with endpoint prefix', async () => {
       mockSend.mockResolvedValue({});
-      const result = await provider.store('path/file.txt', Buffer.from('data'), {
-        contentType: 'text/plain',
-        contentLength: 4,
-      });
+      const result = await provider.store(
+        'path/file.txt',
+        Buffer.from('data'),
+        {
+          contentType: 'text/plain',
+          contentLength: 4,
+        },
+      );
       expect(result.location).toBe(
         'http://localhost:4567/local-bucket/path/file.txt',
       );

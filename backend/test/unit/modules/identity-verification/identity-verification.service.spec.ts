@@ -16,7 +16,11 @@ import {
 import { IdentityVerificationStatus } from '../../../../src/modules/identity-verification/identity-verification.domain';
 import type { IdentityVerificationRequest } from '../../../../src/modules/identity-verification/identity-verification.domain';
 import type { User } from '../../../../src/modules/users/users.domain';
-import { Language, Role, UserStatus } from '../../../../src/modules/users/users.domain';
+import {
+  Language,
+  Role,
+  UserStatus,
+} from '../../../../src/modules/users/users.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 
 describe('IdentityVerificationService', () => {
@@ -273,7 +277,10 @@ describe('IdentityVerificationService', () => {
 
       const result = await service.getMyVerification(mockCtx, mockUser.id);
 
-      expect(repository.findByUserId).toHaveBeenCalledWith(mockCtx, mockUser.id);
+      expect(repository.findByUserId).toHaveBeenCalledWith(
+        mockCtx,
+        mockUser.id,
+      );
       expect(result).not.toBeNull();
       expect(result).toMatchObject({
         id: mockVerification.id,
@@ -422,7 +429,9 @@ describe('IdentityVerificationService', () => {
 
       expect(result.status).toBe(IdentityVerificationStatus.Rejected);
       expect(result.adminNotes).toBe('Document is unclear');
-      expect(usersService.setIdentityVerificationApproved).not.toHaveBeenCalled();
+      expect(
+        usersService.setIdentityVerificationApproved,
+      ).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if verification not found', async () => {

@@ -89,7 +89,9 @@ export class NotificationsController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: MarkAsReadBatchRequest,
   ): Promise<ApiResponse<MarkAsReadBatchResponse>> {
-    const ids = Array.isArray(body?.notificationIds) ? body.notificationIds : [];
+    const ids = Array.isArray(body?.notificationIds)
+      ? body.notificationIds
+      : [];
     const result = await this.service.markAsReadBatch(ctx, user.id, ids);
     return { success: true, data: result };
   }

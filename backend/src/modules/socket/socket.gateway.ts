@@ -14,11 +14,7 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import { InMemoryRealtimeBroadcaster } from '../../common/realtime';
 import type { Ctx } from '../../common/types/context';
-import {
-  CHAT_JOIN,
-  CHAT_LEAVE,
-  CHAT_MESSAGE,
-} from './socket.events';
+import { CHAT_JOIN, CHAT_LEAVE, CHAT_MESSAGE } from './socket.events';
 
 const USER_ROOM_PREFIX = 'user:';
 const TRANSACTION_ROOM_PREFIX = 'transaction:';
@@ -136,10 +132,7 @@ export class SocketGateway
   }
 
   @SubscribeMessage(CHAT_LEAVE)
-  handleChatLeave(
-    client: any,
-    payload: { transactionId?: string },
-  ): void {
+  handleChatLeave(client: any, payload: { transactionId?: string }): void {
     const transactionId = payload?.transactionId;
     if (transactionId && typeof transactionId === 'string') {
       client.leave(TRANSACTION_ROOM_PREFIX + transactionId);

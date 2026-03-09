@@ -247,8 +247,7 @@ export class TicketsService {
       const re = config.riskEngine.seller;
       const { count: activeCount, amounts: activeAmounts } =
         await this.getActiveListingsTotalsForSeller(ctx, sellerId);
-      const newListingQuantity =
-        data.quantity ?? data.ticketUnits?.length ?? 0;
+      const newListingQuantity = data.quantity ?? data.ticketUnits?.length ?? 0;
       const newCount = activeCount + 1;
       if (newCount > re.unverifiedSellerMaxSales) {
         throw new ForbiddenException(
@@ -352,7 +351,9 @@ export class TicketsService {
         (eventDate.date.getTime() - Date.now()) / (1000 * 60 * 60);
       const proximityHours =
         platformConfig?.riskEngine?.buyer?.phoneRequiredEventHours ??
-        this.nestConfigService.get<number>('platform.riskEngine.buyer.phoneRequiredEventHours')!;
+        this.nestConfigService.get<number>(
+          'platform.riskEngine.buyer.phoneRequiredEventHours',
+        )!;
       if (hoursUntilEvent >= 0 && hoursUntilEvent <= proximityHours) {
         throw new ForbiddenException(
           'Identity verification (KYC) is required to list tickets for events starting within the next ' +
@@ -405,12 +406,11 @@ export class TicketsService {
     const created = await this.txManager.executeInTransaction(
       ctx,
       async (txCtx) => {
-        const activePromotion =
-          await this.promotionsService.getActiveForUser(
-            txCtx,
-            sellerId,
-            PromotionType.SELLER_DISCOUNTED_FEE,
-          );
+        const activePromotion = await this.promotionsService.getActiveForUser(
+          txCtx,
+          sellerId,
+          PromotionType.SELLER_DISCOUNTED_FEE,
+        );
         const hasPromotion =
           activePromotion &&
           (activePromotion.maxUsages === 0 ||
@@ -441,7 +441,10 @@ export class TicketsService {
           updatedAt: new Date(),
         };
 
-        const createdListing = await this.ticketsRepository.create(txCtx, listing);
+        const createdListing = await this.ticketsRepository.create(
+          txCtx,
+          listing,
+        );
         if (hasPromotion && activePromotion) {
           await this.promotionsService.incrementUsedAndAddListingId(
             txCtx,
@@ -690,8 +693,7 @@ export class TicketsService {
             listing.id,
           );
         const thisListingValue: ConfigMoney = {
-          amount:
-            effectivePrice.amount * listing.ticketUnits.length,
+          amount: effectivePrice.amount * listing.ticketUnits.length,
           currency: effectivePrice.currency,
         };
         const newCount = otherActiveCount + 1;

@@ -1,4 +1,8 @@
-import type { Promotion, PromotionStatus, PromotionType } from './promotions.domain';
+import type {
+  Promotion,
+  PromotionStatus,
+  PromotionType,
+} from './promotions.domain';
 
 /**
  * Request body to create one or more promotions (one per user)

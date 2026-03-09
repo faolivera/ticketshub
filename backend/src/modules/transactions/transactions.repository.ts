@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { Transaction as PrismaTransaction } from '@prisma/client';
 import { TicketType as PrismaTicketType } from '@prisma/client';
-import type { Ctx } from '../../common/types/context';
+import { type Ctx, ON_APP_INIT_CTX } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { Transaction, Money } from './transactions.domain';
 import {
   TransactionStatus,
@@ -19,7 +20,12 @@ import { OptimisticLockException } from '../../common/exceptions/optimistic-lock
 type AuditLogClient = {
   transactionAuditLog: {
     create: (args: {
-      data: { transactionId: string; action: string; changedBy: string; payload: object };
+      data: {
+        transactionId: string;
+        action: string;
+        changedBy: string;
+        payload: object;
+      };
     }) => Promise<unknown>;
   };
 };
@@ -29,6 +35,8 @@ export class TransactionsRepository
   extends BaseRepository
   implements ITransactionsRepository
 {
+  private readonly logger = new ContextLogger(TransactionsRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -85,7 +93,13 @@ export class TransactionsRepository
         updatedAt: transaction.updatedAt,
       },
     });
-    await this.writeAuditLog(client as unknown as AuditLogClient, created.id, 'created', ctx.userId ?? 'system', this.buildCreatedAuditPayload(created));
+    await this.writeAuditLog(
+      client as unknown as AuditLogClient,
+      created.id,
+      'created',
+      ctx.userId ?? 'system',
+      this.buildCreatedAuditPayload(created),
+    );
     return this.mapToTransaction(created);
   }
 
@@ -277,15 +291,23 @@ export class TransactionsRepository
         where: { id },
         data,
       });
-      await this.writeAuditLog(client as unknown as AuditLogClient, id, 'updated', ctx.userId ?? 'system', this.serializeUpdatesPayload(data));
+      await this.writeAuditLog(
+        client as unknown as AuditLogClient,
+        id,
+        'updated',
+        ctx.userId ?? 'system',
+        this.serializeUpdatesPayload(data),
+      );
       return this.mapToTransaction(updated);
     } catch (error) {
-      console.error('transactions.repository update failed:', error);
+      this.logger.error(ctx, 'transactions.repository update failed:', error);
       return undefined;
     }
   }
 
-  private buildUpdateData(updates: Partial<Transaction>): Record<string, unknown> {
+  private buildUpdateData(
+    updates: Partial<Transaction>,
+  ): Record<string, unknown> {
     const data: Record<string, unknown> = {};
 
     if (updates.listingId !== undefined) data.listingId = updates.listingId;
@@ -379,7 +401,8 @@ export class TransactionsRepository
       data.sellerSentPayloadType = updates.sellerSentPayloadType;
     }
     if (updates.sellerSentPayloadTypeOtherText !== undefined) {
-      data.sellerSentPayloadTypeOtherText = updates.sellerSentPayloadTypeOtherText;
+      data.sellerSentPayloadTypeOtherText =
+        updates.sellerSentPayloadTypeOtherText;
     }
     if (updates.buyerConfirmedAt !== undefined) {
       data.buyerConfirmedAt = updates.buyerConfirmedAt;
@@ -397,7 +420,8 @@ export class TransactionsRepository
       data.transferProofStorageKey = updates.transferProofStorageKey;
     }
     if (updates.transferProofOriginalFilename !== undefined) {
-      data.transferProofOriginalFilename = updates.transferProofOriginalFilename;
+      data.transferProofOriginalFilename =
+        updates.transferProofOriginalFilename;
     }
     if (updates.receiptProofStorageKey !== undefined) {
       data.receiptProofStorageKey = updates.receiptProofStorageKey;
@@ -430,7 +454,7 @@ export class TransactionsRepository
         },
       });
     } catch (error) {
-      console.error('transactions.repository writeAuditLog failed:', error);
+      this.logger.error(ON_APP_INIT_CTX, 'transactions.repository writeAuditLog failed:', error);
     }
   }
 
@@ -616,7 +640,13 @@ export class TransactionsRepository
           updatedAt: new Date(),
         },
       });
-      await this.writeAuditLog(client as unknown as AuditLogClient, id, 'updated', ctx.userId ?? 'system', this.serializeUpdatesPayload(updateData));
+      await this.writeAuditLog(
+        client as unknown as AuditLogClient,
+        id,
+        'updated',
+        ctx.userId ?? 'system',
+        this.serializeUpdatesPayload(updateData),
+      );
       return this.mapToTransaction(updated);
     } catch (error: unknown) {
       if (
@@ -644,7 +674,8 @@ export class TransactionsRepository
       quantity: prismaTransaction.quantity,
       ticketPrice: prismaTransaction.ticketPrice as unknown as Money,
       buyerPlatformFee: prismaTransaction.buyerPlatformFee as unknown as Money,
-      sellerPlatformFee: prismaTransaction.sellerPlatformFee as unknown as Money,
+      sellerPlatformFee:
+        prismaTransaction.sellerPlatformFee as unknown as Money,
       paymentMethodCommission:
         prismaTransaction.paymentMethodCommission as unknown as Money,
       totalPaid: prismaTransaction.totalPaid as unknown as Money,
@@ -652,12 +683,21 @@ export class TransactionsRepository
       pricingSnapshotId: prismaTransaction.pricingSnapshotId,
       offerId: prismaTransaction.offerId ?? undefined,
       status: this.mapStatusFromDb(prismaTransaction.status),
-      requiredActor: this.mapRequiredActorFromDb(prismaTransaction.requiredActor),
+      requiredActor: this.mapRequiredActorFromDb(
+        prismaTransaction.requiredActor,
+      ),
       createdAt: prismaTransaction.createdAt,
       paymentReceivedAt: prismaTransaction.paymentReceivedAt ?? undefined,
       ticketTransferredAt: prismaTransaction.ticketTransferredAt ?? undefined,
-      sellerSentPayloadType: (prismaTransaction.sellerSentPayloadType as Transaction['sellerSentPayloadType']) ?? undefined,
-      sellerSentPayloadTypeOtherText: (prismaTransaction as { sellerSentPayloadTypeOtherText?: string | null }).sellerSentPayloadTypeOtherText ?? undefined,
+      sellerSentPayloadType:
+        (prismaTransaction.sellerSentPayloadType as Transaction['sellerSentPayloadType']) ??
+        undefined,
+      sellerSentPayloadTypeOtherText:
+        (
+          prismaTransaction as {
+            sellerSentPayloadTypeOtherText?: string | null;
+          }
+        ).sellerSentPayloadTypeOtherText ?? undefined,
       buyerConfirmedAt: prismaTransaction.buyerConfirmedAt ?? undefined,
       completedAt: prismaTransaction.completedAt ?? undefined,
       cancelledAt: prismaTransaction.cancelledAt ?? undefined,
@@ -683,10 +723,12 @@ export class TransactionsRepository
         prismaTransaction.paymentConfirmationId ?? undefined,
       paymentApprovedBy: prismaTransaction.paymentApprovedBy ?? undefined,
       paymentApprovedAt: prismaTransaction.paymentApprovedAt ?? undefined,
-      transferProofStorageKey: prismaTransaction.transferProofStorageKey ?? undefined,
+      transferProofStorageKey:
+        prismaTransaction.transferProofStorageKey ?? undefined,
       transferProofOriginalFilename:
         prismaTransaction.transferProofOriginalFilename ?? undefined,
-      receiptProofStorageKey: prismaTransaction.receiptProofStorageKey ?? undefined,
+      receiptProofStorageKey:
+        prismaTransaction.receiptProofStorageKey ?? undefined,
       receiptProofOriginalFilename:
         prismaTransaction.receiptProofOriginalFilename ?? undefined,
       updatedAt: prismaTransaction.updatedAt,

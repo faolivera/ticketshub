@@ -15,7 +15,9 @@ export class VerificationHelper {
   }
 
   static hasV3(user: User): boolean {
-    return user.identityVerification?.status === IdentityVerificationStatus.Approved;
+    return (
+      user.identityVerification?.status === IdentityVerificationStatus.Approved
+    );
   }
 
   static hasV4(user: User): boolean {

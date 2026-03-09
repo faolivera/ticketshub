@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PROMOTIONS_REPOSITORY } from './promotions.repository.interface';
-import type { IPromotionsRepository, ListPromotionsFilters } from './promotions.repository.interface';
+import type {
+  IPromotionsRepository,
+  ListPromotionsFilters,
+} from './promotions.repository.interface';
 import { PlatformConfigService } from '../config/config.service';
 import { UsersService } from '../users/users.service';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -52,8 +55,11 @@ export class PromotionsService {
       );
     }
 
-    const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
-    if (body.config.feePercentage > platformConfig.sellerPlatformFeePercentage) {
+    const platformConfig =
+      await this.platformConfigService.getPlatformConfig(ctx);
+    if (
+      body.config.feePercentage > platformConfig.sellerPlatformFeePercentage
+    ) {
       throw new BadRequestException(
         `Promotion fee percentage (${body.config.feePercentage}%) cannot exceed platform seller fee (${platformConfig.sellerPlatformFeePercentage}%)`,
       );

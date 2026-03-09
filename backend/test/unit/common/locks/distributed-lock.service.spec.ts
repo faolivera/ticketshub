@@ -91,7 +91,9 @@ describe('DistributedLockService', () => {
     it('should not throw when lock is owned by another holder', async () => {
       prismaService.$executeRaw.mockResolvedValue(0);
 
-      await expect(service.releaseLock('test-lock', 'holder-2')).resolves.not.toThrow();
+      await expect(
+        service.releaseLock('test-lock', 'holder-2'),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -123,7 +125,9 @@ describe('DistributedLockService', () => {
       const error = new Error('Function error');
       const fn = jest.fn().mockRejectedValue(error);
 
-      await expect(service.withLockAndLog(mockCtx, 'test-lock', 60, fn)).rejects.toThrow(error);
+      await expect(
+        service.withLockAndLog(mockCtx, 'test-lock', 60, fn),
+      ).rejects.toThrow(error);
 
       expect(prismaService.$executeRaw).toHaveBeenCalledTimes(2); // acquire + release
     });

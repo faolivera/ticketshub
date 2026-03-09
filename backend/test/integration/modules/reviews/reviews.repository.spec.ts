@@ -204,7 +204,16 @@ describe('ReviewsRepository (Integration)', () => {
 
     it('should return all reviews', async () => {
       await repository.create(ctx, createValidReview({ id: randomUUID() }));
-      await repository.create(ctx, createValidReview({ id: randomUUID(), reviewerId: sellerId, revieweeId: buyerId, reviewerRole: 'seller', revieweeRole: 'buyer' }));
+      await repository.create(
+        ctx,
+        createValidReview({
+          id: randomUUID(),
+          reviewerId: sellerId,
+          revieweeId: buyerId,
+          reviewerRole: 'seller',
+          revieweeRole: 'buyer',
+        }),
+      );
       const all = await repository.getAll(ctx);
       expect(all).toHaveLength(2);
     });
@@ -213,13 +222,21 @@ describe('ReviewsRepository (Integration)', () => {
   describe('findByTransactionAndReviewer', () => {
     it('should return undefined when no match', async () => {
       const otherUserId = await createTestUser();
-      const found = await repository.findByTransactionAndReviewer(ctx, transactionId, otherUserId);
+      const found = await repository.findByTransactionAndReviewer(
+        ctx,
+        transactionId,
+        otherUserId,
+      );
       expect(found).toBeUndefined();
     });
 
     it('should find review by transaction and reviewer', async () => {
       const created = await repository.create(ctx, createValidReview());
-      const found = await repository.findByTransactionAndReviewer(ctx, transactionId, buyerId);
+      const found = await repository.findByTransactionAndReviewer(
+        ctx,
+        transactionId,
+        buyerId,
+      );
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
     });
@@ -233,7 +250,16 @@ describe('ReviewsRepository (Integration)', () => {
 
     it('should return all reviews for transaction', async () => {
       await repository.create(ctx, createValidReview({ id: randomUUID() }));
-      await repository.create(ctx, createValidReview({ id: randomUUID(), reviewerId: sellerId, revieweeId: buyerId, reviewerRole: 'seller', revieweeRole: 'buyer' }));
+      await repository.create(
+        ctx,
+        createValidReview({
+          id: randomUUID(),
+          reviewerId: sellerId,
+          revieweeId: buyerId,
+          reviewerRole: 'seller',
+          revieweeRole: 'buyer',
+        }),
+      );
       const list = await repository.getByTransactionId(ctx, transactionId);
       expect(list).toHaveLength(2);
     });
@@ -242,13 +268,21 @@ describe('ReviewsRepository (Integration)', () => {
   describe('getByRevieweeIdAndRole', () => {
     it('should return reviews for reviewee and role', async () => {
       await repository.create(ctx, createValidReview());
-      const list = await repository.getByRevieweeIdAndRole(ctx, sellerId, 'seller');
+      const list = await repository.getByRevieweeIdAndRole(
+        ctx,
+        sellerId,
+        'seller',
+      );
       expect(list).toHaveLength(1);
       expect(list[0].revieweeId).toBe(sellerId);
     });
 
     it('should return empty when no matches', async () => {
-      const list = await repository.getByRevieweeIdAndRole(ctx, buyerId, 'seller');
+      const list = await repository.getByRevieweeIdAndRole(
+        ctx,
+        buyerId,
+        'seller',
+      );
       expect(list).toEqual([]);
     });
   });

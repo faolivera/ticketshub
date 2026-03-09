@@ -12,7 +12,12 @@ import { UsersModule } from '../users/users.module';
 import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
-  imports: [forwardRef(() => TransactionsModule), ConfigModule, UsersModule, RealtimeModule],
+  imports: [
+    forwardRef(() => TransactionsModule),
+    ConfigModule,
+    UsersModule,
+    RealtimeModule,
+  ],
   controllers: [TransactionChatController],
   providers: [
     TransactionChatService,

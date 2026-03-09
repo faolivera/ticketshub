@@ -108,7 +108,10 @@ export type TransactionChatMode = 'disabled' | 'enabled' | 'only_read';
  * Maps transaction status to chat mode for the transaction details page.
  * Adjust this mapping to change when chat is shown and whether sending is allowed.
  */
-export const TRANSACTION_CHAT_MODE: Record<TransactionStatus, TransactionChatMode> = {
+export const TRANSACTION_CHAT_MODE: Record<
+  TransactionStatus,
+  TransactionChatMode
+> = {
   [TransactionStatus.PendingPayment]: 'disabled',
   [TransactionStatus.PaymentPendingVerification]: 'disabled',
   [TransactionStatus.PaymentReceived]: 'enabled',
@@ -121,7 +124,9 @@ export const TRANSACTION_CHAT_MODE: Record<TransactionStatus, TransactionChatMod
   [TransactionStatus.Cancelled]: 'disabled',
 };
 
-export function getTransactionChatMode(status: TransactionStatus): TransactionChatMode {
+export function getTransactionChatMode(
+  status: TransactionStatus,
+): TransactionChatMode {
   return TRANSACTION_CHAT_MODE[status];
 }
 

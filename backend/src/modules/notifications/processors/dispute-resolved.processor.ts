@@ -6,9 +6,7 @@ import type { DisputeResolvedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class DisputeResolvedProcessor
-  implements EventProcessor<DisputeResolvedContext>
-{
+export class DisputeResolvedProcessor implements EventProcessor<DisputeResolvedContext> {
   readonly eventType = NotificationEventType.DISPUTE_RESOLVED;
 
   async getRecipients(

@@ -2,7 +2,10 @@ import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { TermsRepository } from '@/modules/terms/terms.repository';
 import { TermsUserType } from '@/modules/terms/terms.domain';
-import type { UserTermsAcceptance, UserTermsState } from '@/modules/terms/terms.domain';
+import type {
+  UserTermsAcceptance,
+  UserTermsState,
+} from '@/modules/terms/terms.domain';
 import type { Ctx } from '@/common/types/context';
 import {
   getTestPrismaClient,
@@ -38,7 +41,10 @@ describe('TermsRepository (Integration)', () => {
     return user.id;
   }
 
-  async function createTermsVersion(userType: 'buyer' | 'seller', status: 'draft' | 'active' = 'active'): Promise<string> {
+  async function createTermsVersion(
+    userType: 'buyer' | 'seller',
+    status: 'draft' | 'active' = 'active',
+  ): Promise<string> {
     const v = await prisma.termsVersion.create({
       data: {
         userType,
@@ -87,18 +93,27 @@ describe('TermsRepository (Integration)', () => {
       await truncateAllTables(prisma);
       testUserId = await createTestUser();
       await createTermsVersion('buyer', 'draft');
-      const found = await repository.findActiveByUserType(ctx, TermsUserType.Buyer);
+      const found = await repository.findActiveByUserType(
+        ctx,
+        TermsUserType.Buyer,
+      );
       expect(found).toBeUndefined();
     });
 
     it('should find active version for buyer', async () => {
-      const found = await repository.findActiveByUserType(ctx, TermsUserType.Buyer);
+      const found = await repository.findActiveByUserType(
+        ctx,
+        TermsUserType.Buyer,
+      );
       expect(found).toBeDefined();
       expect(found?.userType).toBe(TermsUserType.Buyer);
     });
 
     it('should find active version for seller', async () => {
-      const found = await repository.findActiveByUserType(ctx, TermsUserType.Seller);
+      const found = await repository.findActiveByUserType(
+        ctx,
+        TermsUserType.Seller,
+      );
       expect(found).toBeDefined();
       expect(found?.userType).toBe(TermsUserType.Seller);
     });
@@ -106,7 +121,11 @@ describe('TermsRepository (Integration)', () => {
 
   describe('findAcceptance', () => {
     it('should return undefined when no acceptance', async () => {
-      const found = await repository.findAcceptance(ctx, testUserId, buyerVersionId);
+      const found = await repository.findAcceptance(
+        ctx,
+        testUserId,
+        buyerVersionId,
+      );
       expect(found).toBeUndefined();
     });
 
@@ -126,7 +145,11 @@ describe('TermsRepository (Integration)', () => {
         createdAt: new Date(),
       };
       await repository.createAcceptance(ctx, data);
-      const found = await repository.findAcceptance(ctx, testUserId, buyerVersionId);
+      const found = await repository.findAcceptance(
+        ctx,
+        testUserId,
+        buyerVersionId,
+      );
       expect(found).toBeDefined();
       expect(found?.userId).toBe(testUserId);
     });
@@ -154,7 +177,11 @@ describe('TermsRepository (Integration)', () => {
         createdAt: new Date(),
       };
       await repository.createAcceptance(ctx, data);
-      const list = await repository.findAcceptancesByUser(ctx, testUserId, TermsUserType.Buyer);
+      const list = await repository.findAcceptancesByUser(
+        ctx,
+        testUserId,
+        TermsUserType.Buyer,
+      );
       expect(list).toHaveLength(1);
     });
   });
@@ -183,7 +210,11 @@ describe('TermsRepository (Integration)', () => {
 
   describe('findUserTermsState', () => {
     it('should return undefined when no state', async () => {
-      const found = await repository.findUserTermsState(ctx, testUserId, TermsUserType.Buyer);
+      const found = await repository.findUserTermsState(
+        ctx,
+        testUserId,
+        TermsUserType.Buyer,
+      );
       expect(found).toBeUndefined();
     });
 
@@ -202,7 +233,11 @@ describe('TermsRepository (Integration)', () => {
         updatedAt: new Date(),
       };
       await repository.upsertUserTermsState(ctx, data);
-      const found = await repository.findUserTermsState(ctx, testUserId, TermsUserType.Buyer);
+      const found = await repository.findUserTermsState(
+        ctx,
+        testUserId,
+        TermsUserType.Buyer,
+      );
       expect(found).toBeDefined();
       expect(found?.isCompliant).toBe(true);
     });
@@ -243,7 +278,12 @@ describe('TermsRepository (Integration)', () => {
         updatedAt: new Date(),
       };
       await repository.upsertUserTermsState(ctx, data);
-      const updated: UserTermsState = { ...data, lastAcceptedVersionId: buyerVersionId, isCompliant: true, requiresAction: false };
+      const updated: UserTermsState = {
+        ...data,
+        lastAcceptedVersionId: buyerVersionId,
+        isCompliant: true,
+        requiresAction: false,
+      };
       const result = await repository.upsertUserTermsState(ctx, updated);
       expect(result.isCompliant).toBe(true);
     });

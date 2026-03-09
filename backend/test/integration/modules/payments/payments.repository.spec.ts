@@ -1,8 +1,16 @@
-import { PrismaClient, Role, SeatingType as PrismaSeatingType } from '@prisma/client';
+import {
+  PrismaClient,
+  Role,
+  SeatingType as PrismaSeatingType,
+} from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PaymentsRepository } from '@/modules/payments/payments.repository';
 import { PaymentStatus } from '@/modules/payments/payments.domain';
-import type { PaymentIntent, Money, PaymentMetadata } from '@/modules/payments/payments.domain';
+import type {
+  PaymentIntent,
+  Money,
+  PaymentMetadata,
+} from '@/modules/payments/payments.domain';
 import type { Ctx } from '@/common/types/context';
 import {
   getTestPrismaClient,
@@ -29,21 +37,26 @@ describe('PaymentsRepository (Integration)', () => {
     currency: currency as Money['currency'],
   });
 
-  const createTestMetadata = (overrides?: Partial<PaymentMetadata>): PaymentMetadata => ({
+  const createTestMetadata = (
+    overrides?: Partial<PaymentMetadata>,
+  ): PaymentMetadata => ({
     buyerId: testBuyerId,
     sellerId: testSellerId,
     listingId: testListingId,
     ...overrides,
   });
 
-  const createTestUser = async (overrides?: Partial<{
-    email: string;
-    role: Role;
-    acceptedSellerTermsAt: Date | null;
-  }>): Promise<string> => {
+  const createTestUser = async (
+    overrides?: Partial<{
+      email: string;
+      role: Role;
+      acceptedSellerTermsAt: Date | null;
+    }>,
+  ): Promise<string> => {
     const user = await prisma.user.create({
       data: {
-        email: overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
+        email:
+          overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
         firstName: 'Test',
         lastName: 'User',
         publicName: `testuser-${randomUUID().slice(0, 8)}`,
@@ -84,7 +97,10 @@ describe('PaymentsRepository (Integration)', () => {
     return event.id;
   };
 
-  const createTestEventDate = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventDate = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const eventDate = await prisma.eventDate.create({
       data: {
         event: { connect: { id: eventId } },
@@ -96,7 +112,10 @@ describe('PaymentsRepository (Integration)', () => {
     return eventDate.id;
   };
 
-  const createTestEventSection = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventSection = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const section = await prisma.eventSection.create({
       data: {
         event: { connect: { id: eventId } },
@@ -125,7 +144,9 @@ describe('PaymentsRepository (Integration)', () => {
     return listing.id;
   };
 
-  const createTestPricingSnapshot = async (listingId: string): Promise<string> => {
+  const createTestPricingSnapshot = async (
+    listingId: string,
+  ): Promise<string> => {
     const id = randomUUID();
     await prisma.pricingSnapshot.create({
       data: {
@@ -141,12 +162,14 @@ describe('PaymentsRepository (Integration)', () => {
     return id;
   };
 
-  const createTestTransaction = async (overrides?: Partial<{
-    buyerId: string;
-    sellerId: string;
-    listingId: string;
-    pricingSnapshotId: string;
-  }>): Promise<string> => {
+  const createTestTransaction = async (
+    overrides?: Partial<{
+      buyerId: string;
+      sellerId: string;
+      listingId: string;
+      pricingSnapshotId: string;
+    }>,
+  ): Promise<string> => {
     const id = randomUUID();
     await prisma.transaction.create({
       data: {
@@ -154,7 +177,8 @@ describe('PaymentsRepository (Integration)', () => {
         listing: { connect: { id: overrides?.listingId ?? testListingId } },
         buyer: { connect: { id: overrides?.buyerId ?? testBuyerId } },
         seller: { connect: { id: overrides?.sellerId ?? testSellerId } },
-        pricingSnapshotId: overrides?.pricingSnapshotId ?? testPricingSnapshotId,
+        pricingSnapshotId:
+          overrides?.pricingSnapshotId ?? testPricingSnapshotId,
         ticketType: 'Physical',
         ticketUnitIds: [],
         quantity: 2,
@@ -173,7 +197,9 @@ describe('PaymentsRepository (Integration)', () => {
     return id;
   };
 
-  const createValidPaymentIntent = (overrides?: Partial<PaymentIntent>): PaymentIntent => {
+  const createValidPaymentIntent = (
+    overrides?: Partial<PaymentIntent>,
+  ): PaymentIntent => {
     const now = new Date();
     return {
       id: randomUUID(),
@@ -196,11 +222,18 @@ describe('PaymentsRepository (Integration)', () => {
     await truncateAllTables(prisma);
     ctx = createTestContext();
 
-    testBuyerId = await createTestUser({ email: `buyer-${Date.now()}@test.com` });
-    testSellerId = await createTestUser({ email: `seller-${Date.now()}@test.com` });
+    testBuyerId = await createTestUser({
+      email: `buyer-${Date.now()}@test.com`,
+    });
+    testSellerId = await createTestUser({
+      email: `seller-${Date.now()}@test.com`,
+    });
     testEventId = await createTestEvent(testSellerId);
     testEventDateId = await createTestEventDate(testEventId, testSellerId);
-    testEventSectionId = await createTestEventSection(testEventId, testSellerId);
+    testEventSectionId = await createTestEventSection(
+      testEventId,
+      testSellerId,
+    );
     testListingId = await createTestListing(testSellerId);
     testPricingSnapshotId = await createTestPricingSnapshot(testListingId);
     testTransactionId = await createTestTransaction();
@@ -326,14 +359,20 @@ describe('PaymentsRepository (Integration)', () => {
 
   describe('findByTransactionId', () => {
     it('should return undefined when no payment for transaction exists', async () => {
-      const payment = await repository.findByTransactionId(ctx, 'non-existent-transaction-id');
+      const payment = await repository.findByTransactionId(
+        ctx,
+        'non-existent-transaction-id',
+      );
       expect(payment).toBeUndefined();
     });
 
     it('should find payment intent by transaction id', async () => {
       const created = await repository.create(ctx, createValidPaymentIntent());
 
-      const found = await repository.findByTransactionId(ctx, testTransactionId);
+      const found = await repository.findByTransactionId(
+        ctx,
+        testTransactionId,
+      );
 
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
@@ -342,8 +381,12 @@ describe('PaymentsRepository (Integration)', () => {
 
     it('should return the correct payment when multiple transactions exist', async () => {
       const transaction2Id = await createTestTransaction();
-      const payment1 = createValidPaymentIntent({ transactionId: testTransactionId });
-      const payment2 = createValidPaymentIntent({ transactionId: transaction2Id });
+      const payment1 = createValidPaymentIntent({
+        transactionId: testTransactionId,
+      });
+      const payment2 = createValidPaymentIntent({
+        transactionId: transaction2Id,
+      });
 
       await repository.create(ctx, payment1);
       await repository.create(ctx, payment2);
@@ -360,7 +403,10 @@ describe('PaymentsRepository (Integration)', () => {
 
   describe('findByProviderPaymentId', () => {
     it('should return undefined when no payment with provider id exists', async () => {
-      const payment = await repository.findByProviderPaymentId(ctx, 'non-existent-provider-id');
+      const payment = await repository.findByProviderPaymentId(
+        ctx,
+        'non-existent-provider-id',
+      );
       expect(payment).toBeUndefined();
     });
 
@@ -369,7 +415,10 @@ describe('PaymentsRepository (Integration)', () => {
       const paymentData = createValidPaymentIntent({ providerPaymentId });
       await repository.create(ctx, paymentData);
 
-      const found = await repository.findByProviderPaymentId(ctx, providerPaymentId);
+      const found = await repository.findByProviderPaymentId(
+        ctx,
+        providerPaymentId,
+      );
 
       expect(found).toBeDefined();
       expect(found?.id).toBe(paymentData.id);
@@ -390,7 +439,10 @@ describe('PaymentsRepository (Integration)', () => {
       await repository.create(ctx, payment1);
       await repository.create(ctx, payment2);
 
-      const found = await repository.findByProviderPaymentId(ctx, 'pi_second_456');
+      const found = await repository.findByProviderPaymentId(
+        ctx,
+        'pi_second_456',
+      );
 
       expect(found).toBeDefined();
       expect(found?.providerPaymentId).toBe('pi_second_456');
@@ -401,7 +453,10 @@ describe('PaymentsRepository (Integration)', () => {
       const paymentData = createValidPaymentIntent();
       await repository.create(ctx, paymentData);
 
-      const found = await repository.findByProviderPaymentId(ctx, 'any-provider-id');
+      const found = await repository.findByProviderPaymentId(
+        ctx,
+        'any-provider-id',
+      );
 
       expect(found).toBeUndefined();
     });
@@ -428,9 +483,12 @@ describe('PaymentsRepository (Integration)', () => {
     });
 
     it('should update payment intent to failed status', async () => {
-      const payment = await repository.create(ctx, createValidPaymentIntent({
-        status: PaymentStatus.Processing,
-      }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({
+          status: PaymentStatus.Processing,
+        }),
+      );
 
       const updated = await repository.update(ctx, payment.id, {
         status: PaymentStatus.Failed,
@@ -507,10 +565,13 @@ describe('PaymentsRepository (Integration)', () => {
     });
 
     it('should not update fields when passed undefined', async () => {
-      const payment = await repository.create(ctx, createValidPaymentIntent({
-        providerPaymentId: 'pi_original_123',
-        status: PaymentStatus.Processing,
-      }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({
+          providerPaymentId: 'pi_original_123',
+          status: PaymentStatus.Processing,
+        }),
+      );
 
       const updated = await repository.update(ctx, payment.id, {
         status: undefined,
@@ -547,27 +608,36 @@ describe('PaymentsRepository (Integration)', () => {
 
       for (const status of statuses) {
         const transaction = await createTestTransaction();
-        const payment = await repository.create(ctx, createValidPaymentIntent({
-          transactionId: transaction,
-          status,
-        }));
+        const payment = await repository.create(
+          ctx,
+          createValidPaymentIntent({
+            transactionId: transaction,
+            status,
+          }),
+        );
         expect(payment.status).toBe(status);
       }
     });
 
     it('should handle payment with zero amount', async () => {
-      const payment = await repository.create(ctx, createValidPaymentIntent({
-        amount: createMoney(0),
-      }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({
+          amount: createMoney(0),
+        }),
+      );
 
       expect(payment.amount.amount).toBe(0);
     });
 
     it('should handle payment with large amount', async () => {
       const largeAmount = createMoney(999999999);
-      const payment = await repository.create(ctx, createValidPaymentIntent({
-        amount: largeAmount,
-      }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({
+          amount: largeAmount,
+        }),
+      );
 
       expect(payment.amount.amount).toBe(999999999);
     });
@@ -577,27 +647,36 @@ describe('PaymentsRepository (Integration)', () => {
 
       for (const currency of currencies) {
         const transaction = await createTestTransaction();
-        const payment = await repository.create(ctx, createValidPaymentIntent({
-          transactionId: transaction,
-          amount: createMoney(10000, currency),
-        }));
+        const payment = await repository.create(
+          ctx,
+          createValidPaymentIntent({
+            transactionId: transaction,
+            amount: createMoney(10000, currency),
+          }),
+        );
         expect(payment.amount.currency).toBe(currency);
       }
     });
 
     it('should handle empty provider payment id', async () => {
-      const payment = await repository.create(ctx, createValidPaymentIntent({
-        providerPaymentId: '',
-      }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({
+          providerPaymentId: '',
+        }),
+      );
 
       expect(payment.providerPaymentId).toBe('');
     });
 
     it('should handle special characters in provider payment id', async () => {
       const providerPaymentId = 'pi_test_123_abc-xyz_!@#';
-      const payment = await repository.create(ctx, createValidPaymentIntent({
-        providerPaymentId,
-      }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({
+          providerPaymentId,
+        }),
+      );
 
       expect(payment.providerPaymentId).toBe(providerPaymentId);
     });
@@ -608,7 +687,10 @@ describe('PaymentsRepository (Integration)', () => {
         sellerId: testSellerId,
         listingId: testListingId,
       };
-      const payment = await repository.create(ctx, createValidPaymentIntent({ metadata }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({ metadata }),
+      );
 
       expect(payment.metadata.buyerId).toBe(testBuyerId);
       expect(payment.metadata.sellerId).toBe(testSellerId);
@@ -626,7 +708,10 @@ describe('PaymentsRepository (Integration)', () => {
         eventName: longString,
         ticketDescription: longString,
       };
-      const payment = await repository.create(ctx, createValidPaymentIntent({ metadata }));
+      const payment = await repository.create(
+        ctx,
+        createValidPaymentIntent({ metadata }),
+      );
 
       expect(payment.metadata.eventName).toBe(longString);
       expect(payment.metadata.ticketDescription).toBe(longString);
@@ -651,9 +736,18 @@ describe('PaymentsRepository (Integration)', () => {
       const transaction3Id = await createTestTransaction();
 
       const [payment1, payment2, payment3] = await Promise.all([
-        repository.create(ctx, createValidPaymentIntent({ transactionId: testTransactionId })),
-        repository.create(ctx, createValidPaymentIntent({ transactionId: transaction2Id })),
-        repository.create(ctx, createValidPaymentIntent({ transactionId: transaction3Id })),
+        repository.create(
+          ctx,
+          createValidPaymentIntent({ transactionId: testTransactionId }),
+        ),
+        repository.create(
+          ctx,
+          createValidPaymentIntent({ transactionId: transaction2Id }),
+        ),
+        repository.create(
+          ctx,
+          createValidPaymentIntent({ transactionId: transaction3Id }),
+        ),
       ]);
 
       expect(payment1.transactionId).toBe(testTransactionId);

@@ -1,7 +1,10 @@
 import { PrismaService } from '../../../../src/common/prisma/prisma.service';
 import { BaseRepository } from '../../../../src/common/repositories/base.repository';
 import { Ctx } from '../../../../src/common/types/context';
-import { TxCtx, PrismaTransactionClient } from '../../../../src/common/database/types';
+import {
+  TxCtx,
+  PrismaTransactionClient,
+} from '../../../../src/common/database/types';
 
 class TestRepository extends BaseRepository {
   public exposeGetClient(ctx: Ctx): PrismaTransactionClient | PrismaService {

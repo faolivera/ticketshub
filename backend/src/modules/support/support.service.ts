@@ -104,20 +104,21 @@ export class SupportService {
       }
     }
 
-    // If report-problem category with transaction, validate time windows and no duplicate
+    // If report-problem category with transaction, validate time windows and no duplicate (per user per transaction)
     if (isReportProblemCategory(data.category) && data.transactionId) {
-      const existingDispute =
-        await this.supportRepository.getTicketByTransactionId(
+      const existingTicket =
+        await this.supportRepository.getTicketByTransactionIdAndUserId(
           ctx,
           data.transactionId,
+          userId,
         );
       if (
-        existingDispute &&
-        existingDispute.status !== SupportTicketStatus.Closed
+        existingTicket &&
+        existingTicket.status !== SupportTicketStatus.Closed
       ) {
         throw new BadRequestException({
           message: 'A support case already exists for this transaction',
-          existingTicketId: existingDispute.id,
+          existingTicketId: existingTicket.id,
         });
       }
 
@@ -129,7 +130,9 @@ export class SupportService {
         throw new BadRequestException('Transaction not found');
       }
       if (transaction.buyerId !== userId && transaction.sellerId !== userId) {
-        throw new ForbiddenException('You can only open a dispute for your own transaction');
+        throw new ForbiddenException(
+          'You can only open a dispute for your own transaction',
+        );
       }
 
       const category = data.category;
@@ -193,10 +196,12 @@ export class SupportService {
             'Cannot open a "ticket did not work" claim: event date could not be determined.',
           );
         }
-        const refDate = eventDate instanceof Date ? eventDate : new Date(eventDate);
+        const refDate =
+          eventDate instanceof Date ? eventDate : new Date(eventDate);
         const platformConfig =
           await this.platformConfigService.getPlatformConfig(ctx);
-        const windowConfig = platformConfig?.riskEngine?.claims?.ticketDidntWork;
+        const windowConfig =
+          platformConfig?.riskEngine?.claims?.ticketDidntWork;
         const minHours = windowConfig?.minimumClaimHours ?? 1;
         const maxHours = windowConfig?.maximumClaimHours ?? 168;
         const now = new Date();
@@ -245,22 +250,21 @@ export class SupportService {
     await this.supportRepository.createTicket(ctx, ticket);
 
     // Only TicketDidntWork triggers formal dispute: transaction → Disputed and buyer flag
-    if (
-      isDisputeTriggeringCategory(data.category) &&
-      data.transactionId
-    ) {
+    if (isDisputeTriggeringCategory(data.category) && data.transactionId) {
       await this.transactionsService.markDisputed(
         ctx,
         data.transactionId,
         ticket.id,
       );
       await this.usersService.setBuyerDisputed(ctx, userId);
-    }
 
-    if (isReportProblemCategory(data.category) && data.transactionId) {
-      const transaction = await this.transactionsService.findById(ctx, data.transactionId);
+      const transaction = await this.transactionsService.findById(
+        ctx,
+        data.transactionId,
+      );
       if (transaction) {
-        const openedBy: 'buyer' | 'seller' = transaction.buyerId === userId ? 'buyer' : 'seller';
+        const openedBy: 'buyer' | 'seller' =
+          transaction.buyerId === userId ? 'buyer' : 'seller';
         this.notificationsService
           .emit(ctx, NotificationEventType.DISPUTE_OPENED, {
             transactionId: data.transactionId,
@@ -271,7 +275,9 @@ export class SupportService {
             openedBy,
             reason: data.category,
           })
-          .catch((err) => this.logger.error(ctx, `Failed to emit DISPUTE_OPENED: ${err}`));
+          .catch((err) =>
+            this.logger.error(ctx, `Failed to emit DISPUTE_OPENED: ${err}`),
+          );
       }
     }
 
@@ -484,7 +490,10 @@ export class SupportService {
         resolution === DisputeResolution.BuyerWins ||
         resolution === DisputeResolution.SplitResolution
       ) {
-        const buyer = await this.usersService.findById(ctx, transaction.buyerId);
+        const buyer = await this.usersService.findById(
+          ctx,
+          transaction.buyerId,
+        );
         if (!buyer) {
           throw new BadRequestException('Buyer not found');
         }
@@ -522,9 +531,13 @@ export class SupportService {
 
     // Emit dispute resolved notification
     if (ticket.transactionId) {
-      const transaction = await this.transactionsService.findById(ctx, ticket.transactionId);
+      const transaction = await this.transactionsService.findById(
+        ctx,
+        ticket.transactionId,
+      );
       if (transaction) {
-        const resolvedInFavorOf: 'buyer' | 'seller' = resolution === DisputeResolution.BuyerWins ? 'buyer' : 'seller';
+        const resolvedInFavorOf: 'buyer' | 'seller' =
+          resolution === DisputeResolution.BuyerWins ? 'buyer' : 'seller';
         this.notificationsService
           .emit(ctx, NotificationEventType.DISPUTE_RESOLVED, {
             transactionId: ticket.transactionId,
@@ -535,7 +548,9 @@ export class SupportService {
             resolution,
             resolvedInFavorOf,
           })
-          .catch((err) => this.logger.error(ctx, `Failed to emit DISPUTE_RESOLVED: ${err}`));
+          .catch((err) =>
+            this.logger.error(ctx, `Failed to emit DISPUTE_RESOLVED: ${err}`),
+          );
       }
     }
 

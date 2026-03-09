@@ -31,7 +31,10 @@ export class OffersRepository
 
   private deserializeMoney(json: unknown): Money {
     const data = json as { amount: number; currency: string };
-    return { amount: data.amount, currency: data.currency as Money['currency'] };
+    return {
+      amount: data.amount,
+      currency: data.currency as Money['currency'],
+    };
   }
 
   private mapToDomain(record: PrismaOffer): Offer {
@@ -144,14 +147,16 @@ export class OffersRepository
   ): Promise<Offer | undefined> {
     const client = this.getClient(ctx);
     const data: Record<string, unknown> = {};
-    if (updates.status !== undefined) data.status = this.mapStatusToDb(updates.status);
+    if (updates.status !== undefined)
+      data.status = this.mapStatusToDb(updates.status);
     if (updates.acceptedAt !== undefined) data.acceptedAt = updates.acceptedAt;
     if (updates.acceptedExpiresAt !== undefined)
       data.acceptedExpiresAt = updates.acceptedExpiresAt;
     if (updates.rejectedAt !== undefined) data.rejectedAt = updates.rejectedAt;
     if (updates.convertedTransactionId !== undefined)
       data.convertedTransactionId = updates.convertedTransactionId;
-    if (updates.cancelledAt !== undefined) data.cancelledAt = updates.cancelledAt;
+    if (updates.cancelledAt !== undefined)
+      data.cancelledAt = updates.cancelledAt;
     data.updatedAt = new Date();
 
     const updated = await client.offer.update({

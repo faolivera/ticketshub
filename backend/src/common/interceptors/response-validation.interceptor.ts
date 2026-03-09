@@ -12,9 +12,13 @@ import { ZodError } from 'zod';
 import type { ZodTypeAny } from 'zod';
 import { ApiResponse } from '../types/api';
 import { VALIDATE_RESPONSE_KEY } from '../decorators/validate-response.decorator';
+import { ContextLogger } from '../logger/context-logger';
+import type { Ctx } from '../types/context';
 
 @Injectable()
 export class ResponseValidationInterceptor implements NestInterceptor {
+  private readonly logger = new ContextLogger(ResponseValidationInterceptor.name);
+
   constructor(private readonly reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -32,6 +36,9 @@ export class ResponseValidationInterceptor implements NestInterceptor {
     const handler = context.getHandler();
     const controllerName = controller.name;
     const methodName = handler.name;
+
+    const request = context.switchToHttp().getRequest();
+    const ctx: Ctx = (request as any).ctx ?? { source: 'HTTP' };
 
     return next.handle().pipe(
       map((data: ApiResponse<any>) => {
@@ -51,12 +58,14 @@ export class ResponseValidationInterceptor implements NestInterceptor {
             if (error instanceof ZodError) {
               const errorMessage = `Response validation failed for ${controllerName}.${methodName}: ${error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
 
-              console.error(errorMessage);
-              console.error(
+              this.logger.error(ctx, errorMessage);
+              this.logger.error(
+                ctx,
                 'Validation errors:',
                 JSON.stringify(error.issues, null, 2),
               );
-              console.error(
+              this.logger.error(
+                ctx,
                 'Received data:',
                 JSON.stringify(data.data, null, 2),
               );

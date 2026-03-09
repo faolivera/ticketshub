@@ -6,9 +6,7 @@ import type { IdentityRejectedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class IdentityRejectedProcessor
-  implements EventProcessor<IdentityRejectedContext>
-{
+export class IdentityRejectedProcessor implements EventProcessor<IdentityRejectedContext> {
   readonly eventType = NotificationEventType.IDENTITY_REJECTED;
 
   async getRecipients(

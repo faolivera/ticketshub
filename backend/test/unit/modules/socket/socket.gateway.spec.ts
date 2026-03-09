@@ -25,7 +25,15 @@ describe('SocketGateway', () => {
     imageId: 'img_1',
   };
 
-  function createMockClient(overrides: Partial<{ handshake: any; data: any; join: jest.Mock; leave: jest.Mock; disconnect: jest.Mock }> = {}) {
+  function createMockClient(
+    overrides: Partial<{
+      handshake: any;
+      data: any;
+      join: jest.Mock;
+      leave: jest.Mock;
+      disconnect: jest.Mock;
+    }> = {},
+  ) {
     return {
       handshake: { auth: { token: 'valid_token' }, query: {} },
       data: undefined,
@@ -63,7 +71,10 @@ describe('SocketGateway', () => {
         SocketGateway,
         { provide: UsersService, useValue: mockUsersService },
         { provide: TransactionsService, useValue: mockTransactionsService },
-        { provide: TransactionChatService, useValue: mockTransactionChatService },
+        {
+          provide: TransactionChatService,
+          useValue: mockTransactionChatService,
+        },
         { provide: InMemoryRealtimeBroadcaster, useValue: mockBroadcaster },
       ],
     }).compile();
@@ -135,7 +146,9 @@ describe('SocketGateway', () => {
     });
 
     it('should not join when getTransactionById throws', async () => {
-      transactionsService.getTransactionById.mockRejectedValue(new ForbiddenException());
+      transactionsService.getTransactionById.mockRejectedValue(
+        new ForbiddenException(),
+      );
       const client = createMockClient();
       client.data = { userId: 'user_1', user: mockUser };
       await gateway.handleChatJoin(client, { transactionId: 'txn_1' });

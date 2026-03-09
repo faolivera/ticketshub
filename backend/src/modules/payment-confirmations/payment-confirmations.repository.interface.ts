@@ -44,7 +44,10 @@ export interface IPaymentConfirmationsRepository {
   /**
    * Save a payment confirmation (create or update)
    */
-  save(ctx: Ctx, confirmation: PaymentConfirmation): Promise<PaymentConfirmation>;
+  save(
+    ctx: Ctx,
+    confirmation: PaymentConfirmation,
+  ): Promise<PaymentConfirmation>;
 
   /**
    * Delete a payment confirmation by ID

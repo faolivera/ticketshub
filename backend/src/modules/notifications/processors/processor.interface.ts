@@ -1,5 +1,8 @@
 import type { Ctx } from '../../../common/types/context';
-import type { NotificationEventType, NotificationRecipient } from '../notifications.domain';
+import type {
+  NotificationEventType,
+  NotificationRecipient,
+} from '../notifications.domain';
 
 /**
  * Interface that all event processors must implement.

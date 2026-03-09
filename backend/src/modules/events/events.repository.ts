@@ -6,7 +6,13 @@ import type {
   EventSection as PrismaEventSection,
 } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
-import type { Event, EventDate, EventSection, EventBanners } from './events.domain';
+import { ContextLogger } from '../../common/logger/context-logger';
+import type {
+  Event,
+  EventDate,
+  EventSection,
+  EventBanners,
+} from './events.domain';
 import {
   EventStatus,
   EventDateStatus,
@@ -19,6 +25,8 @@ import { SeatingType } from '../tickets/tickets.domain';
 
 @Injectable()
 export class EventsRepository implements IEventsRepository {
+  private readonly logger = new ContextLogger(EventsRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   // ==================== Events ====================
@@ -74,7 +82,10 @@ export class EventsRepository implements IEventsRepository {
     return events.map((e) => this.mapToEvent(e));
   }
 
-  async getDatesByEventIds(_ctx: Ctx, eventIds: string[]): Promise<EventDate[]> {
+  async getDatesByEventIds(
+    _ctx: Ctx,
+    eventIds: string[],
+  ): Promise<EventDate[]> {
     if (eventIds.length === 0) return [];
     const dates = await this.prisma.eventDate.findMany({
       where: { eventId: { in: eventIds } },
@@ -161,7 +172,9 @@ export class EventsRepository implements IEventsRepository {
       }),
     ]);
 
-    const eventIdsWithPendingDates = new Set(pendingDates.map((d) => d.eventId));
+    const eventIdsWithPendingDates = new Set(
+      pendingDates.map((d) => d.eventId),
+    );
     const eventIdsWithPendingSections = new Set(
       pendingSections.map((s) => s.eventId),
     );
@@ -205,7 +218,8 @@ export class EventsRepository implements IEventsRepository {
         data.category = this.mapEventCategoryToDb(updates.category);
       }
       if (updates.venue !== undefined) data.venue = updates.venue;
-      if (updates.location !== undefined) data.location = updates.location as object;
+      if (updates.location !== undefined)
+        data.location = updates.location as object;
       if (updates.imageIds !== undefined) data.imageIds = updates.imageIds;
       if (updates.banners !== undefined) {
         data.banners = updates.banners ? (updates.banners as object) : null;
@@ -216,7 +230,8 @@ export class EventsRepository implements IEventsRepository {
       if (updates.rejectionReason !== undefined) {
         data.rejectionReason = updates.rejectionReason;
       }
-      if (updates.approvedBy !== undefined) data.approvedById = updates.approvedBy;
+      if (updates.approvedBy !== undefined)
+        data.approvedById = updates.approvedBy;
 
       const updated = await this.prisma.event.update({
         where: { id },
@@ -224,7 +239,7 @@ export class EventsRepository implements IEventsRepository {
       });
       return this.mapToEvent(updated);
     } catch (error) {
-      console.error('events.repository updateEvent failed:', error);
+      this.logger.error(_ctx, 'events.repository updateEvent failed:', error);
       return undefined;
     }
   }
@@ -325,7 +340,10 @@ export class EventsRepository implements IEventsRepository {
     return this.mapToEventDate(created);
   }
 
-  async findEventDateById(_ctx: Ctx, id: string): Promise<EventDate | undefined> {
+  async findEventDateById(
+    _ctx: Ctx,
+    id: string,
+  ): Promise<EventDate | undefined> {
     const date = await this.prisma.eventDate.findUnique({
       where: { id },
     });
@@ -407,7 +425,8 @@ export class EventsRepository implements IEventsRepository {
       if (updates.rejectionReason !== undefined) {
         data.rejectionReason = updates.rejectionReason;
       }
-      if (updates.approvedBy !== undefined) data.approvedById = updates.approvedBy;
+      if (updates.approvedBy !== undefined)
+        data.approvedById = updates.approvedBy;
 
       const updated = await this.prisma.eventDate.update({
         where: { id },
@@ -415,7 +434,7 @@ export class EventsRepository implements IEventsRepository {
       });
       return this.mapToEventDate(updated);
     } catch (error) {
-      console.error('events.repository updateEventDate failed:', error);
+      this.logger.error(_ctx, 'events.repository updateEventDate failed:', error);
       return undefined;
     }
   }
@@ -428,7 +447,10 @@ export class EventsRepository implements IEventsRepository {
 
   // ==================== Event Sections ====================
 
-  async createEventSection(_ctx: Ctx, section: EventSection): Promise<EventSection> {
+  async createEventSection(
+    _ctx: Ctx,
+    section: EventSection,
+  ): Promise<EventSection> {
     const created = await this.prisma.eventSection.create({
       data: {
         id: section.id,
@@ -540,7 +562,8 @@ export class EventsRepository implements IEventsRepository {
       if (updates.rejectionReason !== undefined) {
         data.rejectionReason = updates.rejectionReason;
       }
-      if (updates.approvedBy !== undefined) data.approvedById = updates.approvedBy;
+      if (updates.approvedBy !== undefined)
+        data.approvedById = updates.approvedBy;
 
       const updated = await this.prisma.eventSection.update({
         where: { id },
@@ -548,7 +571,7 @@ export class EventsRepository implements IEventsRepository {
       });
       return this.mapToEventSection(updated);
     } catch (error) {
-      console.error('events.repository updateEventSection failed:', error);
+      this.logger.error(_ctx, 'events.repository updateEventSection failed:', error);
       return undefined;
     }
   }
@@ -697,7 +720,14 @@ export class EventsRepository implements IEventsRepository {
 
   private mapEventCategoryToDb(
     category: EventCategory,
-  ): 'Concert' | 'Sports' | 'Theater' | 'Festival' | 'Conference' | 'Comedy' | 'Other' {
+  ):
+    | 'Concert'
+    | 'Sports'
+    | 'Theater'
+    | 'Festival'
+    | 'Conference'
+    | 'Comedy'
+    | 'Other' {
     switch (category) {
       case EventCategory.Concert:
         return 'Concert';
@@ -717,7 +747,14 @@ export class EventsRepository implements IEventsRepository {
   }
 
   private mapEventCategoryFromDb(
-    category: 'Concert' | 'Sports' | 'Theater' | 'Festival' | 'Conference' | 'Comedy' | 'Other',
+    category:
+      | 'Concert'
+      | 'Sports'
+      | 'Theater'
+      | 'Festival'
+      | 'Conference'
+      | 'Comedy'
+      | 'Other',
   ): EventCategory {
     switch (category) {
       case 'Concert':
@@ -737,7 +774,9 @@ export class EventsRepository implements IEventsRepository {
     }
   }
 
-  private mapSeatingTypeToDb(seatingType: SeatingType): 'numbered' | 'unnumbered' {
+  private mapSeatingTypeToDb(
+    seatingType: SeatingType,
+  ): 'numbered' | 'unnumbered' {
     switch (seatingType) {
       case SeatingType.Numbered:
         return 'numbered';
@@ -746,7 +785,9 @@ export class EventsRepository implements IEventsRepository {
     }
   }
 
-  private mapSeatingTypeFromDb(seatingType: 'numbered' | 'unnumbered'): SeatingType {
+  private mapSeatingTypeFromDb(
+    seatingType: 'numbered' | 'unnumbered',
+  ): SeatingType {
     switch (seatingType) {
       case 'numbered':
         return SeatingType.Numbered;

@@ -26,7 +26,12 @@ import {
   SeatingType,
   type TicketListingWithEvent,
 } from '../../../../src/modules/tickets/tickets.domain';
-import { Language, Role, UserStatus, IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
+import {
+  Language,
+  Role,
+  UserStatus,
+  IdentityVerificationStatus,
+} from '../../../../src/modules/users/users.domain';
 import type { User } from '../../../../src/modules/users/users.domain';
 import type { UserReviewMetrics } from '../../../../src/modules/reviews/reviews.domain';
 import type { PublicPaymentMethodOption } from '../../../../src/modules/payments/payments.domain';
@@ -132,7 +137,11 @@ describe('BffService', () => {
 
     const mockPaymentMethodsService = {
       getPublicPaymentMethods: jest.fn(),
-      findById: jest.fn().mockResolvedValue({ publicName: 'Test Method', type: 'payment_gateway', bankTransferConfig: null }),
+      findById: jest.fn().mockResolvedValue({
+        publicName: 'Test Method',
+        type: 'payment_gateway',
+        bankTransferConfig: null,
+      }),
     };
 
     const mockPricingService = {
@@ -183,7 +192,10 @@ describe('BffService', () => {
         { provide: PricingService, useValue: mockPricingService },
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: PromotionsService, useValue: mockPromotionsService },
-        { provide: TransactionChatService, useValue: mockTransactionChatService },
+        {
+          provide: TransactionChatService,
+          useValue: mockTransactionChatService,
+        },
         { provide: RiskEngineService, useValue: mockRiskEngineService },
       ],
     }).compile();
@@ -485,7 +497,15 @@ describe('BffService', () => {
       firstName: 'Jane',
       lastName: 'Seller',
       role: Role.User,
-       identityVerification: { status: IdentityVerificationStatus.Approved, legalFirstName: 'A', legalLastName: 'B', dateOfBirth: '1990-01-01', governmentIdNumber: '1', submittedAt: new Date(), reviewedAt: new Date() },
+      identityVerification: {
+        status: IdentityVerificationStatus.Approved,
+        legalFirstName: 'A',
+        legalLastName: 'B',
+        dateOfBirth: '1990-01-01',
+        governmentIdNumber: '1',
+        submittedAt: new Date(),
+        reviewedAt: new Date(),
+      },
       status: UserStatus.Enabled,
       publicName: 'Jane Seller',
       imageId: 'img_123',
@@ -513,8 +533,18 @@ describe('BffService', () => {
     };
 
     const mockPaymentMethods: PublicPaymentMethodOption[] = [
-      { id: 'pm_1', name: 'Credit Card', type: 'payment_gateway', buyerCommissionPercent: 3 },
-      { id: 'pm_2', name: 'Bank Transfer', type: 'manual_approval', buyerCommissionPercent: null },
+      {
+        id: 'pm_1',
+        name: 'Credit Card',
+        type: 'payment_gateway',
+        buyerCommissionPercent: 3,
+      },
+      {
+        id: 'pm_2',
+        name: 'Bank Transfer',
+        type: 'manual_approval',
+        buyerCommissionPercent: null,
+      },
     ];
 
     const mockSellerMetrics: UserReviewMetrics = {
@@ -531,7 +561,9 @@ describe('BffService', () => {
 
     it('should return buy page data with serviceFeePercent per payment method', async () => {
       ticketsService.getListingById.mockResolvedValue(mockListing);
-      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        mockPublicUserInfo,
+      ]);
       usersService.findById.mockResolvedValue(mockUser);
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(50);
       reviewsService.getSellerMetrics.mockResolvedValue(mockSellerMetrics);
@@ -550,7 +582,9 @@ describe('BffService', () => {
       expect(result.pricingSnapshot.expiresAt).toEqual(
         mockPricingSnapshot.expiresAt,
       );
-      expect(result.pricingSnapshot).not.toHaveProperty('buyerPlatformFeePercentage');
+      expect(result.pricingSnapshot).not.toHaveProperty(
+        'buyerPlatformFeePercentage',
+      );
       expect(result.paymentMethods).toHaveLength(2);
       expect(result.paymentMethods[0].serviceFeePercent).toBe(13); // 10 + 3
       expect(result.paymentMethods[1].serviceFeePercent).toBe(10); // 10 + 0
@@ -571,7 +605,9 @@ describe('BffService', () => {
         identityVerification: undefined,
       };
       ticketsService.getListingById.mockResolvedValue(mockListing);
-      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        mockPublicUserInfo,
+      ]);
       usersService.findById
         .mockResolvedValueOnce(mockUser)
         .mockResolvedValueOnce(mockBuyer);
@@ -613,7 +649,12 @@ describe('BffService', () => {
       type: TicketType.Digital,
       seatingType: SeatingType.Unnumbered,
       ticketUnits: [
-        { id: 'unit_1', listingId: 'listing_1', status: TicketUnitStatus.Available, version: 1 },
+        {
+          id: 'unit_1',
+          listingId: 'listing_1',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
       ],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'EUR' },
@@ -629,11 +670,25 @@ describe('BffService', () => {
       sectionName: 'General',
     };
 
-    const mockPublicUserInfo = { id: 'seller_123', publicName: 'Jane Seller', pic: { id: 'pic_1', src: '/img.png' } };
+    const mockPublicUserInfo = {
+      id: 'seller_123',
+      publicName: 'Jane Seller',
+      pic: { id: 'pic_1', src: '/img.png' },
+    };
 
     const mockPaymentMethods: PublicPaymentMethodOption[] = [
-      { id: 'pm_1', name: 'Card', type: 'payment_gateway', buyerCommissionPercent: 3 },
-      { id: 'pm_2', name: 'Transfer', type: 'manual_approval', buyerCommissionPercent: 0 },
+      {
+        id: 'pm_1',
+        name: 'Card',
+        type: 'payment_gateway',
+        buyerCommissionPercent: 3,
+      },
+      {
+        id: 'pm_2',
+        name: 'Transfer',
+        type: 'manual_approval',
+        buyerCommissionPercent: 0,
+      },
     ];
 
     it('should return listings with commissionPercentRange = platform + payment method (min/max)', async () => {
@@ -654,9 +709,15 @@ describe('BffService', () => {
         ],
       ]);
       ticketsService.listListings.mockResolvedValue([mockListing]);
-      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
-      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(mockPaymentMethods);
-      reviewsService.getSellerMetricsBatch.mockResolvedValue(mockSellerMetricsMap);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        mockPublicUserInfo,
+      ]);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(
+        mockPaymentMethods,
+      );
+      reviewsService.getSellerMetricsBatch.mockResolvedValue(
+        mockSellerMetricsMap,
+      );
 
       const result = await service.getEventListings(mockCtx, 'event_123');
 
@@ -692,11 +753,20 @@ describe('BffService', () => {
         ],
       ]);
       ticketsService.listListings.mockResolvedValue([mockListing]);
-      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
-      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue([
-        { id: 'pm_1', name: 'Manual', type: 'manual_approval', buyerCommissionPercent: null },
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        mockPublicUserInfo,
       ]);
-      reviewsService.getSellerMetricsBatch.mockResolvedValue(mockSellerMetricsMap);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue([
+        {
+          id: 'pm_1',
+          name: 'Manual',
+          type: 'manual_approval',
+          buyerCommissionPercent: null,
+        },
+      ]);
+      reviewsService.getSellerMetricsBatch.mockResolvedValue(
+        mockSellerMetricsMap,
+      );
 
       const result = await service.getEventListings(mockCtx, 'event_123');
 
@@ -714,8 +784,12 @@ describe('BffService', () => {
 
     it('should use default reputation when seller has no metrics', async () => {
       ticketsService.listListings.mockResolvedValue([mockListing]);
-      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
-      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(mockPaymentMethods);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        mockPublicUserInfo,
+      ]);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(
+        mockPaymentMethods,
+      );
       reviewsService.getSellerMetricsBatch.mockResolvedValue(new Map());
 
       const result = await service.getEventListings(mockCtx, 'event_123');
@@ -746,7 +820,12 @@ describe('BffService', () => {
       type: TicketType.Digital,
       seatingType: SeatingType.Unnumbered,
       ticketUnits: [
-        { id: 'unit_1', listingId: 'listing_1', status: TicketUnitStatus.Available, version: 1 },
+        {
+          id: 'unit_1',
+          listingId: 'listing_1',
+          status: TicketUnitStatus.Available,
+          version: 1,
+        },
       ],
       sellTogether: false,
       pricePerTicket: { amount: 5000, currency: 'EUR' },
@@ -762,11 +841,25 @@ describe('BffService', () => {
       sectionName: 'General',
     };
 
-    const mockPublicUserInfo = { id: 'seller_123', publicName: 'Jane Seller', pic: { id: 'pic_1', src: '/img.png' } };
+    const mockPublicUserInfo = {
+      id: 'seller_123',
+      publicName: 'Jane Seller',
+      pic: { id: 'pic_1', src: '/img.png' },
+    };
 
     const mockPaymentMethods: PublicPaymentMethodOption[] = [
-      { id: 'pm_1', name: 'Card', type: 'payment_gateway', buyerCommissionPercent: 3 },
-      { id: 'pm_2', name: 'Transfer', type: 'manual_approval', buyerCommissionPercent: 0 },
+      {
+        id: 'pm_1',
+        name: 'Card',
+        type: 'payment_gateway',
+        buyerCommissionPercent: 3,
+      },
+      {
+        id: 'pm_2',
+        name: 'Transfer',
+        type: 'manual_approval',
+        buyerCommissionPercent: 0,
+      },
     ];
 
     const mockSellerMetricsMap = new Map<string, UserReviewMetrics>([
@@ -789,16 +882,25 @@ describe('BffService', () => {
     it('should return event and listings combined', async () => {
       eventsService.getEventById.mockResolvedValue(mockEvent as any);
       ticketsService.listListings.mockResolvedValue([mockListing]);
-      usersService.getPublicUserInfoByIds.mockResolvedValue([mockPublicUserInfo]);
-      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(mockPaymentMethods);
-      reviewsService.getSellerMetricsBatch.mockResolvedValue(mockSellerMetricsMap);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        mockPublicUserInfo,
+      ]);
+      paymentMethodsService.getPublicPaymentMethods.mockResolvedValue(
+        mockPaymentMethods,
+      );
+      reviewsService.getSellerMetricsBatch.mockResolvedValue(
+        mockSellerMetricsMap,
+      );
 
       const result = await service.getEventPageData(mockCtx, 'event_123');
 
       expect(result.event).toEqual(mockEvent);
       expect(result.listings).toHaveLength(1);
       expect(result.listings[0].sellerPublicName).toBe('Jane Seller');
-      expect(eventsService.getEventById).toHaveBeenCalledWith(mockCtx, 'event_123');
+      expect(eventsService.getEventById).toHaveBeenCalledWith(
+        mockCtx,
+        'event_123',
+      );
     });
 
     it('should propagate NotFoundException when event not found', async () => {

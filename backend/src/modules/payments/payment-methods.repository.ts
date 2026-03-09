@@ -29,7 +29,10 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
     return methods.map((m) => this.mapToDomain(m));
   }
 
-  async findById(_ctx: Ctx, id: string): Promise<PaymentMethodOption | undefined> {
+  async findById(
+    _ctx: Ctx,
+    id: string,
+  ): Promise<PaymentMethodOption | undefined> {
     const method = await this.prisma.paymentMethod.findUnique({
       where: { id },
     });
@@ -77,7 +80,8 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
     });
     if (!existing) return undefined;
 
-    const existingInstructions = (existing.instructions as PaymentMethodInstructions) || {};
+    const existingInstructions =
+      (existing.instructions as PaymentMethodInstructions) || {};
     const newInstructions: PaymentMethodInstructions = {
       ...existingInstructions,
     };
@@ -135,7 +139,8 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
   }
 
   private mapToDomain(prismaMethod: PrismaPaymentMethod): PaymentMethodOption {
-    const instructions = (prismaMethod.instructions as PaymentMethodInstructions) || {};
+    const instructions =
+      (prismaMethod.instructions as PaymentMethodInstructions) || {};
 
     return {
       id: prismaMethod.id,

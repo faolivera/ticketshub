@@ -104,7 +104,8 @@ export class RiskEngineService {
   ): Promise<RiskEvaluation> {
     const cfg = buyerConfig ?? this.getConfig();
     const now = new Date();
-    const eventHours = (input.eventStartsAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const eventHours =
+      (input.eventStartsAt.getTime() - now.getTime()) / (1000 * 60 * 60);
     const accountAgeDays =
       (now.getTime() - input.buyerCreatedAt.getTime()) / (1000 * 60 * 60 * 24);
 
@@ -185,31 +186,49 @@ export class RiskEngineService {
 
   private getConfig(): RiskEngineBuyerConfigInput {
     const get = (path: string) => this.nestConfigService.get<number>(path)!;
-    const getPaymentTypes = (path: string, fallback: PaymentMethodType[]): PaymentMethodType[] => {
+    const getPaymentTypes = (
+      path: string,
+      fallback: PaymentMethodType[],
+    ): PaymentMethodType[] => {
       const val = this.nestConfigService.get<unknown>(path);
-      if (Array.isArray(val) && val.every((x) => x === 'payment_gateway' || x === 'manual_approval')) {
+      if (
+        Array.isArray(val) &&
+        val.every((x) => x === 'payment_gateway' || x === 'manual_approval')
+      ) {
         return val as PaymentMethodType[];
       }
       return fallback;
     };
     return {
-      phoneRequiredEventHours: get('platform.riskEngine.buyer.phoneRequiredEventHours'),
+      phoneRequiredEventHours: get(
+        'platform.riskEngine.buyer.phoneRequiredEventHours',
+      ),
       phoneRequiredAmount: {
-        amount: Math.round(get('platform.riskEngine.buyer.phoneRequiredAmountUsd') * 100),
+        amount: Math.round(
+          get('platform.riskEngine.buyer.phoneRequiredAmountUsd') * 100,
+        ),
         currency: 'USD',
       },
-      phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
+      phoneRequiredQtyTickets: get(
+        'platform.riskEngine.buyer.phoneRequiredQtyTickets',
+      ),
       newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
       phoneRequiredPaymentMethodTypes: getPaymentTypes(
         'platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes',
         ['manual_approval'],
       ),
-      dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
+      dniRequiredEventHours: get(
+        'platform.riskEngine.buyer.dniRequiredEventHours',
+      ),
       dniRequiredAmount: {
-        amount: Math.round(get('platform.riskEngine.buyer.dniRequiredAmountUsd') * 100),
+        amount: Math.round(
+          get('platform.riskEngine.buyer.dniRequiredAmountUsd') * 100,
+        ),
         currency: 'USD',
       },
-      dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
+      dniRequiredQtyTickets: get(
+        'platform.riskEngine.buyer.dniRequiredQtyTickets',
+      ),
       dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
       dniRequiredPaymentMethodTypes: getPaymentTypes(
         'platform.riskEngine.buyer.dniRequiredPaymentMethodTypes',

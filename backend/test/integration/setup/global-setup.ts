@@ -2,7 +2,8 @@ import { execSync } from 'child_process';
 import { Pool } from 'pg';
 
 const TEST_DATABASE = 'ticketshubtest';
-const ADMIN_DATABASE_URL = 'postgresql://ticketshub:ticketshub@localhost:5433/postgres';
+const ADMIN_DATABASE_URL =
+  'postgresql://ticketshub:ticketshub@localhost:5433/postgres';
 const TEST_DATABASE_URL = `postgresql://ticketshub:ticketshub@localhost:5433/${TEST_DATABASE}`;
 
 export default async function globalSetup(): Promise<void> {

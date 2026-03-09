@@ -55,7 +55,8 @@ export function getPriorityForCategory(
 }
 
 /** Message content key for frontend to render "verify identity" system message with link. */
-export const SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY = '{{DISPUTE_VERIFY_IDENTITY}}';
+export const SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY =
+  '{{DISPUTE_VERIFY_IDENTITY}}';
 
 /**
  * Support ticket status

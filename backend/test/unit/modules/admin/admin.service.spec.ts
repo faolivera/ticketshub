@@ -12,7 +12,10 @@ import type { ITicketsRepository } from '../../../../src/modules/tickets/tickets
 import { TicketsService } from '../../../../src/modules/tickets/tickets.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { PaymentConfirmationStatus } from '../../../../src/modules/payment-confirmations/payment-confirmations.domain';
-import { TransactionStatus, RequiredActor } from '../../../../src/modules/transactions/transactions.domain';
+import {
+  TransactionStatus,
+  RequiredActor,
+} from '../../../../src/modules/transactions/transactions.domain';
 import { TicketType } from '../../../../src/modules/tickets/tickets.domain';
 import {
   EventStatus,
@@ -27,7 +30,11 @@ import type { PaymentConfirmationWithTransaction } from '../../../../src/modules
 import type { AdminUpdateEventResponse } from '../../../../src/modules/admin/admin.api';
 import type { Event } from '../../../../src/modules/events/events.domain';
 import type { User } from '../../../../src/modules/users/users.domain';
-import { Language, Role, UserStatus } from '../../../../src/modules/users/users.domain';
+import {
+  Language,
+  Role,
+  UserStatus,
+} from '../../../../src/modules/users/users.domain';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -39,7 +46,13 @@ describe('AdminService', () => {
   let ticketsService: jest.Mocked<TicketsService>;
   let usersService: jest.Mocked<UsersService>;
   let mockPrivateStorage: { store: jest.Mock; retrieve: jest.Mock };
-  let mockPrisma: { payoutReceiptFile: { create: jest.Mock; findMany: jest.Mock; findFirst: jest.Mock } };
+  let mockPrisma: {
+    payoutReceiptFile: {
+      create: jest.Mock;
+      findMany: jest.Mock;
+      findFirst: jest.Mock;
+    };
+  };
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -123,17 +136,24 @@ describe('AdminService', () => {
     };
 
     const mockPaymentMethodsService = {
-      findById: jest.fn().mockRejectedValue(new NotFoundException('Payment method not found')),
+      findById: jest
+        .fn()
+        .mockRejectedValue(new NotFoundException('Payment method not found')),
     };
 
     mockPrivateStorage = {
-      store: jest.fn().mockResolvedValue({ key: 'test-key', location: 's3://bucket/test-key' }),
+      store: jest.fn().mockResolvedValue({
+        key: 'test-key',
+        location: 's3://bucket/test-key',
+      }),
       retrieve: jest.fn().mockResolvedValue(Buffer.from('file-content')),
     };
 
     mockPrisma = {
       payoutReceiptFile: {
-        create: jest.fn().mockResolvedValue({ id: 'prf_1', transactionId: 'txn_123' }),
+        create: jest
+          .fn()
+          .mockResolvedValue({ id: 'prf_1', transactionId: 'txn_123' }),
         findMany: jest.fn().mockResolvedValue([]),
         findFirst: jest.fn().mockResolvedValue(null),
       },
@@ -186,8 +206,14 @@ describe('AdminService', () => {
       expect(payment.listingId).toBe('listing_123');
       expect(payment.quantity).toBe(2);
       expect(payment.pricePerUnit).toEqual({ amount: 10000, currency: 'USD' });
-      expect(payment.sellerPlatformFee).toEqual({ amount: 1000, currency: 'USD' });
-      expect(payment.buyerPlatformFee).toEqual({ amount: 2000, currency: 'USD' });
+      expect(payment.sellerPlatformFee).toEqual({
+        amount: 1000,
+        currency: 'USD',
+      });
+      expect(payment.buyerPlatformFee).toEqual({
+        amount: 2000,
+        currency: 'USD',
+      });
     });
 
     it('should calculate pricePerUnit correctly', async () => {
@@ -313,17 +339,28 @@ describe('AdminService', () => {
     };
 
     it('should complete payout without files and return transaction', async () => {
-      transactionsService.completePayout = jest.fn().mockResolvedValue(completedTransaction);
+      transactionsService.completePayout = jest
+        .fn()
+        .mockResolvedValue(completedTransaction);
 
-      const result = await service.completePayout(mockCtx, 'txn_123', 'admin_1');
+      const result = await service.completePayout(
+        mockCtx,
+        'txn_123',
+        'admin_1',
+      );
 
       expect(result.id).toBe('txn_123');
       expect(result.status).toBe(TransactionStatus.Completed);
-      expect(transactionsService.completePayout).toHaveBeenCalledWith(mockCtx, 'txn_123');
+      expect(transactionsService.completePayout).toHaveBeenCalledWith(
+        mockCtx,
+        'txn_123',
+      );
     });
 
     it('should upload receipt files and then complete payout when files provided', async () => {
-      transactionsService.completePayout = jest.fn().mockResolvedValue(completedTransaction);
+      transactionsService.completePayout = jest
+        .fn()
+        .mockResolvedValue(completedTransaction);
 
       const files = [
         {
@@ -334,11 +371,19 @@ describe('AdminService', () => {
         },
       ];
 
-      const result = await service.completePayout(mockCtx, 'txn_123', 'admin_1', files);
+      const result = await service.completePayout(
+        mockCtx,
+        'txn_123',
+        'admin_1',
+        files,
+      );
 
       expect(mockPrivateStorage.store).toHaveBeenCalledTimes(1);
       expect(mockPrisma.payoutReceiptFile.create).toHaveBeenCalledTimes(1);
-      expect(transactionsService.completePayout).toHaveBeenCalledWith(mockCtx, 'txn_123');
+      expect(transactionsService.completePayout).toHaveBeenCalledWith(
+        mockCtx,
+        'txn_123',
+      );
       expect(result.status).toBe(TransactionStatus.Completed);
     });
 
@@ -587,12 +632,13 @@ describe('AdminService', () => {
       });
       usersService.findByIds.mockResolvedValue([mockUser]);
       ticketsService.getListingStatsByEventIds.mockResolvedValue(
-        new Map([
-          ['evt_123', { listingsCount: 5, availableTicketsCount: 20 }],
-        ]),
+        new Map([['evt_123', { listingsCount: 5, availableTicketsCount: 20 }]]),
       );
 
-      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+      const result = await service.getAllEvents(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.events).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -643,7 +689,10 @@ describe('AdminService', () => {
         total: 0,
       });
 
-      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+      const result = await service.getAllEvents(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.events).toHaveLength(0);
       expect(result.total).toBe(0);
@@ -658,7 +707,10 @@ describe('AdminService', () => {
       usersService.findByIds.mockResolvedValue([mockUser]);
       ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
 
-      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+      const result = await service.getAllEvents(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.totalPages).toBe(3);
     });
@@ -671,7 +723,10 @@ describe('AdminService', () => {
       usersService.findByIds.mockResolvedValue([]);
       ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
 
-      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+      const result = await service.getAllEvents(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.events[0].createdBy.publicName).toBe('Unknown User');
     });
@@ -684,7 +739,10 @@ describe('AdminService', () => {
       usersService.findByIds.mockResolvedValue([mockUser]);
       ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
 
-      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+      const result = await service.getAllEvents(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.events[0].listingsCount).toBe(0);
       expect(result.events[0].availableTicketsCount).toBe(0);
@@ -715,7 +773,10 @@ describe('AdminService', () => {
         ]),
       );
 
-      const result = await service.getAllEvents(mockCtx, { page: 1, limit: 20 });
+      const result = await service.getAllEvents(mockCtx, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.events).toHaveLength(2);
       expect(result.events[0].createdBy.publicName).toBe('Test User');
@@ -949,10 +1010,20 @@ describe('AdminService', () => {
         total: 1,
       });
       usersService.findByIds.mockResolvedValue([
-        { id: 'buyer_123', publicName: 'John Buyer', email: 'buyer@test.com' } as User,
-        { id: 'seller_123', publicName: 'Jane Seller', email: 'seller@test.com' } as User,
+        {
+          id: 'buyer_123',
+          publicName: 'John Buyer',
+          email: 'buyer@test.com',
+        } as User,
+        {
+          id: 'seller_123',
+          publicName: 'Jane Seller',
+          email: 'seller@test.com',
+        } as User,
       ]);
-      ticketsService.getListingsByIds.mockResolvedValue([mockListingWithEvent as any]);
+      ticketsService.getListingsByIds.mockResolvedValue([
+        mockListingWithEvent as any,
+      ]);
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionsList(mockCtx, {
@@ -979,9 +1050,15 @@ describe('AdminService', () => {
       });
       usersService.findByIds.mockResolvedValue([
         { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
-        { id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User,
+        {
+          id: 'seller_123',
+          publicName: 'Jane',
+          email: 'jane@test.com',
+        } as User,
       ]);
-      ticketsService.getListingsByIds.mockResolvedValue([mockListingWithEvent as any]);
+      ticketsService.getListingsByIds.mockResolvedValue([
+        mockListingWithEvent as any,
+      ]);
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionsList(mockCtx, {
@@ -1035,7 +1112,9 @@ describe('AdminService', () => {
     it('should return pending confirmations count and IDs', async () => {
       const confirmationIds = ['txn_1', 'txn_2', 'txn_3', 'txn_4', 'txn_5'];
       const pendingTxIds = ['txn_6', 'txn_7', 'txn_8'];
-      paymentConfirmationsService.getPendingTransactionIds.mockResolvedValue(confirmationIds);
+      paymentConfirmationsService.getPendingTransactionIds.mockResolvedValue(
+        confirmationIds,
+      );
       transactionsService.getIdsByStatuses.mockResolvedValue(pendingTxIds);
 
       const result = await service.getTransactionsPendingSummary(mockCtx);
@@ -1044,16 +1123,19 @@ describe('AdminService', () => {
       expect(result.pendingTransactionsCount).toBe(3);
       expect(result.pendingConfirmationTransactionIds).toEqual(confirmationIds);
       expect(result.pendingTransactionIds).toEqual(pendingTxIds);
-      expect(paymentConfirmationsService.getPendingTransactionIds).toHaveBeenCalledWith(
+      expect(
+        paymentConfirmationsService.getPendingTransactionIds,
+      ).toHaveBeenCalledWith(mockCtx);
+      expect(transactionsService.getIdsByStatuses).toHaveBeenCalledWith(
         mockCtx,
+        [TransactionStatus.PaymentPendingVerification],
       );
-      expect(transactionsService.getIdsByStatuses).toHaveBeenCalledWith(mockCtx, [
-        TransactionStatus.PaymentPendingVerification,
-      ]);
     });
 
     it('should return zero when no pending confirmations', async () => {
-      paymentConfirmationsService.getPendingTransactionIds.mockResolvedValue([]);
+      paymentConfirmationsService.getPendingTransactionIds.mockResolvedValue(
+        [],
+      );
       transactionsService.getIdsByStatuses.mockResolvedValue([]);
 
       const result = await service.getTransactionsPendingSummary(mockCtx);
@@ -1086,15 +1168,27 @@ describe('AdminService', () => {
     };
 
     beforeEach(() => {
-      paymentMethodsService.findById.mockResolvedValue(mockPaymentMethod as any);
+      paymentMethodsService.findById.mockResolvedValue(
+        mockPaymentMethod as any,
+      );
     });
 
     it('should return transaction detail with enriched data', async () => {
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1127,9 +1221,19 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([
         mockConfirmation as any,
       ]);
@@ -1138,15 +1242,27 @@ describe('AdminService', () => {
 
       expect(result.paymentConfirmations).toHaveLength(1);
       expect(result.paymentConfirmations[0].id).toBe('pc_123');
-      expect(result.paymentConfirmations[0].originalFilename).toBe('receipt.png');
+      expect(result.paymentConfirmations[0].originalFilename).toBe(
+        'receipt.png',
+      );
     });
 
     it('should include paymentMethodId and paymentMethod (type, name) when present on transaction', async () => {
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1162,16 +1278,32 @@ describe('AdminService', () => {
     it('should include full price breakdown (ticketPrice, buyerPlatformFee, sellerPlatformFee, totalPaid, sellerReceives)', async () => {
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
 
       expect(result.ticketPrice).toEqual({ amount: 20000, currency: 'USD' });
-      expect(result.buyerPlatformFee).toEqual({ amount: 2000, currency: 'USD' });
-      expect(result.sellerPlatformFee).toEqual({ amount: 1000, currency: 'USD' });
+      expect(result.buyerPlatformFee).toEqual({
+        amount: 2000,
+        currency: 'USD',
+      });
+      expect(result.sellerPlatformFee).toEqual({
+        amount: 1000,
+        currency: 'USD',
+      });
       expect(result.totalPaid).toEqual({ amount: 24400, currency: 'USD' });
       expect(result.sellerReceives).toEqual({ amount: 19000, currency: 'USD' });
     });
@@ -1191,9 +1323,19 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(txnWithTimeline);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1219,9 +1361,19 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(txnMinimal);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1248,9 +1400,19 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(listingWithPromotion as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        listingWithPromotion as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1266,9 +1428,19 @@ describe('AdminService', () => {
     it('should omit appliedPromotion when listing has no promotionSnapshot', async () => {
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1305,9 +1477,13 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
         .mockResolvedValueOnce([sellerWithBankAccount]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1343,9 +1519,13 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
         .mockResolvedValueOnce([sellerWithoutBankAccount]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1382,9 +1562,13 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
         .mockResolvedValueOnce([sellerWithBankAccountNoBic]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1444,9 +1628,13 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(transactionWithPm);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
         .mockResolvedValueOnce([sellerWithBankAccount]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1475,16 +1663,28 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
 
       expect(result.payoutReceiptFiles).toHaveLength(1);
       expect(result.payoutReceiptFiles[0].id).toBe('prf_1');
-      expect(result.payoutReceiptFiles[0].originalFilename).toBe('payout-receipt.pdf');
+      expect(result.payoutReceiptFiles[0].originalFilename).toBe(
+        'payout-receipt.pdf',
+      );
       expect(result.payoutReceiptFiles[0].contentType).toBe('application/pdf');
     });
 
@@ -1493,9 +1693,19 @@ describe('AdminService', () => {
 
       transactionsService.findById.mockResolvedValue(mockTransaction);
       usersService.findByIds
-        .mockResolvedValueOnce([{ id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User])
-        .mockResolvedValueOnce([{ id: 'seller_123', publicName: 'Jane', email: 'jane@test.com' } as User]);
-      ticketsService.getListingById.mockResolvedValue(mockListingWithEvent as any);
+        .mockResolvedValueOnce([
+          { id: 'buyer_123', publicName: 'John', email: 'j@test.com' } as User,
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'seller_123',
+            publicName: 'Jane',
+            email: 'jane@test.com',
+          } as User,
+        ]);
+      ticketsService.getListingById.mockResolvedValue(
+        mockListingWithEvent as any,
+      );
       paymentConfirmationsService.findByTransactionIds.mockResolvedValue([]);
 
       const result = await service.getTransactionById(mockCtx, 'txn_123');
@@ -1517,7 +1727,9 @@ describe('AdminService', () => {
     };
 
     it('should return file content when record and storage object exist', async () => {
-      mockPrisma.payoutReceiptFile.findFirst.mockResolvedValue(mockReceiptRecord);
+      mockPrisma.payoutReceiptFile.findFirst.mockResolvedValue(
+        mockReceiptRecord,
+      );
       mockPrivateStorage.retrieve.mockResolvedValue(Buffer.from('pdf-content'));
 
       const result = await service.getPayoutReceiptFileContent(
@@ -1546,7 +1758,9 @@ describe('AdminService', () => {
     });
 
     it('should return null when storage object does not exist', async () => {
-      mockPrisma.payoutReceiptFile.findFirst.mockResolvedValue(mockReceiptRecord);
+      mockPrisma.payoutReceiptFile.findFirst.mockResolvedValue(
+        mockReceiptRecord,
+      );
       mockPrivateStorage.retrieve.mockResolvedValue(null);
 
       const result = await service.getPayoutReceiptFileContent(

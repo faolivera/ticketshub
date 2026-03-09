@@ -3,12 +3,15 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { ImageStorage } from './image-storage.interface';
 import type { Image } from '../../modules/images/images.domain';
+import { ON_APP_INIT_CTX } from '../types/context';
+import { ContextLogger } from '../logger/context-logger';
 
 /**
  * Image storage implementation that stores images in the public directory
  */
 @Injectable()
 export class PublicDirectoryImageStorage implements ImageStorage {
+  private readonly logger = new ContextLogger(PublicDirectoryImageStorage.name);
   private readonly uploadDir: string;
   private readonly publicDir: string;
 
@@ -102,7 +105,11 @@ export class PublicDirectoryImageStorage implements ImageStorage {
         // File might not exist with this extension, try next
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
           // Some other error occurred
-          console.warn(`Failed to delete file ${filePath}:`, error);
+          this.logger.warn(
+            ON_APP_INIT_CTX,
+            `Failed to delete file ${filePath}:`,
+            error,
+          );
         }
       }
     }

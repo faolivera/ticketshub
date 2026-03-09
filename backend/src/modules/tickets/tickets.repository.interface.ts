@@ -1,5 +1,9 @@
 import type { Ctx } from '../../common/types/context';
-import type { TicketListing, ListingStatus, TicketType } from './tickets.domain';
+import type {
+  TicketListing,
+  ListingStatus,
+  TicketType,
+} from './tickets.domain';
 
 /**
  * Options for paginated listing list with DB-level filters
@@ -109,10 +113,7 @@ export interface ITicketsRepository {
   /**
    * Get pending listings for multiple event IDs (batch, status = Pending).
    */
-  getPendingByEventIds(
-    ctx: Ctx,
-    eventIds: string[],
-  ): Promise<TicketListing[]>;
+  getPendingByEventIds(ctx: Ctx, eventIds: string[]): Promise<TicketListing[]>;
 
   /**
    * Get pending listings by event date ID

@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionManager } from '../../../../src/common/database/transaction-manager';
 import { PrismaService } from '../../../../src/common/prisma/prisma.service';
 import { Ctx } from '../../../../src/common/types/context';
-import { TxCtx, PrismaTransactionClient } from '../../../../src/common/database/types';
+import {
+  TxCtx,
+  PrismaTransactionClient,
+} from '../../../../src/common/database/types';
 
 describe('TransactionManager', () => {
   let transactionManager: TransactionManager;
@@ -40,11 +43,16 @@ describe('TransactionManager', () => {
       const expectedResult = { id: 'test' };
       const mockFn = jest.fn().mockResolvedValue(expectedResult);
 
-      prismaService.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
-        return fn(mockTxClient);
-      });
+      prismaService.$transaction.mockImplementation(
+        async (fn: (tx: unknown) => Promise<unknown>) => {
+          return fn(mockTxClient);
+        },
+      );
 
-      const result = await transactionManager.executeInTransaction(mockCtx, mockFn);
+      const result = await transactionManager.executeInTransaction(
+        mockCtx,
+        mockFn,
+      );
 
       expect(result).toEqual(expectedResult);
       expect(prismaService.$transaction).toHaveBeenCalledTimes(1);
@@ -65,7 +73,10 @@ describe('TransactionManager', () => {
         tx: mockTxClient,
       };
 
-      const result = await transactionManager.executeInTransaction(ctxWithTx, mockFn);
+      const result = await transactionManager.executeInTransaction(
+        ctxWithTx,
+        mockFn,
+      );
 
       expect(result).toEqual(expectedResult);
       expect(prismaService.$transaction).not.toHaveBeenCalled();
@@ -76,20 +87,26 @@ describe('TransactionManager', () => {
       const testError = new Error('Test error');
       const mockFn = jest.fn().mockRejectedValue(testError);
 
-      prismaService.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
-        return fn(mockTxClient);
-      });
+      prismaService.$transaction.mockImplementation(
+        async (fn: (tx: unknown) => Promise<unknown>) => {
+          return fn(mockTxClient);
+        },
+      );
 
-      await expect(transactionManager.executeInTransaction(mockCtx, mockFn)).rejects.toThrow(testError);
+      await expect(
+        transactionManager.executeInTransaction(mockCtx, mockFn),
+      ).rejects.toThrow(testError);
       expect(prismaService.$transaction).toHaveBeenCalledTimes(1);
     });
 
     it('should respect isolation level option', async () => {
       const mockFn = jest.fn().mockResolvedValue('result');
 
-      prismaService.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
-        return fn(mockTxClient);
-      });
+      prismaService.$transaction.mockImplementation(
+        async (fn: (tx: unknown) => Promise<unknown>) => {
+          return fn(mockTxClient);
+        },
+      );
 
       await transactionManager.executeInTransaction(mockCtx, mockFn, {
         isolationLevel: 'Serializable',
@@ -106,9 +123,11 @@ describe('TransactionManager', () => {
     it('should respect timeout option', async () => {
       const mockFn = jest.fn().mockResolvedValue('result');
 
-      prismaService.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
-        return fn(mockTxClient);
-      });
+      prismaService.$transaction.mockImplementation(
+        async (fn: (tx: unknown) => Promise<unknown>) => {
+          return fn(mockTxClient);
+        },
+      );
 
       await transactionManager.executeInTransaction(mockCtx, mockFn, {
         timeout: 5000,
@@ -125,9 +144,11 @@ describe('TransactionManager', () => {
     it('should pass all transaction options', async () => {
       const mockFn = jest.fn().mockResolvedValue('result');
 
-      prismaService.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
-        return fn(mockTxClient);
-      });
+      prismaService.$transaction.mockImplementation(
+        async (fn: (tx: unknown) => Promise<unknown>) => {
+          return fn(mockTxClient);
+        },
+      );
 
       await transactionManager.executeInTransaction(mockCtx, mockFn, {
         isolationLevel: 'RepeatableRead',

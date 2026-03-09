@@ -6,9 +6,7 @@ import type { ReviewReceivedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class ReviewReceivedProcessor
-  implements EventProcessor<ReviewReceivedContext>
-{
+export class ReviewReceivedProcessor implements EventProcessor<ReviewReceivedContext> {
   readonly eventType = NotificationEventType.REVIEW_RECEIVED;
 
   async getRecipients(

@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentConfirmationsService } from '../../../../src/modules/payment-confirmations/payment-confirmations.service';
 import { PAYMENT_CONFIRMATIONS_REPOSITORY } from '../../../../src/modules/payment-confirmations/payment-confirmations.repository.interface';
@@ -15,7 +19,9 @@ import type { Ctx } from '../../../../src/common/types/context';
 
 const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
-const createMockTransaction = (overrides: Partial<Transaction> = {}): Transaction =>
+const createMockTransaction = (
+  overrides: Partial<Transaction> = {},
+): Transaction =>
   ({
     id: 'txn_123',
     listingId: 'listing_123',
@@ -88,7 +94,9 @@ describe('PaymentConfirmationsService', () => {
     const mockUsersService = { findById: jest.fn() };
     const mockTicketsService = { getListingById: jest.fn() };
     const mockStorageProvider = { store: jest.fn(), retrieve: jest.fn() };
-    const mockNotificationsService = { emit: jest.fn().mockResolvedValue(undefined) };
+    const mockNotificationsService = {
+      emit: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -119,7 +127,9 @@ describe('PaymentConfirmationsService', () => {
 
       await expect(
         service.uploadConfirmation(mockCtx, 'txn_123', 'buyer_123', validFile),
-      ).rejects.toThrow('Payment confirmation is only required for manual payment methods');
+      ).rejects.toThrow(
+        'Payment confirmation is only required for manual payment methods',
+      );
 
       expect(paymentMethodsService.findById).not.toHaveBeenCalled();
     });
@@ -144,9 +154,14 @@ describe('PaymentConfirmationsService', () => {
 
       await expect(
         service.uploadConfirmation(mockCtx, 'txn_123', 'buyer_123', validFile),
-      ).rejects.toThrow('Payment confirmation is only required for manual payment methods');
+      ).rejects.toThrow(
+        'Payment confirmation is only required for manual payment methods',
+      );
 
-      expect(paymentMethodsService.findById).toHaveBeenCalledWith(mockCtx, 'pm_payway');
+      expect(paymentMethodsService.findById).toHaveBeenCalledWith(
+        mockCtx,
+        'pm_payway',
+      );
     });
 
     it('should pass manual check when payment method is manual_approval (any id, e.g. bank transfer)', async () => {
@@ -169,13 +184,19 @@ describe('PaymentConfirmationsService', () => {
         updatedAt: new Date(),
       });
       // Next step after manual check is existing confirmation; return existing so we fail there (proves we passed manual check)
-      repository.findByTransactionId.mockResolvedValue({ id: 'pc_1', transactionId: 'txn_123' });
+      repository.findByTransactionId.mockResolvedValue({
+        id: 'pc_1',
+        transactionId: 'txn_123',
+      });
 
       await expect(
         service.uploadConfirmation(mockCtx, 'txn_123', 'buyer_123', validFile),
       ).rejects.toThrow('Payment confirmation already uploaded');
 
-      expect(paymentMethodsService.findById).toHaveBeenCalledWith(mockCtx, 'pm_galicia');
+      expect(paymentMethodsService.findById).toHaveBeenCalledWith(
+        mockCtx,
+        'pm_galicia',
+      );
     });
   });
 });

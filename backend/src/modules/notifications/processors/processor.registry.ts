@@ -96,7 +96,9 @@ export class ProcessorRegistry {
   /**
    * Get the processor for a given event type
    */
-  getProcessor(eventType: NotificationEventType): AnyEventProcessor | undefined {
+  getProcessor(
+    eventType: NotificationEventType,
+  ): AnyEventProcessor | undefined {
     return this.processors.get(eventType);
   }
 

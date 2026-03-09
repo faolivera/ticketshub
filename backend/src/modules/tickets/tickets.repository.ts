@@ -134,9 +134,7 @@ export class TicketsRepository
     }
   }
 
-  private mapTicketUnitStatusFromDb(
-    status: string,
-  ): TicketUnitStatus {
+  private mapTicketUnitStatusFromDb(status: string): TicketUnitStatus {
     switch (status) {
       case 'available':
         return TicketUnitStatus.Available;
@@ -216,7 +214,9 @@ export class TicketsRepository
 
   // ==================== Update Data Builder ====================
 
-  private buildUpdateData(updates: Partial<TicketListing>): Record<string, unknown> {
+  private buildUpdateData(
+    updates: Partial<TicketListing>,
+  ): Record<string, unknown> {
     const data: Record<string, unknown> = {};
 
     if (updates.type !== undefined) {
@@ -533,7 +533,9 @@ export class TicketsRepository
       where: { id },
       data: {
         status:
-          hasAvailable > 0 ? PrismaListingStatus.Active : PrismaListingStatus.Sold,
+          hasAvailable > 0
+            ? PrismaListingStatus.Active
+            : PrismaListingStatus.Sold,
         updatedAt: new Date(),
       },
       include: { ticketUnits: true },
@@ -542,7 +544,10 @@ export class TicketsRepository
     return this.mapToListing(updated);
   }
 
-  async getPendingByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+  async getPendingByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<TicketListing[]> {
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: {
@@ -705,7 +710,10 @@ export class TicketsRepository
    * Find listing by ID with pessimistic lock (FOR UPDATE)
    * Blocks other transactions from modifying this row until current transaction commits
    */
-  async findByIdForUpdate(ctx: Ctx, id: string): Promise<TicketListing | undefined> {
+  async findByIdForUpdate(
+    ctx: Ctx,
+    id: string,
+  ): Promise<TicketListing | undefined> {
     const client = this.getClient(ctx);
 
     const results = await client.$queryRaw<PrismaTicketListingWithUnits[]>`
@@ -776,7 +784,11 @@ export class TicketsRepository
 
     await client.ticketListing.update({
       where: { id: listingId },
-      data: { status: nextStatus, version: { increment: 1 }, updatedAt: new Date() },
+      data: {
+        status: nextStatus,
+        version: { increment: 1 },
+        updatedAt: new Date(),
+      },
     });
 
     const updated = await this.findById(ctx, listingId);
@@ -822,7 +834,11 @@ export class TicketsRepository
 
     await client.ticketListing.update({
       where: { id: listingId },
-      data: { status: 'Active', version: { increment: 1 }, updatedAt: new Date() },
+      data: {
+        status: 'Active',
+        version: { increment: 1 },
+        updatedAt: new Date(),
+      },
     });
 
     const updated = await this.findById(ctx, listingId);

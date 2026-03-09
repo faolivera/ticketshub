@@ -30,7 +30,10 @@ import {
 import type { INotificationsRepository } from './notifications.repository.interface';
 
 @Injectable()
-export class NotificationsRepository extends BaseRepository implements INotificationsRepository {
+export class NotificationsRepository
+  extends BaseRepository
+  implements INotificationsRepository
+{
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -117,7 +120,9 @@ export class NotificationsRepository extends BaseRepository implements INotifica
     },
   ): Promise<{ events: NotificationEvent[]; total: number }> {
     const client = this.getClient(ctx);
-    const where: Parameters<typeof this.prisma.notificationEvent.findMany>[0]['where'] = {};
+    const where: Parameters<
+      typeof this.prisma.notificationEvent.findMany
+    >[0]['where'] = {};
 
     if (filters?.type) {
       where.type = this.mapEventTypeToDb(filters.type);
@@ -216,7 +221,9 @@ export class NotificationsRepository extends BaseRepository implements INotifica
     unreadOnly: boolean,
   ): Promise<{ notifications: Notification[]; total: number }> {
     const client = this.getClient(ctx);
-    const where: Parameters<typeof this.prisma.notification.findMany>[0]['where'] = {
+    const where: Parameters<
+      typeof this.prisma.notification.findMany
+    >[0]['where'] = {
       recipientId: userId,
       channel: 'IN_APP',
     };
@@ -563,7 +570,9 @@ export class NotificationsRepository extends BaseRepository implements INotifica
           actionUrlTemplate: updates.actionUrlTemplate,
         }),
         ...(updates.isActive !== undefined && { isActive: updates.isActive }),
-        ...(updates.updatedBy !== undefined && { updatedBy: updates.updatedBy }),
+        ...(updates.updatedBy !== undefined && {
+          updatedBy: updates.updatedBy,
+        }),
         updatedAt: new Date(),
       },
     });
@@ -604,9 +613,7 @@ export class NotificationsRepository extends BaseRepository implements INotifica
     return config ? this.mapToNotificationChannelConfig(config) : undefined;
   }
 
-  async findAllChannelConfigs(
-    ctx: Ctx,
-  ): Promise<NotificationChannelConfig[]> {
+  async findAllChannelConfigs(ctx: Ctx): Promise<NotificationChannelConfig[]> {
     const client = this.getClient(ctx);
     const configs = await client.notificationChannelConfig.findMany();
     return configs.map((c) => this.mapToNotificationChannelConfig(c));
@@ -635,7 +642,9 @@ export class NotificationsRepository extends BaseRepository implements INotifica
         ...(updates.priority !== undefined && {
           priority: this.mapPriorityToDb(updates.priority),
         }),
-        ...(updates.updatedBy !== undefined && { updatedBy: updates.updatedBy }),
+        ...(updates.updatedBy !== undefined && {
+          updatedBy: updates.updatedBy,
+        }),
         updatedAt: new Date(),
       },
     });
@@ -646,15 +655,21 @@ export class NotificationsRepository extends BaseRepository implements INotifica
   // MAPPERS - Domain to Prisma
   // ==========================================================================
 
-  private mapEventTypeToDb(type: NotificationEventType): PrismaNotificationEventType {
+  private mapEventTypeToDb(
+    type: NotificationEventType,
+  ): PrismaNotificationEventType {
     return type as PrismaNotificationEventType;
   }
 
-  private mapEventStatusToDb(status: NotificationEventStatus): PrismaNotificationEventStatus {
+  private mapEventStatusToDb(
+    status: NotificationEventStatus,
+  ): PrismaNotificationEventStatus {
     return status as PrismaNotificationEventStatus;
   }
 
-  private mapChannelToDb(channel: NotificationChannel): PrismaNotificationChannel {
+  private mapChannelToDb(
+    channel: NotificationChannel,
+  ): PrismaNotificationChannel {
     return channel as PrismaNotificationChannel;
   }
 
@@ -662,7 +677,9 @@ export class NotificationsRepository extends BaseRepository implements INotifica
     return status as PrismaNotificationStatus;
   }
 
-  private mapPriorityToDb(priority: NotificationPriority): PrismaNotificationPriority {
+  private mapPriorityToDb(
+    priority: NotificationPriority,
+  ): PrismaNotificationPriority {
     return priority as PrismaNotificationPriority;
   }
 
@@ -670,27 +687,39 @@ export class NotificationsRepository extends BaseRepository implements INotifica
   // MAPPERS - Prisma to Domain
   // ==========================================================================
 
-  private mapEventTypeFromDb(type: PrismaNotificationEventType): NotificationEventType {
+  private mapEventTypeFromDb(
+    type: PrismaNotificationEventType,
+  ): NotificationEventType {
     return type as NotificationEventType;
   }
 
-  private mapEventStatusFromDb(status: PrismaNotificationEventStatus): NotificationEventStatus {
+  private mapEventStatusFromDb(
+    status: PrismaNotificationEventStatus,
+  ): NotificationEventStatus {
     return status as NotificationEventStatus;
   }
 
-  private mapChannelFromDb(channel: PrismaNotificationChannel): NotificationChannel {
+  private mapChannelFromDb(
+    channel: PrismaNotificationChannel,
+  ): NotificationChannel {
     return channel as NotificationChannel;
   }
 
-  private mapStatusFromDb(status: PrismaNotificationStatus): NotificationStatus {
+  private mapStatusFromDb(
+    status: PrismaNotificationStatus,
+  ): NotificationStatus {
     return status as NotificationStatus;
   }
 
-  private mapPriorityFromDb(priority: PrismaNotificationPriority): NotificationPriority {
+  private mapPriorityFromDb(
+    priority: PrismaNotificationPriority,
+  ): NotificationPriority {
     return priority as NotificationPriority;
   }
 
-  private mapToNotificationEvent(prisma: PrismaNotificationEvent): NotificationEvent {
+  private mapToNotificationEvent(
+    prisma: PrismaNotificationEvent,
+  ): NotificationEvent {
     return {
       id: prisma.id,
       type: this.mapEventTypeFromDb(prisma.type),
@@ -727,7 +756,9 @@ export class NotificationsRepository extends BaseRepository implements INotifica
     };
   }
 
-  private mapToNotificationTemplate(prisma: PrismaNotificationTemplate): NotificationTemplate {
+  private mapToNotificationTemplate(
+    prisma: PrismaNotificationTemplate,
+  ): NotificationTemplate {
     return {
       id: prisma.id,
       eventType: this.mapEventTypeFromDb(prisma.eventType),
@@ -743,7 +774,9 @@ export class NotificationsRepository extends BaseRepository implements INotifica
     };
   }
 
-  private mapToNotificationChannelConfig(prisma: PrismaNotificationChannelConfig): NotificationChannelConfig {
+  private mapToNotificationChannelConfig(
+    prisma: PrismaNotificationChannelConfig,
+  ): NotificationChannelConfig {
     return {
       id: prisma.id,
       eventType: this.mapEventTypeFromDb(prisma.eventType),

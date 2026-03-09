@@ -130,8 +130,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
   /**
    * Check if exception is a custom exception with structured data.
    */
-  private isCustomException(exception: HttpException): exception is CustomException {
-    return 'code' in exception && typeof (exception as CustomException).code === 'string';
+  private isCustomException(
+    exception: HttpException,
+  ): exception is CustomException {
+    return (
+      'code' in exception &&
+      typeof (exception as CustomException).code === 'string'
+    );
   }
 
   /**
@@ -212,7 +217,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     ) {
       const responseObj = exceptionResponse as Record<string, unknown>;
       const rawMessage = responseObj.message ?? exception.message;
-      message = Array.isArray(rawMessage) ? rawMessage.join(', ') : String(rawMessage);
+      message = Array.isArray(rawMessage)
+        ? rawMessage.join(', ')
+        : String(rawMessage);
       const excludedKeys = new Set(['message', 'error', 'statusCode']);
       for (const [key, value] of Object.entries(responseObj)) {
         if (!excludedKeys.has(key) && value !== undefined) {

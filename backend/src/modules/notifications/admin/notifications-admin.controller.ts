@@ -192,7 +192,10 @@ export class NotificationsAdminController {
     @Context() ctx: Ctx,
     @Param('id') eventId: string,
   ): Promise<ApiResponse<GetEventNotificationsResponse>> {
-    const notifications = await this.service.getEventNotifications(ctx, eventId);
+    const notifications = await this.service.getEventNotifications(
+      ctx,
+      eventId,
+    );
     return { success: true, data: { notifications } };
   }
 }

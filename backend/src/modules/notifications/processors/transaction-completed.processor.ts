@@ -7,9 +7,7 @@ import type { TransactionCompletedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class TransactionCompletedProcessor
-  implements EventProcessor<TransactionCompletedContext>
-{
+export class TransactionCompletedProcessor implements EventProcessor<TransactionCompletedContext> {
   readonly eventType = NotificationEventType.TRANSACTION_COMPLETED;
 
   async getRecipients(

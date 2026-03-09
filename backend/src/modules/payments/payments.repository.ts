@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { PaymentIntent as PrismaPaymentIntent } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { PaymentIntent, Money, PaymentMetadata } from './payments.domain';
 import { PaymentStatus } from './payments.domain';
 import type { IPaymentsRepository } from './payments.repository.interface';
 
 @Injectable()
 export class PaymentsRepository implements IPaymentsRepository {
+  private readonly logger = new ContextLogger(PaymentsRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(_ctx: Ctx, payment: PaymentIntent): Promise<PaymentIntent> {
@@ -84,7 +87,7 @@ export class PaymentsRepository implements IPaymentsRepository {
       });
       return this.mapToPaymentIntent(updated);
     } catch (error) {
-      console.error('payments.repository update failed:', error);
+      this.logger.error(_ctx, 'payments.repository update failed:', error);
       return undefined;
     }
   }

@@ -137,7 +137,9 @@ export class ReviewsService {
         revieweeId,
         comment: review.comment,
       })
-      .catch((err) => this.logger.error(ctx, `Failed to emit REVIEW_RECEIVED: ${err}`));
+      .catch((err) =>
+        this.logger.error(ctx, `Failed to emit REVIEW_RECEIVED: ${err}`),
+      );
 
     this.logger.log(
       ctx,
@@ -201,7 +203,13 @@ export class ReviewsService {
     totalReviews: number;
     totalTransactions: number;
   }): UserBadge[] {
-    const { isVerifiedSeller, role, positiveReviews, totalReviews, totalTransactions } = params;
+    const {
+      isVerifiedSeller,
+      role,
+      positiveReviews,
+      totalReviews,
+      totalTransactions,
+    } = params;
     const badges: UserBadge[] = [];
 
     if (isVerifiedSeller) {
@@ -245,9 +253,12 @@ export class ReviewsService {
     totalTransactions: number,
     user?: import('../users/users.domain').User | null,
   ): Promise<UserBadge[]> {
-    const resolvedUser = user !== undefined ? user : await this.usersService.findById(ctx, userId);
+    const resolvedUser =
+      user !== undefined ? user : await this.usersService.findById(ctx, userId);
     return this.computeBadges({
-      isVerifiedSeller: resolvedUser ? VerificationHelper.hasV3(resolvedUser) : false,
+      isVerifiedSeller: resolvedUser
+        ? VerificationHelper.hasV3(resolvedUser)
+        : false,
       role,
       positiveReviews,
       totalReviews,
@@ -262,7 +273,10 @@ export class ReviewsService {
   async getSellerMetrics(
     ctx: Ctx,
     userId: string,
-    opts?: { user?: import('../users/users.domain').User | null; totalTransactions?: number },
+    opts?: {
+      user?: import('../users/users.domain').User | null;
+      totalTransactions?: number;
+    },
   ): Promise<UserReviewMetrics> {
     this.logger.log(ctx, `Getting seller metrics for user ${userId}`);
 
@@ -290,7 +304,10 @@ export class ReviewsService {
     const totalTransactions =
       opts?.totalTransactions !== undefined
         ? opts.totalTransactions
-        : await this.transactionsService.getSellerCompletedSalesTotal(ctx, userId);
+        : await this.transactionsService.getSellerCompletedSalesTotal(
+            ctx,
+            userId,
+          );
 
     const badges = await this.calculateBadges(
       ctx,
@@ -345,9 +362,15 @@ export class ReviewsService {
     for (const sellerId of sellerIds) {
       const reviews = reviewsBySeller.get(sellerId) ?? [];
       const totalReviews = reviews.length;
-      const positiveReviews = reviews.filter((r) => r.rating === 'positive').length;
-      const negativeReviews = reviews.filter((r) => r.rating === 'negative').length;
-      const neutralReviews = reviews.filter((r) => r.rating === 'neutral').length;
+      const positiveReviews = reviews.filter(
+        (r) => r.rating === 'positive',
+      ).length;
+      const negativeReviews = reviews.filter(
+        (r) => r.rating === 'negative',
+      ).length;
+      const neutralReviews = reviews.filter(
+        (r) => r.rating === 'neutral',
+      ).length;
 
       const nonNeutralReviews = totalReviews - neutralReviews;
       const positivePercent =
@@ -475,7 +498,10 @@ export class ReviewsService {
     const listingIds = [
       ...new Set(transactions.map((t) => t.listingId).filter(Boolean)),
     ];
-    const listings = await this.ticketsService.getListingsByIds(ctx, listingIds);
+    const listings = await this.ticketsService.getListingsByIds(
+      ctx,
+      listingIds,
+    );
     const listingMap = new Map(listings.map((l) => [l.id, l]));
 
     const enrichedReviews: SellerProfileReview[] = reviews.map((review) => {

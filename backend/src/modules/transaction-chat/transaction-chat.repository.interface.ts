@@ -35,7 +35,10 @@ export interface ITransactionChatRepository {
    * Count only user-written messages (messageType === 'text'), excluding system/delivery messages
    * (e.g. "ticket sent"). Used to determine if buyer and seller have actually exchanged messages.
    */
-  countTextMessagesByTransaction(ctx: Ctx, transactionId: string): Promise<number>;
+  countTextMessagesByTransaction(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<number>;
 
   /**
    * Mark messages from the other party as read for the given user (buyer or seller).

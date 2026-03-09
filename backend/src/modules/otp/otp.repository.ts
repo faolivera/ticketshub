@@ -1,13 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import type { Otp as PrismaOtp, OTPType as PrismaOTPType, OTPStatus as PrismaOTPStatus } from '@prisma/client';
+import type {
+  Otp as PrismaOtp,
+  OTPType as PrismaOTPType,
+  OTPStatus as PrismaOTPStatus,
+} from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { OTP } from './otp.domain';
 import { OTPType, OTPStatus } from './otp.domain';
 import type { IOTPRepository } from './otp.repository.interface';
 
 @Injectable()
 export class OTPRepository implements IOTPRepository {
+  private readonly logger = new ContextLogger(OTPRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(_ctx: Ctx, otp: OTP): Promise<OTP> {
@@ -81,7 +88,7 @@ export class OTPRepository implements IOTPRepository {
       });
       return this.mapToOTP(updated);
     } catch (error) {
-      console.error('otp.repository updateStatus failed:', error);
+      this.logger.error(_ctx, 'otp.repository updateStatus failed:', error);
       return undefined;
     }
   }
@@ -92,7 +99,11 @@ export class OTPRepository implements IOTPRepository {
         where: { id },
       });
     } catch (error) {
-      console.warn('otp.repository delete: not found or already deleted', error);
+      this.logger.warn(
+        _ctx,
+        'otp.repository delete: not found or already deleted',
+        error,
+      );
     }
   }
 

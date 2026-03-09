@@ -17,7 +17,17 @@ export interface IOffersRepository {
   update(
     ctx: Ctx,
     id: string,
-    updates: Partial<Pick<Offer, 'status' | 'acceptedAt' | 'acceptedExpiresAt' | 'rejectedAt' | 'convertedTransactionId' | 'cancelledAt'>>,
+    updates: Partial<
+      Pick<
+        Offer,
+        | 'status'
+        | 'acceptedAt'
+        | 'acceptedExpiresAt'
+        | 'rejectedAt'
+        | 'convertedTransactionId'
+        | 'cancelledAt'
+      >
+    >,
   ): Promise<Offer | undefined>;
   findPendingOrAcceptedByListingId(
     ctx: Ctx,

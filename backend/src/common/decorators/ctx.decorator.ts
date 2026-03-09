@@ -8,7 +8,7 @@ import { Ctx } from '../types/context';
  * ```typescript
  * @Get('example')
  * async example(@Context() ctx: Ctx) {
- *   console.log(ctx.requestId);
+ *   this.logger.log(ctx, 'requestId:', ctx.requestId);
  * }
  * ```
  */

@@ -8,11 +8,7 @@ import { ConfigModule as PlatformConfigModule } from '../config/config.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [
-    forwardRef(() => TicketsModule),
-    PlatformConfigModule,
-    UsersModule,
-  ],
+  imports: [forwardRef(() => TicketsModule), PlatformConfigModule, UsersModule],
   controllers: [OffersController],
   providers: [
     OffersService,

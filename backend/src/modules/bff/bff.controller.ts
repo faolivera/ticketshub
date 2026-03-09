@@ -119,7 +119,13 @@ export class BffController {
     if (!pmId) {
       throw new BadRequestException('paymentMethodId is required');
     }
-    const data = await this.bffService.getCheckoutRisk(ctx, ticketId, user.id, quantity, pmId);
+    const data = await this.bffService.getCheckoutRisk(
+      ctx,
+      ticketId,
+      user.id,
+      quantity,
+      pmId,
+    );
     return { success: true, data };
   }
 

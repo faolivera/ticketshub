@@ -6,9 +6,7 @@ import type { SellerVerificationCompleteContext } from '../notifications.context
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class SellerVerificationCompleteProcessor
-  implements EventProcessor<SellerVerificationCompleteContext>
-{
+export class SellerVerificationCompleteProcessor implements EventProcessor<SellerVerificationCompleteContext> {
   readonly eventType = NotificationEventType.SELLER_VERIFICATION_COMPLETE;
 
   async getRecipients(

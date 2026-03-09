@@ -884,12 +884,19 @@ describe('EventsService', () => {
       eventsRepository.findEventById.mockResolvedValue(undefined);
 
       await expect(
-        service.uploadBanner(mockCtx, 'nonexistent', 'user_123', Role.User, 'square', {
-          buffer: mockSquareImageBuffer,
-          originalname: 'test.png',
-          mimetype: 'image/png',
-          size: 1000,
-        }),
+        service.uploadBanner(
+          mockCtx,
+          'nonexistent',
+          'user_123',
+          Role.User,
+          'square',
+          {
+            buffer: mockSquareImageBuffer,
+            originalname: 'test.png',
+            mimetype: 'image/png',
+            size: 1000,
+          },
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -897,12 +904,19 @@ describe('EventsService', () => {
       eventsRepository.findEventById.mockResolvedValue(mockEventWithoutBanners);
 
       await expect(
-        service.uploadBanner(mockCtx, 'evt_123', 'other_user', Role.User, 'square', {
-          buffer: mockSquareImageBuffer,
-          originalname: 'test.png',
-          mimetype: 'image/png',
-          size: 1000,
-        }),
+        service.uploadBanner(
+          mockCtx,
+          'evt_123',
+          'other_user',
+          Role.User,
+          'square',
+          {
+            buffer: mockSquareImageBuffer,
+            originalname: 'test.png',
+            mimetype: 'image/png',
+            size: 1000,
+          },
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -910,12 +924,19 @@ describe('EventsService', () => {
       eventsRepository.findEventById.mockResolvedValue(mockEventWithoutBanners);
 
       await expect(
-        service.uploadBanner(mockCtx, 'evt_123', 'user_123', Role.User, 'square', {
-          buffer: mockSquareImageBuffer,
-          originalname: 'test.gif',
-          mimetype: 'image/gif',
-          size: 1000,
-        }),
+        service.uploadBanner(
+          mockCtx,
+          'evt_123',
+          'user_123',
+          Role.User,
+          'square',
+          {
+            buffer: mockSquareImageBuffer,
+            originalname: 'test.gif',
+            mimetype: 'image/gif',
+            size: 1000,
+          },
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -923,12 +944,19 @@ describe('EventsService', () => {
       eventsRepository.findEventById.mockResolvedValue(mockEventWithoutBanners);
 
       await expect(
-        service.uploadBanner(mockCtx, 'evt_123', 'user_123', Role.User, 'square', {
-          buffer: mockSquareImageBuffer,
-          originalname: 'test.png',
-          mimetype: 'image/png',
-          size: 10 * 1024 * 1024, // 10MB
-        }),
+        service.uploadBanner(
+          mockCtx,
+          'evt_123',
+          'user_123',
+          Role.User,
+          'square',
+          {
+            buffer: mockSquareImageBuffer,
+            originalname: 'test.png',
+            mimetype: 'image/png',
+            size: 10 * 1024 * 1024, // 10MB
+          },
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -951,7 +979,9 @@ describe('EventsService', () => {
         },
       });
       bannerStorage.store.mockResolvedValue('square.png');
-      bannerStorage.getPublicUrlAsync.mockResolvedValue('/public/event-banners/evt_123/square.png');
+      bannerStorage.getPublicUrlAsync.mockResolvedValue(
+        '/public/event-banners/evt_123/square.png',
+      );
 
       // Mock sharp - we can't easily mock it in this test, so we'll skip this assertion
       // In a real scenario, you would use jest.mock for the sharp module
@@ -990,7 +1020,13 @@ describe('EventsService', () => {
       eventsRepository.findEventById.mockResolvedValue(undefined);
 
       await expect(
-        service.deleteBanner(mockCtx, 'nonexistent', 'user_123', Role.User, 'square'),
+        service.deleteBanner(
+          mockCtx,
+          'nonexistent',
+          'user_123',
+          Role.User,
+          'square',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -998,7 +1034,13 @@ describe('EventsService', () => {
       eventsRepository.findEventById.mockResolvedValue(mockEventWithBanner);
 
       await expect(
-        service.deleteBanner(mockCtx, 'evt_123', 'other_user', Role.User, 'square'),
+        service.deleteBanner(
+          mockCtx,
+          'evt_123',
+          'other_user',
+          Role.User,
+          'square',
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -1010,7 +1052,13 @@ describe('EventsService', () => {
       eventsRepository.findEventById.mockResolvedValue(eventWithoutBanner);
 
       await expect(
-        service.deleteBanner(mockCtx, 'evt_123', 'user_123', Role.User, 'square'),
+        service.deleteBanner(
+          mockCtx,
+          'evt_123',
+          'user_123',
+          Role.User,
+          'square',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -1033,7 +1081,10 @@ describe('EventsService', () => {
       expect(result.deleted).toBe(true);
       expect(result.eventId).toBe('evt_123');
       expect(result.bannerType).toBe('square');
-      expect(bannerStorage.deleteByFilename).toHaveBeenCalledWith('evt_123', 'square.png');
+      expect(bannerStorage.deleteByFilename).toHaveBeenCalledWith(
+        'evt_123',
+        'square.png',
+      );
       expect(eventsRepository.updateEvent).toHaveBeenCalled();
     });
 
@@ -1073,7 +1124,11 @@ describe('EventsService', () => {
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
-        location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+        location: {
+          line1: '123 Main St',
+          city: 'Test City',
+          countryCode: 'US',
+        },
         imageIds: [],
         status: EventStatus.Approved,
         createdBy: 'user_123',
@@ -1107,7 +1162,11 @@ describe('EventsService', () => {
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
-        location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+        location: {
+          line1: '123 Main St',
+          city: 'Test City',
+          countryCode: 'US',
+        },
         imageIds: [],
         banners: { square: mockBanner },
         status: EventStatus.Approved,
@@ -1116,13 +1175,17 @@ describe('EventsService', () => {
         updatedAt: new Date(),
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithBanner);
-      bannerStorage.getPublicUrlAsync.mockResolvedValue('/public/event-banners/evt_123/square.png');
+      bannerStorage.getPublicUrlAsync.mockResolvedValue(
+        '/public/event-banners/evt_123/square.png',
+      );
 
       const result = await service.getBanners(mockCtx, 'evt_123');
 
       expect(result.eventId).toBe('evt_123');
       expect(result.square).toBeDefined();
-      expect(result.square?.url).toBe('/public/event-banners/evt_123/square.png');
+      expect(result.square?.url).toBe(
+        '/public/event-banners/evt_123/square.png',
+      );
       expect(result.square?.banner).toEqual(mockBanner);
       expect(result.rectangle).toBeUndefined();
     });
@@ -1136,7 +1199,11 @@ describe('EventsService', () => {
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
-        location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+        location: {
+          line1: '123 Main St',
+          city: 'Test City',
+          countryCode: 'US',
+        },
         imageIds: [],
         status: EventStatus.Pending,
         createdBy: 'user_123',
@@ -1157,7 +1224,11 @@ describe('EventsService', () => {
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
-        location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+        location: {
+          line1: '123 Main St',
+          city: 'Test City',
+          countryCode: 'US',
+        },
         imageIds: [],
         banners: {
           square: {
@@ -1187,7 +1258,12 @@ describe('EventsService', () => {
       eventsRepository.updateEvent.mockResolvedValue(approvedEvent);
       ticketsService.activatePendingListingsForEvent.mockResolvedValue(0);
 
-      const result = await service.approveEvent(mockCtx, 'evt_123', 'admin_123', true);
+      const result = await service.approveEvent(
+        mockCtx,
+        'evt_123',
+        'admin_123',
+        true,
+      );
 
       expect(result.status).toBe(EventStatus.Approved);
       expect(eventsRepository.updateEvent).toHaveBeenCalled();
@@ -1200,7 +1276,11 @@ describe('EventsService', () => {
         name: 'Test Event',
         category: EventCategory.Concert,
         venue: 'Test Venue',
-        location: { line1: '123 Main St', city: 'Test City', countryCode: 'US' },
+        location: {
+          line1: '123 Main St',
+          city: 'Test City',
+          countryCode: 'US',
+        },
         imageIds: [],
         status: EventStatus.Pending,
         createdBy: 'user_123',

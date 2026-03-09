@@ -7,7 +7,11 @@ import {
   EventSectionStatus,
   EventCategory,
 } from '@/modules/events/events.domain';
-import type { Event, EventDate, EventSection } from '@/modules/events/events.domain';
+import type {
+  Event,
+  EventDate,
+  EventSection,
+} from '@/modules/events/events.domain';
 import { SeatingType } from '@/modules/tickets/tickets.domain';
 import type { Ctx } from '@/common/types/context';
 import {
@@ -66,7 +70,10 @@ describe('EventsRepository (Integration)', () => {
     };
   };
 
-  const createValidEventDate = (eventId: string, overrides?: Partial<EventDate>): EventDate => ({
+  const createValidEventDate = (
+    eventId: string,
+    overrides?: Partial<EventDate>,
+  ): EventDate => ({
     id: randomUUID(),
     eventId,
     date: new Date('2026-06-15T20:00:00Z'),
@@ -77,7 +84,10 @@ describe('EventsRepository (Integration)', () => {
     ...overrides,
   });
 
-  const createValidEventSection = (eventId: string, overrides?: Partial<EventSection>): EventSection => ({
+  const createValidEventSection = (
+    eventId: string,
+    overrides?: Partial<EventSection>,
+  ): EventSection => ({
     id: randomUUID(),
     eventId,
     name: 'General Admission',
@@ -166,8 +176,14 @@ describe('EventsRepository (Integration)', () => {
     });
 
     it('should return all events ordered by createdAt desc', async () => {
-      const event1 = await repository.createEvent(ctx, createValidEvent({ name: 'Event 1' }));
-      const event2 = await repository.createEvent(ctx, createValidEvent({ name: 'Event 2' }));
+      const event1 = await repository.createEvent(
+        ctx,
+        createValidEvent({ name: 'Event 1' }),
+      );
+      const event2 = await repository.createEvent(
+        ctx,
+        createValidEvent({ name: 'Event 2' }),
+      );
 
       const events = await repository.getAllEvents(ctx);
 
@@ -184,11 +200,20 @@ describe('EventsRepository (Integration)', () => {
     });
 
     it('should find multiple events by ids', async () => {
-      const event1 = await repository.createEvent(ctx, createValidEvent({ name: 'Event 1' }));
-      const event2 = await repository.createEvent(ctx, createValidEvent({ name: 'Event 2' }));
+      const event1 = await repository.createEvent(
+        ctx,
+        createValidEvent({ name: 'Event 1' }),
+      );
+      const event2 = await repository.createEvent(
+        ctx,
+        createValidEvent({ name: 'Event 2' }),
+      );
       await repository.createEvent(ctx, createValidEvent({ name: 'Event 3' }));
 
-      const events = await repository.findEventsByIds(ctx, [event1.id, event2.id]);
+      const events = await repository.findEventsByIds(ctx, [
+        event1.id,
+        event2.id,
+      ]);
 
       expect(events).toHaveLength(2);
     });
@@ -206,7 +231,10 @@ describe('EventsRepository (Integration)', () => {
       await repository.createEventDate(ctx, createValidEventDate(event1.id));
       await repository.createEventDate(ctx, createValidEventDate(event2.id));
 
-      const dates = await repository.getDatesByEventIds(ctx, [event1.id, event2.id]);
+      const dates = await repository.getDatesByEventIds(ctx, [
+        event1.id,
+        event2.id,
+      ]);
 
       expect(dates).toHaveLength(2);
     });
@@ -221,10 +249,19 @@ describe('EventsRepository (Integration)', () => {
     it('should get sections for multiple events', async () => {
       const event1 = await repository.createEvent(ctx, createValidEvent());
       const event2 = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventSection(ctx, createValidEventSection(event1.id));
-      await repository.createEventSection(ctx, createValidEventSection(event2.id));
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event1.id),
+      );
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event2.id),
+      );
 
-      const sections = await repository.getSectionsByEventIds(ctx, [event1.id, event2.id]);
+      const sections = await repository.getSectionsByEventIds(ctx, [
+        event1.id,
+        event2.id,
+      ]);
 
       expect(sections).toHaveLength(2);
     });
@@ -232,9 +269,18 @@ describe('EventsRepository (Integration)', () => {
 
   describe('getApprovedEvents', () => {
     it('should return only approved events', async () => {
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Pending }));
-      const approved = await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Approved }));
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Rejected }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Pending }),
+      );
+      const approved = await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Approved }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Rejected }),
+      );
 
       const events = await repository.getApprovedEvents(ctx);
 
@@ -245,8 +291,14 @@ describe('EventsRepository (Integration)', () => {
 
   describe('getPendingEvents', () => {
     it('should return pending events', async () => {
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Pending }));
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Approved }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Pending }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Approved }),
+      );
 
       const events = await repository.getPendingEvents(ctx);
 
@@ -255,29 +307,51 @@ describe('EventsRepository (Integration)', () => {
     });
 
     it('should include events with pending dates', async () => {
-      const approvedEvent = await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Approved }));
-      await repository.createEventDate(ctx, createValidEventDate(approvedEvent.id, { status: EventDateStatus.Pending }));
+      const approvedEvent = await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Approved }),
+      );
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(approvedEvent.id, {
+          status: EventDateStatus.Pending,
+        }),
+      );
 
       const events = await repository.getPendingEvents(ctx);
 
-      expect(events.some(e => e.id === approvedEvent.id)).toBe(true);
+      expect(events.some((e) => e.id === approvedEvent.id)).toBe(true);
     });
 
     it('should include events with pending sections', async () => {
-      const approvedEvent = await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Approved }));
-      await repository.createEventSection(ctx, createValidEventSection(approvedEvent.id, { status: EventSectionStatus.Pending }));
+      const approvedEvent = await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Approved }),
+      );
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(approvedEvent.id, {
+          status: EventSectionStatus.Pending,
+        }),
+      );
 
       const events = await repository.getPendingEvents(ctx);
 
-      expect(events.some(e => e.id === approvedEvent.id)).toBe(true);
+      expect(events.some((e) => e.id === approvedEvent.id)).toBe(true);
     });
   });
 
   describe('getEventsByCreator', () => {
     it('should return events by creator', async () => {
       const anotherUserId = await createTestUser();
-      await repository.createEvent(ctx, createValidEvent({ createdBy: testUserId }));
-      await repository.createEvent(ctx, createValidEvent({ createdBy: anotherUserId }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ createdBy: testUserId }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ createdBy: anotherUserId }),
+      );
 
       const events = await repository.getEventsByCreator(ctx, testUserId);
 
@@ -288,30 +362,44 @@ describe('EventsRepository (Integration)', () => {
 
   describe('updateEvent', () => {
     it('should return undefined for non-existent event', async () => {
-      const result = await repository.updateEvent(ctx, 'non-existent-id', { name: 'New Name' });
+      const result = await repository.updateEvent(ctx, 'non-existent-id', {
+        name: 'New Name',
+      });
       expect(result).toBeUndefined();
     });
 
     it('should update event name', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
 
-      const updated = await repository.updateEvent(ctx, event.id, { name: 'Updated Name' });
+      const updated = await repository.updateEvent(ctx, event.id, {
+        name: 'Updated Name',
+      });
 
       expect(updated?.name).toBe('Updated Name');
     });
 
     it('should update event status', async () => {
-      const event = await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Pending }));
+      const event = await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Pending }),
+      );
 
-      const updated = await repository.updateEvent(ctx, event.id, { status: EventStatus.Approved });
+      const updated = await repository.updateEvent(ctx, event.id, {
+        status: EventStatus.Approved,
+      });
 
       expect(updated?.status).toBe(EventStatus.Approved);
     });
 
     it('should update event category', async () => {
-      const event = await repository.createEvent(ctx, createValidEvent({ category: EventCategory.Concert }));
+      const event = await repository.createEvent(
+        ctx,
+        createValidEvent({ category: EventCategory.Concert }),
+      );
 
-      const updated = await repository.updateEvent(ctx, event.id, { category: EventCategory.Sports });
+      const updated = await repository.updateEvent(ctx, event.id, {
+        category: EventCategory.Sports,
+      });
 
       expect(updated?.category).toBe(EventCategory.Sports);
     });
@@ -331,20 +419,36 @@ describe('EventsRepository (Integration)', () => {
   describe('getAllEventsPaginated', () => {
     it('should return paginated events', async () => {
       for (let i = 0; i < 5; i++) {
-        await repository.createEvent(ctx, createValidEvent({ name: `Event ${i}` }));
+        await repository.createEvent(
+          ctx,
+          createValidEvent({ name: `Event ${i}` }),
+        );
       }
 
-      const result = await repository.getAllEventsPaginated(ctx, { page: 1, limit: 2 });
+      const result = await repository.getAllEventsPaginated(ctx, {
+        page: 1,
+        limit: 2,
+      });
 
       expect(result.events).toHaveLength(2);
       expect(result.total).toBe(5);
     });
 
     it('should filter by search term', async () => {
-      await repository.createEvent(ctx, createValidEvent({ name: 'Rock Concert' }));
-      await repository.createEvent(ctx, createValidEvent({ name: 'Jazz Night' }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ name: 'Rock Concert' }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ name: 'Jazz Night' }),
+      );
 
-      const result = await repository.getAllEventsPaginated(ctx, { page: 1, limit: 10, search: 'rock' });
+      const result = await repository.getAllEventsPaginated(ctx, {
+        page: 1,
+        limit: 10,
+        search: 'rock',
+      });
 
       expect(result.events).toHaveLength(1);
       expect(result.events[0].name).toBe('Rock Concert');
@@ -353,20 +457,47 @@ describe('EventsRepository (Integration)', () => {
 
   describe('getApprovedEventsForSelection', () => {
     it('should return only approved events with pagination', async () => {
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Approved, name: 'Approved 1' }));
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Pending, name: 'Pending 1' }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Approved, name: 'Approved 1' }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: EventStatus.Pending, name: 'Pending 1' }),
+      );
 
-      const result = await repository.getApprovedEventsForSelection(ctx, { limit: 10, offset: 0 });
+      const result = await repository.getApprovedEventsForSelection(ctx, {
+        limit: 10,
+        offset: 0,
+      });
 
       expect(result.events).toHaveLength(1);
       expect(result.events[0].status).toBe(EventStatus.Approved);
     });
 
     it('should search by name or venue', async () => {
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Approved, name: 'Concert', venue: 'Stadium' }));
-      await repository.createEvent(ctx, createValidEvent({ status: EventStatus.Approved, name: 'Other', venue: 'Arena' }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({
+          status: EventStatus.Approved,
+          name: 'Concert',
+          venue: 'Stadium',
+        }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({
+          status: EventStatus.Approved,
+          name: 'Other',
+          venue: 'Arena',
+        }),
+      );
 
-      const result = await repository.getApprovedEventsForSelection(ctx, { limit: 10, offset: 0, search: 'stadium' });
+      const result = await repository.getApprovedEventsForSelection(ctx, {
+        limit: 10,
+        offset: 0,
+        search: 'stadium',
+      });
 
       expect(result.events).toHaveLength(1);
       expect(result.events[0].venue).toBe('Stadium');
@@ -396,7 +527,10 @@ describe('EventsRepository (Integration)', () => {
 
     it('should find event date by id', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const created = await repository.createEventDate(ctx, createValidEventDate(event.id));
+      const created = await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id),
+      );
 
       const found = await repository.findEventDateById(ctx, created.id);
 
@@ -408,8 +542,14 @@ describe('EventsRepository (Integration)', () => {
   describe('getDatesByEventId', () => {
     it('should return dates for event ordered by date', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { date: new Date('2026-07-01') }));
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { date: new Date('2026-06-01') }));
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { date: new Date('2026-07-01') }),
+      );
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { date: new Date('2026-06-01') }),
+      );
 
       const dates = await repository.getDatesByEventId(ctx, event.id);
 
@@ -422,9 +562,16 @@ describe('EventsRepository (Integration)', () => {
     it('should find date by event id and exact date', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       const targetDate = new Date('2026-06-15T20:00:00Z');
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { date: targetDate }));
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { date: targetDate }),
+      );
 
-      const found = await repository.findEventDateByEventIdAndDate(ctx, event.id, targetDate);
+      const found = await repository.findEventDateByEventIdAndDate(
+        ctx,
+        event.id,
+        targetDate,
+      );
 
       expect(found).toBeDefined();
     });
@@ -432,7 +579,11 @@ describe('EventsRepository (Integration)', () => {
     it('should return undefined when date not found', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
 
-      const found = await repository.findEventDateByEventIdAndDate(ctx, event.id, new Date('2026-01-01'));
+      const found = await repository.findEventDateByEventIdAndDate(
+        ctx,
+        event.id,
+        new Date('2026-01-01'),
+      );
 
       expect(found).toBeUndefined();
     });
@@ -441,8 +592,14 @@ describe('EventsRepository (Integration)', () => {
   describe('getApprovedDatesByEventId', () => {
     it('should return only approved dates', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { status: EventDateStatus.Pending }));
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { status: EventDateStatus.Approved }));
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { status: EventDateStatus.Pending }),
+      );
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { status: EventDateStatus.Approved }),
+      );
 
       const dates = await repository.getApprovedDatesByEventId(ctx, event.id);
 
@@ -454,11 +611,23 @@ describe('EventsRepository (Integration)', () => {
   describe('getDatesByEventIdAndStatus', () => {
     it('should filter dates by multiple statuses', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { status: EventDateStatus.Pending }));
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { status: EventDateStatus.Approved }));
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { status: EventDateStatus.Rejected }));
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { status: EventDateStatus.Pending }),
+      );
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { status: EventDateStatus.Approved }),
+      );
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { status: EventDateStatus.Rejected }),
+      );
 
-      const dates = await repository.getDatesByEventIdAndStatus(ctx, event.id, [EventDateStatus.Pending, EventDateStatus.Approved]);
+      const dates = await repository.getDatesByEventIdAndStatus(ctx, event.id, [
+        EventDateStatus.Pending,
+        EventDateStatus.Approved,
+      ]);
 
       expect(dates).toHaveLength(2);
     });
@@ -467,8 +636,14 @@ describe('EventsRepository (Integration)', () => {
   describe('getPendingDates', () => {
     it('should return all pending dates', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { status: EventDateStatus.Pending }));
-      await repository.createEventDate(ctx, createValidEventDate(event.id, { status: EventDateStatus.Approved }));
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { status: EventDateStatus.Pending }),
+      );
+      await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id, { status: EventDateStatus.Approved }),
+      );
 
       const dates = await repository.getPendingDates(ctx);
 
@@ -479,15 +654,22 @@ describe('EventsRepository (Integration)', () => {
 
   describe('updateEventDate', () => {
     it('should return undefined for non-existent date', async () => {
-      const result = await repository.updateEventDate(ctx, 'non-existent-id', { status: EventDateStatus.Approved });
+      const result = await repository.updateEventDate(ctx, 'non-existent-id', {
+        status: EventDateStatus.Approved,
+      });
       expect(result).toBeUndefined();
     });
 
     it('should update event date status', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const date = await repository.createEventDate(ctx, createValidEventDate(event.id));
+      const date = await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id),
+      );
 
-      const updated = await repository.updateEventDate(ctx, date.id, { status: EventDateStatus.Approved });
+      const updated = await repository.updateEventDate(ctx, date.id, {
+        status: EventDateStatus.Approved,
+      });
 
       expect(updated?.status).toBe(EventDateStatus.Approved);
     });
@@ -496,7 +678,10 @@ describe('EventsRepository (Integration)', () => {
   describe('deleteEventDate', () => {
     it('should delete event date', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const date = await repository.createEventDate(ctx, createValidEventDate(event.id));
+      const date = await repository.createEventDate(
+        ctx,
+        createValidEventDate(event.id),
+      );
 
       await repository.deleteEventDate(ctx, date.id);
 
@@ -523,13 +708,19 @@ describe('EventsRepository (Integration)', () => {
 
   describe('findEventSectionById', () => {
     it('should return undefined when section does not exist', async () => {
-      const section = await repository.findEventSectionById(ctx, 'non-existent-id');
+      const section = await repository.findEventSectionById(
+        ctx,
+        'non-existent-id',
+      );
       expect(section).toBeUndefined();
     });
 
     it('should find section by id', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const created = await repository.createEventSection(ctx, createValidEventSection(event.id));
+      const created = await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id),
+      );
 
       const found = await repository.findEventSectionById(ctx, created.id);
 
@@ -541,8 +732,14 @@ describe('EventsRepository (Integration)', () => {
   describe('getSectionsByEventId', () => {
     it('should return sections ordered by name', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { name: 'VIP' }));
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { name: 'General' }));
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, { name: 'VIP' }),
+      );
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, { name: 'General' }),
+      );
 
       const sections = await repository.getSectionsByEventId(ctx, event.id);
 
@@ -555,10 +752,24 @@ describe('EventsRepository (Integration)', () => {
   describe('getApprovedSectionsByEventId', () => {
     it('should return only approved sections', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { status: EventSectionStatus.Pending }));
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { status: EventSectionStatus.Approved, name: 'Approved Section' }));
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          status: EventSectionStatus.Pending,
+        }),
+      );
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          status: EventSectionStatus.Approved,
+          name: 'Approved Section',
+        }),
+      );
 
-      const sections = await repository.getApprovedSectionsByEventId(ctx, event.id);
+      const sections = await repository.getApprovedSectionsByEventId(
+        ctx,
+        event.id,
+      );
 
       expect(sections).toHaveLength(1);
       expect(sections[0].status).toBe(EventSectionStatus.Approved);
@@ -568,11 +779,33 @@ describe('EventsRepository (Integration)', () => {
   describe('getSectionsByEventIdAndStatus', () => {
     it('should filter sections by multiple statuses', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { status: EventSectionStatus.Pending, name: 'Section A' }));
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { status: EventSectionStatus.Approved, name: 'Section B' }));
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { status: EventSectionStatus.Rejected, name: 'Section C' }));
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          status: EventSectionStatus.Pending,
+          name: 'Section A',
+        }),
+      );
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          status: EventSectionStatus.Approved,
+          name: 'Section B',
+        }),
+      );
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          status: EventSectionStatus.Rejected,
+          name: 'Section C',
+        }),
+      );
 
-      const sections = await repository.getSectionsByEventIdAndStatus(ctx, event.id, [EventSectionStatus.Pending, EventSectionStatus.Approved]);
+      const sections = await repository.getSectionsByEventIdAndStatus(
+        ctx,
+        event.id,
+        [EventSectionStatus.Pending, EventSectionStatus.Approved],
+      );
 
       expect(sections).toHaveLength(2);
     });
@@ -581,8 +814,19 @@ describe('EventsRepository (Integration)', () => {
   describe('getPendingSections', () => {
     it('should return all pending sections', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { status: EventSectionStatus.Pending }));
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { status: EventSectionStatus.Approved, name: 'Approved' }));
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          status: EventSectionStatus.Pending,
+        }),
+      );
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          status: EventSectionStatus.Approved,
+          name: 'Approved',
+        }),
+      );
 
       const sections = await repository.getPendingSections(ctx);
 
@@ -594,9 +838,16 @@ describe('EventsRepository (Integration)', () => {
   describe('findSectionByEventAndName', () => {
     it('should find section by name (case insensitive)', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      await repository.createEventSection(ctx, createValidEventSection(event.id, { name: 'VIP Section' }));
+      await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, { name: 'VIP Section' }),
+      );
 
-      const found = await repository.findSectionByEventAndName(ctx, event.id, 'vip section');
+      const found = await repository.findSectionByEventAndName(
+        ctx,
+        event.id,
+        'vip section',
+      );
 
       expect(found).toBeDefined();
       expect(found?.name).toBe('VIP Section');
@@ -605,7 +856,11 @@ describe('EventsRepository (Integration)', () => {
     it('should return undefined when section not found', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
 
-      const found = await repository.findSectionByEventAndName(ctx, event.id, 'Non Existent');
+      const found = await repository.findSectionByEventAndName(
+        ctx,
+        event.id,
+        'Non Existent',
+      );
 
       expect(found).toBeUndefined();
     });
@@ -613,24 +868,40 @@ describe('EventsRepository (Integration)', () => {
 
   describe('updateEventSection', () => {
     it('should return undefined for non-existent section', async () => {
-      const result = await repository.updateEventSection(ctx, 'non-existent-id', { name: 'New Name' });
+      const result = await repository.updateEventSection(
+        ctx,
+        'non-existent-id',
+        { name: 'New Name' },
+      );
       expect(result).toBeUndefined();
     });
 
     it('should update section name', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const section = await repository.createEventSection(ctx, createValidEventSection(event.id));
+      const section = await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id),
+      );
 
-      const updated = await repository.updateEventSection(ctx, section.id, { name: 'Updated Section' });
+      const updated = await repository.updateEventSection(ctx, section.id, {
+        name: 'Updated Section',
+      });
 
       expect(updated?.name).toBe('Updated Section');
     });
 
     it('should update section seating type', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const section = await repository.createEventSection(ctx, createValidEventSection(event.id, { seatingType: SeatingType.Unnumbered }));
+      const section = await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id, {
+          seatingType: SeatingType.Unnumbered,
+        }),
+      );
 
-      const updated = await repository.updateEventSection(ctx, section.id, { seatingType: SeatingType.Numbered });
+      const updated = await repository.updateEventSection(ctx, section.id, {
+        seatingType: SeatingType.Numbered,
+      });
 
       expect(updated?.seatingType).toBe(SeatingType.Numbered);
     });
@@ -639,7 +910,10 @@ describe('EventsRepository (Integration)', () => {
   describe('deleteEventSection', () => {
     it('should delete event section', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const section = await repository.createEventSection(ctx, createValidEventSection(event.id));
+      const section = await repository.createEventSection(
+        ctx,
+        createValidEventSection(event.id),
+      );
 
       await repository.deleteEventSection(ctx, section.id);
 

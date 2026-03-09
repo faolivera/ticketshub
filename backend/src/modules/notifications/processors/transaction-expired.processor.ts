@@ -6,9 +6,7 @@ import type { TransactionExpiredContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class TransactionExpiredProcessor
-  implements EventProcessor<TransactionExpiredContext>
-{
+export class TransactionExpiredProcessor implements EventProcessor<TransactionExpiredContext> {
   readonly eventType = NotificationEventType.TRANSACTION_EXPIRED;
 
   async getRecipients(

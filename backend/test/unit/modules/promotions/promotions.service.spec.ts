@@ -61,8 +61,12 @@ describe('PromotionsService', () => {
     };
 
     const mockUsersService = {
-      findByIds: jest.fn().mockResolvedValue([{ id: 'user_1', email: 'a@test.com' }]),
-      findByEmail: jest.fn().mockResolvedValue({ id: 'user_1', email: 'a@test.com' }),
+      findByIds: jest
+        .fn()
+        .mockResolvedValue([{ id: 'user_1', email: 'a@test.com' }]),
+      findByEmail: jest
+        .fn()
+        .mockResolvedValue({ id: 'user_1', email: 'a@test.com' }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -120,7 +124,10 @@ describe('PromotionsService', () => {
         'admin_1',
       );
 
-      expect(usersService.findByEmail).toHaveBeenCalledWith(mockCtx, 'a@test.com');
+      expect(usersService.findByEmail).toHaveBeenCalledWith(
+        mockCtx,
+        'a@test.com',
+      );
       expect(repository.deactivateByUserIdAndType).toHaveBeenCalledWith(
         mockCtx,
         'user_1',
@@ -185,14 +192,19 @@ describe('PromotionsService', () => {
 
   describe('updateStatus', () => {
     it('should deactivate others when activating', async () => {
-      const existing = createMockPromotion({ id: 'promo_1', status: PromotionStatus.Inactive });
+      const existing = createMockPromotion({
+        id: 'promo_1',
+        status: PromotionStatus.Inactive,
+      });
       repository.findById.mockResolvedValue(existing);
       repository.updateStatus.mockResolvedValue({
         ...existing,
         status: PromotionStatus.Active,
       });
 
-      await service.updateStatus(mockCtx, 'promo_1', { status: PromotionStatus.Active });
+      await service.updateStatus(mockCtx, 'promo_1', {
+        status: PromotionStatus.Active,
+      });
 
       expect(repository.deactivateByUserIdAndType).toHaveBeenCalledWith(
         mockCtx,
@@ -229,7 +241,11 @@ describe('PromotionsService', () => {
       });
       repository.incrementUsedAndAddListingId.mockResolvedValue(updated);
 
-      await service.incrementUsedAndAddListingId(mockCtx, 'promo_1', 'listing_1');
+      await service.incrementUsedAndAddListingId(
+        mockCtx,
+        'promo_1',
+        'listing_1',
+      );
 
       expect(repository.incrementUsedAndAddListingId).toHaveBeenCalledWith(
         mockCtx,

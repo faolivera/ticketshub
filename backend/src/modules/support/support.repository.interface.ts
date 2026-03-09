@@ -56,6 +56,15 @@ export interface ISupportRepository {
   ): Promise<SupportTicket | undefined>;
 
   /**
+   * Get ticket by transaction ID and user ID (for duplicate check: one open case per user per transaction)
+   */
+  getTicketByTransactionIdAndUserId(
+    ctx: Ctx,
+    transactionId: string,
+    userId: string,
+  ): Promise<SupportTicket | undefined>;
+
+  /**
    * Update ticket
    */
   updateTicket(

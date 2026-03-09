@@ -17,7 +17,10 @@ const BuyerAmountMoneySchema = z.object({
   currency: BuyerAmountCurrencySchema,
 });
 
-const RiskPaymentMethodTypeSchema = z.enum(['payment_gateway', 'manual_approval']);
+const RiskPaymentMethodTypeSchema = z.enum([
+  'payment_gateway',
+  'manual_approval',
+]);
 
 const RiskEngineBuyerConfigSchema = z.object({
   phoneRequiredEventHours: z.number(),
@@ -80,8 +83,16 @@ export const UpdatePlatformConfigRequestSchema = z.object({
   sellerPlatformFeePercentage: z.number().min(0).max(100).optional(),
   paymentTimeoutMinutes: z.number().min(1).max(1440).optional(),
   adminReviewTimeoutHours: z.number().min(1).max(168).optional(),
-  offerPendingExpirationMinutes: z.number().min(OFFER_EXPIRATION_MIN).max(OFFER_EXPIRATION_MAX).optional(),
-  offerAcceptedExpirationMinutes: z.number().min(OFFER_EXPIRATION_MIN).max(OFFER_EXPIRATION_MAX).optional(),
+  offerPendingExpirationMinutes: z
+    .number()
+    .min(OFFER_EXPIRATION_MIN)
+    .max(OFFER_EXPIRATION_MAX)
+    .optional(),
+  offerAcceptedExpirationMinutes: z
+    .number()
+    .min(OFFER_EXPIRATION_MIN)
+    .max(OFFER_EXPIRATION_MAX)
+    .optional(),
   transactionChatPollIntervalSeconds: z.number().min(5).max(120).optional(),
   transactionChatMaxMessages: z.number().min(10).max(500).optional(),
   riskEngine: z
@@ -92,12 +103,16 @@ export const UpdatePlatformConfigRequestSchema = z.object({
           phoneRequiredAmount: BuyerAmountMoneySchema.optional(),
           phoneRequiredQtyTickets: z.number().min(1).max(50).optional(),
           newAccountDays: z.number().min(0).max(365).optional(),
-          phoneRequiredPaymentMethodTypes: z.array(RiskPaymentMethodTypeSchema).optional(),
+          phoneRequiredPaymentMethodTypes: z
+            .array(RiskPaymentMethodTypeSchema)
+            .optional(),
           dniRequiredEventHours: z.number().min(1).max(720).optional(),
           dniRequiredAmount: BuyerAmountMoneySchema.optional(),
           dniRequiredQtyTickets: z.number().min(1).max(50).optional(),
           dniNewAccountDays: z.number().min(0).max(365).optional(),
-          dniRequiredPaymentMethodTypes: z.array(RiskPaymentMethodTypeSchema).optional(),
+          dniRequiredPaymentMethodTypes: z
+            .array(RiskPaymentMethodTypeSchema)
+            .optional(),
         })
         .optional(),
       seller: z
@@ -133,4 +148,5 @@ export const UpdatePlatformConfigRequestSchema = z.object({
     .optional(),
 });
 
-export const UpdatePlatformConfigResponseSchema = GetPlatformConfigResponseSchema;
+export const UpdatePlatformConfigResponseSchema =
+  GetPlatformConfigResponseSchema;

@@ -6,9 +6,7 @@ import type { IdentityVerifiedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class IdentityVerifiedProcessor
-  implements EventProcessor<IdentityVerifiedContext>
-{
+export class IdentityVerifiedProcessor implements EventProcessor<IdentityVerifiedContext> {
   readonly eventType = NotificationEventType.IDENTITY_VERIFIED;
 
   async getRecipients(

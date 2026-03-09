@@ -1,4 +1,8 @@
-import { PrismaClient, Role, SeatingType as PrismaSeatingType } from '@prisma/client';
+import {
+  PrismaClient,
+  Role,
+  SeatingType as PrismaSeatingType,
+} from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { TransactionsRepository } from '@/modules/transactions/transactions.repository';
 import {
@@ -6,7 +10,10 @@ import {
   RequiredActor,
   CancellationReason,
 } from '@/modules/transactions/transactions.domain';
-import type { Transaction, Money } from '@/modules/transactions/transactions.domain';
+import type {
+  Transaction,
+  Money,
+} from '@/modules/transactions/transactions.domain';
 import { TicketType, DeliveryMethod } from '@/modules/tickets/tickets.domain';
 import type { Address } from '@/modules/shared/address.domain';
 import type { Ctx } from '@/common/types/context';
@@ -44,14 +51,17 @@ describe('TransactionsRepository (Integration)', () => {
     ...overrides,
   });
 
-  const createTestUser = async (overrides?: Partial<{
-    email: string;
-    role: Role;
-    acceptedSellerTermsAt: Date | null;
-  }>): Promise<string> => {
+  const createTestUser = async (
+    overrides?: Partial<{
+      email: string;
+      role: Role;
+      acceptedSellerTermsAt: Date | null;
+    }>,
+  ): Promise<string> => {
     const user = await prisma.user.create({
       data: {
-        email: overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
+        email:
+          overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
         firstName: 'Test',
         lastName: 'User',
         publicName: `testuser-${randomUUID().slice(0, 8)}`,
@@ -92,7 +102,10 @@ describe('TransactionsRepository (Integration)', () => {
     return event.id;
   };
 
-  const createTestEventDate = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventDate = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const eventDate = await prisma.eventDate.create({
       data: {
         event: { connect: { id: eventId } },
@@ -104,7 +117,10 @@ describe('TransactionsRepository (Integration)', () => {
     return eventDate.id;
   };
 
-  const createTestEventSection = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventSection = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const section = await prisma.eventSection.create({
       data: {
         event: { connect: { id: eventId } },
@@ -133,7 +149,9 @@ describe('TransactionsRepository (Integration)', () => {
     return listing.id;
   };
 
-  const createTestPricingSnapshot = async (listingId: string): Promise<string> => {
+  const createTestPricingSnapshot = async (
+    listingId: string,
+  ): Promise<string> => {
     const id = randomUUID();
     await prisma.pricingSnapshot.create({
       data: {
@@ -149,7 +167,9 @@ describe('TransactionsRepository (Integration)', () => {
     return id;
   };
 
-  const createValidTransaction = (overrides?: Partial<Transaction>): Transaction => {
+  const createValidTransaction = (
+    overrides?: Partial<Transaction>,
+  ): Transaction => {
     const now = new Date();
     return {
       id: randomUUID(),
@@ -185,11 +205,18 @@ describe('TransactionsRepository (Integration)', () => {
     await truncateAllTables(prisma);
     ctx = createTestContext();
 
-    testBuyerId = await createTestUser({ email: `buyer-${Date.now()}@test.com` });
-    testSellerId = await createTestUser({ email: `seller-${Date.now()}@test.com` });
+    testBuyerId = await createTestUser({
+      email: `buyer-${Date.now()}@test.com`,
+    });
+    testSellerId = await createTestUser({
+      email: `seller-${Date.now()}@test.com`,
+    });
     testEventId = await createTestEvent(testSellerId);
     testEventDateId = await createTestEventDate(testEventId, testSellerId);
-    testEventSectionId = await createTestEventSection(testEventId, testSellerId);
+    testEventSectionId = await createTestEventSection(
+      testEventId,
+      testSellerId,
+    );
     testListingId = await createTestListing(testSellerId);
     testPricingSnapshotId = await createTestPricingSnapshot(testListingId);
   });
@@ -220,11 +247,19 @@ describe('TransactionsRepository (Integration)', () => {
       const transaction = await repository.create(ctx, transactionData);
 
       expect(transaction.ticketPrice).toEqual(transactionData.ticketPrice);
-      expect(transaction.buyerPlatformFee).toEqual(transactionData.buyerPlatformFee);
-      expect(transaction.sellerPlatformFee).toEqual(transactionData.sellerPlatformFee);
-      expect(transaction.paymentMethodCommission).toEqual(transactionData.paymentMethodCommission);
+      expect(transaction.buyerPlatformFee).toEqual(
+        transactionData.buyerPlatformFee,
+      );
+      expect(transaction.sellerPlatformFee).toEqual(
+        transactionData.sellerPlatformFee,
+      );
+      expect(transaction.paymentMethodCommission).toEqual(
+        transactionData.paymentMethodCommission,
+      );
       expect(transaction.totalPaid).toEqual(transactionData.totalPaid);
-      expect(transaction.sellerReceives).toEqual(transactionData.sellerReceives);
+      expect(transaction.sellerReceives).toEqual(
+        transactionData.sellerReceives,
+      );
     });
 
     it('should create a transaction with delivery method and pickup address', async () => {
@@ -253,7 +288,9 @@ describe('TransactionsRepository (Integration)', () => {
 
       expect(transaction.status).toBe(TransactionStatus.Cancelled);
       expect(transaction.cancelledBy).toBe(RequiredActor.Buyer);
-      expect(transaction.cancellationReason).toBe(CancellationReason.BuyerCancelled);
+      expect(transaction.cancellationReason).toBe(
+        CancellationReason.BuyerCancelled,
+      );
       expect(transaction.cancelledAt).toBeDefined();
     });
   });
@@ -306,9 +343,17 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should return transactions for specific buyer', async () => {
-      const otherBuyerId = await createTestUser({ email: `other-buyer-${Date.now()}@test.com` });
-      await repository.create(ctx, createValidTransaction({ buyerId: testBuyerId }));
-      await repository.create(ctx, createValidTransaction({ buyerId: otherBuyerId }));
+      const otherBuyerId = await createTestUser({
+        email: `other-buyer-${Date.now()}@test.com`,
+      });
+      await repository.create(
+        ctx,
+        createValidTransaction({ buyerId: testBuyerId }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({ buyerId: otherBuyerId }),
+      );
 
       const transactions = await repository.getByBuyerId(ctx, testBuyerId);
 
@@ -336,10 +381,18 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should return transactions for specific seller', async () => {
-      const otherSellerId = await createTestUser({ email: `other-seller-${Date.now()}@test.com` });
+      const otherSellerId = await createTestUser({
+        email: `other-seller-${Date.now()}@test.com`,
+      });
       const otherEventId = await createTestEvent(otherSellerId);
-      const otherEventDateId = await createTestEventDate(otherEventId, otherSellerId);
-      const otherEventSectionId = await createTestEventSection(otherEventId, otherSellerId);
+      const otherEventDateId = await createTestEventDate(
+        otherEventId,
+        otherSellerId,
+      );
+      const otherEventSectionId = await createTestEventSection(
+        otherEventId,
+        otherSellerId,
+      );
 
       const otherListing = await prisma.ticketListing.create({
         data: {
@@ -354,14 +407,22 @@ describe('TransactionsRepository (Integration)', () => {
         },
       });
 
-      const otherPricingSnapshot = await createTestPricingSnapshot(otherListing.id);
+      const otherPricingSnapshot = await createTestPricingSnapshot(
+        otherListing.id,
+      );
 
-      await repository.create(ctx, createValidTransaction({ sellerId: testSellerId }));
-      await repository.create(ctx, createValidTransaction({
-        sellerId: otherSellerId,
-        listingId: otherListing.id,
-        pricingSnapshotId: otherPricingSnapshot,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({ sellerId: testSellerId }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          sellerId: otherSellerId,
+          listingId: otherListing.id,
+          pricingSnapshotId: otherPricingSnapshot,
+        }),
+      );
 
       const transactions = await repository.getBySellerId(ctx, testSellerId);
 
@@ -385,7 +446,9 @@ describe('TransactionsRepository (Integration)', () => {
       const transactions = await repository.getByListingId(ctx, testListingId);
 
       expect(transactions).toHaveLength(2);
-      expect(transactions.every(t => t.listingId === testListingId)).toBe(true);
+      expect(transactions.every((t) => t.listingId === testListingId)).toBe(
+        true,
+      );
     });
   });
 
@@ -398,7 +461,10 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should return empty array when listings have no transactions', async () => {
-      const transactions = await repository.getByListingIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const transactions = await repository.getByListingIds(ctx, [
+        'non-existent-1',
+        'non-existent-2',
+      ]);
       expect(transactions).toEqual([]);
     });
 
@@ -406,13 +472,22 @@ describe('TransactionsRepository (Integration)', () => {
       const listing2Id = await createTestListing(testSellerId);
       const pricingSnapshot2Id = await createTestPricingSnapshot(listing2Id);
 
-      await repository.create(ctx, createValidTransaction({ listingId: testListingId }));
-      await repository.create(ctx, createValidTransaction({
-        listingId: listing2Id,
-        pricingSnapshotId: pricingSnapshot2Id,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({ listingId: testListingId }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          listingId: listing2Id,
+          pricingSnapshotId: pricingSnapshot2Id,
+        }),
+      );
 
-      const transactions = await repository.getByListingIds(ctx, [testListingId, listing2Id]);
+      const transactions = await repository.getByListingIds(ctx, [
+        testListingId,
+        listing2Id,
+      ]);
 
       expect(transactions).toHaveLength(2);
     });
@@ -422,10 +497,13 @@ describe('TransactionsRepository (Integration)', () => {
 
   describe('getPendingDepositRelease', () => {
     it('should return empty array when no transactions have depositReleaseAt passed', async () => {
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.TicketTransferred,
-        depositReleaseAt: new Date(Date.now() + 60 * 60 * 1000),
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.TicketTransferred,
+          depositReleaseAt: new Date(Date.now() + 60 * 60 * 1000),
+        }),
+      );
 
       const transactions = await repository.getPendingDepositRelease(ctx);
 
@@ -434,10 +512,13 @@ describe('TransactionsRepository (Integration)', () => {
 
     it('should return TicketTransferred transactions with expired depositReleaseAt', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.TicketTransferred,
-        depositReleaseAt: pastDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.TicketTransferred,
+          depositReleaseAt: pastDate,
+        }),
+      );
 
       const transactions = await repository.getPendingDepositRelease(ctx);
 
@@ -447,10 +528,13 @@ describe('TransactionsRepository (Integration)', () => {
 
     it('should return DepositHold transactions with expired depositReleaseAt', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.DepositHold,
-        depositReleaseAt: pastDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.DepositHold,
+          depositReleaseAt: pastDate,
+        }),
+      );
 
       const transactions = await repository.getPendingDepositRelease(ctx);
 
@@ -460,14 +544,20 @@ describe('TransactionsRepository (Integration)', () => {
 
     it('should not return TransferringFund or Completed', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.TransferringFund,
-        depositReleaseAt: pastDate,
-      }));
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.Completed,
-        depositReleaseAt: pastDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.TransferringFund,
+          depositReleaseAt: pastDate,
+        }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.Completed,
+          depositReleaseAt: pastDate,
+        }),
+      );
 
       const transactions = await repository.getPendingDepositRelease(ctx);
 
@@ -479,12 +569,17 @@ describe('TransactionsRepository (Integration)', () => {
 
   describe('update', () => {
     it('should return undefined for non-existent transaction', async () => {
-      const result = await repository.update(ctx, 'non-existent-id', { quantity: 5 });
+      const result = await repository.update(ctx, 'non-existent-id', {
+        quantity: 5,
+      });
       expect(result).toBeUndefined();
     });
 
     it('should update transaction status', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
 
       const updated = await repository.update(ctx, transaction.id, {
         status: TransactionStatus.PaymentReceived,
@@ -498,9 +593,12 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should update transaction to completed', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.TicketTransferred,
-      }));
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.TicketTransferred,
+        }),
+      );
       const completedAt = new Date();
 
       const updated = await repository.update(ctx, transaction.id, {
@@ -516,7 +614,10 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should update payment method and confirmation', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
 
       const updated = await repository.update(ctx, transaction.id, {
         paymentMethodId: 'payment-method-123',
@@ -528,8 +629,16 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should update delivery method and pickup address', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
-      const pickupAddress = createTestAddress({ line1: '456 New St', city: 'Munich', state: 'Bavaria', postalCode: '80331' });
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
+      const pickupAddress = createTestAddress({
+        line1: '456 New St',
+        city: 'Munich',
+        state: 'Bavaria',
+        postalCode: '80331',
+      });
 
       const updated = await repository.update(ctx, transaction.id, {
         deliveryMethod: DeliveryMethod.Pickup,
@@ -541,10 +650,13 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should not update fields when passed undefined', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction({
-        deliveryMethod: DeliveryMethod.Pickup,
-        pickupAddress: createTestAddress(),
-      }));
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction({
+          deliveryMethod: DeliveryMethod.Pickup,
+          pickupAddress: createTestAddress(),
+        }),
+      );
 
       const updated = await repository.update(ctx, transaction.id, {
         deliveryMethod: undefined,
@@ -595,9 +707,17 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should filter by buyer ids', async () => {
-      const otherBuyerId = await createTestUser({ email: `other-buyer-${Date.now()}@test.com` });
-      await repository.create(ctx, createValidTransaction({ buyerId: testBuyerId }));
-      await repository.create(ctx, createValidTransaction({ buyerId: otherBuyerId }));
+      const otherBuyerId = await createTestUser({
+        email: `other-buyer-${Date.now()}@test.com`,
+      });
+      await repository.create(
+        ctx,
+        createValidTransaction({ buyerId: testBuyerId }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({ buyerId: otherBuyerId }),
+      );
 
       const result = await repository.getPaginated(ctx, 1, 10, {
         buyerIds: [testBuyerId],
@@ -619,9 +739,17 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should combine filters with OR logic', async () => {
-      const otherBuyerId = await createTestUser({ email: `other-buyer-${Date.now()}@test.com` });
-      const t1 = await repository.create(ctx, createValidTransaction({ buyerId: testBuyerId }));
-      const t2 = await repository.create(ctx, createValidTransaction({ buyerId: otherBuyerId }));
+      const otherBuyerId = await createTestUser({
+        email: `other-buyer-${Date.now()}@test.com`,
+      });
+      const t1 = await repository.create(
+        ctx,
+        createValidTransaction({ buyerId: testBuyerId }),
+      );
+      const t2 = await repository.create(
+        ctx,
+        createValidTransaction({ buyerId: otherBuyerId }),
+      );
 
       const result = await repository.getPaginated(ctx, 1, 10, {
         transactionIds: [t1.id],
@@ -641,7 +769,10 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should return empty array when no transactions match', async () => {
-      const transactions = await repository.findByIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const transactions = await repository.findByIds(ctx, [
+        'non-existent-1',
+        'non-existent-2',
+      ]);
       expect(transactions).toEqual([]);
     });
 
@@ -653,8 +784,8 @@ describe('TransactionsRepository (Integration)', () => {
       const transactions = await repository.findByIds(ctx, [t1.id, t2.id]);
 
       expect(transactions).toHaveLength(2);
-      expect(transactions.map(t => t.id)).toContain(t1.id);
-      expect(transactions.map(t => t.id)).toContain(t2.id);
+      expect(transactions.map((t) => t.id)).toContain(t1.id);
+      expect(transactions.map((t) => t.id)).toContain(t2.id);
     });
   });
 
@@ -667,19 +798,39 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should count transactions by single status', async () => {
-      await repository.create(ctx, createValidTransaction({ status: TransactionStatus.PendingPayment }));
-      await repository.create(ctx, createValidTransaction({ status: TransactionStatus.PaymentReceived }));
-      await repository.create(ctx, createValidTransaction({ status: TransactionStatus.PendingPayment }));
+      await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.PendingPayment }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.PaymentReceived }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.PendingPayment }),
+      );
 
-      const count = await repository.countByStatuses(ctx, [TransactionStatus.PendingPayment]);
+      const count = await repository.countByStatuses(ctx, [
+        TransactionStatus.PendingPayment,
+      ]);
 
       expect(count).toBe(2);
     });
 
     it('should count transactions by multiple statuses', async () => {
-      await repository.create(ctx, createValidTransaction({ status: TransactionStatus.PendingPayment }));
-      await repository.create(ctx, createValidTransaction({ status: TransactionStatus.PaymentReceived }));
-      await repository.create(ctx, createValidTransaction({ status: TransactionStatus.Completed }));
+      await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.PendingPayment }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.PaymentReceived }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.Completed }),
+      );
 
       const count = await repository.countByStatuses(ctx, [
         TransactionStatus.PendingPayment,
@@ -699,9 +850,18 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should return transaction ids for given statuses', async () => {
-      const t1 = await repository.create(ctx, createValidTransaction({ status: TransactionStatus.PendingPayment }));
-      const t2 = await repository.create(ctx, createValidTransaction({ status: TransactionStatus.PaymentReceived }));
-      await repository.create(ctx, createValidTransaction({ status: TransactionStatus.Completed }));
+      const t1 = await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.PendingPayment }),
+      );
+      const t2 = await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.PaymentReceived }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({ status: TransactionStatus.Completed }),
+      );
 
       const ids = await repository.getIdsByStatuses(ctx, [
         TransactionStatus.PendingPayment,
@@ -719,10 +879,13 @@ describe('TransactionsRepository (Integration)', () => {
   describe('findExpiredPendingPayments', () => {
     it('should return empty array when no expired payments', async () => {
       const futureDate = new Date(Date.now() + 60 * 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PendingPayment,
-        paymentExpiresAt: futureDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.PendingPayment,
+          paymentExpiresAt: futureDate,
+        }),
+      );
 
       const transactions = await repository.findExpiredPendingPayments(ctx);
 
@@ -731,10 +894,13 @@ describe('TransactionsRepository (Integration)', () => {
 
     it('should return transactions with expired payment window', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PendingPayment,
-        paymentExpiresAt: pastDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.PendingPayment,
+          paymentExpiresAt: pastDate,
+        }),
+      );
 
       const transactions = await repository.findExpiredPendingPayments(ctx);
 
@@ -744,10 +910,13 @@ describe('TransactionsRepository (Integration)', () => {
 
     it('should not return non-PendingPayment transactions with expired dates', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PaymentReceived,
-        paymentExpiresAt: pastDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.PaymentReceived,
+          paymentExpiresAt: pastDate,
+        }),
+      );
 
       const transactions = await repository.findExpiredPendingPayments(ctx);
 
@@ -760,10 +929,13 @@ describe('TransactionsRepository (Integration)', () => {
   describe('findExpiredAdminReviews', () => {
     it('should return empty array when no expired admin reviews', async () => {
       const futureDate = new Date(Date.now() + 60 * 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PaymentPendingVerification,
-        adminReviewExpiresAt: futureDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.PaymentPendingVerification,
+          adminReviewExpiresAt: futureDate,
+        }),
+      );
 
       const transactions = await repository.findExpiredAdminReviews(ctx);
 
@@ -772,23 +944,31 @@ describe('TransactionsRepository (Integration)', () => {
 
     it('should return transactions with expired admin review', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PaymentPendingVerification,
-        adminReviewExpiresAt: pastDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.PaymentPendingVerification,
+          adminReviewExpiresAt: pastDate,
+        }),
+      );
 
       const transactions = await repository.findExpiredAdminReviews(ctx);
 
       expect(transactions).toHaveLength(1);
-      expect(transactions[0].status).toBe(TransactionStatus.PaymentPendingVerification);
+      expect(transactions[0].status).toBe(
+        TransactionStatus.PaymentPendingVerification,
+      );
     });
 
     it('should not return non-PaymentPendingVerification transactions', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PendingPayment,
-        adminReviewExpiresAt: pastDate,
-      }));
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.PendingPayment,
+          adminReviewExpiresAt: pastDate,
+        }),
+      );
 
       const transactions = await repository.findExpiredAdminReviews(ctx);
 
@@ -800,7 +980,10 @@ describe('TransactionsRepository (Integration)', () => {
 
   describe('findByIdForUpdate', () => {
     it('should return undefined when transaction does not exist', async () => {
-      const transaction = await repository.findByIdForUpdate(ctx, 'non-existent-id');
+      const transaction = await repository.findByIdForUpdate(
+        ctx,
+        'non-existent-id',
+      );
       expect(transaction).toBeUndefined();
     });
 
@@ -818,7 +1001,10 @@ describe('TransactionsRepository (Integration)', () => {
 
   describe('updateWithVersion', () => {
     it('should update transaction with correct version', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
 
       const updated = await repository.updateWithVersion(
         ctx,
@@ -832,7 +1018,10 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should throw OptimisticLockException when version mismatch', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
 
       await expect(
         repository.updateWithVersion(
@@ -856,7 +1045,10 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should increment version on each update', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
 
       const updated1 = await repository.updateWithVersion(
         ctx,
@@ -882,13 +1074,13 @@ describe('TransactionsRepository (Integration)', () => {
 
   describe('Edge Cases', () => {
     it('should handle transactions with all ticket types', async () => {
-      const ticketTypes = [
-        TicketType.Physical,
-        TicketType.Digital,
-      ];
+      const ticketTypes = [TicketType.Physical, TicketType.Digital];
 
       for (const ticketType of ticketTypes) {
-        const transaction = await repository.create(ctx, createValidTransaction({ ticketType }));
+        const transaction = await repository.create(
+          ctx,
+          createValidTransaction({ ticketType }),
+        );
         expect(transaction.ticketType).toBe(ticketType);
       }
     });
@@ -906,10 +1098,13 @@ describe('TransactionsRepository (Integration)', () => {
       ];
 
       for (const status of statuses) {
-        const transaction = await repository.create(ctx, createValidTransaction({
-          status,
-          requiredActor: RequiredActor.None,
-        }));
+        const transaction = await repository.create(
+          ctx,
+          createValidTransaction({
+            status,
+            requiredActor: RequiredActor.None,
+          }),
+        );
         expect(transaction.status).toBe(status);
       }
     });
@@ -924,45 +1119,60 @@ describe('TransactionsRepository (Integration)', () => {
       ];
 
       for (const reason of reasons) {
-        const transaction = await repository.create(ctx, createValidTransaction({
-          status: TransactionStatus.Cancelled,
-          cancellationReason: reason,
-          cancelledBy: RequiredActor.Platform,
-          cancelledAt: new Date(),
-        }));
+        const transaction = await repository.create(
+          ctx,
+          createValidTransaction({
+            status: TransactionStatus.Cancelled,
+            cancellationReason: reason,
+            cancelledBy: RequiredActor.Platform,
+            cancelledAt: new Date(),
+          }),
+        );
         expect(transaction.cancellationReason).toBe(reason);
       }
     });
 
     it('should handle transaction with ticket unit ids', async () => {
       const ticketUnitIds = ['unit-1', 'unit-2', 'unit-3'];
-      const transaction = await repository.create(ctx, createValidTransaction({
-        ticketUnitIds,
-        quantity: 3,
-      }));
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction({
+          ticketUnitIds,
+          quantity: 3,
+        }),
+      );
 
       expect(transaction.ticketUnitIds).toEqual(ticketUnitIds);
     });
 
     it('should handle transaction with dispute id', async () => {
       const disputeId = randomUUID();
-      const transaction = await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.Disputed,
-        disputeId,
-      }));
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.Disputed,
+          disputeId,
+        }),
+      );
 
       expect(transaction.disputeId).toBe(disputeId);
     });
 
     it('should handle transaction with admin approval', async () => {
-      const adminId = await createTestUser({ role: Role.Admin, email: `admin-${Date.now()}@test.com` });
+      const adminId = await createTestUser({
+        role: Role.Admin,
+        email: `admin-${Date.now()}@test.com`,
+      });
       const approvedAt = new Date();
 
-      const transaction = await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.PaymentReceived,
-        paymentApprovedBy: adminId,
-        paymentApprovedAt: approvedAt,
-      }));
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.PaymentReceived,
+          paymentApprovedBy: adminId,
+          paymentApprovedAt: approvedAt,
+        }),
+      );
 
       expect(transaction.paymentApprovedBy).toBe(adminId);
       expect(transaction.paymentApprovedAt).toEqual(approvedAt);
@@ -970,10 +1180,13 @@ describe('TransactionsRepository (Integration)', () => {
 
     it('should handle refunded transaction', async () => {
       const refundedAt = new Date();
-      const transaction = await repository.create(ctx, createValidTransaction({
-        status: TransactionStatus.Refunded,
-        refundedAt,
-      }));
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction({
+          status: TransactionStatus.Refunded,
+          refundedAt,
+        }),
+      );
 
       expect(transaction.status).toBe(TransactionStatus.Refunded);
       expect(transaction.refundedAt).toEqual(refundedAt);
@@ -996,7 +1209,9 @@ describe('TransactionsRepository (Integration)', () => {
       expect(auditLogs[0].action).toBe('created');
       expect(auditLogs[0].transactionId).toBe(transactionData.id);
       expect(auditLogs[0].payload).toBeDefined();
-      expect((auditLogs[0].payload as { id?: string }).id).toBe(transactionData.id);
+      expect((auditLogs[0].payload as { id?: string }).id).toBe(
+        transactionData.id,
+      );
     });
 
     it('should set changedBy to ctx.userId when context has userId', async () => {
@@ -1027,7 +1242,10 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should create one audit log row with action "updated" when transaction is updated', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
       await repository.update(ctx, transaction.id, {
         status: TransactionStatus.PaymentReceived,
         requiredActor: RequiredActor.Seller,
@@ -1048,14 +1266,22 @@ describe('TransactionsRepository (Integration)', () => {
     });
 
     it('should create one audit log row with action "updated" when updateWithVersion is called', async () => {
-      const transaction = await repository.create(ctx, createValidTransaction());
-      await repository.updateWithVersion(ctx, transaction.id, {
-        status: TransactionStatus.Cancelled,
-        requiredActor: RequiredActor.None,
-        cancelledBy: RequiredActor.Buyer,
-        cancellationReason: CancellationReason.BuyerCancelled,
-        cancelledAt: new Date(),
-      }, transaction.version);
+      const transaction = await repository.create(
+        ctx,
+        createValidTransaction(),
+      );
+      await repository.updateWithVersion(
+        ctx,
+        transaction.id,
+        {
+          status: TransactionStatus.Cancelled,
+          requiredActor: RequiredActor.None,
+          cancelledBy: RequiredActor.Buyer,
+          cancellationReason: CancellationReason.BuyerCancelled,
+          cancelledAt: new Date(),
+        },
+        transaction.version,
+      );
 
       const auditLogs = await prisma.transactionAuditLog.findMany({
         where: { transactionId: transaction.id },

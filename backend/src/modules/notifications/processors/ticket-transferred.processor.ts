@@ -6,9 +6,7 @@ import type { TicketTransferredContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class TicketTransferredProcessor
-  implements EventProcessor<TicketTransferredContext>
-{
+export class TicketTransferredProcessor implements EventProcessor<TicketTransferredContext> {
   readonly eventType = NotificationEventType.TICKET_TRANSFERRED;
 
   async getRecipients(

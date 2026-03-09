@@ -32,12 +32,7 @@ const TransactionStatusSchema = z.enum([
   'Cancelled',
 ]);
 
-const RequiredActorSchema = z.enum([
-  'Buyer',
-  'Seller',
-  'Platform',
-  'None',
-]);
+const RequiredActorSchema = z.enum(['Buyer', 'Seller', 'Platform', 'None']);
 const ListingStatusSchema = z.enum(['Active', 'Sold', 'Cancelled', 'Expired']);
 const TicketUnitStatusSchema = z.enum(['available', 'reserved', 'sold']);
 const SeatingTypeSchema = z.enum(['numbered', 'unnumbered']);
@@ -174,7 +169,9 @@ const BffTransactionWithDetailsSchema = z.object({
   createdAt: z.coerce.date(),
   paymentReceivedAt: z.coerce.date().optional(),
   ticketTransferredAt: z.coerce.date().optional(),
-  sellerSentPayloadType: z.enum(['ticketera', 'pdf_or_image', 'other']).optional(),
+  sellerSentPayloadType: z
+    .enum(['ticketera', 'pdf_or_image', 'other'])
+    .optional(),
   sellerSentPayloadTypeOtherText: z.string().optional(),
   buyerConfirmedAt: z.coerce.date().optional(),
   completedAt: z.coerce.date().optional(),

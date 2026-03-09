@@ -98,7 +98,13 @@ export class WalletService {
         );
       }
 
-      return this.executeHoldFunds(txCtx, wallet, amount, reference, description);
+      return this.executeHoldFunds(
+        txCtx,
+        wallet,
+        amount,
+        reference,
+        description,
+      );
     });
   }
 
@@ -315,7 +321,13 @@ export class WalletService {
         );
       }
 
-      return this.executeCreditFunds(txCtx, wallet, amount, reference, description);
+      return this.executeCreditFunds(
+        txCtx,
+        wallet,
+        amount,
+        reference,
+        description,
+      );
     });
   }
 
@@ -382,7 +394,13 @@ export class WalletService {
         );
       }
 
-      return this.executeDebitFunds(txCtx, wallet, amount, reference, description);
+      return this.executeDebitFunds(
+        txCtx,
+        wallet,
+        amount,
+        reference,
+        description,
+      );
     });
   }
 
@@ -394,7 +412,10 @@ export class WalletService {
     description: string,
   ): Promise<WalletTransaction> {
     if (wallet.balance.amount < amount.amount) {
-      throw new InsufficientFundsException(wallet.balance.amount, amount.amount);
+      throw new InsufficientFundsException(
+        wallet.balance.amount,
+        amount.amount,
+      );
     }
 
     // Subtract from balance

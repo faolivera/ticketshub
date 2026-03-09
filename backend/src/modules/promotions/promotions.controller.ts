@@ -26,7 +26,10 @@ import type {
   ListPromotionsResponse,
   UpdatePromotionStatusRequest,
 } from './promotions.api';
-import { CreatePromotionRequestSchema, UpdatePromotionStatusRequestSchema } from './schemas/api.schemas';
+import {
+  CreatePromotionRequestSchema,
+  UpdatePromotionStatusRequestSchema,
+} from './schemas/api.schemas';
 import { PromotionStatus, PromotionType } from './promotions.domain';
 
 @Controller('api/admin/promotions')
@@ -63,12 +66,19 @@ export class PromotionsController {
     @Query('type') type?: string,
     @Query('userId') userId?: string,
   ): Promise<ApiResponse<ListPromotionsResponse>> {
-    const filters: { status?: PromotionStatus; type?: PromotionType; userId?: string } = {};
+    const filters: {
+      status?: PromotionStatus;
+      type?: PromotionType;
+      userId?: string;
+    } = {};
     if (status) {
       filters.status =
         status === 'active' ? PromotionStatus.Active : PromotionStatus.Inactive;
     }
-    if (type && (type === 'SELLER_DISCOUNTED_FEE' || type === 'BUYER_DISCOUNTED_FEE')) {
+    if (
+      type &&
+      (type === 'SELLER_DISCOUNTED_FEE' || type === 'BUYER_DISCOUNTED_FEE')
+    ) {
       filters.type = type as PromotionType;
     }
     if (userId) filters.userId = userId;

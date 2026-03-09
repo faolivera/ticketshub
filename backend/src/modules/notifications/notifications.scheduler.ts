@@ -54,8 +54,12 @@ export class NotificationsScheduler {
         try {
           await this.worker.processPendingEvents(ctx);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          this.logger.error(ctx, `Failed to process pending events: ${errorMessage}`);
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(
+            ctx,
+            `Failed to process pending events: ${errorMessage}`,
+          );
         }
       },
     );
@@ -80,8 +84,12 @@ export class NotificationsScheduler {
         try {
           await this.worker.sendPendingEmails(ctx);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          this.logger.error(ctx, `Failed to send pending emails: ${errorMessage}`);
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(
+            ctx,
+            `Failed to send pending emails: ${errorMessage}`,
+          );
         }
       },
     );
@@ -106,7 +114,8 @@ export class NotificationsScheduler {
         try {
           await this.worker.retryFailedEmails(ctx);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           this.logger.error(ctx, `Failed to retry emails: ${errorMessage}`);
         }
       },
@@ -132,11 +141,18 @@ export class NotificationsScheduler {
         try {
           const deletedCount = await this.service.cleanupOldNotifications(ctx);
           if (deletedCount > 0) {
-            this.logger.log(ctx, `Cleaned up ${deletedCount} old notifications`);
+            this.logger.log(
+              ctx,
+              `Cleaned up ${deletedCount} old notifications`,
+            );
           }
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          this.logger.error(ctx, `Failed to cleanup old notifications: ${errorMessage}`);
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(
+            ctx,
+            `Failed to cleanup old notifications: ${errorMessage}`,
+          );
         }
       },
     );

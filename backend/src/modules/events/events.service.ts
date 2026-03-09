@@ -162,7 +162,10 @@ export class EventsService {
   /**
    * Get event by slug with dates and sections (for public event page URL)
    */
-  async getEventBySlug(ctx: Ctx, slug: string): Promise<EventWithDatesResponse> {
+  async getEventBySlug(
+    ctx: Ctx,
+    slug: string,
+  ): Promise<EventWithDatesResponse> {
     const event = await this.eventsRepository.findEventBySlug(ctx, slug);
     if (!event) {
       throw new NotFoundException('Event not found');
@@ -247,14 +250,12 @@ export class EventsService {
       this.eventsRepository.getSectionsByEventIds(ctx, eventIds),
     ]);
 
-    const allowedDateStatuses =
-      includeAllStatuses
-        ? undefined
-        : [EventDateStatus.Pending, EventDateStatus.Approved];
-    const allowedSectionStatuses =
-      includeAllStatuses
-        ? undefined
-        : [EventSectionStatus.Pending, EventSectionStatus.Approved];
+    const allowedDateStatuses = includeAllStatuses
+      ? undefined
+      : [EventDateStatus.Pending, EventDateStatus.Approved];
+    const allowedSectionStatuses = includeAllStatuses
+      ? undefined
+      : [EventSectionStatus.Pending, EventSectionStatus.Approved];
 
     const datesByEvent = new Map<string, EventDate[]>();
     const sectionsByEvent = new Map<string, EventSection[]>();
@@ -358,7 +359,9 @@ export class EventsService {
     }
 
     if (approved && !event.banners?.square) {
-      throw new BadRequestException('Square banner is required for event approval');
+      throw new BadRequestException(
+        'Square banner is required for event approval',
+      );
     }
 
     const updated = await this.eventsRepository.updateEvent(ctx, eventId, {
@@ -377,7 +380,9 @@ export class EventsService {
 
     await this.notificationsService.emit(
       ctx,
-      approved ? NotificationEventType.EVENT_APPROVED : NotificationEventType.EVENT_REJECTED,
+      approved
+        ? NotificationEventType.EVENT_APPROVED
+        : NotificationEventType.EVENT_REJECTED,
       {
         eventId: updated.id,
         eventSlug: updated.slug,
@@ -1061,14 +1066,12 @@ export class EventsService {
     const limit = query.limit ?? 12;
     const offset = query.offset ?? 0;
 
-    const { events, total } = await this.eventsRepository.getApprovedEventsForSelection(
-      ctx,
-      {
+    const { events, total } =
+      await this.eventsRepository.getApprovedEventsForSelection(ctx, {
         limit: limit + 1,
         offset,
         search: query.search,
-      },
-    );
+      });
 
     const hasMore = events.length > limit;
     const resultEvents = hasMore ? events.slice(0, limit) : events;
@@ -1136,11 +1139,15 @@ export class EventsService {
     const isAdmin = userRole === Role.Admin;
     const isCreator = event.createdBy === userId;
     if (!isAdmin && !isCreator) {
-      throw new ForbiddenException('Only event creator or admin can upload banners');
+      throw new ForbiddenException(
+        'Only event creator or admin can upload banners',
+      );
     }
 
     if (!ALLOWED_BANNER_MIME_TYPES.includes(file.mimetype as any)) {
-      throw new BadRequestException('Invalid file type. Allowed: PNG, JPEG, WebP');
+      throw new BadRequestException(
+        'Invalid file type. Allowed: PNG, JPEG, WebP',
+      );
     }
 
     if (file.size > BANNER_CONSTRAINTS.maxSizeBytes) {
@@ -1187,7 +1194,10 @@ export class EventsService {
 
     const existingBanner = event.banners?.[bannerType];
     if (existingBanner) {
-      await this.bannerStorage.deleteByFilename(eventId, existingBanner.filename);
+      await this.bannerStorage.deleteByFilename(
+        eventId,
+        existingBanner.filename,
+      );
     }
 
     const filename = await this.bannerStorage.store(
@@ -1254,12 +1264,16 @@ export class EventsService {
     const isAdmin = userRole === Role.Admin;
     const isCreator = event.createdBy === userId;
     if (!isAdmin && !isCreator) {
-      throw new ForbiddenException('Only event creator or admin can delete banners');
+      throw new ForbiddenException(
+        'Only event creator or admin can delete banners',
+      );
     }
 
     const existingBanner = event.banners?.[bannerType];
     if (!existingBanner) {
-      throw new NotFoundException(`No ${bannerType} banner exists for this event`);
+      throw new NotFoundException(
+        `No ${bannerType} banner exists for this event`,
+      );
     }
 
     await this.bannerStorage.deleteByFilename(eventId, existingBanner.filename);
@@ -1268,7 +1282,8 @@ export class EventsService {
     delete updatedBanners[bannerType];
 
     await this.eventsRepository.updateEvent(ctx, eventId, {
-      banners: Object.keys(updatedBanners).length > 0 ? updatedBanners : undefined,
+      banners:
+        Object.keys(updatedBanners).length > 0 ? updatedBanners : undefined,
     });
 
     this.logger.log(ctx, `${bannerType} banner deleted for event ${eventId}`);
@@ -1283,7 +1298,10 @@ export class EventsService {
   /**
    * Get banners for an event with URLs.
    */
-  async getBanners(ctx: Ctx, eventId: string): Promise<GetEventBannersResponse> {
+  async getBanners(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<GetEventBannersResponse> {
     const event = await this.eventsRepository.findEventById(ctx, eventId);
     if (!event) {
       throw new NotFoundException('Event not found');

@@ -12,9 +12,13 @@ export type AppEnvironment = (typeof VALID_ENVIRONMENTS)[number];
  * all other values come from the HOCON file (with env substitution).
  * After parsing, process.env is attached under the "env" key for payment gateways.
  */
-export function loadHoconConfig(overrideEnv?: AppEnvironment): Record<string, unknown> {
+export function loadHoconConfig(
+  overrideEnv?: AppEnvironment,
+): Record<string, unknown> {
   loadDotenv({ path: path.join(process.cwd(), '.env') });
-  const env = (overrideEnv ?? process.env.ENVIRONMENT ?? 'dev') as AppEnvironment;
+  const env = (overrideEnv ??
+    process.env.ENVIRONMENT ??
+    'dev') as AppEnvironment;
   if (!VALID_ENVIRONMENTS.includes(env)) {
     throw new Error(
       `Invalid ENVIRONMENT "${env}". Must be one of: ${VALID_ENVIRONMENTS.join(', ')}.`,

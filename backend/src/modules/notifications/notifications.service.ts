@@ -131,7 +131,10 @@ export class NotificationsService {
   /**
    * Get unread notification count for header badge
    */
-  async getUnreadCount(ctx: Ctx, userId: string): Promise<GetUnreadCountResponse> {
+  async getUnreadCount(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<GetUnreadCountResponse> {
     const count = await this.repository.countUnreadNotifications(ctx, userId);
     return { count };
   }
@@ -205,9 +208,15 @@ export class NotificationsService {
   /**
    * Mark all notifications as read for a user
    */
-  async markAllAsRead(ctx: Ctx, userId: string): Promise<MarkAllAsReadResponse> {
+  async markAllAsRead(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<MarkAllAsReadResponse> {
     const markedCount = await this.repository.markAllAsRead(ctx, userId);
-    this.logger.log(ctx, `Marked ${markedCount} notifications as read for user ${userId}`);
+    this.logger.log(
+      ctx,
+      `Marked ${markedCount} notifications as read for user ${userId}`,
+    );
     return { markedCount };
   }
 
@@ -226,10 +235,7 @@ export class NotificationsService {
   /**
    * Get a template by ID
    */
-  async getTemplateById(
-    ctx: Ctx,
-    id: string,
-  ): Promise<NotificationTemplate> {
+  async getTemplateById(ctx: Ctx, id: string): Promise<NotificationTemplate> {
     const template = await this.repository.findTemplateById(ctx, id);
     if (!template) {
       throw new NotFoundException('Template not found');
@@ -432,7 +438,10 @@ export class NotificationsService {
     ctx: Ctx,
     notificationId: string,
   ): Promise<Notification | undefined> {
-    return await this.repository.claimRetryableEmailNotification(ctx, notificationId);
+    return await this.repository.claimRetryableEmailNotification(
+      ctx,
+      notificationId,
+    );
   }
 
   /**
@@ -597,7 +606,10 @@ export class NotificationsService {
     const newRetryCount = notification.retryCount + 1;
     let nextRetryAt: Date | undefined;
 
-    const retryConfig = this.configService.get<{ maxRetries: number; backoffMinutes: number[] }>('notifications.retry') ?? { maxRetries: 3, backoffMinutes: [1, 5, 15] };
+    const retryConfig = this.configService.get<{
+      maxRetries: number;
+      backoffMinutes: number[];
+    }>('notifications.retry') ?? { maxRetries: 3, backoffMinutes: [1, 5, 15] };
     if (newRetryCount < retryConfig.maxRetries) {
       const backoffMinutes =
         retryConfig.backoffMinutes[newRetryCount - 1] ?? 15;

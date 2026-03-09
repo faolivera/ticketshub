@@ -1,7 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 
 /** Reference date type for claim window validation (used in i18n to pick the right label). */
-export type ClaimRefDateType = 'ticket_transfer' | 'event_date' | 'payment_received';
+export type ClaimRefDateType =
+  | 'ticket_transfer'
+  | 'event_date'
+  | 'payment_received';
 
 /**
  * Exception thrown when a claim is opened too soon after the reference date.

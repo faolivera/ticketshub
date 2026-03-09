@@ -1,10 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { UsersRepository } from '@/modules/users/users.repository';
-import {
-  Role,
-  UserStatus,
-  Language,
-} from '@/modules/users/users.domain';
+import { Role, UserStatus, Language } from '@/modules/users/users.domain';
 import type { CreateUserData } from '@/modules/users/users.repository.interface';
 import type { Ctx } from '@/common/types/context';
 import {
@@ -18,7 +14,9 @@ describe('UsersRepository (Integration)', () => {
   let repository: UsersRepository;
   let ctx: Ctx;
 
-  const createValidUserData = (overrides?: Partial<CreateUserData>): CreateUserData => ({
+  const createValidUserData = (
+    overrides?: Partial<CreateUserData>,
+  ): CreateUserData => ({
     email: `test-${Date.now()}@example.com`,
     firstName: 'John',
     lastName: 'Doe',
@@ -104,8 +102,14 @@ describe('UsersRepository (Integration)', () => {
     });
 
     it('should return all users', async () => {
-      await repository.add(ctx, createValidUserData({ email: 'user1@example.com' }));
-      await repository.add(ctx, createValidUserData({ email: 'user2@example.com' }));
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'user1@example.com' }),
+      );
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'user2@example.com' }),
+      );
 
       const users = await repository.getAll(ctx);
 
@@ -137,20 +141,32 @@ describe('UsersRepository (Integration)', () => {
     });
 
     it('should return empty array when no users match', async () => {
-      const users = await repository.findByIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const users = await repository.findByIds(ctx, [
+        'non-existent-1',
+        'non-existent-2',
+      ]);
       expect(users).toEqual([]);
     });
 
     it('should find multiple users by ids', async () => {
-      const user1 = await repository.add(ctx, createValidUserData({ email: 'user1@test.com' }));
-      const user2 = await repository.add(ctx, createValidUserData({ email: 'user2@test.com' }));
-      await repository.add(ctx, createValidUserData({ email: 'user3@test.com' }));
+      const user1 = await repository.add(
+        ctx,
+        createValidUserData({ email: 'user1@test.com' }),
+      );
+      const user2 = await repository.add(
+        ctx,
+        createValidUserData({ email: 'user2@test.com' }),
+      );
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'user3@test.com' }),
+      );
 
       const users = await repository.findByIds(ctx, [user1.id, user2.id]);
 
       expect(users).toHaveLength(2);
-      expect(users.map(u => u.id)).toContain(user1.id);
-      expect(users.map(u => u.id)).toContain(user2.id);
+      expect(users.map((u) => u.id)).toContain(user1.id);
+      expect(users.map((u) => u.id)).toContain(user2.id);
     });
   });
 
@@ -197,21 +213,33 @@ describe('UsersRepository (Integration)', () => {
     });
 
     it('should find users by partial email match (case insensitive)', async () => {
-      await repository.add(ctx, createValidUserData({ email: 'john.doe@example.com' }));
-      await repository.add(ctx, createValidUserData({ email: 'jane.doe@example.com' }));
-      await repository.add(ctx, createValidUserData({ email: 'bob.smith@test.com' }));
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'john.doe@example.com' }),
+      );
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'jane.doe@example.com' }),
+      );
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'bob.smith@test.com' }),
+      );
 
       const users = await repository.findByEmailContaining(ctx, 'DOE');
 
       expect(users).toHaveLength(2);
-      expect(users.every(u => u.email.includes('doe'))).toBe(true);
+      expect(users.every((u) => u.email.includes('doe'))).toBe(true);
     });
   });
 
   describe('getSellers', () => {
     it('should return empty array when no sellers exist', async () => {
       await repository.add(ctx, createValidUserData());
-      await repository.add(ctx, createValidUserData({ email: 'buyer@test.com' }));
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'buyer@test.com' }),
+      );
 
       const sellers = await repository.getSellers(ctx);
 
@@ -219,26 +247,48 @@ describe('UsersRepository (Integration)', () => {
     });
 
     it('should return only users who accepted seller terms', async () => {
-      await repository.add(ctx, createValidUserData({ email: 'basic@test.com' }));
-      await repository.add(ctx, createValidUserData({ email: 'seller@test.com', acceptedSellerTermsAt: new Date() }));
-      await repository.add(ctx, createValidUserData({ email: 'verified@test.com', acceptedSellerTermsAt: new Date() }));
+      await repository.add(
+        ctx,
+        createValidUserData({ email: 'basic@test.com' }),
+      );
+      await repository.add(
+        ctx,
+        createValidUserData({
+          email: 'seller@test.com',
+          acceptedSellerTermsAt: new Date(),
+        }),
+      );
+      await repository.add(
+        ctx,
+        createValidUserData({
+          email: 'verified@test.com',
+          acceptedSellerTermsAt: new Date(),
+        }),
+      );
 
       const sellers = await repository.getSellers(ctx);
 
       expect(sellers).toHaveLength(2);
-      expect(sellers.some(s => s.email === 'seller@test.com')).toBe(true);
-      expect(sellers.some(s => s.email === 'verified@test.com')).toBe(true);
+      expect(sellers.some((s) => s.email === 'seller@test.com')).toBe(true);
+      expect(sellers.some((s) => s.email === 'verified@test.com')).toBe(true);
     });
   });
 
   describe('updateEmailVerified', () => {
     it('should return undefined for non-existent user', async () => {
-      const result = await repository.updateEmailVerified(ctx, 'non-existent-id', true);
+      const result = await repository.updateEmailVerified(
+        ctx,
+        'non-existent-id',
+        true,
+      );
       expect(result).toBeUndefined();
     });
 
     it('should update email verified status to true', async () => {
-      const user = await repository.add(ctx, createValidUserData({ emailVerified: false }));
+      const user = await repository.add(
+        ctx,
+        createValidUserData({ emailVerified: false }),
+      );
 
       const updated = await repository.updateEmailVerified(ctx, user.id, true);
 
@@ -247,7 +297,10 @@ describe('UsersRepository (Integration)', () => {
     });
 
     it('should update email verified status to false', async () => {
-      const user = await repository.add(ctx, createValidUserData({ emailVerified: true }));
+      const user = await repository.add(
+        ctx,
+        createValidUserData({ emailVerified: true }),
+      );
 
       const updated = await repository.updateEmailVerified(ctx, user.id, false);
 
@@ -258,14 +311,26 @@ describe('UsersRepository (Integration)', () => {
 
   describe('updatePhoneVerified', () => {
     it('should return undefined for non-existent user', async () => {
-      const result = await repository.updatePhoneVerified(ctx, 'non-existent-id', true);
+      const result = await repository.updatePhoneVerified(
+        ctx,
+        'non-existent-id',
+        true,
+      );
       expect(result).toBeUndefined();
     });
 
     it('should update phone verified status', async () => {
-      const user = await repository.add(ctx, createValidUserData({ phoneVerified: false }));
+      const user = await repository.add(
+        ctx,
+        createValidUserData({ phoneVerified: false }),
+      );
 
-      const updated = await repository.updatePhoneVerified(ctx, user.id, true, '+1234567890');
+      const updated = await repository.updatePhoneVerified(
+        ctx,
+        user.id,
+        true,
+        '+1234567890',
+      );
 
       expect(updated).toBeDefined();
       expect(updated?.phoneVerified).toBe(true);
@@ -273,7 +338,10 @@ describe('UsersRepository (Integration)', () => {
     });
 
     it('should update phone verified without changing phone number', async () => {
-      const user = await repository.add(ctx, createValidUserData({ phone: '+1111111111', phoneVerified: false }));
+      const user = await repository.add(
+        ctx,
+        createValidUserData({ phone: '+1111111111', phoneVerified: false }),
+      );
 
       const updated = await repository.updatePhoneVerified(ctx, user.id, true);
 
@@ -284,14 +352,18 @@ describe('UsersRepository (Integration)', () => {
 
   describe('updateBasicInfo', () => {
     it('should return undefined for non-existent user', async () => {
-      const result = await repository.updateBasicInfo(ctx, 'non-existent-id', { firstName: 'New' });
+      const result = await repository.updateBasicInfo(ctx, 'non-existent-id', {
+        firstName: 'New',
+      });
       expect(result).toBeUndefined();
     });
 
     it('should update first name', async () => {
       const user = await repository.add(ctx, createValidUserData());
 
-      const updated = await repository.updateBasicInfo(ctx, user.id, { firstName: 'NewFirstName' });
+      const updated = await repository.updateBasicInfo(ctx, user.id, {
+        firstName: 'NewFirstName',
+      });
 
       expect(updated?.firstName).toBe('NewFirstName');
     });
@@ -299,7 +371,9 @@ describe('UsersRepository (Integration)', () => {
     it('should update last name', async () => {
       const user = await repository.add(ctx, createValidUserData());
 
-      const updated = await repository.updateBasicInfo(ctx, user.id, { lastName: 'NewLastName' });
+      const updated = await repository.updateBasicInfo(ctx, user.id, {
+        lastName: 'NewLastName',
+      });
 
       expect(updated?.lastName).toBe('NewLastName');
     });
@@ -307,7 +381,9 @@ describe('UsersRepository (Integration)', () => {
     it('should update public name', async () => {
       const user = await repository.add(ctx, createValidUserData());
 
-      const updated = await repository.updateBasicInfo(ctx, user.id, { publicName: 'newpublicname' });
+      const updated = await repository.updateBasicInfo(ctx, user.id, {
+        publicName: 'newpublicname',
+      });
 
       expect(updated?.publicName).toBe('newpublicname');
     });
@@ -337,7 +413,9 @@ describe('UsersRepository (Integration)', () => {
         geoPoint: { lat: 48.1351, lng: 11.582 },
       };
 
-      const updated = await repository.updateBasicInfo(ctx, user.id, { address: newAddress });
+      const updated = await repository.updateBasicInfo(ctx, user.id, {
+        address: newAddress,
+      });
 
       expect(updated?.address).toBeDefined();
       expect(updated?.address?.city).toBe('Munich');
@@ -346,14 +424,22 @@ describe('UsersRepository (Integration)', () => {
 
   describe('setAcceptedSellerTermsAt', () => {
     it('should return undefined for non-existent user', async () => {
-      const result = await repository.setAcceptedSellerTermsAt(ctx, 'non-existent-id', new Date());
+      const result = await repository.setAcceptedSellerTermsAt(
+        ctx,
+        'non-existent-id',
+        new Date(),
+      );
       expect(result).toBeUndefined();
     });
 
     it('should set accepted seller terms timestamp', async () => {
       const user = await repository.add(ctx, createValidUserData());
 
-      const updated = await repository.setAcceptedSellerTermsAt(ctx, user.id, new Date());
+      const updated = await repository.setAcceptedSellerTermsAt(
+        ctx,
+        user.id,
+        new Date(),
+      );
 
       expect(updated?.acceptedSellerTermsAt).toBeDefined();
     });
@@ -361,31 +447,44 @@ describe('UsersRepository (Integration)', () => {
 
   describe('updateIdentityVerificationApproved', () => {
     it('should return undefined for non-existent user', async () => {
-      const result = await repository.updateIdentityVerificationApproved(ctx, 'non-existent-id', {
-        legalFirstName: 'John',
-        legalLastName: 'Doe',
-        dateOfBirth: '1990-01-01',
-        governmentIdNumber: 'ABC123',
-      });
+      const result = await repository.updateIdentityVerificationApproved(
+        ctx,
+        'non-existent-id',
+        {
+          legalFirstName: 'John',
+          legalLastName: 'Doe',
+          dateOfBirth: '1990-01-01',
+          governmentIdNumber: 'ABC123',
+        },
+      );
       expect(result).toBeUndefined();
     });
 
     it('should set identity verification approved on user', async () => {
-      const user = await repository.add(ctx, createValidUserData({ acceptedSellerTermsAt: new Date() }));
+      const user = await repository.add(
+        ctx,
+        createValidUserData({ acceptedSellerTermsAt: new Date() }),
+      );
 
-      const updated = await repository.updateIdentityVerificationApproved(ctx, user.id, {
-        legalFirstName: 'John',
-        legalLastName: 'Doe',
-        dateOfBirth: '1990-01-01',
-        governmentIdNumber: 'ABC123456',
-      });
+      const updated = await repository.updateIdentityVerificationApproved(
+        ctx,
+        user.id,
+        {
+          legalFirstName: 'John',
+          legalLastName: 'Doe',
+          dateOfBirth: '1990-01-01',
+          governmentIdNumber: 'ABC123456',
+        },
+      );
 
       expect(updated).toBeDefined();
       expect(updated?.identityVerification).toBeDefined();
       expect(updated?.identityVerification?.legalFirstName).toBe('John');
       expect(updated?.identityVerification?.legalLastName).toBe('Doe');
       expect(updated?.identityVerification?.dateOfBirth).toBe('1990-01-01');
-      expect(updated?.identityVerification?.governmentIdNumber).toBe('ABC123456');
+      expect(updated?.identityVerification?.governmentIdNumber).toBe(
+        'ABC123456',
+      );
       expect(updated?.identityVerification?.status).toBe('approved');
     });
   });

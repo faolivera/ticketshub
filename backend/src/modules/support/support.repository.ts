@@ -102,7 +102,9 @@ export class SupportRepository implements ISupportRepository {
       source?: string;
     },
   ): Promise<{ tickets: SupportTicket[]; total: number }> {
-    const where: Parameters<typeof this.prisma.supportTicket.findMany>[0]['where'] = {};
+    const where: Parameters<
+      typeof this.prisma.supportTicket.findMany
+    >[0]['where'] = {};
     if (params.status) {
       const toDomainStatus: Record<string, SupportTicketStatus> = {
         open: SupportTicketStatus.Open,
@@ -162,6 +164,17 @@ export class SupportRepository implements ISupportRepository {
   ): Promise<SupportTicket | undefined> {
     const ticket = await this.prisma.supportTicket.findFirst({
       where: { transactionId },
+    });
+    return ticket ? this.mapToTicket(ticket) : undefined;
+  }
+
+  async getTicketByTransactionIdAndUserId(
+    _ctx: Ctx,
+    transactionId: string,
+    userId: string,
+  ): Promise<SupportTicket | undefined> {
+    const ticket = await this.prisma.supportTicket.findFirst({
+      where: { transactionId, userId },
     });
     return ticket ? this.mapToTicket(ticket) : undefined;
   }
@@ -229,8 +242,11 @@ export class SupportRepository implements ISupportRepository {
     prismaTicket: PrismaSupportTicket,
     domainOverrides?: Partial<SupportTicket>,
   ): SupportTicket {
-    const source = domainOverrides?.source ?? this.mapSourceFromDb(prismaTicket.source);
-    const category = domainOverrides?.category ?? this.mapCategoryFromDb(prismaTicket.category);
+    const source =
+      domainOverrides?.source ?? this.mapSourceFromDb(prismaTicket.source);
+    const category =
+      domainOverrides?.category ??
+      this.mapCategoryFromDb(prismaTicket.category);
     const priority =
       domainOverrides?.priority ?? getPriorityForCategory(category);
     return {
@@ -322,7 +338,8 @@ export class SupportRepository implements ISupportRepository {
     const map: Record<SupportCategory, PrismaSupportTicketCategory> = {
       [SupportCategory.TicketNotReceived]: 'ticket_not_received',
       [SupportCategory.TicketDidntWork]: 'ticket_didnt_work',
-      [SupportCategory.BuyerDidNotConfirmReceipt]: 'buyer_did_not_confirm_receipt',
+      [SupportCategory.BuyerDidNotConfirmReceipt]:
+        'buyer_did_not_confirm_receipt',
       [SupportCategory.PaymentIssue]: 'payment_issue',
       [SupportCategory.AccountIssue]: 'account',
       [SupportCategory.Other]: 'other',

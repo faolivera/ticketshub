@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { User as PrismaUser } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type {
   User,
   UserAddress,
@@ -29,6 +30,8 @@ function normalizeEmail(email: string): string {
 
 @Injectable()
 export class UsersRepository implements IUsersRepository {
+  private readonly logger = new ContextLogger(UsersRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getAll(_ctx: Ctx): Promise<User[]> {
@@ -61,10 +64,7 @@ export class UsersRepository implements IUsersRepository {
     return user ? this.mapToUser(user) : undefined;
   }
 
-  async findByEmailContaining(
-    _ctx: Ctx,
-    searchTerm: string,
-  ): Promise<User[]> {
+  async findByEmailContaining(_ctx: Ctx, searchTerm: string): Promise<User[]> {
     if (!searchTerm?.trim()) return [];
     const term = searchTerm.trim();
     const users = await this.prisma.user.findMany({
@@ -169,7 +169,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updateEmailVerified failed:', error);
+      this.logger.error(_ctx, 'updateEmailVerified failed:', error);
       return undefined;
     }
   }
@@ -190,7 +190,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updatePhoneVerified failed:', error);
+      this.logger.error(_ctx, 'updatePhoneVerified failed:', error);
       return undefined;
     }
   }
@@ -207,7 +207,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('setPhone failed:', error);
+      this.logger.error(_ctx, 'setPhone failed:', error);
       return undefined;
     }
   }
@@ -221,8 +221,10 @@ export class UsersRepository implements IUsersRepository {
       const data: Record<string, unknown> = {};
       if (updates.firstName !== undefined) data.firstName = updates.firstName;
       if (updates.lastName !== undefined) data.lastName = updates.lastName;
-      if (updates.publicName !== undefined) data.publicName = updates.publicName;
-      if (updates.address !== undefined) data.address = updates.address as object;
+      if (updates.publicName !== undefined)
+        data.publicName = updates.publicName;
+      if (updates.address !== undefined)
+        data.address = updates.address as object;
       if (updates.imageId !== undefined) data.imageId = updates.imageId;
 
       const user = await this.prisma.user.update({
@@ -231,7 +233,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updateBasicInfo failed:', error);
+      this.logger.error(_ctx, 'updateBasicInfo failed:', error);
       return undefined;
     }
   }
@@ -248,7 +250,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('setAcceptedSellerTermsAt failed:', error);
+      this.logger.error(_ctx, 'setAcceptedSellerTermsAt failed:', error);
       return undefined;
     }
   }
@@ -279,7 +281,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updateIdentityVerificationApproved failed:', error);
+      this.logger.error(_ctx, 'updateIdentityVerificationApproved failed:', error);
       return undefined;
     }
   }
@@ -308,7 +310,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(updated);
     } catch (error) {
-      console.error('invalidateBankAccountVerification failed:', error);
+      this.logger.error(_ctx, 'invalidateBankAccountVerification failed:', error);
       return undefined;
     }
   }
@@ -329,7 +331,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updateBankAccount failed:', error);
+      this.logger.error(_ctx, 'updateBankAccount failed:', error);
       return undefined;
     }
   }
@@ -344,10 +346,7 @@ export class UsersRepository implements IUsersRepository {
     return users.filter((u) => u.bankAccount != null);
   }
 
-  async setBuyerDisputed(
-    _ctx: Ctx,
-    userId: string,
-  ): Promise<User | undefined> {
+  async setBuyerDisputed(_ctx: Ctx, userId: string): Promise<User | undefined> {
     try {
       const user = await this.prisma.user.update({
         where: { id: userId },
@@ -355,7 +354,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('setBuyerDisputed failed:', error);
+      this.logger.error(_ctx, 'setBuyerDisputed failed:', error);
       return undefined;
     }
   }
@@ -369,8 +368,10 @@ export class UsersRepository implements IUsersRepository {
       const updateData: Record<string, unknown> = {};
       if (data.firstName !== undefined) updateData.firstName = data.firstName;
       if (data.lastName !== undefined) updateData.lastName = data.lastName;
-      if (data.publicName !== undefined) updateData.publicName = data.publicName;
-      if (data.email !== undefined) updateData.email = normalizeEmail(data.email);
+      if (data.publicName !== undefined)
+        updateData.publicName = data.publicName;
+      if (data.email !== undefined)
+        updateData.email = normalizeEmail(data.email);
       if (data.role !== undefined) updateData.role = data.role;
       if (data.status !== undefined) updateData.status = data.status;
       if (data.phone !== undefined) updateData.phone = data.phone;
@@ -433,7 +434,7 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      console.error('updateForAdmin failed:', error);
+      this.logger.error(_ctx, 'updateForAdmin failed:', error);
       return undefined;
     }
   }
@@ -495,15 +496,11 @@ export class UsersRepository implements IUsersRepository {
     };
   }
 
-  private mapLanguageToDb(
-    language: Language,
-  ): 'es' | 'en' {
+  private mapLanguageToDb(language: Language): 'es' | 'en' {
     return language === Language.ES ? 'es' : 'en';
   }
 
-  private mapLanguageFromDb(
-    dbLanguage: 'es' | 'en',
-  ): Language {
+  private mapLanguageFromDb(dbLanguage: 'es' | 'en'): Language {
     return dbLanguage === 'es' ? Language.ES : Language.EN;
   }
 
@@ -524,9 +521,7 @@ export class UsersRepository implements IUsersRepository {
     };
   }
 
-  private serializeIdentityVerification(
-    iv: IdentityVerification,
-  ): object {
+  private serializeIdentityVerification(iv: IdentityVerification): object {
     return {
       status: iv.status,
       legalFirstName: iv.legalFirstName,

@@ -69,7 +69,11 @@ export interface Event {
  * Generate a URL-safe slug from event name, venue, and a unique suffix.
  * Used for default slug on event creation; admin can change it on approval.
  */
-export function generateEventSlug(name: string, venue: string, id: string): string {
+export function generateEventSlug(
+  name: string,
+  venue: string,
+  id: string,
+): string {
   const base = [name, venue].filter(Boolean).join(' ');
   const slugified = base
     .toLowerCase()

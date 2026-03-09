@@ -1,4 +1,8 @@
-import { PrismaClient, Role, SeatingType as PrismaSeatingType } from '@prisma/client';
+import {
+  PrismaClient,
+  Role,
+  SeatingType as PrismaSeatingType,
+} from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PricingRepository } from '@/modules/payments/pricing/pricing.repository';
 import type {
@@ -11,7 +15,10 @@ import {
   getTestPrismaClient,
   disconnectTestPrisma,
 } from '../../../setup/test-prisma.service';
-import { truncateAllTables, createTestContext } from '../../../setup/test-utils';
+import {
+  truncateAllTables,
+  createTestContext,
+} from '../../../setup/test-utils';
 
 describe('PricingRepository (Integration)', () => {
   let prisma: PrismaClient;
@@ -29,19 +36,31 @@ describe('PricingRepository (Integration)', () => {
     currency: currency as Money['currency'],
   });
 
-  const createPaymentMethodCommissions = (): PaymentMethodCommissionSnapshot[] => [
-    { paymentMethodId: 'pm-card', paymentMethodName: 'Credit Card', commissionPercent: 2.5 },
-    { paymentMethodId: 'pm-transfer', paymentMethodName: 'Bank Transfer', commissionPercent: 0 },
-  ];
+  const createPaymentMethodCommissions =
+    (): PaymentMethodCommissionSnapshot[] => [
+      {
+        paymentMethodId: 'pm-card',
+        paymentMethodName: 'Credit Card',
+        commissionPercent: 2.5,
+      },
+      {
+        paymentMethodId: 'pm-transfer',
+        paymentMethodName: 'Bank Transfer',
+        commissionPercent: 0,
+      },
+    ];
 
-  const createTestUser = async (overrides?: Partial<{
-    email: string;
-    role: Role;
-    acceptedSellerTermsAt: Date | null;
-  }>): Promise<string> => {
+  const createTestUser = async (
+    overrides?: Partial<{
+      email: string;
+      role: Role;
+      acceptedSellerTermsAt: Date | null;
+    }>,
+  ): Promise<string> => {
     const user = await prisma.user.create({
       data: {
-        email: overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
+        email:
+          overrides?.email ?? `user-${Date.now()}-${randomUUID()}@test.com`,
         firstName: 'Test',
         lastName: 'User',
         publicName: `testuser-${randomUUID().slice(0, 8)}`,
@@ -82,7 +101,10 @@ describe('PricingRepository (Integration)', () => {
     return event.id;
   };
 
-  const createTestEventDate = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventDate = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const eventDate = await prisma.eventDate.create({
       data: {
         event: { connect: { id: eventId } },
@@ -94,7 +116,10 @@ describe('PricingRepository (Integration)', () => {
     return eventDate.id;
   };
 
-  const createTestEventSection = async (eventId: string, createdBy: string): Promise<string> => {
+  const createTestEventSection = async (
+    eventId: string,
+    createdBy: string,
+  ): Promise<string> => {
     const section = await prisma.eventSection.create({
       data: {
         event: { connect: { id: eventId } },
@@ -123,7 +148,9 @@ describe('PricingRepository (Integration)', () => {
     return listing.id;
   };
 
-  const createValidPricingSnapshot = (overrides?: Partial<PricingSnapshot>): PricingSnapshot => {
+  const createValidPricingSnapshot = (
+    overrides?: Partial<PricingSnapshot>,
+  ): PricingSnapshot => {
     const now = new Date();
     return {
       id: randomUUID(),
@@ -147,10 +174,15 @@ describe('PricingRepository (Integration)', () => {
     await truncateAllTables(prisma);
     ctx = createTestContext();
 
-    testSellerId = await createTestUser({ email: `seller-${Date.now()}@test.com` });
+    testSellerId = await createTestUser({
+      email: `seller-${Date.now()}@test.com`,
+    });
     testEventId = await createTestEvent(testSellerId);
     testEventDateId = await createTestEventDate(testEventId, testSellerId);
-    testEventSectionId = await createTestEventSection(testEventId, testSellerId);
+    testEventSectionId = await createTestEventSection(
+      testEventId,
+      testSellerId,
+    );
     testListingId = await createTestListing(testSellerId);
   });
 
@@ -177,9 +209,15 @@ describe('PricingRepository (Integration)', () => {
       const snapshot = await repository.create(ctx, snapshotData);
 
       expect(snapshot.pricePerTicket).toEqual(snapshotData.pricePerTicket);
-      expect(snapshot.buyerPlatformFeePercentage).toBe(snapshotData.buyerPlatformFeePercentage);
-      expect(snapshot.sellerPlatformFeePercentage).toBe(snapshotData.sellerPlatformFeePercentage);
-      expect(snapshot.paymentMethodCommissions).toEqual(snapshotData.paymentMethodCommissions);
+      expect(snapshot.buyerPlatformFeePercentage).toBe(
+        snapshotData.buyerPlatformFeePercentage,
+      );
+      expect(snapshot.sellerPlatformFeePercentage).toBe(
+        snapshotData.sellerPlatformFeePercentage,
+      );
+      expect(snapshot.paymentMethodCommissions).toEqual(
+        snapshotData.paymentMethodCommissions,
+      );
     });
 
     it('should create a pricing snapshot with consumption data', async () => {
@@ -201,7 +239,11 @@ describe('PricingRepository (Integration)', () => {
 
     it('should create a pricing snapshot with null commission percent', async () => {
       const commissions: PaymentMethodCommissionSnapshot[] = [
-        { paymentMethodId: 'pm-card', paymentMethodName: 'Credit Card', commissionPercent: null },
+        {
+          paymentMethodId: 'pm-card',
+          paymentMethodName: 'Credit Card',
+          commissionPercent: null,
+        },
       ];
       const snapshotData = createValidPricingSnapshot({
         paymentMethodCommissions: commissions,
@@ -222,7 +264,10 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should find snapshot by id', async () => {
-      const created = await repository.create(ctx, createValidPricingSnapshot());
+      const created = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
 
       const found = await repository.findById(ctx, created.id);
 
@@ -238,9 +283,15 @@ describe('PricingRepository (Integration)', () => {
       const found = await repository.findById(ctx, snapshotData.id);
 
       expect(found?.pricePerTicket).toEqual(snapshotData.pricePerTicket);
-      expect(found?.buyerPlatformFeePercentage).toBe(snapshotData.buyerPlatformFeePercentage);
-      expect(found?.sellerPlatformFeePercentage).toBe(snapshotData.sellerPlatformFeePercentage);
-      expect(found?.paymentMethodCommissions).toEqual(snapshotData.paymentMethodCommissions);
+      expect(found?.buyerPlatformFeePercentage).toBe(
+        snapshotData.buyerPlatformFeePercentage,
+      );
+      expect(found?.sellerPlatformFeePercentage).toBe(
+        snapshotData.sellerPlatformFeePercentage,
+      );
+      expect(found?.paymentMethodCommissions).toEqual(
+        snapshotData.paymentMethodCommissions,
+      );
     });
   });
 
@@ -248,12 +299,17 @@ describe('PricingRepository (Integration)', () => {
 
   describe('update', () => {
     it('should return undefined for non-existent snapshot', async () => {
-      const result = await repository.update(ctx, 'non-existent-id', { buyerPlatformFeePercentage: 10 });
+      const result = await repository.update(ctx, 'non-existent-id', {
+        buyerPlatformFeePercentage: 10,
+      });
       expect(result).toBeUndefined();
     });
 
     it('should update pricing percentages', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
 
       const updated = await repository.update(ctx, snapshot.id, {
         buyerPlatformFeePercentage: 7,
@@ -265,7 +321,10 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should update price per ticket', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const newPrice = createMoney(7500);
 
       const updated = await repository.update(ctx, snapshot.id, {
@@ -276,9 +335,16 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should update payment method commissions', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const newCommissions: PaymentMethodCommissionSnapshot[] = [
-        { paymentMethodId: 'pm-wallet', paymentMethodName: 'E-Wallet', commissionPercent: 1.5 },
+        {
+          paymentMethodId: 'pm-wallet',
+          paymentMethodName: 'E-Wallet',
+          commissionPercent: 1.5,
+        },
       ];
 
       const updated = await repository.update(ctx, snapshot.id, {
@@ -289,7 +355,10 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should update expiration date', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const newExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
       const updated = await repository.update(ctx, snapshot.id, {
@@ -300,7 +369,10 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should update consumption data', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const consumedAt = new Date();
       const transactionId = randomUUID();
       const paymentMethodId = 'pm-card';
@@ -317,7 +389,10 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should update listing id', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const newListingId = await createTestListing(testSellerId);
 
       const updated = await repository.update(ctx, snapshot.id, {
@@ -336,10 +411,13 @@ describe('PricingRepository (Integration)', () => {
         sellerPlatformFeePercentage: undefined,
       });
 
-      expect(updated?.buyerPlatformFeePercentage).toBe(originalData.buyerPlatformFeePercentage);
-      expect(updated?.sellerPlatformFeePercentage).toBe(originalData.sellerPlatformFeePercentage);
+      expect(updated?.buyerPlatformFeePercentage).toBe(
+        originalData.buyerPlatformFeePercentage,
+      );
+      expect(updated?.sellerPlatformFeePercentage).toBe(
+        originalData.sellerPlatformFeePercentage,
+      );
     });
-
   });
 
   // ==================== deleteExpired ====================
@@ -347,7 +425,10 @@ describe('PricingRepository (Integration)', () => {
   describe('deleteExpired', () => {
     it('should return 0 when no expired snapshots exist', async () => {
       const futureDate = new Date(Date.now() + 60 * 60 * 1000);
-      await repository.create(ctx, createValidPricingSnapshot({ expiresAt: futureDate }));
+      await repository.create(
+        ctx,
+        createValidPricingSnapshot({ expiresAt: futureDate }),
+      );
 
       const deletedCount = await repository.deleteExpired(ctx);
 
@@ -356,7 +437,10 @@ describe('PricingRepository (Integration)', () => {
 
     it('should delete expired unconsumed snapshots', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidPricingSnapshot({ expiresAt: pastDate }));
+      await repository.create(
+        ctx,
+        createValidPricingSnapshot({ expiresAt: pastDate }),
+      );
 
       const deletedCount = await repository.deleteExpired(ctx);
 
@@ -365,11 +449,14 @@ describe('PricingRepository (Integration)', () => {
 
     it('should not delete expired but consumed snapshots', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidPricingSnapshot({
-        expiresAt: pastDate,
-        consumedByTransactionId: randomUUID(),
-        consumedAt: new Date(),
-      }));
+      await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          expiresAt: pastDate,
+          consumedByTransactionId: randomUUID(),
+          consumedAt: new Date(),
+        }),
+      );
 
       const deletedCount = await repository.deleteExpired(ctx);
 
@@ -378,9 +465,18 @@ describe('PricingRepository (Integration)', () => {
 
     it('should delete multiple expired unconsumed snapshots', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      await repository.create(ctx, createValidPricingSnapshot({ expiresAt: pastDate }));
-      await repository.create(ctx, createValidPricingSnapshot({ expiresAt: pastDate }));
-      await repository.create(ctx, createValidPricingSnapshot({ expiresAt: pastDate }));
+      await repository.create(
+        ctx,
+        createValidPricingSnapshot({ expiresAt: pastDate }),
+      );
+      await repository.create(
+        ctx,
+        createValidPricingSnapshot({ expiresAt: pastDate }),
+      );
+      await repository.create(
+        ctx,
+        createValidPricingSnapshot({ expiresAt: pastDate }),
+      );
 
       const deletedCount = await repository.deleteExpired(ctx);
 
@@ -390,13 +486,21 @@ describe('PricingRepository (Integration)', () => {
     it('should only delete expired snapshots, not future ones', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
       const futureDate = new Date(Date.now() + 60 * 60 * 1000);
-      const expiredSnapshot = await repository.create(ctx, createValidPricingSnapshot({ expiresAt: pastDate }));
-      const validSnapshot = await repository.create(ctx, createValidPricingSnapshot({ expiresAt: futureDate }));
+      const expiredSnapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({ expiresAt: pastDate }),
+      );
+      const validSnapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({ expiresAt: futureDate }),
+      );
 
       const deletedCount = await repository.deleteExpired(ctx);
 
       expect(deletedCount).toBe(1);
-      expect(await repository.findById(ctx, expiredSnapshot.id)).toBeUndefined();
+      expect(
+        await repository.findById(ctx, expiredSnapshot.id),
+      ).toBeUndefined();
       expect(await repository.findById(ctx, validSnapshot.id)).toBeDefined();
     });
   });
@@ -405,7 +509,10 @@ describe('PricingRepository (Integration)', () => {
 
   describe('consumeAtomic', () => {
     it('should consume a valid snapshot atomically', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const transactionId = randomUUID();
       const paymentMethodId = 'pm-card';
 
@@ -436,7 +543,10 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should return undefined when listing id does not match', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const wrongListingId = await createTestListing(testSellerId);
 
       const consumed = await repository.consumeAtomic(
@@ -451,10 +561,13 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should return undefined when snapshot is already consumed', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        consumedByTransactionId: randomUUID(),
-        consumedAt: new Date(),
-      }));
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          consumedByTransactionId: randomUUID(),
+          consumedAt: new Date(),
+        }),
+      );
 
       const consumed = await repository.consumeAtomic(
         ctx,
@@ -469,9 +582,12 @@ describe('PricingRepository (Integration)', () => {
 
     it('should return undefined when snapshot is expired', async () => {
       const pastDate = new Date(Date.now() - 60 * 1000);
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        expiresAt: pastDate,
-      }));
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          expiresAt: pastDate,
+        }),
+      );
 
       const consumed = await repository.consumeAtomic(
         ctx,
@@ -485,23 +601,43 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should prevent double consumption (race condition protection)', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
       const transactionId1 = randomUUID();
       const transactionId2 = randomUUID();
       const paymentMethodId = 'pm-card';
 
       const [result1, result2] = await Promise.all([
-        repository.consumeAtomic(ctx, snapshot.id, testListingId, transactionId1, paymentMethodId),
-        repository.consumeAtomic(ctx, snapshot.id, testListingId, transactionId2, paymentMethodId),
+        repository.consumeAtomic(
+          ctx,
+          snapshot.id,
+          testListingId,
+          transactionId1,
+          paymentMethodId,
+        ),
+        repository.consumeAtomic(
+          ctx,
+          snapshot.id,
+          testListingId,
+          transactionId2,
+          paymentMethodId,
+        ),
       ]);
 
-      const successCount = [result1, result2].filter(r => r !== undefined).length;
+      const successCount = [result1, result2].filter(
+        (r) => r !== undefined,
+      ).length;
       expect(successCount).toBe(1);
     });
 
     it('should set consumedAt timestamp when consuming', async () => {
       const beforeConsume = new Date();
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot());
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot(),
+      );
 
       const consumed = await repository.consumeAtomic(
         ctx,
@@ -513,8 +649,12 @@ describe('PricingRepository (Integration)', () => {
       const afterConsume = new Date();
 
       expect(consumed?.consumedAt).toBeDefined();
-      expect(consumed?.consumedAt!.getTime()).toBeGreaterThanOrEqual(beforeConsume.getTime());
-      expect(consumed?.consumedAt!.getTime()).toBeLessThanOrEqual(afterConsume.getTime());
+      expect(consumed?.consumedAt!.getTime()).toBeGreaterThanOrEqual(
+        beforeConsume.getTime(),
+      );
+      expect(consumed?.consumedAt!.getTime()).toBeLessThanOrEqual(
+        afterConsume.getTime(),
+      );
     });
   });
 
@@ -523,13 +663,20 @@ describe('PricingRepository (Integration)', () => {
   describe('Edge Cases', () => {
     it('should handle zero commission percentages', async () => {
       const commissions: PaymentMethodCommissionSnapshot[] = [
-        { paymentMethodId: 'pm-free', paymentMethodName: 'Free Transfer', commissionPercent: 0 },
+        {
+          paymentMethodId: 'pm-free',
+          paymentMethodName: 'Free Transfer',
+          commissionPercent: 0,
+        },
       ];
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        buyerPlatformFeePercentage: 0,
-        sellerPlatformFeePercentage: 0,
-        paymentMethodCommissions: commissions,
-      }));
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          buyerPlatformFeePercentage: 0,
+          sellerPlatformFeePercentage: 0,
+          paymentMethodCommissions: commissions,
+        }),
+      );
 
       expect(snapshot.buyerPlatformFeePercentage).toBe(0);
       expect(snapshot.sellerPlatformFeePercentage).toBe(0);
@@ -537,10 +684,13 @@ describe('PricingRepository (Integration)', () => {
     });
 
     it('should handle large percentage values', async () => {
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        buyerPlatformFeePercentage: 99.99,
-        sellerPlatformFeePercentage: 99.99,
-      }));
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          buyerPlatformFeePercentage: 99.99,
+          sellerPlatformFeePercentage: 99.99,
+        }),
+      );
 
       expect(snapshot.buyerPlatformFeePercentage).toBe(99.99);
       expect(snapshot.sellerPlatformFeePercentage).toBe(99.99);
@@ -548,14 +698,33 @@ describe('PricingRepository (Integration)', () => {
 
     it('should handle multiple payment method commissions', async () => {
       const commissions: PaymentMethodCommissionSnapshot[] = [
-        { paymentMethodId: 'pm-card', paymentMethodName: 'Credit Card', commissionPercent: 2.5 },
-        { paymentMethodId: 'pm-transfer', paymentMethodName: 'Bank Transfer', commissionPercent: 0 },
-        { paymentMethodId: 'pm-wallet', paymentMethodName: 'E-Wallet', commissionPercent: 1.5 },
-        { paymentMethodId: 'pm-crypto', paymentMethodName: 'Crypto', commissionPercent: null },
+        {
+          paymentMethodId: 'pm-card',
+          paymentMethodName: 'Credit Card',
+          commissionPercent: 2.5,
+        },
+        {
+          paymentMethodId: 'pm-transfer',
+          paymentMethodName: 'Bank Transfer',
+          commissionPercent: 0,
+        },
+        {
+          paymentMethodId: 'pm-wallet',
+          paymentMethodName: 'E-Wallet',
+          commissionPercent: 1.5,
+        },
+        {
+          paymentMethodId: 'pm-crypto',
+          paymentMethodName: 'Crypto',
+          commissionPercent: null,
+        },
       ];
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        paymentMethodCommissions: commissions,
-      }));
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          paymentMethodCommissions: commissions,
+        }),
+      );
 
       expect(snapshot.paymentMethodCommissions).toHaveLength(4);
       expect(snapshot.paymentMethodCommissions).toEqual(commissions);
@@ -565,18 +734,24 @@ describe('PricingRepository (Integration)', () => {
       const currencies = ['EUR', 'USD', 'GBP', 'MXN'];
 
       for (const currency of currencies) {
-        const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-          pricePerTicket: createMoney(10000, currency),
-        }));
+        const snapshot = await repository.create(
+          ctx,
+          createValidPricingSnapshot({
+            pricePerTicket: createMoney(10000, currency),
+          }),
+        );
         expect(snapshot.pricePerTicket.currency).toBe(currency);
       }
     });
 
     it('should handle very far future expiration dates', async () => {
       const farFutureDate = new Date('2099-12-31T23:59:59.999Z');
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        expiresAt: farFutureDate,
-      }));
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          expiresAt: farFutureDate,
+        }),
+      );
 
       expect(snapshot.expiresAt).toEqual(farFutureDate);
     });
@@ -586,11 +761,14 @@ describe('PricingRepository (Integration)', () => {
       const transactionId = randomUUID();
       const paymentMethodId = 'pm-card';
 
-      const snapshot = await repository.create(ctx, createValidPricingSnapshot({
-        consumedAt,
-        consumedByTransactionId: transactionId,
-        selectedPaymentMethodId: paymentMethodId,
-      }));
+      const snapshot = await repository.create(
+        ctx,
+        createValidPricingSnapshot({
+          consumedAt,
+          consumedByTransactionId: transactionId,
+          selectedPaymentMethodId: paymentMethodId,
+        }),
+      );
 
       expect(snapshot.consumedAt).toEqual(consumedAt);
       expect(snapshot.consumedByTransactionId).toBe(transactionId);
@@ -606,8 +784,12 @@ describe('PricingRepository (Integration)', () => {
       expect(found?.id).toBe(originalData.id);
       expect(found?.listingId).toBe(originalData.listingId);
       expect(found?.pricePerTicket).toEqual(originalData.pricePerTicket);
-      expect(found?.buyerPlatformFeePercentage).toBe(originalData.buyerPlatformFeePercentage);
-      expect(found?.sellerPlatformFeePercentage).toBe(originalData.sellerPlatformFeePercentage);
+      expect(found?.buyerPlatformFeePercentage).toBe(
+        originalData.buyerPlatformFeePercentage,
+      );
+      expect(found?.sellerPlatformFeePercentage).toBe(
+        originalData.sellerPlatformFeePercentage,
+      );
     });
   });
 });

@@ -7,7 +7,11 @@ import {
   ListingStatus,
   TicketUnitStatus,
 } from '@/modules/tickets/tickets.domain';
-import type { TicketListing, TicketUnit, Money } from '@/modules/tickets/tickets.domain';
+import type {
+  TicketListing,
+  TicketUnit,
+  Money,
+} from '@/modules/tickets/tickets.domain';
 import { SeatingType } from '@/modules/tickets/tickets.domain';
 import type { Ctx } from '@/common/types/context';
 import {
@@ -69,7 +73,10 @@ describe('TicketsRepository (Integration)', () => {
     return event.id;
   };
 
-  const createTestEventDate = async (eventId: string, createdById: string): Promise<string> => {
+  const createTestEventDate = async (
+    eventId: string,
+    createdById: string,
+  ): Promise<string> => {
     const eventDate = await prisma.eventDate.create({
       data: {
         eventId,
@@ -103,7 +110,10 @@ describe('TicketsRepository (Integration)', () => {
     currency: currency as Money['currency'],
   });
 
-  const createValidTicketUnit = (listingId: string, overrides?: Partial<TicketUnit>): TicketUnit => ({
+  const createValidTicketUnit = (
+    listingId: string,
+    overrides?: Partial<TicketUnit>,
+  ): TicketUnit => ({
     id: randomUUID(),
     listingId,
     status: TicketUnitStatus.Available,
@@ -111,7 +121,9 @@ describe('TicketsRepository (Integration)', () => {
     ...overrides,
   });
 
-  const createValidListing = (overrides?: Partial<TicketListing>): TicketListing => {
+  const createValidListing = (
+    overrides?: Partial<TicketListing>,
+  ): TicketListing => {
     const id = randomUUID();
     return {
       id,
@@ -191,7 +203,11 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should create a listing with seat information', async () => {
-      const numberedSectionId = await createTestEventSection(testEventId, testUserId, 'numbered');
+      const numberedSectionId = await createTestEventSection(
+        testEventId,
+        testUserId,
+        'numbered',
+      );
       const id = randomUUID();
       const listingData = createValidListing({
         id,
@@ -255,7 +271,10 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should return empty array when no listings match', async () => {
-      const listings = await repository.findByIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const listings = await repository.findByIds(ctx, [
+        'non-existent-1',
+        'non-existent-2',
+      ]);
       expect(listings).toEqual([]);
     });
 
@@ -264,11 +283,14 @@ describe('TicketsRepository (Integration)', () => {
       const listing2 = await repository.create(ctx, createValidListing());
       await repository.create(ctx, createValidListing());
 
-      const listings = await repository.findByIds(ctx, [listing1.id, listing2.id]);
+      const listings = await repository.findByIds(ctx, [
+        listing1.id,
+        listing2.id,
+      ]);
 
       expect(listings).toHaveLength(2);
-      expect(listings.map(l => l.id)).toContain(listing1.id);
-      expect(listings.map(l => l.id)).toContain(listing2.id);
+      expect(listings.map((l) => l.id)).toContain(listing1.id);
+      expect(listings.map((l) => l.id)).toContain(listing2.id);
     });
   });
 
@@ -296,9 +318,18 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getActiveListings', () => {
     it('should return only active listings', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      const activeListing = await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Sold }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      const activeListing = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Sold }),
+      );
 
       const listings = await repository.getActiveListings(ctx);
 
@@ -307,7 +338,10 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should return empty array when no active listings', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
       const listings = await repository.getActiveListings(ctx);
 
@@ -319,8 +353,14 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getByEventId', () => {
     it('should return active listings for event', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
       const listings = await repository.getByEventId(ctx, testEventId);
 
@@ -341,8 +381,14 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getByEventDateId', () => {
     it('should return active listings for event date', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Sold }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Sold }),
+      );
 
       const listings = await repository.getByEventDateId(ctx, testEventDateId);
 
@@ -363,9 +409,18 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getBySellerId', () => {
     it('should return all listings for seller', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Sold }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Sold }),
+      );
 
       const listings = await repository.getBySellerId(ctx, testUserId);
 
@@ -382,8 +437,14 @@ describe('TicketsRepository (Integration)', () => {
 
     it('should not return other sellers listings', async () => {
       const otherUserId = await createTestUser();
-      await repository.create(ctx, createValidListing({ sellerId: otherUserId }));
-      await repository.create(ctx, createValidListing({ sellerId: testUserId }));
+      await repository.create(
+        ctx,
+        createValidListing({ sellerId: otherUserId }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ sellerId: testUserId }),
+      );
 
       const listings = await repository.getBySellerId(ctx, testUserId);
 
@@ -396,14 +457,21 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('update', () => {
     it('should return undefined for non-existent listing', async () => {
-      const result = await repository.update(ctx, 'non-existent-id', { status: ListingStatus.Active });
+      const result = await repository.update(ctx, 'non-existent-id', {
+        status: ListingStatus.Active,
+      });
       expect(result).toBeUndefined();
     });
 
     it('should update listing status', async () => {
-      const listing = await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      const listing = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
-      const updated = await repository.update(ctx, listing.id, { status: ListingStatus.Active });
+      const updated = await repository.update(ctx, listing.id, {
+        status: ListingStatus.Active,
+      });
 
       expect(updated?.status).toBe(ListingStatus.Active);
     });
@@ -419,17 +487,27 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should update ticket type', async () => {
-      const listing = await repository.create(ctx, createValidListing({ type: TicketType.Digital }));
+      const listing = await repository.create(
+        ctx,
+        createValidListing({ type: TicketType.Digital }),
+      );
 
-      const updated = await repository.update(ctx, listing.id, { type: TicketType.Physical });
+      const updated = await repository.update(ctx, listing.id, {
+        type: TicketType.Physical,
+      });
 
       expect(updated?.type).toBe(TicketType.Physical);
     });
 
     it('should update sellTogether flag', async () => {
-      const listing = await repository.create(ctx, createValidListing({ sellTogether: false }));
+      const listing = await repository.create(
+        ctx,
+        createValidListing({ sellTogether: false }),
+      );
 
-      const updated = await repository.update(ctx, listing.id, { sellTogether: true });
+      const updated = await repository.update(ctx, listing.id, {
+        sellTogether: true,
+      });
 
       expect(updated?.sellTogether).toBe(true);
     });
@@ -449,7 +527,7 @@ describe('TicketsRepository (Integration)', () => {
 
     it('should delete listing and cascade to ticket units', async () => {
       const listing = await repository.create(ctx, createValidListing());
-      const unitIds = listing.ticketUnits.map(u => u.id);
+      const unitIds = listing.ticketUnits.map((u) => u.id);
 
       await repository.delete(ctx, listing.id);
 
@@ -467,17 +545,23 @@ describe('TicketsRepository (Integration)', () => {
       const listing = await repository.create(ctx, createValidListing());
       const unitToReserve = listing.ticketUnits[0];
 
-      const updated = await repository.reserveUnits(ctx, listing.id, [unitToReserve.id]);
+      const updated = await repository.reserveUnits(ctx, listing.id, [
+        unitToReserve.id,
+      ]);
 
       expect(updated).toBeDefined();
-      const reservedUnit = updated?.ticketUnits.find(u => u.id === unitToReserve.id);
+      const reservedUnit = updated?.ticketUnits.find(
+        (u) => u.id === unitToReserve.id,
+      );
       expect(reservedUnit?.status).toBe(TicketUnitStatus.Reserved);
     });
 
     it('should return undefined when unit not found', async () => {
       const listing = await repository.create(ctx, createValidListing());
 
-      const result = await repository.reserveUnits(ctx, listing.id, ['non-existent-unit']);
+      const result = await repository.reserveUnits(ctx, listing.id, [
+        'non-existent-unit',
+      ]);
 
       expect(result).toBeUndefined();
     });
@@ -496,16 +580,23 @@ describe('TicketsRepository (Integration)', () => {
       const listing = await repository.create(ctx, createValidListing());
       const unitId = listing.ticketUnits[0].id;
 
-      const result = await repository.reserveUnits(ctx, listing.id, [unitId, unitId]);
+      const result = await repository.reserveUnits(ctx, listing.id, [
+        unitId,
+        unitId,
+      ]);
 
       expect(result).toBeUndefined();
     });
 
     it('should mark listing as Sold when all units reserved', async () => {
       const listing = await repository.create(ctx, createValidListing());
-      const allUnitIds = listing.ticketUnits.map(u => u.id);
+      const allUnitIds = listing.ticketUnits.map((u) => u.id);
 
-      const updated = await repository.reserveUnits(ctx, listing.id, allUnitIds);
+      const updated = await repository.reserveUnits(
+        ctx,
+        listing.id,
+        allUnitIds,
+      );
 
       expect(updated?.status).toBe(ListingStatus.Sold);
     });
@@ -531,14 +622,16 @@ describe('TicketsRepository (Integration)', () => {
       const updated = await repository.restoreUnits(ctx, listing.id, [unitId]);
 
       expect(updated).toBeDefined();
-      const restoredUnit = updated?.ticketUnits.find(u => u.id === unitId);
+      const restoredUnit = updated?.ticketUnits.find((u) => u.id === unitId);
       expect(restoredUnit?.status).toBe(TicketUnitStatus.Available);
     });
 
     it('should return undefined when unit not found', async () => {
       const listing = await repository.create(ctx, createValidListing());
 
-      const result = await repository.restoreUnits(ctx, listing.id, ['non-existent-unit']);
+      const result = await repository.restoreUnits(ctx, listing.id, [
+        'non-existent-unit',
+      ]);
 
       expect(result).toBeUndefined();
     });
@@ -557,17 +650,22 @@ describe('TicketsRepository (Integration)', () => {
       const unitId = listing.ticketUnits[0].id;
       await repository.reserveUnits(ctx, listing.id, [unitId]);
 
-      const result = await repository.restoreUnits(ctx, listing.id, [unitId, unitId]);
+      const result = await repository.restoreUnits(ctx, listing.id, [
+        unitId,
+        unitId,
+      ]);
 
       expect(result).toBeUndefined();
     });
 
     it('should update listing status to Active when units restored', async () => {
       const listing = await repository.create(ctx, createValidListing());
-      const allUnitIds = listing.ticketUnits.map(u => u.id);
+      const allUnitIds = listing.ticketUnits.map((u) => u.id);
       await repository.reserveUnits(ctx, listing.id, allUnitIds);
 
-      const updated = await repository.restoreUnits(ctx, listing.id, [allUnitIds[0]]);
+      const updated = await repository.restoreUnits(ctx, listing.id, [
+        allUnitIds[0],
+      ]);
 
       expect(updated?.status).toBe(ListingStatus.Active);
     });
@@ -577,8 +675,14 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getPendingByEventId', () => {
     it('should return pending listings for event', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
 
       const listings = await repository.getPendingByEventId(ctx, testEventId);
 
@@ -587,7 +691,10 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should return empty array when no pending listings', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
 
       const listings = await repository.getPendingByEventId(ctx, testEventId);
 
@@ -599,10 +706,19 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getPendingByEventDateId', () => {
     it('should return pending listings for event date', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
 
-      const listings = await repository.getPendingByEventDateId(ctx, testEventDateId);
+      const listings = await repository.getPendingByEventDateId(
+        ctx,
+        testEventDateId,
+      );
 
       expect(listings).toHaveLength(1);
       expect(listings[0].status).toBe(ListingStatus.Pending);
@@ -611,7 +727,10 @@ describe('TicketsRepository (Integration)', () => {
     it('should return empty array when no pending listings for date', async () => {
       const otherDateId = await createTestEventDate(testEventId, testUserId);
 
-      const listings = await repository.getPendingByEventDateId(ctx, otherDateId);
+      const listings = await repository.getPendingByEventDateId(
+        ctx,
+        otherDateId,
+      );
 
       expect(listings).toEqual([]);
     });
@@ -621,13 +740,23 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('bulkUpdateStatus', () => {
     it('should return 0 when no ids provided', async () => {
-      const count = await repository.bulkUpdateStatus(ctx, [], ListingStatus.Cancelled);
+      const count = await repository.bulkUpdateStatus(
+        ctx,
+        [],
+        ListingStatus.Cancelled,
+      );
       expect(count).toBe(0);
     });
 
     it('should update status for multiple listings', async () => {
-      const listing1 = await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      const listing2 = await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      const listing1 = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      const listing2 = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
       const count = await repository.bulkUpdateStatus(
         ctx,
@@ -644,7 +773,10 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should handle non-existent ids gracefully', async () => {
-      const listing = await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      const listing = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
       const count = await repository.bulkUpdateStatus(
         ctx,
@@ -660,11 +792,23 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getAllByEventDateId', () => {
     it('should return all listings for event date regardless of status', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Sold }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Sold }),
+      );
 
-      const listings = await repository.getAllByEventDateId(ctx, testEventDateId);
+      const listings = await repository.getAllByEventDateId(
+        ctx,
+        testEventDateId,
+      );
 
       expect(listings).toHaveLength(3);
     });
@@ -682,19 +826,34 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getPendingByEventSectionId', () => {
     it('should return pending listings for section', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
 
-      const listings = await repository.getPendingByEventSectionId(ctx, testEventSectionId);
+      const listings = await repository.getPendingByEventSectionId(
+        ctx,
+        testEventSectionId,
+      );
 
       expect(listings).toHaveLength(1);
       expect(listings[0].status).toBe(ListingStatus.Pending);
     });
 
     it('should return empty array when no pending listings for section', async () => {
-      const otherSectionId = await createTestEventSection(testEventId, testUserId);
+      const otherSectionId = await createTestEventSection(
+        testEventId,
+        testUserId,
+      );
 
-      const listings = await repository.getPendingByEventSectionId(ctx, otherSectionId);
+      const listings = await repository.getPendingByEventSectionId(
+        ctx,
+        otherSectionId,
+      );
 
       expect(listings).toEqual([]);
     });
@@ -704,19 +863,37 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getAllByEventSectionId', () => {
     it('should return all listings for section regardless of status', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Cancelled }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Cancelled }),
+      );
 
-      const listings = await repository.getAllByEventSectionId(ctx, testEventSectionId);
+      const listings = await repository.getAllByEventSectionId(
+        ctx,
+        testEventSectionId,
+      );
 
       expect(listings).toHaveLength(3);
     });
 
     it('should return empty array for section with no listings', async () => {
-      const otherSectionId = await createTestEventSection(testEventId, testUserId);
+      const otherSectionId = await createTestEventSection(
+        testEventId,
+        testUserId,
+      );
 
-      const listings = await repository.getAllByEventSectionId(ctx, otherSectionId);
+      const listings = await repository.getAllByEventSectionId(
+        ctx,
+        otherSectionId,
+      );
 
       expect(listings).toEqual([]);
     });
@@ -726,10 +903,22 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getAllByEventId', () => {
     it('should return all listings for event regardless of status', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Sold }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Expired }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Sold }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Expired }),
+      );
 
       const listings = await repository.getAllByEventId(ctx, testEventId);
 
@@ -749,17 +938,33 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('getListingStatsByEventIds', () => {
     it('should return empty map entries when no listings exist', async () => {
-      const stats = await repository.getListingStatsByEventIds(ctx, [testEventId]);
+      const stats = await repository.getListingStatsByEventIds(ctx, [
+        testEventId,
+      ]);
 
-      expect(stats.get(testEventId)).toEqual({ listingsCount: 0, availableTicketsCount: 0 });
+      expect(stats.get(testEventId)).toEqual({
+        listingsCount: 0,
+        availableTicketsCount: 0,
+      });
     });
 
     it('should return correct stats for events with listings', async () => {
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
-      const stats = await repository.getListingStatsByEventIds(ctx, [testEventId]);
+      const stats = await repository.getListingStatsByEventIds(ctx, [
+        testEventId,
+      ]);
 
       const eventStats = stats.get(testEventId);
       expect(eventStats?.listingsCount).toBe(3);
@@ -769,17 +974,29 @@ describe('TicketsRepository (Integration)', () => {
     it('should return stats for multiple events', async () => {
       const otherEventId = await createTestEvent(testUserId);
       const otherDateId = await createTestEventDate(otherEventId, testUserId);
-      const otherSectionId = await createTestEventSection(otherEventId, testUserId);
+      const otherSectionId = await createTestEventSection(
+        otherEventId,
+        testUserId,
+      );
 
-      await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.create(ctx, createValidListing({
-        eventId: otherEventId,
-        eventDateId: otherDateId,
-        eventSectionId: otherSectionId,
-        status: ListingStatus.Active,
-      }));
+      await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.create(
+        ctx,
+        createValidListing({
+          eventId: otherEventId,
+          eventDateId: otherDateId,
+          eventSectionId: otherSectionId,
+          status: ListingStatus.Active,
+        }),
+      );
 
-      const stats = await repository.getListingStatsByEventIds(ctx, [testEventId, otherEventId]);
+      const stats = await repository.getListingStatsByEventIds(ctx, [
+        testEventId,
+        otherEventId,
+      ]);
 
       expect(stats.get(testEventId)?.listingsCount).toBe(1);
       expect(stats.get(otherEventId)?.listingsCount).toBe(1);
@@ -792,10 +1009,17 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should only count available units in active listings', async () => {
-      const listing = await repository.create(ctx, createValidListing({ status: ListingStatus.Active }));
-      await repository.reserveUnits(ctx, listing.id, [listing.ticketUnits[0].id]);
+      const listing = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Active }),
+      );
+      await repository.reserveUnits(ctx, listing.id, [
+        listing.ticketUnits[0].id,
+      ]);
 
-      const stats = await repository.getListingStatsByEventIds(ctx, [testEventId]);
+      const stats = await repository.getListingStatsByEventIds(ctx, [
+        testEventId,
+      ]);
 
       expect(stats.get(testEventId)?.availableTicketsCount).toBe(1);
     });
@@ -805,7 +1029,10 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('findByIdForUpdate', () => {
     it('should return undefined when listing does not exist', async () => {
-      const listing = await repository.findByIdForUpdate(ctx, 'non-existent-id');
+      const listing = await repository.findByIdForUpdate(
+        ctx,
+        'non-existent-id',
+      );
       expect(listing).toBeUndefined();
     });
 
@@ -827,10 +1054,12 @@ describe('TicketsRepository (Integration)', () => {
       const listing = await repository.create(ctx, createValidListing());
       const unitId = listing.ticketUnits[0].id;
 
-      const updated = await repository.reserveUnitsWithLock(ctx, listing.id, [unitId]);
+      const updated = await repository.reserveUnitsWithLock(ctx, listing.id, [
+        unitId,
+      ]);
 
       expect(updated).toBeDefined();
-      const reservedUnit = updated.ticketUnits.find(u => u.id === unitId);
+      const reservedUnit = updated.ticketUnits.find((u) => u.id === unitId);
       expect(reservedUnit?.status).toBe(TicketUnitStatus.Reserved);
     });
 
@@ -854,9 +1083,13 @@ describe('TicketsRepository (Integration)', () => {
 
     it('should mark listing as Sold when all units reserved', async () => {
       const listing = await repository.create(ctx, createValidListing());
-      const allUnitIds = listing.ticketUnits.map(u => u.id);
+      const allUnitIds = listing.ticketUnits.map((u) => u.id);
 
-      const updated = await repository.reserveUnitsWithLock(ctx, listing.id, allUnitIds);
+      const updated = await repository.reserveUnitsWithLock(
+        ctx,
+        listing.id,
+        allUnitIds,
+      );
 
       expect(updated.status).toBe(ListingStatus.Sold);
     });
@@ -870,10 +1103,12 @@ describe('TicketsRepository (Integration)', () => {
       const unitId = listing.ticketUnits[0].id;
       await repository.reserveUnitsWithLock(ctx, listing.id, [unitId]);
 
-      const updated = await repository.restoreUnitsWithLock(ctx, listing.id, [unitId]);
+      const updated = await repository.restoreUnitsWithLock(ctx, listing.id, [
+        unitId,
+      ]);
 
       expect(updated).toBeDefined();
-      const restoredUnit = updated.ticketUnits.find(u => u.id === unitId);
+      const restoredUnit = updated.ticketUnits.find((u) => u.id === unitId);
       expect(restoredUnit?.status).toBe(TicketUnitStatus.Available);
     });
 
@@ -896,10 +1131,14 @@ describe('TicketsRepository (Integration)', () => {
 
     it('should update listing status to Active when units restored', async () => {
       const listing = await repository.create(ctx, createValidListing());
-      const allUnitIds = listing.ticketUnits.map(u => u.id);
+      const allUnitIds = listing.ticketUnits.map((u) => u.id);
       await repository.reserveUnitsWithLock(ctx, listing.id, allUnitIds);
 
-      const updated = await repository.restoreUnitsWithLock(ctx, listing.id, allUnitIds);
+      const updated = await repository.restoreUnitsWithLock(
+        ctx,
+        listing.id,
+        allUnitIds,
+      );
 
       expect(updated.status).toBe(ListingStatus.Active);
     });
@@ -909,7 +1148,10 @@ describe('TicketsRepository (Integration)', () => {
 
   describe('updateWithVersion', () => {
     it('should update listing when version matches', async () => {
-      const listing = await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      const listing = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
       const updated = await repository.updateWithVersion(
         ctx,
@@ -948,7 +1190,10 @@ describe('TicketsRepository (Integration)', () => {
     });
 
     it('should update status with version check', async () => {
-      const listing = await repository.create(ctx, createValidListing({ status: ListingStatus.Pending }));
+      const listing = await repository.create(
+        ctx,
+        createValidListing({ status: ListingStatus.Pending }),
+      );
 
       const updated = await repository.updateWithVersion(
         ctx,
@@ -979,36 +1224,57 @@ describe('TicketsRepository (Integration)', () => {
   describe('enum mapping', () => {
     it('should correctly map all TicketType values', async () => {
       for (const type of [TicketType.Physical, TicketType.Digital]) {
-        const listing = await repository.create(ctx, createValidListing({ type }));
+        const listing = await repository.create(
+          ctx,
+          createValidListing({ type }),
+        );
         const found = await repository.findById(ctx, listing.id);
         expect(found?.type).toBe(type);
       }
     });
 
     it('should correctly map all ListingStatus values', async () => {
-      for (const status of [ListingStatus.Pending, ListingStatus.Active, ListingStatus.Sold, ListingStatus.Cancelled, ListingStatus.Expired]) {
-        const listing = await repository.create(ctx, createValidListing({ status }));
+      for (const status of [
+        ListingStatus.Pending,
+        ListingStatus.Active,
+        ListingStatus.Sold,
+        ListingStatus.Cancelled,
+        ListingStatus.Expired,
+      ]) {
+        const listing = await repository.create(
+          ctx,
+          createValidListing({ status }),
+        );
         const found = await repository.findById(ctx, listing.id);
         expect(found?.status).toBe(status);
       }
     });
 
     it('should correctly map all DeliveryMethod values', async () => {
-      for (const deliveryMethod of [DeliveryMethod.Pickup, DeliveryMethod.ArrangeWithSeller]) {
-        const listing = await repository.create(ctx, createValidListing({
-          type: TicketType.Physical,
-          deliveryMethod,
-        }));
+      for (const deliveryMethod of [
+        DeliveryMethod.Pickup,
+        DeliveryMethod.ArrangeWithSeller,
+      ]) {
+        const listing = await repository.create(
+          ctx,
+          createValidListing({
+            type: TicketType.Physical,
+            deliveryMethod,
+          }),
+        );
         const found = await repository.findById(ctx, listing.id);
         expect(found?.deliveryMethod).toBe(deliveryMethod);
       }
     });
 
     it('should handle undefined deliveryMethod', async () => {
-      const listing = await repository.create(ctx, createValidListing({
-        type: TicketType.Digital,
-        deliveryMethod: undefined,
-      }));
+      const listing = await repository.create(
+        ctx,
+        createValidListing({
+          type: TicketType.Digital,
+          deliveryMethod: undefined,
+        }),
+      );
       const found = await repository.findById(ctx, listing.id);
       expect(found?.deliveryMethod).toBeUndefined();
     });

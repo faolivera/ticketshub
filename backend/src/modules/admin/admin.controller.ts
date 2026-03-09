@@ -190,8 +190,7 @@ export class AdminController {
   async getTransactionsPendingSummary(
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<AdminTransactionsPendingSummaryResponse>> {
-    const data =
-      await this.adminService.getTransactionsPendingSummary(ctx);
+    const data = await this.adminService.getTransactionsPendingSummary(ctx);
     return { success: true, data };
   }
 
@@ -217,11 +216,21 @@ export class AdminController {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
       fileFilter: (_req, file, cb) => {
-        const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+        const allowed = [
+          'image/png',
+          'image/jpeg',
+          'image/jpg',
+          'application/pdf',
+        ];
         if (allowed.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Invalid file type. Allowed: images (PNG, JPEG) or PDF'), false);
+          cb(
+            new BadRequestException(
+              'Invalid file type. Allowed: images (PNG, JPEG) or PDF',
+            ),
+            false,
+          );
         }
       },
     }),
@@ -234,13 +243,20 @@ export class AdminController {
     @UploadedFiles() receipts?: Multer.File[],
   ): Promise<ApiResponse<AdminCompletePayoutResponse>> {
     const files =
-      receipts?.filter((f) => f?.buffer)?.map((f) => ({
-        buffer: f.buffer,
-        originalname: f.originalname,
-        mimetype: f.mimetype,
-        size: f.size,
-      })) ?? [];
-    const data = await this.adminService.completePayout(ctx, id, user.id, files.length ? files : undefined);
+      receipts
+        ?.filter((f) => f?.buffer)
+        ?.map((f) => ({
+          buffer: f.buffer,
+          originalname: f.originalname,
+          mimetype: f.mimetype,
+          size: f.size,
+        })) ?? [];
+    const data = await this.adminService.completePayout(
+      ctx,
+      id,
+      user.id,
+      files.length ? files : undefined,
+    );
     return { success: true, data };
   }
 
@@ -623,12 +639,16 @@ export class AdminController {
       limits: { fileSize: BANNER_CONSTRAINTS.maxSizeBytes },
       fileFilter: (_req, file, cb) => {
         if (
-          ALLOWED_BANNER_MIME_TYPES.includes(file.mimetype as EventBannerMimeType)
+          ALLOWED_BANNER_MIME_TYPES.includes(
+            file.mimetype as EventBannerMimeType,
+          )
         ) {
           cb(null, true);
         } else {
           cb(
-            new BadRequestException('Invalid file type. Allowed: PNG, JPEG, WebP'),
+            new BadRequestException(
+              'Invalid file type. Allowed: PNG, JPEG, WebP',
+            ),
             false,
           );
         }
@@ -643,7 +663,9 @@ export class AdminController {
     @UploadedFile() file: Multer.File,
   ): Promise<ApiResponse<UploadEventBannerResponse>> {
     if (bannerType !== 'square' && bannerType !== 'rectangle') {
-      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+      throw new BadRequestException(
+        'Banner type must be "square" or "rectangle"',
+      );
     }
 
     if (!file) {
@@ -678,7 +700,9 @@ export class AdminController {
     @Param('type') bannerType: string,
   ): Promise<ApiResponse<DeleteEventBannerResponse>> {
     if (bannerType !== 'square' && bannerType !== 'rectangle') {
-      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+      throw new BadRequestException(
+        'Banner type must be "square" or "rectangle"',
+      );
     }
 
     const result = await this.eventsService.deleteBanner(

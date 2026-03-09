@@ -22,6 +22,8 @@ export interface TxCtx extends Ctx {
  * @param ctx - The context to check
  * @returns True if the context contains an active transaction client
  */
-export function hasTx(ctx: Ctx): ctx is TxCtx & { tx: PrismaTransactionClient } {
+export function hasTx(
+  ctx: Ctx,
+): ctx is TxCtx & { tx: PrismaTransactionClient } {
   return 'tx' in ctx && ctx.tx !== undefined;
 }

@@ -75,14 +75,25 @@ describe('RiskEngineService', () => {
     };
 
     const mockConversionService = {
-      convert: jest.fn().mockImplementation(async (_ctx, money: { amount: number; currency: string }, toCurrency: string) => {
-        if (money.currency === toCurrency) return money;
-        if (money.currency === 'USD' && toCurrency === 'USD') return money;
-        if (money.currency === 'ARS' && toCurrency === 'USD') {
-          return { amount: Math.round(money.amount / 1000), currency: 'USD' as const };
-        }
-        return money;
-      }),
+      convert: jest
+        .fn()
+        .mockImplementation(
+          async (
+            _ctx,
+            money: { amount: number; currency: string },
+            toCurrency: string,
+          ) => {
+            if (money.currency === toCurrency) return money;
+            if (money.currency === 'USD' && toCurrency === 'USD') return money;
+            if (money.currency === 'ARS' && toCurrency === 'USD') {
+              return {
+                amount: Math.round(money.amount / 1000),
+                currency: 'USD' as const,
+              };
+            }
+            return money;
+          },
+        ),
     };
 
     const mockUsersService = {
@@ -110,7 +121,11 @@ describe('RiskEngineService', () => {
 
   describe('evaluate', () => {
     it('should return LOW risk and requireV2/requireV3 false when no triggers fire', async () => {
-      const result = await service.evaluate(mockCtx, baseInput, defaultBuyerConfig);
+      const result = await service.evaluate(
+        mockCtx,
+        baseInput,
+        defaultBuyerConfig,
+      );
 
       expect(result.riskLevel).toBe(RiskLevel.LOW);
       expect(result.requireV1).toBe(true);
@@ -302,16 +317,12 @@ describe('RiskEngineService', () => {
         .mockResolvedValueOnce(buyer)
         .mockResolvedValueOnce(sellerWithV3);
 
-      const result = await service.evaluateCheckoutRisk(
-        mockCtx,
-        'buyer_1',
-        {
-          quantity: 1,
-          amount: { amount: 5000, currency: 'USD' },
-          eventStartsAt: baseInput.eventStartsAt,
-          sellerId: 'seller_1',
-        },
-      );
+      const result = await service.evaluateCheckoutRisk(mockCtx, 'buyer_1', {
+        quantity: 1,
+        amount: { amount: 5000, currency: 'USD' },
+        eventStartsAt: baseInput.eventStartsAt,
+        sellerId: 'seller_1',
+      });
 
       expect(usersService.findById).toHaveBeenCalledWith(mockCtx, 'buyer_1');
       expect(usersService.findById).toHaveBeenCalledWith(mockCtx, 'seller_1');
@@ -334,16 +345,12 @@ describe('RiskEngineService', () => {
         .mockResolvedValueOnce(buyer)
         .mockResolvedValueOnce(sellerWithoutV3);
 
-      const result = await service.evaluateCheckoutRisk(
-        mockCtx,
-        'buyer_1',
-        {
-          quantity: 1,
-          amount: { amount: 5000, currency: 'USD' },
-          eventStartsAt: baseInput.eventStartsAt,
-          sellerId: 'seller_1',
-        },
-      );
+      const result = await service.evaluateCheckoutRisk(mockCtx, 'buyer_1', {
+        quantity: 1,
+        amount: { amount: 5000, currency: 'USD' },
+        eventStartsAt: baseInput.eventStartsAt,
+        sellerId: 'seller_1',
+      });
 
       expect(result.requireV2).toBe(true);
       expect(result.requireV3).toBe(false);

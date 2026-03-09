@@ -13,17 +13,29 @@ import {
   type FileStorageProvider,
 } from '../../../../src/common/storage/file-storage-provider.interface';
 import type { User } from '../../../../src/modules/users/users.domain';
-import { Language, Role, UserStatus, IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
+import {
+  Language,
+  Role,
+  UserStatus,
+  IdentityVerificationStatus,
+} from '../../../../src/modules/users/users.domain';
 import type { Image } from '../../../../src/modules/images/images.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 import { AcceptanceMethod } from '../../../../src/modules/terms/terms.domain';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 
 jest.mock('bcrypt', () => ({
-  hash: jest.fn().mockImplementation((plain: string) => Promise.resolve(`hashed:${plain}`)),
-  compare: jest.fn().mockImplementation((plain: string, stored: string) =>
-    Promise.resolve(stored.startsWith('$2') && (plain === 'correct' || plain === 'newPass123')),
-  ),
+  hash: jest
+    .fn()
+    .mockImplementation((plain: string) => Promise.resolve(`hashed:${plain}`)),
+  compare: jest
+    .fn()
+    .mockImplementation((plain: string, stored: string) =>
+      Promise.resolve(
+        stored.startsWith('$2') &&
+          (plain === 'correct' || plain === 'newPass123'),
+      ),
+    ),
 }));
 
 describe('UsersService', () => {
@@ -118,7 +130,11 @@ describe('UsersService', () => {
         const defaults: Record<string, unknown> = {
           'jwt.secret': 'test-secret',
           'jwt.expiresIn': '7d',
-          'users.allowedAvatarMimeTypes': ['image/jpeg', 'image/png', 'image/webp'],
+          'users.allowedAvatarMimeTypes': [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+          ],
           'users.maxAvatarSizeBytes': 5 * 1024 * 1024,
         };
         return defaults[key];
@@ -205,11 +221,18 @@ describe('UsersService', () => {
       usersRepository.findById.mockResolvedValue(mockUser);
       imagesRepository.findById.mockResolvedValue(mockImage);
 
-      const result = await service.login(mockCtx, 'User@Example.COM', 'correct');
+      const result = await service.login(
+        mockCtx,
+        'User@Example.COM',
+        'correct',
+      );
 
       expect(result).not.toBeNull();
       expect(result?.token).toBeDefined();
-      expect(usersRepository.findByEmail).toHaveBeenCalledWith(mockCtx, 'User@Example.COM');
+      expect(usersRepository.findByEmail).toHaveBeenCalledWith(
+        mockCtx,
+        'User@Example.COM',
+      );
     });
   });
 
@@ -617,7 +640,11 @@ describe('UsersService', () => {
       usersRepository.findById.mockResolvedValue(undefined);
 
       await expect(
-        service.setBankAccountVerificationStatus(mockCtx, 'nonexistent', 'approved'),
+        service.setBankAccountVerificationStatus(
+          mockCtx,
+          'nonexistent',
+          'approved',
+        ),
       ).rejects.toThrow(BadRequestException);
       expect(usersRepository.updateBankAccount).not.toHaveBeenCalled();
     });
@@ -627,7 +654,11 @@ describe('UsersService', () => {
       usersRepository.findById.mockResolvedValue(userNoBank);
 
       await expect(
-        service.setBankAccountVerificationStatus(mockCtx, userNoBank.id, 'approved'),
+        service.setBankAccountVerificationStatus(
+          mockCtx,
+          userNoBank.id,
+          'approved',
+        ),
       ).rejects.toThrow(BadRequestException);
       expect(usersRepository.updateBankAccount).not.toHaveBeenCalled();
     });

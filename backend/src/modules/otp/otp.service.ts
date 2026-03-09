@@ -44,10 +44,9 @@ export class OTPService {
     await this.otpRepository.expireAllPendingByUserAndType(ctx, userId, type);
 
     const code = this.generateCode(type);
-    const expirationMinutes = this.configService.get<number>('otp.expirationMinutes') ?? 10;
-    const expiresAt = new Date(
-      Date.now() + expirationMinutes * 60 * 1000,
-    );
+    const expirationMinutes =
+      this.configService.get<number>('otp.expirationMinutes') ?? 10;
+    const expiresAt = new Date(Date.now() + expirationMinutes * 60 * 1000);
 
     const otp: OTP = {
       id: this.generateId(),

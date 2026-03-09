@@ -51,7 +51,10 @@ describe('ImagesRepository (Integration)', () => {
     });
 
     it('should return empty array when no matches', async () => {
-      const images = await repository.findByIds(ctx, ['non-existent-1', 'non-existent-2']);
+      const images = await repository.findByIds(ctx, [
+        'non-existent-1',
+        'non-existent-2',
+      ]);
       expect(images).toEqual([]);
     });
 
@@ -62,7 +65,7 @@ describe('ImagesRepository (Integration)', () => {
       await repository.set(ctx, img2);
       const images = await repository.findByIds(ctx, [img1.id, img2.id]);
       expect(images).toHaveLength(2);
-      expect(images.map(i => i.id).sort()).toEqual([img1.id, img2.id].sort());
+      expect(images.map((i) => i.id).sort()).toEqual([img1.id, img2.id].sort());
     });
   });
 

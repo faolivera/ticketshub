@@ -52,7 +52,10 @@ export class NotificationsWorker {
    *    - Send through channel (for EMAIL)
    */
   async processClaimedEvent(ctx: Ctx, event: NotificationEvent): Promise<void> {
-    this.logger.log(ctx, `Processing claimed event: ${event.id} (${event.type})`);
+    this.logger.log(
+      ctx,
+      `Processing claimed event: ${event.id} (${event.type})`,
+    );
 
     try {
       const processor = this.processorRegistry.getProcessor(event.type);
@@ -65,7 +68,10 @@ export class NotificationsWorker {
         event.type,
       );
       if (!channelConfig) {
-        this.logger.warn(ctx, `No channel config found for ${event.type}, skipping`);
+        this.logger.warn(
+          ctx,
+          `No channel config found for ${event.type}, skipping`,
+        );
         await this.service.markEventCompleted(ctx, event.id);
         return;
       }
@@ -88,10 +94,17 @@ export class NotificationsWorker {
       }
 
       await this.service.markEventCompleted(ctx, event.id);
-      this.logger.log(ctx, `Successfully processed event ${event.type} for ${event.id}`);
+      this.logger.log(
+        ctx,
+        `Successfully processed event ${event.type} for ${event.id}`,
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(ctx, `Failed to process event ${event.id}: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        ctx,
+        `Failed to process event ${event.id}: ${errorMessage}`,
+      );
       await this.service.markEventFailed(ctx, event.id, errorMessage);
     }
   }
@@ -130,7 +143,7 @@ export class NotificationsWorker {
     variables: Record<string, string>,
   ): Promise<void> {
     // Render template
-    
+
     const content = await this.templateService.renderContent(
       ctx,
       event.type,
@@ -158,7 +171,10 @@ export class NotificationsWorker {
       actionUrl: content.actionUrl,
     });
 
-    this.logger.debug(ctx, `Created notification ${notification.id} for ${channel}`);
+    this.logger.debug(
+      ctx,
+      `Created notification ${notification.id} for ${channel}`,
+    );
 
     // For in-app, notification is already "delivered" by being stored
     if (channel === NotificationChannel.IN_APP) {
@@ -177,7 +193,10 @@ export class NotificationsWorker {
     const claimed = await this.service.claimPendingEmails(ctx, 10);
     if (claimed.length === 0) return;
 
-    this.logger.log(ctx, `Sending ${claimed.length} claimed email notifications`);
+    this.logger.log(
+      ctx,
+      `Sending ${claimed.length} claimed email notifications`,
+    );
 
     for (const notification of claimed) {
       await this.sendEmail(ctx, notification);
@@ -191,12 +210,21 @@ export class NotificationsWorker {
     const retryable = await this.service.getRetryableEmailNotifications(ctx);
     if (retryable.length === 0) return;
 
-    this.logger.log(ctx, `Found ${retryable.length} retryable email notifications`);
+    this.logger.log(
+      ctx,
+      `Found ${retryable.length} retryable email notifications`,
+    );
 
     for (const notification of retryable) {
-      const claimed = await this.service.claimRetryableEmail(ctx, notification.id);
+      const claimed = await this.service.claimRetryableEmail(
+        ctx,
+        notification.id,
+      );
       if (!claimed) {
-        this.logger.debug(ctx, `Notification ${notification.id} already claimed by another worker`);
+        this.logger.debug(
+          ctx,
+          `Notification ${notification.id} already claimed by another worker`,
+        );
         continue;
       }
       await this.sendEmail(ctx, claimed);
@@ -229,12 +257,18 @@ export class NotificationsWorker {
     const events = await this.service.getPendingEvents(ctx);
     if (events.length === 0) return;
 
-    this.logger.log(ctx, `Processing ${events.length} pending notification events`);
+    this.logger.log(
+      ctx,
+      `Processing ${events.length} pending notification events`,
+    );
 
     for (const event of events) {
       const claimed = await this.service.claimEvent(ctx, event.id);
       if (!claimed) {
-        this.logger.debug(ctx, `Event ${event.id} already claimed by another worker`);
+        this.logger.debug(
+          ctx,
+          `Event ${event.id} already claimed by another worker`,
+        );
         continue;
       }
       await this.processClaimedEvent(ctx, claimed);

@@ -1,4 +1,11 @@
-import { Controller, Get, Patch, Body, Inject, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Body,
+  Inject,
+  UseGuards,
+} from '@nestjs/common';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { ValidateResponse } from '../../common/decorators/validate-response.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -36,7 +43,8 @@ export class ConfigController {
   async getPlatformConfig(
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<GetPlatformConfigResponse>> {
-    const data = await this.platformConfigService.getPlatformConfigForAdmin(ctx);
+    const data =
+      await this.platformConfigService.getPlatformConfigForAdmin(ctx);
     return { success: true, data };
   }
 
@@ -46,7 +54,10 @@ export class ConfigController {
     @Context() ctx: Ctx,
     @Body() body: UpdatePlatformConfigRequest,
   ): Promise<ApiResponse<UpdatePlatformConfigResponse>> {
-    const data = await this.platformConfigService.updatePlatformConfig(ctx, body);
+    const data = await this.platformConfigService.updatePlatformConfig(
+      ctx,
+      body,
+    );
     return { success: true, data };
   }
 }

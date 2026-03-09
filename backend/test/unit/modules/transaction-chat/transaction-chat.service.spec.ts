@@ -10,12 +10,14 @@ import type { Ctx } from '../../../../src/common/types/context';
 
 const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
-function createMockTransaction(overrides: {
-  id?: string;
-  buyerId?: string;
-  sellerId?: string;
-  status?: TransactionStatus;
-} = {}) {
+function createMockTransaction(
+  overrides: {
+    id?: string;
+    buyerId?: string;
+    sellerId?: string;
+    status?: TransactionStatus;
+  } = {},
+) {
   return {
     id: 'txn_1',
     buyerId: 'buyer_1',
@@ -84,11 +86,7 @@ describe('TransactionChatService', () => {
         },
       ]);
 
-      const result = await service.getMessages(
-        mockCtx,
-        'txn_1',
-        'buyer_1',
-      );
+      const result = await service.getMessages(mockCtx, 'txn_1', 'buyer_1');
 
       expect(result.messages).toHaveLength(1);
       expect(result.messages[0].senderRole).toBe('buyer');
@@ -223,10 +221,9 @@ describe('TransactionChatService', () => {
       );
 
       expect(result).toBe(true);
-      expect(chatRepository.countTextMessagesByTransaction).toHaveBeenCalledWith(
-        mockCtx,
-        'txn_1',
-      );
+      expect(
+        chatRepository.countTextMessagesByTransaction,
+      ).toHaveBeenCalledWith(mockCtx, 'txn_1');
     });
 
     it('should return false when there are no text messages (only delivery or none)', async () => {
@@ -258,7 +255,9 @@ describe('TransactionChatService', () => {
       );
 
       expect(result).toBe(false);
-      expect(chatRepository.countTextMessagesByTransaction).not.toHaveBeenCalled();
+      expect(
+        chatRepository.countTextMessagesByTransaction,
+      ).not.toHaveBeenCalled();
     });
   });
 

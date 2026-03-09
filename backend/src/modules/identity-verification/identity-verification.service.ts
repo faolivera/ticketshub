@@ -242,9 +242,9 @@ export class IdentityVerificationService {
           ? verification.submittedAt.toISOString()
           : String(verification.submittedAt),
       reviewedAt: verification.reviewedAt
-        ? (verification.reviewedAt instanceof Date
-            ? verification.reviewedAt.toISOString()
-            : String(verification.reviewedAt))
+        ? verification.reviewedAt instanceof Date
+          ? verification.reviewedAt.toISOString()
+          : String(verification.reviewedAt)
         : undefined,
     };
   }
@@ -288,17 +288,16 @@ export class IdentityVerificationService {
     const verificationsWithUsers: IdentityVerificationWithUser[] =
       verifications.map((v) => {
         const user = usersMap.get(v.userId);
-        const bankAccountSummary =
-          user?.bankAccount
-            ? {
-                verified: user.bankAccount.verified,
-                holderName: user.bankAccount.holderName,
-                cbuLast4:
-                  user.bankAccount.cbuOrCvu?.length >= 4
-                    ? user.bankAccount.cbuOrCvu.slice(-4)
-                    : undefined,
-              }
-            : null;
+        const bankAccountSummary = user?.bankAccount
+          ? {
+              verified: user.bankAccount.verified,
+              holderName: user.bankAccount.holderName,
+              cbuLast4:
+                user.bankAccount.cbuOrCvu?.length >= 4
+                  ? user.bankAccount.cbuOrCvu.slice(-4)
+                  : undefined,
+            }
+          : null;
         return {
           ...v,
           userEmail: user?.email ?? 'Unknown',
@@ -422,10 +421,15 @@ export class IdentityVerificationService {
           userId: verification.userId,
           userName: `${verification.legalFirstName} ${verification.legalLastName}`,
         })
-        .catch((err) => this.logger.error(ctx, `Failed to emit IDENTITY_VERIFIED: ${err}`));
+        .catch((err) =>
+          this.logger.error(ctx, `Failed to emit IDENTITY_VERIFIED: ${err}`),
+        );
 
       // If bank is already approved, seller verification is complete
-      const userAfter = await this.usersService.findById(ctx, verification.userId);
+      const userAfter = await this.usersService.findById(
+        ctx,
+        verification.userId,
+      );
       if (userAfter?.bankAccount?.verified === true) {
         this.notificationsService
           .emit(ctx, NotificationEventType.SELLER_VERIFICATION_COMPLETE, {

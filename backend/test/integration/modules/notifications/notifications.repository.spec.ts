@@ -51,7 +51,9 @@ describe('NotificationsRepository (Integration)', () => {
     return user.id;
   };
 
-  const createValidEvent = (overrides?: Partial<NotificationEvent>): NotificationEvent => ({
+  const createValidEvent = (
+    overrides?: Partial<NotificationEvent>,
+  ): NotificationEvent => ({
     id: generateNotificationEventId(),
     type: NotificationEventType.PAYMENT_REQUIRED,
     context: { transactionId: randomUUID() },
@@ -88,7 +90,8 @@ describe('NotificationsRepository (Integration)', () => {
     channel: NotificationChannel.IN_APP,
     locale: 'en',
     titleTemplate: 'Payment Required for {{transactionId}}',
-    bodyTemplate: 'Please complete your payment for transaction {{transactionId}}',
+    bodyTemplate:
+      'Please complete your payment for transaction {{transactionId}}',
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -183,9 +186,18 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should return only pending events', async () => {
-      await repository.createEvent(ctx, createValidEvent({ status: NotificationEventStatus.PENDING }));
-      await repository.createEvent(ctx, createValidEvent({ status: NotificationEventStatus.PROCESSING }));
-      await repository.createEvent(ctx, createValidEvent({ status: NotificationEventStatus.COMPLETED }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: NotificationEventStatus.PENDING }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: NotificationEventStatus.PROCESSING }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: NotificationEventStatus.COMPLETED }),
+      );
 
       const events = await repository.findPendingEvents(ctx);
 
@@ -197,13 +209,21 @@ describe('NotificationsRepository (Integration)', () => {
       const olderDate = new Date('2025-01-01T10:00:00Z');
       const newerDate = new Date('2025-01-02T10:00:00Z');
 
-      await repository.createEvent(ctx, createValidEvent({ triggeredAt: newerDate }));
-      await repository.createEvent(ctx, createValidEvent({ triggeredAt: olderDate }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ triggeredAt: newerDate }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ triggeredAt: olderDate }),
+      );
 
       const events = await repository.findPendingEvents(ctx);
 
       expect(events).toHaveLength(2);
-      expect(events[0].triggeredAt.getTime()).toBeLessThan(events[1].triggeredAt.getTime());
+      expect(events[0].triggeredAt.getTime()).toBeLessThan(
+        events[1].triggeredAt.getTime(),
+      );
     });
   });
 
@@ -229,7 +249,9 @@ describe('NotificationsRepository (Integration)', () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       const processedAt = new Date();
 
-      const updated = await repository.updateEvent(ctx, event.id, { processedAt });
+      const updated = await repository.updateEvent(ctx, event.id, {
+        processedAt,
+      });
 
       expect(updated?.processedAt).toEqual(processedAt);
     });
@@ -278,20 +300,34 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should filter by type', async () => {
-      await repository.createEvent(ctx, createValidEvent({ type: NotificationEventType.PAYMENT_REQUIRED }));
-      await repository.createEvent(ctx, createValidEvent({ type: NotificationEventType.DISPUTE_OPENED }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ type: NotificationEventType.PAYMENT_REQUIRED }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ type: NotificationEventType.DISPUTE_OPENED }),
+      );
 
       const result = await repository.getEventsPaginated(ctx, 1, 10, {
         type: NotificationEventType.PAYMENT_REQUIRED,
       });
 
       expect(result.events).toHaveLength(1);
-      expect(result.events[0].type).toBe(NotificationEventType.PAYMENT_REQUIRED);
+      expect(result.events[0].type).toBe(
+        NotificationEventType.PAYMENT_REQUIRED,
+      );
     });
 
     it('should filter by status', async () => {
-      await repository.createEvent(ctx, createValidEvent({ status: NotificationEventStatus.PENDING }));
-      await repository.createEvent(ctx, createValidEvent({ status: NotificationEventStatus.COMPLETED }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: NotificationEventStatus.PENDING }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ status: NotificationEventStatus.COMPLETED }),
+      );
 
       const result = await repository.getEventsPaginated(ctx, 1, 10, {
         status: NotificationEventStatus.PENDING,
@@ -306,9 +342,18 @@ describe('NotificationsRepository (Integration)', () => {
       const midDate = new Date('2025-06-01T10:00:00Z');
       const newDate = new Date('2025-12-01T10:00:00Z');
 
-      await repository.createEvent(ctx, createValidEvent({ triggeredAt: oldDate }));
-      await repository.createEvent(ctx, createValidEvent({ triggeredAt: midDate }));
-      await repository.createEvent(ctx, createValidEvent({ triggeredAt: newDate }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ triggeredAt: oldDate }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ triggeredAt: midDate }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ triggeredAt: newDate }),
+      );
 
       const result = await repository.getEventsPaginated(ctx, 1, 10, {
         from: new Date('2025-03-01'),
@@ -322,8 +367,14 @@ describe('NotificationsRepository (Integration)', () => {
       const olderDate = new Date('2025-01-01T10:00:00Z');
       const newerDate = new Date('2025-06-01T10:00:00Z');
 
-      await repository.createEvent(ctx, createValidEvent({ triggeredAt: olderDate }));
-      await repository.createEvent(ctx, createValidEvent({ triggeredAt: newerDate }));
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ triggeredAt: olderDate }),
+      );
+      await repository.createEvent(
+        ctx,
+        createValidEvent({ triggeredAt: newerDate }),
+      );
 
       const result = await repository.getEventsPaginated(ctx, 1, 10);
 
@@ -385,7 +436,10 @@ describe('NotificationsRepository (Integration)', () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       const notificationData = createValidNotification(event.id);
 
-      const notification = await repository.createNotification(ctx, notificationData);
+      const notification = await repository.createNotification(
+        ctx,
+        notificationData,
+      );
 
       expect(notification).toBeDefined();
       expect(notification.id).toBe(notificationData.id);
@@ -400,7 +454,10 @@ describe('NotificationsRepository (Integration)', () => {
         channel: NotificationChannel.EMAIL,
       });
 
-      const notification = await repository.createNotification(ctx, notificationData);
+      const notification = await repository.createNotification(
+        ctx,
+        notificationData,
+      );
 
       expect(notification.channel).toBe(NotificationChannel.EMAIL);
     });
@@ -418,7 +475,10 @@ describe('NotificationsRepository (Integration)', () => {
         nextRetryAt: new Date(now.getTime() + 60000),
       });
 
-      const notification = await repository.createNotification(ctx, notificationData);
+      const notification = await repository.createNotification(
+        ctx,
+        notificationData,
+      );
 
       expect(notification.actionUrl).toBe('https://example.com/action');
       expect(notification.read).toBe(true);
@@ -431,13 +491,19 @@ describe('NotificationsRepository (Integration)', () => {
 
   describe('findNotificationById', () => {
     it('should return undefined when notification does not exist', async () => {
-      const notification = await repository.findNotificationById(ctx, 'non-existent-id');
+      const notification = await repository.findNotificationById(
+        ctx,
+        'non-existent-id',
+      );
       expect(notification).toBeUndefined();
     });
 
     it('should find notification by id', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
-      const created = await repository.createNotification(ctx, createValidNotification(event.id));
+      const created = await repository.createNotification(
+        ctx,
+        createValidNotification(event.id),
+      );
 
       const found = await repository.findNotificationById(ctx, created.id);
 
@@ -448,7 +514,10 @@ describe('NotificationsRepository (Integration)', () => {
 
   describe('findNotificationsByEventId', () => {
     it('should return empty array when no notifications exist', async () => {
-      const notifications = await repository.findNotificationsByEventId(ctx, 'non-existent-id');
+      const notifications = await repository.findNotificationsByEventId(
+        ctx,
+        'non-existent-id',
+      );
       expect(notifications).toEqual([]);
     });
 
@@ -456,14 +525,21 @@ describe('NotificationsRepository (Integration)', () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { channel: NotificationChannel.IN_APP }),
+        createValidNotification(event.id, {
+          channel: NotificationChannel.IN_APP,
+        }),
       );
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { channel: NotificationChannel.EMAIL }),
+        createValidNotification(event.id, {
+          channel: NotificationChannel.EMAIL,
+        }),
       );
 
-      const notifications = await repository.findNotificationsByEventId(ctx, event.id);
+      const notifications = await repository.findNotificationsByEventId(
+        ctx,
+        event.id,
+      );
 
       expect(notifications).toHaveLength(2);
     });
@@ -471,7 +547,13 @@ describe('NotificationsRepository (Integration)', () => {
 
   describe('findUserInAppNotifications', () => {
     it('should return empty result when no notifications exist', async () => {
-      const result = await repository.findUserInAppNotifications(ctx, testUserId, 1, 10, false);
+      const result = await repository.findUserInAppNotifications(
+        ctx,
+        testUserId,
+        1,
+        10,
+        false,
+      );
 
       expect(result.notifications).toEqual([]);
       expect(result.total).toBe(0);
@@ -481,14 +563,24 @@ describe('NotificationsRepository (Integration)', () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { channel: NotificationChannel.IN_APP }),
+        createValidNotification(event.id, {
+          channel: NotificationChannel.IN_APP,
+        }),
       );
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { channel: NotificationChannel.EMAIL }),
+        createValidNotification(event.id, {
+          channel: NotificationChannel.EMAIL,
+        }),
       );
 
-      const result = await repository.findUserInAppNotifications(ctx, testUserId, 1, 10, false);
+      const result = await repository.findUserInAppNotifications(
+        ctx,
+        testUserId,
+        1,
+        10,
+        false,
+      );
 
       expect(result.notifications).toHaveLength(1);
       expect(result.notifications[0].channel).toBe(NotificationChannel.IN_APP);
@@ -505,7 +597,13 @@ describe('NotificationsRepository (Integration)', () => {
         createValidNotification(event.id, { read: true }),
       );
 
-      const result = await repository.findUserInAppNotifications(ctx, testUserId, 1, 10, true);
+      const result = await repository.findUserInAppNotifications(
+        ctx,
+        testUserId,
+        1,
+        10,
+        true,
+      );
 
       expect(result.notifications).toHaveLength(1);
       expect(result.notifications[0].read).toBe(false);
@@ -514,10 +612,19 @@ describe('NotificationsRepository (Integration)', () => {
     it('should paginate results', async () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       for (let i = 0; i < 5; i++) {
-        await repository.createNotification(ctx, createValidNotification(event.id));
+        await repository.createNotification(
+          ctx,
+          createValidNotification(event.id),
+        );
       }
 
-      const result = await repository.findUserInAppNotifications(ctx, testUserId, 1, 2, false);
+      const result = await repository.findUserInAppNotifications(
+        ctx,
+        testUserId,
+        1,
+        2,
+        false,
+      );
 
       expect(result.notifications).toHaveLength(2);
       expect(result.total).toBe(5);
@@ -537,7 +644,13 @@ describe('NotificationsRepository (Integration)', () => {
         createValidNotification(event.id, { createdAt: newerDate }),
       );
 
-      const result = await repository.findUserInAppNotifications(ctx, testUserId, 1, 10, false);
+      const result = await repository.findUserInAppNotifications(
+        ctx,
+        testUserId,
+        1,
+        10,
+        false,
+      );
 
       expect(result.notifications[0].createdAt.getTime()).toBeGreaterThan(
         result.notifications[1].createdAt.getTime(),
@@ -553,7 +666,13 @@ describe('NotificationsRepository (Integration)', () => {
         createValidNotification(event.id, { recipientId: otherUserId }),
       );
 
-      const result = await repository.findUserInAppNotifications(ctx, testUserId, 1, 10, false);
+      const result = await repository.findUserInAppNotifications(
+        ctx,
+        testUserId,
+        1,
+        10,
+        false,
+      );
 
       expect(result.notifications).toHaveLength(0);
     });
@@ -569,15 +688,24 @@ describe('NotificationsRepository (Integration)', () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { read: false, channel: NotificationChannel.IN_APP }),
+        createValidNotification(event.id, {
+          read: false,
+          channel: NotificationChannel.IN_APP,
+        }),
       );
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { read: true, channel: NotificationChannel.IN_APP }),
+        createValidNotification(event.id, {
+          read: true,
+          channel: NotificationChannel.IN_APP,
+        }),
       );
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { read: false, channel: NotificationChannel.EMAIL }),
+        createValidNotification(event.id, {
+          read: false,
+          channel: NotificationChannel.EMAIL,
+        }),
       );
 
       const count = await repository.countUnreadNotifications(ctx, testUserId);
@@ -588,9 +716,13 @@ describe('NotificationsRepository (Integration)', () => {
 
   describe('updateNotification', () => {
     it('should return undefined for non-existent notification', async () => {
-      const result = await repository.updateNotification(ctx, 'non-existent-id', {
-        status: NotificationStatus.SENT,
-      });
+      const result = await repository.updateNotification(
+        ctx,
+        'non-existent-id',
+        {
+          status: NotificationStatus.SENT,
+        },
+      );
       expect(result).toBeUndefined();
     });
 
@@ -601,9 +733,13 @@ describe('NotificationsRepository (Integration)', () => {
         createValidNotification(event.id),
       );
 
-      const updated = await repository.updateNotification(ctx, notification.id, {
-        status: NotificationStatus.SENT,
-      });
+      const updated = await repository.updateNotification(
+        ctx,
+        notification.id,
+        {
+          status: NotificationStatus.SENT,
+        },
+      );
 
       expect(updated?.status).toBe(NotificationStatus.SENT);
     });
@@ -616,10 +752,14 @@ describe('NotificationsRepository (Integration)', () => {
       );
       const readAt = new Date();
 
-      const updated = await repository.updateNotification(ctx, notification.id, {
-        read: true,
-        readAt,
-      });
+      const updated = await repository.updateNotification(
+        ctx,
+        notification.id,
+        {
+          read: true,
+          readAt,
+        },
+      );
 
       expect(updated?.read).toBe(true);
       expect(updated?.readAt).toEqual(readAt);
@@ -634,10 +774,14 @@ describe('NotificationsRepository (Integration)', () => {
       const sentAt = new Date();
       const deliveredAt = new Date();
 
-      const updated = await repository.updateNotification(ctx, notification.id, {
-        sentAt,
-        deliveredAt,
-      });
+      const updated = await repository.updateNotification(
+        ctx,
+        notification.id,
+        {
+          sentAt,
+          deliveredAt,
+        },
+      );
 
       expect(updated?.sentAt).toEqual(sentAt);
       expect(updated?.deliveredAt).toEqual(deliveredAt);
@@ -651,13 +795,17 @@ describe('NotificationsRepository (Integration)', () => {
       );
       const failedAt = new Date();
 
-      const updated = await repository.updateNotification(ctx, notification.id, {
-        status: NotificationStatus.FAILED,
-        failedAt,
-        failureReason: 'Email delivery failed',
-        retryCount: 1,
-        nextRetryAt: new Date(failedAt.getTime() + 60000),
-      });
+      const updated = await repository.updateNotification(
+        ctx,
+        notification.id,
+        {
+          status: NotificationStatus.FAILED,
+          failedAt,
+          failureReason: 'Email delivery failed',
+          retryCount: 1,
+          nextRetryAt: new Date(failedAt.getTime() + 60000),
+        },
+      );
 
       expect(updated?.status).toBe(NotificationStatus.FAILED);
       expect(updated?.failedAt).toEqual(failedAt);
@@ -676,11 +824,17 @@ describe('NotificationsRepository (Integration)', () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { read: false, channel: NotificationChannel.IN_APP }),
+        createValidNotification(event.id, {
+          read: false,
+          channel: NotificationChannel.IN_APP,
+        }),
       );
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { read: false, channel: NotificationChannel.IN_APP }),
+        createValidNotification(event.id, {
+          read: false,
+          channel: NotificationChannel.IN_APP,
+        }),
       );
 
       const count = await repository.markAllAsRead(ctx, testUserId);
@@ -692,7 +846,10 @@ describe('NotificationsRepository (Integration)', () => {
       const event = await repository.createEvent(ctx, createValidEvent());
       await repository.createNotification(
         ctx,
-        createValidNotification(event.id, { read: false, channel: NotificationChannel.EMAIL }),
+        createValidNotification(event.id, {
+          read: false,
+          channel: NotificationChannel.EMAIL,
+        }),
       );
 
       const count = await repository.markAllAsRead(ctx, testUserId);
@@ -758,7 +915,8 @@ describe('NotificationsRepository (Integration)', () => {
 
   describe('findRetryableEmailNotifications', () => {
     it('should return empty array when no retryable notifications', async () => {
-      const notifications = await repository.findRetryableEmailNotifications(ctx);
+      const notifications =
+        await repository.findRetryableEmailNotifications(ctx);
       expect(notifications).toEqual([]);
     });
 
@@ -776,7 +934,8 @@ describe('NotificationsRepository (Integration)', () => {
         }),
       );
 
-      const notifications = await repository.findRetryableEmailNotifications(ctx);
+      const notifications =
+        await repository.findRetryableEmailNotifications(ctx);
 
       expect(notifications).toHaveLength(1);
     });
@@ -795,7 +954,8 @@ describe('NotificationsRepository (Integration)', () => {
         }),
       );
 
-      const notifications = await repository.findRetryableEmailNotifications(ctx);
+      const notifications =
+        await repository.findRetryableEmailNotifications(ctx);
 
       expect(notifications).toHaveLength(0);
     });
@@ -814,7 +974,8 @@ describe('NotificationsRepository (Integration)', () => {
         }),
       );
 
-      const notifications = await repository.findRetryableEmailNotifications(ctx);
+      const notifications =
+        await repository.findRetryableEmailNotifications(ctx);
 
       expect(notifications).toHaveLength(0);
     });
@@ -844,14 +1005,20 @@ describe('NotificationsRepository (Integration)', () => {
 
       expect(count).toBe(1);
 
-      const remaining = await repository.findNotificationsByEventId(ctx, event.id);
+      const remaining = await repository.findNotificationsByEventId(
+        ctx,
+        event.id,
+      );
       expect(remaining).toHaveLength(1);
     });
   });
 
   describe('claimPendingEmailNotifications', () => {
     it('should return empty array when no pending notifications', async () => {
-      const notifications = await repository.claimPendingEmailNotifications(ctx, 10);
+      const notifications = await repository.claimPendingEmailNotifications(
+        ctx,
+        10,
+      );
       expect(notifications).toEqual([]);
     });
 
@@ -885,8 +1052,14 @@ describe('NotificationsRepository (Integration)', () => {
         }),
       );
 
-      const firstClaim = await repository.claimPendingEmailNotifications(ctx, 10);
-      const secondClaim = await repository.claimPendingEmailNotifications(ctx, 10);
+      const firstClaim = await repository.claimPendingEmailNotifications(
+        ctx,
+        10,
+      );
+      const secondClaim = await repository.claimPendingEmailNotifications(
+        ctx,
+        10,
+      );
 
       expect(firstClaim).toHaveLength(1);
       expect(secondClaim).toHaveLength(0);
@@ -895,7 +1068,10 @@ describe('NotificationsRepository (Integration)', () => {
 
   describe('claimRetryableEmailNotification', () => {
     it('should return undefined for non-existent notification', async () => {
-      const result = await repository.claimRetryableEmailNotification(ctx, 'non-existent-id');
+      const result = await repository.claimRetryableEmailNotification(
+        ctx,
+        'non-existent-id',
+      );
       expect(result).toBeUndefined();
     });
 
@@ -909,7 +1085,10 @@ describe('NotificationsRepository (Integration)', () => {
         }),
       );
 
-      const result = await repository.claimRetryableEmailNotification(ctx, notification.id);
+      const result = await repository.claimRetryableEmailNotification(
+        ctx,
+        notification.id,
+      );
 
       expect(result).toBeUndefined();
     });
@@ -927,7 +1106,10 @@ describe('NotificationsRepository (Integration)', () => {
         }),
       );
 
-      const claimed = await repository.claimRetryableEmailNotification(ctx, notification.id);
+      const claimed = await repository.claimRetryableEmailNotification(
+        ctx,
+        notification.id,
+      );
 
       expect(claimed).toBeDefined();
       expect(claimed?.status).toBe(NotificationStatus.QUEUED);
@@ -947,7 +1129,10 @@ describe('NotificationsRepository (Integration)', () => {
         }),
       );
 
-      const claimed = await repository.claimRetryableEmailNotification(ctx, notification.id);
+      const claimed = await repository.claimRetryableEmailNotification(
+        ctx,
+        notification.id,
+      );
 
       expect(claimed).toBeUndefined();
     });
@@ -979,19 +1164,27 @@ describe('NotificationsRepository (Integration)', () => {
 
       const template = await repository.createTemplate(ctx, templateData);
 
-      expect(template.actionUrlTemplate).toBe('https://example.com/action/{{id}}');
+      expect(template.actionUrlTemplate).toBe(
+        'https://example.com/action/{{id}}',
+      );
       expect(template.updatedBy).toBe(testUserId);
     });
   });
 
   describe('findTemplateById', () => {
     it('should return undefined when template does not exist', async () => {
-      const template = await repository.findTemplateById(ctx, 'non-existent-id');
+      const template = await repository.findTemplateById(
+        ctx,
+        'non-existent-id',
+      );
       expect(template).toBeUndefined();
     });
 
     it('should find template by id', async () => {
-      const created = await repository.createTemplate(ctx, createValidTemplate());
+      const created = await repository.createTemplate(
+        ctx,
+        createValidTemplate(),
+      );
 
       const found = await repository.findTemplateById(ctx, created.id);
 
@@ -1028,7 +1221,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should not find inactive template', async () => {
-      await repository.createTemplate(ctx, createValidTemplate({ isActive: false }));
+      await repository.createTemplate(
+        ctx,
+        createValidTemplate({ isActive: false }),
+      );
 
       const found = await repository.findTemplate(
         ctx,
@@ -1088,7 +1284,9 @@ describe('NotificationsRepository (Integration)', () => {
       await repository.createTemplate(ctx, createValidTemplate());
       await repository.createTemplate(
         ctx,
-        createValidTemplate({ eventType: NotificationEventType.DISPUTE_OPENED }),
+        createValidTemplate({
+          eventType: NotificationEventType.DISPUTE_OPENED,
+        }),
       );
 
       const templates = await repository.findAllTemplates(ctx);
@@ -1106,7 +1304,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should update template title', async () => {
-      const template = await repository.createTemplate(ctx, createValidTemplate());
+      const template = await repository.createTemplate(
+        ctx,
+        createValidTemplate(),
+      );
 
       const updated = await repository.updateTemplate(ctx, template.id, {
         titleTemplate: 'Updated Title',
@@ -1116,7 +1317,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should update template body', async () => {
-      const template = await repository.createTemplate(ctx, createValidTemplate());
+      const template = await repository.createTemplate(
+        ctx,
+        createValidTemplate(),
+      );
 
       const updated = await repository.updateTemplate(ctx, template.id, {
         bodyTemplate: 'Updated body content',
@@ -1126,7 +1330,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should update template isActive status', async () => {
-      const template = await repository.createTemplate(ctx, createValidTemplate({ isActive: true }));
+      const template = await repository.createTemplate(
+        ctx,
+        createValidTemplate({ isActive: true }),
+      );
 
       const updated = await repository.updateTemplate(ctx, template.id, {
         isActive: false,
@@ -1136,7 +1343,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should update template updatedBy', async () => {
-      const template = await repository.createTemplate(ctx, createValidTemplate());
+      const template = await repository.createTemplate(
+        ctx,
+        createValidTemplate(),
+      );
 
       const updated = await repository.updateTemplate(ctx, template.id, {
         updatedBy: testUserId,
@@ -1146,7 +1356,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should update multiple fields', async () => {
-      const template = await repository.createTemplate(ctx, createValidTemplate());
+      const template = await repository.createTemplate(
+        ctx,
+        createValidTemplate(),
+      );
 
       const updated = await repository.updateTemplate(ctx, template.id, {
         titleTemplate: 'New Title',
@@ -1223,11 +1436,15 @@ describe('NotificationsRepository (Integration)', () => {
     it('should return all channel configs', async () => {
       await repository.createChannelConfig(
         ctx,
-        createValidChannelConfig({ eventType: NotificationEventType.PAYMENT_REQUIRED }),
+        createValidChannelConfig({
+          eventType: NotificationEventType.PAYMENT_REQUIRED,
+        }),
       );
       await repository.createChannelConfig(
         ctx,
-        createValidChannelConfig({ eventType: NotificationEventType.DISPUTE_OPENED }),
+        createValidChannelConfig({
+          eventType: NotificationEventType.DISPUTE_OPENED,
+        }),
       );
 
       const configs = await repository.findAllChannelConfigs(ctx);
@@ -1247,7 +1464,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should update inAppEnabled', async () => {
-      await repository.createChannelConfig(ctx, createValidChannelConfig({ inAppEnabled: true }));
+      await repository.createChannelConfig(
+        ctx,
+        createValidChannelConfig({ inAppEnabled: true }),
+      );
 
       const updated = await repository.updateChannelConfig(
         ctx,
@@ -1259,7 +1479,10 @@ describe('NotificationsRepository (Integration)', () => {
     });
 
     it('should update emailEnabled', async () => {
-      await repository.createChannelConfig(ctx, createValidChannelConfig({ emailEnabled: true }));
+      await repository.createChannelConfig(
+        ctx,
+        createValidChannelConfig({ emailEnabled: true }),
+      );
 
       const updated = await repository.updateChannelConfig(
         ctx,

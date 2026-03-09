@@ -8,7 +8,9 @@ import type { Ctx } from '../../../../src/common/types/context';
 
 const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-req' };
 
-function createNotification(overrides: Partial<Notification> = {}): Notification {
+function createNotification(
+  overrides: Partial<Notification> = {},
+): Notification {
   return {
     id: 'notif_1',
     eventId: 'evt_1',

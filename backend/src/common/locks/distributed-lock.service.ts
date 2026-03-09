@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { hostname } from 'os';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContextLogger } from '../logger/context-logger';
-import type { Ctx } from '../types/context';
+import { type Ctx, ON_APP_INIT_CTX } from '../types/context';
 
 @Injectable()
 export class DistributedLockService {
@@ -56,7 +56,7 @@ export class DistributedLockService {
       `;
       return result === 1;
     } catch (error) {
-      console.error('acquireLock error:', error);
+      this.logger.error(ON_APP_INIT_CTX, 'acquireLock error:', error);
       return false;
     }
   }
@@ -83,9 +83,16 @@ export class DistributedLockService {
     ttlSeconds: number,
     fn: () => Promise<T>,
   ): Promise<T | null> {
-    const acquired = await this.acquireLock(lockId, this.holderIdentifier, ttlSeconds);
+    const acquired = await this.acquireLock(
+      lockId,
+      this.holderIdentifier,
+      ttlSeconds,
+    );
     if (!acquired) {
-      this.logger.debug(ctx, `Could not acquire lock: ${lockId} (another instance may hold it)`);
+      this.logger.debug(
+        ctx,
+        `Could not acquire lock: ${lockId} (another instance may hold it)`,
+      );
       return null;
     }
 

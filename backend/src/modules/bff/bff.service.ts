@@ -16,9 +16,13 @@ import { PromotionsService } from '../promotions/promotions.service';
 import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import { EventsService } from '../events/events.service';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
-import { TransactionStatus, getTransactionChatMode } from '../transactions/transactions.domain';
+import {
+  TransactionStatus,
+  getTransactionChatMode,
+} from '../transactions/transactions.domain';
 import { Role } from '../users/users.domain';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type {
   BffTransactionWithDetails,
   GetMyTicketsData,
@@ -40,6 +44,8 @@ import { VerificationHelper } from '../../common/utils/verification-helper';
 
 @Injectable()
 export class BffService {
+  private readonly logger = new ContextLogger(BffService.name);
+
   constructor(
     @Inject(UsersService)
     private readonly usersService: UsersService,
@@ -70,10 +76,7 @@ export class BffService {
   /**
    * Get event page data by slug: event details + enriched listings in a single call.
    */
-  async getEventPageData(
-    ctx: Ctx,
-    eventSlug: string,
-  ): Promise<EventPageData> {
+  async getEventPageData(ctx: Ctx, eventSlug: string): Promise<EventPageData> {
     const event = await this.eventsService.getEventBySlug(ctx, eventSlug);
     const listings = await this.getEventListings(ctx, event.id);
     return { event, listings };
@@ -114,7 +117,11 @@ export class BffService {
 
     const platformCommissionPercent = platformConfig.buyerPlatformFeePercentage;
     const combinedCommissionPercents = paymentMethods
-      .map((pm) => (pm.buyerCommissionPercent != null ? platformCommissionPercent + pm.buyerCommissionPercent : null))
+      .map((pm) =>
+        pm.buyerCommissionPercent != null
+          ? platformCommissionPercent + pm.buyerCommissionPercent
+          : null,
+      )
       .filter((p): p is number => p != null);
     const commissionPercentRange =
       combinedCommissionPercents.length > 0
@@ -178,7 +185,8 @@ export class BffService {
     ctx: Ctx,
     userId: string,
   ): Promise<GetSellTicketConfigResponse> {
-    const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
+    const platformConfig =
+      await this.platformConfigService.getPlatformConfig(ctx);
     const activePromotion =
       await this.promotionsService.getActivePromotionSummary(ctx, userId);
     return {
@@ -198,9 +206,14 @@ export class BffService {
   ): Promise<BuyPageData> {
     const listing = await this.ticketsService.getListingById(ctx, ticketId);
     const [publicInfo, user, totalSales] = await Promise.all([
-      this.usersService.getPublicUserInfoByIds(ctx, [listing.sellerId]).then((a) => a[0]),
+      this.usersService
+        .getPublicUserInfoByIds(ctx, [listing.sellerId])
+        .then((a) => a[0]),
       this.usersService.findById(ctx, listing.sellerId),
-      this.transactionsService.getSellerCompletedSalesTotal(ctx, listing.sellerId),
+      this.transactionsService.getSellerCompletedSalesTotal(
+        ctx,
+        listing.sellerId,
+      ),
     ]);
     const [sellerMetrics, paymentMethods, snapshot] = await Promise.all([
       this.reviewsService.getSellerMetrics(ctx, listing.sellerId, {
@@ -223,7 +236,9 @@ export class BffService {
       totalSales,
       percentPositiveReviews: sellerMetrics.positivePercent,
       totalReviews: sellerMetrics.totalReviews,
-      memberSince: user?.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
+      memberSince: user?.createdAt
+        ? new Date(user.createdAt).toISOString()
+        : new Date().toISOString(),
     };
 
     const pricingSnapshot: BuyPagePricingSnapshot = {
@@ -231,21 +246,23 @@ export class BffService {
       expiresAt: snapshot.expiresAt,
     };
 
-    const buyPagePaymentMethods: BuyPagePaymentMethodOption[] = paymentMethods.map(
-      (pm) => ({
+    const buyPagePaymentMethods: BuyPagePaymentMethodOption[] =
+      paymentMethods.map((pm) => ({
         id: pm.id,
         name: pm.name,
         serviceFeePercent:
           snapshot.buyerPlatformFeePercentage +
           (pm.buyerCommissionPercent ?? 0),
-      }),
-    );
+      }));
 
     let checkoutRisk: BuyPageData['checkoutRisk'];
     if (buyerId) {
       const quantity = 1;
       const totalMinor = listing.pricePerTicket.amount * quantity;
-      const amount: { amount: number; currency: 'USD' | 'ARS' | 'EUR' | 'GBP' } = {
+      const amount: {
+        amount: number;
+        currency: 'USD' | 'ARS' | 'EUR' | 'GBP';
+      } = {
         amount: totalMinor,
         currency: listing.pricePerTicket.currency,
       };
@@ -262,9 +279,12 @@ export class BffService {
         requireV1: risk.requireV1,
         requireV2: risk.requireV2,
         requireV3: risk.requireV3,
-        missingV1: risk.requireV1 && (!buyer || !VerificationHelper.hasV1(buyer)),
-        missingV2: risk.requireV2 && (!buyer || !VerificationHelper.hasV2(buyer)),
-        missingV3: risk.requireV3 && (!buyer || !VerificationHelper.hasV3(buyer)),
+        missingV1:
+          risk.requireV1 && (!buyer || !VerificationHelper.hasV1(buyer)),
+        missingV2:
+          risk.requireV2 && (!buyer || !VerificationHelper.hasV2(buyer)),
+        missingV3:
+          risk.requireV3 && (!buyer || !VerificationHelper.hasV3(buyer)),
       };
     }
 
@@ -289,13 +309,16 @@ export class BffService {
     paymentMethodId: string,
   ): Promise<{ checkoutRisk: NonNullable<BuyPageData['checkoutRisk']> }> {
     const listing = await this.ticketsService.getListingById(ctx, listingId);
-    const paymentMethod = await this.paymentMethodsService.findById(ctx, paymentMethodId).catch(() => null);
+    const paymentMethod = await this.paymentMethodsService
+      .findById(ctx, paymentMethodId)
+      .catch(() => null);
     const qty = Math.max(1, Math.floor(quantity));
     const totalMinor = listing.pricePerTicket.amount * qty;
-    const amount: { amount: number; currency: 'USD' | 'ARS' | 'EUR' | 'GBP' } = {
-      amount: totalMinor,
-      currency: listing.pricePerTicket.currency,
-    };
+    const amount: { amount: number; currency: 'USD' | 'ARS' | 'EUR' | 'GBP' } =
+      {
+        amount: totalMinor,
+        currency: listing.pricePerTicket.currency,
+      };
     const [risk, buyer] = await Promise.all([
       this.riskEngine.evaluateCheckoutRisk(ctx, buyerId, {
         quantity: qty,
@@ -376,7 +399,11 @@ export class BffService {
             userRole,
           );
       } catch (error) {
-        console.warn('getTransactionDetails: no payment confirmation yet', error);
+        this.logger.warn(
+          ctx,
+          'getTransactionDetails: no payment confirmation yet',
+          error,
+        );
       }
     }
 
@@ -389,7 +416,7 @@ export class BffService {
           userId,
         );
       } catch (error) {
-        console.warn('getTransactionDetails: failed to load reviews', error);
+        this.logger.warn(ctx, 'getTransactionDetails: failed to load reviews', error);
       }
     }
 
@@ -406,7 +433,11 @@ export class BffService {
           bankTransferConfig = paymentMethod.bankTransferConfig ?? null;
         }
       } catch (error) {
-        console.warn('getTransactionDetails: failed to load payment method', error);
+        this.logger.warn(
+          ctx,
+          'getTransactionDetails: failed to load payment method',
+          error,
+        );
       }
     }
 
@@ -424,10 +455,11 @@ export class BffService {
           seat: u.seat,
         }));
     } catch (error) {
-      console.warn('getTransactionDetails: listing not found or gone', error);
+      this.logger.warn(ctx, 'getTransactionDetails: listing not found or gone', error);
     }
 
-    const bffTransaction: BffTransactionWithDetails = this.toBffTransaction(transaction);
+    const bffTransaction: BffTransactionWithDetails =
+      this.toBffTransaction(transaction);
 
     let chat: GetTransactionDetailsResponse['chat'];
     const chatMode = getTransactionChatMode(transaction.status);

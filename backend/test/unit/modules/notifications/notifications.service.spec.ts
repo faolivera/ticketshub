@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
-import { INotificationsRepository, NOTIFICATIONS_REPOSITORY } from '../../../../src/modules/notifications/notifications.repository.interface';
+import {
+  INotificationsRepository,
+  NOTIFICATIONS_REPOSITORY,
+} from '../../../../src/modules/notifications/notifications.repository.interface';
 import type { Ctx } from '../../../../src/common/types/context';
 import type {
   NotificationEvent,
@@ -21,7 +24,9 @@ describe('NotificationsService', () => {
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
-  const createMockEvent = (overrides: Partial<NotificationEvent> = {}): NotificationEvent => ({
+  const createMockEvent = (
+    overrides: Partial<NotificationEvent> = {},
+  ): NotificationEvent => ({
     id: 'ne_123456_abcd',
     type: NotificationEventType.PAYMENT_REQUIRED,
     context: { transactionId: 'tx_123' },
@@ -31,7 +36,9 @@ describe('NotificationsService', () => {
     ...overrides,
   });
 
-  const createMockNotification = (overrides: Partial<Notification> = {}): Notification => ({
+  const createMockNotification = (
+    overrides: Partial<Notification> = {},
+  ): Notification => ({
     id: 'n_123456_abcd',
     eventId: 'ne_123456_abcd',
     eventType: NotificationEventType.PAYMENT_REQUIRED,
@@ -102,13 +109,18 @@ describe('NotificationsService', () => {
 
   describe('claimEvent', () => {
     it('should return event when successfully claimed', async () => {
-      const mockEvent = createMockEvent({ status: NotificationEventStatus.PROCESSING });
+      const mockEvent = createMockEvent({
+        status: NotificationEventStatus.PROCESSING,
+      });
       repository.claimPendingEvent.mockResolvedValue(mockEvent);
 
       const result = await service.claimEvent(mockCtx, 'ne_123456_abcd');
 
       expect(result).toEqual(mockEvent);
-      expect(repository.claimPendingEvent).toHaveBeenCalledWith(mockCtx, 'ne_123456_abcd');
+      expect(repository.claimPendingEvent).toHaveBeenCalledWith(
+        mockCtx,
+        'ne_123456_abcd',
+      );
     });
 
     it('should return undefined when event already claimed by another worker', async () => {
@@ -117,7 +129,10 @@ describe('NotificationsService', () => {
       const result = await service.claimEvent(mockCtx, 'ne_123456_abcd');
 
       expect(result).toBeUndefined();
-      expect(repository.claimPendingEvent).toHaveBeenCalledWith(mockCtx, 'ne_123456_abcd');
+      expect(repository.claimPendingEvent).toHaveBeenCalledWith(
+        mockCtx,
+        'ne_123456_abcd',
+      );
     });
 
     it('should return undefined when event does not exist', async () => {
@@ -126,22 +141,36 @@ describe('NotificationsService', () => {
       const result = await service.claimEvent(mockCtx, 'ne_nonexistent');
 
       expect(result).toBeUndefined();
-      expect(repository.claimPendingEvent).toHaveBeenCalledWith(mockCtx, 'ne_nonexistent');
+      expect(repository.claimPendingEvent).toHaveBeenCalledWith(
+        mockCtx,
+        'ne_nonexistent',
+      );
     });
   });
 
   describe('claimPendingEmails', () => {
     it('should return claimed notifications', async () => {
       const mockNotifications = [
-        createMockNotification({ id: 'n_1', status: NotificationStatus.QUEUED }),
-        createMockNotification({ id: 'n_2', status: NotificationStatus.QUEUED }),
+        createMockNotification({
+          id: 'n_1',
+          status: NotificationStatus.QUEUED,
+        }),
+        createMockNotification({
+          id: 'n_2',
+          status: NotificationStatus.QUEUED,
+        }),
       ];
-      repository.claimPendingEmailNotifications.mockResolvedValue(mockNotifications);
+      repository.claimPendingEmailNotifications.mockResolvedValue(
+        mockNotifications,
+      );
 
       const result = await service.claimPendingEmails(mockCtx, 10);
 
       expect(result).toEqual(mockNotifications);
-      expect(repository.claimPendingEmailNotifications).toHaveBeenCalledWith(mockCtx, 10);
+      expect(repository.claimPendingEmailNotifications).toHaveBeenCalledWith(
+        mockCtx,
+        10,
+      );
     });
 
     it('should return empty array when no pending emails available', async () => {
@@ -150,7 +179,10 @@ describe('NotificationsService', () => {
       const result = await service.claimPendingEmails(mockCtx, 10);
 
       expect(result).toEqual([]);
-      expect(repository.claimPendingEmailNotifications).toHaveBeenCalledWith(mockCtx, 10);
+      expect(repository.claimPendingEmailNotifications).toHaveBeenCalledWith(
+        mockCtx,
+        10,
+      );
     });
 
     it('should use default limit of 10 when not specified', async () => {
@@ -158,7 +190,10 @@ describe('NotificationsService', () => {
 
       await service.claimPendingEmails(mockCtx);
 
-      expect(repository.claimPendingEmailNotifications).toHaveBeenCalledWith(mockCtx, 10);
+      expect(repository.claimPendingEmailNotifications).toHaveBeenCalledWith(
+        mockCtx,
+        10,
+      );
     });
   });
 
@@ -168,27 +203,44 @@ describe('NotificationsService', () => {
         status: NotificationStatus.QUEUED,
         retryCount: 1,
       });
-      repository.claimRetryableEmailNotification.mockResolvedValue(mockNotification);
+      repository.claimRetryableEmailNotification.mockResolvedValue(
+        mockNotification,
+      );
 
-      const result = await service.claimRetryableEmail(mockCtx, 'n_123456_abcd');
+      const result = await service.claimRetryableEmail(
+        mockCtx,
+        'n_123456_abcd',
+      );
 
       expect(result).toEqual(mockNotification);
-      expect(repository.claimRetryableEmailNotification).toHaveBeenCalledWith(mockCtx, 'n_123456_abcd');
+      expect(repository.claimRetryableEmailNotification).toHaveBeenCalledWith(
+        mockCtx,
+        'n_123456_abcd',
+      );
     });
 
     it('should return undefined when notification already being retried', async () => {
       repository.claimRetryableEmailNotification.mockResolvedValue(undefined);
 
-      const result = await service.claimRetryableEmail(mockCtx, 'n_123456_abcd');
+      const result = await service.claimRetryableEmail(
+        mockCtx,
+        'n_123456_abcd',
+      );
 
       expect(result).toBeUndefined();
-      expect(repository.claimRetryableEmailNotification).toHaveBeenCalledWith(mockCtx, 'n_123456_abcd');
+      expect(repository.claimRetryableEmailNotification).toHaveBeenCalledWith(
+        mockCtx,
+        'n_123456_abcd',
+      );
     });
 
     it('should return undefined when notification does not exist', async () => {
       repository.claimRetryableEmailNotification.mockResolvedValue(undefined);
 
-      const result = await service.claimRetryableEmail(mockCtx, 'n_nonexistent');
+      const result = await service.claimRetryableEmail(
+        mockCtx,
+        'n_nonexistent',
+      );
 
       expect(result).toBeUndefined();
     });
@@ -196,7 +248,10 @@ describe('NotificationsService', () => {
     it('should return undefined when notification has exceeded max retries', async () => {
       repository.claimRetryableEmailNotification.mockResolvedValue(undefined);
 
-      const result = await service.claimRetryableEmail(mockCtx, 'n_123456_abcd');
+      const result = await service.claimRetryableEmail(
+        mockCtx,
+        'n_123456_abcd',
+      );
 
       expect(result).toBeUndefined();
     });
@@ -210,7 +265,10 @@ describe('NotificationsService', () => {
       });
       repository.updateEvent.mockResolvedValue(mockEvent);
 
-      const result = await service.markEventCompleted(mockCtx, 'ne_123456_abcd');
+      const result = await service.markEventCompleted(
+        mockCtx,
+        'ne_123456_abcd',
+      );
 
       expect(result?.status).toBe(NotificationEventStatus.COMPLETED);
       expect(repository.updateEvent).toHaveBeenCalledWith(
@@ -234,7 +292,11 @@ describe('NotificationsService', () => {
       });
       repository.updateEvent.mockResolvedValue(mockEvent);
 
-      const result = await service.markEventFailed(mockCtx, 'ne_123456_abcd', errorMessage);
+      const result = await service.markEventFailed(
+        mockCtx,
+        'ne_123456_abcd',
+        errorMessage,
+      );
 
       expect(result?.status).toBe(NotificationEventStatus.FAILED);
       expect(repository.updateEvent).toHaveBeenCalledWith(
@@ -267,15 +329,27 @@ describe('NotificationsService', () => {
   describe('getRetryableEmailNotifications', () => {
     it('should return retryable notifications from repository', async () => {
       const mockNotifications = [
-        createMockNotification({ id: 'n_1', status: NotificationStatus.FAILED, retryCount: 1 }),
-        createMockNotification({ id: 'n_2', status: NotificationStatus.FAILED, retryCount: 2 }),
+        createMockNotification({
+          id: 'n_1',
+          status: NotificationStatus.FAILED,
+          retryCount: 1,
+        }),
+        createMockNotification({
+          id: 'n_2',
+          status: NotificationStatus.FAILED,
+          retryCount: 2,
+        }),
       ];
-      repository.findRetryableEmailNotifications.mockResolvedValue(mockNotifications);
+      repository.findRetryableEmailNotifications.mockResolvedValue(
+        mockNotifications,
+      );
 
       const result = await service.getRetryableEmailNotifications(mockCtx);
 
       expect(result).toEqual(mockNotifications);
-      expect(repository.findRetryableEmailNotifications).toHaveBeenCalledWith(mockCtx);
+      expect(repository.findRetryableEmailNotifications).toHaveBeenCalledWith(
+        mockCtx,
+      );
     });
   });
 

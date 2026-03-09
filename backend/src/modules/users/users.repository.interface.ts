@@ -11,8 +11,13 @@ import type {
 /**
  * Data required to create a new user
  */
-export type CreateUserData = Omit<User, 'id' | 'country' | 'currency' | 'status'> &
-  Partial<Pick<User, 'country' | 'currency' | 'buyerDisputed'>> & { status?: UserStatus };
+export type CreateUserData = Omit<
+  User,
+  'id' | 'country' | 'currency' | 'status'
+> &
+  Partial<Pick<User, 'country' | 'currency' | 'buyerDisputed'>> & {
+    status?: UserStatus;
+  };
 
 /**
  * Data for updating basic user information
@@ -142,7 +147,10 @@ export interface IUsersRepository {
   /**
    * Invalidate V4 (bank account verified = false). Used when V3 legal name changes.
    */
-  invalidateBankAccountVerification(ctx: Ctx, userId: string): Promise<User | undefined>;
+  invalidateBankAccountVerification(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<User | undefined>;
 
   /**
    * Update or set bank account data
@@ -197,7 +205,10 @@ export interface UpdateUserForAdminData {
     Pick<IdentityVerification, 'status' | 'rejectionReason' | 'reviewedAt'>
   >;
   bankAccount?: Partial<
-    Pick<BankAccount, 'holderName' | 'cbuOrCvu' | 'alias' | 'verified' | 'verifiedAt'>
+    Pick<
+      BankAccount,
+      'holderName' | 'cbuOrCvu' | 'alias' | 'verified' | 'verifiedAt'
+    >
   >;
 }
 

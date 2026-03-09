@@ -6,10 +6,7 @@ import {
   type WalletTransaction,
   type Money,
 } from '@/modules/wallet/wallet.domain';
-import {
-  Role,
-  UserStatus,
-} from '@/modules/users/users.domain';
+import { Role, UserStatus } from '@/modules/users/users.domain';
 import type { Ctx } from '@/common/types/context';
 import { OptimisticLockException } from '@/common/exceptions/optimistic-lock.exception';
 import {
@@ -24,17 +21,23 @@ describe('WalletRepository (Integration)', () => {
   let repository: WalletRepository;
   let ctx: Ctx;
 
-  const createMoney = (amount: number, currency: 'EUR' | 'USD' = 'EUR'): Money => ({
+  const createMoney = (
+    amount: number,
+    currency: 'EUR' | 'USD' = 'EUR',
+  ): Money => ({
     amount,
     currency,
   });
 
-  const createTestUser = async (overrides?: { email?: string }): Promise<string> => {
+  const createTestUser = async (overrides?: {
+    email?: string;
+  }): Promise<string> => {
     const userId = randomUUID();
     await prisma.user.create({
       data: {
         id: userId,
-        email: overrides?.email ?? `test-${Date.now()}-${randomUUID()}@example.com`,
+        email:
+          overrides?.email ?? `test-${Date.now()}-${randomUUID()}@example.com`,
         firstName: 'Test',
         lastName: 'User',
         publicName: `testuser-${userId.slice(0, 8)}`,
@@ -52,7 +55,10 @@ describe('WalletRepository (Integration)', () => {
     return userId;
   };
 
-  const createTestWallet = (userId: string, overrides?: Partial<Wallet>): Wallet => ({
+  const createTestWallet = (
+    userId: string,
+    overrides?: Partial<Wallet>,
+  ): Wallet => ({
     userId,
     balance: createMoney(10000),
     pendingBalance: createMoney(0),
@@ -372,7 +378,10 @@ describe('WalletRepository (Integration)', () => {
         amount: createMoney(5000),
       });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction).toBeDefined();
       expect(transaction.id).toBe(transactionData.id);
@@ -390,7 +399,10 @@ describe('WalletRepository (Integration)', () => {
         description: 'Withdrawal',
       });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction.type).toBe(WalletTransactionType.Debit);
       expect(transaction.description).toBe('Withdrawal');
@@ -404,7 +416,10 @@ describe('WalletRepository (Integration)', () => {
         amount: createMoney(2000),
       });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction.type).toBe(WalletTransactionType.Hold);
     });
@@ -417,7 +432,10 @@ describe('WalletRepository (Integration)', () => {
         amount: createMoney(2000),
       });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction.type).toBe(WalletTransactionType.Release);
     });
@@ -428,7 +446,10 @@ describe('WalletRepository (Integration)', () => {
       const reference = `txn-${randomUUID()}`;
       const transactionData = createTestTransaction(userId, { reference });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction.reference).toBe(reference);
     });
@@ -439,7 +460,10 @@ describe('WalletRepository (Integration)', () => {
       const createdAt = new Date('2024-06-15T10:30:00Z');
       const transactionData = createTestTransaction(userId, { createdAt });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction.createdAt.toISOString()).toBe(createdAt.toISOString());
     });
@@ -450,7 +474,10 @@ describe('WalletRepository (Integration)', () => {
       const userId = await createTestUser();
       await repository.upsertWallet(ctx, createTestWallet(userId));
 
-      const transactions = await repository.getTransactionsByUserId(ctx, userId);
+      const transactions = await repository.getTransactionsByUserId(
+        ctx,
+        userId,
+      );
 
       expect(transactions).toEqual([]);
     });
@@ -462,7 +489,10 @@ describe('WalletRepository (Integration)', () => {
       await repository.createTransaction(ctx, createTestTransaction(userId));
       await repository.createTransaction(ctx, createTestTransaction(userId));
 
-      const transactions = await repository.getTransactionsByUserId(ctx, userId);
+      const transactions = await repository.getTransactionsByUserId(
+        ctx,
+        userId,
+      );
 
       expect(transactions).toHaveLength(3);
     });
@@ -488,11 +518,20 @@ describe('WalletRepository (Integration)', () => {
         createTestTransaction(userId, { createdAt: newDate }),
       );
 
-      const transactions = await repository.getTransactionsByUserId(ctx, userId);
+      const transactions = await repository.getTransactionsByUserId(
+        ctx,
+        userId,
+      );
 
-      expect(transactions[0].createdAt.toISOString()).toBe(newDate.toISOString());
-      expect(transactions[1].createdAt.toISOString()).toBe(middleDate.toISOString());
-      expect(transactions[2].createdAt.toISOString()).toBe(oldDate.toISOString());
+      expect(transactions[0].createdAt.toISOString()).toBe(
+        newDate.toISOString(),
+      );
+      expect(transactions[1].createdAt.toISOString()).toBe(
+        middleDate.toISOString(),
+      );
+      expect(transactions[2].createdAt.toISOString()).toBe(
+        oldDate.toISOString(),
+      );
     });
 
     it('should only return transactions for the specified user', async () => {
@@ -505,7 +544,10 @@ describe('WalletRepository (Integration)', () => {
       await repository.createTransaction(ctx, createTestTransaction(userId1));
       await repository.createTransaction(ctx, createTestTransaction(userId2));
 
-      const transactions = await repository.getTransactionsByUserId(ctx, userId1);
+      const transactions = await repository.getTransactionsByUserId(
+        ctx,
+        userId1,
+      );
 
       expect(transactions).toHaveLength(2);
       expect(transactions.every((t) => t.walletUserId === userId1)).toBe(true);
@@ -514,7 +556,10 @@ describe('WalletRepository (Integration)', () => {
 
   describe('getTransactionById', () => {
     it('should return undefined when transaction does not exist', async () => {
-      const transaction = await repository.getTransactionById(ctx, randomUUID());
+      const transaction = await repository.getTransactionById(
+        ctx,
+        randomUUID(),
+      );
 
       expect(transaction).toBeUndefined();
     });
@@ -528,7 +573,10 @@ describe('WalletRepository (Integration)', () => {
       });
       await repository.createTransaction(ctx, transactionData);
 
-      const transaction = await repository.getTransactionById(ctx, transactionData.id);
+      const transaction = await repository.getTransactionById(
+        ctx,
+        transactionData.id,
+      );
 
       expect(transaction).toBeDefined();
       expect(transaction?.id).toBe(transactionData.id);
@@ -601,9 +649,14 @@ describe('WalletRepository (Integration)', () => {
     it('should handle empty description in transaction', async () => {
       const userId = await createTestUser();
       await repository.upsertWallet(ctx, createTestWallet(userId));
-      const transactionData = createTestTransaction(userId, { description: '' });
+      const transactionData = createTestTransaction(userId, {
+        description: '',
+      });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction.description).toBe('');
     });
@@ -615,7 +668,10 @@ describe('WalletRepository (Integration)', () => {
         amount: createMoney(0),
       });
 
-      const transaction = await repository.createTransaction(ctx, transactionData);
+      const transaction = await repository.createTransaction(
+        ctx,
+        transactionData,
+      );
 
       expect(transaction.amount.amount).toBe(0);
     });

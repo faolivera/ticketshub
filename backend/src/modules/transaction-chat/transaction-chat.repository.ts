@@ -145,7 +145,9 @@ export class TransactionChatRepository
       transactionId: row.transactionId,
       senderId: row.senderId,
       content: row.content,
-      messageType: (row.messageType === 'delivery' ? 'delivery' : 'text') as TransactionChatMessageEntity['messageType'],
+      messageType: (row.messageType === 'delivery'
+        ? 'delivery'
+        : 'text') as TransactionChatMessageEntity['messageType'],
       payloadType: row.payloadType,
       createdAt: row.createdAt,
       readByBuyerAt: row.readByBuyerAt,

@@ -43,20 +43,25 @@ export class TransactionChatService {
     afterId?: string,
     options?: { markRead?: boolean },
   ): Promise<GetTransactionChatMessagesResponse> {
-    const transaction =
-      await this.transactionsService.getTransactionById(
-        ctx,
-        transactionId,
-        userId,
-      );
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      transactionId,
+      userId,
+    );
     if (!canReadTransactionChat(transaction.status)) {
-      throw new ForbiddenException('Chat is not available for this transaction');
+      throw new ForbiddenException(
+        'Chat is not available for this transaction',
+      );
     }
     const config = await this.platformConfigService.getPlatformConfig(ctx);
-    const entities = await this.chatRepository.findByTransaction(ctx, transactionId, {
-      afterId,
-      limit: config.transactionChatMaxMessages,
-    });
+    const entities = await this.chatRepository.findByTransaction(
+      ctx,
+      transactionId,
+      {
+        afterId,
+        limit: config.transactionChatMaxMessages,
+      },
+    );
     const markRead = options?.markRead !== false;
     if (markRead) {
       await this.chatRepository.markAsReadForUser(
@@ -82,12 +87,11 @@ export class TransactionChatService {
     transactionId: string,
     userId: string,
   ): Promise<void> {
-    const transaction =
-      await this.transactionsService.getTransactionById(
-        ctx,
-        transactionId,
-        userId,
-      );
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      transactionId,
+      userId,
+    );
     if (!canReadTransactionChat(transaction.status)) {
       return;
     }
@@ -110,20 +114,18 @@ export class TransactionChatService {
     transactionId: string,
     userId: string,
   ): Promise<boolean> {
-    const transaction =
-      await this.transactionsService.getTransactionById(
-        ctx,
-        transactionId,
-        userId,
-      );
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      transactionId,
+      userId,
+    );
     if (!canReadTransactionChat(transaction.status)) {
       return false;
     }
-    const count =
-      await this.chatRepository.countTextMessagesByTransaction(
-        ctx,
-        transactionId,
-      );
+    const count = await this.chatRepository.countTextMessagesByTransaction(
+      ctx,
+      transactionId,
+    );
     return count > 0;
   }
 
@@ -136,12 +138,11 @@ export class TransactionChatService {
     transactionId: string,
     userId: string,
   ): Promise<boolean> {
-    const transaction =
-      await this.transactionsService.getTransactionById(
-        ctx,
-        transactionId,
-        userId,
-      );
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      transactionId,
+      userId,
+    );
     if (!canReadTransactionChat(transaction.status)) {
       return false;
     }
@@ -161,14 +162,15 @@ export class TransactionChatService {
     userId: string,
     content: string,
   ): Promise<PostTransactionChatMessageResponse> {
-    const transaction =
-      await this.transactionsService.getTransactionById(
-        ctx,
-        transactionId,
-        userId,
-      );
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      transactionId,
+      userId,
+    );
     if (!canSendTransactionChat(transaction.status)) {
-      throw new ForbiddenException('Chat is not available for this transaction');
+      throw new ForbiddenException(
+        'Chat is not available for this transaction',
+      );
     }
     if (content == null || typeof content !== 'string') {
       throw new BadRequestException('Message content is required');
@@ -183,7 +185,10 @@ export class TransactionChatService {
       );
     }
     const config = await this.platformConfigService.getPlatformConfig(ctx);
-    const count = await this.chatRepository.countByTransaction(ctx, transactionId);
+    const count = await this.chatRepository.countByTransaction(
+      ctx,
+      transactionId,
+    );
     if (count >= config.transactionChatMaxMessages) {
       throw new BadRequestException(
         `Maximum number of messages (${config.transactionChatMaxMessages}) reached for this transaction`,
@@ -212,12 +217,11 @@ export class TransactionChatService {
     sellerId: string,
     payloadType: string,
   ): Promise<TransactionChatMessageItem> {
-    const transaction =
-      await this.transactionsService.getTransactionById(
-        ctx,
-        transactionId,
-        sellerId,
-      );
+    const transaction = await this.transactionsService.getTransactionById(
+      ctx,
+      transactionId,
+      sellerId,
+    );
     if (transaction.sellerId !== sellerId) {
       throw new ForbiddenException('Only seller can create delivery message');
     }

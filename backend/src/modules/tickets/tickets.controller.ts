@@ -45,11 +45,7 @@ export class TicketsController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: CreateListingRequest,
   ): Promise<ApiResponse<CreateListingResponse>> {
-    const listing = await this.ticketsService.createListing(
-      ctx,
-      user.id,
-      body,
-    );
+    const listing = await this.ticketsService.createListing(ctx, user.id, body);
     return { success: true, data: listing };
   }
 

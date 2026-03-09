@@ -115,7 +115,10 @@ export const AdminUpdateEventRequestSchema = z.object({
     .string()
     .min(2)
     .max(120)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase letters, numbers, and hyphens only')
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      'Slug must be lowercase letters, numbers, and hyphens only',
+    )
     .optional(),
   description: z.string().min(10).max(5000).optional(),
   category: z
@@ -444,7 +447,9 @@ export const AdminTransactionDetailResponseSchema = z.object({
   paymentApprovedAt: z.coerce.date().optional(),
   paymentApprovedBy: z.string().optional(),
   disputeId: z.string().optional(),
-  paymentConfirmations: z.array(AdminTransactionDetailPaymentConfirmationSchema),
+  paymentConfirmations: z.array(
+    AdminTransactionDetailPaymentConfirmationSchema,
+  ),
   payoutReceiptFiles: z.array(AdminTransactionPayoutReceiptFileSchema),
   bankTransferDestination: BankTransferDestinationSchema.optional(),
 });
@@ -539,7 +544,12 @@ const AdminUserListItemSchema = z.object({
   role: z.string(),
   emailVerified: z.boolean(),
   phoneVerified: z.boolean(),
-  identityVerificationStatus: z.enum(['none', 'pending', 'approved', 'rejected']),
+  identityVerificationStatus: z.enum([
+    'none',
+    'pending',
+    'approved',
+    'rejected',
+  ]),
   bankAccountVerified: z.boolean(),
   acceptedSellerTermsAt: z.coerce.date().optional(),
   createdAt: z.coerce.date(),

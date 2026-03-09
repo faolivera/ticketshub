@@ -11,7 +11,10 @@ import type {
   IPromotionsRepository,
   ListPromotionsFilters,
 } from './promotions.repository.interface';
-import { PromotionStatus as PrismaPromotionStatus, PromotionType as PrismaPromotionType } from '@prisma/client';
+import {
+  PromotionStatus as PrismaPromotionStatus,
+  PromotionType as PrismaPromotionType,
+} from '@prisma/client';
 
 @Injectable()
 export class PromotionsRepository
@@ -188,7 +191,11 @@ export class PromotionsRepository
   ): Promise<number> {
     const client = this.getClient(ctx);
     const result = await client.promotion.updateMany({
-      where: { userId, type: this.mapTypeToDb(type), status: PrismaPromotionStatus.active },
+      where: {
+        userId,
+        type: this.mapTypeToDb(type),
+        status: PrismaPromotionStatus.active,
+      },
       data: { status: PrismaPromotionStatus.inactive },
     });
     return result.count;

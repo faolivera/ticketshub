@@ -21,7 +21,8 @@ describe('EventsService - getEventsForSelection', () => {
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
   const createMockEvent = (overrides: Partial<Event> = {}): Event => {
-    const id = overrides?.id ?? `evt_${Math.random().toString(36).substr(2, 9)}`;
+    const id =
+      overrides?.id ?? `evt_${Math.random().toString(36).substr(2, 9)}`;
     return {
       id,
       slug: overrides?.slug ?? `test-event-${id.slice(0, 8)}`,
@@ -130,10 +131,13 @@ describe('EventsService - getEventsForSelection', () => {
       expect(result.events).toHaveLength(2);
       expect(result.total).toBe(2);
       expect(result.hasMore).toBe(false);
-      expect(eventsRepository.getApprovedEventsForSelection).toHaveBeenCalledWith(
-        mockCtx,
-        { limit: 13, offset: 0, search: undefined },
-      );
+      expect(
+        eventsRepository.getApprovedEventsForSelection,
+      ).toHaveBeenCalledWith(mockCtx, {
+        limit: 13,
+        offset: 0,
+        search: undefined,
+      });
     });
 
     it('should apply search filter to repository call', async () => {
@@ -152,10 +156,9 @@ describe('EventsService - getEventsForSelection', () => {
 
       expect(result.events).toHaveLength(1);
       expect(result.events[0].name).toBe('Rock Concert');
-      expect(eventsRepository.getApprovedEventsForSelection).toHaveBeenCalledWith(
-        mockCtx,
-        { limit: 13, offset: 0, search: 'rock' },
-      );
+      expect(
+        eventsRepository.getApprovedEventsForSelection,
+      ).toHaveBeenCalledWith(mockCtx, { limit: 13, offset: 0, search: 'rock' });
     });
 
     it('should apply custom limit and offset', async () => {
@@ -175,10 +178,13 @@ describe('EventsService - getEventsForSelection', () => {
 
       expect(result.events).toHaveLength(5);
       expect(result.hasMore).toBe(false);
-      expect(eventsRepository.getApprovedEventsForSelection).toHaveBeenCalledWith(
-        mockCtx,
-        { limit: 6, offset: 10, search: undefined },
-      );
+      expect(
+        eventsRepository.getApprovedEventsForSelection,
+      ).toHaveBeenCalledWith(mockCtx, {
+        limit: 6,
+        offset: 10,
+        search: undefined,
+      });
     });
 
     it('should set hasMore to true when more events exist', async () => {

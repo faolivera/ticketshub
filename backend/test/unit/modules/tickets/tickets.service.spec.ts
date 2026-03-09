@@ -204,12 +204,14 @@ describe('TicketsService', () => {
 
     const mockPromotionsService = {
       getActiveForUser: jest.fn().mockResolvedValue(null),
-      toSnapshot: jest.fn((p: { id: string; name: string; type: string; config: object }) => ({
-        id: p.id,
-        name: p.name,
-        type: p.type,
-        config: p.config,
-      })),
+      toSnapshot: jest.fn(
+        (p: { id: string; name: string; type: string; config: object }) => ({
+          id: p.id,
+          name: p.name,
+          type: p.type,
+          config: p.config,
+        }),
+      ),
       incrementUsedAndAddListingId: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -247,12 +249,16 @@ describe('TicketsService', () => {
 
     const mockNestConfig = {
       get: jest.fn((key: string) =>
-        key === 'platform.riskEngine.buyer.phoneRequiredEventHours' ? 72 : undefined
+        key === 'platform.riskEngine.buyer.phoneRequiredEventHours'
+          ? 72
+          : undefined,
       ),
     };
 
     const mockConversionService = {
-      sumInCurrency: jest.fn().mockResolvedValue({ amount: 0, currency: 'USD' }),
+      sumInCurrency: jest
+        .fn()
+        .mockResolvedValue({ amount: 0, currency: 'USD' }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -315,11 +321,10 @@ describe('TicketsService', () => {
         async (ctx, listing) => listing,
       );
 
-      const result = await service.createListing(
-        mockCtx,
-        'seller_123',
-        { ...baseCreateRequest, eventDateId: 'edt_456' },
-      );
+      const result = await service.createListing(mockCtx, 'seller_123', {
+        ...baseCreateRequest,
+        eventDateId: 'edt_456',
+      });
 
       expect(result.status).toBe(ListingStatus.Pending);
     });
@@ -330,15 +335,11 @@ describe('TicketsService', () => {
         async (ctx, listing) => listing,
       );
 
-      const result = await service.createListing(
-        mockCtx,
-        'seller_123',
-        {
-          ...baseCreateRequest,
-          eventId: 'evt_pending',
-          eventDateId: 'edt_789',
-        },
-      );
+      const result = await service.createListing(mockCtx, 'seller_123', {
+        ...baseCreateRequest,
+        eventId: 'evt_pending',
+        eventDateId: 'edt_789',
+      });
 
       expect(result.status).toBe(ListingStatus.Pending);
     });
@@ -351,11 +352,7 @@ describe('TicketsService', () => {
       eventsService.getEventById.mockResolvedValue(rejectedEvent as any);
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          baseCreateRequest,
-        ),
+        service.createListing(mockCtx, 'seller_123', baseCreateRequest),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -374,11 +371,7 @@ describe('TicketsService', () => {
       );
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          baseCreateRequest,
-        ),
+        service.createListing(mockCtx, 'seller_123', baseCreateRequest),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -388,11 +381,7 @@ describe('TicketsService', () => {
       );
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          baseCreateRequest,
-        ),
+        service.createListing(mockCtx, 'seller_123', baseCreateRequest),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -403,11 +392,7 @@ describe('TicketsService', () => {
       };
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          requestWithoutType,
-        ),
+        service.createListing(mockCtx, 'seller_123', requestWithoutType),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -418,11 +403,7 @@ describe('TicketsService', () => {
       };
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          requestWithInvalidType,
-        ),
+        service.createListing(mockCtx, 'seller_123', requestWithInvalidType),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -433,11 +414,7 @@ describe('TicketsService', () => {
       };
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          requestWithoutDateId,
-        ),
+        service.createListing(mockCtx, 'seller_123', requestWithoutDateId),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -448,11 +425,7 @@ describe('TicketsService', () => {
       };
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          requestWithoutSectionId,
-        ),
+        service.createListing(mockCtx, 'seller_123', requestWithoutSectionId),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -461,11 +434,7 @@ describe('TicketsService', () => {
       eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
 
       await expect(
-        service.createListing(
-          mockCtx,
-          'seller_123',
-          baseCreateRequest,
-        ),
+        service.createListing(mockCtx, 'seller_123', baseCreateRequest),
       ).rejects.toThrow('Must accept seller terms first');
     });
 
@@ -519,7 +488,9 @@ describe('TicketsService', () => {
         identityVerification: undefined,
       } as any);
       eventsService.getEventById.mockResolvedValue(eventBeyond72h as any);
-      ticketsRepository.create.mockImplementation(async (ctx, listing) => listing);
+      ticketsRepository.create.mockImplementation(
+        async (ctx, listing) => listing,
+      );
 
       const result = await service.createListing(
         mockCtx,
@@ -1134,7 +1105,9 @@ describe('TicketsService', () => {
 
     it('should throw BadRequestException for sellTogether listing with partial selection', async () => {
       const sellTogetherListing = { ...mockActiveListing, sellTogether: true };
-      ticketsRepository.findByIdForUpdate.mockResolvedValue(sellTogetherListing);
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(
+        sellTogetherListing,
+      );
 
       await expect(
         service.reserveTickets(mockCtx, 'tkt_active', ['unit_1']),
@@ -1301,7 +1274,9 @@ describe('TicketsService', () => {
           },
         ],
       };
-      ticketsRepository.findByIdForUpdate.mockResolvedValue(listingWithReserved);
+      ticketsRepository.findByIdForUpdate.mockResolvedValue(
+        listingWithReserved,
+      );
 
       await expect(
         service.cancelListing(mockCtx, 'tkt_active', 'seller_123'),

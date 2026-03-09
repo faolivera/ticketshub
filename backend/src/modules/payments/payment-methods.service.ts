@@ -58,7 +58,9 @@ export class PaymentMethodsService {
     return await this.repository.findEnabled(ctx);
   }
 
-  async getPublicPaymentMethods(ctx: Ctx): Promise<PublicPaymentMethodOption[]> {
+  async getPublicPaymentMethods(
+    ctx: Ctx,
+  ): Promise<PublicPaymentMethodOption[]> {
     const enabled = await this.repository.findEnabled(ctx);
     return enabled.map((pm) => ({
       id: pm.id,
@@ -101,11 +103,15 @@ export class PaymentMethodsService {
   ): Promise<PaymentMethodOption> {
     const existing = await this.findById(ctx, id);
 
-    if (data.gatewayProvider !== undefined || data.bankTransferConfig !== undefined) {
+    if (
+      data.gatewayProvider !== undefined ||
+      data.bankTransferConfig !== undefined
+    ) {
       const merged = {
         type: existing.type,
         gatewayProvider: data.gatewayProvider ?? existing.gatewayProvider,
-        bankTransferConfig: data.bankTransferConfig ?? existing.bankTransferConfig,
+        bankTransferConfig:
+          data.bankTransferConfig ?? existing.bankTransferConfig,
       };
       this.validatePaymentMethodData(merged as CreatePaymentMethodRequest);
     }
@@ -156,7 +162,9 @@ export class PaymentMethodsService {
       paymentMethod.gatewayProvider!,
     );
 
-    const env = (this.configService.get<Record<string, string | undefined>>('env') ?? {}) as Record<string, string | undefined>;
+    const env = (this.configService.get<Record<string, string | undefined>>(
+      'env',
+    ) ?? {}) as Record<string, string | undefined>;
     const credentials: GatewayCredentials = {};
     for (const key of credentialKeys) {
       const envKey = `${prefix}_${key}`;
@@ -216,7 +224,12 @@ export class PaymentMethodsService {
         );
       }
       const config = data.bankTransferConfig;
-      if (!config.cbu || !config.accountHolderName || !config.bankName || !config.cuitCuil) {
+      if (
+        !config.cbu ||
+        !config.accountHolderName ||
+        !config.bankName ||
+        !config.cuitCuil
+      ) {
         throw new BadRequestException(
           'Bank transfer config must include cbu, accountHolderName, bankName, and cuitCuil',
         );

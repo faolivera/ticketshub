@@ -10,9 +10,7 @@ import { IdentityVerificationStatus } from './identity-verification.domain';
 import type { IIdentityVerificationRepository } from './identity-verification.repository.interface';
 
 @Injectable()
-export class IdentityVerificationRepository
-  implements IIdentityVerificationRepository
-{
+export class IdentityVerificationRepository implements IIdentityVerificationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async save(

@@ -37,7 +37,10 @@ export class NotificationsSeeder implements OnModuleInit {
     // Sync so new templates (e.g. OFFER_RECEIVED) are created when getDefaultTemplates() is extended
     const sync = await this.syncTemplates(ON_APP_INIT_CTX);
     if (sync.created > 0 || sync.updated > 0) {
-      this.logger.log(ON_APP_INIT_CTX, `Notification templates sync: ${sync.created} created, ${sync.updated} updated`);
+      this.logger.log(
+        ON_APP_INIT_CTX,
+        `Notification templates sync: ${sync.created} created, ${sync.updated} updated`,
+      );
     }
   }
 
@@ -79,39 +82,180 @@ export class NotificationsSeeder implements OnModuleInit {
 
   private async seedChannelConfigs(ctx: Ctx): Promise<void> {
     const existing = await this.repository.findAllChannelConfigs(ctx);
-    const existingEventTypes = new Set(existing.map(c => c.eventType));
+    const existingEventTypes = new Set(existing.map((c) => c.eventType));
 
     if (existingEventTypes.size >= Object.keys(NotificationEventType).length) {
-      this.logger.log(ctx, `All channel configs already exist (${existing.length}), skipping seed`);
+      this.logger.log(
+        ctx,
+        `All channel configs already exist (${existing.length}), skipping seed`,
+      );
       return;
     }
 
     this.logger.log(ctx, 'Seeding missing channel configs...');
 
     const configs: Omit<NotificationChannelConfig, 'id'>[] = [
-      { eventType: NotificationEventType.PAYMENT_REQUIRED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.BUYER_PAYMENT_APPROVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
-      { eventType: NotificationEventType.BUYER_PAYMENT_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.TICKET_TRANSFERRED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.TRANSACTION_COMPLETED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
-      { eventType: NotificationEventType.TRANSACTION_CANCELLED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.TRANSACTION_EXPIRED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.DISPUTE_OPENED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.URGENT, updatedAt: new Date() },
-      { eventType: NotificationEventType.DISPUTE_RESOLVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.IDENTITY_VERIFIED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
-      { eventType: NotificationEventType.IDENTITY_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.IDENTITY_SUBMITTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.BANK_ACCOUNT_SUBMITTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.SELLER_VERIFICATION_COMPLETE, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
-      { eventType: NotificationEventType.EVENT_APPROVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
-      { eventType: NotificationEventType.EVENT_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.REVIEW_RECEIVED, inAppEnabled: true, emailEnabled: false, priority: NotificationPriority.LOW, updatedAt: new Date() },
-      { eventType: NotificationEventType.OFFER_RECEIVED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.OFFER_ACCEPTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.HIGH, updatedAt: new Date() },
-      { eventType: NotificationEventType.OFFER_REJECTED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
-      { eventType: NotificationEventType.OFFER_CANCELLED, inAppEnabled: true, emailEnabled: true, priority: NotificationPriority.NORMAL, updatedAt: new Date() },
+      {
+        eventType: NotificationEventType.PAYMENT_REQUIRED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.BUYER_PAYMENT_APPROVED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.BUYER_PAYMENT_REJECTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.TICKET_TRANSFERRED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.TRANSACTION_COMPLETED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.TRANSACTION_CANCELLED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.TRANSACTION_EXPIRED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.DISPUTE_OPENED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.URGENT,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.DISPUTE_RESOLVED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.IDENTITY_VERIFIED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.IDENTITY_REJECTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.IDENTITY_SUBMITTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.BANK_ACCOUNT_SUBMITTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.SELLER_VERIFICATION_COMPLETE,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.EVENT_APPROVED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.EVENT_REJECTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.REVIEW_RECEIVED,
+        inAppEnabled: true,
+        emailEnabled: false,
+        priority: NotificationPriority.LOW,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.OFFER_RECEIVED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.OFFER_ACCEPTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.OFFER_REJECTED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.OFFER_CANCELLED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
     ];
 
     let seededCount = 0;
@@ -125,13 +269,19 @@ export class NotificationsSeeder implements OnModuleInit {
       }
     }
 
-    this.logger.log(ctx, `Seeded ${seededCount} channel configs (${existing.length} already existed)`);
+    this.logger.log(
+      ctx,
+      `Seeded ${seededCount} channel configs (${existing.length} already existed)`,
+    );
   }
 
   private async seedTemplates(ctx: Ctx): Promise<void> {
     const existing = await this.repository.findAllTemplates(ctx);
     if (existing.length > 0) {
-      this.logger.log(ctx, `Templates already exist (${existing.length}), skipping seed`);
+      this.logger.log(
+        ctx,
+        `Templates already exist (${existing.length}), skipping seed`,
+      );
       return;
     }
 
@@ -152,7 +302,10 @@ export class NotificationsSeeder implements OnModuleInit {
     this.logger.log(ctx, `Seeded ${templates.length} templates`);
   }
 
-  private getDefaultTemplates(): Omit<NotificationTemplate, 'id' | 'isActive' | 'createdAt' | 'updatedAt'>[] {
+  private getDefaultTemplates(): Omit<
+    NotificationTemplate,
+    'id' | 'isActive' | 'createdAt' | 'updatedAt'
+  >[] {
     return [
       // PAYMENT_REQUIRED
       {
@@ -160,7 +313,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Pago pendiente',
-        bodyTemplate: 'Tienes un pago pendiente de {{amountFormatted}} para "{{eventName}}"',
+        bodyTemplate:
+          'Tienes un pago pendiente de {{amountFormatted}} para "{{eventName}}"',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
@@ -168,7 +322,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Pago pendiente para "{{eventName}}"',
-        bodyTemplate: 'Hola, tienes un pago pendiente de {{amountFormatted}} para el ticket de "{{eventName}}" de {{sellerName}}. El pago expira el {{expiresAt}}. Por favor realiza el pago para completar tu compra.',
+        bodyTemplate:
+          'Hola, tienes un pago pendiente de {{amountFormatted}} para el ticket de "{{eventName}}" de {{sellerName}}. El pago expira el {{expiresAt}}. Por favor realiza el pago para completar tu compra.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -178,7 +333,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Nuevo pago recibido',
-        bodyTemplate: '{{buyerName}} envió un comprobante de pago para "{{eventName}}"',
+        bodyTemplate:
+          '{{buyerName}} envió un comprobante de pago para "{{eventName}}"',
         actionUrlTemplate: '/admin/transactions',
       },
       {
@@ -186,7 +342,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Pago recibido para "{{eventName}}"',
-        bodyTemplate: '{{buyerName}} ha enviado un comprobante de pago de {{amountFormatted}} para tu ticket de "{{eventName}}". Por favor revisa y confirma el pago.',
+        bodyTemplate:
+          '{{buyerName}} ha enviado un comprobante de pago de {{amountFormatted}} para tu ticket de "{{eventName}}". Por favor revisa y confirma el pago.',
         actionUrlTemplate: '/admin/transactions',
       },
 
@@ -222,7 +379,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Tu pago para "{{eventName}}" fue rechazado',
-        bodyTemplate: 'Lamentablemente, {{sellerName}} ha rechazado tu pago para "{{eventName}}". Motivo: {{rejectionReason}}. Por favor contacta al vendedor o intenta nuevamente.',
+        bodyTemplate:
+          'Lamentablemente, {{sellerName}} ha rechazado tu pago para "{{eventName}}". Motivo: {{rejectionReason}}. Por favor contacta al vendedor o intenta nuevamente.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -232,7 +390,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Pago disponible',
-        bodyTemplate: 'El pago de {{amountFormatted}} por "{{eventName}}" ya está disponible. Transferí la entrada al comprador.',
+        bodyTemplate:
+          'El pago de {{amountFormatted}} por "{{eventName}}" ya está disponible. Transferí la entrada al comprador.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
@@ -240,7 +399,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Pago recibido - Transferí la entrada',
-        bodyTemplate: 'El pago de {{amountFormatted}} por tu entrada de "{{eventName}}" ya está disponible en escrow. Por favor transferí la entrada al comprador para completar la venta.',
+        bodyTemplate:
+          'El pago de {{amountFormatted}} por tu entrada de "{{eventName}}" ya está disponible en escrow. Por favor transferí la entrada al comprador para completar la venta.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -250,7 +410,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: '¡Entrada transferida!',
-        bodyTemplate: 'Has recibido tu entrada para "{{eventName}}". Por favor confirma que la recibiste para liberar el pago al vendedor.',
+        bodyTemplate:
+          'Has recibido tu entrada para "{{eventName}}". Por favor confirma que la recibiste para liberar el pago al vendedor.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
@@ -258,7 +419,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: '¡Tu entrada para "{{eventName}}" está listo!',
-        bodyTemplate: '¡Felicidades! Has recibido tu entrada para "{{eventName}}" el {{eventDate}} en {{venue}}. Por favor confirma que la recibiste en la app para liberar el pago al vendedor.',
+        bodyTemplate:
+          '¡Felicidades! Has recibido tu entrada para "{{eventName}}" el {{eventDate}} en {{venue}}. Por favor confirma que la recibiste en la app para liberar el pago al vendedor.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -268,7 +430,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Venta completada',
-        bodyTemplate: 'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amountFormatted}}',
+        bodyTemplate:
+          'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amountFormatted}}',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
@@ -276,7 +439,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Venta completada - Fondos liberados',
-        bodyTemplate: 'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amountFormatted}}',
+        bodyTemplate:
+          'Tu venta de "{{eventName}}" se ha completado. Fondos liberados: {{amountFormatted}}',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -294,7 +458,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Transacción cancelada - "{{eventName}}"',
-        bodyTemplate: 'La transacción de "{{eventName}}" fue cancelada por {{cancelledBy}}. Motivo: {{reason}}',
+        bodyTemplate:
+          'La transacción de "{{eventName}}" fue cancelada por {{cancelledBy}}. Motivo: {{reason}}',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -312,7 +477,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Transacción expirada - "{{eventName}}"',
-        bodyTemplate: 'La transacción de "{{eventName}}" ha expirado debido a que no se completó el pago a tiempo.',
+        bodyTemplate:
+          'La transacción de "{{eventName}}" ha expirado debido a que no se completó el pago a tiempo.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -330,7 +496,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Disputa abierta - "{{eventName}}"',
-        bodyTemplate: 'Se ha abierto una disputa para la transacción de "{{eventName}}" por el {{openedBy}}. Motivo: {{reason}}. Nuestro equipo revisará el caso.',
+        bodyTemplate:
+          'Se ha abierto una disputa para la transacción de "{{eventName}}" por el {{openedBy}}. Motivo: {{reason}}. Nuestro equipo revisará el caso.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -348,7 +515,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Disputa resuelta - "{{eventName}}"',
-        bodyTemplate: 'La disputa de "{{eventName}}" ha sido resuelta a favor del {{resolvedInFavorOf}}. Resolución: {{resolution}}',
+        bodyTemplate:
+          'La disputa de "{{eventName}}" ha sido resuelta a favor del {{resolvedInFavorOf}}. Resolución: {{resolution}}',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -366,7 +534,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: '¡Tu identidad ha sido verificada!',
-        bodyTemplate: '¡Felicidades {{userName}}! Tu identidad ha sido verificada exitosamente. Ahora puedes acceder a todas las funcionalidades de vendedor verificado.',
+        bodyTemplate:
+          '¡Felicidades {{userName}}! Tu identidad ha sido verificada exitosamente. Ahora puedes acceder a todas las funcionalidades de vendedor verificado.',
         actionUrlTemplate: '/user-profile',
       },
 
@@ -384,7 +553,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Verificación de identidad rechazada',
-        bodyTemplate: 'Hola {{userName}}, lamentablemente tu solicitud de verificación de identidad fue rechazada. Motivo: {{rejectionReason}}. Puedes volver a intentarlo corrigiendo los datos.',
+        bodyTemplate:
+          'Hola {{userName}}, lamentablemente tu solicitud de verificación de identidad fue rechazada. Motivo: {{rejectionReason}}. Puedes volver a intentarlo corrigiendo los datos.',
         actionUrlTemplate: '/user-profile',
       },
 
@@ -394,7 +564,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Documentos de identidad enviados',
-        bodyTemplate: '{{userName}} ha enviado documentos para verificación de identidad.',
+        bodyTemplate:
+          '{{userName}} ha enviado documentos para verificación de identidad.',
         actionUrlTemplate: '/admin/identity-verifications?verify=identity',
       },
       {
@@ -402,7 +573,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Nueva solicitud de verificación de identidad',
-        bodyTemplate: '{{userName}} ha enviado documentos para verificación. Revisa en el panel de administración.',
+        bodyTemplate:
+          '{{userName}} ha enviado documentos para verificación. Revisa en el panel de administración.',
         actionUrlTemplate: '/admin/identity-verifications?verify=identity',
       },
 
@@ -412,7 +584,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Datos bancarios enviados',
-        bodyTemplate: '{{userName}} ha enviado datos bancarios para validación.',
+        bodyTemplate:
+          '{{userName}} ha enviado datos bancarios para validación.',
         actionUrlTemplate: '/admin/identity-verifications?verify=bank',
       },
       {
@@ -420,7 +593,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Nuevos datos bancarios para validar',
-        bodyTemplate: '{{userName}} ha enviado datos bancarios para validación. Revisa en el panel de administración.',
+        bodyTemplate:
+          '{{userName}} ha enviado datos bancarios para validación. Revisa en el panel de administración.',
         actionUrlTemplate: '/admin/identity-verifications?verify=bank',
       },
 
@@ -430,7 +604,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Verificación completa',
-        bodyTemplate: '¡Felicidades {{userName}}! Tu identidad y datos bancarios han sido verificados. Ya puedes vender entradas.',
+        bodyTemplate:
+          '¡Felicidades {{userName}}! Tu identidad y datos bancarios han sido verificados. Ya puedes vender entradas.',
         actionUrlTemplate: '/sell-ticket',
       },
       {
@@ -438,7 +613,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: '¡Verificación de vendedor completa!',
-        bodyTemplate: 'Hola {{userName}}, tu identidad y datos bancarios han sido aprobados. Ya puedes publicar y vender entradas en TicketsHub.',
+        bodyTemplate:
+          'Hola {{userName}}, tu identidad y datos bancarios han sido aprobados. Ya puedes publicar y vender entradas en TicketsHub.',
         actionUrlTemplate: '/sell-ticket',
       },
 
@@ -456,7 +632,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Tu evento "{{eventName}}" ha sido aprobado',
-        bodyTemplate: '¡Buenas noticias! Tu evento "{{eventName}}" ha sido aprobado y ya está visible para los usuarios.',
+        bodyTemplate:
+          '¡Buenas noticias! Tu evento "{{eventName}}" ha sido aprobado y ya está visible para los usuarios.',
         actionUrlTemplate: '/event/{{eventSlug}}',
       },
 
@@ -474,7 +651,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Tu evento "{{eventName}}" fue rechazado',
-        bodyTemplate: 'Lamentablemente tu evento "{{eventName}}" fue rechazado. Motivo: {{rejectionReason}}. Puedes editar el evento y volver a enviarlo.',
+        bodyTemplate:
+          'Lamentablemente tu evento "{{eventName}}" fue rechazado. Motivo: {{rejectionReason}}. Puedes editar el evento y volver a enviarlo.',
         actionUrlTemplate: '/event/{{eventSlug}}',
       },
 
@@ -484,7 +662,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Nueva reseña recibida',
-        bodyTemplate: '{{reviewerName}} te dejó una reseña de {{rating}} estrellas',
+        bodyTemplate:
+          '{{reviewerName}} te dejó una reseña de {{rating}} estrellas',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
@@ -494,7 +673,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Nueva oferta recibida',
-        bodyTemplate: 'Recibiste una oferta de {{amountFormatted}} para "{{eventName}}". Revisa y acepta o rechaza.',
+        bodyTemplate:
+          'Recibiste una oferta de {{amountFormatted}} para "{{eventName}}". Revisa y acepta o rechaza.',
         actionUrlTemplate: '/seller-dashboard?tab=received&offerId={{offerId}}',
       },
       {
@@ -502,7 +682,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Nueva oferta en "{{eventName}}"',
-        bodyTemplate: 'Alguien ofertó {{amountFormatted}} por tus entradas de "{{eventName}}". Entra a Mis anuncios para revisar y aceptar o rechazar.',
+        bodyTemplate:
+          'Alguien ofertó {{amountFormatted}} por tus entradas de "{{eventName}}". Entra a Mis anuncios para revisar y aceptar o rechazar.',
         actionUrlTemplate: '/seller-dashboard?tab=received&offerId={{offerId}}',
       },
 
@@ -512,7 +693,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Oferta aceptada',
-        bodyTemplate: 'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada. Completa la compra antes de que expire.',
+        bodyTemplate:
+          'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada. Completa la compra antes de que expire.',
         actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
       {
@@ -520,7 +702,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Tu oferta para "{{eventName}}" fue aceptada',
-        bodyTemplate: 'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada por el vendedor. Completa la compra antes de que expire.',
+        bodyTemplate:
+          'Tu oferta de {{amountFormatted}} para "{{eventName}}" fue aceptada por el vendedor. Completa la compra antes de que expire.',
         actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
 
@@ -530,7 +713,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Oferta rechazada',
-        bodyTemplate: 'Tu oferta para "{{eventName}}" fue rechazada por el vendedor',
+        bodyTemplate:
+          'Tu oferta para "{{eventName}}" fue rechazada por el vendedor',
         actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
       {
@@ -538,7 +722,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Tu oferta para "{{eventName}}" fue rechazada',
-        bodyTemplate: 'El vendedor rechazó tu oferta para "{{eventName}}". Puedes hacer otra oferta o comprar al precio publicado.',
+        bodyTemplate:
+          'El vendedor rechazó tu oferta para "{{eventName}}". Puedes hacer otra oferta o comprar al precio publicado.',
         actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
 
@@ -548,7 +733,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Oferta cancelada',
-        bodyTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible. {{reason}}',
+        bodyTemplate:
+          'Tu oferta para "{{eventName}}" ya no está disponible. {{reason}}',
         actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
       {
@@ -556,7 +742,8 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible',
-        bodyTemplate: 'Tu oferta para "{{eventName}}" fue cancelada. {{reason}}',
+        bodyTemplate:
+          'Tu oferta para "{{eventName}}" fue cancelada. {{reason}}',
         actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
     ];

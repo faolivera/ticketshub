@@ -1,6 +1,9 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { PRICING_REPOSITORY, type IPricingRepository } from './pricing.repository.interface';
+import {
+  PRICING_REPOSITORY,
+  type IPricingRepository,
+} from './pricing.repository.interface';
 import { PaymentMethodsService } from '../payment-methods.service';
 import { PlatformConfigService } from '../../config/config.service';
 import { ContextLogger } from '../../../common/logger/context-logger';
@@ -42,14 +45,20 @@ export class PricingService {
    */
   async createSnapshot(
     ctx: Ctx,
-    listing: { id: string; pricePerTicket: Money; promotionSnapshot?: PromotionSnapshot },
+    listing: {
+      id: string;
+      pricePerTicket: Money;
+      promotionSnapshot?: PromotionSnapshot;
+    },
     options?: { offeredPricePerTicket?: Money },
   ): Promise<PricingSnapshot> {
     const listingId = listing.id;
-    const pricePerTicket = options?.offeredPricePerTicket ?? listing.pricePerTicket;
+    const pricePerTicket =
+      options?.offeredPricePerTicket ?? listing.pricePerTicket;
     this.logger.log(ctx, `Creating pricing snapshot for listing ${listingId}`);
 
-    const platformConfig = await this.platformConfigService.getPlatformConfig(ctx);
+    const platformConfig =
+      await this.platformConfigService.getPlatformConfig(ctx);
     const { buyerPlatformFeePercentage } = platformConfig;
     const sellerPlatformFeePercentage =
       listing.promotionSnapshot?.type === PromotionType.SELLER_DISCOUNTED_FEE
@@ -106,7 +115,8 @@ export class PricingService {
     if (!snapshot) {
       throw new BadRequestException({
         code: PricingSnapshotError.NOT_FOUND,
-        message: 'Pricing snapshot not found. Please refresh to get current prices.',
+        message:
+          'Pricing snapshot not found. Please refresh to get current prices.',
       });
     }
 
@@ -117,7 +127,8 @@ export class PricingService {
     if (!paymentMethodSnapshot) {
       throw new BadRequestException({
         code: PricingSnapshotError.PAYMENT_METHOD_NOT_AVAILABLE,
-        message: 'Selected payment method is no longer available. Please refresh to get current prices.',
+        message:
+          'Selected payment method is no longer available. Please refresh to get current prices.',
       });
     }
 
@@ -135,14 +146,16 @@ export class PricingService {
       if (!current) {
         throw new BadRequestException({
           code: PricingSnapshotError.NOT_FOUND,
-          message: 'Pricing snapshot not found. Please refresh to get current prices.',
+          message:
+            'Pricing snapshot not found. Please refresh to get current prices.',
         });
       }
 
       if (current.consumedByTransactionId) {
         throw new BadRequestException({
           code: PricingSnapshotError.ALREADY_CONSUMED,
-          message: 'Pricing snapshot has already been used. Please refresh to get current prices.',
+          message:
+            'Pricing snapshot has already been used. Please refresh to get current prices.',
         });
       }
 
@@ -150,20 +163,23 @@ export class PricingService {
       if (new Date(current.expiresAt) < now) {
         throw new BadRequestException({
           code: PricingSnapshotError.EXPIRED,
-          message: 'Pricing snapshot has expired. Please refresh to get current prices.',
+          message:
+            'Pricing snapshot has expired. Please refresh to get current prices.',
         });
       }
 
       if (current.listingId !== listingId) {
         throw new BadRequestException({
           code: PricingSnapshotError.LISTING_MISMATCH,
-          message: 'Pricing snapshot does not match this listing. Please refresh to get current prices.',
+          message:
+            'Pricing snapshot does not match this listing. Please refresh to get current prices.',
         });
       }
 
       throw new BadRequestException({
         code: PricingSnapshotError.ALREADY_CONSUMED,
-        message: 'Unable to use pricing snapshot. Please refresh to get current prices.',
+        message:
+          'Unable to use pricing snapshot. Please refresh to get current prices.',
       });
     }
 

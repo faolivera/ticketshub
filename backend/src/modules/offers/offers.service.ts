@@ -55,7 +55,10 @@ export class OffersService {
     userId: string,
     body: CreateOfferRequest,
   ): Promise<Offer> {
-    const listing = await this.ticketsService.getListingById(ctx, body.listingId);
+    const listing = await this.ticketsService.getListingById(
+      ctx,
+      body.listingId,
+    );
     if (!listing) {
       throw new NotFoundException('Listing not found');
     }
@@ -96,8 +99,7 @@ export class OffersService {
       await this.platformConfigService.getPlatformConfig(ctx);
     const now = new Date();
     const expiresAt = new Date(
-      now.getTime() +
-        platformConfig.offerPendingExpirationMinutes * 60 * 1000,
+      now.getTime() + platformConfig.offerPendingExpirationMinutes * 60 * 1000,
     );
 
     const offer: Offer = {
@@ -113,7 +115,10 @@ export class OffersService {
     };
 
     const created = await this.offersRepository.create(ctx, offer);
-    this.logger.log(ctx, `Created offer ${created.id} for listing ${body.listingId}`);
+    this.logger.log(
+      ctx,
+      `Created offer ${created.id} for listing ${body.listingId}`,
+    );
 
     this.notificationsService
       .emit(ctx, NotificationEventType.OFFER_RECEIVED, {
@@ -140,7 +145,9 @@ export class OffersService {
     );
     if (tickets.type === 'numbered') {
       if (!tickets.seats?.length) {
-        throw new BadRequestException('Numbered offer must specify at least one seat');
+        throw new BadRequestException(
+          'Numbered offer must specify at least one seat',
+        );
       }
       const availableSeats = new Set(
         available
@@ -176,18 +183,26 @@ export class OffersService {
     const listing = await this.ticketsService.getListingById(ctx, listingId);
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.sellerId !== sellerId) {
-      throw new ForbiddenException('You can only view offers for your own listings');
+      throw new ForbiddenException(
+        'You can only view offers for your own listings',
+      );
     }
     const offers = await this.offersRepository.findByListingId(ctx, listingId);
     return this.applyLazyExpiration(ctx, offers);
   }
 
-  async listReceivedOffers(ctx: Ctx, sellerId: string): Promise<OfferWithReceivedContext[]> {
+  async listReceivedOffers(
+    ctx: Ctx,
+    sellerId: string,
+  ): Promise<OfferWithReceivedContext[]> {
     const myListings = await this.ticketsService.getMyListings(ctx, sellerId);
     const listingIds = myListings.map((l) => l.id);
     if (listingIds.length === 0) return [];
     const listingMap = new Map(myListings.map((l) => [l.id, l]));
-    const offers = await this.offersRepository.findByListingIds(ctx, listingIds);
+    const offers = await this.offersRepository.findByListingIds(
+      ctx,
+      listingIds,
+    );
     const expiredApplied = await this.applyLazyExpiration(ctx, offers);
     if (expiredApplied.length === 0) return [];
     const buyerIds = [...new Set(expiredApplied.map((o) => o.userId))];
@@ -222,13 +237,19 @@ export class OffersService {
     });
   }
 
-  async listMyOffers(ctx: Ctx, userId: string): Promise<OfferWithListingSummary[]> {
+  async listMyOffers(
+    ctx: Ctx,
+    userId: string,
+  ): Promise<OfferWithListingSummary[]> {
     const offers = await this.offersRepository.findByUserId(ctx, userId);
     const expiredApplied = await this.applyLazyExpiration(ctx, offers);
     if (expiredApplied.length === 0) return [];
 
     const listingIds = [...new Set(expiredApplied.map((o) => o.listingId))];
-    const listings = await this.ticketsService.getListingsByIds(ctx, listingIds);
+    const listings = await this.ticketsService.getListingsByIds(
+      ctx,
+      listingIds,
+    );
     const listingMap = new Map(listings.map((l) => [l.id, l]));
 
     const sellerIds = [...new Set(listings.map((l) => l.sellerId))];
@@ -273,7 +294,9 @@ export class OffersService {
           status: 'cancelled',
           cancelledAt: now,
         });
-        result.push(cancelled ?? { ...offer, status: 'cancelled', cancelledAt: now });
+        result.push(
+          cancelled ?? { ...offer, status: 'cancelled', cancelledAt: now },
+        );
       } else {
         result.push(offer);
       }
@@ -292,10 +315,15 @@ export class OffersService {
       throw new BadRequestException('Offer is not pending');
     }
 
-    const listing = await this.ticketsService.getListingById(ctx, offer.listingId);
+    const listing = await this.ticketsService.getListingById(
+      ctx,
+      offer.listingId,
+    );
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.sellerId !== sellerId) {
-      throw new ForbiddenException('You can only accept offers on your own listings');
+      throw new ForbiddenException(
+        'You can only accept offers on your own listings',
+      );
     }
 
     const now = new Date();
@@ -310,8 +338,7 @@ export class OffersService {
     const platformConfig =
       await this.platformConfigService.getPlatformConfig(ctx);
     const acceptedExpiresAt = new Date(
-      now.getTime() +
-        platformConfig.offerAcceptedExpirationMinutes * 60 * 1000,
+      now.getTime() + platformConfig.offerAcceptedExpirationMinutes * 60 * 1000,
     );
 
     const updated = await this.offersRepository.update(ctx, offerId, {
@@ -347,10 +374,15 @@ export class OffersService {
       throw new BadRequestException('Offer is not pending');
     }
 
-    const listing = await this.ticketsService.getListingById(ctx, offer.listingId);
+    const listing = await this.ticketsService.getListingById(
+      ctx,
+      offer.listingId,
+    );
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.sellerId !== sellerId) {
-      throw new ForbiddenException('You can only reject offers on your own listings');
+      throw new ForbiddenException(
+        'You can only reject offers on your own listings',
+      );
     }
 
     const now = new Date();
@@ -392,10 +424,7 @@ export class OffersService {
   /**
    * After a purchase (direct or from converted offer), cancel offers that can no longer be satisfied.
    */
-  async cancelAffectedOffers(
-    ctx: Ctx,
-    listingId: string,
-  ): Promise<void> {
+  async cancelAffectedOffers(ctx: Ctx, listingId: string): Promise<void> {
     const listing = await this.ticketsService.getListingById(ctx, listingId);
     if (!listing) return;
 
@@ -432,7 +461,10 @@ export class OffersService {
           status: 'cancelled',
           cancelledAt: now,
         });
-        this.logger.log(ctx, `Cancelled offer ${offer.id} (no longer satisfiable)`);
+        this.logger.log(
+          ctx,
+          `Cancelled offer ${offer.id} (no longer satisfiable)`,
+        );
         this.notificationsService
           .emit(ctx, NotificationEventType.OFFER_CANCELLED, {
             offerId: offer.id,

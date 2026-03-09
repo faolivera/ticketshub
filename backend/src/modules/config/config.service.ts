@@ -1,6 +1,9 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
-import { CONFIG_REPOSITORY, type IConfigRepository } from './config.repository.interface';
+import {
+  CONFIG_REPOSITORY,
+  type IConfigRepository,
+} from './config.repository.interface';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type { PlatformConfig } from './config.domain';
@@ -49,7 +52,9 @@ export class PlatformConfigService {
   /**
    * Returns platform config for admin API (same as getPlatformConfig).
    */
-  async getPlatformConfigForAdmin(ctx: Ctx): Promise<GetPlatformConfigResponse> {
+  async getPlatformConfigForAdmin(
+    ctx: Ctx,
+  ): Promise<GetPlatformConfigResponse> {
     return this.getPlatformConfig(ctx);
   }
 
@@ -67,15 +72,19 @@ export class PlatformConfigService {
         body.buyerPlatformFeePercentage ?? current.buyerPlatformFeePercentage,
       sellerPlatformFeePercentage:
         body.sellerPlatformFeePercentage ?? current.sellerPlatformFeePercentage,
-      paymentTimeoutMinutes: body.paymentTimeoutMinutes ?? current.paymentTimeoutMinutes,
+      paymentTimeoutMinutes:
+        body.paymentTimeoutMinutes ?? current.paymentTimeoutMinutes,
       adminReviewTimeoutHours:
         body.adminReviewTimeoutHours ?? current.adminReviewTimeoutHours,
       offerPendingExpirationMinutes:
-        body.offerPendingExpirationMinutes ?? current.offerPendingExpirationMinutes,
+        body.offerPendingExpirationMinutes ??
+        current.offerPendingExpirationMinutes,
       offerAcceptedExpirationMinutes:
-        body.offerAcceptedExpirationMinutes ?? current.offerAcceptedExpirationMinutes,
+        body.offerAcceptedExpirationMinutes ??
+        current.offerAcceptedExpirationMinutes,
       transactionChatPollIntervalSeconds:
-        body.transactionChatPollIntervalSeconds ?? current.transactionChatPollIntervalSeconds,
+        body.transactionChatPollIntervalSeconds ??
+        current.transactionChatPollIntervalSeconds,
       transactionChatMaxMessages:
         body.transactionChatMaxMessages ?? current.transactionChatMaxMessages,
       riskEngine: body.riskEngine
@@ -126,7 +135,10 @@ export class PlatformConfigService {
         : current.exchangeRates,
     };
     this.validatePlatformConfig(merged);
-    const updated = await this.configRepository.upsertPlatformConfig(ctx, merged);
+    const updated = await this.configRepository.upsertPlatformConfig(
+      ctx,
+      merged,
+    );
     this.logger.log(ctx, 'Updated platform config');
     return updated;
   }
@@ -138,27 +150,46 @@ export class PlatformConfigService {
       fallback: PlatformConfig['riskEngine']['buyer']['phoneRequiredPaymentMethodTypes'],
     ): PlatformConfig['riskEngine']['buyer']['phoneRequiredPaymentMethodTypes'] => {
       const val = this.nestConfigService.get<unknown>(path);
-      if (Array.isArray(val) && val.every((x) => x === 'payment_gateway' || x === 'manual_approval')) {
+      if (
+        Array.isArray(val) &&
+        val.every((x) => x === 'payment_gateway' || x === 'manual_approval')
+      ) {
         return val as PlatformConfig['riskEngine']['buyer']['phoneRequiredPaymentMethodTypes'];
       }
       return fallback;
     };
-    const amountUsd = get('platform.riskEngine.seller.unverifiedSellerMaxAmountUsd');
+    const amountUsd = get(
+      'platform.riskEngine.seller.unverifiedSellerMaxAmountUsd',
+    );
     const phoneUsd = get('platform.riskEngine.buyer.phoneRequiredAmountUsd');
     const dniUsd = get('platform.riskEngine.buyer.dniRequiredAmountUsd');
     const riskEngine = {
       buyer: {
-        phoneRequiredEventHours: get('platform.riskEngine.buyer.phoneRequiredEventHours'),
-        phoneRequiredAmount: { amount: Math.round(phoneUsd * 100), currency: 'USD' as const },
-        phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
+        phoneRequiredEventHours: get(
+          'platform.riskEngine.buyer.phoneRequiredEventHours',
+        ),
+        phoneRequiredAmount: {
+          amount: Math.round(phoneUsd * 100),
+          currency: 'USD' as const,
+        },
+        phoneRequiredQtyTickets: get(
+          'platform.riskEngine.buyer.phoneRequiredQtyTickets',
+        ),
         newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
         phoneRequiredPaymentMethodTypes: getPaymentTypes(
           'platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes',
           ['manual_approval'],
         ),
-        dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
-        dniRequiredAmount: { amount: Math.round(dniUsd * 100), currency: 'USD' as const },
-        dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
+        dniRequiredEventHours: get(
+          'platform.riskEngine.buyer.dniRequiredEventHours',
+        ),
+        dniRequiredAmount: {
+          amount: Math.round(dniUsd * 100),
+          currency: 'USD' as const,
+        },
+        dniRequiredQtyTickets: get(
+          'platform.riskEngine.buyer.dniRequiredQtyTickets',
+        ),
         dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
         dniRequiredPaymentMethodTypes: getPaymentTypes(
           'platform.riskEngine.buyer.dniRequiredPaymentMethodTypes',
@@ -166,34 +197,69 @@ export class PlatformConfigService {
         ),
       },
       seller: {
-        unverifiedSellerMaxSales: get('platform.riskEngine.seller.unverifiedSellerMaxSales'),
-        unverifiedSellerMaxAmount: { amount: Math.round(amountUsd * 100), currency: 'USD' as const },
-        payoutHoldHoursDefault: get('platform.riskEngine.seller.payoutHoldHoursDefault'),
-        payoutHoldHoursUnverified: get('platform.riskEngine.seller.payoutHoldHoursUnverified'),
+        unverifiedSellerMaxSales: get(
+          'platform.riskEngine.seller.unverifiedSellerMaxSales',
+        ),
+        unverifiedSellerMaxAmount: {
+          amount: Math.round(amountUsd * 100),
+          currency: 'USD' as const,
+        },
+        payoutHoldHoursDefault: get(
+          'platform.riskEngine.seller.payoutHoldHoursDefault',
+        ),
+        payoutHoldHoursUnverified: get(
+          'platform.riskEngine.seller.payoutHoldHoursUnverified',
+        ),
       },
       claims: {
         ticketNotReceived: {
-          minimumClaimHours: get('platform.riskEngine.claims.ticketNotReceived.minimumClaimHours'),
-          maximumClaimHours: get('platform.riskEngine.claims.ticketNotReceived.maximumClaimHours'),
+          minimumClaimHours: get(
+            'platform.riskEngine.claims.ticketNotReceived.minimumClaimHours',
+          ),
+          maximumClaimHours: get(
+            'platform.riskEngine.claims.ticketNotReceived.maximumClaimHours',
+          ),
         },
         ticketDidntWork: {
-          minimumClaimHours: get('platform.riskEngine.claims.ticketDidntWork.minimumClaimHours'),
-          maximumClaimHours: get('platform.riskEngine.claims.ticketDidntWork.maximumClaimHours'),
+          minimumClaimHours: get(
+            'platform.riskEngine.claims.ticketDidntWork.minimumClaimHours',
+          ),
+          maximumClaimHours: get(
+            'platform.riskEngine.claims.ticketDidntWork.maximumClaimHours',
+          ),
         },
       },
     };
     return {
-      buyerPlatformFeePercentage: this.nestConfigService.get<number>('platform.buyerPlatformFeePercentage')!,
-      sellerPlatformFeePercentage: this.nestConfigService.get<number>('platform.sellerPlatformFeePercentage')!,
-      paymentTimeoutMinutes: this.nestConfigService.get<number>('platform.paymentTimeoutMinutes')!,
-      adminReviewTimeoutHours: this.nestConfigService.get<number>('platform.adminReviewTimeoutHours')!,
-      offerPendingExpirationMinutes: this.nestConfigService.get<number>('platform.offerPendingExpirationMinutes')!,
-      offerAcceptedExpirationMinutes: this.nestConfigService.get<number>('platform.offerAcceptedExpirationMinutes')!,
-      transactionChatPollIntervalSeconds: this.nestConfigService.get<number>('platform.transactionChatPollIntervalSeconds')!,
-      transactionChatMaxMessages: this.nestConfigService.get<number>('platform.transactionChatMaxMessages')!,
+      buyerPlatformFeePercentage: this.nestConfigService.get<number>(
+        'platform.buyerPlatformFeePercentage',
+      )!,
+      sellerPlatformFeePercentage: this.nestConfigService.get<number>(
+        'platform.sellerPlatformFeePercentage',
+      )!,
+      paymentTimeoutMinutes: this.nestConfigService.get<number>(
+        'platform.paymentTimeoutMinutes',
+      )!,
+      adminReviewTimeoutHours: this.nestConfigService.get<number>(
+        'platform.adminReviewTimeoutHours',
+      )!,
+      offerPendingExpirationMinutes: this.nestConfigService.get<number>(
+        'platform.offerPendingExpirationMinutes',
+      )!,
+      offerAcceptedExpirationMinutes: this.nestConfigService.get<number>(
+        'platform.offerAcceptedExpirationMinutes',
+      )!,
+      transactionChatPollIntervalSeconds: this.nestConfigService.get<number>(
+        'platform.transactionChatPollIntervalSeconds',
+      )!,
+      transactionChatMaxMessages: this.nestConfigService.get<number>(
+        'platform.transactionChatMaxMessages',
+      )!,
       riskEngine,
       exchangeRates: {
-        usdToArs: this.nestConfigService.get<number>('platform.exchangeRates.usdToArs')!,
+        usdToArs: this.nestConfigService.get<number>(
+          'platform.exchangeRates.usdToArs',
+        )!,
       },
     };
   }
@@ -248,7 +314,8 @@ export class PlatformConfigService {
       );
     }
     if (
-      config.transactionChatPollIntervalSeconds < MIN_CHAT_POLL_INTERVAL_SECONDS ||
+      config.transactionChatPollIntervalSeconds <
+        MIN_CHAT_POLL_INTERVAL_SECONDS ||
       config.transactionChatPollIntervalSeconds > MAX_CHAT_POLL_INTERVAL_SECONDS
     ) {
       throw new BadRequestException(
@@ -266,10 +333,17 @@ export class PlatformConfigService {
     const re = config.riskEngine;
     const b = re.buyer;
     if (b.phoneRequiredEventHours < 1 || b.phoneRequiredEventHours > 720) {
-      throw new BadRequestException('riskEngine.buyer.phoneRequiredEventHours must be between 1 and 720');
+      throw new BadRequestException(
+        'riskEngine.buyer.phoneRequiredEventHours must be between 1 and 720',
+      );
     }
-    if (b.phoneRequiredAmount.currency !== 'USD' && b.phoneRequiredAmount.currency !== 'ARS') {
-      throw new BadRequestException('riskEngine.buyer.phoneRequiredAmount.currency must be USD or ARS');
+    if (
+      b.phoneRequiredAmount.currency !== 'USD' &&
+      b.phoneRequiredAmount.currency !== 'ARS'
+    ) {
+      throw new BadRequestException(
+        'riskEngine.buyer.phoneRequiredAmount.currency must be USD or ARS',
+      );
     }
     const phoneAmountMajor = b.phoneRequiredAmount.amount / 100;
     if (phoneAmountMajor < 0 || phoneAmountMajor > 100000) {
@@ -278,13 +352,18 @@ export class PlatformConfigService {
       );
     }
     if (b.phoneRequiredQtyTickets < 1 || b.phoneRequiredQtyTickets > 50) {
-      throw new BadRequestException('riskEngine.buyer.phoneRequiredQtyTickets must be between 1 and 50');
+      throw new BadRequestException(
+        'riskEngine.buyer.phoneRequiredQtyTickets must be between 1 and 50',
+      );
     }
     if (b.newAccountDays < 0 || b.newAccountDays > 365) {
-      throw new BadRequestException('riskEngine.buyer.newAccountDays must be between 0 and 365');
+      throw new BadRequestException(
+        'riskEngine.buyer.newAccountDays must be between 0 and 365',
+      );
     }
     const validPaymentTypes = (arr: unknown): boolean =>
-      Array.isArray(arr) && arr.every((x) => x === 'payment_gateway' || x === 'manual_approval');
+      Array.isArray(arr) &&
+      arr.every((x) => x === 'payment_gateway' || x === 'manual_approval');
     if (!validPaymentTypes(b.phoneRequiredPaymentMethodTypes)) {
       throw new BadRequestException(
         'riskEngine.buyer.phoneRequiredPaymentMethodTypes must be an array of "payment_gateway" and/or "manual_approval"',
@@ -296,10 +375,17 @@ export class PlatformConfigService {
       );
     }
     if (b.dniRequiredEventHours < 1 || b.dniRequiredEventHours > 720) {
-      throw new BadRequestException('riskEngine.buyer.dniRequiredEventHours must be between 1 and 720');
+      throw new BadRequestException(
+        'riskEngine.buyer.dniRequiredEventHours must be between 1 and 720',
+      );
     }
-    if (b.dniRequiredAmount.currency !== 'USD' && b.dniRequiredAmount.currency !== 'ARS') {
-      throw new BadRequestException('riskEngine.buyer.dniRequiredAmount.currency must be USD or ARS');
+    if (
+      b.dniRequiredAmount.currency !== 'USD' &&
+      b.dniRequiredAmount.currency !== 'ARS'
+    ) {
+      throw new BadRequestException(
+        'riskEngine.buyer.dniRequiredAmount.currency must be USD or ARS',
+      );
     }
     const dniAmountMajor = b.dniRequiredAmount.amount / 100;
     if (dniAmountMajor < 0 || dniAmountMajor > 100000) {
@@ -308,11 +394,15 @@ export class PlatformConfigService {
       );
     }
     if (b.dniNewAccountDays < 0 || b.dniNewAccountDays > 365) {
-      throw new BadRequestException('riskEngine.buyer.dniNewAccountDays must be between 0 and 365');
+      throw new BadRequestException(
+        'riskEngine.buyer.dniNewAccountDays must be between 0 and 365',
+      );
     }
     const s = re.seller;
     if (s.unverifiedSellerMaxSales < 0 || s.unverifiedSellerMaxSales > 100) {
-      throw new BadRequestException('riskEngine.seller.unverifiedSellerMaxSales must be between 0 and 100');
+      throw new BadRequestException(
+        'riskEngine.seller.unverifiedSellerMaxSales must be between 0 and 100',
+      );
     }
     const maxAmountMajor = s.unverifiedSellerMaxAmount.amount / 100;
     if (maxAmountMajor < 0 || maxAmountMajor > 100000) {
@@ -321,30 +411,48 @@ export class PlatformConfigService {
       );
     }
     if (s.payoutHoldHoursDefault < 0 || s.payoutHoldHoursDefault > 168) {
-      throw new BadRequestException('riskEngine.seller.payoutHoldHoursDefault must be between 0 and 168');
+      throw new BadRequestException(
+        'riskEngine.seller.payoutHoldHoursDefault must be between 0 and 168',
+      );
     }
     if (s.payoutHoldHoursUnverified < 0 || s.payoutHoldHoursUnverified > 168) {
-      throw new BadRequestException('riskEngine.seller.payoutHoldHoursUnverified must be between 0 and 168');
+      throw new BadRequestException(
+        'riskEngine.seller.payoutHoldHoursUnverified must be between 0 and 168',
+      );
     }
     const validateClaimWindow = (
       window: { minimumClaimHours: number; maximumClaimHours: number },
       prefix: string,
     ) => {
       if (window.minimumClaimHours < 0 || window.minimumClaimHours > 720) {
-        throw new BadRequestException(`${prefix}.minimumClaimHours must be between 0 and 720`);
+        throw new BadRequestException(
+          `${prefix}.minimumClaimHours must be between 0 and 720`,
+        );
       }
       if (window.maximumClaimHours < 1 || window.maximumClaimHours > 720) {
-        throw new BadRequestException(`${prefix}.maximumClaimHours must be between 1 and 720`);
+        throw new BadRequestException(
+          `${prefix}.maximumClaimHours must be between 1 and 720`,
+        );
       }
       if (window.minimumClaimHours >= window.maximumClaimHours) {
-        throw new BadRequestException(`${prefix}.minimumClaimHours must be less than maximumClaimHours`);
+        throw new BadRequestException(
+          `${prefix}.minimumClaimHours must be less than maximumClaimHours`,
+        );
       }
     };
-    validateClaimWindow(re.claims.ticketNotReceived, 'riskEngine.claims.ticketNotReceived');
-    validateClaimWindow(re.claims.ticketDidntWork, 'riskEngine.claims.ticketDidntWork');
+    validateClaimWindow(
+      re.claims.ticketNotReceived,
+      'riskEngine.claims.ticketNotReceived',
+    );
+    validateClaimWindow(
+      re.claims.ticketDidntWork,
+      'riskEngine.claims.ticketDidntWork',
+    );
     const er = config.exchangeRates;
     if (er.usdToArs <= 0 || er.usdToArs > 1000000) {
-      throw new BadRequestException('exchangeRates.usdToArs must be between 1 and 1000000');
+      throw new BadRequestException(
+        'exchangeRates.usdToArs must be between 1 and 1000000',
+      );
     }
   }
 }

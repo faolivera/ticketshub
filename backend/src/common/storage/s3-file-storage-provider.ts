@@ -8,6 +8,8 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
+import { ON_APP_INIT_CTX } from '../types/context';
+import { ContextLogger } from '../logger/context-logger';
 import type {
   FileStorageProvider,
   FileMetadata,
@@ -26,6 +28,7 @@ export interface S3FileStorageProviderOptions {
  */
 @Injectable()
 export class S3FileStorageProvider implements FileStorageProvider {
+  private readonly logger = new ContextLogger(S3FileStorageProvider.name);
   private readonly client: S3Client;
   /** Used only for getSignedUrl when set, so signed URLs use a client-reachable host (e.g. localhost:4567). */
   private readonly signingClient: S3Client | null;
@@ -68,12 +71,16 @@ export class S3FileStorageProvider implements FileStorageProvider {
       return;
     }
     try {
-      await this.client.send(
-        new CreateBucketCommand({ Bucket: this.bucket }),
-      );
+      await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
     } catch (err: unknown) {
-      const code = err && typeof err === 'object' && 'name' in err ? (err as { name: string }).name : '';
-      if (code === 'BucketAlreadyExists' || code === 'BucketAlreadyOwnedByYou') {
+      const code =
+        err && typeof err === 'object' && 'name' in err
+          ? (err as { name: string }).name
+          : '';
+      if (
+        code === 'BucketAlreadyExists' ||
+        code === 'BucketAlreadyOwnedByYou'
+      ) {
         // Bucket exists; continue
       } else {
         throw err;
@@ -125,7 +132,10 @@ export class S3FileStorageProvider implements FileStorageProvider {
       }
       return Buffer.concat(chunks);
     } catch (err: unknown) {
-      const code = err && typeof err === 'object' && 'name' in err ? (err as { name: string }).name : '';
+      const code =
+        err && typeof err === 'object' && 'name' in err
+          ? (err as { name: string }).name
+          : '';
       if (code === 'NoSuchKey' || code === 'NotFound') return null;
       throw err;
     }
@@ -141,7 +151,7 @@ export class S3FileStorageProvider implements FileStorageProvider {
       );
       return true;
     } catch (error) {
-      console.error('S3 delete failed:', error);
+      this.logger.error(ON_APP_INIT_CTX, 'S3 delete failed:', error);
       return false;
     }
   }
@@ -156,7 +166,10 @@ export class S3FileStorageProvider implements FileStorageProvider {
       );
       return true;
     } catch (err: unknown) {
-      const code = err && typeof err === 'object' && 'name' in err ? (err as { name: string }).name : '';
+      const code =
+        err && typeof err === 'object' && 'name' in err
+          ? (err as { name: string }).name
+          : '';
       if (code === 'NotFound' || code === 'NoSuchKey') return false;
       throw err;
     }

@@ -7,7 +7,11 @@ import { TransactionManager } from '../../../../src/common/database';
 import { InsufficientFundsException } from '../../../../src/common/exceptions/insufficient-funds.exception';
 import { OptimisticLockException } from '../../../../src/common/exceptions/optimistic-lock.exception';
 import { WalletTransactionType } from '../../../../src/modules/wallet/wallet.domain';
-import type { Wallet, WalletTransaction, Money } from '../../../../src/modules/wallet/wallet.domain';
+import type {
+  Wallet,
+  WalletTransaction,
+  Money,
+} from '../../../../src/modules/wallet/wallet.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 
 describe('WalletService', () => {
@@ -60,7 +64,9 @@ describe('WalletService', () => {
     };
 
     const mockTxManager = {
-      executeInTransaction: jest.fn().mockImplementation((_ctx, fn) => fn(_ctx)),
+      executeInTransaction: jest
+        .fn()
+        .mockImplementation((_ctx, fn) => fn(_ctx)),
       getClient: jest.fn(),
     };
 
@@ -113,7 +119,9 @@ describe('WalletService', () => {
 
   describe('holdFunds', () => {
     it('should increment pending balance atomically', async () => {
-      const wallet = createMockWallet({ pendingBalance: { amount: 0, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        pendingBalance: { amount: 0, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(
         createMockWallet({ pendingBalance: { amount: 5000, currency: 'EUR' } }),
@@ -209,7 +217,9 @@ describe('WalletService', () => {
 
   describe('releaseFunds', () => {
     it('should transfer pending to balance atomically', async () => {
-      const wallet = createMockWallet({ pendingBalance: { amount: 5000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        pendingBalance: { amount: 5000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(
         createMockWallet({
@@ -240,7 +250,9 @@ describe('WalletService', () => {
     });
 
     it('should throw BadRequestException when insufficient pending balance', async () => {
-      const wallet = createMockWallet({ pendingBalance: { amount: 1000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        pendingBalance: { amount: 1000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
 
       await expect(
@@ -259,7 +271,9 @@ describe('WalletService', () => {
 
   describe('debitFunds', () => {
     it('should throw InsufficientFundsException when overdraw attempted', async () => {
-      const wallet = createMockWallet({ balance: { amount: 1000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        balance: { amount: 1000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
 
       await expect(
@@ -276,7 +290,9 @@ describe('WalletService', () => {
     });
 
     it('should succeed with sufficient balance', async () => {
-      const wallet = createMockWallet({ balance: { amount: 10000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        balance: { amount: 10000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(
         createMockWallet({ balance: { amount: 5000, currency: 'EUR' } }),
@@ -304,7 +320,9 @@ describe('WalletService', () => {
     });
 
     it('should succeed when balance equals requested amount', async () => {
-      const wallet = createMockWallet({ balance: { amount: 5000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        balance: { amount: 5000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(
         createMockWallet({ balance: { amount: 0, currency: 'EUR' } }),
@@ -327,7 +345,9 @@ describe('WalletService', () => {
 
   describe('creditFunds', () => {
     it('should increment balance atomically', async () => {
-      const wallet = createMockWallet({ balance: { amount: 10000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        balance: { amount: 10000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(
         createMockWallet({ balance: { amount: 15000, currency: 'EUR' } }),
@@ -391,7 +411,9 @@ describe('WalletService', () => {
 
   describe('refundHeldFunds', () => {
     it('should decrement pending balance', async () => {
-      const wallet = createMockWallet({ pendingBalance: { amount: 5000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        pendingBalance: { amount: 5000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(
         createMockWallet({ pendingBalance: { amount: 0, currency: 'EUR' } }),
@@ -419,7 +441,9 @@ describe('WalletService', () => {
     });
 
     it('should not go below zero on pending balance', async () => {
-      const wallet = createMockWallet({ pendingBalance: { amount: 3000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        pendingBalance: { amount: 3000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(
         createMockWallet({ pendingBalance: { amount: 0, currency: 'EUR' } }),
@@ -491,7 +515,9 @@ describe('WalletService', () => {
     });
 
     it('should create transaction record for releaseFunds', async () => {
-      const wallet = createMockWallet({ pendingBalance: { amount: 10000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        pendingBalance: { amount: 10000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(wallet);
       walletRepository.createTransaction.mockResolvedValue(
@@ -510,7 +536,9 @@ describe('WalletService', () => {
     });
 
     it('should create transaction record for debitFunds', async () => {
-      const wallet = createMockWallet({ balance: { amount: 10000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        balance: { amount: 10000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(wallet);
       walletRepository.createTransaction.mockResolvedValue(
@@ -548,7 +576,9 @@ describe('WalletService', () => {
     });
 
     it('should create transaction record for refundHeldFunds', async () => {
-      const wallet = createMockWallet({ pendingBalance: { amount: 10000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        pendingBalance: { amount: 10000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(wallet);
       walletRepository.createTransaction.mockResolvedValue(
@@ -570,8 +600,14 @@ describe('WalletService', () => {
   describe('getTransactions', () => {
     it('should return transaction history', async () => {
       const transactions = [
-        createMockWalletTransaction({ id: 'wtx_1', type: WalletTransactionType.Credit }),
-        createMockWalletTransaction({ id: 'wtx_2', type: WalletTransactionType.Debit }),
+        createMockWalletTransaction({
+          id: 'wtx_1',
+          type: WalletTransactionType.Credit,
+        }),
+        createMockWalletTransaction({
+          id: 'wtx_2',
+          type: WalletTransactionType.Debit,
+        }),
       ];
       walletRepository.getTransactionsByUserId.mockResolvedValue(transactions);
 
@@ -617,7 +653,9 @@ describe('WalletService', () => {
     });
 
     it('should execute debitFunds within transaction', async () => {
-      const wallet = createMockWallet({ balance: { amount: 10000, currency: 'EUR' } });
+      const wallet = createMockWallet({
+        balance: { amount: 10000, currency: 'EUR' },
+      });
       walletRepository.findByUserIdForUpdate.mockResolvedValue(wallet);
       walletRepository.updateBalancesWithVersion.mockResolvedValue(wallet);
       walletRepository.createTransaction.mockResolvedValue(

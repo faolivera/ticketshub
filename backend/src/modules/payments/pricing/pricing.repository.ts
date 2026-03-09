@@ -12,7 +12,10 @@ import type { Money } from '../payments.domain';
 import type { IPricingRepository } from './pricing.repository.interface';
 
 @Injectable()
-export class PricingRepository extends BaseRepository implements IPricingRepository {
+export class PricingRepository
+  extends BaseRepository
+  implements IPricingRepository
+{
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -23,7 +26,8 @@ export class PricingRepository extends BaseRepository implements IPricingReposit
       data: {
         id: snapshot.id,
         listingId: snapshot.listingId,
-        pricePerTicket: snapshot.pricePerTicket as unknown as Prisma.InputJsonValue,
+        pricePerTicket:
+          snapshot.pricePerTicket as unknown as Prisma.InputJsonValue,
         buyerPlatformFeePercentage: snapshot.buyerPlatformFeePercentage,
         sellerPlatformFeePercentage: snapshot.sellerPlatformFeePercentage,
         paymentMethodCommissions:
@@ -63,7 +67,8 @@ export class PricingRepository extends BaseRepository implements IPricingReposit
       data.listingId = updates.listingId;
     }
     if (updates.pricePerTicket !== undefined) {
-      data.pricePerTicket = updates.pricePerTicket as unknown as Prisma.InputJsonValue;
+      data.pricePerTicket =
+        updates.pricePerTicket as unknown as Prisma.InputJsonValue;
     }
     if (updates.buyerPlatformFeePercentage !== undefined) {
       data.buyerPlatformFeePercentage = updates.buyerPlatformFeePercentage;

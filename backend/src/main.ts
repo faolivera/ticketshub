@@ -13,7 +13,10 @@ async function bootstrap() {
   app.useWebSocketAdapter(new IoAdapter(app));
 
   const configService = app.get(ConfigService);
-  const loggingConfig = configService.get<{ level?: string; levels?: Record<string, string> }>('logging');
+  const loggingConfig = configService.get<{
+    level?: string;
+    levels?: Record<string, string>;
+  }>('logging');
   if (loggingConfig?.level) {
     setLogLevelConfig({
       level: loggingConfig.level,

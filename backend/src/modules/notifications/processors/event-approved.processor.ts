@@ -6,9 +6,7 @@ import type { EventApprovedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class EventApprovedProcessor
-  implements EventProcessor<EventApprovedContext>
-{
+export class EventApprovedProcessor implements EventProcessor<EventApprovedContext> {
   readonly eventType = NotificationEventType.EVENT_APPROVED;
 
   async getRecipients(

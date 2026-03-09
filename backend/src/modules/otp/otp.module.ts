@@ -8,10 +8,7 @@ import { UsersModule } from '../users/users.module';
 @Module({
   imports: [forwardRef(() => UsersModule)],
   controllers: [OTPController],
-  providers: [
-    OTPService,
-    { provide: OTP_REPOSITORY, useClass: OTPRepository },
-  ],
+  providers: [OTPService, { provide: OTP_REPOSITORY, useClass: OTPRepository }],
   exports: [OTPService],
 })
 export class OTPModule {}

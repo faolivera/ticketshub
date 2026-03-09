@@ -15,7 +15,10 @@ import type { IConfigRepository } from './config.repository.interface';
 import type { Prisma } from '@prisma/client';
 
 @Injectable()
-export class ConfigRepository extends BaseRepository implements IConfigRepository {
+export class ConfigRepository
+  extends BaseRepository
+  implements IConfigRepository
+{
   constructor(
     prisma: PrismaService,
     private readonly nestConfigService: NestConfigService,
@@ -38,7 +41,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         adminReviewTimeoutHours: row.adminReviewTimeoutHours,
         offerPendingExpirationMinutes: row.offerPendingExpirationMinutes,
         offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
-        transactionChatPollIntervalSeconds: row.transactionChatPollIntervalSeconds,
+        transactionChatPollIntervalSeconds:
+          row.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: row.transactionChatMaxMessages,
       },
       riskEngine,
@@ -48,43 +52,86 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
   private getDefaultRiskEngine(): RiskEngineConfig {
     const get = (path: string) => this.nestConfigService.get<number>(path)!;
     const getArray = (path: string) =>
-      this.nestConfigService.get<RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes']>(path) ?? [];
-    const amountUsd = get('platform.riskEngine.seller.unverifiedSellerMaxAmountUsd');
+      this.nestConfigService.get<
+        RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes']
+      >(path) ?? [];
+    const amountUsd = get(
+      'platform.riskEngine.seller.unverifiedSellerMaxAmountUsd',
+    );
     const phoneUsd = get('platform.riskEngine.buyer.phoneRequiredAmountUsd');
     const dniUsd = get('platform.riskEngine.buyer.dniRequiredAmountUsd');
     return {
       buyer: {
-        phoneRequiredEventHours: get('platform.riskEngine.buyer.phoneRequiredEventHours'),
-        phoneRequiredAmount: { amount: Math.round(phoneUsd * 100), currency: 'USD' },
-        phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
+        phoneRequiredEventHours: get(
+          'platform.riskEngine.buyer.phoneRequiredEventHours',
+        ),
+        phoneRequiredAmount: {
+          amount: Math.round(phoneUsd * 100),
+          currency: 'USD',
+        },
+        phoneRequiredQtyTickets: get(
+          'platform.riskEngine.buyer.phoneRequiredQtyTickets',
+        ),
         newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
         phoneRequiredPaymentMethodTypes:
-          getArray('platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes').length > 0
-            ? getArray('platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes')
-            : (['manual_approval'] as RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes']),
-        dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
-        dniRequiredAmount: { amount: Math.round(dniUsd * 100), currency: 'USD' },
-        dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
+          getArray('platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes')
+            .length > 0
+            ? getArray(
+                'platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes',
+              )
+            : ([
+                'manual_approval',
+              ] as RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes']),
+        dniRequiredEventHours: get(
+          'platform.riskEngine.buyer.dniRequiredEventHours',
+        ),
+        dniRequiredAmount: {
+          amount: Math.round(dniUsd * 100),
+          currency: 'USD',
+        },
+        dniRequiredQtyTickets: get(
+          'platform.riskEngine.buyer.dniRequiredQtyTickets',
+        ),
         dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
         dniRequiredPaymentMethodTypes:
-          getArray('platform.riskEngine.buyer.dniRequiredPaymentMethodTypes').length > 0
-            ? getArray('platform.riskEngine.buyer.dniRequiredPaymentMethodTypes')
+          getArray('platform.riskEngine.buyer.dniRequiredPaymentMethodTypes')
+            .length > 0
+            ? getArray(
+                'platform.riskEngine.buyer.dniRequiredPaymentMethodTypes',
+              )
             : ([] as RiskEngineBuyerConfig['dniRequiredPaymentMethodTypes']),
       },
       seller: {
-        unverifiedSellerMaxSales: get('platform.riskEngine.seller.unverifiedSellerMaxSales'),
-        unverifiedSellerMaxAmount: { amount: Math.round(amountUsd * 100), currency: 'USD' },
-        payoutHoldHoursDefault: get('platform.riskEngine.seller.payoutHoldHoursDefault'),
-        payoutHoldHoursUnverified: get('platform.riskEngine.seller.payoutHoldHoursUnverified'),
+        unverifiedSellerMaxSales: get(
+          'platform.riskEngine.seller.unverifiedSellerMaxSales',
+        ),
+        unverifiedSellerMaxAmount: {
+          amount: Math.round(amountUsd * 100),
+          currency: 'USD',
+        },
+        payoutHoldHoursDefault: get(
+          'platform.riskEngine.seller.payoutHoldHoursDefault',
+        ),
+        payoutHoldHoursUnverified: get(
+          'platform.riskEngine.seller.payoutHoldHoursUnverified',
+        ),
       },
       claims: {
         ticketNotReceived: {
-          minimumClaimHours: get('platform.riskEngine.claims.ticketNotReceived.minimumClaimHours'),
-          maximumClaimHours: get('platform.riskEngine.claims.ticketNotReceived.maximumClaimHours'),
+          minimumClaimHours: get(
+            'platform.riskEngine.claims.ticketNotReceived.minimumClaimHours',
+          ),
+          maximumClaimHours: get(
+            'platform.riskEngine.claims.ticketNotReceived.maximumClaimHours',
+          ),
         },
         ticketDidntWork: {
-          minimumClaimHours: get('platform.riskEngine.claims.ticketDidntWork.minimumClaimHours'),
-          maximumClaimHours: get('platform.riskEngine.claims.ticketDidntWork.maximumClaimHours'),
+          minimumClaimHours: get(
+            'platform.riskEngine.claims.ticketDidntWork.minimumClaimHours',
+          ),
+          maximumClaimHours: get(
+            'platform.riskEngine.claims.ticketDidntWork.maximumClaimHours',
+          ),
         },
       },
     };
@@ -102,15 +149,15 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
     return {
       buyer: this.mergeBuyerConfig(
         defaults.buyer,
-        (o.buyer as Partial<RiskEngineBuyerConfig> | undefined),
+        o.buyer as Partial<RiskEngineBuyerConfig> | undefined,
       ),
       seller: this.mergeSellerConfig(
         defaults.seller,
-        (o.seller as Partial<RiskEngineSellerConfig> | undefined),
+        o.seller as Partial<RiskEngineSellerConfig> | undefined,
       ),
       claims: this.mergeClaimsConfig(
         defaults.claims,
-        (o.claims as Partial<RiskEngineClaimsConfig> | undefined),
+        o.claims as Partial<RiskEngineClaimsConfig> | undefined,
       ),
     };
   }
@@ -122,9 +169,13 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
     if (!stored) return defaultCfg;
     const phoneAmount = stored.phoneRequiredAmount;
     const dniAmount = stored.dniRequiredAmount;
-    const allowedCurrency = (c: string): c is 'USD' | 'ARS' => c === 'USD' || c === 'ARS';
-    const validPaymentTypes = (arr: unknown): arr is RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes'] =>
-      Array.isArray(arr) && arr.every((x) => x === 'payment_gateway' || x === 'manual_approval');
+    const allowedCurrency = (c: string): c is 'USD' | 'ARS' =>
+      c === 'USD' || c === 'ARS';
+    const validPaymentTypes = (
+      arr: unknown,
+    ): arr is RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes'] =>
+      Array.isArray(arr) &&
+      arr.every((x) => x === 'payment_gateway' || x === 'manual_approval');
     return {
       phoneRequiredEventHours:
         typeof stored.phoneRequiredEventHours === 'number'
@@ -144,7 +195,9 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         typeof stored.newAccountDays === 'number'
           ? stored.newAccountDays
           : defaultCfg.newAccountDays,
-      phoneRequiredPaymentMethodTypes: validPaymentTypes(stored.phoneRequiredPaymentMethodTypes)
+      phoneRequiredPaymentMethodTypes: validPaymentTypes(
+        stored.phoneRequiredPaymentMethodTypes,
+      )
         ? stored.phoneRequiredPaymentMethodTypes
         : defaultCfg.phoneRequiredPaymentMethodTypes,
       dniRequiredEventHours:
@@ -165,7 +218,9 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         typeof stored.dniNewAccountDays === 'number'
           ? stored.dniNewAccountDays
           : defaultCfg.dniNewAccountDays,
-      dniRequiredPaymentMethodTypes: validPaymentTypes(stored.dniRequiredPaymentMethodTypes)
+      dniRequiredPaymentMethodTypes: validPaymentTypes(
+        stored.dniRequiredPaymentMethodTypes,
+      )
         ? stored.dniRequiredPaymentMethodTypes
         : defaultCfg.dniRequiredPaymentMethodTypes,
     };
@@ -186,7 +241,10 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         amount &&
         typeof amount.amount === 'number' &&
         typeof amount.currency === 'string'
-          ? { amount: amount.amount, currency: amount.currency as 'USD' | 'EUR' | 'GBP' | 'ARS' }
+          ? {
+              amount: amount.amount,
+              currency: amount.currency as 'USD' | 'EUR' | 'GBP' | 'ARS',
+            }
           : defaultCfg.unverifiedSellerMaxAmount,
       payoutHoldHoursDefault:
         typeof stored.payoutHoldHoursDefault === 'number'
@@ -250,9 +308,13 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
     };
   }
 
-  async upsertPlatformConfig(ctx: Ctx, config: PlatformConfig): Promise<PlatformConfig> {
+  async upsertPlatformConfig(
+    ctx: Ctx,
+    config: PlatformConfig,
+  ): Promise<PlatformConfig> {
     const client = this.getClient(ctx);
-    const riskEngineJson = config.riskEngine as unknown as Prisma.InputJsonValue;
+    const riskEngineJson =
+      config.riskEngine as unknown as Prisma.InputJsonValue;
     const row = await client.platformConfig.upsert({
       where: { id: PLATFORM_CONFIG_DEFAULT_ID },
       create: {
@@ -263,7 +325,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         adminReviewTimeoutHours: config.adminReviewTimeoutHours,
         offerPendingExpirationMinutes: config.offerPendingExpirationMinutes,
         offerAcceptedExpirationMinutes: config.offerAcceptedExpirationMinutes,
-        transactionChatPollIntervalSeconds: config.transactionChatPollIntervalSeconds,
+        transactionChatPollIntervalSeconds:
+          config.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: config.transactionChatMaxMessages,
         riskEngine: riskEngineJson,
       },
@@ -274,7 +337,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         adminReviewTimeoutHours: config.adminReviewTimeoutHours,
         offerPendingExpirationMinutes: config.offerPendingExpirationMinutes,
         offerAcceptedExpirationMinutes: config.offerAcceptedExpirationMinutes,
-        transactionChatPollIntervalSeconds: config.transactionChatPollIntervalSeconds,
+        transactionChatPollIntervalSeconds:
+          config.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: config.transactionChatMaxMessages,
         riskEngine: riskEngineJson,
       },
@@ -288,7 +352,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         adminReviewTimeoutHours: row.adminReviewTimeoutHours,
         offerPendingExpirationMinutes: row.offerPendingExpirationMinutes,
         offerAcceptedExpirationMinutes: row.offerAcceptedExpirationMinutes,
-        transactionChatPollIntervalSeconds: row.transactionChatPollIntervalSeconds,
+        transactionChatPollIntervalSeconds:
+          row.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: row.transactionChatMaxMessages,
       },
       riskEngine,

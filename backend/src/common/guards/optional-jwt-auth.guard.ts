@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../../modules/users/users.service';
 import { Request } from 'express';
+import { ContextLogger } from '../logger/context-logger';
 
 /**
  * Optional JWT Auth Guard
@@ -15,6 +16,8 @@ import { Request } from 'express';
  */
 @Injectable()
 export class OptionalJwtAuthGuard implements CanActivate {
+  private readonly logger = new ContextLogger(OptionalJwtAuthGuard.name);
+
   constructor(
     @Inject(UsersService)
     private readonly usersService: UsersService,
@@ -55,7 +58,12 @@ export class OptionalJwtAuthGuard implements CanActivate {
       (request as any).user = userData;
       (request as any).token = token;
     } catch (error) {
-      console.warn('OptionalJwtAuthGuard: validation failed, allowing unauthenticated request', error);
+      const ctx = (request as any).ctx ?? { source: 'HTTP' as const };
+      this.logger.warn(
+        ctx,
+        'OptionalJwtAuthGuard: validation failed, allowing unauthenticated request',
+        error,
+      );
       return true;
     }
 

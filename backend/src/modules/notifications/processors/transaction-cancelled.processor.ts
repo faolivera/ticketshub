@@ -6,9 +6,7 @@ import type { TransactionCancelledContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class TransactionCancelledProcessor
-  implements EventProcessor<TransactionCancelledContext>
-{
+export class TransactionCancelledProcessor implements EventProcessor<TransactionCancelledContext> {
   readonly eventType = NotificationEventType.TRANSACTION_CANCELLED;
 
   async getRecipients(

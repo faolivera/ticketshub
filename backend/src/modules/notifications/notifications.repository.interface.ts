@@ -65,7 +65,10 @@ export interface INotificationsRepository {
   /**
    * Create a notification
    */
-  createNotification(ctx: Ctx, notification: Notification): Promise<Notification>;
+  createNotification(
+    ctx: Ctx,
+    notification: Notification,
+  ): Promise<Notification>;
 
   /**
    * Find notification by ID
@@ -75,7 +78,10 @@ export interface INotificationsRepository {
   /**
    * Find notifications by event ID
    */
-  findNotificationsByEventId(ctx: Ctx, eventId: string): Promise<Notification[]>;
+  findNotificationsByEventId(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<Notification[]>;
 
   /**
    * Find user in-app notifications with pagination
@@ -141,13 +147,19 @@ export interface INotificationsRepository {
    * - status = PENDING
    * Returns the event if claimed, undefined if already claimed by another worker.
    */
-  claimPendingEvent(ctx: Ctx, eventId: string): Promise<NotificationEvent | undefined>;
+  claimPendingEvent(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<NotificationEvent | undefined>;
 
   /**
    * Atomically claim pending email notifications (batch).
    * Sets status to QUEUED and returns only the ones claimed.
    */
-  claimPendingEmailNotifications(ctx: Ctx, limit: number): Promise<Notification[]>;
+  claimPendingEmailNotifications(
+    ctx: Ctx,
+    limit: number,
+  ): Promise<Notification[]>;
 
   /**
    * Atomically claim a retryable email notification.

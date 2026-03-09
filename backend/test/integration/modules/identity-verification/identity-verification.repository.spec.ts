@@ -36,7 +36,9 @@ describe('IdentityVerificationRepository (Integration)', () => {
     return user.id;
   }
 
-  const createValidRequest = (overrides?: Partial<IdentityVerificationRequest>): IdentityVerificationRequest => ({
+  const createValidRequest = (
+    overrides?: Partial<IdentityVerificationRequest>,
+  ): IdentityVerificationRequest => ({
     id: randomUUID(),
     userId: testUserId,
     legalFirstName: 'John',
@@ -119,8 +121,17 @@ describe('IdentityVerificationRepository (Integration)', () => {
     });
 
     it('should return latest request by submittedAt', async () => {
-      await repository.save(ctx, createValidRequest({ id: randomUUID(), submittedAt: new Date('2026-01-01') }));
-      const latest = createValidRequest({ id: randomUUID(), submittedAt: new Date('2026-06-01') });
+      await repository.save(
+        ctx,
+        createValidRequest({
+          id: randomUUID(),
+          submittedAt: new Date('2026-01-01'),
+        }),
+      );
+      const latest = createValidRequest({
+        id: randomUUID(),
+        submittedAt: new Date('2026-06-01'),
+      });
       await repository.save(ctx, latest);
       const found = await repository.findByUserId(ctx, testUserId);
       expect(found?.id).toBe(latest.id);
@@ -134,9 +145,24 @@ describe('IdentityVerificationRepository (Integration)', () => {
     });
 
     it('should filter by status when provided', async () => {
-      await repository.save(ctx, createValidRequest({ id: randomUUID(), status: IdentityVerificationStatus.Pending }));
-      await repository.save(ctx, createValidRequest({ id: randomUUID(), status: IdentityVerificationStatus.Approved }));
-      const pending = await repository.findAll(ctx, IdentityVerificationStatus.Pending);
+      await repository.save(
+        ctx,
+        createValidRequest({
+          id: randomUUID(),
+          status: IdentityVerificationStatus.Pending,
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidRequest({
+          id: randomUUID(),
+          status: IdentityVerificationStatus.Approved,
+        }),
+      );
+      const pending = await repository.findAll(
+        ctx,
+        IdentityVerificationStatus.Pending,
+      );
       expect(pending).toHaveLength(1);
       expect(pending[0].status).toBe(IdentityVerificationStatus.Pending);
     });
@@ -144,8 +170,20 @@ describe('IdentityVerificationRepository (Integration)', () => {
 
   describe('findAllPending', () => {
     it('should return only pending requests', async () => {
-      await repository.save(ctx, createValidRequest({ id: randomUUID(), status: IdentityVerificationStatus.Pending }));
-      await repository.save(ctx, createValidRequest({ id: randomUUID(), status: IdentityVerificationStatus.Approved }));
+      await repository.save(
+        ctx,
+        createValidRequest({
+          id: randomUUID(),
+          status: IdentityVerificationStatus.Pending,
+        }),
+      );
+      await repository.save(
+        ctx,
+        createValidRequest({
+          id: randomUUID(),
+          status: IdentityVerificationStatus.Approved,
+        }),
+      );
       const pending = await repository.findAllPending(ctx);
       expect(pending).toHaveLength(1);
     });

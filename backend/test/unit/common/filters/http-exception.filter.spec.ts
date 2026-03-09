@@ -1,4 +1,12 @@
-import { ArgumentsHost, HttpStatus, BadRequestException, NotFoundException, ForbiddenException, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  HttpStatus,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { HttpExceptionFilter } from '../../../../src/common/filters/http-exception.filter';
 import { OptimisticLockException } from '../../../../src/common/exceptions/optimistic-lock.exception';
 import { InsufficientFundsException } from '../../../../src/common/exceptions/insufficient-funds.exception';
@@ -40,7 +48,10 @@ describe('HttpExceptionFilter', () => {
 
   describe('Custom Exceptions', () => {
     it('should return structured error for OptimisticLockException', () => {
-      const exception = new OptimisticLockException('TicketListing', 'listing-123');
+      const exception = new OptimisticLockException(
+        'TicketListing',
+        'listing-123',
+      );
 
       filter.catch(exception, mockHost);
 
@@ -49,7 +60,8 @@ describe('HttpExceptionFilter', () => {
         success: false,
         error: {
           code: 'OPTIMISTIC_LOCK_CONFLICT',
-          message: 'The TicketListing was modified by another process. Please refresh and try again.',
+          message:
+            'The TicketListing was modified by another process. Please refresh and try again.',
           details: {
             resource: 'TicketListing',
             resourceId: 'listing-123',
@@ -241,7 +253,9 @@ describe('HttpExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(mockResponse.status).toHaveBeenCalledWith(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: {
@@ -256,7 +270,9 @@ describe('HttpExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(mockResponse.status).toHaveBeenCalledWith(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: {
@@ -269,7 +285,9 @@ describe('HttpExceptionFilter', () => {
     it('should return INTERNAL_SERVER_ERROR for null/undefined', () => {
       filter.catch(null, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(mockResponse.status).toHaveBeenCalledWith(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: {

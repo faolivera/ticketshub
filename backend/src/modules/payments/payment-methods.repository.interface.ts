@@ -23,7 +23,10 @@ export interface IPaymentMethodsRepository {
   /**
    * Create a new payment method
    */
-  create(ctx: Ctx, paymentMethod: PaymentMethodOption): Promise<PaymentMethodOption>;
+  create(
+    ctx: Ctx,
+    paymentMethod: PaymentMethodOption,
+  ): Promise<PaymentMethodOption>;
 
   /**
    * Update a payment method

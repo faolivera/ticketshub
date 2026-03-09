@@ -133,7 +133,9 @@ describe('PaymentMethodsService', () => {
         bankTransferConfig: undefined,
       });
       expect(result[1].bankTransferConfig).toBeDefined();
-      expect((result[0] as PaymentMethodOption).gatewayConfigEnvPrefix).toBeUndefined();
+      expect(
+        (result[0] as PaymentMethodOption).gatewayConfigEnvPrefix,
+      ).toBeUndefined();
     });
   });
 

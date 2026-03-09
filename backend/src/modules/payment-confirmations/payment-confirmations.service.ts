@@ -190,7 +190,10 @@ export class PaymentConfirmationsService {
     );
 
     // Get listing and buyer for notification
-    const listing = await this.ticketsService.getListingById(ctx, transaction.listingId);
+    const listing = await this.ticketsService.getListingById(
+      ctx,
+      transaction.listingId,
+    );
     const buyer = await this.usersService.findById(ctx, userId);
 
     // Emit notification for payment submitted
@@ -205,7 +208,12 @@ export class PaymentConfirmationsService {
         buyerName: buyer?.publicName || 'Buyer',
         sellerId: transaction.sellerId,
       })
-      .catch((err) => this.logger.error(ctx, `Failed to emit BUYER_PAYMENT_SUBMITTED: ${err}`));
+      .catch((err) =>
+        this.logger.error(
+          ctx,
+          `Failed to emit BUYER_PAYMENT_SUBMITTED: ${err}`,
+        ),
+      );
 
     this.logger.log(
       ctx,

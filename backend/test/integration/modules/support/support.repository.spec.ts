@@ -5,7 +5,10 @@ import {
   SupportTicketStatus,
   SupportCategory,
 } from '@/modules/support/support.domain';
-import type { SupportTicket, SupportMessage } from '@/modules/support/support.domain';
+import type {
+  SupportTicket,
+  SupportMessage,
+} from '@/modules/support/support.domain';
 import type { Ctx } from '@/common/types/context';
 import {
   getTestPrismaClient,
@@ -39,7 +42,9 @@ describe('SupportRepository (Integration)', () => {
     return user.id;
   }
 
-  const createValidTicket = (overrides?: Partial<SupportTicket>): SupportTicket => ({
+  const createValidTicket = (
+    overrides?: Partial<SupportTicket>,
+  ): SupportTicket => ({
     id: randomUUID(),
     userId: testUserId,
     category: SupportCategory.TicketNotReceived,
@@ -106,8 +111,14 @@ describe('SupportRepository (Integration)', () => {
     });
 
     it('should return all tickets ordered by createdAt desc', async () => {
-      await repository.createTicket(ctx, createValidTicket({ id: randomUUID(), subject: 'First' }));
-      await repository.createTicket(ctx, createValidTicket({ id: randomUUID(), subject: 'Second' }));
+      await repository.createTicket(
+        ctx,
+        createValidTicket({ id: randomUUID(), subject: 'First' }),
+      );
+      await repository.createTicket(
+        ctx,
+        createValidTicket({ id: randomUUID(), subject: 'Second' }),
+      );
       const all = await repository.getAllTickets(ctx);
       expect(all).toHaveLength(2);
       expect(all[0].subject).toBe('Second');
@@ -130,8 +141,17 @@ describe('SupportRepository (Integration)', () => {
 
   describe('getActiveTickets', () => {
     it('should return only open, in progress, waiting for customer', async () => {
-      await repository.createTicket(ctx, createValidTicket({ status: SupportTicketStatus.Open }));
-      await repository.createTicket(ctx, createValidTicket({ id: randomUUID(), status: SupportTicketStatus.Resolved }));
+      await repository.createTicket(
+        ctx,
+        createValidTicket({ status: SupportTicketStatus.Open }),
+      );
+      await repository.createTicket(
+        ctx,
+        createValidTicket({
+          id: randomUUID(),
+          status: SupportTicketStatus.Resolved,
+        }),
+      );
       const active = await repository.getActiveTickets(ctx);
       expect(active).toHaveLength(1);
       expect(active[0].status).toBe(SupportTicketStatus.Open);
@@ -140,33 +160,85 @@ describe('SupportRepository (Integration)', () => {
 
   describe('getTicketByTransactionId', () => {
     it('should return undefined when no ticket for transaction', async () => {
-      const found = await repository.getTicketByTransactionId(ctx, randomUUID());
+      const found = await repository.getTicketByTransactionId(
+        ctx,
+        randomUUID(),
+      );
       expect(found).toBeUndefined();
     });
 
     it('should find ticket by transaction id', async () => {
       const txId = randomUUID();
-      const created = await repository.createTicket(ctx, createValidTicket({ transactionId: txId }));
+      const created = await repository.createTicket(
+        ctx,
+        createValidTicket({ transactionId: txId }),
+      );
       const found = await repository.getTicketByTransactionId(ctx, txId);
       expect(found?.id).toBe(created.id);
     });
   });
 
+  describe('getTicketByTransactionIdAndUserId', () => {
+    it('should return undefined when no ticket for transaction and user', async () => {
+      const found = await repository.getTicketByTransactionIdAndUserId(
+        ctx,
+        randomUUID(),
+        testUserId,
+      );
+      expect(found).toBeUndefined();
+    });
+
+    it('should find ticket by transaction id and user id', async () => {
+      const txId = randomUUID();
+      const created = await repository.createTicket(
+        ctx,
+        createValidTicket({ transactionId: txId }),
+      );
+      const found = await repository.getTicketByTransactionIdAndUserId(
+        ctx,
+        txId,
+        testUserId,
+      );
+      expect(found?.id).toBe(created.id);
+    });
+
+    it('should return undefined when same transaction but different user', async () => {
+      const txId = randomUUID();
+      const otherUserId = await createTestUser();
+      await repository.createTicket(
+        ctx,
+        createValidTicket({ transactionId: txId, userId: otherUserId }),
+      );
+      const found = await repository.getTicketByTransactionIdAndUserId(
+        ctx,
+        txId,
+        testUserId,
+      );
+      expect(found).toBeUndefined();
+    });
+  });
+
   describe('updateTicket', () => {
     it('should return undefined for non-existent ticket', async () => {
-      const result = await repository.updateTicket(ctx, 'non-existent-id', { status: SupportTicketStatus.Resolved });
+      const result = await repository.updateTicket(ctx, 'non-existent-id', {
+        status: SupportTicketStatus.Resolved,
+      });
       expect(result).toBeUndefined();
     });
 
     it('should update ticket status', async () => {
       const ticket = await repository.createTicket(ctx, createValidTicket());
-      const updated = await repository.updateTicket(ctx, ticket.id, { status: SupportTicketStatus.InProgress });
+      const updated = await repository.updateTicket(ctx, ticket.id, {
+        status: SupportTicketStatus.InProgress,
+      });
       expect(updated?.status).toBe(SupportTicketStatus.InProgress);
     });
 
     it('should update subject', async () => {
       const ticket = await repository.createTicket(ctx, createValidTicket());
-      const updated = await repository.updateTicket(ctx, ticket.id, { subject: 'Updated subject' });
+      const updated = await repository.updateTicket(ctx, ticket.id, {
+        subject: 'Updated subject',
+      });
       expect(updated?.subject).toBe('Updated subject');
     });
   });

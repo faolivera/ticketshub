@@ -6,7 +6,9 @@ import { loadHoconConfig } from '../config/load-hocon';
 const config = loadHoconConfig() as { database?: { url?: string } };
 const connectionString = config.database?.url;
 if (!connectionString) {
-  console.error('database.url is required. Set DATABASE_URL or configure in config/*.conf');
+  console.error(
+    'database.url is required. Set DATABASE_URL or configure in config/*.conf',
+  );
   process.exit(1);
 }
 
@@ -123,7 +125,10 @@ async function seedTerms(): Promise<void> {
   });
 
   if (existingBuyerTerms) {
-    console.log('Active buyer terms already exist (id: %s)', existingBuyerTerms.id);
+    console.log(
+      'Active buyer terms already exist (id: %s)',
+      existingBuyerTerms.id,
+    );
   } else {
     const buyerTerms = await prisma.termsVersion.create({
       data: {
@@ -138,7 +143,10 @@ async function seedTerms(): Promise<void> {
   }
 
   if (existingSellerTerms) {
-    console.log('Active seller terms already exist (id: %s)', existingSellerTerms.id);
+    console.log(
+      'Active seller terms already exist (id: %s)',
+      existingSellerTerms.id,
+    );
   } else {
     const sellerTerms = await prisma.termsVersion.create({
       data: {

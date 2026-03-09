@@ -25,9 +25,7 @@ interface PaymentConfirmationFields {
 }
 
 @Injectable()
-export class PaymentConfirmationsRepository
-  implements IPaymentConfirmationsRepository
-{
+export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(_ctx: Ctx, id: string): Promise<PaymentConfirmation | null> {
@@ -132,9 +130,7 @@ export class PaymentConfirmationsRepository
     });
   }
 
-  private mapToDomain(
-    record: PrismaPaymentConfirmation,
-  ): PaymentConfirmation {
+  private mapToDomain(record: PrismaPaymentConfirmation): PaymentConfirmation {
     const fields = (record.fields as PaymentConfirmationFields | null) ?? {};
 
     return {

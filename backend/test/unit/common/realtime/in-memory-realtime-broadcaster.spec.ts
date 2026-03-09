@@ -25,7 +25,9 @@ describe('InMemoryRealtimeBroadcaster', () => {
       broadcaster.setServer(mockServer as Server);
       await broadcaster.emitToUser('user_1', 'notification', { id: 'n1' });
       expect(mockServer.to).toHaveBeenCalledWith('user:user_1');
-      expect(mockServer.emit).toHaveBeenCalledWith('notification', { id: 'n1' });
+      expect(mockServer.emit).toHaveBeenCalledWith('notification', {
+        id: 'n1',
+      });
     });
 
     it('should do nothing when server is not set', async () => {

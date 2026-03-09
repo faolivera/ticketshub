@@ -276,12 +276,16 @@ export class EventsController {
       limits: { fileSize: BANNER_CONSTRAINTS.maxSizeBytes },
       fileFilter: (_req, file, cb) => {
         if (
-          ALLOWED_BANNER_MIME_TYPES.includes(file.mimetype as EventBannerMimeType)
+          ALLOWED_BANNER_MIME_TYPES.includes(
+            file.mimetype as EventBannerMimeType,
+          )
         ) {
           cb(null, true);
         } else {
           cb(
-            new BadRequestException('Invalid file type. Allowed: PNG, JPEG, WebP'),
+            new BadRequestException(
+              'Invalid file type. Allowed: PNG, JPEG, WebP',
+            ),
             false,
           );
         }
@@ -296,7 +300,9 @@ export class EventsController {
     @UploadedFile() file: Multer.File,
   ): Promise<ApiResponse<UploadEventBannerResponse>> {
     if (bannerType !== 'square' && bannerType !== 'rectangle') {
-      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+      throw new BadRequestException(
+        'Banner type must be "square" or "rectangle"',
+      );
     }
 
     if (!file) {
@@ -345,7 +351,9 @@ export class EventsController {
     @Param('type') bannerType: string,
   ): Promise<ApiResponse<DeleteEventBannerResponse>> {
     if (bannerType !== 'square' && bannerType !== 'rectangle') {
-      throw new BadRequestException('Banner type must be "square" or "rectangle"');
+      throw new BadRequestException(
+        'Banner type must be "square" or "rectangle"',
+      );
     }
 
     const result = await this.eventsService.deleteBanner(
