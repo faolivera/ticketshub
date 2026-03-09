@@ -19,10 +19,12 @@ export enum OTPStatus {
 
 /**
  * Request to send OTP
- * target is optional; backend resolves email/phone from authenticated user
+ * For PhoneVerification, phoneNumber is required (validated as Argentina format).
  */
 export interface SendOTPRequest {
   type: OTPType;
+  /** Required when type is PhoneVerification. */
+  phoneNumber?: string;
   target?: string;
 }
 

@@ -61,12 +61,20 @@ export function PhoneVerification() {
     setIsLoading(true);
     setError(null);
     try {
-      await otpService.sendOTP({ type: OTPType.PhoneVerification });
+      await otpService.sendOTP({
+        type: OTPType.PhoneVerification,
+        phoneNumber: phoneNumber.trim(),
+      });
       setStep('verify');
       setTimer(60);
       setCanResend(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('phoneVerification.sendError'));
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string; message?: string };
+      const msg =
+        apiErr?.code === 'INVALID_PHONE_NUMBER'
+          ? t('verifyUser.invalidPhoneNumber')
+          : apiErr?.message ?? t('phoneVerification.sendError');
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -121,12 +129,20 @@ export function PhoneVerification() {
     setIsLoading(true);
     setError(null);
     try {
-      await otpService.sendOTP({ type: OTPType.PhoneVerification });
+      await otpService.sendOTP({
+        type: OTPType.PhoneVerification,
+        phoneNumber: phoneNumber.trim(),
+      });
       setTimer(60);
       setCanResend(false);
       setVerificationCode(['', '', '', '', '', '']);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('phoneVerification.sendError'));
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string; message?: string };
+      const msg =
+        apiErr?.code === 'INVALID_PHONE_NUMBER'
+          ? t('verifyUser.invalidPhoneNumber')
+          : apiErr?.message ?? t('phoneVerification.sendError');
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

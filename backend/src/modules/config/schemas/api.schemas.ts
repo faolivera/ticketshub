@@ -17,15 +17,19 @@ const BuyerAmountMoneySchema = z.object({
   currency: BuyerAmountCurrencySchema,
 });
 
+const RiskPaymentMethodTypeSchema = z.enum(['payment_gateway', 'manual_approval']);
+
 const RiskEngineBuyerConfigSchema = z.object({
   phoneRequiredEventHours: z.number(),
   phoneRequiredAmount: BuyerAmountMoneySchema,
   phoneRequiredQtyTickets: z.number(),
   newAccountDays: z.number(),
+  phoneRequiredPaymentMethodTypes: z.array(RiskPaymentMethodTypeSchema),
   dniRequiredEventHours: z.number(),
   dniRequiredAmount: BuyerAmountMoneySchema,
   dniRequiredQtyTickets: z.number(),
   dniNewAccountDays: z.number(),
+  dniRequiredPaymentMethodTypes: z.array(RiskPaymentMethodTypeSchema),
 });
 
 const RiskEngineSellerConfigSchema = z.object({
@@ -88,10 +92,12 @@ export const UpdatePlatformConfigRequestSchema = z.object({
           phoneRequiredAmount: BuyerAmountMoneySchema.optional(),
           phoneRequiredQtyTickets: z.number().min(1).max(50).optional(),
           newAccountDays: z.number().min(0).max(365).optional(),
+          phoneRequiredPaymentMethodTypes: z.array(RiskPaymentMethodTypeSchema).optional(),
           dniRequiredEventHours: z.number().min(1).max(720).optional(),
           dniRequiredAmount: BuyerAmountMoneySchema.optional(),
           dniRequiredQtyTickets: z.number().min(1).max(50).optional(),
           dniNewAccountDays: z.number().min(0).max(365).optional(),
+          dniRequiredPaymentMethodTypes: z.array(RiskPaymentMethodTypeSchema).optional(),
         })
         .optional(),
       seller: z

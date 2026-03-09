@@ -195,6 +195,23 @@ export class UsersRepository implements IUsersRepository {
     }
   }
 
+  async setPhone(
+    _ctx: Ctx,
+    userId: string,
+    phone: string,
+  ): Promise<User | undefined> {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { phone: phone.trim() },
+      });
+      return this.mapToUser(user);
+    } catch (error) {
+      console.error('setPhone failed:', error);
+      return undefined;
+    }
+  }
+
   async updateBasicInfo(
     _ctx: Ctx,
     userId: string,

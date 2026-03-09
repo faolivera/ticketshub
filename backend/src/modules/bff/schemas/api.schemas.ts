@@ -256,6 +256,10 @@ export const GetBuyPageResponseSchema = z.object({
   checkoutRisk: CheckoutRiskSchema.optional(),
 });
 
+export const GetCheckoutRiskResponseSchema = z.object({
+  checkoutRisk: CheckoutRiskSchema,
+});
+
 const PaymentConfirmationStatusSchema = z.enum([
   'Pending',
   'Accepted',

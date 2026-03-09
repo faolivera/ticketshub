@@ -1028,7 +1028,8 @@
       "identity": "Identidad"
     },
     "stepIndicator": "Paso {{current}} de {{total}}",
-    "backToProfile": "Volver al perfil"
+    "backToProfile": "Volver al perfil",
+    "invalidPhoneNumber": "El número no es un teléfono válido de Argentina. Usá formato móvil o fijo (ej: +54 9 11 1234-5678)."
   },
   "verification": {
     "title": "Verificación de Vendedor",
@@ -1603,6 +1604,14 @@
       "dniRequiredAmountUsd": "Pedir DNI si monto del pedido ≥",
       "dniRequiredQtyTickets": "Pedir DNI si cantidad de entradas ≥",
       "dniNewAccountDays": "Pedir DNI si cuenta con menos de (días)",
+      "phoneRequiredPaymentMethodTypes": "Pedir teléfono cuando el método de pago sea",
+      "phoneRequiredPaymentMethodTypesHelp": "Si el comprador elige uno de estos métodos de pago, se exige verificación de teléfono (V2) además de otros triggers.",
+      "dniRequiredPaymentMethodTypes": "Pedir DNI cuando el método de pago sea",
+      "dniRequiredPaymentMethodTypesHelp": "Si el comprador elige uno de estos métodos de pago, se exigen verificación de identidad (V3) y teléfono (V2).",
+      "paymentMethodType": {
+        "payment_gateway": "Pasarela de pago (tarjeta, etc.)",
+        "manual_approval": "Aprobación manual (ej. transferencia bancaria)"
+      },
       "unverifiedSellerMaxSales": "Vendedor no verificado: máximo publicaciones activas",
       "unverifiedSellerMaxAmount": "Vendedor no verificado: máximo valor total en publicaciones activas",
       "payoutHoldHoursDefault": "Retención de pago post-evento (horas)",

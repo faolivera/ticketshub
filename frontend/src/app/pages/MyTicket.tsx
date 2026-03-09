@@ -1963,7 +1963,11 @@ export function MyTicket() {
                   <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
                     <p className="mb-2">{t('myTicket.disputePhoneRequiredDisclaimer')}</p>
                     <Link
-                      to="/phone-verification"
+                      to="/verify-user"
+                      state={{
+                        verifyPhone: true,
+                        returnTo: `/transaction/${transactionId}`,
+                      }}
                       className="font-medium underline hover:no-underline"
                       onClick={() => handleCloseDisputeModal()}
                     >

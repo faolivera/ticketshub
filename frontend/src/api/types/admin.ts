@@ -585,6 +585,9 @@ export type AdminPaymentMethodResponse = PaymentMethodOption;
 
 // === Admin Platform Config (GET/PATCH /admin/config/platform) ===
 
+/** Payment method types that can trigger step-up verification (must match backend). */
+export type RiskPaymentMethodType = 'payment_gateway' | 'manual_approval';
+
 /**
  * Buyer-facing risk config: when to require V2 (phone) and V3 (DNI) at checkout.
  */
@@ -594,11 +597,15 @@ export interface RiskEngineBuyerConfig {
   phoneRequiredAmount: Money;
   phoneRequiredQtyTickets: number;
   newAccountDays: number;
+  /** When the selected payment method is in this list, require phone (V2). */
+  phoneRequiredPaymentMethodTypes: RiskPaymentMethodType[];
   dniRequiredEventHours: number;
   /** Require DNI when order total >= this amount (USD or ARS only). */
   dniRequiredAmount: Money;
   dniRequiredQtyTickets: number;
   dniNewAccountDays: number;
+  /** When the selected payment method is in this list, require DNI (V3) and phone (V2). */
+  dniRequiredPaymentMethodTypes: RiskPaymentMethodType[];
 }
 
 /**

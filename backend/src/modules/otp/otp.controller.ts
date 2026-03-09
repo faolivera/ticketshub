@@ -28,6 +28,8 @@ import {
   SendOTPResponseSchema,
   VerifyOTPResponseSchema,
 } from './schemas/api.schemas';
+import { isValidArgentinaPhone } from '../../common/utils/phone-validator';
+import { InvalidPhoneNumberException } from '../../common/exceptions/invalid-phone-number.exception';
 
 @Controller('api/otp')
 @UseGuards(JwtAuthGuard)
@@ -47,10 +49,27 @@ export class OTPController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: SendOTPRequest,
   ): Promise<ApiResponse<SendOTPResponse>> {
-    const { type } = body;
+    const { type, phoneNumber: bodyPhone } = body;
 
     if (!type || !Object.values(OTPType).includes(type)) {
       throw new BadRequestException('Valid OTP type is required');
+    }
+
+    if (type === OTPType.PhoneVerification) {
+      const phone = bodyPhone ?? user.phone;
+      if (!phone?.trim()) {
+        throw new BadRequestException(
+          'Phone number is required for phone verification',
+        );
+      }
+      if (!isValidArgentinaPhone(phone)) {
+        throw new InvalidPhoneNumberException(
+          'Invalid phone number for Argentina. Use a valid mobile or landline format (e.g. +54 9 11 1234-5678).',
+        );
+      }
+      if (bodyPhone?.trim()) {
+        await this.usersService.setPhone(ctx, user.id, bodyPhone.trim());
+      }
     }
 
     const otp = await this.otpService.sendOTP(ctx, user.id, type);

@@ -1029,7 +1029,8 @@
       "identity": "Identity"
     },
     "stepIndicator": "Step {{current}} of {{total}}",
-    "backToProfile": "Back to profile"
+    "backToProfile": "Back to profile",
+    "invalidPhoneNumber": "Not a valid Argentina phone number. Use a valid mobile or landline format (e.g. +54 9 11 1234-5678)."
   },
   "verification": {
     "title": "Seller Verification",
@@ -1604,6 +1605,14 @@
       "dniRequiredAmountUsd": "Require DNI when order amount ≥",
       "dniRequiredQtyTickets": "Require DNI when ticket quantity ≥",
       "dniNewAccountDays": "Require DNI when account age under (days)",
+      "phoneRequiredPaymentMethodTypes": "Require phone when payment method is",
+      "phoneRequiredPaymentMethodTypesHelp": "If the buyer selects one of these payment methods, phone verification (V2) is required in addition to other triggers.",
+      "dniRequiredPaymentMethodTypes": "Require DNI when payment method is",
+      "dniRequiredPaymentMethodTypesHelp": "If the buyer selects one of these payment methods, identity verification (V3) and phone (V2) are required.",
+      "paymentMethodType": {
+        "payment_gateway": "Payment gateway (card, etc.)",
+        "manual_approval": "Manual approval (e.g. bank transfer)"
+      },
       "unverifiedSellerMaxSales": "Unverified seller max active listings",
       "unverifiedSellerMaxAmount": "Unverified seller max total value in active listings",
       "payoutHoldHoursDefault": "Payout hold post-event (hours)",

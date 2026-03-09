@@ -8,10 +8,14 @@ export interface Money {
   currency: CurrencyCode;
 }
 
+/** Payment method types that can trigger step-up verification (must match payments.domain PaymentMethodType). */
+export type RiskPaymentMethodType = 'payment_gateway' | 'manual_approval';
+
 /**
  * Buyer-facing risk config: when to require V2 (phone) and V3 (DNI) at checkout.
  * Same condition types for both; DNI thresholds are typically stricter (e.g. higher amount, fewer hours).
  * Amount thresholds are Money (USD or ARS only); comparison uses ConversionService with configured exchange rate.
+ * Payment method type lists: when the selected method is in the list, that verification is required (in addition to other triggers).
  */
 export interface RiskEngineBuyerConfig {
   phoneRequiredEventHours: number;
@@ -19,6 +23,8 @@ export interface RiskEngineBuyerConfig {
   phoneRequiredAmount: Money;
   phoneRequiredQtyTickets: number;
   newAccountDays: number;
+  /** When the selected payment method is in this list, require phone (V2). E.g. ["manual_approval"]. */
+  phoneRequiredPaymentMethodTypes: RiskPaymentMethodType[];
   /** Event within N hours → require V3 (and V2). Stricter than phone. */
   dniRequiredEventHours: number;
   /** Require DNI when order total >= this amount (USD or ARS). */
@@ -27,6 +33,8 @@ export interface RiskEngineBuyerConfig {
   dniRequiredQtyTickets: number;
   /** Account age < N days → require V3 (and V2). */
   dniNewAccountDays: number;
+  /** When the selected payment method is in this list, require DNI (V3) and phone (V2). */
+  dniRequiredPaymentMethodTypes: RiskPaymentMethodType[];
 }
 
 /**

@@ -461,6 +461,13 @@ export class UsersService {
   }
 
   /**
+   * Set user phone (e.g. before sending OTP). Does not set phoneVerified.
+   */
+  async setPhone(ctx: Ctx, userId: string, phone: string): Promise<void> {
+    await this.usersRepository.setPhone(ctx, userId, phone.trim());
+  }
+
+  /**
    * Update basic user information (firstName, lastName, publicName, address, imageId)
    */
   async updateBasicInfo(

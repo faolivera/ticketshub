@@ -10,6 +10,7 @@ import type {
   GetEventPageResponse,
   GetMyTicketsResponse,
   GetBuyPageResponse,
+  GetCheckoutRiskResponse,
 } from '../types';
 
 /**
@@ -78,6 +79,21 @@ export const ticketsService = {
    */
   async getBuyPage(listingId: string): Promise<GetBuyPageResponse> {
     const response = await apiClient.get<GetBuyPageResponse>(`/buy/${listingId}`);
+    return response.data;
+  },
+
+  /**
+   * Re-evaluate checkout risk for quantity and payment method (BFF endpoint, authenticated).
+   * Use when user changes quantity or payment method on the buy page.
+   */
+  async getCheckoutRisk(
+    listingId: string,
+    quantity: number,
+    paymentMethodId: string
+  ): Promise<GetCheckoutRiskResponse> {
+    const response = await apiClient.get<GetCheckoutRiskResponse>(`/buy/${listingId}/checkout-risk`, {
+      params: { quantity: Math.max(1, Math.floor(quantity)), paymentMethodId },
+    });
     return response.data;
   },
 };

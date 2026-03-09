@@ -47,6 +47,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
 
   private getDefaultRiskEngine(): RiskEngineConfig {
     const get = (path: string) => this.nestConfigService.get<number>(path)!;
+    const getArray = (path: string) =>
+      this.nestConfigService.get<RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes']>(path) ?? [];
     const amountUsd = get('platform.riskEngine.seller.unverifiedSellerMaxAmountUsd');
     const phoneUsd = get('platform.riskEngine.buyer.phoneRequiredAmountUsd');
     const dniUsd = get('platform.riskEngine.buyer.dniRequiredAmountUsd');
@@ -56,10 +58,18 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         phoneRequiredAmount: { amount: Math.round(phoneUsd * 100), currency: 'USD' },
         phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
         newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
+        phoneRequiredPaymentMethodTypes:
+          getArray('platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes').length > 0
+            ? getArray('platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes')
+            : (['manual_approval'] as RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes']),
         dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
         dniRequiredAmount: { amount: Math.round(dniUsd * 100), currency: 'USD' },
         dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
         dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
+        dniRequiredPaymentMethodTypes:
+          getArray('platform.riskEngine.buyer.dniRequiredPaymentMethodTypes').length > 0
+            ? getArray('platform.riskEngine.buyer.dniRequiredPaymentMethodTypes')
+            : ([] as RiskEngineBuyerConfig['dniRequiredPaymentMethodTypes']),
       },
       seller: {
         unverifiedSellerMaxSales: get('platform.riskEngine.seller.unverifiedSellerMaxSales'),
@@ -113,6 +123,8 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
     const phoneAmount = stored.phoneRequiredAmount;
     const dniAmount = stored.dniRequiredAmount;
     const allowedCurrency = (c: string): c is 'USD' | 'ARS' => c === 'USD' || c === 'ARS';
+    const validPaymentTypes = (arr: unknown): arr is RiskEngineBuyerConfig['phoneRequiredPaymentMethodTypes'] =>
+      Array.isArray(arr) && arr.every((x) => x === 'payment_gateway' || x === 'manual_approval');
     return {
       phoneRequiredEventHours:
         typeof stored.phoneRequiredEventHours === 'number'
@@ -132,6 +144,9 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         typeof stored.newAccountDays === 'number'
           ? stored.newAccountDays
           : defaultCfg.newAccountDays,
+      phoneRequiredPaymentMethodTypes: validPaymentTypes(stored.phoneRequiredPaymentMethodTypes)
+        ? stored.phoneRequiredPaymentMethodTypes
+        : defaultCfg.phoneRequiredPaymentMethodTypes,
       dniRequiredEventHours:
         typeof stored.dniRequiredEventHours === 'number'
           ? stored.dniRequiredEventHours
@@ -150,6 +165,9 @@ export class ConfigRepository extends BaseRepository implements IConfigRepositor
         typeof stored.dniNewAccountDays === 'number'
           ? stored.dniNewAccountDays
           : defaultCfg.dniNewAccountDays,
+      dniRequiredPaymentMethodTypes: validPaymentTypes(stored.dniRequiredPaymentMethodTypes)
+        ? stored.dniRequiredPaymentMethodTypes
+        : defaultCfg.dniRequiredPaymentMethodTypes,
     };
   }
 

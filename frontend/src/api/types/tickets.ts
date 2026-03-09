@@ -309,6 +309,11 @@ export interface BuyPageData {
 /** Response from GET /api/buy/:listingId */
 export type GetBuyPageResponse = BuyPageData;
 
+/** Response from GET /api/buy/:listingId/checkout-risk (re-evaluate risk for quantity + payment method) */
+export interface GetCheckoutRiskResponse {
+  checkoutRisk: CheckoutRisk;
+}
+
 /**
  * Query params for listing listings
  */

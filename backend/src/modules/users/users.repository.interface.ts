@@ -107,6 +107,11 @@ export interface IUsersRepository {
   ): Promise<User | undefined>;
 
   /**
+   * Set user phone (e.g. before OTP verification). Does not set phoneVerified.
+   */
+  setPhone(ctx: Ctx, userId: string, phone: string): Promise<User | undefined>;
+
+  /**
    * Update basic user information
    */
   updateBasicInfo(

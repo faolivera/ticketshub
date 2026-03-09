@@ -57,6 +57,13 @@ export interface GetEventListingsQuery {
 export type GetBuyPageResponse = BuyPageData;
 
 /**
+ * Response for GET /api/buy/:ticketId/checkout-risk (re-evaluate risk for quantity + payment method).
+ */
+export interface GetCheckoutRiskResponse {
+  checkoutRisk: BuyPageData['checkoutRisk'];
+}
+
+/**
  * Transaction reviews data for the transaction details page
  */
 export interface TransactionReviewsData {

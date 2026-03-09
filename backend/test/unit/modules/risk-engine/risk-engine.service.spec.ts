@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
+import {
+  RiskEngineService,
+  type RiskEngineBuyerConfigInput,
+} from '../../../../src/modules/risk-engine/risk-engine.service';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import { ConversionService } from '../../../../src/modules/config/conversion.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
@@ -16,15 +19,17 @@ describe('RiskEngineService', () => {
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
-  const defaultBuyerConfig = {
+  const defaultBuyerConfig: RiskEngineBuyerConfigInput = {
     phoneRequiredEventHours: 72,
-    phoneRequiredAmount: { amount: 12000, currency: 'USD' as const }, // 120 USD
+    phoneRequiredAmount: { amount: 12000, currency: 'USD' }, // 120 USD
     phoneRequiredQtyTickets: 2,
     newAccountDays: 7,
+    phoneRequiredPaymentMethodTypes: ['manual_approval'],
     dniRequiredEventHours: 24,
-    dniRequiredAmount: { amount: 25000, currency: 'USD' as const }, // 250 USD
+    dniRequiredAmount: { amount: 25000, currency: 'USD' }, // 250 USD
     dniRequiredQtyTickets: 4,
     dniNewAccountDays: 3,
+    dniRequiredPaymentMethodTypes: [],
   };
 
   const hoconBuyerMap: Record<string, number> = {

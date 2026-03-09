@@ -11,7 +11,7 @@ import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import { UserAvatar } from '../components/UserAvatar';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
 import { formatDateTime, formatMonthYear } from '@/lib/format-date';
-import type { BuyPageData, BuyPagePaymentMethodOption, Offer } from '../../api/types';
+import type { BuyPageData, BuyPagePaymentMethodOption, CheckoutRisk, Offer } from '../../api/types';
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 
@@ -87,17 +87,20 @@ export function BuyTicketPage() {
   const [offerPriceCents, setOfferPriceCents] = useState<number>(0);
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
   const [offerError, setOfferError] = useState<string | null>(null);
+  /** Re-evaluated checkout risk when quantity or payment method changes (from GET checkout-risk). */
+  const [localCheckoutRisk, setLocalCheckoutRisk] = useState<CheckoutRisk | null>(null);
 
   const listing = buyPageData?.listing ?? null;
   const seller = buyPageData?.seller ?? null;
   const paymentMethods = buyPageData?.paymentMethods ?? [];
   const pricingSnapshot = buyPageData?.pricingSnapshot ?? null;
-  const checkoutRisk = buyPageData?.checkoutRisk;
+  /** Use re-evaluated risk when available, otherwise initial buy page risk. */
+  const effectiveCheckoutRisk = localCheckoutRisk ?? buyPageData?.checkoutRisk;
 
   /** Purchase blocked when risk engine requires V1/V2/V3 and user has not completed them. Use backend missing* when present. */
-  const missingV1 = checkoutRisk?.missingV1 ?? (checkoutRisk?.requireV1 && !user?.emailVerified);
-  const missingV2 = checkoutRisk?.missingV2 ?? (checkoutRisk?.requireV2 && !user?.phoneVerified);
-  const missingV3 = checkoutRisk?.missingV3 ?? (checkoutRisk?.requireV3 && !user?.identityVerified);
+  const missingV1 = effectiveCheckoutRisk?.missingV1 ?? (effectiveCheckoutRisk?.requireV1 && !user?.emailVerified);
+  const missingV2 = effectiveCheckoutRisk?.missingV2 ?? (effectiveCheckoutRisk?.requireV2 && !user?.phoneVerified);
+  const missingV3 = effectiveCheckoutRisk?.missingV3 ?? (effectiveCheckoutRisk?.requireV3 && !user?.identityVerified);
   const cannotPurchaseDueToVerification = isAuthenticated && (missingV1 || missingV2 || missingV3);
 
   const isOwnListing = user?.id === listing?.sellerId;
@@ -121,6 +124,7 @@ export function BuyTicketPage() {
       try {
         const data = await ticketsService.getBuyPage(listingId);
         setBuyPageData(data);
+        setLocalCheckoutRisk(null);
         if (data.paymentMethods.length > 0) {
           setSelectedPaymentMethod(data.paymentMethods[0]);
         } else {
@@ -217,6 +221,50 @@ export function BuyTicketPage() {
     }
   }, [acceptedOffer, listing?.id]);
 
+  // Re-evaluate checkout risk when quantity or payment method changes (authenticated only).
+  const riskQuantity =
+    acceptedOffer != null
+      ? acceptedOffer.tickets.type === 'numbered'
+        ? acceptedOffer.tickets.seats.length
+        : acceptedOffer.tickets.count
+      : listing?.sellTogether
+        ? availableUnits.length
+        : isNumberedListing
+          ? selectedUnitIds.length
+          : quantity;
+
+  useEffect(() => {
+    if (
+      !listingId ||
+      !isAuthenticated ||
+      !listing ||
+      !selectedPaymentMethod?.id ||
+      riskQuantity < 1
+    ) {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await ticketsService.getCheckoutRisk(
+          listingId,
+          riskQuantity,
+          selectedPaymentMethod.id
+        );
+        if (!cancelled) {
+          setLocalCheckoutRisk(data.checkoutRisk);
+        }
+      } catch {
+        if (!cancelled) {
+          setLocalCheckoutRisk(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [listingId, isAuthenticated, listing?.id, selectedPaymentMethod?.id, riskQuantity]);
+
   const toggleSeatSelection = (unitId: string) => {
     if (listing?.sellTogether) return;
 
@@ -227,10 +275,11 @@ export function BuyTicketPage() {
 
   const refreshBuyPageData = async () => {
     if (!listingId) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+    setLocalCheckoutRisk(null);
+
     try {
       const data = await ticketsService.getBuyPage(listingId);
       setBuyPageData(data);

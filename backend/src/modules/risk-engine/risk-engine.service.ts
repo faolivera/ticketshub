@@ -35,10 +35,14 @@ export type RiskEngineBuyerConfigInput = {
   phoneRequiredAmount: Money;
   phoneRequiredQtyTickets: number;
   newAccountDays: number;
+  /** Payment method types that trigger phone (V2) requirement. */
+  phoneRequiredPaymentMethodTypes: PaymentMethodType[];
   dniRequiredEventHours: number;
   dniRequiredAmount: Money;
   dniRequiredQtyTickets: number;
   dniNewAccountDays: number;
+  /** Payment method types that trigger DNI (V3) and phone (V2) requirement. */
+  dniRequiredPaymentMethodTypes: PaymentMethodType[];
 };
 
 /**
@@ -111,6 +115,12 @@ export class RiskEngineService {
     ]);
 
     // --- DNI conditions (stricter thresholds): same types, require V2 + V3 ---
+    if (
+      input.paymentMethodType &&
+      cfg.dniRequiredPaymentMethodTypes?.includes(input.paymentMethodType)
+    ) {
+      return this.requireV2AndV3Result(RiskLevel.MED);
+    }
     if (eventHours >= 0 && eventHours <= cfg.dniRequiredEventHours) {
       return this.requireV2AndV3Result(RiskLevel.MED);
     }
@@ -125,8 +135,10 @@ export class RiskEngineService {
     }
 
     // --- Phone-only conditions: require V2 ---
-    // Manual approval (e.g. bank transfer) is higher risk; require phone verification.
-    if (input.paymentMethodType === 'manual_approval') {
+    if (
+      input.paymentMethodType &&
+      cfg.phoneRequiredPaymentMethodTypes?.includes(input.paymentMethodType)
+    ) {
       return this.requireV2OnlyResult(RiskLevel.MED);
     }
     if (eventHours >= 0 && eventHours <= cfg.phoneRequiredEventHours) {
@@ -173,6 +185,13 @@ export class RiskEngineService {
 
   private getConfig(): RiskEngineBuyerConfigInput {
     const get = (path: string) => this.nestConfigService.get<number>(path)!;
+    const getPaymentTypes = (path: string, fallback: PaymentMethodType[]): PaymentMethodType[] => {
+      const val = this.nestConfigService.get<unknown>(path);
+      if (Array.isArray(val) && val.every((x) => x === 'payment_gateway' || x === 'manual_approval')) {
+        return val as PaymentMethodType[];
+      }
+      return fallback;
+    };
     return {
       phoneRequiredEventHours: get('platform.riskEngine.buyer.phoneRequiredEventHours'),
       phoneRequiredAmount: {
@@ -181,6 +200,10 @@ export class RiskEngineService {
       },
       phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
       newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
+      phoneRequiredPaymentMethodTypes: getPaymentTypes(
+        'platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes',
+        ['manual_approval'],
+      ),
       dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
       dniRequiredAmount: {
         amount: Math.round(get('platform.riskEngine.buyer.dniRequiredAmountUsd') * 100),
@@ -188,6 +211,10 @@ export class RiskEngineService {
       },
       dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
       dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
+      dniRequiredPaymentMethodTypes: getPaymentTypes(
+        'platform.riskEngine.buyer.dniRequiredPaymentMethodTypes',
+        [],
+      ),
     };
   }
 }

@@ -50,12 +50,20 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     setLoading(true);
     setError(null);
     try {
-      await otpService.sendOTP({ type: OTPType.PhoneVerification });
+      await otpService.sendOTP({
+        type: OTPType.PhoneVerification,
+        phoneNumber: phoneNumber.trim(),
+      });
       setPhase('verify');
       setTimer(60);
       setCanResend(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('becomeSeller.step1.sendError'));
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string; message?: string };
+      const msg =
+        apiErr?.code === 'INVALID_PHONE_NUMBER'
+          ? t('verifyUser.invalidPhoneNumber')
+          : apiErr?.message ?? t('becomeSeller.step1.sendError');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -107,12 +115,20 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     setLoading(true);
     setError(null);
     try {
-      await otpService.sendOTP({ type: OTPType.PhoneVerification });
+      await otpService.sendOTP({
+        type: OTPType.PhoneVerification,
+        phoneNumber: phoneNumber.trim(),
+      });
       setTimer(60);
       setCanResend(false);
       setCode(['', '', '', '', '', '']);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('becomeSeller.step1.sendError'));
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string; message?: string };
+      const msg =
+        apiErr?.code === 'INVALID_PHONE_NUMBER'
+          ? t('verifyUser.invalidPhoneNumber')
+          : apiErr?.message ?? t('becomeSeller.step1.sendError');
+      setError(msg);
     } finally {
       setLoading(false);
     }

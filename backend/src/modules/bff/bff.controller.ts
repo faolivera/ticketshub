@@ -2,8 +2,12 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   Inject,
   UseGuards,
+  ParseIntPipe,
+  DefaultValuePipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { BffService } from './bff.service';
 import { Context } from '../../common/decorators/ctx.decorator';
@@ -19,6 +23,7 @@ import type {
   GetEventPageResponse,
   GetMyTicketsResponse,
   GetBuyPageResponse,
+  GetCheckoutRiskResponse,
   GetTransactionDetailsResponse,
   GetSellTicketConfigResponse,
 } from './bff.api';
@@ -27,6 +32,7 @@ import {
   GetEventPageResponseSchema,
   GetMyTicketsResponseSchema,
   GetBuyPageResponseSchema,
+  GetCheckoutRiskResponseSchema,
   GetTransactionDetailsResponseSchema,
   GetSellTicketConfigResponseSchema,
 } from './schemas/api.schemas';
@@ -92,6 +98,28 @@ export class BffController {
     @User() user?: { id: string },
   ): Promise<ApiResponse<GetBuyPageResponse>> {
     const data = await this.bffService.getBuyPageData(ctx, ticketId, user?.id);
+    return { success: true, data };
+  }
+
+  /**
+   * Re-evaluate checkout risk for the buy page (quantity + payment method).
+   * Authenticated only. Use when user changes quantity or payment method to refresh requireV2/requireV3 and missing flags.
+   */
+  @Get('buy/:ticketId/checkout-risk')
+  @UseGuards(JwtAuthGuard)
+  @ValidateResponse(GetCheckoutRiskResponseSchema)
+  async getCheckoutRisk(
+    @Context() ctx: Ctx,
+    @Param('ticketId') ticketId: string,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Query('quantity', new DefaultValuePipe(1), ParseIntPipe) quantity: number,
+    @Query('paymentMethodId') paymentMethodId: string,
+  ): Promise<ApiResponse<GetCheckoutRiskResponse>> {
+    const pmId = paymentMethodId?.trim();
+    if (!pmId) {
+      throw new BadRequestException('paymentMethodId is required');
+    }
+    const data = await this.bffService.getCheckoutRisk(ctx, ticketId, user.id, quantity, pmId);
     return { success: true, data };
   }
 

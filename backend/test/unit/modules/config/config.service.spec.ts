@@ -28,10 +28,12 @@ describe('PlatformConfigService', () => {
         phoneRequiredAmount: { amount: 12000, currency: 'USD' as const },
         phoneRequiredQtyTickets: 2,
         newAccountDays: 7,
+        phoneRequiredPaymentMethodTypes: ['manual_approval'],
         dniRequiredEventHours: 24,
         dniRequiredAmount: { amount: 25000, currency: 'USD' as const },
         dniRequiredQtyTickets: 4,
         dniNewAccountDays: 3,
+        dniRequiredPaymentMethodTypes: [],
       },
       seller: {
         unverifiedSellerMaxSales: 2,

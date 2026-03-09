@@ -21,7 +21,9 @@ import { adminService } from '../../../api/services/admin.service';
 import type {
   PlatformConfig as PlatformConfigType,
   CurrencyCode,
+  RiskPaymentMethodType,
 } from '../../../api/types/admin';
+import { Checkbox } from '../../components/ui/checkbox';
 
 const MIN_FEE = 0;
 const MAX_FEE = 100;
@@ -66,6 +68,12 @@ export function PlatformConfig() {
     useState<'USD' | 'ARS'>('USD');
   const [dniRequiredQtyTickets, setDniRequiredQtyTickets] = useState('');
   const [dniNewAccountDays, setDniNewAccountDays] = useState('');
+  const [phoneRequiredPaymentMethodTypes, setPhoneRequiredPaymentMethodTypes] = useState<
+    RiskPaymentMethodType[]
+  >([]);
+  const [dniRequiredPaymentMethodTypes, setDniRequiredPaymentMethodTypes] = useState<
+    RiskPaymentMethodType[]
+  >([]);
   const [unverifiedSellerMaxSales, setUnverifiedSellerMaxSales] = useState('');
   const [unverifiedSellerMaxAmountMajor, setUnverifiedSellerMaxAmountMajor] = useState('');
   const [unverifiedSellerMaxAmountCurrency, setUnverifiedSellerMaxAmountCurrency] =
@@ -110,6 +118,16 @@ export function PlatformConfig() {
         );
         setDniRequiredQtyTickets(String(re.buyer.dniRequiredQtyTickets));
         setDniNewAccountDays(String(re.buyer.dniNewAccountDays));
+        setPhoneRequiredPaymentMethodTypes(
+          Array.isArray(re.buyer.phoneRequiredPaymentMethodTypes)
+            ? re.buyer.phoneRequiredPaymentMethodTypes
+            : ['manual_approval']
+        );
+        setDniRequiredPaymentMethodTypes(
+          Array.isArray(re.buyer.dniRequiredPaymentMethodTypes)
+            ? re.buyer.dniRequiredPaymentMethodTypes
+            : []
+        );
       }
       if (re?.seller) {
         setUnverifiedSellerMaxSales(String(re.seller.unverifiedSellerMaxSales));
@@ -270,6 +288,8 @@ export function PlatformConfig() {
             dniNewAccountDays !== '' && !Number.isNaN(Number(dniNewAccountDays))
               ? Math.round(Number(dniNewAccountDays))
               : (cur?.buyer?.dniNewAccountDays ?? 0),
+          phoneRequiredPaymentMethodTypes,
+          dniRequiredPaymentMethodTypes: dniRequiredPaymentMethodTypes,
         },
         seller: {
           unverifiedSellerMaxSales: (Math.round(Number(unverifiedSellerMaxSales)) || cur?.seller?.unverifiedSellerMaxSales) ?? 0,
@@ -517,6 +537,31 @@ export function PlatformConfig() {
                 />
               </div>
             </div>
+            <div className="mt-4 space-y-2">
+              <Label>{t('admin.platformConfig.phoneRequiredPaymentMethodTypes')}</Label>
+              <div className="flex flex-wrap gap-4">
+                {(['payment_gateway', 'manual_approval'] as const).map((pmType) => (
+                  <label key={pmType} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={phoneRequiredPaymentMethodTypes.includes(pmType)}
+                      onCheckedChange={(checked) => {
+                        setPhoneRequiredPaymentMethodTypes((prev) =>
+                          checked
+                            ? [...prev, pmType]
+                            : prev.filter((t) => t !== pmType)
+                        );
+                      }}
+                    />
+                    <span className="text-sm">
+                      {t(`admin.platformConfig.paymentMethodType.${pmType}`)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('admin.platformConfig.phoneRequiredPaymentMethodTypesHelp')}
+              </p>
+            </div>
             <p className="mt-3 text-xs text-muted-foreground">
               {t('admin.platformConfig.riskEngineDniSubtitle')}
             </p>
@@ -588,6 +633,29 @@ export function PlatformConfig() {
                   onChange={(e) => setDniNewAccountDays(e.target.value)}
                 />
               </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <Label>{t('admin.platformConfig.dniRequiredPaymentMethodTypes')}</Label>
+              <div className="flex flex-wrap gap-4">
+                {(['payment_gateway', 'manual_approval'] as const).map((pmType) => (
+                  <label key={pmType} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={dniRequiredPaymentMethodTypes.includes(pmType)}
+                      onCheckedChange={(checked) => {
+                        setDniRequiredPaymentMethodTypes((prev) =>
+                          checked ? [...prev, pmType] : prev.filter((t) => t !== pmType)
+                        );
+                      }}
+                    />
+                    <span className="text-sm">
+                      {t(`admin.platformConfig.paymentMethodType.${pmType}`)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('admin.platformConfig.dniRequiredPaymentMethodTypesHelp')}
+              </p>
             </div>
           </div>
 

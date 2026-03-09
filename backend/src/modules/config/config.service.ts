@@ -90,6 +90,12 @@ export class PlatformConfigService {
                   dniRequiredAmount:
                     body.riskEngine.buyer.dniRequiredAmount ??
                     current.riskEngine.buyer.dniRequiredAmount,
+                  phoneRequiredPaymentMethodTypes:
+                    body.riskEngine.buyer.phoneRequiredPaymentMethodTypes ??
+                    current.riskEngine.buyer.phoneRequiredPaymentMethodTypes,
+                  dniRequiredPaymentMethodTypes:
+                    body.riskEngine.buyer.dniRequiredPaymentMethodTypes ??
+                    current.riskEngine.buyer.dniRequiredPaymentMethodTypes,
                 }
               : current.riskEngine.buyer,
             seller: body.riskEngine.seller
@@ -127,6 +133,16 @@ export class PlatformConfigService {
 
   private getDefaultsFromHocon(): PlatformConfig {
     const get = (path: string) => this.nestConfigService.get<number>(path)!;
+    const getPaymentTypes = (
+      path: string,
+      fallback: PlatformConfig['riskEngine']['buyer']['phoneRequiredPaymentMethodTypes'],
+    ): PlatformConfig['riskEngine']['buyer']['phoneRequiredPaymentMethodTypes'] => {
+      const val = this.nestConfigService.get<unknown>(path);
+      if (Array.isArray(val) && val.every((x) => x === 'payment_gateway' || x === 'manual_approval')) {
+        return val as PlatformConfig['riskEngine']['buyer']['phoneRequiredPaymentMethodTypes'];
+      }
+      return fallback;
+    };
     const amountUsd = get('platform.riskEngine.seller.unverifiedSellerMaxAmountUsd');
     const phoneUsd = get('platform.riskEngine.buyer.phoneRequiredAmountUsd');
     const dniUsd = get('platform.riskEngine.buyer.dniRequiredAmountUsd');
@@ -136,10 +152,18 @@ export class PlatformConfigService {
         phoneRequiredAmount: { amount: Math.round(phoneUsd * 100), currency: 'USD' as const },
         phoneRequiredQtyTickets: get('platform.riskEngine.buyer.phoneRequiredQtyTickets'),
         newAccountDays: get('platform.riskEngine.buyer.newAccountDays'),
+        phoneRequiredPaymentMethodTypes: getPaymentTypes(
+          'platform.riskEngine.buyer.phoneRequiredPaymentMethodTypes',
+          ['manual_approval'],
+        ),
         dniRequiredEventHours: get('platform.riskEngine.buyer.dniRequiredEventHours'),
         dniRequiredAmount: { amount: Math.round(dniUsd * 100), currency: 'USD' as const },
         dniRequiredQtyTickets: get('platform.riskEngine.buyer.dniRequiredQtyTickets'),
         dniNewAccountDays: get('platform.riskEngine.buyer.dniNewAccountDays'),
+        dniRequiredPaymentMethodTypes: getPaymentTypes(
+          'platform.riskEngine.buyer.dniRequiredPaymentMethodTypes',
+          [],
+        ),
       },
       seller: {
         unverifiedSellerMaxSales: get('platform.riskEngine.seller.unverifiedSellerMaxSales'),
@@ -258,6 +282,18 @@ export class PlatformConfigService {
     }
     if (b.newAccountDays < 0 || b.newAccountDays > 365) {
       throw new BadRequestException('riskEngine.buyer.newAccountDays must be between 0 and 365');
+    }
+    const validPaymentTypes = (arr: unknown): boolean =>
+      Array.isArray(arr) && arr.every((x) => x === 'payment_gateway' || x === 'manual_approval');
+    if (!validPaymentTypes(b.phoneRequiredPaymentMethodTypes)) {
+      throw new BadRequestException(
+        'riskEngine.buyer.phoneRequiredPaymentMethodTypes must be an array of "payment_gateway" and/or "manual_approval"',
+      );
+    }
+    if (!validPaymentTypes(b.dniRequiredPaymentMethodTypes)) {
+      throw new BadRequestException(
+        'riskEngine.buyer.dniRequiredPaymentMethodTypes must be an array of "payment_gateway" and/or "manual_approval"',
+      );
     }
     if (b.dniRequiredEventHours < 1 || b.dniRequiredEventHours > 720) {
       throw new BadRequestException('riskEngine.buyer.dniRequiredEventHours must be between 1 and 720');

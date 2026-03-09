@@ -278,6 +278,46 @@ export class BffService {
   }
 
   /**
+   * Re-evaluate checkout risk for the buy page when quantity or payment method changes.
+   * Caller must be authenticated (buyerId required). Returns checkoutRisk for the given quantity and payment method.
+   */
+  async getCheckoutRisk(
+    ctx: Ctx,
+    listingId: string,
+    buyerId: string,
+    quantity: number,
+    paymentMethodId: string,
+  ): Promise<{ checkoutRisk: NonNullable<BuyPageData['checkoutRisk']> }> {
+    const listing = await this.ticketsService.getListingById(ctx, listingId);
+    const paymentMethod = await this.paymentMethodsService.findById(ctx, paymentMethodId).catch(() => null);
+    const qty = Math.max(1, Math.floor(quantity));
+    const totalMinor = listing.pricePerTicket.amount * qty;
+    const amount: { amount: number; currency: 'USD' | 'ARS' | 'EUR' | 'GBP' } = {
+      amount: totalMinor,
+      currency: listing.pricePerTicket.currency,
+    };
+    const [risk, buyer] = await Promise.all([
+      this.riskEngine.evaluateCheckoutRisk(ctx, buyerId, {
+        quantity: qty,
+        amount,
+        eventStartsAt: listing.eventDate,
+        sellerId: listing.sellerId,
+        paymentMethodType: paymentMethod?.type,
+      }),
+      this.usersService.findById(ctx, buyerId),
+    ]);
+    const checkoutRisk: NonNullable<BuyPageData['checkoutRisk']> = {
+      requireV1: risk.requireV1,
+      requireV2: risk.requireV2,
+      requireV3: risk.requireV3,
+      missingV1: risk.requireV1 && (!buyer || !VerificationHelper.hasV1(buyer)),
+      missingV2: risk.requireV2 && (!buyer || !VerificationHelper.hasV2(buyer)),
+      missingV3: risk.requireV3 && (!buyer || !VerificationHelper.hasV3(buyer)),
+    };
+    return { checkoutRisk };
+  }
+
+  /**
    * Get current user's tickets: bought, sold, and listed.
    * Transactions use BFF view with servicePrice (no buyer commission breakdown).
    */
