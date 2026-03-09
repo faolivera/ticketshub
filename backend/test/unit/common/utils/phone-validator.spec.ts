@@ -11,34 +11,30 @@ describe('phone-validator (Argentina)', () => {
     });
   });
 
-  describe('isValidArgentinaPhone', () => {
-    it('accepts Buenos Aires 10-digit (11 + 8)', () => {
-      expect(isValidArgentinaPhone('1112345678')).toBe(true);
-      expect(isValidArgentinaPhone('11 1234-5678')).toBe(true);
-      expect(isValidArgentinaPhone('(11) 1234-5678')).toBe(true);
-    });
-
-    it('accepts other area codes 10-digit', () => {
-      expect(isValidArgentinaPhone('2231234567')).toBe(true); // Mar del Plata
-      expect(isValidArgentinaPhone('3511234567')).toBe(true); // Córdoba
-      expect(isValidArgentinaPhone('3831234567')).toBe(true);
-      expect(isValidArgentinaPhone('2901123456')).toBe(true); // Ushuaia 4-digit area
-    });
-
-    it('accepts international mobile format (549 + 9 digits)', () => {
+  describe('isValidArgentinaPhone (mobile only)', () => {
+    it('accepts international mobile (549 + 10-digit national)', () => {
       expect(isValidArgentinaPhone('5491112345678')).toBe(true);
       expect(isValidArgentinaPhone('+54 9 11 1234-5678')).toBe(true);
       expect(isValidArgentinaPhone('0054 9 11 12345678')).toBe(true);
+      expect(isValidArgentinaPhone('+5492617482639')).toBe(true); // Mendoza
     });
 
-    it('rejects too short', () => {
+    it('accepts national mobile with 15 prefix (15 + 10-digit national)', () => {
+      expect(isValidArgentinaPhone('151112345678')).toBe(true);
+      expect(isValidArgentinaPhone('15 11 1234-5678')).toBe(true);
+      expect(isValidArgentinaPhone('152611234567')).toBe(true);
+    });
+
+    it('rejects landline (10 digits without 15 or 549)', () => {
+      expect(isValidArgentinaPhone('1112345678')).toBe(false);
+      expect(isValidArgentinaPhone('11 1234-5678')).toBe(false);
+      expect(isValidArgentinaPhone('2231234567')).toBe(false);
+      expect(isValidArgentinaPhone('3511234567')).toBe(false);
+    });
+
+    it('rejects too short or invalid', () => {
       expect(isValidArgentinaPhone('111234567')).toBe(false);
-      expect(isValidArgentinaPhone('123')).toBe(false);
-    });
-
-    it('rejects invalid area', () => {
-      expect(isValidArgentinaPhone('1012345678')).toBe(false); // 10 not valid as single area
-      expect(isValidArgentinaPhone('5512345678')).toBe(false); // 55 not valid
+      expect(isValidArgentinaPhone('549111234567')).toBe(false); // 549 + 9 digits
     });
 
     it('rejects empty or non-string', () => {

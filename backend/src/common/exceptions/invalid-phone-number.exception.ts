@@ -7,7 +7,9 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 export class InvalidPhoneNumberException extends HttpException {
   public readonly code = 'INVALID_PHONE_NUMBER' as const;
 
-  constructor(message: string = 'Invalid phone number for Argentina.') {
+  constructor(
+    message: string = 'Invalid Argentina mobile number. Use +54 9 area number or 15 area number (landline not accepted).',
+  ) {
     super(
       {
         message,

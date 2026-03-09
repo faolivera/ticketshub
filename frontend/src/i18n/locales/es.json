@@ -1029,7 +1029,7 @@
     },
     "stepIndicator": "Paso {{current}} de {{total}}",
     "backToProfile": "Volver al perfil",
-    "invalidPhoneNumber": "El número no es un teléfono válido de Argentina. Usá formato móvil o fijo (ej: +54 9 11 1234-5678)."
+    "invalidPhoneNumber": "El número no es un móvil válido de Argentina. Usá formato +54 9 área número o 15 área número (no se aceptan fijos)."
   },
   "verification": {
     "title": "Verificación de Vendedor",

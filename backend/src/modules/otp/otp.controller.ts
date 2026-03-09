@@ -64,7 +64,7 @@ export class OTPController {
       }
       if (!isValidArgentinaPhone(phone)) {
         throw new InvalidPhoneNumberException(
-          'Invalid phone number for Argentina. Use a valid mobile or landline format (e.g. +54 9 11 1234-5678).',
+          'Invalid Argentina mobile number. Use +54 9 area number or 15 area number (landline not accepted).',
         );
       }
       if (bodyPhone?.trim()) {
