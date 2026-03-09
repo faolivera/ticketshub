@@ -900,9 +900,9 @@ describe('TransactionsService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should throw BadRequestException when status is not PaymentReceived', async () => {
+    it('should throw BadRequestException when status is not PaymentReceived or TicketTransferred', async () => {
       const transaction = createMockTransaction({
-        status: TransactionStatus.TicketTransferred,
+        status: TransactionStatus.PendingPayment,
         sellerId: 'seller_123',
       });
       transactionsRepository.findById.mockResolvedValue(transaction);

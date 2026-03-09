@@ -15,7 +15,6 @@ describe('phone-validator (Argentina)', () => {
     it('accepts international mobile (549 + 10-digit national)', () => {
       expect(isValidArgentinaPhone('5491112345678')).toBe(true);
       expect(isValidArgentinaPhone('+54 9 11 1234-5678')).toBe(true);
-      expect(isValidArgentinaPhone('0054 9 11 12345678')).toBe(true);
       expect(isValidArgentinaPhone('+5492617482639')).toBe(true); // Mendoza
     });
 

@@ -103,6 +103,7 @@ describe('BffService', () => {
   beforeEach(async () => {
     const mockEventsService = {
       getEventById: jest.fn(),
+      getEventBySlug: jest.fn(),
     };
 
     const mockUsersService = {
@@ -165,6 +166,7 @@ describe('BffService', () => {
 
     const mockTransactionChatService = {
       hasUnreadMessages: jest.fn().mockResolvedValue(false),
+      hasExchangedMessages: jest.fn().mockResolvedValue(false),
     };
 
     const mockRiskEngineService = {
@@ -880,7 +882,7 @@ describe('BffService', () => {
     ]);
 
     it('should return event and listings combined', async () => {
-      eventsService.getEventById.mockResolvedValue(mockEvent as any);
+      eventsService.getEventBySlug.mockResolvedValue(mockEvent as any);
       ticketsService.listListings.mockResolvedValue([mockListing]);
       usersService.getPublicUserInfoByIds.mockResolvedValue([
         mockPublicUserInfo,
@@ -897,14 +899,14 @@ describe('BffService', () => {
       expect(result.event).toEqual(mockEvent);
       expect(result.listings).toHaveLength(1);
       expect(result.listings[0].sellerPublicName).toBe('Jane Seller');
-      expect(eventsService.getEventById).toHaveBeenCalledWith(
+      expect(eventsService.getEventBySlug).toHaveBeenCalledWith(
         mockCtx,
         'event_123',
       );
     });
 
     it('should propagate NotFoundException when event not found', async () => {
-      eventsService.getEventById.mockRejectedValue(
+      eventsService.getEventBySlug.mockRejectedValue(
         new NotFoundException('Event not found'),
       );
 

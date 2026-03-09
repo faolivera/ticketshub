@@ -13,6 +13,8 @@ import type { IImagesRepository } from '../../../../src/modules/images/images.re
 import { TicketsService } from '../../../../src/modules/tickets/tickets.service';
 import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
 import { EventBannerStorageService } from '../../../../src/modules/events/event-banner-storage.service';
+import { UsersService } from '../../../../src/modules/users/users.service';
+import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import {
   EventStatus,
   EventDateStatus,
@@ -93,6 +95,9 @@ describe('EventsService', () => {
       getApprovedSectionsByEventId: jest.fn(),
       getDatesByEventIdAndStatus: jest.fn(),
       getSectionsByEventIdAndStatus: jest.fn(),
+      getDatesByEventIds: jest.fn(),
+      getSectionsByEventIds: jest.fn(),
+      listEventsPaginated: jest.fn(),
     };
 
     const mockImagesRepository = {
@@ -124,6 +129,16 @@ describe('EventsService', () => {
       readFile: jest.fn(),
     };
 
+    const mockUsersService = {
+      findById: jest.fn(),
+      findByIds: jest.fn(),
+      getPublicUserInfoByIds: jest.fn(),
+    };
+
+    const mockNotificationsService = {
+      emit: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventsService,
@@ -132,6 +147,8 @@ describe('EventsService', () => {
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: EventBannerStorageService, useValue: mockBannerStorage },
+        { provide: UsersService, useValue: mockUsersService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
@@ -204,12 +221,15 @@ describe('EventsService', () => {
     };
 
     it('should return pending and approved dates/sections by default (excludes rejected)', async () => {
-      eventsRepository.getApprovedEvents.mockResolvedValue([mockApprovedEvent]);
-      eventsRepository.getDatesByEventIdAndStatus.mockResolvedValue([
+      eventsRepository.listEventsPaginated.mockResolvedValue({
+        events: [mockApprovedEvent],
+        total: 1,
+      });
+      eventsRepository.getDatesByEventIds.mockResolvedValue([
         mockApprovedEventDate,
         mockPendingEventDate,
       ]);
-      eventsRepository.getSectionsByEventIdAndStatus.mockResolvedValue([
+      eventsRepository.getSectionsByEventIds.mockResolvedValue([
         mockApprovedSection,
         mockPendingSection,
       ]);
@@ -224,26 +244,30 @@ describe('EventsService', () => {
       expect(result[0].sections.map((s) => s.name)).toContain(
         'Campo Delantero',
       );
-      expect(eventsRepository.getDatesByEventIdAndStatus).toHaveBeenCalledWith(
+      expect(eventsRepository.listEventsPaginated).toHaveBeenCalledWith(
         mockCtx,
-        'evt_123',
-        [EventDateStatus.Pending, EventDateStatus.Approved],
+        expect.objectContaining({ approvedOnly: true }),
       );
-      expect(
-        eventsRepository.getSectionsByEventIdAndStatus,
-      ).toHaveBeenCalledWith(mockCtx, 'evt_123', [
-        EventSectionStatus.Pending,
-        EventSectionStatus.Approved,
-      ]);
+      expect(eventsRepository.getDatesByEventIds).toHaveBeenCalledWith(
+        mockCtx,
+        ['evt_123'],
+      );
+      expect(eventsRepository.getSectionsByEventIds).toHaveBeenCalledWith(
+        mockCtx,
+        ['evt_123'],
+      );
     });
 
     it('should include all statuses when includeAllStatuses is true', async () => {
-      eventsRepository.getAllEvents.mockResolvedValue([mockApprovedEvent]);
-      eventsRepository.getDatesByEventId.mockResolvedValue([
+      eventsRepository.listEventsPaginated.mockResolvedValue({
+        events: [mockApprovedEvent],
+        total: 1,
+      });
+      eventsRepository.getDatesByEventIds.mockResolvedValue([
         mockApprovedEventDate,
         mockPendingEventDate,
       ]);
-      eventsRepository.getSectionsByEventId.mockResolvedValue([
+      eventsRepository.getSectionsByEventIds.mockResolvedValue([
         mockApprovedSection,
         mockPendingSection,
       ]);
@@ -254,14 +278,12 @@ describe('EventsService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].dates).toHaveLength(2);
       expect(result[0].sections).toHaveLength(2);
-      expect(eventsRepository.getDatesByEventId).toHaveBeenCalled();
-      expect(eventsRepository.getSectionsByEventId).toHaveBeenCalled();
-      expect(
-        eventsRepository.getDatesByEventIdAndStatus,
-      ).not.toHaveBeenCalled();
-      expect(
-        eventsRepository.getSectionsByEventIdAndStatus,
-      ).not.toHaveBeenCalled();
+      expect(eventsRepository.listEventsPaginated).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({ approvedOnly: false }),
+      );
+      expect(eventsRepository.getDatesByEventIds).toHaveBeenCalled();
+      expect(eventsRepository.getSectionsByEventIds).toHaveBeenCalled();
     });
   });
 

@@ -11,6 +11,7 @@ import { TICKETS_REPOSITORY } from '../../../../src/modules/tickets/tickets.repo
 import type { ITicketsRepository } from '../../../../src/modules/tickets/tickets.repository.interface';
 import { TicketsService } from '../../../../src/modules/tickets/tickets.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
+import { SupportService } from '../../../../src/modules/support/support.service';
 import { PaymentConfirmationStatus } from '../../../../src/modules/payment-confirmations/payment-confirmations.domain';
 import {
   TransactionStatus,
@@ -122,6 +123,7 @@ describe('AdminService', () => {
     const mockTicketsRepository = {
       getAll: jest.fn().mockResolvedValue([]),
       getAllByEventId: jest.fn().mockResolvedValue([]),
+      getPendingByEventIds: jest.fn().mockResolvedValue([]),
     };
 
     const mockTicketsService = {
@@ -159,6 +161,13 @@ describe('AdminService', () => {
       },
     };
 
+    const mockSupportService = {
+      getTicketByTransactionId: jest.fn(),
+      createTicket: jest.fn(),
+      addMessage: jest.fn(),
+      getTicketsByTransactionIds: jest.fn().mockResolvedValue(new Map()),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -174,6 +183,7 @@ describe('AdminService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage! },
         { provide: PrismaService, useValue: mockPrisma! },
+        { provide: SupportService, useValue: mockSupportService },
       ],
     }).compile();
 

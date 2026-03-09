@@ -6,6 +6,8 @@ import { IMAGES_REPOSITORY } from '../../../../src/modules/images/images.reposit
 import { TicketsService } from '../../../../src/modules/tickets/tickets.service';
 import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
 import { EventBannerStorageService } from '../../../../src/modules/events/event-banner-storage.service';
+import { UsersService } from '../../../../src/modules/users/users.service';
+import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import {
   EventStatus,
   EventCategory,
@@ -98,6 +100,16 @@ describe('EventsService - getEventsForSelection', () => {
       readFile: jest.fn(),
     };
 
+    const mockUsersService = {
+      findById: jest.fn(),
+      findByIds: jest.fn(),
+      getPublicUserInfoByIds: jest.fn(),
+    };
+
+    const mockNotificationsService = {
+      emit: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventsService,
@@ -106,6 +118,8 @@ describe('EventsService - getEventsForSelection', () => {
         { provide: TicketsService, useValue: mockTicketsService },
         { provide: TransactionsService, useValue: mockTransactionsService },
         { provide: EventBannerStorageService, useValue: mockBannerStorage },
+        { provide: UsersService, useValue: mockUsersService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 

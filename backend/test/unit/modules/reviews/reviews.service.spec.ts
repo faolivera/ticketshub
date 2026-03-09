@@ -598,7 +598,8 @@ describe('ReviewsService', () => {
       expect(metrics.neutralReviews).toBe(0);
       expect(metrics.positivePercent).toBeNull();
       expect(metrics.totalTransactions).toBe(3);
-      expect(metrics.badges).toEqual([]);
+      // Seller has 3 sales but 0 reviews: gets new_seller badge (no other badges apply)
+      expect(metrics.badges).toEqual(['new_seller']);
     });
 
     it('should include verified badge when user is VerifiedSeller', async () => {
@@ -688,7 +689,7 @@ describe('ReviewsService', () => {
 
       reviewsRepository.getByRevieweeIdsAndRole.mockResolvedValue([]);
       transactionsService.getCompletedSalesTotalBatch.mockResolvedValue(
-        new Map([[sellerId, 3]]),
+        new Map([[sellerId, 4]]),
       );
       usersService.findByIds.mockResolvedValue([
         { id: sellerId, acceptedSellerTermsAt: new Date() },
@@ -696,6 +697,7 @@ describe('ReviewsService', () => {
 
       const result = await service.getSellerMetricsBatch(mockCtx, [sellerId]);
 
+      // totalTransactions > 3: new_seller not applied (only when <= 3 and 0 reviews)
       expect(result.get(sellerId)!.badges).not.toContain('new_seller');
     });
 
