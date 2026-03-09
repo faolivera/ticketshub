@@ -637,7 +637,6 @@ const AdminSupportTicketItemSchema = z.object({
   userId: z.string().optional(),
   transactionId: z.string().optional(),
   category: z.string(),
-  disputeReason: z.string().optional(),
   source: z.string().optional(),
   subject: z.string(),
   description: z.string(),

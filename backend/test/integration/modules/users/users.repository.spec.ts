@@ -57,7 +57,7 @@ describe('UsersRepository (Integration)', () => {
 
       expect(user).toBeDefined();
       expect(user.id).toBeDefined();
-      expect(user.email).toBe(userData.email);
+      expect(user.email).toBe(userData.email.trim().toLowerCase());
       expect(user.firstName).toBe(userData.firstName);
       expect(user.lastName).toBe(userData.lastName);
       expect(user.role).toBe(Role.User);
@@ -86,6 +86,14 @@ describe('UsersRepository (Integration)', () => {
       expect(user.address?.city).toBe('Berlin');
       expect(user.emailVerified).toBe(true);
       expect(user.phoneVerified).toBe(true);
+    });
+
+    it('should store email in lowercase', async () => {
+      const userData = createValidUserData({ email: 'User@Example.COM' });
+
+      const user = await repository.add(ctx, userData);
+
+      expect(user.email).toBe('user@example.com');
     });
   });
 
@@ -161,6 +169,19 @@ describe('UsersRepository (Integration)', () => {
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
       expect(found?.email).toBe(email);
+    });
+
+    it('should find user by email case-insensitively', async () => {
+      const created = await repository.add(
+        ctx,
+        createValidUserData({ email: 'login@example.com' }),
+      );
+
+      const found = await repository.findByEmail(ctx, 'Login@Example.COM');
+
+      expect(found).toBeDefined();
+      expect(found?.id).toBe(created.id);
+      expect(found?.email).toBe('login@example.com');
     });
   });
 

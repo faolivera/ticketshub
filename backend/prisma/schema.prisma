@@ -173,6 +173,10 @@ enum SupportTicketCategory {
   account
   technical
   other
+  ticket_not_received
+  ticket_didnt_work
+  buyer_did_not_confirm_receipt
+  payment_issue
 }
 
 enum SupportTicketSource {

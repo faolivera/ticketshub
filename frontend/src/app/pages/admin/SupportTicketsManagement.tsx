@@ -44,7 +44,9 @@ const STATUS_OPTIONS = [
 
 const CATEGORY_OPTIONS = [
   { value: '', labelKey: 'admin.supportTickets.allCategories' },
-  { value: 'TicketDispute', labelKey: 'admin.supportTickets.ticketDispute' },
+  { value: 'TicketNotReceived', labelKey: 'admin.supportTickets.ticketNotReceived' },
+  { value: 'TicketDidntWork', labelKey: 'admin.supportTickets.ticketDidntWork' },
+  { value: 'BuyerDidNotConfirmReceipt', labelKey: 'admin.supportTickets.buyerDidNotConfirmReceipt' },
   { value: 'PaymentIssue', labelKey: 'admin.supportTickets.paymentIssue' },
   { value: 'AccountIssue', labelKey: 'admin.supportTickets.accountIssue' },
   { value: 'Other', labelKey: 'admin.supportTickets.other' },

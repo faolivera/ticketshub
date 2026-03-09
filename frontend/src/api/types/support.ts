@@ -1,23 +1,28 @@
 import type { PaginationParams } from './common';
 
 /**
- * Support ticket category
+ * Support ticket category.
+ * Transaction-related (TicketNotReceived, TicketDidntWork, BuyerDidNotConfirmReceipt)
+ * are used for "report a problem"; only TicketDidntWork triggers a formal dispute.
  */
 export enum SupportCategory {
-  TicketDispute = 'TicketDispute',
+  TicketNotReceived = 'TicketNotReceived',
+  TicketDidntWork = 'TicketDidntWork',
+  BuyerDidNotConfirmReceipt = 'BuyerDidNotConfirmReceipt',
   PaymentIssue = 'PaymentIssue',
   AccountIssue = 'AccountIssue',
   Other = 'Other',
 }
 
-/**
- * Dispute reason - specific reasons for ticket disputes
- */
-export enum DisputeReason {
-  TicketNotReceived = 'TicketNotReceived',
-  TicketDidntWork = 'TicketDidntWork',
-  BuyerDidNotConfirmReceipt = 'BuyerDidNotConfirmReceipt',
-}
+/** Categories available in the transaction "report a problem" flow. */
+export const REPORT_PROBLEM_CATEGORIES: SupportCategory[] = [
+  SupportCategory.TicketNotReceived,
+  SupportCategory.TicketDidntWork,
+  SupportCategory.BuyerDidNotConfirmReceipt,
+];
+
+/** Message content key for system "verify identity" message (frontend renders with i18n + link). */
+export const SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY = '{{DISPUTE_VERIFY_IDENTITY}}';
 
 /**
  * Support ticket status
@@ -58,7 +63,6 @@ export interface SupportTicket {
   transactionId?: string;
 
   category: SupportCategory;
-  disputeReason?: DisputeReason;
   source?: SupportTicketSource;
 
   subject: string;
@@ -112,7 +116,6 @@ export interface SupportTicketWithMessages extends SupportTicket {
 export interface CreateSupportTicketRequest {
   transactionId?: string;
   category: SupportCategory;
-  disputeReason?: DisputeReason;
   source?: SupportTicketSource;
   subject: string;
   description: string;

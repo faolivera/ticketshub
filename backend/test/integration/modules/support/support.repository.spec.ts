@@ -42,7 +42,7 @@ describe('SupportRepository (Integration)', () => {
   const createValidTicket = (overrides?: Partial<SupportTicket>): SupportTicket => ({
     id: randomUUID(),
     userId: testUserId,
-    category: SupportCategory.TicketDispute,
+    category: SupportCategory.TicketNotReceived,
     subject: 'Test subject',
     description: 'Test description',
     status: SupportTicketStatus.Open,

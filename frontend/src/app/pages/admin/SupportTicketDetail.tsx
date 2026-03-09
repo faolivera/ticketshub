@@ -172,7 +172,7 @@ export function SupportTicketDetail() {
     );
   }
 
-  const isDispute = ticket.category === 'TicketDispute';
+  const isDispute = ['TicketDidntWork'].includes(ticket.category);
   const canResolve =
     isDispute &&
     ticket.status !== 'resolved' &&

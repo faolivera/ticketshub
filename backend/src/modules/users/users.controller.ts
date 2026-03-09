@@ -80,7 +80,8 @@ export class UsersController {
       throw new BadRequestException('Email and password are required');
     }
 
-    const result = await this.usersService.login(ctx, email, password);
+    const normalizedEmail = email.trim().toLowerCase();
+    const result = await this.usersService.login(ctx, normalizedEmail, password);
     if (!result) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -139,8 +140,9 @@ export class UsersController {
       throw new BadRequestException('Terms acceptance is required to register');
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     const result = await this.usersService.register(ctx, {
-      email,
+      email: normalizedEmail,
       password,
       firstName,
       lastName,

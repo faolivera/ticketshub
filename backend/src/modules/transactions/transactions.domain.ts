@@ -113,7 +113,7 @@ export const TRANSACTION_CHAT_MODE: Record<TransactionStatus, TransactionChatMod
   [TransactionStatus.PaymentPendingVerification]: 'disabled',
   [TransactionStatus.PaymentReceived]: 'enabled',
   [TransactionStatus.TicketTransferred]: 'enabled',
-  [TransactionStatus.DepositHold]: 'enabled',
+  [TransactionStatus.DepositHold]: 'only_read',
   [TransactionStatus.TransferringFund]: 'only_read',
   [TransactionStatus.Completed]: 'only_read',
   [TransactionStatus.Disputed]: 'disabled',

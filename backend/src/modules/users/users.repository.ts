@@ -22,6 +22,11 @@ import type {
   VerifiedSellerIdentityData,
 } from './users.repository.interface';
 
+/** Normalize email for storage and lookup: trim and lowercase (emails are case-insensitive). */
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 @Injectable()
 export class UsersRepository implements IUsersRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -47,8 +52,11 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async findByEmail(_ctx: Ctx, email: string): Promise<User | undefined> {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+    const normalized = normalizeEmail(email);
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: normalized, mode: 'insensitive' },
+      },
     });
     return user ? this.mapToUser(user) : undefined;
   }
@@ -120,7 +128,7 @@ export class UsersRepository implements IUsersRepository {
   async add(_ctx: Ctx, userData: CreateUserData): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
-        email: userData.email,
+        email: normalizeEmail(userData.email),
         firstName: userData.firstName,
         lastName: userData.lastName,
         publicName: userData.publicName,
@@ -345,7 +353,7 @@ export class UsersRepository implements IUsersRepository {
       if (data.firstName !== undefined) updateData.firstName = data.firstName;
       if (data.lastName !== undefined) updateData.lastName = data.lastName;
       if (data.publicName !== undefined) updateData.publicName = data.publicName;
-      if (data.email !== undefined) updateData.email = data.email;
+      if (data.email !== undefined) updateData.email = normalizeEmail(data.email);
       if (data.role !== undefined) updateData.role = data.role;
       if (data.status !== undefined) updateData.status = data.status;
       if (data.phone !== undefined) updateData.phone = data.phone;

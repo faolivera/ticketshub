@@ -1310,7 +1310,6 @@ export class AdminService {
       userId: t.userId,
       transactionId: t.transactionId,
       category: t.category,
-      disputeReason: t.disputeReason,
       source: t.source,
       subject: t.subject,
       description: t.description,

@@ -14,6 +14,7 @@ import {
   SupportTicketStatus,
   SupportCategory,
   SupportTicketSource,
+  getPriorityForCategory,
 } from './support.domain';
 import type { ISupportRepository } from './support.repository.interface';
 
@@ -117,8 +118,10 @@ export class SupportRepository implements ISupportRepository {
     }
     if (params.category) {
       const categoryMap: Record<string, PrismaSupportTicketCategory> = {
-        TicketDispute: 'transaction',
-        PaymentIssue: 'transaction',
+        TicketNotReceived: 'ticket_not_received',
+        TicketDidntWork: 'ticket_didnt_work',
+        BuyerDidNotConfirmReceipt: 'buyer_did_not_confirm_receipt',
+        PaymentIssue: 'payment_issue',
         AccountIssue: 'account',
         Other: 'other',
       };
@@ -227,8 +230,9 @@ export class SupportRepository implements ISupportRepository {
     domainOverrides?: Partial<SupportTicket>,
   ): SupportTicket {
     const source = domainOverrides?.source ?? this.mapSourceFromDb(prismaTicket.source);
+    const category = domainOverrides?.category ?? this.mapCategoryFromDb(prismaTicket.category);
     const priority =
-      domainOverrides?.priority ?? this.priorityFromSource(source);
+      domainOverrides?.priority ?? getPriorityForCategory(category);
     return {
       id: prismaTicket.id,
       userId: prismaTicket.userId ?? undefined,
@@ -236,8 +240,7 @@ export class SupportRepository implements ISupportRepository {
       guestName: prismaTicket.guestName ?? undefined,
       guestEmail: prismaTicket.guestEmail ?? undefined,
       transactionId: prismaTicket.transactionId ?? undefined,
-      category: domainOverrides?.category ?? this.mapCategoryFromDb(prismaTicket.category),
-      disputeReason: domainOverrides?.disputeReason,
+      category,
       source,
       subject: prismaTicket.subject,
       description: domainOverrides?.description ?? '',
@@ -250,22 +253,6 @@ export class SupportRepository implements ISupportRepository {
       updatedAt: prismaTicket.updatedAt,
       resolvedAt: prismaTicket.resolvedAt ?? undefined,
     };
-  }
-
-  private priorityFromSource(
-    source: SupportTicketSource | undefined,
-  ): 'low' | 'medium' | 'high' | 'urgent' {
-    if (!source) return 'medium';
-    switch (source) {
-      case SupportTicketSource.Dispute:
-        return 'high';
-      case SupportTicketSource.ContactFromTransaction:
-        return 'medium';
-      case SupportTicketSource.ContactForm:
-        return 'low';
-      default:
-        return 'medium';
-    }
   }
 
   private mapSourceToDb(
@@ -333,8 +320,10 @@ export class SupportRepository implements ISupportRepository {
     category: SupportCategory,
   ): PrismaSupportTicketCategory {
     const map: Record<SupportCategory, PrismaSupportTicketCategory> = {
-      [SupportCategory.TicketDispute]: 'transaction',
-      [SupportCategory.PaymentIssue]: 'transaction',
+      [SupportCategory.TicketNotReceived]: 'ticket_not_received',
+      [SupportCategory.TicketDidntWork]: 'ticket_didnt_work',
+      [SupportCategory.BuyerDidNotConfirmReceipt]: 'buyer_did_not_confirm_receipt',
+      [SupportCategory.PaymentIssue]: 'payment_issue',
       [SupportCategory.AccountIssue]: 'account',
       [SupportCategory.Other]: 'other',
     };
@@ -345,10 +334,14 @@ export class SupportRepository implements ISupportRepository {
     category: PrismaSupportTicketCategory,
   ): SupportCategory {
     const map: Record<PrismaSupportTicketCategory, SupportCategory> = {
-      transaction: SupportCategory.TicketDispute,
+      transaction: SupportCategory.TicketNotReceived,
       account: SupportCategory.AccountIssue,
       technical: SupportCategory.Other,
       other: SupportCategory.Other,
+      ticket_not_received: SupportCategory.TicketNotReceived,
+      ticket_didnt_work: SupportCategory.TicketDidntWork,
+      buyer_did_not_confirm_receipt: SupportCategory.BuyerDidNotConfirmReceipt,
+      payment_issue: SupportCategory.PaymentIssue,
     };
     return map[category];
   }

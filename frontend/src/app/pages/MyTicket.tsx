@@ -34,7 +34,7 @@ import {
 } from '@/app/components/ui/tooltip';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService, supportService } from '@/api/services';
 import type { ApiError } from '@/api/client';
-import { SupportCategory, DisputeReason } from '@/api/types/support';
+import { SupportCategory } from '@/api/types/support';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
@@ -85,11 +85,13 @@ export function MyTicket() {
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   /** When 'choice', show disclaimer + Contact / Report; when 'form', show dispute form. Only used when chat is enabled. */
   const [disputeModalStep, setDisputeModalStep] = useState<'choice' | 'form'>('choice');
-  const [disputeReason, setDisputeReason] = useState<DisputeReason>(DisputeReason.TicketNotReceived);
+  const [reportCategory, setReportCategory] = useState<SupportCategory>(SupportCategory.TicketNotReceived);
   const [disputeSubject, setDisputeSubject] = useState('');
   const [disputeDescription, setDisputeDescription] = useState('');
   const [disputeError, setDisputeError] = useState<string | null>(null);
+  const [disputeExistingTicketId, setDisputeExistingTicketId] = useState<string | null>(null);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  const [reportSuccessTicketId, setReportSuccessTicketId] = useState<string | null>(null);
 
   const [showConfirmTransferModal, setShowConfirmTransferModal] = useState(false);
   const [confirmTransferModalStep, setConfirmTransferModalStep] = useState<1 | 2>(1);
@@ -430,8 +432,9 @@ export function MyTicket() {
 
   const handleOpenDisputeClick = () => {
     setDisputeError(null);
-    setDisputeReason(
-      isSeller ? DisputeReason.BuyerDidNotConfirmReceipt : DisputeReason.TicketNotReceived,
+    setDisputeExistingTicketId(null);
+    setReportCategory(
+      isSeller ? SupportCategory.BuyerDidNotConfirmReceipt : SupportCategory.TicketNotReceived,
     );
     setDisputeSubject(transaction ? `${t('myTicket.disputeSubjectPrefix')} ${transaction.eventName}` : '');
     setDisputeDescription('');
@@ -457,22 +460,31 @@ export function MyTicket() {
       return;
     }
     setIsSubmittingDispute(true);
+    setDisputeExistingTicketId(null);
     try {
-      await supportService.createTicket({
+      const createdTicket = await supportService.createTicket({
         transactionId,
-        category: SupportCategory.TicketDispute,
-        disputeReason: disputeReason,
+        category: reportCategory,
         subject,
         description,
       });
       handleCloseDisputeModal();
+      setReportSuccessTicketId(createdTicket.id);
       const data = await bffService.getTransactionDetails(transactionId);
       setTransaction(data.transaction);
       setCounterpartyEmail(data.counterpartyEmail ?? null);
     } catch (err: unknown) {
       let msg: string;
       const apiErr = err as ApiError | undefined;
+      const existingId = typeof apiErr?.details?.existingTicketId === 'string' ? apiErr.details.existingTicketId : null;
+      setDisputeExistingTicketId(null);
       if (
+        apiErr?.code === 'BAD_REQUEST' &&
+        (existingId != null || (typeof apiErr?.message === 'string' && apiErr.message.toLowerCase().includes('already exists')))
+      ) {
+        msg = t('myTicket.reportProblemAlreadyExists');
+        if (existingId) setDisputeExistingTicketId(existingId);
+      } else if (
         apiErr?.code === 'CLAIM_TOO_EARLY' &&
         typeof apiErr.details?.minHours === 'number'
       ) {
@@ -620,6 +632,29 @@ export function MyTicket() {
           <ArrowLeft className="w-4 h-4" />
           {t('myTicket.backToMyTickets')}
         </button>
+
+        {reportSuccessTicketId && (
+          <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-center justify-between gap-4">
+            <p className="text-green-800 text-sm flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 flex-shrink-0 text-green-600" />
+              {t('myTicket.reportProblemSuccess')}{' '}
+              <Link
+                to={`/support/${reportSuccessTicketId}`}
+                className="font-semibold text-green-700 underline hover:no-underline"
+              >
+                {t('myTicket.reportProblemSuccessLink')}
+              </Link>
+            </p>
+            <button
+              type="button"
+              onClick={() => setReportSuccessTicketId(null)}
+              className="p-1 rounded hover:bg-green-100 text-green-700"
+              aria-label={t('myTicket.cancel')}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Transaction Information */}
@@ -1897,8 +1932,8 @@ export function MyTicket() {
                       {t('myTicket.disputeReason')} <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      value={disputeReason}
-                      onValueChange={(v) => setDisputeReason(v as DisputeReason)}
+                      value={reportCategory}
+                      onValueChange={(v) => setReportCategory(v as SupportCategory)}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder={t('myTicket.disputeReason')} />
@@ -1906,16 +1941,16 @@ export function MyTicket() {
                       <SelectContent>
                         {isBuyer && (
                           <>
-                            <SelectItem value={DisputeReason.TicketNotReceived}>
+                            <SelectItem value={SupportCategory.TicketNotReceived}>
                               {t('myTicket.disputeReasonNotReceived')}
                             </SelectItem>
-                            <SelectItem value={DisputeReason.TicketDidntWork}>
+                            <SelectItem value={SupportCategory.TicketDidntWork}>
                               {t('myTicket.disputeReasonDidntWork')}
                             </SelectItem>
                           </>
                         )}
                         {isSeller && (
-                          <SelectItem value={DisputeReason.BuyerDidNotConfirmReceipt}>
+                          <SelectItem value={SupportCategory.BuyerDidNotConfirmReceipt}>
                             {t('myTicket.disputeReasonBuyerDidNotConfirm')}
                           </SelectItem>
                         )}
@@ -1947,10 +1982,23 @@ export function MyTicket() {
                     />
                   </div>
                   {disputeError && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                      {disputeError}
-                    </p>
+                    <div className="text-sm text-red-600 space-y-1">
+                      <p className="flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        {disputeError}
+                      </p>
+                      {disputeExistingTicketId && (
+                        <p>
+                          <Link
+                            to={`/support/${disputeExistingTicketId}`}
+                            className="font-medium text-red-700 underline hover:no-underline"
+                            onClick={() => handleCloseDisputeModal()}
+                          >
+                            {t('myTicket.reportProblemViewExistingCase')}
+                          </Link>
+                        </p>
+                      )}
+                    </div>
                   )}
                   <div className="flex gap-3 pt-2">
                     <button

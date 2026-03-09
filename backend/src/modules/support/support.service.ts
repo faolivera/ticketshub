@@ -25,10 +25,13 @@ import type {
 } from './support.domain';
 import {
   SupportCategory,
-  DisputeReason,
   SupportTicketStatus,
   DisputeResolution,
   SupportTicketSource,
+  isReportProblemCategory,
+  isDisputeTriggeringCategory,
+  getPriorityForCategory,
+  SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY,
 } from './support.domain';
 import { TransactionStatus } from '../transactions/transactions.domain';
 import type { ListSupportTicketsQuery } from './support.api';
@@ -57,27 +60,14 @@ export class SupportService {
 
   /** Sentinel senderId for guest (anonymous) ticket messages */
   private static readonly GUEST_SENDER_ID = '__guest__';
+  /** Sentinel senderId for system messages (e.g. verify identity notice) */
+  private static readonly SYSTEM_SENDER_ID = '__system__';
 
   /**
    * Generate a unique ID
    */
   private generateId(prefix: string): string {
     return `${prefix}_${Date.now()}_${randomBytes(4).toString('hex')}`;
-  }
-
-  private priorityFromSource(
-    source: SupportTicketSource,
-  ): 'low' | 'medium' | 'high' | 'urgent' {
-    switch (source) {
-      case SupportTicketSource.Dispute:
-        return 'high';
-      case SupportTicketSource.ContactFromTransaction:
-        return 'medium';
-      case SupportTicketSource.ContactForm:
-        return 'low';
-      default:
-        return 'medium';
-    }
   }
 
   /**
@@ -89,7 +79,6 @@ export class SupportService {
     data: {
       transactionId?: string;
       category: SupportCategory;
-      disputeReason?: DisputeReason;
       source?: SupportTicketSource;
       subject: string;
       description: string;
@@ -97,9 +86,9 @@ export class SupportService {
   ): Promise<SupportTicket> {
     this.logger.log(ctx, `Creating support ticket for user ${userId}`);
 
-    // Verification gate: V1+V2 required to open a claim (dispute)
-    if (data.category === SupportCategory.TicketDispute) {
-      const user = await this.usersService.findById(ctx, userId);
+    let user: Awaited<ReturnType<UsersService['findById']>> | undefined;
+    if (isReportProblemCategory(data.category)) {
+      user = await this.usersService.findById(ctx, userId);
       if (!user) {
         throw new ForbiddenException('User not found');
       }
@@ -115,8 +104,8 @@ export class SupportService {
       }
     }
 
-    // If dispute with transaction, validate time windows and no duplicate
-    if (data.category === SupportCategory.TicketDispute && data.transactionId) {
+    // If report-problem category with transaction, validate time windows and no duplicate
+    if (isReportProblemCategory(data.category) && data.transactionId) {
       const existingDispute =
         await this.supportRepository.getTicketByTransactionId(
           ctx,
@@ -126,9 +115,10 @@ export class SupportService {
         existingDispute &&
         existingDispute.status !== SupportTicketStatus.Closed
       ) {
-        throw new BadRequestException(
-          'A dispute already exists for this transaction',
-        );
+        throw new BadRequestException({
+          message: 'A support case already exists for this transaction',
+          existingTicketId: existingDispute.id,
+        });
       }
 
       const transaction = await this.transactionsService.findById(
@@ -142,21 +132,11 @@ export class SupportService {
         throw new ForbiddenException('You can only open a dispute for your own transaction');
       }
 
-      const reason = data.disputeReason;
-      if (
-        reason !== DisputeReason.TicketNotReceived &&
-        reason !== DisputeReason.TicketDidntWork &&
-        reason !== DisputeReason.BuyerDidNotConfirmReceipt
-      ) {
-        throw new BadRequestException(
-          'Invalid dispute reason. Allowed: TicketNotReceived, TicketDidntWork, BuyerDidNotConfirmReceipt.',
-        );
-      }
-
+      const category = data.category;
       const isBuyer = transaction.buyerId === userId;
       const isSeller = transaction.sellerId === userId;
 
-      if (reason === DisputeReason.TicketNotReceived) {
+      if (category === SupportCategory.TicketNotReceived) {
         if (!isBuyer) {
           throw new ForbiddenException(
             'Only the buyer can report "ticket not received".',
@@ -194,7 +174,7 @@ export class SupportService {
         if (now > maxDeadline) {
           throw new ClaimTooLateException(maxHours, refDateType);
         }
-      } else if (reason === DisputeReason.TicketDidntWork) {
+      } else if (category === SupportCategory.TicketDidntWork) {
         if (!isBuyer) {
           throw new ForbiddenException(
             'Only the buyer can report "ticket did not work".',
@@ -245,22 +225,14 @@ export class SupportService {
       }
     }
 
-    // Source and priority: dispute is always high; contact flows use request or inferred source
-    const source: SupportTicketSource =
-      data.category === SupportCategory.TicketDispute
-        ? SupportTicketSource.Dispute
-        : data.source ??
-          (data.transactionId
-            ? SupportTicketSource.ContactFromTransaction
-            : SupportTicketSource.ContactForm);
-    const priority = this.priorityFromSource(source);
+    const source = data.source;
+    const priority = getPriorityForCategory(data.category);
 
     const ticket: SupportTicket = {
       id: this.generateId('spt'),
       userId,
       transactionId: data.transactionId,
       category: data.category,
-      disputeReason: data.disputeReason,
       source,
       subject: data.subject,
       description: data.description,
@@ -272,11 +244,10 @@ export class SupportService {
 
     await this.supportRepository.createTicket(ctx, ticket);
 
-    // Only "TicketDidntWork" is a formal dispute: it sets transaction to Disputed and buyer flag
+    // Only TicketDidntWork triggers formal dispute: transaction → Disputed and buyer flag
     if (
-      data.category === SupportCategory.TicketDispute &&
-      data.transactionId &&
-      data.disputeReason === DisputeReason.TicketDidntWork
+      isDisputeTriggeringCategory(data.category) &&
+      data.transactionId
     ) {
       await this.transactionsService.markDisputed(
         ctx,
@@ -286,7 +257,7 @@ export class SupportService {
       await this.usersService.setBuyerDisputed(ctx, userId);
     }
 
-    if (data.category === SupportCategory.TicketDispute && data.transactionId) {
+    if (isReportProblemCategory(data.category) && data.transactionId) {
       const transaction = await this.transactionsService.findById(ctx, data.transactionId);
       if (transaction) {
         const openedBy: 'buyer' | 'seller' = transaction.buyerId === userId ? 'buyer' : 'seller';
@@ -298,7 +269,7 @@ export class SupportService {
             buyerId: transaction.buyerId,
             sellerId: transaction.sellerId,
             openedBy,
-            reason: data.disputeReason!,
+            reason: data.category,
           })
           .catch((err) => this.logger.error(ctx, `Failed to emit DISPUTE_OPENED: ${err}`));
       }
@@ -306,6 +277,22 @@ export class SupportService {
 
     // Create initial message with description
     await this.addMessage(ctx, ticket.id, userId, false, data.description);
+
+    // If report-problem flow and user has not verified identity (DNI), add automatic message
+    if (
+      isDisputeTriggeringCategory(data.category) &&
+      user &&
+      !VerificationHelper.hasV3(user)
+    ) {
+      await this.supportRepository.createMessage(ctx, {
+        id: this.generateId('msg'),
+        ticketId: ticket.id,
+        userId: SupportService.SYSTEM_SENDER_ID,
+        isAdmin: false,
+        message: SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY,
+        createdAt: new Date(),
+      });
+    }
 
     this.logger.log(ctx, `Support ticket ${ticket.id} created`);
     return ticket;
@@ -323,6 +310,7 @@ export class SupportService {
       subject: string;
       description: string;
       transactionId?: string;
+      source?: SupportTicketSource;
     },
     clientIp: string,
   ): Promise<SupportTicket> {
@@ -345,10 +333,8 @@ export class SupportService {
       throw new BadRequestException('Description is required');
     }
 
-    const source: SupportTicketSource = data.transactionId
-      ? SupportTicketSource.ContactFromTransaction
-      : SupportTicketSource.ContactForm;
-    const priority = this.priorityFromSource(source);
+    const source = data.source;
+    const priority = getPriorityForCategory(SupportCategory.Other);
 
     const guestId = `guest:${clientIp}`;
 
@@ -474,7 +460,7 @@ export class SupportService {
       throw new NotFoundException('Support ticket not found');
     }
 
-    if (ticket.category !== SupportCategory.TicketDispute) {
+    if (!isReportProblemCategory(ticket.category)) {
       throw new BadRequestException('This ticket is not a dispute');
     }
 

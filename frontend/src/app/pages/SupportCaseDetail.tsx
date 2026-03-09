@@ -14,6 +14,7 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { ArrowLeft, Loader2, Send } from 'lucide-react';
 import { supportService } from '@/api/services';
 import type { SupportTicketWithMessages, SupportMessage } from '@/api/types';
+import { SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY } from '@/api/types/support';
 import { formatDateTimeMedium } from '@/lib/format-date';
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
@@ -174,24 +175,37 @@ export function SupportCaseDetail() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
-            {(ticket.messages ?? []).map((msg: SupportMessage) => (
-              <div
-                key={msg.id}
-                className={`rounded-lg p-3 ${
-                  msg.isAdmin
-                    ? 'bg-primary/10 border border-primary/20 ml-0 mr-4 sm:mr-8'
-                    : 'bg-muted/50 mr-0 ml-4 sm:ml-8'
-                }`}
-              >
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Badge variant={msg.isAdmin ? 'default' : 'outline'} className="text-xs">
-                    {msg.isAdmin ? t('support.fromSupport') : t('support.you')}
-                  </Badge>
-                  <span>{formatDateTimeMedium(msg.createdAt)}</span>
+            {(ticket.messages ?? []).map((msg: SupportMessage) => {
+              const isSystemMessage = msg.message === SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY;
+              const fromSupport = msg.isAdmin || isSystemMessage;
+              return (
+                <div
+                  key={msg.id}
+                  className={`rounded-lg p-3 ${
+                    fromSupport
+                      ? 'bg-primary/10 border border-primary/20 ml-0 mr-4 sm:mr-8'
+                      : 'bg-muted/50 mr-0 ml-4 sm:ml-8'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                    <Badge variant={fromSupport ? 'default' : 'outline'} className="text-xs">
+                      {fromSupport ? t('support.fromSupport') : t('support.you')}
+                    </Badge>
+                    <span>{formatDateTimeMedium(msg.createdAt)}</span>
+                  </div>
+                  {isSystemMessage ? (
+                    <p className="text-sm">
+                      {t('support.disputeVerifyIdentityMessage')}{' '}
+                      <Link to="/seller-verification" className="text-primary underline font-medium">
+                        {t('support.disputeVerifyIdentityLink')}
+                      </Link>
+                    </p>
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                  )}
                 </div>
-                <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div ref={messagesEndRef} />
 

@@ -743,7 +743,6 @@ export interface AdminSupportTicketItem {
   userId?: string;
   transactionId?: string;
   category: string;
-  disputeReason?: string;
   source?: string;
   subject: string;
   description: string;
@@ -814,7 +813,6 @@ export interface AdminSupportTicketDetailResponse {
   userId?: string;
   transactionId?: string;
   category: string;
-  disputeReason?: string;
   source?: string;
   subject: string;
   description: string;

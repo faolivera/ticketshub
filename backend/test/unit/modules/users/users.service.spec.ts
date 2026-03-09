@@ -199,6 +199,18 @@ describe('UsersService', () => {
 
       expect(result).toBeNull();
     });
+
+    it('should succeed when email is in different case (case-insensitive lookup)', async () => {
+      usersRepository.findByEmail.mockResolvedValue(mockUser);
+      usersRepository.findById.mockResolvedValue(mockUser);
+      imagesRepository.findById.mockResolvedValue(mockImage);
+
+      const result = await service.login(mockCtx, 'User@Example.COM', 'correct');
+
+      expect(result).not.toBeNull();
+      expect(result?.token).toBeDefined();
+      expect(usersRepository.findByEmail).toHaveBeenCalledWith(mockCtx, 'User@Example.COM');
+    });
   });
 
   describe('register', () => {

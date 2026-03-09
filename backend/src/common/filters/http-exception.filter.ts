@@ -190,6 +190,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   /**
    * Extract details from standard NestJS exceptions.
+   * When response is an object, extra keys (e.g. existingTicketId) are passed in details.
    */
   private extractStandardExceptionDetails(
     exception: HttpException,
@@ -201,6 +202,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.generateCodeFromName(exceptionName);
 
     let message: string;
+    const details: Record<string, unknown> = {};
 
     if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
@@ -208,9 +210,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       typeof exceptionResponse === 'object' &&
       exceptionResponse !== null
     ) {
-      const responseObj = exceptionResponse as { message?: string | string[] };
-      const rawMessage = responseObj.message || exception.message;
-      message = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
+      const responseObj = exceptionResponse as Record<string, unknown>;
+      const rawMessage = responseObj.message ?? exception.message;
+      message = Array.isArray(rawMessage) ? rawMessage.join(', ') : String(rawMessage);
+      const excludedKeys = new Set(['message', 'error', 'statusCode']);
+      for (const [key, value] of Object.entries(responseObj)) {
+        if (!excludedKeys.has(key) && value !== undefined) {
+          details[key] = value;
+        }
+      }
     } else {
       message = exception.message;
     }
@@ -218,6 +226,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     return {
       code,
       message,
+      ...(Object.keys(details).length > 0 ? { details } : {}),
     };
   }
 

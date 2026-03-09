@@ -1,6 +1,5 @@
 import type {
   SupportCategory,
-  DisputeReason,
   SupportTicket,
   SupportTicketWithMessages,
   DisputeResolution,
@@ -13,8 +12,7 @@ import type {
 export interface CreateSupportTicketRequest {
   transactionId?: string;
   category: SupportCategory;
-  disputeReason?: DisputeReason;
-  /** Origin hint for contact flows; ignored when category is TicketDispute */
+  /** Origin of the ticket (optional). */
   source?: SupportTicketSource;
   subject: string;
   description: string;
@@ -29,6 +27,7 @@ export interface PublicContactRequest {
   subject: string;
   description: string;
   transactionId?: string;
+  source?: SupportTicketSource;
 }
 
 /**
