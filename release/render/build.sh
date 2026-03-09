@@ -10,9 +10,15 @@ cd "$REPO_ROOT"
 echo "Building backend (required for image)..."
 (cd backend && npm run build)
 # Set BUILD_PLATFORM=linux/amd64 to build for Render (requires Docker Buildx). Otherwise builds for host arch.
+# Set REGISTRY_CACHE_REF (e.g. ghcr.io/owner/ticketshub:buildcache) to use registry cache in CI.
 if [[ "${BUILD_PLATFORM}" == "linux/amd64" ]] && docker buildx version &>/dev/null; then
   echo "Building for linux/amd64 (Render)..."
-  docker buildx build --platform linux/amd64 -f release/render/Dockerfile -t "$TAG" --load .
+  cache_args=()
+  if [[ -n "${REGISTRY_CACHE_REF}" ]]; then
+    cache_args+=(--cache-from "type=registry,ref=${REGISTRY_CACHE_REF}" --cache-to "type=registry,ref=${REGISTRY_CACHE_REF},mode=max")
+    echo "Using registry cache: ${REGISTRY_CACHE_REF}"
+  fi
+  docker buildx build --platform linux/amd64 -f release/render/Dockerfile -t "$TAG" --load "${cache_args[@]}" .
 else
   if [[ "${BUILD_PLATFORM}" == "linux/amd64" ]]; then
     echo "BUILD_PLATFORM=linux/amd64 set but buildx not available. Building for host arch. To build for Render: install buildx (https://docs.docker.com/go/buildx/) or let Render build from repo."
