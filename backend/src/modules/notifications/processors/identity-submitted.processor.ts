@@ -14,16 +14,18 @@ export class IdentitySubmittedProcessor implements EventProcessor<IdentitySubmit
 
   async getRecipients(
     ctx: Ctx,
-    _context: IdentitySubmittedContext,
+    context: IdentitySubmittedContext,
   ): Promise<NotificationRecipient[]> {
+    void context;
     const adminIds = await this.usersService.getAdminUserIds(ctx);
     return adminIds.map((userId) => ({ userId }));
   }
 
   getTemplateVariables(
     context: IdentitySubmittedContext,
-    _recipientId: string,
+    recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       userName: context.userName,
     };

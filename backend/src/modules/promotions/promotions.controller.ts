@@ -24,7 +24,6 @@ import type {
   CreatePromotionRequest,
   CreatePromotionResponse,
   ListPromotionsResponse,
-  UpdatePromotionStatusRequest,
 } from './promotions.api';
 import {
   CreatePromotionRequestSchema,

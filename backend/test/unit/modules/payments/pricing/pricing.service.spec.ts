@@ -15,8 +15,6 @@ import type { Ctx } from '../../../../../src/common/types/context';
 describe('PricingService', () => {
   let service: PricingService;
   let repository: jest.Mocked<IPricingRepository>;
-  let platformConfigService: jest.Mocked<PlatformConfigService>;
-  let paymentMethodsService: jest.Mocked<PaymentMethodsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -109,8 +107,8 @@ describe('PricingService', () => {
 
     service = module.get<PricingService>(PricingService);
     repository = module.get(PRICING_REPOSITORY);
-    platformConfigService = module.get(PlatformConfigService);
-    paymentMethodsService = module.get(PaymentMethodsService);
+    void module.get(PlatformConfigService);
+    void module.get(PaymentMethodsService);
   });
 
   describe('createSnapshot', () => {

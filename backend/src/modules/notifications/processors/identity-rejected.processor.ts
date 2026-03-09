@@ -21,6 +21,7 @@ export class IdentityRejectedProcessor implements EventProcessor<IdentityRejecte
     context: IdentityRejectedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       userName: context.userName,
       rejectionReason: context.rejectionReason,

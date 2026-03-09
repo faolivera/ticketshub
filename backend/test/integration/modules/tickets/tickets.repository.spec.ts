@@ -12,7 +12,6 @@ import type {
   TicketUnit,
   Money,
 } from '@/modules/tickets/tickets.domain';
-import { SeatingType } from '@/modules/tickets/tickets.domain';
 import type { Ctx } from '@/common/types/context';
 import {
   getTestPrismaClient,

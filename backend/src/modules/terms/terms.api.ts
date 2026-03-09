@@ -1,8 +1,4 @@
-import type {
-  TermsVersion,
-  TermsUserType,
-  AcceptanceMethod,
-} from './terms.domain';
+import type { TermsUserType, AcceptanceMethod } from './terms.domain';
 
 export interface GetCurrentTermsResponse {
   id: string;

@@ -14,16 +14,18 @@ export class BankAccountSubmittedProcessor implements EventProcessor<BankAccount
 
   async getRecipients(
     ctx: Ctx,
-    _context: BankAccountSubmittedContext,
+    context: BankAccountSubmittedContext,
   ): Promise<NotificationRecipient[]> {
+    void context;
     const adminIds = await this.usersService.getAdminUserIds(ctx);
     return adminIds.map((userId) => ({ userId }));
   }
 
   getTemplateVariables(
     context: BankAccountSubmittedContext,
-    _recipientId: string,
+    recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       userName: context.userName,
     };

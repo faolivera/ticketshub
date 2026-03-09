@@ -16,11 +16,7 @@ import type {
   Notification,
   NotificationChannelConfig,
 } from './notifications.domain';
-import {
-  NotificationChannel,
-  NotificationEventStatus,
-  NotificationStatus,
-} from './notifications.domain';
+import { NotificationChannel } from './notifications.domain';
 
 @Injectable()
 export class NotificationsWorker {

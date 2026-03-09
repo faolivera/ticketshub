@@ -16,7 +16,7 @@ import {
   Role,
   UserStatus,
 } from '../users/users.domain';
-import { EventCategory, EventSectionStatus } from '../events/events.domain';
+import { EventCategory } from '../events/events.domain';
 import {
   TicketType,
   DeliveryMethod,

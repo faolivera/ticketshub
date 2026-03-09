@@ -897,7 +897,6 @@ export class EventsService {
     if (data.location !== undefined) eventUpdates.location = data.location;
     if (data.imageIds !== undefined) eventUpdates.imageIds = data.imageIds;
 
-    let updatedEvent = event;
     if (Object.keys(eventUpdates).length > 0) {
       const result = await this.eventsRepository.updateEvent(
         ctx,
@@ -907,7 +906,6 @@ export class EventsService {
       if (!result) {
         throw new NotFoundException('Event not found after update');
       }
-      updatedEvent = result;
     }
 
     // 3. Handle date updates and creations

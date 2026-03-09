@@ -25,7 +25,6 @@ describe('ReviewsService', () => {
   let reviewsRepository: jest.Mocked<IReviewsRepository>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let usersService: jest.Mocked<UsersService>;
-  let ticketsService: jest.Mocked<TicketsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -114,7 +113,7 @@ describe('ReviewsService', () => {
     reviewsRepository = module.get(REVIEWS_REPOSITORY);
     transactionsService = module.get(TransactionsService);
     usersService = module.get(UsersService);
-    ticketsService = module.get(TicketsService);
+    void module.get(TicketsService);
   });
 
   describe('createReview', () => {

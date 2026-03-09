@@ -18,7 +18,6 @@ import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
   Review,
-  ReviewRating,
   ReviewPartyRole,
   UserReviewMetrics,
   UserBadge,

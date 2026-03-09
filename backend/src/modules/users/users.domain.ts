@@ -1,4 +1,4 @@
-import type { Address, AddressWithGeoPoint } from '../shared/address.domain';
+import type { AddressWithGeoPoint } from '../shared/address.domain';
 import type { Image } from '../images/images.domain';
 import type { CurrencyCode } from '../shared/money.domain';
 

@@ -140,6 +140,7 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
     paymentIntentId: string,
     amount?: Money,
   ): Promise<PaymentIntent> {
+    void amount;
     this.logger.log(ctx, `Refunding payment ${paymentIntentId}`);
 
     const payment = await this.paymentsRepository.findById(
@@ -169,8 +170,9 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
   async processWebhook(
     ctx: Ctx,
     payload: unknown,
-    _signature?: string,
+    signature?: string,
   ): Promise<WebhookResult> {
+    void signature;
     this.logger.log(ctx, `Processing webhook`);
 
     try {
@@ -210,6 +212,8 @@ export class PaymentsService implements PaymentProvider, PayoutProvider {
     amount: Money,
     bankAccountId: string,
   ): Promise<PayoutResult> {
+    void amount;
+    void bankAccountId;
     this.logger.log(ctx, `Creating payout for user ${userId}`);
 
     // Mock payout - in production, call payment provider's payout API

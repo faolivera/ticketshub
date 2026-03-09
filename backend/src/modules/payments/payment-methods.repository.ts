@@ -22,7 +22,8 @@ interface PaymentMethodInstructions {
 export class PaymentMethodsRepository implements IPaymentMethodsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(_ctx: Ctx): Promise<PaymentMethodOption[]> {
+  async findAll(ctx: Ctx): Promise<PaymentMethodOption[]> {
+    void ctx;
     const methods = await this.prisma.paymentMethod.findMany({
       orderBy: { createdAt: 'desc' },
     });
@@ -30,16 +31,18 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
   }
 
   async findById(
-    _ctx: Ctx,
+    ctx: Ctx,
     id: string,
   ): Promise<PaymentMethodOption | undefined> {
+    void ctx;
     const method = await this.prisma.paymentMethod.findUnique({
       where: { id },
     });
     return method ? this.mapToDomain(method) : undefined;
   }
 
-  async findEnabled(_ctx: Ctx): Promise<PaymentMethodOption[]> {
+  async findEnabled(ctx: Ctx): Promise<PaymentMethodOption[]> {
+    void ctx;
     const methods = await this.prisma.paymentMethod.findMany({
       where: { status: 'enabled' },
       orderBy: { createdAt: 'desc' },

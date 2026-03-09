@@ -83,11 +83,7 @@ import {
   SupportTicketStatus,
   DisputeResolution,
 } from '../support/support.domain';
-import type {
-  SupportTicket,
-  SupportTicketWithMessages,
-  SupportMessage,
-} from '../support/support.domain';
+import type { SupportTicket, SupportMessage } from '../support/support.domain';
 
 @Injectable()
 export class AdminService {
@@ -148,6 +144,7 @@ export class AdminService {
    * Get dashboard metrics with minimal DB load (single raw query with counts).
    */
   async getDashboardMetrics(ctx: Ctx): Promise<AdminDashboardMetricsResponse> {
+    void ctx;
     type Row = {
       users_total: bigint;
       users_phone_verified: bigint;

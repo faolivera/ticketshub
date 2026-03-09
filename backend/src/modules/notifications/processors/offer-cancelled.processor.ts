@@ -18,8 +18,9 @@ export class OfferCancelledProcessor implements EventProcessor<OfferCancelledCon
 
   getTemplateVariables(
     context: OfferCancelledContext,
-    _recipientId: string,
+    recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       offerId: context.offerId,
       listingId: context.listingId,

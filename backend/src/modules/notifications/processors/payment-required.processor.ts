@@ -22,6 +22,7 @@ export class PaymentRequiredProcessor implements EventProcessor<PaymentRequiredC
     context: PaymentRequiredContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       sellerName: context.sellerName,
       eventName: context.eventName,

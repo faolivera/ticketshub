@@ -416,7 +416,11 @@ export class BffService {
           userId,
         );
       } catch (error) {
-        this.logger.warn(ctx, 'getTransactionDetails: failed to load reviews', error);
+        this.logger.warn(
+          ctx,
+          'getTransactionDetails: failed to load reviews',
+          error,
+        );
       }
     }
 
@@ -455,7 +459,11 @@ export class BffService {
           seat: u.seat,
         }));
     } catch (error) {
-      this.logger.warn(ctx, 'getTransactionDetails: listing not found or gone', error);
+      this.logger.warn(
+        ctx,
+        'getTransactionDetails: listing not found or gone',
+        error,
+      );
     }
 
     const bffTransaction: BffTransactionWithDetails =

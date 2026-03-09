@@ -15,8 +15,9 @@ export class BuyerPaymentSubmittedProcessor implements EventProcessor<BuyerPayme
 
   async getRecipients(
     ctx: Ctx,
-    _context: BuyerPaymentSubmittedContext,
+    context: BuyerPaymentSubmittedContext,
   ): Promise<NotificationRecipient[]> {
+    void context;
     // All admins receive this notification (payment confirmation to review)
     const adminIds = await this.usersService.getAdminUserIds(ctx);
     return adminIds.map((userId) => ({ userId }));
@@ -26,6 +27,7 @@ export class BuyerPaymentSubmittedProcessor implements EventProcessor<BuyerPayme
     context: BuyerPaymentSubmittedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       buyerName: context.buyerName,
       eventName: context.eventName,

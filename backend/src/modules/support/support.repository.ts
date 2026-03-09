@@ -58,17 +58,16 @@ export class SupportRepository implements ISupportRepository {
     return ticket ? this.mapToTicket(ticket) : undefined;
   }
 
-  async getAllTickets(_ctx: Ctx): Promise<SupportTicket[]> {
+  async getAllTickets(ctx: Ctx): Promise<SupportTicket[]> {
+    void ctx;
     const tickets = await this.prisma.supportTicket.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return tickets.map((t) => this.mapToTicket(t));
   }
 
-  async getTicketsByUserId(
-    _ctx: Ctx,
-    userId: string,
-  ): Promise<SupportTicket[]> {
+  async getTicketsByUserId(ctx: Ctx, userId: string): Promise<SupportTicket[]> {
+    void ctx;
     const tickets = await this.prisma.supportTicket.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -76,7 +75,8 @@ export class SupportRepository implements ISupportRepository {
     return tickets.map((t) => this.mapToTicket(t));
   }
 
-  async getActiveTickets(_ctx: Ctx): Promise<SupportTicket[]> {
+  async getActiveTickets(ctx: Ctx): Promise<SupportTicket[]> {
+    void ctx;
     const tickets = await this.prisma.supportTicket.findMany({
       where: {
         status: {

@@ -21,6 +21,7 @@ export class EventApprovedProcessor implements EventProcessor<EventApprovedConte
     context: EventApprovedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       eventSlug: context.eventSlug,

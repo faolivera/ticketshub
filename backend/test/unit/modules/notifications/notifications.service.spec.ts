@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import {

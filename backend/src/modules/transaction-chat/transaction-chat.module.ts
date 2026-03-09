@@ -2,10 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TransactionChatController } from './transaction-chat.controller';
 import { TransactionChatService } from './transaction-chat.service';
 import { TransactionChatRepository } from './transaction-chat.repository';
-import {
-  TRANSACTION_CHAT_REPOSITORY,
-  type ITransactionChatRepository,
-} from './transaction-chat.repository.interface';
+import { TRANSACTION_CHAT_REPOSITORY } from './transaction-chat.repository.interface';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { ConfigModule } from '../config/config.module';
 import { UsersModule } from '../users/users.module';

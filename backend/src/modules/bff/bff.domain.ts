@@ -1,6 +1,5 @@
 import type { Image } from '../images/images.domain';
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
-import type { PublicPaymentMethodOption } from '../payments/payments.domain';
 import type { EventWithDatesResponse } from '../events/events.api';
 
 export type SellerReviewType = 'positive' | 'neutral' | 'negative';

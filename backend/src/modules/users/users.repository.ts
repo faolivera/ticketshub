@@ -34,7 +34,8 @@ export class UsersRepository implements IUsersRepository {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAll(_ctx: Ctx): Promise<User[]> {
+  async getAll(ctx: Ctx): Promise<User[]> {
+    void ctx;
     const users = await this.prisma.user.findMany();
     return users.map((u) => this.mapToUser(u));
   }
@@ -79,9 +80,10 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async findManyPaginated(
-    _ctx: Ctx,
+    ctx: Ctx,
     params: { page: number; limit: number; search?: string },
   ): Promise<{ users: User[]; total: number }> {
+    void ctx;
     const { page, limit, search } = params;
     const skip = (page - 1) * limit;
     const term = search?.trim();
@@ -109,7 +111,8 @@ export class UsersRepository implements IUsersRepository {
     };
   }
 
-  async getSellers(_ctx: Ctx): Promise<User[]> {
+  async getSellers(ctx: Ctx): Promise<User[]> {
+    void ctx;
     const users = await this.prisma.user.findMany({
       where: {
         acceptedSellerTermsAt: { not: null },
@@ -118,7 +121,8 @@ export class UsersRepository implements IUsersRepository {
     return users.map((u) => this.mapToUser(u));
   }
 
-  async getAdmins(_ctx: Ctx): Promise<User[]> {
+  async getAdmins(ctx: Ctx): Promise<User[]> {
+    void ctx;
     const users = await this.prisma.user.findMany({
       where: { role: 'Admin' },
     });
@@ -281,7 +285,11 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(user);
     } catch (error) {
-      this.logger.error(_ctx, 'updateIdentityVerificationApproved failed:', error);
+      this.logger.error(
+        _ctx,
+        'updateIdentityVerificationApproved failed:',
+        error,
+      );
       return undefined;
     }
   }
@@ -310,7 +318,11 @@ export class UsersRepository implements IUsersRepository {
       });
       return this.mapToUser(updated);
     } catch (error) {
-      this.logger.error(_ctx, 'invalidateBankAccountVerification failed:', error);
+      this.logger.error(
+        _ctx,
+        'invalidateBankAccountVerification failed:',
+        error,
+      );
       return undefined;
     }
   }

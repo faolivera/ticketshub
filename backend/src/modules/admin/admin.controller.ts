@@ -89,7 +89,6 @@ import {
   AdminDashboardMetricsResponseSchema,
   AdminUsersResponseSchema,
   AdminUserDetailResponseSchema,
-  AdminUpdateUserRequestSchema,
   AdminUpdateUserResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';

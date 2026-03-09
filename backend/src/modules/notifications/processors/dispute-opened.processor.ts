@@ -23,6 +23,7 @@ export class DisputeOpenedProcessor implements EventProcessor<DisputeOpenedConte
     context: DisputeOpenedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       openedBy: context.openedBy,

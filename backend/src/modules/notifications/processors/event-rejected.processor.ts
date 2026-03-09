@@ -21,6 +21,7 @@ export class EventRejectedProcessor implements EventProcessor<EventRejectedConte
     context: EventRejectedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       eventSlug: context.eventSlug,

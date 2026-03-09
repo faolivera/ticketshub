@@ -18,8 +18,9 @@ export class SellerVerificationCompleteProcessor implements EventProcessor<Selle
 
   getTemplateVariables(
     context: SellerVerificationCompleteContext,
-    _recipientId: string,
+    recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       userName: context.userName,
     };

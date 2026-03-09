@@ -35,7 +35,6 @@ function createMockPromotion(overrides: Partial<Promotion> = {}): Promotion {
 describe('PromotionsService', () => {
   let service: PromotionsService;
   let repository: jest.Mocked<IPromotionsRepository>;
-  let platformConfigService: jest.Mocked<PlatformConfigService>;
   let usersService: jest.Mocked<UsersService>;
 
   beforeEach(async () => {
@@ -80,7 +79,7 @@ describe('PromotionsService', () => {
 
     service = module.get<PromotionsService>(PromotionsService);
     repository = module.get(PROMOTIONS_REPOSITORY);
-    platformConfigService = module.get(PlatformConfigService);
+    void module.get(PlatformConfigService);
     usersService = module.get(UsersService);
   });
 

@@ -21,6 +21,7 @@ export class TransactionExpiredProcessor implements EventProcessor<TransactionEx
     context: TransactionExpiredContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       transactionId: context.transactionId,

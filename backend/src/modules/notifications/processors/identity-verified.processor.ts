@@ -21,6 +21,7 @@ export class IdentityVerifiedProcessor implements EventProcessor<IdentityVerifie
     context: IdentityVerifiedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       userName: context.userName,
     };

@@ -21,6 +21,7 @@ export class SellerPaymentReceivedProcessor implements EventProcessor<SellerPaym
     context: SellerPaymentReceivedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       amount: String(context.amount),

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentConfirmationsService } from '../../../../src/modules/payment-confirmations/payment-confirmations.service';
 import { PAYMENT_CONFIRMATIONS_REPOSITORY } from '../../../../src/modules/payment-confirmations/payment-confirmations.repository.interface';

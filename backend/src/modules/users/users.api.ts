@@ -1,9 +1,4 @@
-import type { Image } from '../images/images.domain';
-import type {
-  LoginResponse,
-  AuthenticatedUserPublicInfo,
-  PublicMeUser,
-} from './users.domain';
+import type { LoginResponse, PublicMeUser } from './users.domain';
 import type { AcceptanceMethod } from '../terms/terms.domain';
 
 export type { PublicMeUser };

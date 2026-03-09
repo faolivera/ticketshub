@@ -244,6 +244,7 @@ export class TransactionChatService {
     buyerId: string,
     sellerId: string,
   ): TransactionChatMessageItem {
+    void sellerId;
     const senderRole: ChatSenderRole =
       entity.senderId === buyerId ? 'buyer' : 'seller';
     return {

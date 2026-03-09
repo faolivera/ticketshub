@@ -19,7 +19,6 @@ describe('TermsRepository (Integration)', () => {
   let ctx: Ctx;
   let testUserId: string;
   let buyerVersionId: string;
-  let sellerVersionId: string;
 
   async function createTestUser(): Promise<string> {
     const user = await prisma.user.create({
@@ -67,7 +66,7 @@ describe('TermsRepository (Integration)', () => {
     ctx = createTestContext();
     testUserId = await createTestUser();
     buyerVersionId = await createTermsVersion('buyer');
-    sellerVersionId = await createTermsVersion('seller');
+    await createTermsVersion('seller');
   });
 
   afterAll(async () => {

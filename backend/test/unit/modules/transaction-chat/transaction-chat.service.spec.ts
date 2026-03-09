@@ -31,7 +31,6 @@ describe('TransactionChatService', () => {
   let service: TransactionChatService;
   let chatRepository: jest.Mocked<ITransactionChatRepository>;
   let transactionsService: jest.Mocked<TransactionsService>;
-  let platformConfigService: jest.Mocked<PlatformConfigService>;
 
   beforeEach(async () => {
     const mockChatRepository = {
@@ -63,7 +62,7 @@ describe('TransactionChatService', () => {
     service = module.get(TransactionChatService);
     chatRepository = module.get(TRANSACTION_CHAT_REPOSITORY);
     transactionsService = module.get(TransactionsService);
-    platformConfigService = module.get(PlatformConfigService);
+    void module.get(PlatformConfigService);
   });
 
   describe('getMessages', () => {

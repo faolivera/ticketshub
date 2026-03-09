@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Param,
-  Body,
   Headers,
   UseGuards,
   Inject,
@@ -35,6 +34,7 @@ export class PaymentsController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-signature') signature?: string,
   ): Promise<ApiResponse<WebhookResponse>> {
+    void signature;
     const payload = req.body;
 
     const result = await this.paymentsService.processWebhook(ctx, payload);

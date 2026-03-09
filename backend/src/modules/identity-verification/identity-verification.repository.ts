@@ -61,7 +61,8 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
     return records.map((r) => this.mapToDomain(r));
   }
 
-  async findAllPending(_ctx: Ctx): Promise<IdentityVerificationRequest[]> {
+  async findAllPending(ctx: Ctx): Promise<IdentityVerificationRequest[]> {
+    void ctx;
     const records = await this.prisma.identityVerificationRequest.findMany({
       where: { status: 'pending' },
       orderBy: { submittedAt: 'desc' },
@@ -69,7 +70,8 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
     return records.map((r) => this.mapToDomain(r));
   }
 
-  async countPending(_ctx: Ctx): Promise<number> {
+  async countPending(ctx: Ctx): Promise<number> {
+    void ctx;
     return this.prisma.identityVerificationRequest.count({
       where: { status: 'pending' },
     });

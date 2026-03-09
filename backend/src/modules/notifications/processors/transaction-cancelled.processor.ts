@@ -21,6 +21,7 @@ export class TransactionCancelledProcessor implements EventProcessor<Transaction
     context: TransactionCancelledContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       cancelledBy: context.cancelledBy,

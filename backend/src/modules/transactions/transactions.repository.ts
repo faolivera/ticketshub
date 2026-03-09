@@ -454,7 +454,11 @@ export class TransactionsRepository
         },
       });
     } catch (error) {
-      this.logger.error(ON_APP_INIT_CTX, 'transactions.repository writeAuditLog failed:', error);
+      this.logger.error(
+        ON_APP_INIT_CTX,
+        'transactions.repository writeAuditLog failed:',
+        error,
+      );
     }
   }
 

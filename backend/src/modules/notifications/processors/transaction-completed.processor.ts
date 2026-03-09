@@ -22,6 +22,7 @@ export class TransactionCompletedProcessor implements EventProcessor<Transaction
     context: TransactionCompletedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       amount: String(context.amount),

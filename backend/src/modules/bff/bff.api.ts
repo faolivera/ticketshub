@@ -4,12 +4,7 @@ import type { PaymentConfirmation } from '../payment-confirmations/payment-confi
 import type { Review } from '../reviews/reviews.domain';
 import type { BankTransferConfig } from '../payments/payments.domain';
 import type { Money } from '../transactions/transactions.domain';
-import type {
-  SellerProfile,
-  ListingWithSeller,
-  EventPageData,
-  BuyPageData,
-} from './bff.domain';
+import type { SellerProfile, EventPageData, BuyPageData } from './bff.domain';
 
 /**
  * Transaction view for buyer-facing BFF: single "service price" (platform + payment method commission).

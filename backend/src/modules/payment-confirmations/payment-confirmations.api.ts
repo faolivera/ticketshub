@@ -1,7 +1,4 @@
-import type {
-  PaymentConfirmation,
-  PaymentConfirmationStatus,
-} from './payment-confirmations.domain';
+import type { PaymentConfirmation } from './payment-confirmations.domain';
 
 /**
  * Response after uploading a payment confirmation

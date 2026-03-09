@@ -67,14 +67,16 @@ export class EventsRepository implements IEventsRepository {
     return event ? this.mapToEvent(event) : undefined;
   }
 
-  async getAllEvents(_ctx: Ctx): Promise<Event[]> {
+  async getAllEvents(ctx: Ctx): Promise<Event[]> {
+    void ctx;
     const events = await this.prisma.event.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return events.map((e) => this.mapToEvent(e));
   }
 
-  async findEventsByIds(_ctx: Ctx, ids: string[]): Promise<Event[]> {
+  async findEventsByIds(ctx: Ctx, ids: string[]): Promise<Event[]> {
+    void ctx;
     if (ids.length === 0) return [];
     const events = await this.prisma.event.findMany({
       where: { id: { in: ids } },
@@ -82,10 +84,8 @@ export class EventsRepository implements IEventsRepository {
     return events.map((e) => this.mapToEvent(e));
   }
 
-  async getDatesByEventIds(
-    _ctx: Ctx,
-    eventIds: string[],
-  ): Promise<EventDate[]> {
+  async getDatesByEventIds(ctx: Ctx, eventIds: string[]): Promise<EventDate[]> {
+    void ctx;
     if (eventIds.length === 0) return [];
     const dates = await this.prisma.eventDate.findMany({
       where: { eventId: { in: eventIds } },
@@ -95,9 +95,10 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getSectionsByEventIds(
-    _ctx: Ctx,
+    ctx: Ctx,
     eventIds: string[],
   ): Promise<EventSection[]> {
+    void ctx;
     if (eventIds.length === 0) return [];
     const sections = await this.prisma.eventSection.findMany({
       where: { eventId: { in: eventIds } },
@@ -106,7 +107,8 @@ export class EventsRepository implements IEventsRepository {
     return sections.map((s) => this.mapToEventSection(s));
   }
 
-  async getApprovedEvents(_ctx: Ctx): Promise<Event[]> {
+  async getApprovedEvents(ctx: Ctx): Promise<Event[]> {
+    void ctx;
     const events = await this.prisma.event.findMany({
       where: { status: 'approved' },
       orderBy: { createdAt: 'desc' },
@@ -157,7 +159,8 @@ export class EventsRepository implements IEventsRepository {
     };
   }
 
-  async getPendingEvents(_ctx: Ctx): Promise<Event[]> {
+  async getPendingEvents(ctx: Ctx): Promise<Event[]> {
+    void ctx;
     const [pendingEvents, pendingDates, pendingSections] = await Promise.all([
       this.prisma.event.findMany({
         where: { status: 'pending' },
@@ -402,7 +405,8 @@ export class EventsRepository implements IEventsRepository {
     return dates.map((d) => this.mapToEventDate(d));
   }
 
-  async getPendingDates(_ctx: Ctx): Promise<EventDate[]> {
+  async getPendingDates(ctx: Ctx): Promise<EventDate[]> {
+    void ctx;
     const dates = await this.prisma.eventDate.findMany({
       where: { status: 'pending' },
       orderBy: { date: 'asc' },
@@ -434,7 +438,11 @@ export class EventsRepository implements IEventsRepository {
       });
       return this.mapToEventDate(updated);
     } catch (error) {
-      this.logger.error(_ctx, 'events.repository updateEventDate failed:', error);
+      this.logger.error(
+        _ctx,
+        'events.repository updateEventDate failed:',
+        error,
+      );
       return undefined;
     }
   }
@@ -519,7 +527,8 @@ export class EventsRepository implements IEventsRepository {
     return sections.map((s) => this.mapToEventSection(s));
   }
 
-  async getPendingSections(_ctx: Ctx): Promise<EventSection[]> {
+  async getPendingSections(ctx: Ctx): Promise<EventSection[]> {
+    void ctx;
     const sections = await this.prisma.eventSection.findMany({
       where: { status: 'pending' },
       orderBy: { name: 'asc' },
@@ -571,7 +580,11 @@ export class EventsRepository implements IEventsRepository {
       });
       return this.mapToEventSection(updated);
     } catch (error) {
-      this.logger.error(_ctx, 'events.repository updateEventSection failed:', error);
+      this.logger.error(
+        _ctx,
+        'events.repository updateEventSection failed:',
+        error,
+      );
       return undefined;
     }
   }

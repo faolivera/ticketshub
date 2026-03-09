@@ -45,20 +45,23 @@ export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepo
     return record ? this.mapToDomain(record) : null;
   }
 
-  async findAllPending(_ctx: Ctx): Promise<PaymentConfirmation[]> {
+  async findAllPending(ctx: Ctx): Promise<PaymentConfirmation[]> {
+    void ctx;
     const records = await this.prisma.paymentConfirmation.findMany({
       where: { status: PrismaPaymentConfirmationStatus.pending },
     });
     return records.map((r) => this.mapToDomain(r));
   }
 
-  async countPending(_ctx: Ctx): Promise<number> {
+  async countPending(ctx: Ctx): Promise<number> {
+    void ctx;
     return this.prisma.paymentConfirmation.count({
       where: { status: PrismaPaymentConfirmationStatus.pending },
     });
   }
 
-  async getPendingTransactionIds(_ctx: Ctx): Promise<string[]> {
+  async getPendingTransactionIds(ctx: Ctx): Promise<string[]> {
+    void ctx;
     const records = await this.prisma.paymentConfirmation.findMany({
       where: { status: PrismaPaymentConfirmationStatus.pending },
       select: { transactionId: true },

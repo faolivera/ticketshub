@@ -21,6 +21,7 @@ export class TicketTransferredProcessor implements EventProcessor<TicketTransfer
     context: TicketTransferredContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       eventDate: context.eventDate,

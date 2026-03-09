@@ -21,6 +21,7 @@ export class ReviewReceivedProcessor implements EventProcessor<ReviewReceivedCon
     context: ReviewReceivedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       reviewerName: context.reviewerName,
       rating: String(context.rating),

@@ -18,8 +18,9 @@ export class OfferRejectedProcessor implements EventProcessor<OfferRejectedConte
 
   getTemplateVariables(
     context: OfferRejectedContext,
-    _recipientId: string,
+    recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       offerId: context.offerId,
       listingId: context.listingId,

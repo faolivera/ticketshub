@@ -9,7 +9,6 @@ import type { Ctx } from '../../../../src/common/types/context';
 describe('PlatformConfigService', () => {
   let service: PlatformConfigService;
   let configRepository: jest.Mocked<IConfigRepository>;
-  let nestConfigService: jest.Mocked<NestConfigService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -97,7 +96,7 @@ describe('PlatformConfigService', () => {
 
     service = module.get<PlatformConfigService>(PlatformConfigService);
     configRepository = module.get(CONFIG_REPOSITORY);
-    nestConfigService = module.get(NestConfigService);
+    void module.get(NestConfigService);
   });
 
   describe('getPlatformConfig', () => {

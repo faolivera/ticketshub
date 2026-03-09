@@ -18,7 +18,6 @@ import { NotificationsService } from '../../../../src/modules/notifications/noti
 import { OffersService } from '../../../../src/modules/offers/offers.service';
 import { TransactionManager } from '../../../../src/common/database';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
-import { OptimisticLockException } from '../../../../src/common/exceptions/optimistic-lock.exception';
 import { PRIVATE_STORAGE_PROVIDER } from '../../../../src/common/storage/file-storage-provider.interface';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import {

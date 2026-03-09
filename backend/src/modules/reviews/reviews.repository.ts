@@ -50,7 +50,8 @@ export class ReviewsRepository implements IReviewsRepository {
     return review ? this.mapToReview(review) : undefined;
   }
 
-  async getAll(_ctx: Ctx): Promise<Review[]> {
+  async getAll(ctx: Ctx): Promise<Review[]> {
+    void ctx;
     const reviews = await this.prisma.review.findMany({
       include: {
         transaction: {

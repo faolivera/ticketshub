@@ -9,18 +9,15 @@ import type {
   Notification,
   NotificationTemplate,
   NotificationChannelConfig,
-  NotificationRecipient,
 } from './notifications.domain';
 import {
   NotificationEventType,
   NotificationEventStatus,
   NotificationStatus,
   NotificationChannel,
-  NotificationPriority,
   generateNotificationEventId,
   generateNotificationId,
   generateNotificationTemplateId,
-  generateNotificationChannelConfigId,
 } from './notifications.domain';
 import type { NotificationContextMap } from './notifications.contexts';
 import type {

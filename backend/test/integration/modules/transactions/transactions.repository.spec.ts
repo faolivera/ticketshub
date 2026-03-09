@@ -746,7 +746,7 @@ describe('TransactionsRepository (Integration)', () => {
         ctx,
         createValidTransaction({ buyerId: testBuyerId }),
       );
-      const t2 = await repository.create(
+      await repository.create(
         ctx,
         createValidTransaction({ buyerId: otherBuyerId }),
       );

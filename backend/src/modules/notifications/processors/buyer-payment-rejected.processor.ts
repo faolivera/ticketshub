@@ -21,6 +21,7 @@ export class BuyerPaymentRejectedProcessor implements EventProcessor<BuyerPaymen
     context: BuyerPaymentRejectedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       sellerName: context.sellerName,
       eventName: context.eventName,

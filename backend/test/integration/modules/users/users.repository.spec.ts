@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { UsersRepository } from '@/modules/users/users.repository';
-import { Role, UserStatus, Language } from '@/modules/users/users.domain';
+import { Role, Language } from '@/modules/users/users.domain';
 import type { CreateUserData } from '@/modules/users/users.repository.interface';
 import type { Ctx } from '@/common/types/context';
 import {

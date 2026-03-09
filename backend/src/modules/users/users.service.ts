@@ -23,7 +23,6 @@ import type {
   AuthenticatedUserPublicInfo,
 } from './users.domain';
 import { Role, UserStatus, Language } from './users.domain';
-import { IdentityVerificationStatus } from './users.domain';
 import { VerificationHelper } from '../../common/utils/verification-helper';
 import type { Image } from '../images/images.domain';
 import type { JWTPayload, LoginResponse } from './users.domain';
@@ -107,7 +106,9 @@ export class UsersService {
       user.bankAccount?.cbuOrCvu?.length >= 4
         ? user.bankAccount.cbuOrCvu.slice(-4)
         : undefined;
-    const { identityVerification: _iv, bankAccount: _ba, ...rest } = user;
+    const { identityVerification, bankAccount, ...rest } = user;
+    void identityVerification;
+    void bankAccount;
     const response: PublicMeUser = {
       ...rest,
       identityVerified,
@@ -255,7 +256,9 @@ export class UsersService {
     const image = await this.imagesRepository.findById(ctx, user.imageId);
     const resolvedPic = image ? await this.resolveImageUrl(image) : null;
 
-    const { password: _password, imageId: _imageId, ...safeUser } = user;
+    const { password, imageId, ...safeUser } = user;
+    void password;
+    void imageId;
     return {
       ...safeUser,
       pic: resolvedPic,
@@ -794,11 +797,7 @@ export class UsersService {
           `${user.firstName} ${user.lastName}`.trim() || user.publicName,
       })
       .catch((err) =>
-        this.logger.error(
-          ctx,
-          'Failed to emit BANK_ACCOUNT_SUBMITTED:',
-          err,
-        ),
+        this.logger.error(ctx, 'Failed to emit BANK_ACCOUNT_SUBMITTED:', err),
       );
 
     const updated = await this.getAuthenticatedUserInfo(ctx, userId);

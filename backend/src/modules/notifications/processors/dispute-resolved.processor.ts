@@ -21,6 +21,7 @@ export class DisputeResolvedProcessor implements EventProcessor<DisputeResolvedC
     context: DisputeResolvedContext,
     recipientId: string,
   ): Record<string, string> {
+    void recipientId;
     return {
       eventName: context.eventName,
       resolution: context.resolution,

@@ -17,7 +17,9 @@ import type { Ctx } from '../types/context';
 
 @Injectable()
 export class ResponseValidationInterceptor implements NestInterceptor {
-  private readonly logger = new ContextLogger(ResponseValidationInterceptor.name);
+  private readonly logger = new ContextLogger(
+    ResponseValidationInterceptor.name,
+  );
 
   constructor(private readonly reflector: Reflector) {}
 
