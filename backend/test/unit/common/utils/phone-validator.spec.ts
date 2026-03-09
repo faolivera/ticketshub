@@ -11,20 +11,20 @@ describe('phone-validator (Argentina)', () => {
     });
   });
 
-  describe('isValidArgentinaPhone (mobile only)', () => {
+  describe('isValidArgentinaPhone (mobile only, +549… format)', () => {
     it('accepts international mobile (549 + 10-digit national)', () => {
       expect(isValidArgentinaPhone('5491112345678')).toBe(true);
       expect(isValidArgentinaPhone('+54 9 11 1234-5678')).toBe(true);
-      expect(isValidArgentinaPhone('+5492617482639')).toBe(true); // Mendoza
+      expect(isValidArgentinaPhone('+5492611234567')).toBe(true); // Mendoza
     });
 
-    it('accepts national mobile with 15 prefix (15 + 10-digit national)', () => {
-      expect(isValidArgentinaPhone('151112345678')).toBe(true);
-      expect(isValidArgentinaPhone('15 11 1234-5678')).toBe(true);
-      expect(isValidArgentinaPhone('152611234567')).toBe(true);
+    it('rejects national 15… format (only +549… accepted)', () => {
+      expect(isValidArgentinaPhone('151112345678')).toBe(false);
+      expect(isValidArgentinaPhone('15 11 1234-5678')).toBe(false);
+      expect(isValidArgentinaPhone('152611234567')).toBe(false);
     });
 
-    it('rejects landline (10 digits without 15 or 549)', () => {
+    it('rejects landline (10 digits without 549)', () => {
       expect(isValidArgentinaPhone('1112345678')).toBe(false);
       expect(isValidArgentinaPhone('11 1234-5678')).toBe(false);
       expect(isValidArgentinaPhone('2231234567')).toBe(false);
