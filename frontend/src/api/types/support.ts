@@ -16,6 +16,7 @@ export enum SupportCategory {
 export enum DisputeReason {
   TicketNotReceived = 'TicketNotReceived',
   TicketDidntWork = 'TicketDidntWork',
+  BuyerDidNotConfirmReceipt = 'BuyerDidNotConfirmReceipt',
 }
 
 /**

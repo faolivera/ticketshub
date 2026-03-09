@@ -98,6 +98,8 @@ export interface TransactionDetailsChatConfig {
   chatMaxMessages: number;
   /** True when the current user has unread messages from the other party */
   hasUnreadMessages: boolean;
+  /** True when buyer and seller have exchanged at least one user message (excludes system/delivery e.g. "ticket sent") */
+  hasExchangedMessages: boolean;
 }
 
 /**

@@ -311,6 +311,7 @@ const TransactionDetailsChatConfigSchema = z.object({
   chatPollIntervalSeconds: z.number(),
   chatMaxMessages: z.number(),
   hasUnreadMessages: z.boolean(),
+  hasExchangedMessages: z.boolean(),
 });
 
 export const GetTransactionDetailsResponseSchema = z.object({

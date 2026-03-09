@@ -12,8 +12,12 @@ export enum SupportCategory {
  * Dispute reason - specific reasons for ticket disputes
  */
 export enum DisputeReason {
+  /** Buyer: did not receive the ticket(s). Reference: payment date. Does not set transaction to Disputed. */
   TicketNotReceived = 'TicketNotReceived',
+  /** Buyer: ticket did not work. Reference: event date. Sets transaction to Disputed. */
   TicketDidntWork = 'TicketDidntWork',
+  /** Seller: buyer has not confirmed receipt. Only when status is TicketTransferred. Does not set transaction to Disputed. */
+  BuyerDidNotConfirmReceipt = 'BuyerDidNotConfirmReceipt',
 }
 
 /**

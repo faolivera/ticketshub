@@ -396,17 +396,24 @@ export class BffService {
       (chatMode === 'enabled' || chatMode === 'only_read')
     ) {
       const config = await this.platformConfigService.getPlatformConfig(ctx);
-      const hasUnreadMessages =
-        await this.transactionChatService.hasUnreadMessages(
+      const [hasUnreadMessages, hasExchangedMessages] = await Promise.all([
+        this.transactionChatService.hasUnreadMessages(
           ctx,
           transactionId,
           userId,
-        );
+        ),
+        this.transactionChatService.hasExchangedMessages(
+          ctx,
+          transactionId,
+          userId,
+        ),
+      ]);
       chat = {
         chatMode,
         chatPollIntervalSeconds: config.transactionChatPollIntervalSeconds,
         chatMaxMessages: config.transactionChatMaxMessages,
         hasUnreadMessages,
+        hasExchangedMessages,
       };
     }
 

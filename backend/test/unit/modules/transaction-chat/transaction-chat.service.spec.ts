@@ -36,6 +36,7 @@ describe('TransactionChatService', () => {
       create: jest.fn(),
       findByTransaction: jest.fn(),
       countByTransaction: jest.fn(),
+      countTextMessagesByTransaction: jest.fn(),
       markAsReadForUser: jest.fn().mockResolvedValue(undefined),
       countUnreadForUser: jest.fn(),
     };
@@ -204,6 +205,60 @@ describe('TransactionChatService', () => {
       await expect(
         service.sendMessage(mockCtx, 'txn_1', 'buyer_1', 'Hi'),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('hasExchangedMessages', () => {
+    it('should return true when there is at least one user-written (text) message', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+      });
+      transactionsService.getTransactionById.mockResolvedValue(transaction);
+      chatRepository.countTextMessagesByTransaction.mockResolvedValue(1);
+
+      const result = await service.hasExchangedMessages(
+        mockCtx,
+        'txn_1',
+        'buyer_1',
+      );
+
+      expect(result).toBe(true);
+      expect(chatRepository.countTextMessagesByTransaction).toHaveBeenCalledWith(
+        mockCtx,
+        'txn_1',
+      );
+    });
+
+    it('should return false when there are no text messages (only delivery or none)', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.TicketTransferred,
+      });
+      transactionsService.getTransactionById.mockResolvedValue(transaction);
+      chatRepository.countTextMessagesByTransaction.mockResolvedValue(0);
+
+      const result = await service.hasExchangedMessages(
+        mockCtx,
+        'txn_1',
+        'seller_1',
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when transaction status does not allow chat', async () => {
+      const transaction = createMockTransaction({
+        status: TransactionStatus.PendingPayment,
+      });
+      transactionsService.getTransactionById.mockResolvedValue(transaction);
+
+      const result = await service.hasExchangedMessages(
+        mockCtx,
+        'txn_1',
+        'buyer_1',
+      );
+
+      expect(result).toBe(false);
+      expect(chatRepository.countTextMessagesByTransaction).not.toHaveBeenCalled();
     });
   });
 

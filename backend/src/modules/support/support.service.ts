@@ -15,7 +15,6 @@ import { VerificationHelper } from '../../common/utils/verification-helper';
 import { ContextLogger } from '../../common/logger/context-logger';
 import { ClaimTooEarlyException } from '../../common/exceptions/claim-too-early.exception';
 import { ClaimTooLateException } from '../../common/exceptions/claim-too-late.exception';
-import { ClaimTicketNotTransferredException } from '../../common/exceptions/claim-ticket-not-transferred.exception';
 import { ClaimConfirmReceiptFirstException } from '../../common/exceptions/claim-confirm-receipt-first.exception';
 import type { ClaimRefDateType } from '../../common/exceptions/claim-too-early.exception';
 import type { Ctx } from '../../common/types/context';
@@ -146,21 +145,61 @@ export class SupportService {
       const reason = data.disputeReason;
       if (
         reason !== DisputeReason.TicketNotReceived &&
-        reason !== DisputeReason.TicketDidntWork
+        reason !== DisputeReason.TicketDidntWork &&
+        reason !== DisputeReason.BuyerDidNotConfirmReceipt
       ) {
         throw new BadRequestException(
-          'Invalid dispute reason. Allowed: TicketNotReceived, TicketDidntWork.',
+          'Invalid dispute reason. Allowed: TicketNotReceived, TicketDidntWork, BuyerDidNotConfirmReceipt.',
         );
       }
 
-      let refDate: Date;
+      const isBuyer = transaction.buyerId === userId;
+      const isSeller = transaction.sellerId === userId;
 
       if (reason === DisputeReason.TicketNotReceived) {
-        if (!transaction.ticketTransferredAt) {
-          throw new ClaimTicketNotTransferredException();
+        if (!isBuyer) {
+          throw new ForbiddenException(
+            'Only the buyer can report "ticket not received".',
+          );
         }
-        refDate = transaction.ticketTransferredAt;
-      } else {
+        const allowedStatuses = [
+          TransactionStatus.PaymentReceived,
+          TransactionStatus.TicketTransferred,
+        ];
+        if (!allowedStatuses.includes(transaction.status)) {
+          throw new BadRequestException(
+            '"Ticket not received" can only be reported when the transaction is PaymentReceived or TicketTransferred.',
+          );
+        }
+        if (!transaction.paymentReceivedAt) {
+          throw new BadRequestException(
+            'Cannot open "ticket not received" claim: payment date is not set.',
+          );
+        }
+        const refDate = transaction.paymentReceivedAt;
+        const platformConfig =
+          await this.platformConfigService.getPlatformConfig(ctx);
+        const windowConfig =
+          platformConfig?.riskEngine?.claims?.ticketNotReceived;
+        const minHours = windowConfig?.minimumClaimHours ?? 1;
+        const maxHours = windowConfig?.maximumClaimHours ?? 168;
+        const now = new Date();
+        const refTime = refDate.getTime();
+        const minDeadline = new Date(refTime + minHours * 60 * 60 * 1000);
+        const maxDeadline = new Date(refTime + maxHours * 60 * 60 * 1000);
+        const refDateType: ClaimRefDateType = 'payment_received';
+        if (now < minDeadline) {
+          throw new ClaimTooEarlyException(minHours, refDateType);
+        }
+        if (now > maxDeadline) {
+          throw new ClaimTooLateException(maxHours, refDateType);
+        }
+      } else if (reason === DisputeReason.TicketDidntWork) {
+        if (!isBuyer) {
+          throw new ForbiddenException(
+            'Only the buyer can report "ticket did not work".',
+          );
+        }
         if (!transaction.buyerConfirmedAt) {
           throw new ClaimConfirmReceiptFirstException();
         }
@@ -174,32 +213,35 @@ export class SupportService {
             'Cannot open a "ticket did not work" claim: event date could not be determined.',
           );
         }
-        refDate = eventDate instanceof Date ? eventDate : new Date(eventDate);
-      }
-
-      const platformConfig =
-        await this.platformConfigService.getPlatformConfig(ctx);
-      const claimsConfig = platformConfig?.riskEngine?.claims;
-      const windowConfig =
-        reason === DisputeReason.TicketNotReceived
-          ? claimsConfig?.ticketNotReceived
-          : claimsConfig?.ticketDidntWork;
-      const minHours = windowConfig?.minimumClaimHours ?? 1;
-      const maxHours = windowConfig?.maximumClaimHours ?? 168;
-
-      const now = new Date();
-      const refTime = refDate.getTime();
-      const minDeadline = new Date(refTime + minHours * 60 * 60 * 1000);
-      const maxDeadline = new Date(refTime + maxHours * 60 * 60 * 1000);
-      const refDateType: ClaimRefDateType =
-        reason === DisputeReason.TicketNotReceived
-          ? 'ticket_transfer'
-          : 'event_date';
-      if (now < minDeadline) {
-        throw new ClaimTooEarlyException(minHours, refDateType);
-      }
-      if (now > maxDeadline) {
-        throw new ClaimTooLateException(maxHours, refDateType);
+        const refDate = eventDate instanceof Date ? eventDate : new Date(eventDate);
+        const platformConfig =
+          await this.platformConfigService.getPlatformConfig(ctx);
+        const windowConfig = platformConfig?.riskEngine?.claims?.ticketDidntWork;
+        const minHours = windowConfig?.minimumClaimHours ?? 1;
+        const maxHours = windowConfig?.maximumClaimHours ?? 168;
+        const now = new Date();
+        const refTime = refDate.getTime();
+        const minDeadline = new Date(refTime + minHours * 60 * 60 * 1000);
+        const maxDeadline = new Date(refTime + maxHours * 60 * 60 * 1000);
+        const refDateType: ClaimRefDateType = 'event_date';
+        if (now < minDeadline) {
+          throw new ClaimTooEarlyException(minHours, refDateType);
+        }
+        if (now > maxDeadline) {
+          throw new ClaimTooLateException(maxHours, refDateType);
+        }
+      } else {
+        // BuyerDidNotConfirmReceipt
+        if (!isSeller) {
+          throw new ForbiddenException(
+            'Only the seller can report "buyer did not confirm receipt".',
+          );
+        }
+        if (transaction.status !== TransactionStatus.TicketTransferred) {
+          throw new BadRequestException(
+            '"Buyer did not confirm receipt" can only be reported when the transaction is in TicketTransferred status.',
+          );
+        }
       }
     }
 
@@ -230,21 +272,24 @@ export class SupportService {
 
     await this.supportRepository.createTicket(ctx, ticket);
 
-    // If it's a dispute, mark the transaction as disputed and notify
-    if (data.category === SupportCategory.TicketDispute && data.transactionId) {
+    // Only "TicketDidntWork" is a formal dispute: it sets transaction to Disputed and buyer flag
+    if (
+      data.category === SupportCategory.TicketDispute &&
+      data.transactionId &&
+      data.disputeReason === DisputeReason.TicketDidntWork
+    ) {
       await this.transactionsService.markDisputed(
         ctx,
         data.transactionId,
         ticket.id,
       );
+      await this.usersService.setBuyerDisputed(ctx, userId);
+    }
 
-      // Get transaction details for notification and set buyerDisputed when buyer opens dispute
+    if (data.category === SupportCategory.TicketDispute && data.transactionId) {
       const transaction = await this.transactionsService.findById(ctx, data.transactionId);
       if (transaction) {
         const openedBy: 'buyer' | 'seller' = transaction.buyerId === userId ? 'buyer' : 'seller';
-        if (openedBy === 'buyer') {
-          await this.usersService.setBuyerDisputed(ctx, userId);
-        }
         this.notificationsService
           .emit(ctx, NotificationEventType.DISPUTE_OPENED, {
             transactionId: data.transactionId,

@@ -60,6 +60,16 @@ export class TransactionChatRepository
     });
   }
 
+  async countTextMessagesByTransaction(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<number> {
+    const client = this.getClient(ctx);
+    return client.transactionChatMessage.count({
+      where: { transactionId, messageType: 'text' },
+    });
+  }
+
   async markAsReadForUser(
     ctx: Ctx,
     transactionId: string,

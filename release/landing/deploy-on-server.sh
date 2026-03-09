@@ -3,7 +3,7 @@
 # Usage: GITHUB_OWNER=faolivera ./deploy-on-server.sh   OR   ./deploy-on-server.sh faolivera
 # Requires: Docker, and docker login ghcr.io if the image is private.
 set -e
-GITHUB_OWNER="${GITHUB_OWNER:-$1}"
+GITHUB_OWNER="faolivera"
 if [[ -z "$GITHUB_OWNER" ]]; then
   echo "Usage: GITHUB_OWNER=youruser ./deploy-on-server.sh   OR   ./deploy-on-server.sh youruser"
   exit 1

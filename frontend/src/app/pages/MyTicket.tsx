@@ -83,6 +83,8 @@ export function MyTicket() {
   const [isPaymentExpiredLocally, setIsPaymentExpiredLocally] = useState(false);
 
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  /** When 'choice', show disclaimer + Contact / Report; when 'form', show dispute form. Only used when chat is enabled. */
+  const [disputeModalStep, setDisputeModalStep] = useState<'choice' | 'form'>('choice');
   const [disputeReason, setDisputeReason] = useState<DisputeReason>(DisputeReason.TicketNotReceived);
   const [disputeSubject, setDisputeSubject] = useState('');
   const [disputeDescription, setDisputeDescription] = useState('');
@@ -412,19 +414,36 @@ export function MyTicket() {
     }
   };
 
-  const canOpenDispute =
+  const canReportAsBuyer =
     transaction &&
-    (isBuyer || isSeller) &&
-    [TransactionStatus.PaymentReceived, TransactionStatus.TicketTransferred, TransactionStatus.DepositHold].includes(
-      transaction.status,
-    );
+    isBuyer &&
+    [
+      TransactionStatus.PaymentReceived,
+      TransactionStatus.TicketTransferred,
+      TransactionStatus.DepositHold,
+    ].includes(transaction.status);
+  const canReportAsSeller =
+    transaction &&
+    isSeller &&
+    transaction.status === TransactionStatus.TicketTransferred;
+  const canOpenDispute = canReportAsBuyer || canReportAsSeller;
 
   const handleOpenDisputeClick = () => {
     setDisputeError(null);
-    setDisputeReason(DisputeReason.TicketNotReceived);
+    setDisputeReason(
+      isSeller ? DisputeReason.BuyerDidNotConfirmReceipt : DisputeReason.TicketNotReceived,
+    );
     setDisputeSubject(transaction ? `${t('myTicket.disputeSubjectPrefix')} ${transaction.eventName}` : '');
     setDisputeDescription('');
+    const showChoiceStep =
+      chatConfig?.chatMode === 'enabled' && !chatConfig?.hasExchangedMessages;
+    setDisputeModalStep(showChoiceStep ? 'choice' : 'form');
     setShowDisputeModal(true);
+  };
+
+  const handleCloseDisputeModal = () => {
+    setShowDisputeModal(false);
+    setDisputeModalStep('choice');
   };
 
   const handleSubmitDispute = async (e: React.FormEvent) => {
@@ -446,7 +465,7 @@ export function MyTicket() {
         subject,
         description,
       });
-      setShowDisputeModal(false);
+      handleCloseDisputeModal();
       const data = await bffService.getTransactionDetails(transactionId);
       setTransaction(data.transaction);
       setCounterpartyEmail(data.counterpartyEmail ?? null);
@@ -460,7 +479,9 @@ export function MyTicket() {
         const refDateKey =
           apiErr.details?.refDateType === 'event_date'
             ? 'myTicket.referenceDateEvent'
-            : 'myTicket.referenceDateTransfer';
+            : apiErr.details?.refDateType === 'payment_received'
+              ? 'myTicket.referenceDatePayment'
+              : 'myTicket.referenceDateTransfer';
         msg = t('myTicket.claimTooEarly', {
           minHours: apiErr.details.minHours,
           referenceDate: t(refDateKey),
@@ -472,7 +493,9 @@ export function MyTicket() {
         const refDateKey =
           apiErr.details?.refDateType === 'event_date'
             ? 'myTicket.referenceDateEvent'
-            : 'myTicket.referenceDateTransfer';
+            : apiErr.details?.refDateType === 'payment_received'
+              ? 'myTicket.referenceDatePayment'
+              : 'myTicket.referenceDateTransfer';
         msg = t('myTicket.claimTooLate', {
           maxHours: apiErr.details.maxHours,
           referenceDate: t(refDateKey),
@@ -1800,85 +1823,154 @@ export function MyTicket() {
         </div>
       )}
 
-      {/* Open dispute modal */}
+      {/* Open dispute modal — step 1: choice (when chat enabled), step 2: form */}
       {showDisputeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {t('myTicket.disputeTitle')}
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              {t('myTicket.disputeIntro')}
-            </p>
-            <form onSubmit={handleSubmitDispute} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  {t('myTicket.disputeReason')} <span className="text-red-500">*</span>
-                </label>
-                <Select
-                  value={disputeReason}
-                  onValueChange={(v) => setDisputeReason(v as DisputeReason)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t('myTicket.disputeReason')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={DisputeReason.TicketNotReceived}>
-                      {t('myTicket.disputeReasonNotReceived')}
-                    </SelectItem>
-                    <SelectItem value={DisputeReason.TicketDidntWork}>
-                      {t('myTicket.disputeReasonDidntWork')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  {t('myTicket.disputeSubject')}
-                </label>
-                <input
-                  type="text"
-                  value={disputeSubject}
-                  onChange={(e) => setDisputeSubject(e.target.value)}
-                  placeholder={t('myTicket.disputeSubjectPlaceholder')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  {t('myTicket.disputeDescription')} <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={disputeDescription}
-                  onChange={(e) => setDisputeDescription(e.target.value)}
-                  placeholder={t('myTicket.disputeDescriptionPlaceholder')}
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-              </div>
-              {disputeError && (
-                <p className="text-sm text-red-600 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {disputeError}
+            {disputeModalStep === 'choice' ? (
+              <>
+                <div className="flex items-start justify-between gap-2 mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {t('myTicket.disputeTitle')}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleCloseDisputeModal}
+                    className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                    aria-label={t('myTicket.cancel')}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-gray-700 mb-6">
+                  {t('myTicket.disputeTryChatFirst')}
                 </p>
-              )}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDisputeModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  {t('myTicket.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingDispute}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  {isSubmittingDispute ? t('myTicket.disputeSubmitting') : t('myTicket.disputeSubmit')}
-                </button>
-              </div>
-            </form>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleCloseDisputeModal();
+                      setChatWasAutoOpened(false);
+                      setIsChatOpen(true);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5 flex-shrink-0" />
+                    {isBuyer ? t('myTicket.contactSeller') : t('myTicket.contactBuyer')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDisputeModalStep('form')}
+                    className="flex-1 flex items-center justify-center gap-2 border-2 border-red-300 text-red-700 py-3 px-4 rounded-lg font-semibold hover:bg-red-50 transition-colors"
+                  >
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    {t('myTicket.reportProblem')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {t('myTicket.disputeTitle')}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleCloseDisputeModal}
+                    className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                    aria-label={t('myTicket.cancel')}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  {t('myTicket.disputeIntro')}
+                </p>
+                {chatConfig?.chatMode === 'enabled' && chatConfig.hasExchangedMessages && (
+                  <p className="text-sm text-gray-700 mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                    {t('myTicket.disputeAlreadyChatted')}
+                  </p>
+                )}
+                <form onSubmit={handleSubmitDispute} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      {t('myTicket.disputeReason')} <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      value={disputeReason}
+                      onValueChange={(v) => setDisputeReason(v as DisputeReason)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t('myTicket.disputeReason')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isBuyer && (
+                          <>
+                            <SelectItem value={DisputeReason.TicketNotReceived}>
+                              {t('myTicket.disputeReasonNotReceived')}
+                            </SelectItem>
+                            <SelectItem value={DisputeReason.TicketDidntWork}>
+                              {t('myTicket.disputeReasonDidntWork')}
+                            </SelectItem>
+                          </>
+                        )}
+                        {isSeller && (
+                          <SelectItem value={DisputeReason.BuyerDidNotConfirmReceipt}>
+                            {t('myTicket.disputeReasonBuyerDidNotConfirm')}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      {t('myTicket.disputeSubject')}
+                    </label>
+                    <input
+                      type="text"
+                      value={disputeSubject}
+                      onChange={(e) => setDisputeSubject(e.target.value)}
+                      placeholder={t('myTicket.disputeSubjectPlaceholder')}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      {t('myTicket.disputeDescription')} <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={disputeDescription}
+                      onChange={(e) => setDisputeDescription(e.target.value)}
+                      placeholder={t('myTicket.disputeDescriptionPlaceholder')}
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                    />
+                  </div>
+                  {disputeError && (
+                    <p className="text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {disputeError}
+                    </p>
+                  )}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleCloseDisputeModal}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      {t('myTicket.cancel')}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingDispute}
+                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                    >
+                      {isSubmittingDispute ? t('myTicket.disputeSubmitting') : t('myTicket.disputeSubmit')}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

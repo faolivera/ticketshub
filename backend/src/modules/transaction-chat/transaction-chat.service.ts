@@ -101,6 +101,33 @@ export class TransactionChatService {
   }
 
   /**
+   * Returns whether buyer and seller have exchanged at least one user-written message
+   * (excludes system/delivery messages like "ticket sent"). Used by BFF to show
+   * "try chatting first" vs "if after talking the problem continues" in the report flow.
+   */
+  async hasExchangedMessages(
+    ctx: Ctx,
+    transactionId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const transaction =
+      await this.transactionsService.getTransactionById(
+        ctx,
+        transactionId,
+        userId,
+      );
+    if (!canReadTransactionChat(transaction.status)) {
+      return false;
+    }
+    const count =
+      await this.chatRepository.countTextMessagesByTransaction(
+        ctx,
+        transactionId,
+      );
+    return count > 0;
+  }
+
+  /**
    * Returns whether the current user has unread messages in this transaction's chat.
    * Used by BFF to include hasUnreadMessages in transaction details.
    */
