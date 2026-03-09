@@ -2,9 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
+import { seedDemoData, loginAs } from './e2e-helpers';
 
 describe('MyTickets (e2e)', () => {
   let app: INestApplication;
+  let seedIds: Awaited<ReturnType<typeof seedDemoData>>['ids'];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -13,6 +15,9 @@ describe('MyTickets (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    const seeded = await seedDemoData(app);
+    seedIds = seeded.ids;
   });
 
   afterAll(async () => {
@@ -24,18 +29,11 @@ describe('MyTickets (e2e)', () => {
   });
 
   it('authenticated GET /api/my-tickets returns 200 with bought/sold/listed arrays', async () => {
-    const loginRes = await request(app.getHttpServer())
-      .post('/api/users/login')
-      .send({ email: 'seller@ticketshub.local', password: 'seller123' })
-      .expect(200);
-
-    const { success: loginSuccess, data: loginData } = loginRes.body;
-    expect(loginSuccess).toBe(true);
-    expect(loginData).toBeDefined();
-    expect(loginData.token).toBeDefined();
-    expect(typeof loginData.token).toBe('string');
-
-    const token = loginData.token;
+    const token = await loginAs(
+      app,
+      'seller@ticketshub.local',
+      'seller123',
+    );
 
     const myTicketsRes = await request(app.getHttpServer())
       .get('/api/my-tickets')
@@ -54,7 +52,7 @@ describe('MyTickets (e2e)', () => {
     expect(data.listed.length).toBeGreaterThan(0);
     expect(
       data.listed.every(
-        (listing: { sellerId: string }) => listing.sellerId === '2',
+        (listing: { sellerId: string }) => listing.sellerId === seedIds.sellerUserId,
       ),
     ).toBe(true);
   });
