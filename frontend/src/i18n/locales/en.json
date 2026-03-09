@@ -1030,7 +1030,7 @@
     },
     "stepIndicator": "Step {{current}} of {{total}}",
     "backToProfile": "Back to profile",
-    "invalidPhoneNumber": "Not a valid Argentina mobile number. Use +54 9 area number or 15 area number (landline not accepted)."
+    "invalidPhoneNumber": "Not a valid Argentina mobile number. Use international format: +54 9 (area) (number)"
   },
   "verification": {
     "title": "Seller Verification",

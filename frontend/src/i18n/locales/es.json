@@ -1029,7 +1029,7 @@
     },
     "stepIndicator": "Paso {{current}} de {{total}}",
     "backToProfile": "Volver al perfil",
-    "invalidPhoneNumber": "El número no es un móvil válido de Argentina. Usá formato +54 9 área número o 15 área número (no se aceptan fijos)."
+    "invalidPhoneNumber": "El número no es un móvil válido de Argentina. Usá formato internacional: +54 9 (área) (número)"
   },
   "verification": {
     "title": "Verificación de Vendedor",
