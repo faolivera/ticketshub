@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, Ticket } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
+import { PageMeta } from '@/app/components/PageMeta';
 
 export function Login() {
   const { t } = useTranslation();
@@ -50,6 +51,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+      <PageMeta title={t('seo.login.title')} description={t('seo.login.description')} />
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="text-center mb-8">

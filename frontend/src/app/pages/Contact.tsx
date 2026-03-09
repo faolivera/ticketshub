@@ -8,6 +8,7 @@ import {
   SupportCategory,
   SupportTicketSource,
 } from '@/api/types/support';
+import { PageMeta } from '@/app/components/PageMeta';
 
 export function Contact() {
   const { t } = useTranslation();
@@ -78,6 +79,7 @@ export function Contact() {
   if (userLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <PageMeta title={t('seo.contact.title')} description={t('seo.contact.description')} />
         <div className="text-gray-500">{t('common.loading')}</div>
       </div>
     );
@@ -86,6 +88,7 @@ export function Contact() {
   if (success) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12">
+        <PageMeta title={t('seo.contact.title')} description={t('seo.contact.description')} />
         <div className="bg-white rounded-xl shadow-md p-8 text-center">
           <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Mail className="w-7 h-7 text-green-600" />
@@ -107,6 +110,7 @@ export function Contact() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+      <PageMeta title={t('seo.contact.title')} description={t('seo.contact.description')} />
       <div className="bg-white rounded-xl shadow-md p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           {t('contact.title')}

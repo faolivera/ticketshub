@@ -39,7 +39,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <Ticket className="w-8 h-8 text-indigo-600" />
-          <span className="text-2xl font-bold text-gray-900">TicketHub</span>
+          <span className="text-2xl font-bold text-gray-900">TicketsHub</span>
         </Link>
 
         <div className="flex items-center gap-4">

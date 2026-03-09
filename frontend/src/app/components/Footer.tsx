@@ -54,7 +54,7 @@ export function Footer() {
                 <Instagram className="w-6 h-6" />
               </a>
               <a 
-                href="mailto:contact@tickethub.com"
+                href="mailto:contact@ticketshub.com.ar"
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 <Mail className="w-6 h-6" />

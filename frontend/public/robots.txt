@@ -1,0 +1,6 @@
+# TicketsHub – allow all crawlers; adjust if you need to disallow specific paths
+User-agent: *
+Allow: /
+
+# Sitemap (replace the host with your production domain if different)
+Sitemap: https://ticketshub.com.ar/sitemap.xml

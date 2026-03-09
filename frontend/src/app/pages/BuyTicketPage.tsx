@@ -14,6 +14,7 @@ import { formatDateTime, formatMonthYear } from '@/lib/format-date';
 import type { BuyPageData, BuyPagePaymentMethodOption, CheckoutRisk, Offer } from '../../api/types';
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
+import { PageMeta } from '@/app/components/PageMeta';
 
 function getBadgeIcon(badge: string) {
   const b = badge.toLowerCase();
@@ -361,17 +362,23 @@ export function BuyTicketPage() {
 
   if (isLoading) {
     return (
-      <LoadingSpinner size="lg" text={t('common.loading')} fullScreen />
+      <>
+        <PageMeta title={t('seo.defaultTitle')} description={t('seo.defaultDescription')} />
+        <LoadingSpinner size="lg" text={t('common.loading')} fullScreen />
+      </>
     );
   }
 
   if (error || !listing) {
     return (
-      <ErrorMessage
-        title={error || t('buyTicket.ticketNotFound')}
-        message={t('buyTicket.errorLoading')}
-        fullScreen
-      />
+      <>
+        <PageMeta title={t('seo.defaultTitle')} description={t('seo.defaultDescription')} />
+        <ErrorMessage
+          title={error || t('buyTicket.ticketNotFound')}
+          message={t('buyTicket.errorLoading')}
+          fullScreen
+        />
+      </>
     );
   }
 
@@ -452,6 +459,11 @@ export function BuyTicketPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <PageMeta
+        title={t('seo.buyTicket.title', { eventName: listing.eventName })}
+        description={t('seo.buyTicket.description', { eventName: listing.eventName })}
+        image={listing.bannerUrls?.rectangle ?? listing.bannerUrls?.square}
+      />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {isOwnListing && listing && (
           <>

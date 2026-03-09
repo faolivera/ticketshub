@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SearchX, Ticket } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
+import { PageMeta } from '@/app/components/PageMeta';
 
 export function NotFound() {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-12 sm:py-16">
+      <PageMeta title={t('seo.notFound.title')} description={t('seo.notFound.description')} />
       <div className="max-w-md w-full text-center">
         {/* Decorative 404 with subtle animation */}
         <div className="relative mb-6">

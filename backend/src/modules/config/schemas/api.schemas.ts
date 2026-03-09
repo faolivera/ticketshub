@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+export const GetAppEnvironmentResponseSchema = z.object({
+  environment: z.enum(['dev', 'test', 'staging', 'prod']),
+});
+
 export const GetSellerPricingResponseSchema = z.object({
   sellerPlatformFeePercentage: z.number(),
 });

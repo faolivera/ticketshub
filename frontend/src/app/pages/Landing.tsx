@@ -6,6 +6,9 @@ import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorMessage } from '@/app/components/ErrorMessage';
 import { EmptyState } from '@/app/components/EmptyState';
 import { useTranslation } from 'react-i18next';
+import { PageMeta } from '@/app/components/PageMeta';
+import { JsonLd } from '@/app/components/JsonLd';
+import { getBaseUrl } from '@/config/env';
 import { eventsService } from '../../api/services/events.service';
 import type { EventWithDates } from '../../api/types';
 import { EventCategory, EventSectionStatus } from '../../api/types/events';
@@ -153,8 +156,19 @@ export function Landing() {
       .map(transformEventForCard);
   }, [events, searchTerm, activeCategory]);
 
+  const baseUrl = getBaseUrl();
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'TicketsHub',
+    url: baseUrl || 'https://ticketshub.com.ar',
+    logo: `${baseUrl || 'https://ticketshub.com.ar'}/og-default.png`,
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <PageMeta title={t('seo.landing.title')} description={t('seo.landing.description')} />
+      <JsonLd data={organizationJsonLd} />
       <div
         className="relative bg-cover bg-center bg-no-repeat text-white py-16 md:py-28 min-h-[320px] md:min-h-[420px] flex items-center"
         style={{ backgroundImage: 'url(/hero.jpeg)' }}

@@ -10,12 +10,14 @@ import {
   Ticket
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { PageMeta } from '@/app/components/PageMeta';
 
 export function HowItWorks() {
   const { t } = useTranslation();
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <PageMeta title={t('seo.howItWorks.title')} description={t('seo.howItWorks.description')} />
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
         <div className="max-w-6xl mx-auto px-6">

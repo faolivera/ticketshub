@@ -5,6 +5,14 @@ import type { RiskEngineConfig, ExchangeRatesConfig } from './config.domain';
  */
 
 /**
+ * Response for GET /api/config/app-environment (public).
+ * Used by the frontend to decide e.g. whether to load analytics (only in prod).
+ */
+export interface GetAppEnvironmentResponse {
+  environment: 'dev' | 'test' | 'staging' | 'prod';
+}
+
+/**
  * Response for GET /api/config/seller-pricing (authenticated, non-admin).
  * Used by the sell-ticket flow to display platform commission.
  */

@@ -13,6 +13,9 @@ import type { TransformedTicket } from '../components/TicketCard';
 import type { EventWithDates, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
+import { PageMeta } from '@/app/components/PageMeta';
+import { JsonLd } from '@/app/components/JsonLd';
+import { getBaseUrl } from '@/config/env';
 import type { SortOption, ViewMode } from '../components/TicketFilters';
 import { Badge } from '../components/ui/badge';
 import { cn } from '../components/ui/utils';
@@ -236,30 +239,66 @@ export function EventTickets() {
   // Loading state
   if (isLoading) {
     return (
-      <LoadingSpinner 
-        size="lg" 
-        text={t('common.loading')} 
-        fullScreen 
-      />
+      <>
+        <PageMeta title={t('seo.defaultTitle')} description={t('seo.defaultDescription')} />
+        <LoadingSpinner 
+          size="lg" 
+          text={t('common.loading')} 
+          fullScreen 
+        />
+      </>
     );
   }
 
   // Error state
   if (error || !event) {
     return (
-      <ErrorMessage 
-        title={error || t('eventTickets.eventNotFound')}
-        message={t('eventTickets.errorLoading')}
-        fullScreen
-      />
+      <>
+        <PageMeta title={t('seo.defaultTitle')} description={t('seo.defaultDescription')} />
+        <ErrorMessage 
+          title={error || t('eventTickets.eventNotFound')}
+          message={t('eventTickets.errorLoading')}
+          fullScreen
+        />
+      </>
     );
   }
 
   // Build location string
   const locationStr = [event.location.city, event.location.countryCode].filter(Boolean).join(', ');
+  const baseUrl = getBaseUrl();
+  const eventUrl = baseUrl ? `${baseUrl}/event/${event.slug}` : '';
+  const firstDate = event.dates?.find(d => d.status === 'approved');
+  const eventImage = event.bannerUrls?.rectangle ?? event.bannerUrls?.square ?? event.images?.[0]?.src;
+  const eventImageAbs = eventImage
+    ? (eventImage.startsWith('http') ? eventImage : `${baseUrl}${eventImage.startsWith('/') ? '' : '/'}${eventImage}`)
+    : undefined;
+  const eventJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: event.name,
+    ...(firstDate && { startDate: new Date(firstDate.date).toISOString() }),
+    ...(eventUrl && { url: eventUrl }),
+    ...(eventImageAbs && { image: eventImageAbs }),
+    location: {
+      '@type': 'Place',
+      name: event.venue,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: event.location?.city,
+        addressCountry: event.location?.countryCode,
+      },
+    },
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <PageMeta
+        title={t('seo.eventTickets.title', { eventName: event.name })}
+        description={t('seo.eventTickets.description', { eventName: event.name })}
+        image={eventImage}
+      />
+      <JsonLd data={eventJsonLd} />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Link 
           to="/" 

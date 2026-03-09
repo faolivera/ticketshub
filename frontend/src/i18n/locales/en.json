@@ -1,4 +1,44 @@
 {
+  "seo": {
+    "defaultTitle": "TicketsHub – Buy and Sell Tickets Securely",
+    "defaultDescription": "Buy and sell event tickets with buyer protection. Find tickets for concerts, sports, and more.",
+    "landing": {
+      "title": "TicketsHub – Buy and Sell Tickets Securely",
+      "description": "Find tickets for concerts, sports, and events with buyer protection. Secure escrow keeps both buyers and sellers safe."
+    },
+    "login": {
+      "title": "Sign In | TicketsHub",
+      "description": "Sign in to your TicketsHub account to buy or sell tickets."
+    },
+    "register": {
+      "title": "Create Account | TicketsHub",
+      "description": "Join TicketsHub to buy and sell tickets securely with buyer protection."
+    },
+    "howItWorks": {
+      "title": "How It Works | TicketsHub",
+      "description": "Learn how our secure escrow system protects both buyers and sellers throughout the entire ticket transaction."
+    },
+    "contact": {
+      "title": "Contact Us | TicketsHub",
+      "description": "Get in touch with TicketsHub. We're here to help with your ticket purchases and sales."
+    },
+    "eventTickets": {
+      "title": "{{eventName}} – Tickets | TicketsHub",
+      "description": "Buy tickets for {{eventName}}. Secure payment and buyer protection. Compare prices from verified sellers."
+    },
+    "sellerProfile": {
+      "title": "{{sellerName}} – Seller | TicketsHub",
+      "description": "View {{sellerName}}'s seller profile and available tickets on TicketsHub."
+    },
+    "buyTicket": {
+      "title": "Buy – {{eventName}} | TicketsHub",
+      "description": "Complete your purchase for {{eventName}} tickets. Secure checkout with buyer protection."
+    },
+    "notFound": {
+      "title": "Page Not Found | TicketsHub",
+      "description": "The page you're looking for doesn't exist or has been moved."
+    }
+  },
   "header": {
     "home": "Home",
     "myTickets": "My Tickets",

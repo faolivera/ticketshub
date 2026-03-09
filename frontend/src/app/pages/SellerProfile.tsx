@@ -18,6 +18,7 @@ import {
 import { Separator } from '../components/ui/separator';
 import type { SellerProfile as SellerProfileData } from '../../api/types';
 import { formatMonthYear } from '@/lib/format-date';
+import { PageMeta } from '@/app/components/PageMeta';
 
 export function SellerProfile() {
   const { t } = useTranslation();
@@ -53,21 +54,27 @@ export function SellerProfile() {
 
   if (isLoading) {
     return (
-      <LoadingSpinner
-        size="lg"
-        text={t('sellerProfile.loading')}
-        fullScreen
-      />
+      <>
+        <PageMeta title={t('seo.defaultTitle')} description={t('seo.defaultDescription')} />
+        <LoadingSpinner
+          size="lg"
+          text={t('sellerProfile.loading')}
+          fullScreen
+        />
+      </>
     );
   }
 
   if (error || !seller) {
     return (
-      <ErrorMessage
-        title={error ? t(error) : t('sellerProfile.sellerNotFound')}
-        message={t('sellerProfile.tryAgainLater')}
-        fullScreen
-      />
+      <>
+        <PageMeta title={t('seo.defaultTitle')} description={t('seo.defaultDescription')} />
+        <ErrorMessage
+          title={error ? t(error) : t('sellerProfile.sellerNotFound')}
+          message={t('sellerProfile.tryAgainLater')}
+          fullScreen
+        />
+      </>
     );
   }
 
@@ -102,6 +109,10 @@ export function SellerProfile() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta
+        title={t('seo.sellerProfile.title', { sellerName: seller.publicName })}
+        description={t('seo.sellerProfile.description', { sellerName: seller.publicName })}
+      />
       <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 lg:py-16">
         <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-8" />
 

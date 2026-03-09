@@ -9,6 +9,7 @@ import { useUser } from '@/app/contexts/UserContext';
 import { OTPType } from '@/api/types';
 import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
 import { TermsModal } from '@/app/components/TermsModal';
+import { PageMeta } from '@/app/components/PageMeta';
 
 export function Register() {
   const { t } = useTranslation();
@@ -180,6 +181,7 @@ export function Register() {
   if (step === 'verify') {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
+        <PageMeta title={t('seo.register.title')} description={t('seo.register.description')} />
         <div className="max-w-md mx-auto px-4">
           <div className="bg-white rounded-lg shadow-md p-8">
             <button
@@ -262,6 +264,7 @@ export function Register() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
+      <PageMeta title={t('seo.register.title')} description={t('seo.register.description')} />
       <div className="max-w-md mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="text-center mb-8">
