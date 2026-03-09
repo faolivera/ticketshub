@@ -48,6 +48,7 @@ import type {
   AdminTransactionsResponse,
   AdminTransactionsPendingSummaryResponse,
   AdminTransactionDetailResponse,
+  AdminUpdateTransactionRequest,
   AdminUserSearchResponse,
   AdminSellerPayoutsResponse,
   AdminCompletePayoutResponse,
@@ -253,6 +254,20 @@ export class AdminController {
     @Param('id') id: string,
   ): Promise<ApiResponse<AdminTransactionDetailResponse>> {
     const data = await this.adminService.getTransactionById(ctx, id);
+    return { success: true, data };
+  }
+
+  /**
+   * Update transaction by ID (admin). All request body fields are optional.
+   */
+  @Patch('transactions/:id')
+  @ValidateResponse(AdminTransactionDetailResponseSchema)
+  async updateTransaction(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+    @Body() body: AdminUpdateTransactionRequest,
+  ): Promise<ApiResponse<AdminTransactionDetailResponse>> {
+    const data = await this.adminService.updateTransaction(ctx, id, body);
     return { success: true, data };
   }
 

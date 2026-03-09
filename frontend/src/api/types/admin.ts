@@ -1,4 +1,6 @@
-import type { Money, Address } from './common';
+import type { Money, Address, CurrencyCode } from './common';
+
+export type { CurrencyCode };
 import type { EventCategory, EventDateStatus, Event, EventDate } from './events';
 
 /**
@@ -362,6 +364,36 @@ export interface AdminTransactionsResponse {
 }
 
 /**
+ * Request body for PATCH /api/admin/transactions/:id
+ * All fields optional; only provided fields are updated. Date fields as ISO strings.
+ */
+export interface AdminUpdateTransactionRequest {
+  status?: string;
+  quantity?: number;
+  ticketPrice?: Money;
+  buyerPlatformFee?: Money;
+  sellerPlatformFee?: Money;
+  paymentMethodCommission?: Money;
+  totalPaid?: Money;
+  sellerReceives?: Money;
+  paymentReceivedAt?: string | null;
+  ticketTransferredAt?: string | null;
+  buyerConfirmedAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  refundedAt?: string | null;
+  paymentApprovedAt?: string | null;
+  paymentApprovedBy?: string | null;
+  disputeId?: string | null;
+  buyerId?: string;
+  sellerId?: string;
+  listingId?: string;
+  requiredActor?: string;
+  cancellationReason?: string | null;
+  cancelledBy?: string | null;
+}
+
+/**
  * Payment confirmation item for admin transaction detail
  */
 export interface AdminTransactionPaymentConfirmation {
@@ -478,6 +510,8 @@ export interface AdminTransactionDetailResponse {
   cancelledAt?: string;
   refundedAt?: string;
   paymentApprovedAt?: string;
+  paymentApprovedBy?: string | null;
+  disputeId?: string | null;
   paymentMethodId?: string;
   paymentMethod?: AdminTransactionDetail['paymentMethod'];
   appliedPromotion?: AdminTransactionDetail['appliedPromotion'];
@@ -550,13 +584,6 @@ export type AdminPaymentMethodsResponse = PaymentMethodOption[];
 export type AdminPaymentMethodResponse = PaymentMethodOption;
 
 // === Admin Platform Config (GET/PATCH /admin/config/platform) ===
-
-export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'ARS';
-
-export interface Money {
-  amount: number;
-  currency: CurrencyCode;
-}
 
 /**
  * Buyer-facing risk config: when to require V2 (phone) and V3 (DNI) at checkout.
@@ -886,6 +913,10 @@ export interface AdminSupportTicketItem {
   guestName?: string;
   guestEmail?: string;
   guestId?: string;
+  /** Display name of the user who opened the ticket (from User or guest) */
+  initiatorName?: string;
+  /** Email of the user who opened the ticket (from User or guest) */
+  initiatorEmail?: string;
   status: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   resolution?: string;
@@ -914,7 +945,19 @@ export interface AdminSupportMessageItem {
   createdAt: string;
 }
 
+/** Transaction summary for support ticket detail when the ticket is linked to a transaction. */
+export interface AdminSupportTicketTransactionSummary {
+  initiatorRole?: 'buyer' | 'seller';
+  status: string;
+  ticketPrice: Money;
+  quantity: number;
+  totalPaid: Money;
+  sellerReceives: Money;
+}
+
 export interface AdminSupportTicketDetailResponse extends AdminSupportTicketItem {
+  /** When the ticket is linked to a transaction, summary data for admin context. */
+  transactionSummary?: AdminSupportTicketTransactionSummary;
   messages: AdminSupportMessageItem[];
 }
 

@@ -17,6 +17,7 @@ import type {
   AdminTransactionsQuery,
   AdminTransactionsResponse,
   AdminTransactionDetailResponse,
+  AdminUpdateTransactionRequest,
   AdminTransactionsPendingSummaryResponse,
   AdminPaymentMethodsResponse,
   AdminPaymentMethodResponse,
@@ -233,6 +234,20 @@ export const adminService = {
   ): Promise<AdminTransactionDetailResponse> {
     const response = await apiClient.get<AdminTransactionDetailResponse>(
       `/admin/transactions/${transactionId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Update transaction by ID (admin). All body fields optional.
+   */
+  async updateTransaction(
+    transactionId: string,
+    body: AdminUpdateTransactionRequest
+  ): Promise<AdminTransactionDetailResponse> {
+    const response = await apiClient.patch<AdminTransactionDetailResponse>(
+      `/admin/transactions/${transactionId}`,
+      body
     );
     return response.data;
   },

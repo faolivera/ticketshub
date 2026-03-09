@@ -196,6 +196,7 @@ export function SupportTicketsManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('admin.supportTickets.id')}</TableHead>
+                    <TableHead>{t('admin.supportTickets.initiator')}</TableHead>
                     <TableHead>{t('admin.supportTickets.subject')}</TableHead>
                     <TableHead>{t('admin.supportTickets.status')}</TableHead>
                     <TableHead>{t('admin.supportTickets.priority')}</TableHead>
@@ -209,13 +210,14 @@ export function SupportTicketsManagement() {
                       <TableCell className="font-mono text-xs">
                         {ticket.id.slice(0, 12)}…
                       </TableCell>
+                      <TableCell className="min-w-[140px]">
+                        <span className="font-medium block">{ticket.initiatorName ?? '—'}</span>
+                        <span className="text-xs text-muted-foreground block">
+                          {ticket.initiatorEmail ?? '—'}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         <span className="font-medium">{ticket.subject}</span>
-                        {ticket.guestEmail && (
-                          <span className="block text-xs text-muted-foreground">
-                            {t('admin.supportTickets.guest')}: {ticket.guestEmail}
-                          </span>
-                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{ticket.status}</Badge>

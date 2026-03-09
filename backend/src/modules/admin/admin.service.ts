@@ -36,6 +36,7 @@ import type {
   AdminTransactionListItem,
   AdminTransactionsPendingSummaryResponse,
   AdminTransactionDetailResponse,
+  AdminUpdateTransactionRequest,
   AdminTransactionUserRef,
   AdminTransactionListingRef,
   AdminTransactionPaymentConfirmationRef,
@@ -48,6 +49,7 @@ import type {
   AdminSupportTicketsResponse,
   AdminSupportTicketItem,
   AdminSupportTicketDetailResponse,
+  AdminSupportTicketTransactionSummary,
   AdminUpdateSupportTicketStatusResponse,
   AdminResolveSupportDisputeResponse,
   AdminAddSupportTicketMessageResponse,
@@ -66,7 +68,7 @@ import {
 } from '../users/users.domain';
 import type { User } from '../users/users.domain';
 import type { Transaction } from '../transactions/transactions.domain';
-import { TransactionStatus } from '../transactions/transactions.domain';
+import { TransactionStatus, RequiredActor, CancellationReason } from '../transactions/transactions.domain';
 import { SupportService } from '../support/support.service';
 import { SupportTicketStatus, DisputeResolution } from '../support/support.domain';
 import type { SupportTicket, SupportTicketWithMessages, SupportMessage } from '../support/support.domain';
@@ -957,6 +959,49 @@ export class AdminService {
   }
 
   /**
+   * Update transaction by ID (admin). Parses request and delegates to transactions service.
+   */
+  async updateTransaction(
+    ctx: Ctx,
+    transactionId: string,
+    body: AdminUpdateTransactionRequest,
+  ): Promise<AdminTransactionDetailResponse> {
+    const parseDate = (s: string | null | undefined): Date | undefined => {
+      if (s == null || s === '') return undefined;
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? undefined : d;
+    };
+
+    const updates: Partial<Transaction> = {};
+    if (body.status !== undefined) updates.status = body.status as TransactionStatus;
+    if (body.quantity !== undefined) updates.quantity = body.quantity;
+    if (body.ticketPrice !== undefined) updates.ticketPrice = body.ticketPrice as Transaction['ticketPrice'];
+    if (body.buyerPlatformFee !== undefined) updates.buyerPlatformFee = body.buyerPlatformFee as Transaction['buyerPlatformFee'];
+    if (body.sellerPlatformFee !== undefined) updates.sellerPlatformFee = body.sellerPlatformFee as Transaction['sellerPlatformFee'];
+    if (body.paymentMethodCommission !== undefined) updates.paymentMethodCommission = body.paymentMethodCommission as Transaction['paymentMethodCommission'];
+    if (body.totalPaid !== undefined) updates.totalPaid = body.totalPaid as Transaction['totalPaid'];
+    if (body.sellerReceives !== undefined) updates.sellerReceives = body.sellerReceives as Transaction['sellerReceives'];
+    if (body.paymentReceivedAt !== undefined) updates.paymentReceivedAt = parseDate(body.paymentReceivedAt) ?? undefined;
+    if (body.ticketTransferredAt !== undefined) updates.ticketTransferredAt = parseDate(body.ticketTransferredAt) ?? undefined;
+    if (body.buyerConfirmedAt !== undefined) updates.buyerConfirmedAt = parseDate(body.buyerConfirmedAt) ?? undefined;
+    if (body.completedAt !== undefined) updates.completedAt = parseDate(body.completedAt) ?? undefined;
+    if (body.cancelledAt !== undefined) updates.cancelledAt = parseDate(body.cancelledAt) ?? undefined;
+    if (body.refundedAt !== undefined) updates.refundedAt = parseDate(body.refundedAt) ?? undefined;
+    if (body.paymentApprovedAt !== undefined) updates.paymentApprovedAt = parseDate(body.paymentApprovedAt) ?? undefined;
+    if (body.paymentApprovedBy !== undefined) updates.paymentApprovedBy = body.paymentApprovedBy ?? undefined;
+    if (body.disputeId !== undefined) updates.disputeId = body.disputeId ?? undefined;
+    if (body.buyerId !== undefined) updates.buyerId = body.buyerId;
+    if (body.sellerId !== undefined) updates.sellerId = body.sellerId;
+    if (body.listingId !== undefined) updates.listingId = body.listingId;
+    if (body.requiredActor !== undefined) updates.requiredActor = body.requiredActor as RequiredActor;
+    if (body.cancellationReason !== undefined) updates.cancellationReason = (body.cancellationReason as CancellationReason) ?? undefined;
+    if (body.cancelledBy !== undefined) updates.cancelledBy = (body.cancelledBy as RequiredActor) ?? undefined;
+
+    await this.transactionsService.updateForAdmin(ctx, transactionId, updates);
+    return this.getTransactionById(ctx, transactionId);
+  }
+
+  /**
    * Retrieve a payout receipt file's raw content for admin preview/download.
    * Returns null if the file record or storage object does not exist.
    */
@@ -1308,9 +1353,16 @@ export class AdminService {
       category: query.category,
       source: query.source,
     });
+    const userIds = [...new Set(tickets.map((t) => t.userId).filter(Boolean))] as string[];
+    const users = userIds.length > 0 ? await this.usersService.findByIds(ctx, userIds) : [];
+    const userMap = new Map(users.map((u) => [u.id, { name: u.publicName, email: u.email }]));
     const totalPages = Math.ceil(total / limit);
     return {
-      tickets: tickets.map((t) => this.mapTicketToAdminItem(t)),
+      tickets: tickets.map((t) => ({
+        ...this.mapTicketToAdminItem(t),
+        initiatorName: t.userId ? userMap.get(t.userId)?.name : t.guestName,
+        initiatorEmail: t.userId ? userMap.get(t.userId)?.email : t.guestEmail,
+      })),
       total,
       page,
       limit,
@@ -1329,8 +1381,54 @@ export class AdminService {
       adminId,
       Role.Admin,
     );
+    const base = this.mapTicketToAdminItem(ticket);
+    let initiatorName: string | undefined;
+    let initiatorEmail: string | undefined;
+    if (ticket.userId) {
+      const users = await this.usersService.findByIds(ctx, [ticket.userId]);
+      const user = users[0];
+      initiatorName = user?.publicName;
+      initiatorEmail = user?.email;
+    } else {
+      initiatorName = ticket.guestName;
+      initiatorEmail = ticket.guestEmail;
+    }
+    let transactionSummary: AdminSupportTicketTransactionSummary | undefined;
+    if (ticket.transactionId) {
+      const transaction = await this.transactionsService.findById(
+        ctx,
+        ticket.transactionId,
+      );
+      if (transaction) {
+        const initiatorRole: 'buyer' | 'seller' | undefined = ticket.userId
+          ? ticket.userId === transaction.buyerId
+            ? 'buyer'
+            : 'seller'
+          : undefined;
+        transactionSummary = {
+          initiatorRole,
+          status: transaction.status,
+          ticketPrice: {
+            amount: transaction.ticketPrice.amount,
+            currency: transaction.ticketPrice.currency,
+          },
+          quantity: transaction.quantity,
+          totalPaid: {
+            amount: transaction.totalPaid.amount,
+            currency: transaction.totalPaid.currency,
+          },
+          sellerReceives: {
+            amount: transaction.sellerReceives.amount,
+            currency: transaction.sellerReceives.currency,
+          },
+        };
+      }
+    }
     return {
-      ...this.mapTicketToAdminItem(ticket),
+      ...base,
+      initiatorName,
+      initiatorEmail,
+      transactionSummary,
       messages: ticket.messages.map((m) => this.mapMessageToAdminItem(m)),
     };
   }

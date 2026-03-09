@@ -90,6 +90,7 @@ export function MyTicket() {
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const [showConfirmTransferModal, setShowConfirmTransferModal] = useState(false);
+  const [confirmTransferModalStep, setConfirmTransferModalStep] = useState<1 | 2>(1);
   const [confirmTransferPayloadType, setConfirmTransferPayloadType] = useState<'ticketera' | 'pdf_or_image' | 'other'>('ticketera');
   const [confirmTransferPayloadTypeOtherText, setConfirmTransferPayloadTypeOtherText] = useState('');
   const [isConfirmingTransfer, setIsConfirmingTransfer] = useState(false);
@@ -1264,7 +1265,12 @@ export function MyTicket() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowConfirmTransferModal(true)}
+                    onClick={() => {
+                      setShowConfirmTransferModal(true);
+                      setConfirmTransferModalStep(1);
+                      setTransferProofFile(null);
+                      setTransferProofError(null);
+                    }}
                     className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                   >
                     {t('myTicket.confirmTicketTransferred')}
@@ -1623,89 +1629,173 @@ export function MyTicket() {
         </div>
       </div>
 
-      {/* Confirm transfer modal (step 1): how did you send the ticket? No file here; attach proof is step 2 after transfer. */}
+      {/* Confirm transfer modal: step 1 = how did you send the ticket; step 2 = optional upload proof (wizard). */}
       {showConfirmTransferModal && transaction && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {t('myTicket.confirmTransferTitle')}
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              {t('myTicket.confirmTransferPayloadHint')}
-            </p>
-            {counterpartyEmail && (
-              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
-                {t('myTicket.transferDisclaimerBuyerEmail', { email: counterpartyEmail })}
-              </p>
-            )}
-            <div className="space-y-2 mb-4">
-              {(['ticketera', 'pdf_or_image', 'other'] as const).map((type) => (
-                <label
-                  key={type}
-                  className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
-                >
-                  <input
-                    type="radio"
-                    name="payloadType"
-                    value={type}
-                    checked={confirmTransferPayloadType === type}
-                    onChange={() => setConfirmTransferPayloadType(type)}
-                    className="w-4 h-4 text-blue-600"
-                  />
-                  <span className="font-medium">{t(`myTicket.payloadType_${type}`)}</span>
-                </label>
-              ))}
-            </div>
-            {confirmTransferPayloadType === 'other' && (
-              <div className="mb-6">
+            {confirmTransferModalStep === 1 ? (
+              <>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {t('myTicket.confirmTransferTitle')}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  {t('myTicket.confirmTransferPayloadHint')}
+                </p>
+                {counterpartyEmail && (
+                  <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+                    {t('myTicket.transferDisclaimerBuyerEmail', { email: counterpartyEmail })}
+                  </p>
+                )}
+                <div className="space-y-2 mb-4">
+                  {(['ticketera', 'pdf_or_image', 'other'] as const).map((type) => (
+                    <label
+                      key={type}
+                      className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+                    >
+                      <input
+                        type="radio"
+                        name="payloadType"
+                        value={type}
+                        checked={confirmTransferPayloadType === type}
+                        onChange={() => setConfirmTransferPayloadType(type)}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="font-medium">{t(`myTicket.payloadType_${type}`)}</span>
+                    </label>
+                  ))}
+                </div>
+                {confirmTransferPayloadType === 'other' && (
+                  <div className="mb-6">
+                    <input
+                      type="text"
+                      value={confirmTransferPayloadTypeOtherText}
+                      onChange={(e) => setConfirmTransferPayloadTypeOtherText(e.target.value)}
+                      placeholder={t('myTicket.payloadTypeOtherPlaceholder')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowConfirmTransferModal(false);
+                      setConfirmTransferPayloadTypeOtherText('');
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  >
+                    {t('myTicket.cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isConfirmingTransfer}
+                    onClick={async () => {
+                      try {
+                        setIsConfirmingTransfer(true);
+                        setTransferProofError(null);
+                        const updated = await transactionsService.confirmTransfer(transaction.id, {
+                          payloadType: confirmTransferPayloadType,
+                          ...(confirmTransferPayloadType === 'other' && confirmTransferPayloadTypeOtherText.trim() && {
+                            payloadTypeOtherText: confirmTransferPayloadTypeOtherText.trim(),
+                          }),
+                        });
+                        setTransaction(prev => prev ? { ...prev, ...updated } : null);
+                        setConfirmTransferModalStep(2);
+                        setConfirmTransferPayloadTypeOtherText('');
+                      } catch (err) {
+                        console.error('Failed to confirm transfer:', err);
+                        setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+                      } finally {
+                        setIsConfirmingTransfer(false);
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isConfirmingTransfer ? t('myTicket.confirmingTransfer') : t('myTicket.confirmTransferSubmit')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {t('myTicket.uploadTransferProof')}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  {t('myTicket.attachTransferProofAfterTransfer')}
+                </p>
                 <input
-                  type="text"
-                  value={confirmTransferPayloadTypeOtherText}
-                  onChange={(e) => setConfirmTransferPayloadTypeOtherText(e.target.value)}
-                  placeholder={t('myTicket.payloadTypeOtherPlaceholder')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
-              </div>
-            )}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowConfirmTransferModal(false);
-                  setConfirmTransferPayloadTypeOtherText('');
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                {t('myTicket.cancel')}
-              </button>
-              <button
-                type="button"
-                disabled={isConfirmingTransfer}
-                onClick={async () => {
-                  try {
-                    setIsConfirmingTransfer(true);
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    setTransferProofFile(file ?? null);
                     setTransferProofError(null);
-                    const updated = await transactionsService.confirmTransfer(transaction.id, {
-                      payloadType: confirmTransferPayloadType,
-                      ...(confirmTransferPayloadType === 'other' && confirmTransferPayloadTypeOtherText.trim() && {
-                        payloadTypeOtherText: confirmTransferPayloadTypeOtherText.trim(),
-                      }),
-                    });
-                    setTransaction(prev => prev ? { ...prev, ...updated } : null);
-                    setShowConfirmTransferModal(false);
-                    setConfirmTransferPayloadTypeOtherText('');
-                  } catch (err) {
-                    console.error('Failed to confirm transfer:', err);
-                    setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
-                  } finally {
-                    setIsConfirmingTransfer(false);
-                  }
-                }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isConfirmingTransfer ? t('myTicket.confirmingTransfer') : t('myTicket.confirmTransferSubmit')}
-              </button>
-            </div>
+                  }}
+                  className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2"
+                />
+                {transferProofFile && (
+                  <p className="mt-1 text-sm text-gray-500 mb-2">{transferProofFile.name}</p>
+                )}
+                {transferProofError && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1 mb-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    {transferProofError}
+                  </p>
+                )}
+                <div className="flex gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowConfirmTransferModal(false);
+                      setConfirmTransferModalStep(1);
+                      setTransferProofFile(null);
+                      setTransferProofError(null);
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  >
+                    {t('myTicket.skipTransferProofStep')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!transferProofFile || isUploadingTransferProof}
+                    onClick={async () => {
+                      if (!transferProofFile || !transactionId) return;
+                      const ACCEPTED_TYPES = ['image/', 'application/pdf'];
+                      const MAX_SIZE_MB = 10;
+                      const validType = ACCEPTED_TYPES.some(
+                        (type) => transferProofFile.type === type || (type.endsWith('/') && transferProofFile.type.startsWith(type))
+                      );
+                      if (!validType) {
+                        setTransferProofError(t('myTicket.invalidFileType'));
+                        return;
+                      }
+                      if (transferProofFile.size > MAX_SIZE_MB * 1024 * 1024) {
+                        setTransferProofError(t('myTicket.fileTooLarge', { maxMb: MAX_SIZE_MB }));
+                        return;
+                      }
+                      try {
+                        setIsUploadingTransferProof(true);
+                        setTransferProofError(null);
+                        await transactionsService.uploadTransferProof(transaction.id, transferProofFile);
+                        const data = await bffService.getTransactionDetails(transactionId);
+                        setTransaction(data.transaction);
+                        setShowConfirmTransferModal(false);
+                        setConfirmTransferModalStep(1);
+                        setTransferProofFile(null);
+                      } catch (err) {
+                        console.error('Failed to upload transfer proof:', err);
+                        setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+                      } finally {
+                        setIsUploadingTransferProof(false);
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

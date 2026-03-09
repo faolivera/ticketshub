@@ -22,6 +22,7 @@ const TABLES_TO_TRUNCATE = [
   'payment_confirmations',
   'payment_intents',
   'payment_methods',
+  'transaction_audit_logs',
   'transactions',
   'ticket_units',
   'ticket_listings',

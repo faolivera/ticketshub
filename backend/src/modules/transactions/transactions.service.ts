@@ -1600,4 +1600,24 @@ export class TransactionsService {
 
     return transactions.some((t) => t.status === TransactionStatus.Completed);
   }
+
+  /**
+   * Update transaction by admin (raw update). Used for admin edit form.
+   * Caller must pass already-parsed updates (e.g. Date objects for timestamps).
+   */
+  async updateForAdmin(
+    ctx: Ctx,
+    transactionId: string,
+    updates: Partial<Transaction>,
+  ): Promise<Transaction> {
+    const updated = await this.transactionsRepository.update(
+      ctx,
+      transactionId,
+      updates,
+    );
+    if (!updated) {
+      throw new NotFoundException('Transaction not found');
+    }
+    return updated;
+  }
 }

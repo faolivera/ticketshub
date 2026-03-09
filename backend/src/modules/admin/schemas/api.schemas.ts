@@ -449,6 +449,33 @@ export const AdminTransactionDetailResponseSchema = z.object({
   bankTransferDestination: BankTransferDestinationSchema.optional(),
 });
 
+/** Request body for PATCH /api/admin/transactions/:id - all fields optional */
+export const AdminUpdateTransactionRequestSchema = z.object({
+  status: z.string().optional(),
+  quantity: z.number().int().min(0).optional(),
+  ticketPrice: MoneySchema.optional(),
+  buyerPlatformFee: MoneySchema.optional(),
+  sellerPlatformFee: MoneySchema.optional(),
+  paymentMethodCommission: MoneySchema.optional(),
+  totalPaid: MoneySchema.optional(),
+  sellerReceives: MoneySchema.optional(),
+  paymentReceivedAt: z.string().nullable().optional(),
+  ticketTransferredAt: z.string().nullable().optional(),
+  buyerConfirmedAt: z.string().nullable().optional(),
+  completedAt: z.string().nullable().optional(),
+  cancelledAt: z.string().nullable().optional(),
+  refundedAt: z.string().nullable().optional(),
+  paymentApprovedAt: z.string().nullable().optional(),
+  paymentApprovedBy: z.string().nullable().optional(),
+  disputeId: z.string().nullable().optional(),
+  buyerId: z.string().optional(),
+  sellerId: z.string().optional(),
+  listingId: z.string().optional(),
+  requiredActor: z.string().optional(),
+  cancellationReason: z.string().nullable().optional(),
+  cancelledBy: z.string().nullable().optional(),
+});
+
 export const AdminUserSearchItemSchema = z.object({
   id: z.string(),
   email: z.string(),
@@ -617,6 +644,8 @@ const AdminSupportTicketItemSchema = z.object({
   guestName: z.string().optional(),
   guestEmail: z.string().optional(),
   guestId: z.string().optional(),
+  initiatorName: z.string().optional(),
+  initiatorEmail: z.string().optional(),
   status: z.string(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']),
   resolution: z.string().optional(),
@@ -645,9 +674,21 @@ const AdminSupportMessageItemSchema = z.object({
   createdAt: z.coerce.date(),
 });
 
+const AdminSupportTicketTransactionSummarySchema = z.object({
+  initiatorRole: z.enum(['buyer', 'seller']).optional(),
+  status: z.string(),
+  ticketPrice: MoneySchema,
+  quantity: z.number(),
+  totalPaid: MoneySchema,
+  sellerReceives: MoneySchema,
+});
+
 export const AdminSupportTicketDetailResponseSchema =
   AdminSupportTicketItemSchema.merge(
-    z.object({ messages: z.array(AdminSupportMessageItemSchema) }),
+    z.object({
+      messages: z.array(AdminSupportMessageItemSchema),
+      transactionSummary: AdminSupportTicketTransactionSummarySchema.optional(),
+    }),
   );
 
 export const AdminUpdateSupportTicketStatusResponseSchema =

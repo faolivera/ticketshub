@@ -420,6 +420,37 @@ export interface AdminTransactionsPendingSummaryResponse {
 }
 
 /**
+ * Request body for PATCH /api/admin/transactions/:id
+ * All fields optional; only provided fields are updated.
+ * Date fields accepted as ISO strings.
+ */
+export interface AdminUpdateTransactionRequest {
+  status?: string;
+  quantity?: number;
+  ticketPrice?: Money;
+  buyerPlatformFee?: Money;
+  sellerPlatformFee?: Money;
+  paymentMethodCommission?: Money;
+  totalPaid?: Money;
+  sellerReceives?: Money;
+  paymentReceivedAt?: string | null;
+  ticketTransferredAt?: string | null;
+  buyerConfirmedAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  refundedAt?: string | null;
+  paymentApprovedAt?: string | null;
+  paymentApprovedBy?: string | null;
+  disputeId?: string | null;
+  buyerId?: string;
+  sellerId?: string;
+  listingId?: string;
+  requiredActor?: string;
+  cancellationReason?: string | null;
+  cancelledBy?: string | null;
+}
+
+/**
  * Payout receipt file uploaded by admin when completing a seller payout.
  */
 export interface AdminTransactionPayoutReceiptFile {
@@ -719,6 +750,10 @@ export interface AdminSupportTicketItem {
   guestName?: string;
   guestEmail?: string;
   guestId?: string;
+  /** Display name of the user who opened the ticket (from User or guest) */
+  initiatorName?: string;
+  /** Email of the user who opened the ticket (from User or guest) */
+  initiatorEmail?: string;
   status: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   resolution?: string;
@@ -754,6 +789,24 @@ export interface AdminSupportMessageItem {
 }
 
 /**
+ * Transaction summary shown on support ticket detail when the ticket is linked to a transaction.
+ */
+export interface AdminSupportTicketTransactionSummary {
+  /** Role of the user who opened the ticket in the transaction (buyer or seller). Omitted when opener is guest. */
+  initiatorRole?: 'buyer' | 'seller';
+  /** Transaction status. */
+  status: string;
+  /** Ticket value (total for the quantity). */
+  ticketPrice: Money;
+  /** Number of tickets (or seats) in the transaction. */
+  quantity: number;
+  /** Amount paid by the buyer. */
+  totalPaid: Money;
+  /** Amount the seller receives. */
+  sellerReceives: Money;
+}
+
+/**
  * Response for GET /api/admin/support-tickets/:id
  */
 export interface AdminSupportTicketDetailResponse {
@@ -768,6 +821,10 @@ export interface AdminSupportTicketDetailResponse {
   guestName?: string;
   guestEmail?: string;
   guestId?: string;
+  /** Display name of the user who opened the ticket (from User or guest). */
+  initiatorName?: string;
+  /** Email of the user who opened the ticket (from User or guest). */
+  initiatorEmail?: string;
   status: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   resolution?: string;
@@ -776,6 +833,8 @@ export interface AdminSupportTicketDetailResponse {
   createdAt: Date;
   updatedAt: Date;
   resolvedAt?: Date;
+  /** When the ticket is linked to a transaction, summary data for admin context. */
+  transactionSummary?: AdminSupportTicketTransactionSummary;
   messages: AdminSupportMessageItem[];
 }
 

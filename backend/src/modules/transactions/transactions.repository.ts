@@ -15,6 +15,15 @@ import { TicketType, DeliveryMethod } from '../tickets/tickets.domain';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { OptimisticLockException } from '../../common/exceptions/optimistic-lock.exception';
 
+/** Client shape required for writing audit log (Prisma client or transaction client). */
+type AuditLogClient = {
+  transactionAuditLog: {
+    create: (args: {
+      data: { transactionId: string; action: string; changedBy: string; payload: object };
+    }) => Promise<unknown>;
+  };
+};
+
 @Injectable()
 export class TransactionsRepository
   extends BaseRepository
@@ -76,6 +85,7 @@ export class TransactionsRepository
         updatedAt: transaction.updatedAt,
       },
     });
+    await this.writeAuditLog(client as unknown as AuditLogClient, created.id, 'created', ctx.userId ?? 'system', this.buildCreatedAuditPayload(created));
     return this.mapToTransaction(created);
   }
 
@@ -267,6 +277,7 @@ export class TransactionsRepository
         where: { id },
         data,
       });
+      await this.writeAuditLog(client as unknown as AuditLogClient, id, 'updated', ctx.userId ?? 'system', this.serializeUpdatesPayload(data));
       return this.mapToTransaction(updated);
     } catch (error) {
       console.error('transactions.repository update failed:', error);
@@ -396,6 +407,54 @@ export class TransactionsRepository
     }
 
     return data;
+  }
+
+  /**
+   * Writes an audit log entry for a transaction change. Best-effort: logs errors and does not throw.
+   * Must be awaited so that when called inside a DB transaction, the audit row is part of the same transaction.
+   */
+  private async writeAuditLog(
+    client: AuditLogClient,
+    transactionId: string,
+    action: 'created' | 'updated',
+    changedBy: string,
+    payload: object,
+  ): Promise<void> {
+    try {
+      await client.transactionAuditLog.create({
+        data: {
+          transactionId,
+          action,
+          changedBy,
+          payload,
+        },
+      });
+    } catch (error) {
+      console.error('transactions.repository writeAuditLog failed:', error);
+    }
+  }
+
+  /**
+   * Builds a minimal JSON-serializable snapshot for the "created" audit payload (no sensitive or large blobs).
+   */
+  private buildCreatedAuditPayload(created: PrismaTransaction): object {
+    return {
+      id: created.id,
+      listingId: created.listingId,
+      buyerId: created.buyerId,
+      sellerId: created.sellerId,
+      status: created.status,
+      requiredActor: created.requiredActor,
+      paymentExpiresAt: created.paymentExpiresAt?.toISOString(),
+      createdAt: created.createdAt.toISOString(),
+    };
+  }
+
+  /**
+   * Serializes update data to a JSON-safe object (e.g. dates as ISO strings) for audit payload.
+   */
+  private serializeUpdatesPayload(updateData: Record<string, unknown>): object {
+    return JSON.parse(JSON.stringify(updateData));
   }
 
   async getPaginated(
@@ -557,6 +616,7 @@ export class TransactionsRepository
           updatedAt: new Date(),
         },
       });
+      await this.writeAuditLog(client as unknown as AuditLogClient, id, 'updated', ctx.userId ?? 'system', this.serializeUpdatesPayload(updateData));
       return this.mapToTransaction(updated);
     } catch (error: unknown) {
       if (

@@ -27,7 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { ArrowLeft, Loader2, Send, Scale } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, Scale, Database } from 'lucide-react';
+import { formatCurrency } from '@/lib/format-currency';
 import { adminService } from '../../../api/services';
 import type {
   AdminSupportTicketDetailResponse,
@@ -70,6 +71,8 @@ export function SupportTicketDetail() {
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
+
+  const [moreDataModalOpen, setMoreDataModalOpen] = useState(false);
 
   const fetchTicket = useCallback(async () => {
     if (!id) return;
@@ -198,17 +201,104 @@ export function SupportTicketDetail() {
             {ticket.category && <Badge variant="secondary">{ticket.category}</Badge>}
           </div>
           <CardDescription>
-            {ticket.guestEmail
-              ? `${t('admin.supportTickets.guest')}: ${ticket.guestName ?? ''} (${ticket.guestEmail})`
-              : `${t('admin.supportTickets.user')}: ${ticket.userId ?? '—'}`}
             {ticket.transactionId && (
-              <> · {t('admin.supportTickets.transaction')}: {ticket.transactionId}</>
+              <>
+                {t('admin.supportTickets.transaction')}: {ticket.transactionId}
+                {' · '}
+              </>
             )}
-            {' · '}
             {formatDateTimeMedium(ticket.createdAt)}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+            <div className="grid gap-1 text-sm">
+              <div className="font-medium text-muted-foreground">
+                {t('admin.supportTickets.initiatorName')}:{' '}
+                <span className="text-foreground">
+                  {ticket.initiatorName ?? ticket.guestName ?? '—'}
+                </span>
+              </div>
+              <div className="font-medium text-muted-foreground">
+                {t('admin.supportTickets.initiatorEmail')}:{' '}
+                <span className="text-foreground">
+                  {ticket.initiatorEmail ?? ticket.guestEmail ?? '—'}
+                </span>
+              </div>
+            </div>
+            {ticket.transactionSummary && (
+              <div className="grid gap-2 text-sm pt-2 border-t">
+                {ticket.transactionSummary.initiatorRole != null && (
+                  <div>
+                    <span className="text-muted-foreground">
+                      {t('admin.supportTickets.roleInTransaction')}:{' '}
+                    </span>
+                    <span className="font-medium">
+                      {ticket.transactionSummary.initiatorRole === 'buyer'
+                        ? t('admin.supportTickets.roleBuyer')
+                        : t('admin.supportTickets.roleSeller')}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-muted-foreground">
+                    {t('admin.supportTickets.transactionStatus')}:{' '}
+                  </span>
+                  <span className="font-medium">{ticket.transactionSummary.status}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">
+                    {t('admin.supportTickets.ticketValue')}:{' '}
+                  </span>
+                  <span className="font-medium">
+                    {formatCurrency(
+                      ticket.transactionSummary.ticketPrice.amount,
+                      ticket.transactionSummary.ticketPrice.currency,
+                    )}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">
+                    {t('admin.supportTickets.ticketsCount')}:{' '}
+                  </span>
+                  <span className="font-medium">{ticket.transactionSummary.quantity}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">
+                    {t('admin.supportTickets.amountPaidByBuyer')}:{' '}
+                  </span>
+                  <span className="font-medium">
+                    {formatCurrency(
+                      ticket.transactionSummary.totalPaid.amount,
+                      ticket.transactionSummary.totalPaid.currency,
+                    )}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">
+                    {t('admin.supportTickets.amountSellerReceives')}:{' '}
+                  </span>
+                  <span className="font-medium">
+                    {formatCurrency(
+                      ticket.transactionSummary.sellerReceives.amount,
+                      ticket.transactionSummary.sellerReceives.currency,
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMoreDataModalOpen(true)}
+              >
+                <Database className="w-4 h-4 mr-1" />
+                {t('admin.supportTickets.moreData')}
+              </Button>
+            </div>
+          </div>
+
           <p className="text-sm whitespace-pre-wrap">{ticket.description}</p>
 
           <div className="flex flex-wrap gap-4 pt-4 border-t">
@@ -295,6 +385,22 @@ export function SupportTicketDetail() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={moreDataModalOpen} onOpenChange={setMoreDataModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.supportTickets.moreData')}</DialogTitle>
+            <DialogDescription>
+              {t('admin.supportTickets.moreDataModalPlaceholder')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoreDataModalOpen(false)}>
+              {t('admin.sellerPayouts.cancel')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={resolveDialogOpen} onOpenChange={setResolveDialogOpen}>
         <DialogContent>

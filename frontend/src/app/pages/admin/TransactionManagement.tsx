@@ -28,6 +28,13 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import {
   Braces,
@@ -42,6 +49,7 @@ import {
   FileText,
   Image,
   Loader2,
+  Pencil,
   Search,
   X,
 } from 'lucide-react';
@@ -54,9 +62,24 @@ import type {
   AdminTransactionPaymentConfirmation,
   AdminTransactionPayoutReceiptFile,
   AdminTransactionsPendingSummaryResponse,
+  AdminUpdateTransactionRequest,
 } from '../../../api/types/admin';
 
 const ITEMS_PER_PAGE = 20;
+
+/** Transaction statuses in chronological order (main flow first, then terminal statuses). */
+const TRANSACTION_STATUS_ORDER: string[] = [
+  'PendingPayment',
+  'PaymentPendingVerification',
+  'PaymentReceived',
+  'TicketTransferred',
+  'DepositHold',
+  'TransferringFund',
+  'Completed',
+  'Disputed',
+  'Refunded',
+  'Cancelled',
+];
 
 export default function TransactionManagement() {
   const { t } = useTranslation();
@@ -105,6 +128,11 @@ export default function TransactionManagement() {
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonDialogTransactionId, setJsonDialogTransactionId] = useState<string | null>(null);
   const [jsonCopied, setJsonCopied] = useState(false);
+
+  const [editModalTransactionId, setEditModalTransactionId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<AdminUpdateTransactionRequest | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -177,6 +205,37 @@ export default function TransactionManagement() {
     setExpandedId(openIdParam);
     void loadDetail(openIdParam);
   }, [loadDetail, openIdParam]);
+
+  useEffect(() => {
+    if (!editModalTransactionId) {
+      setEditForm(null);
+      return;
+    }
+    const detail = detailCache[editModalTransactionId];
+    if (!detail) return;
+    setEditForm({
+      status: detail.status,
+      quantity: detail.quantity,
+      ticketPrice: detail.ticketPrice,
+      buyerPlatformFee: detail.buyerPlatformFee,
+      sellerPlatformFee: detail.sellerPlatformFee,
+      paymentMethodCommission: detail.paymentMethodCommission,
+      totalPaid: detail.totalPaid,
+      sellerReceives: detail.sellerReceives,
+      paymentReceivedAt: detail.paymentReceivedAt ?? null,
+      ticketTransferredAt: detail.ticketTransferredAt ?? null,
+      buyerConfirmedAt: detail.buyerConfirmedAt ?? null,
+      completedAt: detail.completedAt ?? null,
+      cancelledAt: detail.cancelledAt ?? null,
+      refundedAt: detail.refundedAt ?? null,
+      paymentApprovedAt: detail.paymentApprovedAt ?? null,
+      paymentApprovedBy: detail.paymentApprovedBy ?? null,
+      disputeId: detail.disputeId ?? null,
+      buyerId: detail.buyer?.id,
+      sellerId: detail.seller?.id,
+      listingId: detail.listing?.id,
+    });
+  }, [editModalTransactionId, detailCache]);
 
   const refreshAfterReview = useCallback(
     async (transactionId: string): Promise<void> => {
@@ -836,6 +895,7 @@ export default function TransactionManagement() {
                     <TableHead>{t('admin.transactions.status')}</TableHead>
                     <TableHead className="text-right">{t('admin.transactions.amount')}</TableHead>
                     <TableHead>{t('admin.transactions.createdAt')}</TableHead>
+                    <TableHead className="w-[80px]">{t('admin.transactions.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -859,8 +919,14 @@ export default function TransactionManagement() {
                             </Button>
                           </TableCell>
                           <TableCell className="font-mono text-sm">{transaction.id}</TableCell>
-                          <TableCell className="text-sm">{transaction.buyer.email}</TableCell>
-                          <TableCell className="text-sm">{transaction.seller.email}</TableCell>
+                          <TableCell className="min-w-[140px]">
+                            <span className="font-medium block text-sm">{transaction.buyer.name ?? '—'}</span>
+                            <span className="text-xs text-muted-foreground block">{transaction.buyer.email ?? '—'}</span>
+                          </TableCell>
+                          <TableCell className="min-w-[140px]">
+                            <span className="font-medium block text-sm">{transaction.seller.name ?? '—'}</span>
+                            <span className="text-xs text-muted-foreground block">{transaction.seller.email ?? '—'}</span>
+                          </TableCell>
                           <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                           <TableCell className="text-right font-medium">
                             {formatCurrency(transaction.totalPaid.amount, transaction.totalPaid.currency)}
@@ -868,11 +934,25 @@ export default function TransactionManagement() {
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDate(transaction.createdAt)}
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                setEditModalTransactionId(transaction.id);
+                                setEditError(null);
+                                await loadDetail(transaction.id);
+                              }}
+                            >
+                              <Pencil className="w-4 h-4 mr-1" />
+                              {t('admin.transactions.edit')}
+                            </Button>
+                          </TableCell>
                         </TableRow>
 
                         {isExpanded && (
                           <TableRow>
-                            <TableCell colSpan={7} className="bg-muted/30 p-0">
+                            <TableCell colSpan={8} className="bg-muted/30 p-0">
                               <div className="p-4 pl-12">{renderExpandedContent(transaction.id)}</div>
                             </TableCell>
                           </TableRow>
@@ -951,6 +1031,241 @@ export default function TransactionManagement() {
               {t('admin.transactions.confirmReject')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!editModalTransactionId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditModalTransactionId(null);
+            setEditForm(null);
+            setEditError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('admin.transactions.editTransaction')}</DialogTitle>
+            <DialogDescription>
+              {editModalTransactionId}
+            </DialogDescription>
+          </DialogHeader>
+          {!editModalTransactionId ? null : !detailCache[editModalTransactionId] ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : !editForm ? (
+            <div className="py-8 text-muted-foreground text-sm">{t('common.loading')}</div>
+          ) : (
+            <form
+              className="space-y-4 overflow-y-auto pr-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!editModalTransactionId || !editForm) return;
+                setEditSaving(true);
+                setEditError(null);
+                try {
+                  const updated = await adminService.updateTransaction(editModalTransactionId, editForm);
+                  setDetailCache((prev) => ({ ...prev, [editModalTransactionId]: updated }));
+                  setEditModalTransactionId(null);
+                  setEditForm(null);
+                } catch (err) {
+                  setEditError(err instanceof Error ? err.message : t('common.errorLoading'));
+                } finally {
+                  setEditSaving(false);
+                }
+              }}
+            >
+              {editError && (
+                <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">{editError}</p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.status')}</Label>
+                  <Select
+                    value={editForm.status ?? ''}
+                    onValueChange={(v) => setEditForm((f) => ({ ...f!, status: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('admin.transactions.status')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TRANSACTION_STATUS_ORDER.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {getStatusLabel(status)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.quantity')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={editForm.quantity ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, quantity: e.target.value ? parseInt(e.target.value, 10) : undefined }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.buyerId')}</Label>
+                  <Input
+                    value={editForm.buyerId ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, buyerId: e.target.value || undefined }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.sellerId')}</Label>
+                  <Input
+                    value={editForm.sellerId ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, sellerId: e.target.value || undefined }))}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>{t('admin.transactions.listingId')}</Label>
+                  <Input
+                    value={editForm.listingId ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, listingId: e.target.value || undefined }))}
+                  />
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-2">{t('admin.transactions.priceBreakdown')}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(['ticketPrice', 'buyerPlatformFee', 'sellerPlatformFee', 'paymentMethodCommission', 'totalPaid', 'sellerReceives'] as const).map((field) => (
+                    <div key={field} className="flex gap-2 items-end">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs">{t(`admin.transactions.${field}`)}</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Amount (cents)"
+                            value={editForm[field]?.amount ?? ''}
+                            onChange={(e) =>
+                              setEditForm((f) => ({
+                                ...f!,
+                                [field]: {
+                                  ...(f![field] ?? { amount: 0, currency: 'USD' }),
+                                  amount: e.target.value ? Number(e.target.value) : 0,
+                                },
+                              }))
+                            }
+                          />
+                          <Input
+                            className="w-24"
+                            placeholder="USD"
+                            value={editForm[field]?.currency ?? ''}
+                            onChange={(e) =>
+                              setEditForm((f) => ({
+                                ...f!,
+                                [field]: {
+                                  ...(f![field] ?? { amount: 0, currency: 'USD' }),
+                                  currency: e.target.value,
+                                },
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-2">{t('admin.transactions.timeline')}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    'paymentReceivedAt',
+                    'ticketTransferredAt',
+                    'buyerConfirmedAt',
+                    'completedAt',
+                    'cancelledAt',
+                    'refundedAt',
+                    'paymentApprovedAt',
+                  ].map((field) => (
+                    <div key={field} className="space-y-1">
+                      <Label className="text-xs">{t(`admin.transactions.${field}`)}</Label>
+                      <Input
+                        type="datetime-local"
+                        step={1}
+                        value={
+                          (editForm as Record<string, string | null | undefined>)[field]
+                            ? (() => {
+                                const d = new Date((editForm as Record<string, string | null | undefined>)[field] as string);
+                                if (Number.isNaN(d.getTime())) return '';
+                                const pad = (n: number) => n.toString().padStart(2, '0');
+                                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                              })()
+                            : ''
+                        }
+                        onChange={(e) =>
+                          setEditForm((f) => ({
+                            ...f!,
+                            [field]: e.target.value ? new Date(e.target.value).toISOString() : null,
+                          }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.paymentApprovedBy')}</Label>
+                  <Input
+                    value={editForm.paymentApprovedBy ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, paymentApprovedBy: e.target.value || null }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.disputeId')}</Label>
+                  <Input
+                    value={editForm.disputeId ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, disputeId: e.target.value || null }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.requiredActor')}</Label>
+                  <Input
+                    value={editForm.requiredActor ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, requiredActor: e.target.value || undefined }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.cancellationReason')}</Label>
+                  <Input
+                    value={editForm.cancellationReason ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, cancellationReason: e.target.value || null }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.transactions.cancelledBy')}</Label>
+                  <Input
+                    value={editForm.cancelledBy ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f!, cancelledBy: e.target.value || null }))}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditModalTransactionId(null);
+                    setEditForm(null);
+                    setEditError(null);
+                  }}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" disabled={editSaving}>
+                  {editSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  {t('admin.transactions.save')}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 

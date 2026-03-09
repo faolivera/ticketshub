@@ -531,6 +531,7 @@ model Transaction {
   payoutReceiptFiles        PayoutReceiptFile[]
   reviews                   Review[]
   chatMessages              TransactionChatMessage[]
+  auditLogs                 TransactionAuditLog[]
 
   @@index([buyerId])
   @@index([sellerId])
@@ -541,6 +542,21 @@ model Transaction {
   @@index([status, depositReleaseAt])
   @@index([createdAt(sort: Desc)])
   @@map("transactions")
+}
+
+model TransactionAuditLog {
+  id            String   @id @default(uuid())
+  transactionId String   @map("transaction_id")
+  action        String   // 'created' | 'updated'
+  changedAt     DateTime @default(now()) @map("changed_at")
+  changedBy     String   @map("changed_by") // userId or 'system'
+  payload       Json     // for created: snapshot; for updated: the updates partial
+
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@index([transactionId, changedAt(sort: Desc)])
+  @@map("transaction_audit_logs")
 }
 
 model TransactionChatMessage {

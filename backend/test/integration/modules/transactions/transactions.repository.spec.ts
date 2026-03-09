@@ -979,4 +979,94 @@ describe('TransactionsRepository (Integration)', () => {
       expect(transaction.refundedAt).toEqual(refundedAt);
     });
   });
+
+  // ==================== audit log ====================
+
+  describe('audit log', () => {
+    it('should create one audit log row with action "created" when transaction is created', async () => {
+      const transactionData = createValidTransaction();
+      await repository.create(ctx, transactionData);
+
+      const auditLogs = await prisma.transactionAuditLog.findMany({
+        where: { transactionId: transactionData.id },
+        orderBy: { changedAt: 'asc' },
+      });
+
+      expect(auditLogs).toHaveLength(1);
+      expect(auditLogs[0].action).toBe('created');
+      expect(auditLogs[0].transactionId).toBe(transactionData.id);
+      expect(auditLogs[0].payload).toBeDefined();
+      expect((auditLogs[0].payload as { id?: string }).id).toBe(transactionData.id);
+    });
+
+    it('should set changedBy to ctx.userId when context has userId', async () => {
+      const userId = testBuyerId;
+      const ctxWithUser = createTestContext({ userId });
+      const transactionData = createValidTransaction();
+      await repository.create(ctxWithUser, transactionData);
+
+      const auditLogs = await prisma.transactionAuditLog.findMany({
+        where: { transactionId: transactionData.id },
+      });
+
+      expect(auditLogs).toHaveLength(1);
+      expect(auditLogs[0].changedBy).toBe(userId);
+    });
+
+    it('should set changedBy to "system" when ctx.userId is undefined', async () => {
+      const ctxNoUser = createTestContext(); // no userId
+      const transactionData = createValidTransaction();
+      await repository.create(ctxNoUser, transactionData);
+
+      const auditLogs = await prisma.transactionAuditLog.findMany({
+        where: { transactionId: transactionData.id },
+      });
+
+      expect(auditLogs).toHaveLength(1);
+      expect(auditLogs[0].changedBy).toBe('system');
+    });
+
+    it('should create one audit log row with action "updated" when transaction is updated', async () => {
+      const transaction = await repository.create(ctx, createValidTransaction());
+      await repository.update(ctx, transaction.id, {
+        status: TransactionStatus.PaymentReceived,
+        requiredActor: RequiredActor.Seller,
+        paymentReceivedAt: new Date(),
+      });
+
+      const auditLogs = await prisma.transactionAuditLog.findMany({
+        where: { transactionId: transaction.id },
+        orderBy: { changedAt: 'asc' },
+      });
+
+      expect(auditLogs).toHaveLength(2); // created + updated
+      expect(auditLogs[0].action).toBe('created');
+      expect(auditLogs[1].action).toBe('updated');
+      const payload = auditLogs[1].payload as Record<string, unknown>;
+      expect(payload.status).toBeDefined();
+      expect(payload.requiredActor).toBeDefined();
+    });
+
+    it('should create one audit log row with action "updated" when updateWithVersion is called', async () => {
+      const transaction = await repository.create(ctx, createValidTransaction());
+      await repository.updateWithVersion(ctx, transaction.id, {
+        status: TransactionStatus.Cancelled,
+        requiredActor: RequiredActor.None,
+        cancelledBy: RequiredActor.Buyer,
+        cancellationReason: CancellationReason.BuyerCancelled,
+        cancelledAt: new Date(),
+      }, transaction.version);
+
+      const auditLogs = await prisma.transactionAuditLog.findMany({
+        where: { transactionId: transaction.id },
+        orderBy: { changedAt: 'asc' },
+      });
+
+      expect(auditLogs).toHaveLength(2); // created + updated
+      expect(auditLogs[0].action).toBe('created');
+      expect(auditLogs[1].action).toBe('updated');
+      const payload = auditLogs[1].payload as Record<string, unknown>;
+      expect(payload.status).toBeDefined();
+    });
+  });
 });
