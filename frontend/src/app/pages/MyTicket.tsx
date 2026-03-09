@@ -83,8 +83,8 @@ export function MyTicket() {
   const [isPaymentExpiredLocally, setIsPaymentExpiredLocally] = useState(false);
 
   const [showDisputeModal, setShowDisputeModal] = useState(false);
-  /** When 'choice', show disclaimer + Contact / Report; when 'form', show dispute form. Only used when chat is enabled. */
-  const [disputeModalStep, setDisputeModalStep] = useState<'choice' | 'form'>('choice');
+  /** When 'choice', show disclaimer + Contact / Report; when 'form', show dispute form; when 'report_sent', show success. */
+  const [disputeModalStep, setDisputeModalStep] = useState<'choice' | 'form' | 'report_sent'>('choice');
   const [reportCategory, setReportCategory] = useState<SupportCategory>(SupportCategory.TicketNotReceived);
   const [disputeSubject, setDisputeSubject] = useState('');
   const [disputeDescription, setDisputeDescription] = useState('');
@@ -447,6 +447,7 @@ export function MyTicket() {
   const handleCloseDisputeModal = () => {
     setShowDisputeModal(false);
     setDisputeModalStep('choice');
+    setReportSuccessTicketId(null);
   };
 
   const handleSubmitDispute = async (e: React.FormEvent) => {
@@ -468,8 +469,8 @@ export function MyTicket() {
         subject,
         description,
       });
-      handleCloseDisputeModal();
       setReportSuccessTicketId(createdTicket.id);
+      setDisputeModalStep('report_sent');
       const data = await bffService.getTransactionDetails(transactionId);
       setTransaction(data.transaction);
       setCounterpartyEmail(data.counterpartyEmail ?? null);
@@ -633,7 +634,7 @@ export function MyTicket() {
           {t('myTicket.backToMyTickets')}
         </button>
 
-        {reportSuccessTicketId && (
+        {reportSuccessTicketId && !showDisputeModal && (
           <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-center justify-between gap-4">
             <p className="text-green-800 text-sm flex items-center gap-2">
               <CheckCircle className="w-5 h-5 flex-shrink-0 text-green-600" />
@@ -1911,6 +1912,33 @@ export function MyTicket() {
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     {t('myTicket.reportProblem')}
                   </button>
+                </div>
+              </>
+            ) : disputeModalStep === 'report_sent' ? (
+              <>
+                <div className="flex flex-col items-center text-center py-4">
+                  <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">
+                    {t('myTicket.reportProblemSuccess')}
+                  </h3>
+                  <div className="flex flex-col sm:flex-row gap-3 w-full">
+                    <Link
+                      to={reportSuccessTicketId ? `/support/${reportSuccessTicketId}` : '#'}
+                      onClick={handleCloseDisputeModal}
+                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      {t('myTicket.reportProblemSuccessLink')}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleCloseDisputeModal}
+                      className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                    >
+                      {t('myTicket.close')}
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (

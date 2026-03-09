@@ -808,6 +808,7 @@
     "reportProblemSuccessLink": "View case",
     "reportProblemAlreadyExists": "A support case already exists for this transaction.",
     "reportProblemViewExistingCase": "View existing case",
+    "close": "Close",
     "claimTooEarly": "Claims can only be opened at least {{minHours}} hour(s) after the {{referenceDate}}. Please try again later.",
     "claimTooLate": "Claims must be opened within {{maxHours}} hours of the {{referenceDate}}. The deadline has passed.",
     "claimTicketNotTransferred": "You can only open a \"ticket not received\" claim after the ticket has been transferred.",

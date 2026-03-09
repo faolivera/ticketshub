@@ -807,6 +807,7 @@
     "reportProblemSuccessLink": "Ver caso",
     "reportProblemAlreadyExists": "Ya existe un caso de soporte para esta transacción.",
     "reportProblemViewExistingCase": "Ver caso existente",
+    "close": "Cerrar",
     "claimTooEarly": "Los reclamos solo pueden abrirse al menos {{minHours}} hora(s) después de la {{referenceDate}}. Por favor, intentá más tarde.",
     "claimTooLate": "Los reclamos deben abrirse dentro de las {{maxHours}} horas desde la {{referenceDate}}. El plazo venció.",
     "claimTicketNotTransferred": "Solo podés abrir un reclamo de \"no recibí la entrada\" después de que el ticket haya sido transferido.",

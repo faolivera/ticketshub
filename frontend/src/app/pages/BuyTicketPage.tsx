@@ -255,10 +255,6 @@ export function BuyTicketPage() {
       return;
     }
 
-    if (!user?.phoneVerified) {
-      setPurchaseError(t('buyTicket.phoneRequiredToPurchase'));
-      return;
-    }
     if (missingV2 || missingV3) {
       setPurchaseError(t('buyTicket.identityRequiredToPurchase'));
       return;
