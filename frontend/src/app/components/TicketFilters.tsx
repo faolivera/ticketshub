@@ -7,6 +7,13 @@ import {
   DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose,
 } from './ui/drawer';
 import { Checkbox } from './ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { useIsMobile } from './ui/use-mobile';
 import { formatDateTimeShort } from '@/lib/format-date';
 
@@ -68,15 +75,16 @@ export const TicketFilters: FC<TicketFiltersProps> = ({
   const showTimeMap = Object.fromEntries(uniqueShowTimes.map(st => [st.key, st]));
 
   const sortSelect = (
-    <select
-      value={sortOption}
-      onChange={(e) => onSortChange(e.target.value as SortOption)}
-      className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-    >
-      <option value="price_asc">{t('eventTickets.sortPriceLowToHigh')}</option>
-      <option value="price_desc">{t('eventTickets.sortPriceHighToLow')}</option>
-      <option value="most_available">{t('eventTickets.sortMostAvailable')}</option>
-    </select>
+    <Select value={sortOption} onValueChange={(v) => onSortChange(v as SortOption)}>
+      <SelectTrigger className="w-[180px] h-9">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="price_asc">{t('eventTickets.sortPriceLowToHigh')}</SelectItem>
+        <SelectItem value="price_desc">{t('eventTickets.sortPriceHighToLow')}</SelectItem>
+        <SelectItem value="most_available">{t('eventTickets.sortMostAvailable')}</SelectItem>
+      </SelectContent>
+    </Select>
   );
 
   const viewToggle = (
