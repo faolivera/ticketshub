@@ -8,6 +8,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { OptimisticLockException } from '../../common/exceptions/optimistic-lock.exception';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { Wallet, WalletTransaction, Money } from './wallet.domain';
 import { WalletTransactionType } from './wallet.domain';
 import type { IWalletRepository } from './wallet.repository.interface';
@@ -17,6 +18,8 @@ export class WalletRepository
   extends BaseRepository
   implements IWalletRepository
 {
+  private readonly logger = new ContextLogger(WalletRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -39,6 +42,7 @@ export class WalletRepository
     ctx: Ctx,
     userId: string,
   ): Promise<Wallet | undefined> {
+    this.logger.debug(ctx, 'findByUserIdForUpdate', { userId });
     const client = this.getClient(ctx);
 
     const [wallet] = await client.$queryRaw<PrismaWallet[]>`
@@ -51,6 +55,7 @@ export class WalletRepository
   }
 
   async upsertWallet(ctx: Ctx, wallet: Wallet): Promise<Wallet> {
+    this.logger.debug(ctx, 'upsertWallet', { userId: wallet.userId });
     const client = this.getClient(ctx);
     const upserted = await client.wallet.upsert({
       where: { userId: wallet.userId },
@@ -113,6 +118,7 @@ export class WalletRepository
     pendingChange: number,
     expectedVersion: number,
   ): Promise<Wallet> {
+    this.logger.debug(ctx, 'updateBalancesWithVersion', { userId, expectedVersion });
     const client = this.getClient(ctx);
     const result = await client.$executeRaw`
       UPDATE wallets
@@ -149,6 +155,7 @@ export class WalletRepository
     ctx: Ctx,
     transaction: WalletTransaction,
   ): Promise<WalletTransaction> {
+    this.logger.debug(ctx, 'createTransaction', { transactionId: transaction.id });
     const client = this.getClient(ctx);
     const created = await client.walletTransaction.create({
       data: {
@@ -169,6 +176,7 @@ export class WalletRepository
     ctx: Ctx,
     userId: string,
   ): Promise<WalletTransaction[]> {
+    this.logger.debug(ctx, 'getTransactionsByUserId', { userId });
     const client = this.getClient(ctx);
     const transactions = await client.walletTransaction.findMany({
       where: { walletUserId: userId },
@@ -181,6 +189,7 @@ export class WalletRepository
     ctx: Ctx,
     id: string,
   ): Promise<WalletTransaction | undefined> {
+    this.logger.debug(ctx, 'getTransactionById', { id });
     const client = this.getClient(ctx);
     const transaction = await client.walletTransaction.findUnique({
       where: { id },

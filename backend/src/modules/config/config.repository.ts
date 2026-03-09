@@ -3,6 +3,7 @@ import { ConfigService as NestConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type {
   PlatformConfig,
   RiskEngineConfig,
@@ -19,6 +20,8 @@ export class ConfigRepository
   extends BaseRepository
   implements IConfigRepository
 {
+  private readonly logger = new ContextLogger(ConfigRepository.name);
+
   constructor(
     prisma: PrismaService,
     private readonly nestConfigService: NestConfigService,
@@ -27,6 +30,7 @@ export class ConfigRepository
   }
 
   async findPlatformConfig(ctx: Ctx): Promise<PlatformConfig | null> {
+    this.logger.debug(ctx, 'findPlatformConfig');
     const client = this.getClient(ctx);
     const row = await client.platformConfig.findUnique({
       where: { id: PLATFORM_CONFIG_DEFAULT_ID },
@@ -312,6 +316,7 @@ export class ConfigRepository
     ctx: Ctx,
     config: PlatformConfig,
   ): Promise<PlatformConfig> {
+    this.logger.debug(ctx, 'upsertPlatformConfig');
     const client = this.getClient(ctx);
     const riskEngineJson =
       config.riskEngine as unknown as Prisma.InputJsonValue;

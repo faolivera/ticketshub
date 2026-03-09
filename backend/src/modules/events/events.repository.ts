@@ -32,6 +32,7 @@ export class EventsRepository implements IEventsRepository {
   // ==================== Events ====================
 
   async createEvent(_ctx: Ctx, event: Event): Promise<Event> {
+    this.logger.debug(_ctx, 'createEvent', { eventId: event.id });
     const created = await this.prisma.event.create({
       data: {
         id: event.id,
@@ -54,6 +55,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async findEventById(_ctx: Ctx, id: string): Promise<Event | undefined> {
+    this.logger.debug(_ctx, 'findEventById', { id });
     const event = await this.prisma.event.findUnique({
       where: { id },
     });
@@ -61,6 +63,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async findEventBySlug(_ctx: Ctx, slug: string): Promise<Event | undefined> {
+    this.logger.debug(_ctx, 'findEventBySlug', { slug });
     const event = await this.prisma.event.findUnique({
       where: { slug },
     });
@@ -68,7 +71,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getAllEvents(ctx: Ctx): Promise<Event[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getAllEvents');
     const events = await this.prisma.event.findMany({
       orderBy: { createdAt: 'desc' },
     });
@@ -76,7 +79,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async findEventsByIds(ctx: Ctx, ids: string[]): Promise<Event[]> {
-    void ctx;
+    this.logger.debug(ctx, 'findEventsByIds', { count: ids.length });
     if (ids.length === 0) return [];
     const events = await this.prisma.event.findMany({
       where: { id: { in: ids } },
@@ -85,7 +88,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getDatesByEventIds(ctx: Ctx, eventIds: string[]): Promise<EventDate[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getDatesByEventIds', { count: eventIds.length });
     if (eventIds.length === 0) return [];
     const dates = await this.prisma.eventDate.findMany({
       where: { eventId: { in: eventIds } },
@@ -98,7 +101,7 @@ export class EventsRepository implements IEventsRepository {
     ctx: Ctx,
     eventIds: string[],
   ): Promise<EventSection[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getSectionsByEventIds', { count: eventIds.length });
     if (eventIds.length === 0) return [];
     const sections = await this.prisma.eventSection.findMany({
       where: { eventId: { in: eventIds } },
@@ -108,7 +111,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getApprovedEvents(ctx: Ctx): Promise<Event[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getApprovedEvents');
     const events = await this.prisma.event.findMany({
       where: { status: 'approved' },
       orderBy: { createdAt: 'desc' },
@@ -127,6 +130,7 @@ export class EventsRepository implements IEventsRepository {
       offset: number;
     },
   ): Promise<{ events: Event[]; total: number }> {
+    this.logger.debug(_ctx, 'listEventsPaginated', { limit: opts.limit, offset: opts.offset });
     const where: Record<string, unknown> = {};
     if (opts.approvedOnly) {
       where.status = 'approved';
@@ -160,7 +164,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getPendingEvents(ctx: Ctx): Promise<Event[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getPendingEvents');
     const [pendingEvents, pendingDates, pendingSections] = await Promise.all([
       this.prisma.event.findMany({
         where: { status: 'pending' },
@@ -200,6 +204,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getEventsByCreator(_ctx: Ctx, userId: string): Promise<Event[]> {
+    this.logger.debug(_ctx, 'getEventsByCreator', { userId });
     const events = await this.prisma.event.findMany({
       where: { createdById: userId },
       orderBy: { createdAt: 'desc' },
@@ -248,6 +253,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async deleteEvent(_ctx: Ctx, id: string): Promise<void> {
+    this.logger.debug(_ctx, 'deleteEvent', { id });
     await this.prisma.event.delete({
       where: { id },
     });
@@ -257,6 +263,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     options: { page: number; limit: number; search?: string },
   ): Promise<{ events: Event[]; total: number }> {
+    this.logger.debug(_ctx, 'getAllEventsPaginated', { page: options.page, limit: options.limit });
     const where = options.search
       ? {
           name: {
@@ -286,6 +293,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     options: { limit: number; offset: number; search?: string },
   ): Promise<{ events: Event[]; total: number }> {
+    this.logger.debug(_ctx, 'getApprovedEventsForSelection', { limit: options.limit, offset: options.offset });
     const where = {
       status: 'approved' as const,
       ...(options.search
@@ -327,6 +335,7 @@ export class EventsRepository implements IEventsRepository {
   // ==================== Event Dates ====================
 
   async createEventDate(_ctx: Ctx, date: EventDate): Promise<EventDate> {
+    this.logger.debug(_ctx, 'createEventDate', { dateId: date.id, eventId: date.eventId });
     const created = await this.prisma.eventDate.create({
       data: {
         id: date.id,
@@ -347,6 +356,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     id: string,
   ): Promise<EventDate | undefined> {
+    this.logger.debug(_ctx, 'findEventDateById', { id });
     const date = await this.prisma.eventDate.findUnique({
       where: { id },
     });
@@ -354,6 +364,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getDatesByEventId(_ctx: Ctx, eventId: string): Promise<EventDate[]> {
+    this.logger.debug(_ctx, 'getDatesByEventId', { eventId });
     const dates = await this.prisma.eventDate.findMany({
       where: { eventId },
       orderBy: { date: 'asc' },
@@ -366,6 +377,7 @@ export class EventsRepository implements IEventsRepository {
     eventId: string,
     date: Date,
   ): Promise<EventDate | undefined> {
+    this.logger.debug(_ctx, 'findEventDateByEventIdAndDate', { eventId });
     const found = await this.prisma.eventDate.findFirst({
       where: {
         eventId,
@@ -379,6 +391,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     eventId: string,
   ): Promise<EventDate[]> {
+    this.logger.debug(_ctx, 'getApprovedDatesByEventId', { eventId });
     const dates = await this.prisma.eventDate.findMany({
       where: {
         eventId,
@@ -394,6 +407,7 @@ export class EventsRepository implements IEventsRepository {
     eventId: string,
     statuses: EventDateStatus[],
   ): Promise<EventDate[]> {
+    this.logger.debug(_ctx, 'getDatesByEventIdAndStatus', { eventId });
     const dbStatuses = statuses.map((s) => this.mapEventDateStatusToDb(s));
     const dates = await this.prisma.eventDate.findMany({
       where: {
@@ -406,7 +420,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getPendingDates(ctx: Ctx): Promise<EventDate[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getPendingDates');
     const dates = await this.prisma.eventDate.findMany({
       where: { status: 'pending' },
       orderBy: { date: 'asc' },
@@ -448,6 +462,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async deleteEventDate(_ctx: Ctx, id: string): Promise<void> {
+    this.logger.debug(_ctx, 'deleteEventDate', { id });
     await this.prisma.eventDate.delete({
       where: { id },
     });
@@ -459,6 +474,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     section: EventSection,
   ): Promise<EventSection> {
+    this.logger.debug(_ctx, 'createEventSection', { sectionId: section.id, eventId: section.eventId });
     const created = await this.prisma.eventSection.create({
       data: {
         id: section.id,
@@ -480,6 +496,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     id: string,
   ): Promise<EventSection | undefined> {
+    this.logger.debug(_ctx, 'findEventSectionById', { id });
     const section = await this.prisma.eventSection.findUnique({
       where: { id },
     });
@@ -490,6 +507,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     eventId: string,
   ): Promise<EventSection[]> {
+    this.logger.debug(_ctx, 'getSectionsByEventId', { eventId });
     const sections = await this.prisma.eventSection.findMany({
       where: { eventId },
       orderBy: { name: 'asc' },
@@ -501,6 +519,7 @@ export class EventsRepository implements IEventsRepository {
     _ctx: Ctx,
     eventId: string,
   ): Promise<EventSection[]> {
+    this.logger.debug(_ctx, 'getApprovedSectionsByEventId', { eventId });
     const sections = await this.prisma.eventSection.findMany({
       where: {
         eventId,
@@ -516,6 +535,7 @@ export class EventsRepository implements IEventsRepository {
     eventId: string,
     statuses: EventSectionStatus[],
   ): Promise<EventSection[]> {
+    this.logger.debug(_ctx, 'getSectionsByEventIdAndStatus', { eventId });
     const dbStatuses = statuses.map((s) => this.mapEventSectionStatusToDb(s));
     const sections = await this.prisma.eventSection.findMany({
       where: {
@@ -528,7 +548,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async getPendingSections(ctx: Ctx): Promise<EventSection[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getPendingSections');
     const sections = await this.prisma.eventSection.findMany({
       where: { status: 'pending' },
       orderBy: { name: 'asc' },
@@ -541,6 +561,7 @@ export class EventsRepository implements IEventsRepository {
     eventId: string,
     name: string,
   ): Promise<EventSection | undefined> {
+    this.logger.debug(_ctx, 'findSectionByEventAndName', { eventId, name });
     const section = await this.prisma.eventSection.findFirst({
       where: {
         eventId,
@@ -590,6 +611,7 @@ export class EventsRepository implements IEventsRepository {
   }
 
   async deleteEventSection(_ctx: Ctx, id: string): Promise<void> {
+    this.logger.debug(_ctx, 'deleteEventSection', { id });
     await this.prisma.eventSection.delete({
       where: { id },
     });

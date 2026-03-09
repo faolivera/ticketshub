@@ -4,6 +4,7 @@ import { PrismaService } from '../../../common/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import type { PricingSnapshot as PrismaPricingSnapshot } from '@prisma/client';
 import type { Ctx } from '../../../common/types/context';
+import { ContextLogger } from '../../../common/logger/context-logger';
 import type {
   PricingSnapshot,
   PaymentMethodCommissionSnapshot,
@@ -16,11 +17,14 @@ export class PricingRepository
   extends BaseRepository
   implements IPricingRepository
 {
+  private readonly logger = new ContextLogger(PricingRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
 
   async create(ctx: Ctx, snapshot: PricingSnapshot): Promise<PricingSnapshot> {
+    this.logger.debug(ctx, 'create', { id: snapshot.id, listingId: snapshot.listingId });
     const client = this.getClient(ctx);
     const prismaSnapshot = await client.pricingSnapshot.create({
       data: {
@@ -43,6 +47,7 @@ export class PricingRepository
   }
 
   async findById(ctx: Ctx, id: string): Promise<PricingSnapshot | undefined> {
+    this.logger.debug(ctx, 'findById', { id });
     const client = this.getClient(ctx);
     const snapshot = await client.pricingSnapshot.findUnique({
       where: { id },
@@ -55,6 +60,7 @@ export class PricingRepository
     id: string,
     updates: Partial<PricingSnapshot>,
   ): Promise<PricingSnapshot | undefined> {
+    this.logger.debug(ctx, 'update', { id });
     const client = this.getClient(ctx);
     const existing = await client.pricingSnapshot.findUnique({
       where: { id },
@@ -102,6 +108,7 @@ export class PricingRepository
   }
 
   async deleteExpired(ctx: Ctx): Promise<number> {
+    this.logger.debug(ctx, 'deleteExpired');
     const client = this.getClient(ctx);
     const now = new Date();
 
@@ -122,6 +129,7 @@ export class PricingRepository
     transactionId: string,
     selectedPaymentMethodId: string,
   ): Promise<PricingSnapshot | undefined> {
+    this.logger.debug(ctx, 'consumeAtomic', { snapshotId, listingId, transactionId });
     const client = this.getClient(ctx);
     const now = new Date();
 

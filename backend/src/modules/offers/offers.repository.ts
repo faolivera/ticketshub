@@ -4,6 +4,7 @@ import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Offer as PrismaOffer } from '@prisma/client';
 import { OfferStatus as PrismaOfferStatus } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { Offer, OfferStatus, OfferTickets } from './offers.domain';
 import type { Money } from '../tickets/tickets.domain';
 import type { IOffersRepository } from './offers.repository.interface';
@@ -13,6 +14,8 @@ export class OffersRepository
   extends BaseRepository
   implements IOffersRepository
 {
+  private readonly logger = new ContextLogger(OffersRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -57,6 +60,7 @@ export class OffersRepository
   }
 
   async create(ctx: Ctx, offer: Offer): Promise<Offer> {
+    this.logger.debug(ctx, 'create', { offerId: offer.id, listingId: offer.listingId });
     const client = this.getClient(ctx);
     const created = await client.offer.create({
       data: {
@@ -80,12 +84,14 @@ export class OffersRepository
   }
 
   async findById(ctx: Ctx, id: string): Promise<Offer | undefined> {
+    this.logger.debug(ctx, 'findById', { id });
     const client = this.getClient(ctx);
     const row = await client.offer.findUnique({ where: { id } });
     return row ? this.mapToDomain(row) : undefined;
   }
 
   async findByListingId(ctx: Ctx, listingId: string): Promise<Offer[]> {
+    this.logger.debug(ctx, 'findByListingId', { listingId });
     const client = this.getClient(ctx);
     const rows = await client.offer.findMany({
       where: { listingId },
@@ -95,6 +101,7 @@ export class OffersRepository
   }
 
   async findByListingIds(ctx: Ctx, listingIds: string[]): Promise<Offer[]> {
+    this.logger.debug(ctx, 'findByListingIds', { count: listingIds.length });
     if (listingIds.length === 0) return [];
     const client = this.getClient(ctx);
     const rows = await client.offer.findMany({
@@ -105,6 +112,7 @@ export class OffersRepository
   }
 
   async findByUserId(ctx: Ctx, userId: string): Promise<Offer[]> {
+    this.logger.debug(ctx, 'findByUserId', { userId });
     const client = this.getClient(ctx);
     const rows = await client.offer.findMany({
       where: { userId },
@@ -118,6 +126,7 @@ export class OffersRepository
     userId: string,
     listingId: string,
   ): Promise<Offer | undefined> {
+    this.logger.debug(ctx, 'findActiveByUserAndListing', { userId, listingId });
     const client = this.getClient(ctx);
     const row = await client.offer.findFirst({
       where: {
@@ -145,6 +154,7 @@ export class OffersRepository
       >
     >,
   ): Promise<Offer | undefined> {
+    this.logger.debug(ctx, 'update', { id });
     const client = this.getClient(ctx);
     const data: Record<string, unknown> = {};
     if (updates.status !== undefined)
@@ -170,6 +180,7 @@ export class OffersRepository
     ctx: Ctx,
     listingId: string,
   ): Promise<Offer[]> {
+    this.logger.debug(ctx, 'findPendingOrAcceptedByListingId', { listingId });
     const client = this.getClient(ctx);
     const rows = await client.offer.findMany({
       where: {

@@ -6,6 +6,7 @@ import type {
   ReviewRole as PrismaReviewRole,
 } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { Review, ReviewRating, ReviewPartyRole } from './reviews.domain';
 import type { IReviewsRepository } from './reviews.repository.interface';
 
@@ -15,9 +16,12 @@ type PrismaReviewWithTransaction = PrismaReview & {
 
 @Injectable()
 export class ReviewsRepository implements IReviewsRepository {
+  private readonly logger = new ContextLogger(ReviewsRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(_ctx: Ctx, review: Review): Promise<Review> {
+    this.logger.debug(_ctx, 'create', { reviewId: review.id, transactionId: review.transactionId });
     const prismaReview = await this.prisma.review.create({
       data: {
         id: review.id,
@@ -39,6 +43,7 @@ export class ReviewsRepository implements IReviewsRepository {
   }
 
   async findById(_ctx: Ctx, id: string): Promise<Review | undefined> {
+    this.logger.debug(_ctx, 'findById', { id });
     const review = await this.prisma.review.findUnique({
       where: { id },
       include: {
@@ -51,7 +56,7 @@ export class ReviewsRepository implements IReviewsRepository {
   }
 
   async getAll(ctx: Ctx): Promise<Review[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getAll');
     const reviews = await this.prisma.review.findMany({
       include: {
         transaction: {
@@ -67,6 +72,7 @@ export class ReviewsRepository implements IReviewsRepository {
     transactionId: string,
     reviewerId: string,
   ): Promise<Review | undefined> {
+    this.logger.debug(_ctx, 'findByTransactionAndReviewer', { transactionId, reviewerId });
     const review = await this.prisma.review.findUnique({
       where: {
         transactionId_reviewerId: {
@@ -87,6 +93,7 @@ export class ReviewsRepository implements IReviewsRepository {
     _ctx: Ctx,
     transactionId: string,
   ): Promise<Review[]> {
+    this.logger.debug(_ctx, 'getByTransactionId', { transactionId });
     const reviews = await this.prisma.review.findMany({
       where: { transactionId },
       include: {
@@ -103,6 +110,7 @@ export class ReviewsRepository implements IReviewsRepository {
     revieweeId: string,
     revieweeRole: ReviewPartyRole,
   ): Promise<Review[]> {
+    this.logger.debug(_ctx, 'getByRevieweeIdAndRole', { revieweeId, revieweeRole });
     const reviews = await this.prisma.review.findMany({
       where: {
         revieweeId,
@@ -123,6 +131,7 @@ export class ReviewsRepository implements IReviewsRepository {
     revieweeIds: string[],
     revieweeRole: ReviewPartyRole,
   ): Promise<Review[]> {
+    this.logger.debug(_ctx, 'getByRevieweeIdsAndRole', { count: revieweeIds.length, revieweeRole });
     if (revieweeIds.length === 0) return [];
     const reviews = await this.prisma.review.findMany({
       where: {
@@ -140,6 +149,7 @@ export class ReviewsRepository implements IReviewsRepository {
   }
 
   async getByReviewerId(_ctx: Ctx, reviewerId: string): Promise<Review[]> {
+    this.logger.debug(_ctx, 'getByReviewerId', { reviewerId });
     const reviews = await this.prisma.review.findMany({
       where: { reviewerId },
       orderBy: { createdAt: 'desc' },

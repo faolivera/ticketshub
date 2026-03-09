@@ -5,18 +5,22 @@ import type {
   IdentityVerificationStatus as PrismaIdentityVerificationStatus,
 } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { IdentityVerificationRequest } from './identity-verification.domain';
 import { IdentityVerificationStatus } from './identity-verification.domain';
 import type { IIdentityVerificationRepository } from './identity-verification.repository.interface';
 
 @Injectable()
 export class IdentityVerificationRepository implements IIdentityVerificationRepository {
+  private readonly logger = new ContextLogger(IdentityVerificationRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async save(
     _ctx: Ctx,
     verification: IdentityVerificationRequest,
   ): Promise<void> {
+    this.logger.debug(_ctx, 'save', { id: verification.id, userId: verification.userId });
     const data = this.mapToDbData(verification);
 
     await this.prisma.identityVerificationRequest.upsert({
@@ -33,6 +37,7 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
     _ctx: Ctx,
     id: string,
   ): Promise<IdentityVerificationRequest | undefined> {
+    this.logger.debug(_ctx, 'findById', { id });
     const record = await this.prisma.identityVerificationRequest.findUnique({
       where: { id },
     });
@@ -43,6 +48,7 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
     _ctx: Ctx,
     userId: string,
   ): Promise<IdentityVerificationRequest | undefined> {
+    this.logger.debug(_ctx, 'findByUserId', { userId });
     const record = await this.prisma.identityVerificationRequest.findFirst({
       where: { userId },
       orderBy: { submittedAt: 'desc' },
@@ -54,6 +60,7 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
     _ctx: Ctx,
     status?: IdentityVerificationStatus,
   ): Promise<IdentityVerificationRequest[]> {
+    this.logger.debug(_ctx, 'findAll', { status });
     const records = await this.prisma.identityVerificationRequest.findMany({
       where: status ? { status: this.mapStatusToDb(status) } : undefined,
       orderBy: { submittedAt: 'desc' },
@@ -62,7 +69,7 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
   }
 
   async findAllPending(ctx: Ctx): Promise<IdentityVerificationRequest[]> {
-    void ctx;
+    this.logger.debug(ctx, 'findAllPending');
     const records = await this.prisma.identityVerificationRequest.findMany({
       where: { status: 'pending' },
       orderBy: { submittedAt: 'desc' },
@@ -71,7 +78,7 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
   }
 
   async countPending(ctx: Ctx): Promise<number> {
-    void ctx;
+    this.logger.debug(ctx, 'countPending');
     return this.prisma.identityVerificationRequest.count({
       where: { status: 'pending' },
     });

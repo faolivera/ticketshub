@@ -9,6 +9,7 @@ import type {
   SupportMessageSender as PrismaSupportMessageSender,
 } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { SupportTicket, SupportMessage } from './support.domain';
 import {
   SupportTicketStatus,
@@ -20,11 +21,14 @@ import type { ISupportRepository } from './support.repository.interface';
 
 @Injectable()
 export class SupportRepository implements ISupportRepository {
+  private readonly logger = new ContextLogger(SupportRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   // ==================== Tickets ====================
 
   async createTicket(_ctx: Ctx, ticket: SupportTicket): Promise<SupportTicket> {
+    this.logger.debug(_ctx, 'createTicket', { ticketId: ticket.id });
     const prismaTicket = await this.prisma.supportTicket.create({
       data: {
         id: ticket.id,
@@ -52,6 +56,7 @@ export class SupportRepository implements ISupportRepository {
     _ctx: Ctx,
     id: string,
   ): Promise<SupportTicket | undefined> {
+    this.logger.debug(_ctx, 'findTicketById', { id });
     const ticket = await this.prisma.supportTicket.findUnique({
       where: { id },
     });
@@ -59,7 +64,7 @@ export class SupportRepository implements ISupportRepository {
   }
 
   async getAllTickets(ctx: Ctx): Promise<SupportTicket[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getAllTickets');
     const tickets = await this.prisma.supportTicket.findMany({
       orderBy: { createdAt: 'desc' },
     });
@@ -67,7 +72,7 @@ export class SupportRepository implements ISupportRepository {
   }
 
   async getTicketsByUserId(ctx: Ctx, userId: string): Promise<SupportTicket[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getTicketsByUserId', { userId });
     const tickets = await this.prisma.supportTicket.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -76,7 +81,7 @@ export class SupportRepository implements ISupportRepository {
   }
 
   async getActiveTickets(ctx: Ctx): Promise<SupportTicket[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getActiveTickets');
     const tickets = await this.prisma.supportTicket.findMany({
       where: {
         status: {
@@ -102,6 +107,7 @@ export class SupportRepository implements ISupportRepository {
       source?: string;
     },
   ): Promise<{ tickets: SupportTicket[]; total: number }> {
+    this.logger.debug(_ctx, 'getTicketsAdmin', { page: params.page, limit: params.limit });
     const where: Parameters<
       typeof this.prisma.supportTicket.findMany
     >[0]['where'] = {};
@@ -162,6 +168,7 @@ export class SupportRepository implements ISupportRepository {
     _ctx: Ctx,
     transactionId: string,
   ): Promise<SupportTicket | undefined> {
+    this.logger.debug(_ctx, 'getTicketByTransactionId', { transactionId });
     const ticket = await this.prisma.supportTicket.findFirst({
       where: { transactionId },
     });
@@ -173,6 +180,7 @@ export class SupportRepository implements ISupportRepository {
     transactionId: string,
     userId: string,
   ): Promise<SupportTicket | undefined> {
+    this.logger.debug(_ctx, 'getTicketByTransactionIdAndUserId', { transactionId, userId });
     const ticket = await this.prisma.supportTicket.findFirst({
       where: { transactionId, userId },
     });
@@ -184,6 +192,7 @@ export class SupportRepository implements ISupportRepository {
     id: string,
     updates: Partial<SupportTicket>,
   ): Promise<SupportTicket | undefined> {
+    this.logger.debug(_ctx, 'updateTicket', { id });
     const existing = await this.prisma.supportTicket.findUnique({
       where: { id },
     });
@@ -213,6 +222,7 @@ export class SupportRepository implements ISupportRepository {
     _ctx: Ctx,
     message: SupportMessage,
   ): Promise<SupportMessage> {
+    this.logger.debug(_ctx, 'createMessage', { messageId: message.id, ticketId: message.ticketId });
     const prismaMessage = await this.prisma.supportMessage.create({
       data: {
         id: message.id,
@@ -229,6 +239,7 @@ export class SupportRepository implements ISupportRepository {
     _ctx: Ctx,
     ticketId: string,
   ): Promise<SupportMessage[]> {
+    this.logger.debug(_ctx, 'getMessagesByTicketId', { ticketId });
     const messages = await this.prisma.supportMessage.findMany({
       where: { ticketId },
       orderBy: { createdAt: 'asc' },

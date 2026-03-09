@@ -13,6 +13,7 @@ import {
   TicketUnitStatus as PrismaTicketUnitStatus,
 } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { TicketListing, TicketUnit, Money } from './tickets.domain';
 import {
   TicketType,
@@ -33,6 +34,8 @@ export class TicketsRepository
   extends BaseRepository
   implements ITicketsRepository
 {
+  private readonly logger = new ContextLogger(TicketsRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -254,6 +257,7 @@ export class TicketsRepository
   // ==================== Repository Methods ====================
 
   async create(ctx: Ctx, listing: TicketListing): Promise<TicketListing> {
+    this.logger.debug(ctx, 'create', { listingId: listing.id, eventId: listing.eventId });
     const client = this.getClient(ctx);
     const created = await client.ticketListing.create({
       data: {
@@ -294,6 +298,7 @@ export class TicketsRepository
   }
 
   async findById(ctx: Ctx, id: string): Promise<TicketListing | undefined> {
+    this.logger.debug(ctx, 'findById', { id });
     const client = this.getClient(ctx);
     const listing = await client.ticketListing.findUnique({
       where: { id },
@@ -303,6 +308,7 @@ export class TicketsRepository
   }
 
   async findByIds(ctx: Ctx, ids: string[]): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'findByIds', { count: ids.length });
     if (ids.length === 0) return [];
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
@@ -313,6 +319,7 @@ export class TicketsRepository
   }
 
   async getAll(ctx: Ctx): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getAll');
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       orderBy: { createdAt: 'desc' },
@@ -322,6 +329,7 @@ export class TicketsRepository
   }
 
   async getActiveListings(ctx: Ctx): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getActiveListings');
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: { status: PrismaListingStatus.Active },
@@ -384,6 +392,7 @@ export class TicketsRepository
   }
 
   async getByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getByEventId', { eventId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: {
@@ -400,6 +409,7 @@ export class TicketsRepository
     ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getByEventDateId', { eventDateId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: {
@@ -413,6 +423,7 @@ export class TicketsRepository
   }
 
   async getBySellerId(ctx: Ctx, sellerId: string): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getBySellerId', { sellerId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: { sellerId },
@@ -427,6 +438,7 @@ export class TicketsRepository
     id: string,
     updates: Partial<TicketListing>,
   ): Promise<TicketListing | undefined> {
+    this.logger.debug(ctx, 'update', { id });
     const client = this.getClient(ctx);
     const existing = await client.ticketListing.findUnique({
       where: { id },
@@ -445,6 +457,7 @@ export class TicketsRepository
   }
 
   async delete(ctx: Ctx, id: string): Promise<void> {
+    this.logger.debug(ctx, 'delete', { id });
     const client = this.getClient(ctx);
     await client.ticketListing.delete({
       where: { id },
@@ -456,6 +469,7 @@ export class TicketsRepository
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
+    this.logger.debug(ctx, 'reserveUnits', { id, ticketUnitIdsCount: ticketUnitIds.length });
     const client = this.getClient(ctx);
     const idSet = new Set(ticketUnitIds);
     if (idSet.size !== ticketUnitIds.length) {
@@ -502,6 +516,7 @@ export class TicketsRepository
     id: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing | undefined> {
+    this.logger.debug(ctx, 'restoreUnits', { id, ticketUnitIdsCount: ticketUnitIds.length });
     const client = this.getClient(ctx);
     const idSet = new Set(ticketUnitIds);
     if (idSet.size !== ticketUnitIds.length) {
@@ -548,6 +563,7 @@ export class TicketsRepository
     ctx: Ctx,
     eventId: string,
   ): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getPendingByEventId', { eventId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: {
@@ -564,6 +580,7 @@ export class TicketsRepository
     ctx: Ctx,
     eventIds: string[],
   ): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getPendingByEventIds', { count: eventIds.length });
     if (eventIds.length === 0) return [];
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
@@ -581,6 +598,7 @@ export class TicketsRepository
     ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getPendingByEventDateId', { eventDateId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: {
@@ -598,6 +616,7 @@ export class TicketsRepository
     listingIds: string[],
     status: ListingStatus,
   ): Promise<number> {
+    this.logger.debug(ctx, 'bulkUpdateStatus', { count: listingIds.length, status });
     if (listingIds.length === 0) return 0;
     const client = this.getClient(ctx);
 
@@ -616,6 +635,7 @@ export class TicketsRepository
     ctx: Ctx,
     eventDateId: string,
   ): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getAllByEventDateId', { eventDateId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: { eventDateId },
@@ -629,6 +649,7 @@ export class TicketsRepository
     ctx: Ctx,
     eventSectionId: string,
   ): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getPendingByEventSectionId', { eventSectionId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: {
@@ -645,6 +666,7 @@ export class TicketsRepository
     ctx: Ctx,
     eventSectionId: string,
   ): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getAllByEventSectionId', { eventSectionId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: { eventSectionId },
@@ -655,6 +677,7 @@ export class TicketsRepository
   }
 
   async getAllByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {
+    this.logger.debug(ctx, 'getAllByEventId', { eventId });
     const client = this.getClient(ctx);
     const listings = await client.ticketListing.findMany({
       where: { eventId },
@@ -670,6 +693,7 @@ export class TicketsRepository
   ): Promise<
     Map<string, { listingsCount: number; availableTicketsCount: number }>
   > {
+    this.logger.debug(ctx, 'getListingStatsByEventIds', { count: eventIds.length });
     const statsMap = new Map<
       string,
       { listingsCount: number; availableTicketsCount: number }
@@ -714,6 +738,7 @@ export class TicketsRepository
     ctx: Ctx,
     id: string,
   ): Promise<TicketListing | undefined> {
+    this.logger.debug(ctx, 'findByIdForUpdate', { id });
     const client = this.getClient(ctx);
 
     const results = await client.$queryRaw<PrismaTicketListingWithUnits[]>`
@@ -747,6 +772,7 @@ export class TicketsRepository
     listingId: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing> {
+    this.logger.debug(ctx, 'reserveUnitsWithLock', { listingId, ticketUnitIdsCount: ticketUnitIds.length });
     const client = this.getClient(ctx);
 
     const units = await client.$queryRaw<PrismaTicketUnit[]>`
@@ -806,6 +832,7 @@ export class TicketsRepository
     listingId: string,
     ticketUnitIds: string[],
   ): Promise<TicketListing> {
+    this.logger.debug(ctx, 'restoreUnitsWithLock', { listingId, ticketUnitIdsCount: ticketUnitIds.length });
     const client = this.getClient(ctx);
 
     const units = await client.$queryRaw<PrismaTicketUnit[]>`
@@ -856,6 +883,7 @@ export class TicketsRepository
     updates: Partial<TicketListing>,
     expectedVersion: number,
   ): Promise<TicketListing> {
+    this.logger.debug(ctx, 'updateWithVersion', { id, expectedVersion });
     const client = this.getClient(ctx);
 
     const data: Record<string, unknown> = { ...this.buildUpdateData(updates) };

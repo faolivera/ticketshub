@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { PaymentMethod as PrismaPaymentMethod } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type {
   PaymentMethodOption,
   PaymentMethodType,
@@ -20,10 +21,12 @@ interface PaymentMethodInstructions {
 
 @Injectable()
 export class PaymentMethodsRepository implements IPaymentMethodsRepository {
+  private readonly logger = new ContextLogger(PaymentMethodsRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(ctx: Ctx): Promise<PaymentMethodOption[]> {
-    void ctx;
+    this.logger.debug(ctx, 'findAll');
     const methods = await this.prisma.paymentMethod.findMany({
       orderBy: { createdAt: 'desc' },
     });
@@ -34,7 +37,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
     ctx: Ctx,
     id: string,
   ): Promise<PaymentMethodOption | undefined> {
-    void ctx;
+    this.logger.debug(ctx, 'findById', { id });
     const method = await this.prisma.paymentMethod.findUnique({
       where: { id },
     });
@@ -42,7 +45,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
   }
 
   async findEnabled(ctx: Ctx): Promise<PaymentMethodOption[]> {
-    void ctx;
+    this.logger.debug(ctx, 'findEnabled');
     const methods = await this.prisma.paymentMethod.findMany({
       where: { status: 'enabled' },
       orderBy: { createdAt: 'desc' },
@@ -54,6 +57,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
     _ctx: Ctx,
     paymentMethod: PaymentMethodOption,
   ): Promise<PaymentMethodOption> {
+    this.logger.debug(_ctx, 'create', { id: paymentMethod.id });
     const instructions = this.buildInstructions(paymentMethod);
 
     const created = await this.prisma.paymentMethod.create({
@@ -78,6 +82,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
     id: string,
     updates: Partial<PaymentMethodOption>,
   ): Promise<PaymentMethodOption | undefined> {
+    this.logger.debug(_ctx, 'update', { id });
     const existing = await this.prisma.paymentMethod.findUnique({
       where: { id },
     });
@@ -119,6 +124,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
   }
 
   async delete(_ctx: Ctx, id: string): Promise<boolean> {
+    this.logger.debug(_ctx, 'delete', { id });
     const existing = await this.prisma.paymentMethod.findUnique({
       where: { id },
     });

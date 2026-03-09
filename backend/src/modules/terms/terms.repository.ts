@@ -8,6 +8,7 @@ import type {
   TermsStatus as PrismaTermsStatus,
 } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type {
   TermsVersion,
   UserTermsAcceptance,
@@ -24,12 +25,15 @@ import type { ITermsRepository } from './terms.repository.interface';
 
 @Injectable()
 export class TermsRepository implements ITermsRepository {
+  private readonly logger = new ContextLogger(TermsRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findVersionById(
     _ctx: Ctx,
     id: string,
   ): Promise<TermsVersion | undefined> {
+    this.logger.debug(_ctx, 'findVersionById', { id });
     const version = await this.prisma.termsVersion.findUnique({
       where: { id },
     });
@@ -55,6 +59,7 @@ export class TermsRepository implements ITermsRepository {
     userId: string,
     termsVersionId: string,
   ): Promise<UserTermsAcceptance | undefined> {
+    this.logger.debug(_ctx, 'findAcceptance', { userId, termsVersionId });
     const acceptance = await this.prisma.userTermsAcceptance.findUnique({
       where: {
         userId_termsVersionId: { userId, termsVersionId },
@@ -68,6 +73,7 @@ export class TermsRepository implements ITermsRepository {
     userId: string,
     userType?: TermsUserType,
   ): Promise<UserTermsAcceptance[]> {
+    this.logger.debug(_ctx, 'findAcceptancesByUser', { userId, userType });
     const acceptances = await this.prisma.userTermsAcceptance.findMany({
       where: {
         userId,
@@ -81,6 +87,7 @@ export class TermsRepository implements ITermsRepository {
     _ctx: Ctx,
     data: UserTermsAcceptance,
   ): Promise<UserTermsAcceptance> {
+    this.logger.debug(_ctx, 'createAcceptance', { id: data.id, userId: data.userId });
     const acceptance = await this.prisma.userTermsAcceptance.create({
       data: {
         id: data.id,
@@ -98,6 +105,7 @@ export class TermsRepository implements ITermsRepository {
     userId: string,
     userType: TermsUserType,
   ): Promise<UserTermsState | undefined> {
+    this.logger.debug(_ctx, 'findUserTermsState', { userId, userType });
     const state = await this.prisma.userTermsState.findUnique({
       where: {
         userId_userType: { userId, userType: this.mapUserTypeToDb(userType) },
@@ -110,6 +118,7 @@ export class TermsRepository implements ITermsRepository {
     _ctx: Ctx,
     data: UserTermsState,
   ): Promise<UserTermsState> {
+    this.logger.debug(_ctx, 'upsertUserTermsState', { userId: data.userId, userType: data.userType });
     const dbUserType = this.mapUserTypeToDb(data.userType);
     const state = await this.prisma.userTermsState.upsert({
       where: {

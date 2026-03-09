@@ -6,6 +6,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { PaymentConfirmation } from './payment-confirmations.domain';
 import {
   PaymentConfirmationStatus,
@@ -26,9 +27,12 @@ interface PaymentConfirmationFields {
 
 @Injectable()
 export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepository {
+  private readonly logger = new ContextLogger(PaymentConfirmationsRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(_ctx: Ctx, id: string): Promise<PaymentConfirmation | null> {
+    this.logger.debug(_ctx, 'findById', { id });
     const record = await this.prisma.paymentConfirmation.findUnique({
       where: { id },
     });
@@ -39,6 +43,7 @@ export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepo
     _ctx: Ctx,
     transactionId: string,
   ): Promise<PaymentConfirmation | null> {
+    this.logger.debug(_ctx, 'findByTransactionId', { transactionId });
     const record = await this.prisma.paymentConfirmation.findUnique({
       where: { transactionId },
     });
@@ -46,7 +51,7 @@ export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepo
   }
 
   async findAllPending(ctx: Ctx): Promise<PaymentConfirmation[]> {
-    void ctx;
+    this.logger.debug(ctx, 'findAllPending');
     const records = await this.prisma.paymentConfirmation.findMany({
       where: { status: PrismaPaymentConfirmationStatus.pending },
     });
@@ -54,14 +59,14 @@ export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepo
   }
 
   async countPending(ctx: Ctx): Promise<number> {
-    void ctx;
+    this.logger.debug(ctx, 'countPending');
     return this.prisma.paymentConfirmation.count({
       where: { status: PrismaPaymentConfirmationStatus.pending },
     });
   }
 
   async getPendingTransactionIds(ctx: Ctx): Promise<string[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getPendingTransactionIds');
     const records = await this.prisma.paymentConfirmation.findMany({
       where: { status: PrismaPaymentConfirmationStatus.pending },
       select: { transactionId: true },
@@ -73,6 +78,7 @@ export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepo
     _ctx: Ctx,
     transactionIds: string[],
   ): Promise<PaymentConfirmation[]> {
+    this.logger.debug(_ctx, 'findByTransactionIds', { count: transactionIds.length });
     if (transactionIds.length === 0) return [];
     const records = await this.prisma.paymentConfirmation.findMany({
       where: { transactionId: { in: transactionIds } },
@@ -84,6 +90,7 @@ export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepo
     _ctx: Ctx,
     confirmation: PaymentConfirmation,
   ): Promise<PaymentConfirmation> {
+    this.logger.debug(_ctx, 'save', { id: confirmation.id, transactionId: confirmation.transactionId });
     const fields: Prisma.InputJsonObject = {
       storageKey: confirmation.storageKey,
       originalFilename: confirmation.originalFilename,
@@ -128,6 +135,7 @@ export class PaymentConfirmationsRepository implements IPaymentConfirmationsRepo
   }
 
   async delete(_ctx: Ctx, id: string): Promise<void> {
+    this.logger.debug(_ctx, 'delete', { id });
     await this.prisma.paymentConfirmation.delete({
       where: { id },
     });

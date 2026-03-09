@@ -14,6 +14,7 @@ export class PaymentsRepository implements IPaymentsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(_ctx: Ctx, payment: PaymentIntent): Promise<PaymentIntent> {
+    this.logger.debug(_ctx, 'create', { paymentId: payment.id });
     const created = await this.prisma.paymentIntent.create({
       data: {
         id: payment.id,
@@ -31,6 +32,7 @@ export class PaymentsRepository implements IPaymentsRepository {
   }
 
   async findById(_ctx: Ctx, id: string): Promise<PaymentIntent | undefined> {
+    this.logger.debug(_ctx, 'findById', { id });
     const payment = await this.prisma.paymentIntent.findUnique({
       where: { id },
     });
@@ -41,6 +43,7 @@ export class PaymentsRepository implements IPaymentsRepository {
     _ctx: Ctx,
     transactionId: string,
   ): Promise<PaymentIntent | undefined> {
+    this.logger.debug(_ctx, 'findByTransactionId', { transactionId });
     const payment = await this.prisma.paymentIntent.findUnique({
       where: { transactionId },
     });
@@ -51,6 +54,7 @@ export class PaymentsRepository implements IPaymentsRepository {
     _ctx: Ctx,
     providerPaymentId: string,
   ): Promise<PaymentIntent | undefined> {
+    this.logger.debug(_ctx, 'findByProviderPaymentId', { providerPaymentId });
     const payment = await this.prisma.paymentIntent.findFirst({
       where: { providerPaymentId },
     });
@@ -62,6 +66,7 @@ export class PaymentsRepository implements IPaymentsRepository {
     id: string,
     updates: Partial<PaymentIntent>,
   ): Promise<PaymentIntent | undefined> {
+    this.logger.debug(_ctx, 'update', { id });
     try {
       const data: Record<string, unknown> = {};
 

@@ -2,14 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { Image as PrismaImage } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type { Image } from './images.domain';
 import type { IImagesRepository } from './images.repository.interface';
 
 @Injectable()
 export class ImagesRepository implements IImagesRepository {
+  private readonly logger = new ContextLogger(ImagesRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(_ctx: Ctx, id: string): Promise<Image | undefined> {
+    this.logger.debug(_ctx, 'findById', { id });
     const image = await this.prisma.image.findUnique({
       where: { id },
     });
@@ -17,6 +21,7 @@ export class ImagesRepository implements IImagesRepository {
   }
 
   async findByIds(_ctx: Ctx, ids: string[]): Promise<Image[]> {
+    this.logger.debug(_ctx, 'findByIds', { count: ids.length });
     if (ids.length === 0) return [];
     const images = await this.prisma.image.findMany({
       where: { id: { in: ids } },
@@ -25,6 +30,7 @@ export class ImagesRepository implements IImagesRepository {
   }
 
   async set(_ctx: Ctx, image: Image): Promise<void> {
+    this.logger.debug(_ctx, 'set', { id: image.id });
     await this.prisma.image.upsert({
       where: { id: image.id },
       update: {

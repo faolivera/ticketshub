@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type {
   ITransactionChatRepository,
   TransactionChatMessageEntity,
@@ -14,6 +15,8 @@ export class TransactionChatRepository
   extends BaseRepository
   implements ITransactionChatRepository
 {
+  private readonly logger = new ContextLogger(TransactionChatRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -25,6 +28,7 @@ export class TransactionChatRepository
     content: string,
     options?: { messageType?: 'text' | 'delivery'; payloadType?: string },
   ): Promise<TransactionChatMessageEntity> {
+    this.logger.debug(ctx, 'create', { transactionId });
     const client = this.getClient(ctx);
     const row = await client.transactionChatMessage.create({
       data: {
@@ -43,6 +47,7 @@ export class TransactionChatRepository
     transactionId: string,
     options?: { afterId?: string; limit?: number },
   ): Promise<TransactionChatMessageEntity[]> {
+    this.logger.debug(ctx, 'findByTransaction', { transactionId });
     const client = this.getClient(ctx);
     const limit = options?.limit ?? DEFAULT_LIMIT;
     const rows = await client.transactionChatMessage.findMany({
@@ -54,6 +59,7 @@ export class TransactionChatRepository
   }
 
   async countByTransaction(ctx: Ctx, transactionId: string): Promise<number> {
+    this.logger.debug(ctx, 'countByTransaction', { transactionId });
     const client = this.getClient(ctx);
     return client.transactionChatMessage.count({
       where: { transactionId },
@@ -64,6 +70,7 @@ export class TransactionChatRepository
     ctx: Ctx,
     transactionId: string,
   ): Promise<number> {
+    this.logger.debug(ctx, 'countTextMessagesByTransaction', { transactionId });
     const client = this.getClient(ctx);
     return client.transactionChatMessage.count({
       where: { transactionId, messageType: 'text' },
@@ -77,6 +84,7 @@ export class TransactionChatRepository
     buyerId: string,
     sellerId: string,
   ): Promise<void> {
+    this.logger.debug(ctx, 'markAsReadForUser', { transactionId, userId });
     const client = this.getClient(ctx);
     const now = new Date();
     if (userId === buyerId) {
@@ -107,6 +115,7 @@ export class TransactionChatRepository
     buyerId: string,
     sellerId: string,
   ): Promise<number> {
+    this.logger.debug(ctx, 'countUnreadForUser', { transactionId, userId });
     const client = this.getClient(ctx);
     if (userId === buyerId) {
       return client.transactionChatMessage.count({

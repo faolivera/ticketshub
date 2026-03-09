@@ -13,6 +13,7 @@ import {
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import type {
   NotificationEvent,
   Notification,
@@ -34,6 +35,8 @@ export class NotificationsRepository
   extends BaseRepository
   implements INotificationsRepository
 {
+  private readonly logger = new ContextLogger(NotificationsRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -46,6 +49,7 @@ export class NotificationsRepository
     ctx: Ctx,
     event: NotificationEvent,
   ): Promise<NotificationEvent> {
+    this.logger.debug(ctx, 'createEvent', { eventId: event.id });
     const client = this.getClient(ctx);
     const created = await client.notificationEvent.create({
       data: {
@@ -66,6 +70,7 @@ export class NotificationsRepository
     ctx: Ctx,
     id: string,
   ): Promise<NotificationEvent | undefined> {
+    this.logger.debug(ctx, 'findEventById', { id });
     const client = this.getClient(ctx);
     const event = await client.notificationEvent.findUnique({
       where: { id },
@@ -74,6 +79,7 @@ export class NotificationsRepository
   }
 
   async findPendingEvents(ctx: Ctx): Promise<NotificationEvent[]> {
+    this.logger.debug(ctx, 'findPendingEvents');
     const client = this.getClient(ctx);
     const events = await client.notificationEvent.findMany({
       where: { status: 'PENDING' },
@@ -87,6 +93,7 @@ export class NotificationsRepository
     id: string,
     updates: Partial<NotificationEvent>,
   ): Promise<NotificationEvent | undefined> {
+    this.logger.debug(ctx, 'updateEvent', { id });
     const client = this.getClient(ctx);
     const existing = await client.notificationEvent.findUnique({
       where: { id },
@@ -119,6 +126,7 @@ export class NotificationsRepository
       to?: Date;
     },
   ): Promise<{ events: NotificationEvent[]; total: number }> {
+    this.logger.debug(ctx, 'getEventsPaginated', { page, limit });
     const client = this.getClient(ctx);
     const where: Parameters<
       typeof this.prisma.notificationEvent.findMany
@@ -164,6 +172,7 @@ export class NotificationsRepository
     ctx: Ctx,
     notification: Notification,
   ): Promise<Notification> {
+    this.logger.debug(ctx, 'createNotification', { notificationId: notification.id, eventId: notification.eventId });
     const client = this.getClient(ctx);
     const created = await client.notification.create({
       data: {
@@ -195,6 +204,7 @@ export class NotificationsRepository
     ctx: Ctx,
     id: string,
   ): Promise<Notification | undefined> {
+    this.logger.debug(ctx, 'findNotificationById', { id });
     const client = this.getClient(ctx);
     const notification = await client.notification.findUnique({
       where: { id },
@@ -206,6 +216,7 @@ export class NotificationsRepository
     ctx: Ctx,
     eventId: string,
   ): Promise<Notification[]> {
+    this.logger.debug(ctx, 'findNotificationsByEventId', { eventId });
     const client = this.getClient(ctx);
     const notifications = await client.notification.findMany({
       where: { eventId },
@@ -220,6 +231,7 @@ export class NotificationsRepository
     limit: number,
     unreadOnly: boolean,
   ): Promise<{ notifications: Notification[]; total: number }> {
+    this.logger.debug(ctx, 'findUserInAppNotifications', { userId, page, limit, unreadOnly });
     const client = this.getClient(ctx);
     const where: Parameters<
       typeof this.prisma.notification.findMany
@@ -249,6 +261,7 @@ export class NotificationsRepository
   }
 
   async countUnreadNotifications(ctx: Ctx, userId: string): Promise<number> {
+    this.logger.debug(ctx, 'countUnreadNotifications', { userId });
     const client = this.getClient(ctx);
     return await client.notification.count({
       where: {
@@ -264,6 +277,7 @@ export class NotificationsRepository
     id: string,
     updates: Partial<Notification>,
   ): Promise<Notification | undefined> {
+    this.logger.debug(ctx, 'updateNotification', { id });
     const client = this.getClient(ctx);
     const existing = await client.notification.findUnique({
       where: { id },
@@ -299,6 +313,7 @@ export class NotificationsRepository
   }
 
   async markAllAsRead(ctx: Ctx, userId: string): Promise<number> {
+    this.logger.debug(ctx, 'markAllAsRead', { userId });
     const client = this.getClient(ctx);
     const now = new Date();
     const result = await client.notification.updateMany({
@@ -321,6 +336,7 @@ export class NotificationsRepository
     userId: string,
     notificationIds: string[],
   ): Promise<number> {
+    this.logger.debug(ctx, 'markAsReadBatch', { userId, count: notificationIds.length });
     if (notificationIds.length === 0) return 0;
     const client = this.getClient(ctx);
     const now = new Date();
@@ -341,6 +357,7 @@ export class NotificationsRepository
   }
 
   async findPendingEmailNotifications(ctx: Ctx): Promise<Notification[]> {
+    this.logger.debug(ctx, 'findPendingEmailNotifications');
     const client = this.getClient(ctx);
     const notifications = await client.notification.findMany({
       where: {
@@ -352,6 +369,7 @@ export class NotificationsRepository
   }
 
   async findRetryableEmailNotifications(ctx: Ctx): Promise<Notification[]> {
+    this.logger.debug(ctx, 'findRetryableEmailNotifications');
     const client = this.getClient(ctx);
     const now = new Date();
     const notifications = await client.notification.findMany({
@@ -366,6 +384,7 @@ export class NotificationsRepository
   }
 
   async deleteOldNotifications(ctx: Ctx): Promise<number> {
+    this.logger.debug(ctx, 'deleteOldNotifications');
     const client = this.getClient(ctx);
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - NOTIFICATION_RETENTION_DAYS);
@@ -386,6 +405,7 @@ export class NotificationsRepository
     ctx: Ctx,
     eventId: string,
   ): Promise<NotificationEvent | undefined> {
+    this.logger.debug(ctx, 'claimPendingEvent', { eventId });
     const client = this.getClient(ctx);
 
     const result = await client.notificationEvent.updateMany({
@@ -412,6 +432,7 @@ export class NotificationsRepository
     ctx: Ctx,
     limit: number,
   ): Promise<Notification[]> {
+    this.logger.debug(ctx, 'claimPendingEmailNotifications', { limit });
     const client = this.getClient(ctx);
 
     const pending = await client.notification.findMany({
@@ -455,6 +476,7 @@ export class NotificationsRepository
     ctx: Ctx,
     notificationId: string,
   ): Promise<Notification | undefined> {
+    this.logger.debug(ctx, 'claimRetryableEmailNotification', { notificationId });
     const client = this.getClient(ctx);
     const now = new Date();
     const nextRetryAt = new Date(now.getTime() + 5 * 60 * 1000);
@@ -492,6 +514,7 @@ export class NotificationsRepository
     ctx: Ctx,
     template: NotificationTemplate,
   ): Promise<NotificationTemplate> {
+    this.logger.debug(ctx, 'createTemplate', { templateId: template.id });
     const client = this.getClient(ctx);
     const created = await client.notificationTemplate.create({
       data: {
@@ -515,6 +538,7 @@ export class NotificationsRepository
     ctx: Ctx,
     id: string,
   ): Promise<NotificationTemplate | undefined> {
+    this.logger.debug(ctx, 'findTemplateById', { id });
     const client = this.getClient(ctx);
     const template = await client.notificationTemplate.findUnique({
       where: { id },
@@ -528,6 +552,7 @@ export class NotificationsRepository
     channel: NotificationChannel,
     locale: string,
   ): Promise<NotificationTemplate | undefined> {
+    this.logger.debug(ctx, 'findTemplate', { eventType, channel, locale });
     const client = this.getClient(ctx);
     const template = await client.notificationTemplate.findFirst({
       where: {
@@ -541,6 +566,7 @@ export class NotificationsRepository
   }
 
   async findAllTemplates(ctx: Ctx): Promise<NotificationTemplate[]> {
+    this.logger.debug(ctx, 'findAllTemplates');
     const client = this.getClient(ctx);
     const templates = await client.notificationTemplate.findMany();
     return templates.map((t) => this.mapToNotificationTemplate(t));
@@ -551,6 +577,7 @@ export class NotificationsRepository
     id: string,
     updates: Partial<NotificationTemplate>,
   ): Promise<NotificationTemplate | undefined> {
+    this.logger.debug(ctx, 'updateTemplate', { id });
     const client = this.getClient(ctx);
     const existing = await client.notificationTemplate.findUnique({
       where: { id },
@@ -587,6 +614,7 @@ export class NotificationsRepository
     ctx: Ctx,
     config: NotificationChannelConfig,
   ): Promise<NotificationChannelConfig> {
+    this.logger.debug(ctx, 'createChannelConfig', { configId: config.id });
     const client = this.getClient(ctx);
     const created = await client.notificationChannelConfig.create({
       data: {
@@ -606,6 +634,7 @@ export class NotificationsRepository
     ctx: Ctx,
     eventType: NotificationEventType,
   ): Promise<NotificationChannelConfig | undefined> {
+    this.logger.debug(ctx, 'findChannelConfig', { eventType });
     const client = this.getClient(ctx);
     const config = await client.notificationChannelConfig.findUnique({
       where: { eventType: this.mapEventTypeToDb(eventType) },
@@ -614,6 +643,7 @@ export class NotificationsRepository
   }
 
   async findAllChannelConfigs(ctx: Ctx): Promise<NotificationChannelConfig[]> {
+    this.logger.debug(ctx, 'findAllChannelConfigs');
     const client = this.getClient(ctx);
     const configs = await client.notificationChannelConfig.findMany();
     return configs.map((c) => this.mapToNotificationChannelConfig(c));
@@ -624,6 +654,7 @@ export class NotificationsRepository
     eventType: NotificationEventType,
     updates: Partial<NotificationChannelConfig>,
   ): Promise<NotificationChannelConfig | undefined> {
+    this.logger.debug(ctx, 'updateChannelConfig', { eventType });
     const client = this.getClient(ctx);
     const existing = await client.notificationChannelConfig.findUnique({
       where: { eventType: this.mapEventTypeToDb(eventType) },

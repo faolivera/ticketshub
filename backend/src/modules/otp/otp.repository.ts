@@ -18,6 +18,7 @@ export class OTPRepository implements IOTPRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(_ctx: Ctx, otp: OTP): Promise<OTP> {
+    this.logger.debug(_ctx, 'create', { otpId: otp.id });
     const created = await this.prisma.otp.create({
       data: {
         id: otp.id,
@@ -33,6 +34,7 @@ export class OTPRepository implements IOTPRepository {
   }
 
   async findById(_ctx: Ctx, id: string): Promise<OTP | undefined> {
+    this.logger.debug(_ctx, 'findById', { id });
     const otp = await this.prisma.otp.findUnique({
       where: { id },
     });
@@ -44,6 +46,7 @@ export class OTPRepository implements IOTPRepository {
     userId: string,
     type: OTPType,
   ): Promise<OTP | undefined> {
+    this.logger.debug(_ctx, 'findLatestPendingByUserAndType', { userId, type });
     const otp = await this.prisma.otp.findFirst({
       where: {
         userId,
@@ -61,6 +64,7 @@ export class OTPRepository implements IOTPRepository {
     userId: string,
     type: OTPType,
   ): Promise<void> {
+    this.logger.debug(_ctx, 'expireAllPendingByUserAndType', { userId, type });
     await this.prisma.otp.updateMany({
       where: {
         userId,
@@ -78,6 +82,7 @@ export class OTPRepository implements IOTPRepository {
     id: string,
     status: OTPStatus,
   ): Promise<OTP | undefined> {
+    this.logger.debug(_ctx, 'updateStatus', { id, status });
     try {
       const updated = await this.prisma.otp.update({
         where: { id },
@@ -94,6 +99,7 @@ export class OTPRepository implements IOTPRepository {
   }
 
   async delete(_ctx: Ctx, id: string): Promise<void> {
+    this.logger.debug(_ctx, 'delete', { id });
     try {
       await this.prisma.otp.delete({
         where: { id },

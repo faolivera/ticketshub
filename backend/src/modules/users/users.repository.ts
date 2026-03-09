@@ -35,12 +35,13 @@ export class UsersRepository implements IUsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAll(ctx: Ctx): Promise<User[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getAll');
     const users = await this.prisma.user.findMany();
     return users.map((u) => this.mapToUser(u));
   }
 
   async findById(_ctx: Ctx, id: string): Promise<User | undefined> {
+    this.logger.debug(_ctx, 'findById', { id });
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -48,6 +49,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async findByIds(_ctx: Ctx, ids: string[]): Promise<User[]> {
+    this.logger.debug(_ctx, 'findByIds', { count: ids.length });
     if (ids.length === 0) return [];
     const users = await this.prisma.user.findMany({
       where: { id: { in: ids } },
@@ -56,6 +58,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async findByEmail(_ctx: Ctx, email: string): Promise<User | undefined> {
+    this.logger.debug(_ctx, 'findByEmail');
     const normalized = normalizeEmail(email);
     const user = await this.prisma.user.findFirst({
       where: {
@@ -66,6 +69,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async findByEmailContaining(_ctx: Ctx, searchTerm: string): Promise<User[]> {
+    this.logger.debug(_ctx, 'findByEmailContaining');
     if (!searchTerm?.trim()) return [];
     const term = searchTerm.trim();
     const users = await this.prisma.user.findMany({
@@ -83,7 +87,7 @@ export class UsersRepository implements IUsersRepository {
     ctx: Ctx,
     params: { page: number; limit: number; search?: string },
   ): Promise<{ users: User[]; total: number }> {
-    void ctx;
+    this.logger.debug(ctx, 'findManyPaginated', { page: params.page, limit: params.limit, search: params.search });
     const { page, limit, search } = params;
     const skip = (page - 1) * limit;
     const term = search?.trim();
@@ -112,7 +116,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async getSellers(ctx: Ctx): Promise<User[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getSellers');
     const users = await this.prisma.user.findMany({
       where: {
         acceptedSellerTermsAt: { not: null },
@@ -122,7 +126,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async getAdmins(ctx: Ctx): Promise<User[]> {
-    void ctx;
+    this.logger.debug(ctx, 'getAdmins');
     const users = await this.prisma.user.findMany({
       where: { role: 'Admin' },
     });
@@ -130,6 +134,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async add(_ctx: Ctx, userData: CreateUserData): Promise<User> {
+    this.logger.debug(_ctx, 'add', { email: userData.email });
     const user = await this.prisma.user.create({
       data: {
         email: normalizeEmail(userData.email),
@@ -349,6 +354,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async findUsersWithBankAccount(_ctx: Ctx): Promise<User[]> {
+    this.logger.debug(_ctx, 'findUsersWithBankAccount');
     const rows = await this.prisma.$queryRaw<{ id: string }[]>`
       SELECT id FROM users WHERE "bankAccount" IS NOT NULL
     `;

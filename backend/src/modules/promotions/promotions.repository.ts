@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Ctx } from '../../common/types/context';
+import { ContextLogger } from '../../common/logger/context-logger';
 import {
   type Promotion,
   PromotionStatus,
@@ -21,6 +22,8 @@ export class PromotionsRepository
   extends BaseRepository
   implements IPromotionsRepository
 {
+  private readonly logger = new ContextLogger(PromotionsRepository.name);
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
@@ -82,6 +85,7 @@ export class PromotionsRepository
     ctx: Ctx,
     promotion: Omit<Promotion, 'id' | 'createdAt'>,
   ): Promise<Promotion> {
+    this.logger.debug(ctx, 'create');
     const client = this.getClient(ctx);
     const id = crypto.randomUUID();
     const created = await client.promotion.create({
@@ -103,6 +107,7 @@ export class PromotionsRepository
   }
 
   async findById(ctx: Ctx, id: string): Promise<Promotion | undefined> {
+    this.logger.debug(ctx, 'findById', { id });
     const client = this.getClient(ctx);
     const row = await client.promotion.findUnique({ where: { id } });
     return row ? this.mapToDomain(row) : undefined;
@@ -113,6 +118,7 @@ export class PromotionsRepository
     userId: string,
     type: PromotionType,
   ): Promise<Promotion | undefined> {
+    this.logger.debug(ctx, 'findActiveByUserIdAndType', { userId, type });
     const client = this.getClient(ctx);
     const now = new Date();
     const rows = await client.promotion.findMany({
@@ -134,6 +140,7 @@ export class PromotionsRepository
   }
 
   async list(ctx: Ctx, filters?: ListPromotionsFilters): Promise<Promotion[]> {
+    this.logger.debug(ctx, 'list', { filters });
     const client = this.getClient(ctx);
     const where: {
       status?: PrismaPromotionStatus;
@@ -155,6 +162,7 @@ export class PromotionsRepository
     id: string,
     status: PromotionStatus,
   ): Promise<Promotion | undefined> {
+    this.logger.debug(ctx, 'updateStatus', { id, status });
     const client = this.getClient(ctx);
     const updated = await client.promotion.update({
       where: { id },
@@ -168,6 +176,7 @@ export class PromotionsRepository
     id: string,
     listingId: string,
   ): Promise<Promotion | undefined> {
+    this.logger.debug(ctx, 'incrementUsedAndAddListingId', { id, listingId });
     const client = this.getClient(ctx);
     const existing = await client.promotion.findUnique({ where: { id } });
     if (!existing) return undefined;
@@ -189,6 +198,7 @@ export class PromotionsRepository
     userId: string,
     type: PromotionType,
   ): Promise<number> {
+    this.logger.debug(ctx, 'deactivateByUserIdAndType', { userId, type });
     const client = this.getClient(ctx);
     const result = await client.promotion.updateMany({
       where: {

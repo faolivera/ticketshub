@@ -157,6 +157,7 @@ export class OrdersService {
 - Handle data access only
 - All methods must have explicit return types
 - **Repositories should only be injected by their own module's service**
+- **Every repository method must call the logger at least once.** Use `ContextLogger` (e.g. `private readonly logger = new ContextLogger(RepositoryName.name)`). For methods that receive `ctx`, log at DEBUG at entry (e.g. `this.logger.debug(ctx, 'methodName')` or `this.logger.debug(ctx, 'methodName', { id })`). For methods that only receive `_ctx`, either rename to `ctx` and add a debug log at entry, or log in error paths (e.g. in `catch`). Never use `void ctx`; use the context for logging.
 
 ### Raw SQL Queries (CRITICAL)
 
@@ -249,6 +250,7 @@ throw new HttpException('Custom error', HttpStatus.INTERNAL_SERVER_ERROR);
 **Use `ContextLogger` everywhere.** Do not use `console.log`, `console.error`, or `console.warn` in application code.
 
 - **Services, repositories, guards, interceptors, storage providers, lock services**: inject or instantiate `ContextLogger` with the class name (e.g. `private readonly logger = new ContextLogger(MyService.name)`) and call `this.logger.error(ctx, message, ...)`, `this.logger.warn(ctx, message, ...)`, etc.
+- **Repositories**: every repository method must call the logger at least once (see [Repositories](#repositories)); use DEBUG at method entry when `ctx` is available.
 - **When `ctx` is available** (e.g. in a method that receives `ctx: Ctx`): pass it as the first argument so logs include request context.
 - **When `ctx` is not available** (e.g. in a private helper or code path without request context): use `ON_APP_INIT_CTX` from `common/types/context` so logs still go through the same pipeline and respect log level config.
 - **Exception — scripts** (e.g. under `scripts/`): `console.error` / `console.log` before `process.exit(1)` is acceptable.

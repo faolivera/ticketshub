@@ -42,6 +42,7 @@ export class TransactionsRepository
   }
 
   async create(ctx: Ctx, transaction: Transaction): Promise<Transaction> {
+    this.logger.debug(ctx, 'create', { transactionId: transaction.id });
     const client = this.getClient(ctx);
     const created = await client.transaction.create({
       data: {
@@ -104,6 +105,7 @@ export class TransactionsRepository
   }
 
   async findById(ctx: Ctx, id: string): Promise<Transaction | undefined> {
+    this.logger.debug(ctx, 'findById', { id });
     const client = this.getClient(ctx);
     const transaction = await client.transaction.findUnique({
       where: { id },
@@ -112,6 +114,7 @@ export class TransactionsRepository
   }
 
   async getAll(ctx: Ctx): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getAll');
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
       orderBy: { createdAt: 'desc' },
@@ -120,6 +123,7 @@ export class TransactionsRepository
   }
 
   async getByBuyerId(ctx: Ctx, buyerId: string): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getByBuyerId', { buyerId });
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
       where: { buyerId },
@@ -137,6 +141,7 @@ export class TransactionsRepository
       offset: number;
     },
   ): Promise<{ transactions: Transaction[]; total: number }> {
+    this.logger.debug(ctx, 'getByBuyerIdPaginated', { buyerId, limit: opts.limit, offset: opts.offset });
     const client = this.getClient(ctx);
     const where = {
       buyerId,
@@ -160,6 +165,7 @@ export class TransactionsRepository
   }
 
   async getBySellerId(ctx: Ctx, sellerId: string): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getBySellerId', { sellerId });
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
       where: { sellerId },
@@ -177,6 +183,7 @@ export class TransactionsRepository
       offset: number;
     },
   ): Promise<{ transactions: Transaction[]; total: number }> {
+    this.logger.debug(ctx, 'getBySellerIdPaginated', { sellerId, limit: opts.limit, offset: opts.offset });
     const client = this.getClient(ctx);
     const where = {
       sellerId,
@@ -208,6 +215,7 @@ export class TransactionsRepository
       offset: number;
     },
   ): Promise<{ transactions: Transaction[]; total: number }> {
+    this.logger.debug(ctx, 'getByUserIdPaginated', { userId, limit: opts.limit, offset: opts.offset });
     const client = this.getClient(ctx);
     const where = {
       OR: [{ buyerId: userId }, { sellerId: userId }],
@@ -234,6 +242,7 @@ export class TransactionsRepository
     _ctx: Ctx,
     sellerIds: string[],
   ): Promise<Transaction[]> {
+    this.logger.debug(_ctx, 'getCompletedBySellerIds', { count: sellerIds.length });
     if (sellerIds.length === 0) return [];
     const client = this.getClient(_ctx);
     const transactions = await client.transaction.findMany({
@@ -246,6 +255,7 @@ export class TransactionsRepository
   }
 
   async getByListingId(ctx: Ctx, listingId: string): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getByListingId', { listingId });
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
       where: { listingId },
@@ -257,6 +267,7 @@ export class TransactionsRepository
     ctx: Ctx,
     listingIds: string[],
   ): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getByListingIds', { count: listingIds.length });
     if (listingIds.length === 0) return [];
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
@@ -266,6 +277,7 @@ export class TransactionsRepository
   }
 
   async getPendingDepositRelease(ctx: Ctx): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getPendingDepositRelease');
     const client = this.getClient(ctx);
     const now = new Date();
     const transactions = await client.transaction.findMany({
@@ -283,6 +295,7 @@ export class TransactionsRepository
     id: string,
     updates: Partial<Transaction>,
   ): Promise<Transaction | undefined> {
+    this.logger.debug(ctx, 'update', { id });
     const client = this.getClient(ctx);
     try {
       const data = this.buildUpdateData(updates);
@@ -495,6 +508,7 @@ export class TransactionsRepository
       sellerIds?: string[];
     },
   ): Promise<{ transactions: Transaction[]; total: number }> {
+    this.logger.debug(ctx, 'getPaginated', { page, limit });
     const client = this.getClient(ctx);
     let where = {};
 
@@ -534,6 +548,7 @@ export class TransactionsRepository
   }
 
   async findByIds(ctx: Ctx, ids: string[]): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'findByIds', { count: ids.length });
     if (ids.length === 0) return [];
     const client = this.getClient(ctx);
     const transactions = await client.transaction.findMany({
@@ -546,6 +561,7 @@ export class TransactionsRepository
     ctx: Ctx,
     statuses: TransactionStatus[],
   ): Promise<number> {
+    this.logger.debug(ctx, 'countByStatuses', { count: statuses.length });
     if (statuses.length === 0) return 0;
     const client = this.getClient(ctx);
     const dbStatuses = statuses.map((s) => this.mapStatusToDb(s));
@@ -558,6 +574,7 @@ export class TransactionsRepository
     ctx: Ctx,
     statuses: TransactionStatus[],
   ): Promise<string[]> {
+    this.logger.debug(ctx, 'getIdsByStatuses', { count: statuses.length });
     if (statuses.length === 0) return [];
     const client = this.getClient(ctx);
     const dbStatuses = statuses.map((s) => this.mapStatusToDb(s));
@@ -569,6 +586,7 @@ export class TransactionsRepository
   }
 
   async findExpiredPendingPayments(ctx: Ctx): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'findExpiredPendingPayments');
     const client = this.getClient(ctx);
     const now = new Date();
     const transactions = await client.transaction.findMany({
@@ -581,6 +599,7 @@ export class TransactionsRepository
   }
 
   async findExpiredAdminReviews(ctx: Ctx): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'findExpiredAdminReviews');
     const client = this.getClient(ctx);
     const now = new Date();
     const transactions = await client.transaction.findMany({
@@ -597,6 +616,7 @@ export class TransactionsRepository
     status: TransactionStatus,
     paymentMethodIds: string[],
   ): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getByStatusAndPaymentMethodIds', { status, count: paymentMethodIds.length });
     if (paymentMethodIds.length === 0) return [];
     const client = this.getClient(ctx);
     const dbStatus = this.mapStatusToDb(status);
@@ -614,6 +634,7 @@ export class TransactionsRepository
     ctx: Ctx,
     id: string,
   ): Promise<Transaction | undefined> {
+    this.logger.debug(ctx, 'findByIdForUpdate', { id });
     const client = this.getClient(ctx);
 
     const [transaction] = await client.$queryRaw<PrismaTransaction[]>`
@@ -631,6 +652,7 @@ export class TransactionsRepository
     updates: Partial<Transaction>,
     expectedVersion: number,
   ): Promise<Transaction> {
+    this.logger.debug(ctx, 'updateWithVersion', { id, expectedVersion });
     const client = this.getClient(ctx);
 
     const updateData = this.buildUpdateData(updates);
