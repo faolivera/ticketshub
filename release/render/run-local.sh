@@ -6,7 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
-IMAGE="${1:-ticketshub:latest}"
+IMAGE="${1:-ticketshub-render:latest}"
 # Use same network as docker-compose (default name: ticketshub_default)
 NETWORK="ticketshub_default"
 docker run --rm -it \

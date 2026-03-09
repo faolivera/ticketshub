@@ -1,6 +1,6 @@
-# Serve static files. localhost always works (for curl/debug on server).
-# Set DOMAIN=ticketshub.shop so Caddy also serves and gets HTTPS for that hostname.
-localhost {$DOMAIN:} {
+# Serve static files. localhost for local/debug; production domains for HTTPS (Let's Encrypt).
+# Domains: ticketshub.com.ar, ticketshub.ar, ticketshub.shop — ensure DNS A records point to this host.
+localhost ticketshub.com.ar ticketshub.ar ticketshub.shop {
 	root * /srv
 	encode gzip
 	file_server

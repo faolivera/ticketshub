@@ -1,0 +1,25 @@
+# Caddy: TLS for ticketshub.shop, ticketshub.com.ar, ticketshub.ar
+# Automatic HTTPS via Let's Encrypt. DNS A records must point to this host.
+# Persist certs in /data (mount a volume at /data in Docker).
+{
+	admin off
+	storage /data/caddy
+}
+
+ticketshub.shop, ticketshub.com.ar, ticketshub.ar {
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+	handle /socket.io/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+	handle /health {
+		reverse_proxy 127.0.0.1:3000
+	}
+	handle {
+		root * /app/frontend/dist
+		encode gzip
+		try_files {path} /index.html
+		file_server
+	}
+}

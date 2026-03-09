@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ContextLogger } from '../../../common/logger/context-logger';
 import type { Ctx } from '../../../common/types/context';
 import type { Notification } from '../notifications.domain';
@@ -6,60 +6,42 @@ import type {
   NotificationChannelProvider,
   ChannelSendResult,
 } from './channel.interface';
+import type { IEmailSender } from '../../../common/email/email-sender.interface';
+import { EMAIL_SENDER } from '../../../common/email/email-sender.interface';
+import { UsersService } from '../../users/users.service';
 
 /**
- * Email notification channel using AWS SES.
- * Currently a mock implementation - production would integrate with actual SES SDK.
+ * Email notification channel. Uses configured email provider (SES or MOCK_EMAIL) via IEmailSender.
  */
 @Injectable()
 export class EmailChannel implements NotificationChannelProvider {
   private readonly logger = new ContextLogger(EmailChannel.name);
 
-  // TODO: Inject SES client when integrating with AWS
-  // private readonly sesClient: SESClient;
+  constructor(
+    @Inject(EMAIL_SENDER)
+    private readonly emailSender: IEmailSender,
+    private readonly usersService: UsersService,
+  ) {}
 
   async send(ctx: Ctx, notification: Notification): Promise<ChannelSendResult> {
-    this.logger.log(
-      ctx,
-      `[MOCK] Sending email notification ${notification.id} to user ${notification.recipientId}`,
-    );
-
-    try {
-      // TODO: Integrate with AWS SES
-      // const command = new SendEmailCommand({
-      //   Source: 'noreply@ticketshub.com',
-      //   Destination: { ToAddresses: [recipientEmail] },
-      //   Message: {
-      //     Subject: { Data: notification.title },
-      //     Body: { Text: { Data: notification.body } },
-      //   },
-      // });
-      // const response = await this.sesClient.send(command);
-
-      // Mock successful send
-      const mockMessageId = `ses_${Date.now()}_${Math.random().toString(16).substring(2, 10)}`;
-
-      this.logger.debug(
+    const user = await this.usersService.findById(ctx, notification.recipientId);
+    if (!user?.email) {
+      this.logger.warn(
         ctx,
-        `[MOCK] Email sent successfully. MessageId: ${mockMessageId}`,
+        `No email for recipient ${notification.recipientId}, skipping notification ${notification.id}`,
       );
-
-      return {
-        success: true,
-        externalId: mockMessageId,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(
-        ctx,
-        `Failed to send email notification ${notification.id}: ${errorMessage}`,
-      );
-
-      return {
-        success: false,
-        error: errorMessage,
-      };
+      return { success: false, error: 'Recipient has no email' };
     }
+
+    const result = await this.emailSender.send(ctx, {
+      to: user.email,
+      subject: notification.title,
+      body: notification.body,
+    });
+
+    if (result.success) {
+      return { success: true, externalId: result.messageId };
+    }
+    return { success: false, error: result.error };
   }
 }

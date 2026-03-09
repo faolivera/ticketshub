@@ -16,6 +16,11 @@ export enum OTPStatus {
 }
 
 /**
+ * Sentinel code stored when using Twilio Verify (verification is done via API, not DB).
+ */
+export const OTP_CODE_TWILIO_PENDING = 'TWILIO';
+
+/**
  * OTP entity
  */
 export interface OTP {
@@ -27,6 +32,8 @@ export interface OTP {
   expiresAt: Date;
   createdAt: Date;
   verifiedAt?: Date;
+  /** Email or phone where the OTP was sent (for sending and for Twilio verify). */
+  destination?: string;
 }
 
 /**

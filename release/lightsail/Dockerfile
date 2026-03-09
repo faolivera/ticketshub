@@ -1,5 +1,6 @@
-# Multi-stage build for Render: frontend (Vite) + backend (NestJS) + Caddy
-# Build from repo root: docker build -f release/render/Dockerfile -t ticketshub-render:latest .
+# Multi-stage build for AWS Lightsail: frontend + backend + Caddy with TLS
+# Build from repo root: docker build -f release/lightsail/Dockerfile -t ticketshub-lightsail:latest .
+# Caddy serves on 80/443 with automatic HTTPS for ticketshub.shop, ticketshub.com.ar, ticketshub.ar
 
 # -----------------------------------------------------------------------------
 # Stage 1: Frontend
@@ -24,7 +25,6 @@ RUN npm ci --omit=dev 2>/dev/null || npm install --omit=dev
 
 COPY backend/ ./
 RUN npx prisma generate
-# Backend dist is included via COPY backend/ (build.sh runs `npm run build` in backend first to avoid OOM in Docker)
 
 # -----------------------------------------------------------------------------
 # Stage 3: Runtime (Caddy + Node)
@@ -34,7 +34,6 @@ RUN apk add --no-cache caddy
 
 WORKDIR /app/backend
 
-# Copy backend runtime artifacts (prisma.config.ts required for Prisma 7 migrate deploy)
 COPY --from=backend /app/backend/node_modules ./node_modules
 COPY --from=backend /app/backend/dist ./dist
 COPY --from=backend /app/backend/package.json ./
@@ -42,14 +41,12 @@ COPY --from=backend /app/backend/prisma ./prisma
 COPY --from=backend /app/backend/prisma.config.ts ./
 COPY --from=backend /app/backend/config ./config
 
-# Copy frontend static assets
 COPY --from=frontend /app/frontend/dist /app/frontend/dist
 
-# Copy Caddy and entrypoint
-COPY release/render/Caddyfile /etc/caddy/Caddyfile
-COPY release/render/entrypoint.sh /entrypoint.sh
+COPY release/lightsail/Caddyfile /etc/caddy/Caddyfile
+COPY release/lightsail/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 8080
+EXPOSE 80 443
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -1,6 +1,6 @@
 # Landing (Coming Soon)
 
-Minimal static landing page served by Caddy for **ticketshub.shop**. No logo or app name—just “Coming soon.” Styling matches the main app (Plus Jakarta Sans, light background, dark text).
+Minimal static landing page served by Caddy for **ticketshub.com.ar**, **ticketshub.ar**, and **ticketshub.shop**. No logo or app name—just “Coming soon.” Styling matches the main app (Plus Jakarta Sans, light background, dark text).
 
 ## Build and publish to ghcr.io (from repo root)
 
@@ -46,18 +46,17 @@ docker run -p 80:80 -p 443:443 --rm landing
 
 Open http://localhost — Caddy serves the static site on port 80.
 
-**HTTPS with automatic certificates (production at ticketshub.shop):**
+**HTTPS with automatic certificates (production):**
 
-Set `DOMAIN=ticketshub.shop` so Caddy can obtain a Let’s Encrypt certificate. Persist `/data` so certs are reused:
+Caddy is configured for ticketshub.com.ar, ticketshub.ar, and ticketshub.shop. Persist `/data` so Let’s Encrypt certs are reused:
 
 ```bash
 docker run -p 80:80 -p 443:443 \
-  -e DOMAIN=ticketshub.shop \
   -v landing_caddy_data:/data \
   --rm landing
 ```
 
-Caddy will serve HTTPS on 443 and redirect HTTP to HTTPS. Ensure ports 80 and 443 are open and ticketshub.shop DNS A record points to the host.
+Caddy will serve HTTPS on 443 and redirect HTTP to HTTPS. Ensure ports 80 and 443 are open and the DNS A records for those domains point to the host.
 
 ## Deploy on AWS Lightsail
 
@@ -71,10 +70,9 @@ Caddy will serve HTTPS on 443 and redirect HTTP to HTTPS. Ensure ports 80 and 44
      ```bash
      docker run -d -p 80:80 -p 443:443 --name landing --restart unless-stopped landing
      ```
-   - HTTPS at ticketshub.shop:
+   - HTTPS (ticketshub.com.ar, ticketshub.ar, ticketshub.shop):
      ```bash
      docker run -d -p 80:80 -p 443:443 \
-       -e DOMAIN=ticketshub.shop \
        -v landing_caddy_data:/data \
        --name landing --restart unless-stopped ghcr.io/YOUR_GITHUB_OWNER/ticketshub-landing:latest
      ```
@@ -82,7 +80,7 @@ Caddy will serve HTTPS on 443 and redirect HTTP to HTTPS. Ensure ports 80 and 44
 
 4. **Firewall:** In the Lightsail networking tab, allow TCP 80 and 443.
 
-5. **DNS:** Point ticketshub.shop A record to the instance’s static IP.
+5. **DNS:** Point the A records for ticketshub.com.ar, ticketshub.ar, and ticketshub.shop to the instance’s static IP.
 
 **Update to a new image (after pushing from GitHub Actions):** Copy `release/landing/deploy-on-server.sh` to the instance, then run:
 

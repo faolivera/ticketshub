@@ -728,17 +728,18 @@ model WalletTransaction {
 }
 
 model Otp {
-  id         String    @id @default(uuid())
-  userId     String
-  type       OTPType
-  code       String
-  status     OTPStatus @default(pending)
-  expiresAt  DateTime
-  verifiedAt DateTime?
-  createdAt  DateTime  @default(now())
+  id          String    @id @default(uuid())
+  userId      String
+  type        OTPType
+  code        String
+  status      OTPStatus @default(pending)
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  destination String?   // Email or phone where the OTP was sent (for sending and for Twilio verify)
 
   // Relations
-  user       User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([userId, type])

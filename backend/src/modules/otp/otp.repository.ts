@@ -28,6 +28,7 @@ export class OTPRepository implements IOTPRepository {
         status: this.mapStatusToPrisma(otp.status),
         expiresAt: otp.expiresAt,
         verifiedAt: otp.verifiedAt,
+        destination: otp.destination ?? null,
       },
     });
     return this.mapToOTP(created);
@@ -123,6 +124,7 @@ export class OTPRepository implements IOTPRepository {
       expiresAt: prismaOtp.expiresAt,
       createdAt: prismaOtp.createdAt,
       verifiedAt: prismaOtp.verifiedAt ?? undefined,
+      destination: prismaOtp.destination ?? undefined,
     };
   }
 

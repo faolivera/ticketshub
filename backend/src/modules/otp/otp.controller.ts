@@ -72,7 +72,16 @@ export class OTPController {
       }
     }
 
-    const otp = await this.otpService.sendOTP(ctx, user.id, type);
+    const email =
+      type === OTPType.EmailVerification ? user.email : undefined;
+    const phone =
+      type === OTPType.PhoneVerification
+        ? (bodyPhone ?? user.phone)?.trim()
+        : undefined;
+    const otp = await this.otpService.sendOTP(ctx, user.id, type, {
+      email,
+      phone,
+    });
 
     return {
       success: true,
@@ -107,7 +116,9 @@ export class OTPController {
       );
     }
 
-    await this.otpService.verifyOTP(ctx, user.id, type, code);
+    const phoneForVerify =
+      type === OTPType.PhoneVerification ? phoneNumber : undefined;
+    await this.otpService.verifyOTP(ctx, user.id, type, code, phoneForVerify);
 
     if (type === OTPType.EmailVerification) {
       await this.usersService.markEmailVerified(ctx, user.id);

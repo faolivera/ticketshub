@@ -378,11 +378,9 @@ export class UsersService {
         throw new BadRequestException('Invalid password for existing account');
       }
       // Resume verification: resend OTP
-      await this.otpService.sendOTP(
-        ctx,
-        existing.id,
-        OTPType.EmailVerification,
-      );
+      await this.otpService.sendOTP(ctx, existing.id, OTPType.EmailVerification, {
+        email: existing.email,
+      });
       const token = this.generateToken(existing);
       const userInfo = await this.getAuthenticatedUserInfo(ctx, existing.id);
       if (!userInfo) {
@@ -426,7 +424,9 @@ export class UsersService {
       data.termsAcceptance.method,
     );
 
-    await this.otpService.sendOTP(ctx, newUser.id, OTPType.EmailVerification);
+    await this.otpService.sendOTP(ctx, newUser.id, OTPType.EmailVerification, {
+      email: newUser.email,
+    });
 
     const token = this.generateToken(newUser);
     const userInfo = await this.getAuthenticatedUserInfo(ctx, newUser.id);

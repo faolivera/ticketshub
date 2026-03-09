@@ -18,6 +18,8 @@ import { SupportModule } from './modules/support/support.module';
 import { BffModule } from './modules/bff/bff.module';
 import { TermsModule } from './modules/terms/terms.module';
 import { StorageModule } from './common/storage/storage.module';
+import { EmailModule } from './common/email/email.module';
+import { SmsModule } from './common/sms/sms.module';
 import { PaymentConfirmationsModule } from './modules/payment-confirmations/payment-confirmations.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -46,6 +48,8 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     DistributedLockModule,
     NotificationsModule,
     StorageModule,
+    EmailModule,
+    SmsModule,
 
     // Core modules
     HealthModule,

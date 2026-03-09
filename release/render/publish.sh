@@ -18,7 +18,7 @@ if [[ -z "${GITHUB_OWNER}" ]]; then
   fi
 fi
 IMAGE="ghcr.io/${GITHUB_OWNER}/ticketshub:${TAG}"
-SOURCE="${2:-ticketshub:latest}"
+SOURCE="${2:-ticketshub-render:latest}"
 cd "$REPO_ROOT"
 docker tag "$SOURCE" "$IMAGE"
 docker push "$IMAGE"

@@ -6,7 +6,7 @@ import type { OTP, OTPStatus, OTPType } from './otp.domain';
  */
 export interface IOTPRepository {
   /**
-   * Create a new OTP
+   * Create a new OTP (destination is optional; used for send target and Twilio verify).
    */
   create(ctx: Ctx, otp: OTP): Promise<OTP>;
 

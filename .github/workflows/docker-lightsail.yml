@@ -1,16 +1,18 @@
-# Build TicketsHub Docker image for linux/amd64 (e.g. Render) and push to GHCR.
+# Build TicketsHub Docker image for AWS Lightsail (linux/amd64) and push to GHCR.
+# TLS/SSL for ticketshub.shop, ticketshub.com.ar, ticketshub.ar via Caddy in the image.
 # Trigger: manual only (workflow_dispatch).
 #
 # If push fails with "permission_denied: write_package":
 # - Repo in org: Settings → Actions → General → Workflow permissions → "Read and write permissions".
 # - Or add a PAT with write:packages as repo secret GHCR_TOKEN (used below when set).
-name: Docker image – Render (linux/amd64)
+name: Docker image – Lightsail (linux/amd64)
 
 on:
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME: ticketshub-lightsail
 
 jobs:
   build:
@@ -48,17 +50,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Build image (release/render/build.sh)
+      - name: Build image (release/lightsail/build.sh)
         env:
           BUILD_PLATFORM: linux/amd64
-          REGISTRY_CACHE_REF: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ticketshub-render:buildcache
+          REGISTRY_CACHE_REF: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:buildcache
         run: |
-          chmod +x release/render/build.sh
-          ./release/render/build.sh "${{ env.REGISTRY }}/${{ github.repository_owner }}/ticketshub-render:latest"
+          chmod +x release/lightsail/build.sh
+          ./release/lightsail/build.sh "${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
 
       - name: Push image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/ticketshub-render"
+          IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}"
           docker push "${IMAGE}:latest"
           docker tag "${IMAGE}:latest" "${IMAGE}:sha-${{ github.sha }}"
           docker push "${IMAGE}:sha-${{ github.sha }}"

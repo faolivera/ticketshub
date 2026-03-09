@@ -17,7 +17,6 @@ docker rm landing 2>/dev/null || true
 echo "Starting new container..."
 docker run -d \
   -p 80:80 -p 443:443 \
-  -e DOMAIN=ticketshub.shop \
   -v landing_caddy_data:/data \
   --name landing \
   --restart unless-stopped \

@@ -5,12 +5,12 @@
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-TAG="${1:-ticketshub:latest}"
+TAG="${1:-ticketshub-render:latest}"
 cd "$REPO_ROOT"
 echo "Building backend (required for image)..."
 (cd backend && npm run build)
 # Set BUILD_PLATFORM=linux/amd64 to build for Render (requires Docker Buildx). Otherwise builds for host arch.
-# Set REGISTRY_CACHE_REF (e.g. ghcr.io/owner/ticketshub:buildcache) to use registry cache in CI.
+# Set REGISTRY_CACHE_REF (e.g. ghcr.io/owner/ticketshub-render:buildcache) to use registry cache in CI.
 if [[ "${BUILD_PLATFORM}" == "linux/amd64" ]] && docker buildx version &>/dev/null; then
   echo "Building for linux/amd64 (Render)..."
   cache_args=()
