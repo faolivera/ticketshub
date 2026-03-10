@@ -15,6 +15,8 @@ import type { BuyPageData, BuyPagePaymentMethodOption, CheckoutRisk, Offer } fro
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
+import { JsonLd } from '@/app/components/JsonLd';
+import { getBaseUrl } from '@/config/env';
 
 function getBadgeIcon(badge: string) {
   const b = badge.toLowerCase();
@@ -457,6 +459,37 @@ export function BuyTicketPage() {
     listing.sectionName ||
     (listing.type === 'Physical' ? 'Physical Ticket' : 'Digital Ticket');
 
+  const baseUrl = getBaseUrl();
+  const buyPageUrl = baseUrl && eventSlug && listingId ? `${baseUrl}/buy/${eventSlug}/${listingId}` : '';
+  const imagePath = listing.bannerUrls?.rectangle ?? listing.bannerUrls?.square;
+  const imageAbs = imagePath
+    ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`)
+    : undefined;
+  const priceValue = (acceptedOffer ? acceptedOffer.offeredPrice.amount : listing.pricePerTicket.amount) / 100;
+  const productName = `${listing.eventName} – ${ticketTypeDisplay}`;
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: productName,
+    description: t('seo.buyTicket.description', { eventName: listing.eventName }),
+    ...(buyPageUrl && { url: buyPageUrl }),
+    ...(imageAbs && { image: imageAbs }),
+    offers: {
+      '@type': 'Offer',
+      price: priceValue,
+      priceCurrency: listing.pricePerTicket.currency,
+      availability: 'https://schema.org/InStock',
+      ...(buyPageUrl && { url: buyPageUrl }),
+      ...(seller?.publicName && {
+        seller: {
+          '@type': 'Organization',
+          name: seller.publicName,
+        },
+      }),
+      ...(listing.expiresAt && { validThrough: new Date(listing.expiresAt).toISOString() }),
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PageMeta
@@ -464,6 +497,7 @@ export function BuyTicketPage() {
         description={t('seo.buyTicket.description', { eventName: listing.eventName })}
         image={listing.bannerUrls?.rectangle ?? listing.bannerUrls?.square}
       />
+      <JsonLd data={productJsonLd} />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {isOwnListing && listing && (
           <>

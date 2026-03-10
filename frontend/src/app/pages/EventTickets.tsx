@@ -289,6 +289,16 @@ export function EventTickets() {
         addressCountry: event.location?.countryCode,
       },
     },
+    ...(listings.length > 0 &&
+      baseUrl && {
+        offers: listings.map((listing) => ({
+          '@type': 'Offer',
+          price: listing.pricePerTicket.amount / 100,
+          priceCurrency: listing.pricePerTicket.currency,
+          url: `${baseUrl}/buy/${event.slug}/${listing.id}`,
+          availability: 'https://schema.org/InStock',
+        })),
+      }),
   };
 
   return (
