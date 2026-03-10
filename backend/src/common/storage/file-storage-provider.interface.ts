@@ -57,13 +57,14 @@ export interface FileStorageProvider {
    */
   exists(key: string): Promise<boolean>;
 
+  /** Returns a public (unauthenticated) URL for the given key. Only available on providers backed by a publicly-accessible bucket. */
+  getPublicUrl?(key: string): string;
+
   /**
-   * Generate a time-limited access URL (for cloud storage like S3)
-   * @param key File key
-   * @param expiresInSeconds URL expiration time
-   * @returns Signed URL or null if not supported
+   * Generate a time-limited access URL (for cloud storage like S3).
+   * Use for private or user-specific assets (e.g. avatars).
    */
-  getSignedUrl?(key: string, expiresInSeconds: number): Promise<string | null>;
+  getSignedUrl?(key: string, expiresInSeconds: number): Promise<string>;
 }
 
 /**

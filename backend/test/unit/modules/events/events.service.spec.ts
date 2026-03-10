@@ -124,7 +124,7 @@ describe('EventsService', () => {
       delete: jest.fn(),
       deleteByFilename: jest.fn(),
       exists: jest.fn(),
-      getPublicUrlAsync: jest.fn(),
+      getPublicUrl: jest.fn(),
       scanExistingBanners: jest.fn(),
       readFile: jest.fn(),
     };
@@ -1001,7 +1001,7 @@ describe('EventsService', () => {
         },
       });
       bannerStorage.store.mockResolvedValue('square.png');
-      bannerStorage.getPublicUrlAsync.mockResolvedValue(
+      bannerStorage.getPublicUrl.mockReturnValue(
         '/public/event-banners/evt_123/square.png',
       );
 
@@ -1197,7 +1197,7 @@ describe('EventsService', () => {
         updatedAt: new Date(),
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithBanner);
-      bannerStorage.getPublicUrlAsync.mockResolvedValue(
+      bannerStorage.getPublicUrl.mockReturnValue(
         '/public/event-banners/evt_123/square.png',
       );
 

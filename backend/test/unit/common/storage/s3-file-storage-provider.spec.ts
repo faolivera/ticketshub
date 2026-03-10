@@ -1,6 +1,10 @@
 import { S3FileStorageProvider } from '../../../../src/common/storage/s3-file-storage-provider';
 import type { StorageConfig } from '../../../../src/common/storage/storage-config';
 
+jest.mock('@aws-sdk/s3-request-presigner', () => ({
+  getSignedUrl: jest.fn().mockResolvedValue('https://s3.example.com/signed-url'),
+}));
+
 const mockSend = jest.fn();
 
 jest.mock('@aws-sdk/client-s3', () => ({
@@ -22,12 +26,6 @@ jest.mock('@aws-sdk/client-s3', () => ({
   CreateBucketCommand: jest
     .fn()
     .mockImplementation((opts: unknown) => ({ _create: opts })),
-}));
-
-jest.mock('@aws-sdk/s3-request-presigner', () => ({
-  getSignedUrl: jest
-    .fn()
-    .mockResolvedValue('https://s3.example.com/signed-url'),
 }));
 
 describe('S3FileStorageProvider', () => {
@@ -114,6 +112,11 @@ describe('S3FileStorageProvider', () => {
       expect(result).toBe(false);
     });
 
+    it('should return public S3 URL from getPublicUrl', () => {
+      const url = provider.getPublicUrl('path/file.txt');
+      expect(url).toBe('https://my-bucket.s3.us-east-1.amazonaws.com/path/file.txt');
+    });
+
     it('should return signed URL from getSignedUrl', async () => {
       const url = await provider.getSignedUrl('path/file.txt', 3600);
       expect(url).toBe('https://s3.example.com/signed-url');
@@ -150,6 +153,11 @@ describe('S3FileStorageProvider', () => {
       expect(result.location).toBe(
         'http://localhost:4567/local-bucket/path/file.txt',
       );
+    });
+
+    it('should return localstack URL from getPublicUrl', () => {
+      const url = provider.getPublicUrl('path/file.txt');
+      expect(url).toBe('http://localhost:4567/local-bucket/path/file.txt');
     });
   });
 });

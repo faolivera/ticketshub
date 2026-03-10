@@ -115,17 +115,15 @@ export class EventBannerStorageService {
   }
 
   /**
-   * Get a signed public URL for a banner (for S3; use in API responses).
-   * @param expiresInSeconds Default 3600 (1 hour)
+   * Get a public URL for a banner (static S3 URL or local fallback).
    */
-  async getPublicUrlAsync(
+  getPublicUrl(
     eventId: string,
     filename: string,
-    expiresInSeconds: number = 3600,
-  ): Promise<string> {
+  ): string {
     const key = this.getStorageKey(eventId, filename);
-    if (this.storageProvider.getSignedUrl) {
-      return this.storageProvider.getSignedUrl(key, expiresInSeconds);
+    if (this.storageProvider.getPublicUrl) {
+      return this.storageProvider.getPublicUrl(key);
     }
     return `/public/${BANNERS_PREFIX}/${eventId}/${filename}`;
   }

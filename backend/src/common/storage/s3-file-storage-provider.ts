@@ -6,7 +6,7 @@ import {
   HeadObjectCommand,
   CreateBucketCommand,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { getSignedUrl as getPresignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
 import { ON_APP_INIT_CTX } from '../types/context';
 import { ContextLogger } from '../logger/context-logger';
@@ -30,7 +30,6 @@ export interface S3FileStorageProviderOptions {
 export class S3FileStorageProvider implements FileStorageProvider {
   private readonly logger = new ContextLogger(S3FileStorageProvider.name);
   private readonly client: S3Client;
-  /** Used only for getSignedUrl when set, so signed URLs use a client-reachable host (e.g. localhost:4567). */
   private readonly signingClient: S3Client | null;
   private readonly bucket: string;
   private readonly config: StorageConfig;
@@ -175,12 +174,16 @@ export class S3FileStorageProvider implements FileStorageProvider {
     }
   }
 
+  getPublicUrl(key: string): string {
+    if (this.config.endpoint) {
+      return `${this.config.endpoint}/${this.bucket}/${key}`;
+    }
+    return `https://${this.bucket}.s3.${this.config.region}.amazonaws.com/${key}`;
+  }
+
   async getSignedUrl(key: string, expiresInSeconds: number): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-    });
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     const client = this.signingClient ?? this.client;
-    return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+    return getPresignedUrl(client, command, { expiresIn: expiresInSeconds });
   }
 }

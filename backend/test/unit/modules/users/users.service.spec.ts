@@ -123,6 +123,7 @@ describe('UsersService', () => {
       retrieve: jest.fn(),
       delete: jest.fn(),
       exists: jest.fn(),
+      getSignedUrl: jest.fn().mockResolvedValue('https://s3.example.com/signed-avatar-url'),
     };
 
     const mockConfigService = {
@@ -350,7 +351,7 @@ describe('UsersService', () => {
       const result = await service.uploadAvatar(mockCtx, mockUser.id, mockFile);
 
       expect(result).toBeDefined();
-      expect(result.pic.src).toContain('/public/avatars/');
+      expect(result.pic.src).toContain('signed-avatar-url');
       expect(storageProvider.store).toHaveBeenCalledWith(
         expect.stringMatching(/^avatars\/user_123\/.*\.jpg$/),
         mockFile.buffer,

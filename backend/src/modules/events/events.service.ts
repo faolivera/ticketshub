@@ -778,13 +778,13 @@ export class EventsService {
         if (event.banners) {
           const bannerUrls: { square?: string; rectangle?: string } = {};
           if (event.banners.square) {
-            bannerUrls.square = await this.bannerStorage.getPublicUrlAsync(
+            bannerUrls.square = this.bannerStorage.getPublicUrl(
               event.id,
               event.banners.square.filename,
             );
           }
           if (event.banners.rectangle) {
-            bannerUrls.rectangle = await this.bannerStorage.getPublicUrlAsync(
+            bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
               event.id,
               event.banners.rectangle.filename,
             );
@@ -1084,14 +1084,14 @@ export class EventsService {
         };
 
         if (event.banners?.square) {
-          item.squareBannerUrl = await this.bannerStorage.getPublicUrlAsync(
+          item.squareBannerUrl = this.bannerStorage.getPublicUrl(
             event.id,
             event.banners.square.filename,
           );
         }
 
         if (event.banners?.rectangle) {
-          item.rectangleBannerUrl = await this.bannerStorage.getPublicUrlAsync(
+          item.rectangleBannerUrl = this.bannerStorage.getPublicUrl(
             event.id,
             event.banners.rectangle.filename,
           );
@@ -1226,7 +1226,7 @@ export class EventsService {
       banners: updatedBanners,
     });
 
-    const url = await this.bannerStorage.getPublicUrlAsync(eventId, filename);
+    const url = this.bannerStorage.getPublicUrl(eventId, filename);
 
     this.logger.log(
       ctx,
@@ -1309,7 +1309,7 @@ export class EventsService {
 
     if (event.banners?.square) {
       response.square = {
-        url: await this.bannerStorage.getPublicUrlAsync(
+        url: this.bannerStorage.getPublicUrl(
           eventId,
           event.banners.square.filename,
         ),
@@ -1319,7 +1319,7 @@ export class EventsService {
 
     if (event.banners?.rectangle) {
       response.rectangle = {
-        url: await this.bannerStorage.getPublicUrlAsync(
+        url: this.bannerStorage.getPublicUrl(
           eventId,
           event.banners.rectangle.filename,
         ),
@@ -1348,13 +1348,13 @@ export class EventsService {
     if (event.banners) {
       const bannerUrls: { square?: string; rectangle?: string } = {};
       if (event.banners.square) {
-        bannerUrls.square = await this.bannerStorage.getPublicUrlAsync(
+        bannerUrls.square = this.bannerStorage.getPublicUrl(
           event.id,
           event.banners.square.filename,
         );
       }
       if (event.banners.rectangle) {
-        bannerUrls.rectangle = await this.bannerStorage.getPublicUrlAsync(
+        bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
           event.id,
           event.banners.rectangle.filename,
         );

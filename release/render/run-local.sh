@@ -32,10 +32,11 @@ docker run --rm -it \
   -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}" \
   -e S3_PRIVATE_BUCKET="${S3_PRIVATE_BUCKET:-ticketshub-private-dev}" \
   -e S3_PUBLIC_BUCKET="${S3_PUBLIC_BUCKET:-ticketshub-public-dev}" \
-  -e S3_ENDPOINT="http://localstack:4566" \
+  -e S3_ENDPOINT="http://localhost:4567" \
   -e S3_SIGNED_URL_ENDPOINT="http://localhost:4567" \
   -e TWILIO_ACCOUNT_SID="${TWILIO_ACCOUNT_SID:-}" \
   -e TWILIO_AUTH_TOKEN="${TWILIO_AUTH_TOKEN:-}" \
   -e TWILIO_VERIFY_SERVICE_SID="${TWILIO_VERIFY_SERVICE_SID:-}" \
+  -e APP_PUBLIC_URL="http://localhost:8080" \
   -e SES_FROM_EMAIL="${SES_FROM_EMAIL:-}" \
   "$IMAGE"
