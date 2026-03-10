@@ -1,10 +1,9 @@
-# Caddy: serve frontend and reverse-proxy to backend
+# Caddy: serve static assets from frontend dist; proxy page requests to backend for SEO-injected HTML
 # Listen on PORT (set by Render); default 8080 for local runs
 # Disable admin API so Render health checks (Host: *.onrender.com) are not rejected with 403
 {
 	admin off
 }
-# API/socket/health must be handled first, then static SPA (otherwise /api/* gets index.html)
 :{$PORT:8080} {
 	handle /api/* {
 		reverse_proxy 127.0.0.1:3000
@@ -15,10 +14,14 @@
 	handle /health {
 		reverse_proxy 127.0.0.1:3000
 	}
-	handle {
+	# All static assets (JS, CSS, images, favicon, etc.) live under /assets/ after build
+	handle /assets/* {
 		root * /app/frontend/dist
 		encode gzip
-		try_files {path} /index.html
 		file_server
+	}
+	# All other requests: proxy to backend for SEO-injected HTML
+	handle {
+		reverse_proxy 127.0.0.1:3000
 	}
 }

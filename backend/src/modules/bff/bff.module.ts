@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { BffController } from './bff.controller';
 import { BffService } from './bff.service';
+import { SeoController } from './seo/seo.controller';
+import { SeoService } from './seo/seo.service';
 import { UsersModule } from '../users/users.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { TicketsModule } from '../tickets/tickets.module';
@@ -27,7 +29,7 @@ import { RiskEngineModule } from '../risk-engine/risk-engine.module';
     EventsModule,
     RiskEngineModule,
   ],
-  controllers: [BffController],
-  providers: [BffService],
+  controllers: [BffController, SeoController],
+  providers: [BffService, SeoService],
 })
 export class BffModule {}

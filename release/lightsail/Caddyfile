@@ -16,10 +16,12 @@ ticketshub.shop, ticketshub.com.ar, ticketshub.ar {
 	handle /health {
 		reverse_proxy 127.0.0.1:3000
 	}
-	handle {
+	handle /assets/* {
 		root * /app/frontend/dist
 		encode gzip
-		try_files {path} /index.html
 		file_server
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3000
 	}
 }

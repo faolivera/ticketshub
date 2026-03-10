@@ -162,7 +162,7 @@ export function Landing() {
     '@type': 'Organization',
     name: 'TicketsHub',
     url: baseUrl || 'https://ticketshub.com.ar',
-    logo: `${baseUrl || 'https://ticketshub.com.ar'}/og-default.png`,
+    logo: `${baseUrl || 'https://ticketshub.com.ar'}/assets/og-default.png`,
   };
 
   return (
@@ -171,7 +171,7 @@ export function Landing() {
       <JsonLd data={organizationJsonLd} />
       <div
         className="relative bg-cover bg-center bg-no-repeat text-white py-16 md:py-28 min-h-[320px] md:min-h-[420px] flex items-center"
-        style={{ backgroundImage: 'url(/hero.jpeg)' }}
+        style={{ backgroundImage: 'url(/assets/hero.jpeg)' }}
       >
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 w-full">

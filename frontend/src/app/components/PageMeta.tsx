@@ -12,7 +12,7 @@ export interface PageMetaProps {
   ogType?: string;
 }
 
-const DEFAULT_OG_IMAGE_PATH = '/og-default.png';
+const DEFAULT_OG_IMAGE_PATH = '/assets/og-default.png';
 
 /**
  * Sets document title, meta description, canonical, Open Graph and Twitter Card tags.

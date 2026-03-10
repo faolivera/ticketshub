@@ -13,6 +13,9 @@ npx prisma migrate deploy
 echo "Seeding terms (idempotent)..."
 node dist/src/scripts/seed-terms.js || true
 
+# Backend needs to read index.html from frontend dist for SEO placeholder replacement
+export APP_CLIENT_BUILD_PATH=/app/frontend/dist
+
 echo "Starting backend on port 3000..."
 node dist/src/main.js &
 

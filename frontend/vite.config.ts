@@ -2,6 +2,58 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
+import path from 'path'
+
+/**
+ * Public assets under /assets/* so Caddy (and dev) only need one static handler.
+ * - Dev: serve public at /assets/* (same URLs as prod).
+ * - Build: copy public into outDir/assets/ (no HTML rewrite; index and app use /assets/... from the start).
+ */
+function publicToAssetsPlugin() {
+  let resolvedConfig: { root: string; publicDir: string; outDir: string }
+  return {
+    name: 'public-to-assets',
+    configResolved(config) {
+      resolvedConfig = {
+        root: config.root,
+        publicDir: path.resolve(config.root, config.publicDir || 'public'),
+        outDir: path.resolve(config.root, config.build.outDir),
+      }
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const match = req.url?.match(/^\/assets\/(.+)$/)
+        if (!match) return next()
+        const name = decodeURIComponent(match[1]).replace(/\.\./g, '')
+        const filePath = path.resolve(resolvedConfig.publicDir, name)
+        const rel = path.relative(resolvedConfig.publicDir, filePath)
+        if (rel.startsWith('..') || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+          return next()
+        }
+        res.setHeader('Content-Type', server.config.server.mimeTypes?.get(path.extname(name)) ?? 'application/octet-stream')
+        fs.createReadStream(filePath).pipe(res)
+      })
+    },
+    closeBundle() {
+      const { publicDir, outDir } = resolvedConfig
+      const assetsDir = path.join(outDir, 'assets')
+      if (!fs.existsSync(publicDir)) return
+
+      if (!fs.existsSync(assetsDir)) fs.mkdirSync(assetsDir, { recursive: true })
+      const entries = fs.readdirSync(publicDir, { withFileTypes: true })
+      for (const e of entries) {
+        const src = path.join(publicDir, e.name)
+        const dest = path.join(assetsDir, e.name)
+        if (e.isDirectory()) {
+          fs.cpSync(src, dest, { recursive: true })
+        } else {
+          fs.copyFileSync(src, dest)
+        }
+      }
+    },
+  }
+}
 
 export default defineConfig({
   build: {
@@ -40,10 +92,9 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
   },
   plugins: [
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
+    publicToAssetsPlugin(),
   ],
   resolve: {
     alias: {

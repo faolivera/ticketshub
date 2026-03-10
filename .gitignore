@@ -31,3 +31,6 @@ lerna-debug.log*
 # Database dumps (local dev only)
 backend/dumps/
 
+# Infra (AWS policies, etc.)
+infra/
+

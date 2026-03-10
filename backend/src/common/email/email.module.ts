@@ -10,7 +10,8 @@ const PROVIDER_MOCK = 'MOCK_EMAIL';
 
 /**
  * Global email module. Provides IEmailSender based on config.
- * Reads notifications.emailProvider (AWS | MOCK_EMAIL); same provider is used for OTP email and notification email.
+ * Provider is read from notifications.emailProvider, with fallback to otp.emailProvider
+ * so that setting only otp.emailProvider (e.g. for OTP testing) is enough.
  */
 @Global()
 @Module({
@@ -19,6 +20,7 @@ const PROVIDER_MOCK = 'MOCK_EMAIL';
       provide: EMAIL_SENDER,
       useFactory: (configService: ConfigService): IEmailSender => {
         const provider =
+          configService.get<string>('otp.emailProvider') ??
           configService.get<string>('notifications.emailProvider') ??
           PROVIDER_MOCK;
 
