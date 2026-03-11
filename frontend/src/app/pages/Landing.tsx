@@ -1,10 +1,21 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Calendar, ShieldCheck, Ticket, Headphones, RotateCcw } from 'lucide-react';
+import { Search, Calendar, ShieldCheck, Ticket, Headphones, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { EventCard } from '@/app/components/EventCard';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorMessage } from '@/app/components/ErrorMessage';
 import { EmptyState } from '@/app/components/EmptyState';
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+  DrawerClose,
+} from '@/app/components/ui/drawer';
+import { Checkbox } from '@/app/components/ui/checkbox';
+import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { useTranslation } from 'react-i18next';
 import { PageMeta } from '@/app/components/PageMeta';
 import { JsonLd } from '@/app/components/JsonLd';
@@ -104,6 +115,7 @@ const CATEGORY_I18N_KEYS: Record<EventCategory, string> = {
 
 export function Landing() {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<EventCategory | null>(null);
   const [events, setEvents] = useState<EventWithDates[]>([]);
@@ -170,15 +182,18 @@ export function Landing() {
       <PageMeta title={t('seo.landing.title')} description={t('seo.landing.description')} />
       <JsonLd data={organizationJsonLd} />
       <div
-        className="relative bg-cover bg-center bg-no-repeat text-white py-16 md:py-28 min-h-[320px] md:min-h-[420px] flex items-center"
+        className="relative bg-cover bg-center bg-no-repeat text-white py-8 sm:py-12 md:py-28 min-h-[220px] sm:min-h-[260px] md:min-h-[420px] flex items-center"
         style={{ backgroundImage: 'url(/assets/hero.jpeg)' }}
       >
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 w-full">
-          <h1 className="text-5xl font-bold mb-4 text-center tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-center tracking-tight">
             {t('landing.title')}
           </h1>
-          <p className="text-xl text-center mb-4 text-white/80">
+          <p className="md:hidden text-base text-center mb-3 text-white/80">
+            {t('landing.subtitleShort')}
+          </p>
+          <p className="hidden md:block text-xl text-center mb-4 text-white/80">
             {t('landing.subtitle')}
           </p>
 
@@ -190,7 +205,7 @@ export function Landing() {
                 placeholder={t('landing.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white shadow-lg"
+                className="w-full pl-12 pr-4 py-3 md:py-4 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white shadow-lg min-h-[44px]"
               />
             </div>
           </div>
@@ -206,37 +221,98 @@ export function Landing() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="flex items-center gap-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 shrink-0">
-            {searchTerm ? t('landing.searchResults') : t('landing.upcomingEvents')}
-          </h2>
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 md:py-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-3 sm:mb-4 mb-4">
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <h2 className="text-xl font-semibold text-gray-900 truncate m-0 leading-tight py-0.5">
+              {searchTerm ? t('landing.searchResults') : t('landing.upcomingEvents')}
+            </h2>
 
-          {!isLoading && !error && availableCategories.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+            {/* Mobile: filter drawer trigger to the right of title (only when more than one category) */}
+            {isMobile && !isLoading && !error && availableCategories.length > 1 && (
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 px-3 py-2 min-h-[44px] text-sm font-medium border border-gray-300 rounded-lg bg-white text-gray-700 hover:border-gray-400 transition-colors flex-shrink-0 touch-manipulation"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    {t('landing.filters')}
+                    {activeCategory !== null && (
+                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                        1
+                      </span>
+                    )}
+                  </button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader>
+                    <DrawerTitle>{t('landing.filters')}</DrawerTitle>
+                  </DrawerHeader>
+                  <div className="px-4 pb-4 space-y-1 overflow-y-auto">
+                    <label className="flex items-center gap-3 py-3 px-1 rounded-md cursor-pointer hover:bg-gray-50">
+                      <Checkbox
+                        checked={activeCategory === null}
+                        onCheckedChange={() => setActiveCategory(null)}
+                      />
+                      <span className="text-sm font-medium">{t('landing.categoryAll')}</span>
+                    </label>
+                    {availableCategories.map(category => (
+                      <label
+                        key={category}
+                        className="flex items-center gap-3 py-3 px-1 rounded-md cursor-pointer hover:bg-gray-50"
+                      >
+                        <Checkbox
+                          checked={activeCategory === category}
+                          onCheckedChange={() => setActiveCategory(category)}
+                        />
+                        <span className="text-sm">{t(CATEGORY_I18N_KEYS[category])}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <DrawerFooter className="flex-row gap-2">
+                    <DrawerClose asChild>
+                      <button
+                        type="button"
+                        className="flex-1 px-4 py-2.5 min-h-[44px] text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
+                      >
+                        {t('landing.applyFilters')}
+                      </button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
+            )}
+          </div>
+
+          {/* Desktop: horizontal category chips — same row as title, aligned (only when more than one category) */}
+          {!isMobile && !isLoading && !error && availableCategories.length > 1 && (
+            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-x-auto scrollbar-none pb-1">
               <button
-                onClick={() => setActiveCategory(null)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                  activeCategory === null
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
-                }`}
-              >
-                {t('landing.categoryAll')}
-              </button>
-              {availableCategories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setActiveCategory(activeCategory === category ? null : category)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                    activeCategory === category
+                  type="button"
+                  onClick={() => setActiveCategory(null)}
+                  className={`px-4 py-2 sm:py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-0 ${
+                    activeCategory === null
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
                   }`}
                 >
-                  {t(CATEGORY_I18N_KEYS[category])}
+                  {t('landing.categoryAll')}
                 </button>
-              ))}
+                {availableCategories.map(category => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setActiveCategory(activeCategory === category ? null : category)}
+                    className={`px-4 py-2 sm:py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-0 ${
+                      activeCategory === category
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
+                    }`}
+                  >
+                    {t(CATEGORY_I18N_KEYS[category])}
+                  </button>
+                  ))}
             </div>
           )}
         </div>

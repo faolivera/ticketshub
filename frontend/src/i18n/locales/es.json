@@ -78,6 +78,7 @@
   "landing": {
     "title": "Compra y Vende Entradas",
     "subtitle": "Encuentra entradas para conciertos y eventos con protección al comprador",
+    "subtitleShort": "Encontrá eventos. Comprá entradas. Protegido.",
     "securePayment": "Aprende cómo funciona nuestro sistema de pago seguro",
     "searchPlaceholder": "Buscar eventos, artistas o ubicaciones...",
     "searchResults": "Resultados de Búsqueda",
@@ -96,7 +97,9 @@
     "categoryFestival": "Festivales",
     "categoryConference": "Conferencias",
     "categoryComedy": "Comedia",
-    "categoryOther": "Otros"
+    "categoryOther": "Otros",
+    "filters": "Filtros",
+    "applyFilters": "Aplicar"
   },
   "eventCard": {
     "trending": "Tendencia",

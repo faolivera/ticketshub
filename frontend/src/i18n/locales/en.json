@@ -78,6 +78,7 @@
   "landing": {
     "title": "Buy and Sell Tickets",
     "subtitle": "Find tickets for concerts and events with buyer protection",
+    "subtitleShort": "Find events. Buy tickets. Protected.",
     "securePayment": "Learn how our secure payment system works",
     "searchPlaceholder": "Search for events, artists, or locations...",
     "searchResults": "Search Results",
@@ -96,7 +97,9 @@
     "categoryFestival": "Festivals",
     "categoryConference": "Conferences",
     "categoryComedy": "Comedy",
-    "categoryOther": "Other"
+    "categoryOther": "Other",
+    "filters": "Filters",
+    "applyFilters": "Apply"
   },
   "eventCard": {
     "trending": "Trending",
