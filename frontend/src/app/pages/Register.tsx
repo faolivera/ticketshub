@@ -173,39 +173,39 @@ export function Register() {
 
   if (step === 'verify') {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-gray-50 pt-4 pb-8 sm:pt-8 sm:pb-12">
         <PageMeta title={t('seo.register.title')} description={t('seo.register.description')} />
         <div className="max-w-md mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-md p-8">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
             <button
               onClick={() => (fromLogin ? navigate('/login', { state: { from: redirectTarget } }) : setStep('register'))}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 sm:mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
               {t('register.back')}
             </button>
 
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-blue-600" />
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Mail className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
                 {t('register.verifyEmail')}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 {t('register.verifyEmailDescription', { email: formData.email })}
               </p>
             </div>
 
             {verifyError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <div className="mb-4 sm:mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {verifyError}
               </div>
             )}
 
-            <form onSubmit={handleVerify} className="space-y-6">
+            <form onSubmit={handleVerify} className="space-y-4 sm:space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3 text-center">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3 text-center">
                   {t('register.enterCode')}
                 </label>
                 <div className="flex gap-2 justify-center">
@@ -228,7 +228,7 @@ export function Register() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 sm:py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? t('common.loading') : t('register.verify')}
               </button>
@@ -256,29 +256,29 @@ export function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 pt-4 pb-8 sm:pt-8 sm:pb-12">
       <PageMeta title={t('seo.register.title')} description={t('seo.register.description')} />
       <div className="max-w-md mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8">
+          <div className="text-center mb-4 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
               {t('register.signUp')}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base">
               {t('register.signUpDescription')}
             </p>
           </div>
 
           {registerError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 sm:mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {registerError}
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-6">
+          <form onSubmit={handleRegister} className="space-y-4 sm:space-y-6">
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
                   {t('register.email')} <span className="text-red-500">*</span>
@@ -289,14 +289,14 @@ export function Register() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder={t('register.emailPlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                 <div className="flex items-center gap-2">
                   <Lock className="w-4 h-4" />
                   {t('register.password')} <span className="text-red-500">*</span>
@@ -307,7 +307,7 @@ export function Register() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder={t('register.passwordPlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 minLength={8}
                 autoComplete="new-password"
@@ -316,7 +316,7 @@ export function Register() {
 
             {/* First Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   {t('register.firstName')} <span className="text-red-500">*</span>
@@ -327,14 +327,14 @@ export function Register() {
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 placeholder={t('register.firstNamePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
 
             {/* Last Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   {t('register.lastName')} <span className="text-red-500">*</span>
@@ -345,14 +345,14 @@ export function Register() {
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 placeholder={t('register.lastNamePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
 
             {/* Phone (optional) */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   {t('register.phoneOptional')}
@@ -363,9 +363,9 @@ export function Register() {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder={t('register.phonePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
                 {t('register.phoneOptionalHint')}
               </p>
             </div>
@@ -397,12 +397,12 @@ export function Register() {
             <button
               type="submit"
               disabled={isSubmitting || !termsVersionId || !termsAccepted}
-              className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 sm:py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? t('common.loading') : t('register.createAccount')}
             </button>
 
-            <p className="text-center text-sm text-gray-600">
+            <p className="hidden sm:block text-center text-sm text-gray-600">
               {t('register.alreadyHaveAccount')}{' '}
               <Link
                 to="/login"
