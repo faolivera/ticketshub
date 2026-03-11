@@ -173,8 +173,13 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
             </label>
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              onChange={(e) => {
+                const digitsOnly = e.target.value.replace(/\D/g, '');
+                setPhoneNumber(digitsOnly);
+              }}
               placeholder={t('becomeSeller.step1.phonePlaceholder')}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               disabled={loading}

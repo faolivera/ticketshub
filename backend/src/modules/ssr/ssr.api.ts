@@ -11,7 +11,7 @@ export interface PageMetaDto {
 }
 
 /** Default and static route meta (Spanish). Keys match frontend i18n seo.* (es.json). */
-export const SEO_STATIC_META: Record<
+export const SSR_STATIC_META: Record<
   string,
   { title: string; description: string }
 > = {

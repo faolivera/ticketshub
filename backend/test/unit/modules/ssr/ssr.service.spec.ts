@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { SeoService } from '../../../../src/modules/bff/seo/seo.service';
+import { SsrService } from '../../../../src/modules/ssr/ssr.service';
 
 const PLACEHOLDER_GA = '<!-- __GA_SCRIPT__ -->';
 const mockIndexHtml = `
@@ -32,8 +32,8 @@ jest.mock('fs', () => {
   };
 });
 
-describe('SeoService', () => {
-  let service: SeoService;
+describe('SsrService', () => {
+  let service: SsrService;
   let configService: jest.Mocked<ConfigService>;
 
   const meta = {
@@ -54,7 +54,7 @@ describe('SeoService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        SeoService,
+        SsrService,
         {
           provide: ConfigService,
           useValue: { get: mockConfigGet },
@@ -62,7 +62,7 @@ describe('SeoService', () => {
       ],
     }).compile();
 
-    service = module.get<SeoService>(SeoService);
+    service = module.get<SsrService>(SsrService);
     configService = module.get(ConfigService);
   });
 

@@ -7,7 +7,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import type { TicketListingWithEvent } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
-import { formatDate } from '@/lib/format-date';
+import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useIsMobile } from '../components/ui/use-mobile';
 import { BackButton } from '../components/BackButton';
 
@@ -92,7 +92,7 @@ export function EditListing() {
   const handleCancel = async () => {
     if (!listingId) return;
     
-    if (!confirm(t('editListing.confirmCancel'))) {
+    if (!confirm(t('editListing.cancelListingConfirm'))) {
       return;
     }
     
@@ -177,10 +177,18 @@ export function EditListing() {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Column - Ticket Preview */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="relative h-64 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <Ticket className="w-24 h-24 text-white opacity-50" />
+            <div className="relative h-64 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+              {listing.bannerUrls?.rectangle || listing.bannerUrls?.square ? (
+                <img
+                  src={listing.bannerUrls.rectangle || listing.bannerUrls.square}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <Ticket className="w-24 h-24 text-white opacity-50 relative z-10" />
+              )}
               {/* Status Badge */}
-              <div className="absolute top-4 right-4">
+              <div className="absolute top-4 right-4 z-10">
                 <span
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm bg-opacity-95 ${
                     isActive
@@ -216,7 +224,7 @@ export function EditListing() {
                   <div className="flex items-center gap-2 text-gray-900">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      {formatDate(listing.eventDate)}
+                      {formatDateTime(listing.eventDate)}
                     </span>
                   </div>
                 </div>
@@ -233,8 +241,11 @@ export function EditListing() {
                     {t('editListing.quantity')}
                   </label>
                   <p className="text-gray-900">
-                    {availableUnits.length} of {listing.ticketUnits.length} available
-                    {listing.sellTogether && ' (sold together)'}
+                    {t('editListing.quantityAvailable', {
+                      available: availableUnits.length,
+                      total: listing.ticketUnits.length,
+                    })}
+                    {listing.sellTogether && ` ${t('editListing.soldTogether')}`}
                   </p>
                 </div>
 

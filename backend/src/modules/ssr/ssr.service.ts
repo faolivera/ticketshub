@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
-import type { PageMetaDto } from './seo.api';
+import type { PageMetaDto } from './ssr.api';
 
 const readFile = promisify(fs.readFile);
 
@@ -30,7 +30,7 @@ function escapeAttr(value: string): string {
 }
 
 @Injectable()
-export class SeoService {
+export class SsrService {
   constructor(private readonly configService: ConfigService) {}
 
   /**

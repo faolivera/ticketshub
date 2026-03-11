@@ -5,5 +5,7 @@ import { loadHoconConfig } from './load-hocon';
  * Loads HOCON based on ENVIRONMENT (only env var read here).
  */
 export default function configuration(): Record<string, unknown> {
-  return loadHoconConfig();
+  const config = loadHoconConfig();
+  console.log('resend from HOCON:', config?.resend);
+  return config;
 }

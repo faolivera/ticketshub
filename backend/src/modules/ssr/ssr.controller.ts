@@ -8,21 +8,21 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { Context } from '../../../common/decorators/ctx.decorator';
-import type { Ctx } from '../../../common/types/context';
-import { BffService } from '../bff.service';
-import { SeoService } from './seo.service';
+import { Context } from '../../common/decorators/ctx.decorator';
+import type { Ctx } from '../../common/types/context';
+import { BffService } from '../bff/bff.service';
+import { SsrService } from './ssr.service';
 import {
   type PageMetaDto,
-  SEO_STATIC_META,
-} from './seo.api';
+  SSR_STATIC_META,
+} from './ssr.api';
 
 @Controller()
-export class SeoController {
+export class SsrController {
   private readonly defaultOgImage: string;
 
   constructor(
-    private readonly seoService: SeoService,
+    private readonly ssrService: SsrService,
     private readonly bffService: BffService,
     private readonly configService: ConfigService,
   ) {
@@ -66,11 +66,11 @@ export class SeoController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   async index(@Res() res: Response): Promise<void> {
     const meta = this.buildMeta(
-      SEO_STATIC_META.landing.title,
-      SEO_STATIC_META.landing.description,
+      SSR_STATIC_META.landing.title,
+      SSR_STATIC_META.landing.description,
       '/',
     );
-    const html = await this.seoService.getIndexHtml(meta);
+    const html = await this.ssrService.getIndexHtml(meta);
     res.send(html);
   }
 
@@ -78,11 +78,11 @@ export class SeoController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   async login(@Res() res: Response): Promise<void> {
     const meta = this.buildMeta(
-      SEO_STATIC_META.login.title,
-      SEO_STATIC_META.login.description,
+      SSR_STATIC_META.login.title,
+      SSR_STATIC_META.login.description,
       '/login',
     );
-    const html = await this.seoService.getIndexHtml(meta);
+    const html = await this.ssrService.getIndexHtml(meta);
     res.send(html);
   }
 
@@ -90,11 +90,11 @@ export class SeoController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   async register(@Res() res: Response): Promise<void> {
     const meta = this.buildMeta(
-      SEO_STATIC_META.register.title,
-      SEO_STATIC_META.register.description,
+      SSR_STATIC_META.register.title,
+      SSR_STATIC_META.register.description,
       '/register',
     );
-    const html = await this.seoService.getIndexHtml(meta);
+    const html = await this.ssrService.getIndexHtml(meta);
     res.send(html);
   }
 
@@ -102,11 +102,11 @@ export class SeoController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   async howItWorks(@Res() res: Response): Promise<void> {
     const meta = this.buildMeta(
-      SEO_STATIC_META.howItWorks.title,
-      SEO_STATIC_META.howItWorks.description,
+      SSR_STATIC_META.howItWorks.title,
+      SSR_STATIC_META.howItWorks.description,
       '/how-it-works',
     );
-    const html = await this.seoService.getIndexHtml(meta);
+    const html = await this.ssrService.getIndexHtml(meta);
     res.send(html);
   }
 
@@ -114,11 +114,11 @@ export class SeoController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   async contact(@Res() res: Response): Promise<void> {
     const meta = this.buildMeta(
-      SEO_STATIC_META.contact.title,
-      SEO_STATIC_META.contact.description,
+      SSR_STATIC_META.contact.title,
+      SSR_STATIC_META.contact.description,
       '/contact',
     );
-    const html = await this.seoService.getIndexHtml(meta);
+    const html = await this.ssrService.getIndexHtml(meta);
     res.send(html);
   }
 
@@ -131,11 +131,11 @@ export class SeoController {
   ): Promise<void> {
     try {
       const { event } = await this.bffService.getEventPageData(ctx, eventSlug);
-      const title = SEO_STATIC_META.eventTickets.title.replace(
+      const title = SSR_STATIC_META.eventTickets.title.replace(
         '{{eventName}}',
         event.name,
       );
-      const description = SEO_STATIC_META.eventTickets.description.replace(
+      const description = SSR_STATIC_META.eventTickets.description.replace(
         '{{eventName}}',
         event.name,
       );
@@ -148,16 +148,16 @@ export class SeoController {
         `/event/${eventSlug}`,
         ogImage,
       );
-      const html = await this.seoService.getIndexHtml(meta);
+      const html = await this.ssrService.getIndexHtml(meta);
       res.send(html);
     } catch (e) {
       if (e instanceof NotFoundException) throw e;
       const meta = this.buildMeta(
-        SEO_STATIC_META.default.title,
-        SEO_STATIC_META.default.description,
+        SSR_STATIC_META.default.title,
+        SSR_STATIC_META.default.description,
         `/event/${eventSlug}`,
       );
-      const html = await this.seoService.getIndexHtml(meta);
+      const html = await this.ssrService.getIndexHtml(meta);
       res.send(html);
     }
   }
@@ -171,11 +171,11 @@ export class SeoController {
   ): Promise<void> {
     try {
       const profile = await this.bffService.getSellerProfile(ctx, sellerId);
-      const title = SEO_STATIC_META.sellerProfile.title.replace(
+      const title = SSR_STATIC_META.sellerProfile.title.replace(
         '{{sellerName}}',
         profile.publicName,
       );
-      const description = SEO_STATIC_META.sellerProfile.description.replace(
+      const description = SSR_STATIC_META.sellerProfile.description.replace(
         '{{sellerName}}',
         profile.publicName,
       );
@@ -184,16 +184,16 @@ export class SeoController {
         description,
         `/seller/${sellerId}`,
       );
-      const html = await this.seoService.getIndexHtml(meta);
+      const html = await this.ssrService.getIndexHtml(meta);
       res.send(html);
     } catch (e) {
       if (e instanceof NotFoundException) throw e;
       const meta = this.buildMeta(
-        SEO_STATIC_META.default.title,
-        SEO_STATIC_META.default.description,
+        SSR_STATIC_META.default.title,
+        SSR_STATIC_META.default.description,
         `/seller/${sellerId}`,
       );
-      const html = await this.seoService.getIndexHtml(meta);
+      const html = await this.ssrService.getIndexHtml(meta);
       res.send(html);
     }
   }
@@ -209,11 +209,11 @@ export class SeoController {
     try {
       const data = await this.bffService.getBuyPageData(ctx, listingId);
       const { listing } = data;
-      const title = SEO_STATIC_META.buyTicket.title.replace(
+      const title = SSR_STATIC_META.buyTicket.title.replace(
         '{{eventName}}',
         listing.eventName,
       );
-      const description = SEO_STATIC_META.buyTicket.description.replace(
+      const description = SSR_STATIC_META.buyTicket.description.replace(
         '{{eventName}}',
         listing.eventName,
       );
@@ -226,16 +226,16 @@ export class SeoController {
         `/buy/${_eventSlug}/${listingId}`,
         ogImage,
       );
-      const html = await this.seoService.getIndexHtml(meta);
+      const html = await this.ssrService.getIndexHtml(meta);
       res.send(html);
     } catch (e) {
       if (e instanceof NotFoundException) throw e;
       const meta = this.buildMeta(
-        SEO_STATIC_META.default.title,
-        SEO_STATIC_META.default.description,
+        SSR_STATIC_META.default.title,
+        SSR_STATIC_META.default.description,
         `/buy/${_eventSlug}/${listingId}`,
       );
-      const html = await this.seoService.getIndexHtml(meta);
+      const html = await this.ssrService.getIndexHtml(meta);
       res.send(html);
     }
   }
@@ -246,11 +246,11 @@ export class SeoController {
     const req = res.req as { path?: string; url?: string };
     const pathname = req.path ?? (req.url?.split('?')[0] ?? '/');
     const meta = this.buildMeta(
-      SEO_STATIC_META.default.title,
-      SEO_STATIC_META.default.description,
+      SSR_STATIC_META.default.title,
+      SSR_STATIC_META.default.description,
       pathname,
     );
-    const html = await this.seoService.getIndexHtml(meta);
+    const html = await this.ssrService.getIndexHtml(meta);
     res.send(html);
   }
 }

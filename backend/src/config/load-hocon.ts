@@ -27,7 +27,6 @@ export function loadHoconConfig(
 
   const configDir = path.join(process.cwd(), 'config');
   const configPath = path.join(configDir, `${env}.conf`);
-
   const parsed = parse(configPath, {
     parseEnv: true,
     parseArgs: false,

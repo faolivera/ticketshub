@@ -360,8 +360,13 @@ export function Register() {
               </label>
               <input
                 type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setFormData({ ...formData, phone: digitsOnly });
+                }}
                 placeholder={t('register.phonePlaceholder')}
                 className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

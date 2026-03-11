@@ -369,10 +369,13 @@ export function SellerVerification() {
               </label>
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={identityData.governmentIdNumber}
-                onChange={(e) =>
-                  setIdentityData({ ...identityData, governmentIdNumber: e.target.value })
-                }
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setIdentityData({ ...identityData, governmentIdNumber: digitsOnly });
+                }}
                 placeholder={t('verification.governmentIdPlaceholder')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required

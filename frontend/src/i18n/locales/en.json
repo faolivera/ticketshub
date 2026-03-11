@@ -386,6 +386,8 @@
     "eventDateTime": "Event Date & Time",
     "venue": "Venue",
     "quantity": "Quantity",
+    "quantityAvailable": "{{available}} of {{total}} available",
+    "soldTogether": "(sold together)",
     "row": "Row",
     "seats": "Seats",
     "listedSince": "Listed Since",

@@ -272,8 +272,13 @@ export function PhoneVerification() {
               </label>
               <input
                 type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setPhoneNumber(digitsOnly);
+                }}
                 placeholder="+1 (555) 123-4567"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required

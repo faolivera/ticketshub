@@ -293,10 +293,13 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
             </label>
             <input
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={identityData.governmentIdNumber}
-              onChange={(e) =>
-                setIdentityData({ ...identityData, governmentIdNumber: e.target.value })
-              }
+              onChange={(e) => {
+                const digitsOnly = e.target.value.replace(/\D/g, '');
+                setIdentityData({ ...identityData, governmentIdNumber: digitsOnly });
+              }}
               placeholder={t('verification.governmentIdPlaceholder')}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               required

@@ -16,6 +16,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { SupportModule } from './modules/support/support.module';
 import { BffModule } from './modules/bff/bff.module';
+import { SsrModule } from './modules/ssr/ssr.module';
 import { TermsModule } from './modules/terms/terms.module';
 import { StorageModule } from './common/storage/storage.module';
 import { EmailModule } from './common/email/email.module';
@@ -66,7 +67,6 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     IdentityVerificationModule,
     ReviewsModule,
     SupportModule,
-    BffModule,
     TermsModule,
     AdminModule,
     PlatformConfigModule,
@@ -76,6 +76,8 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     TransactionChatModule,
     RealtimeModule,
     SocketModule,
+    BffModule,
+    SsrModule,
   ],
 })
 export class AppModule {}

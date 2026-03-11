@@ -2,10 +2,12 @@ import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { IEmailSender } from './email-sender.interface';
 import { EMAIL_SENDER } from './email-sender.interface';
+import { ResendEmailSender } from './resend-email-sender';
 import { SesEmailSender } from './ses-email-sender';
 import { MockEmailSender } from './mock-email-sender';
 
 const PROVIDER_AWS = 'AWS';
+const PROVIDER_RESEND = 'RESEND';
 const PROVIDER_MOCK = 'MOCK_EMAIL';
 
 /**
@@ -43,6 +45,19 @@ const PROVIDER_MOCK = 'MOCK_EMAIL';
             secretAccessKey,
             fromEmail,
           });
+        }
+
+        if (provider === PROVIDER_RESEND) {
+          const apiKey = configService.get<string>('resend.apiKey');
+          const fromEmail = configService.get<string>('resend.fromEmail');
+
+          if (!apiKey || !fromEmail) {
+            throw new Error(
+              'Resend config incomplete. Set RESEND_API_KEY and RESEND_FROM_EMAIL (or resend.apiKey, resend.fromEmail in config).',
+            );
+          }
+
+          return new ResendEmailSender({ apiKey, fromEmail });
         }
 
         return new MockEmailSender();
