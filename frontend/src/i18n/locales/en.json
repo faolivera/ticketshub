@@ -176,7 +176,7 @@
   },
   "buyTicket": {
     "backToEvent": "Back to event",
-    "backToMyListings": "Back to your listings",
+    "backToMyListings": "Back to my listings",
     "ticketNotFound": "Ticket not found",
     "returnToHome": "Return to home",
     "ticketDetails": "Ticket Details",
@@ -356,8 +356,11 @@
   "sellerDashboard": {
     "title": "My Sales",
     "tabListed": "Listed Tickets",
+    "tabListedShort": "Listings",
     "tabSold": "Sold Tickets",
+    "tabSoldShort": "Sales",
     "tabReceived": "Received Offers",
+    "tabReceivedShort": "Offers",
     "offerReceived": "Offer received",
     "fromBuyer": "From:",
     "listingPrice": "Listing price",
@@ -372,7 +375,7 @@
   "editListing": {
     "title": "Edit Listing",
     "backToMyTickets": "Back to My Tickets",
-    "backToSellerDashboard": "Back to My sales",
+    "backToSellerDashboard": "Back to my listings",
     "listingNotFound": "Listing not found",
     "importantNote": "Important:",
     "changesDisclaimer": "Changes will only take effect for newly sold tickets. Tickets already reserved or sold will keep their original details.",

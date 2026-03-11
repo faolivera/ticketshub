@@ -8,6 +8,9 @@ import { VerificationHelper } from '@/lib/verification';
 import { usersService } from '@/api/services';
 import { UserAvatar } from '@/app/components/UserAvatar';
 import { formatMonthYear } from '@/lib/format-date';
+import { Card, CardContent } from '@/app/components/ui/card';
+import { Button } from '@/app/components/ui/button';
+import { cn } from '@/app/components/ui/utils';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE_MB = 5;
@@ -71,11 +74,6 @@ export function UserProfile() {
       ? t('becomeSeller.cta.verifySellerData')
       : t('becomeSeller.cta.completeVerification');
 
-  const badgeClass = (verified: boolean, pending: boolean) => {
-    if (verified) return 'bg-green-100 text-green-800';
-    if (pending) return 'bg-amber-100 text-amber-800';
-    return 'bg-amber-100 text-amber-800';
-  };
   const badgeLabel = (verified: boolean, pending: boolean) => {
     if (verified) return t('userProfile.badgeVerified');
     if (pending) return t('userProfile.badgeVerifying');
@@ -83,198 +81,222 @@ export function UserProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('userProfile.title')}</h1>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
+          {t('userProfile.title')}
+        </h1>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
-          <div className="flex items-start gap-4 mb-6">
-            {/* Avatar with upload */}
-            <div className="relative flex-shrink-0">
-              <button
-                type="button"
-                onClick={handleAvatarClick}
-                disabled={avatarUploading}
-                className="relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full disabled:cursor-not-allowed"
-                aria-label={t('userProfile.changePhoto')}
-              >
-                <UserAvatar
-                  name={`${user.firstName} ${user.lastName}`}
-                  src={user.pic?.src}
-                  className="w-16 h-16 text-xl"
-                />
-                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {avatarUploading ? (
-                    <Loader2 className="w-4 h-4 text-white animate-spin" />
-                  ) : (
-                    <Camera className="w-4 h-4 text-white" />
+        <Card className="border-border overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            {/* Profile header: stacked on mobile, row on sm+ */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
+              {/* Avatar: centered on mobile, left on desktop */}
+              <div className="flex flex-col items-center sm:items-start gap-3">
+                <div className="relative flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleAvatarClick}
+                    disabled={avatarUploading}
+                    className="relative group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full disabled:cursor-not-allowed min-w-[72px] min-h-[72px] sm:min-w-0 sm:min-h-0"
+                    aria-label={t('userProfile.changePhoto')}
+                  >
+                    <UserAvatar
+                      name={`${user.firstName} ${user.lastName}`}
+                      src={user.pic?.src}
+                      className="w-20 h-20 sm:w-16 sm:h-16 text-xl ring-2 ring-border"
+                    />
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      {avatarUploading ? (
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                      ) : (
+                        <Camera className="w-5 h-5 text-white" />
+                      )}
+                    </div>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    aria-hidden="true"
+                  />
+                  {avatarError && (
+                    <p className="absolute -bottom-5 left-0 right-0 text-xs text-destructive text-center whitespace-nowrap">
+                      {avatarError}
+                    </p>
                   )}
                 </div>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={handleFileChange}
-                className="hidden"
-                aria-hidden="true"
-              />
-              {avatarError && (
-                <p className="absolute -bottom-5 left-0 right-0 text-xs text-red-600 text-center whitespace-nowrap">
-                  {avatarError}
-                </p>
-              )}
-            </div>
-
-            {/* Name + member since */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h2 className="text-lg font-bold text-gray-900">
-                  {user.firstName} {user.lastName}
-                </h2>
-                {isSeller && <SellerBadge user={user} />}
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>
-                  {t('userProfile.memberSince')}{' '}
-                  {user.createdAt ? formatMonthYear(user.createdAt) : formatMonthYear('2025-01-01')}
-                </span>
-              </div>
-            </div>
 
-            {/* Actions */}
-            <div className="flex flex-col gap-2 flex-shrink-0">
-              <button className="px-4 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap">
-                {t('userProfile.editProfile')}
-              </button>
-              <button
-                onClick={logout}
-                className="px-4 py-1.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap"
-              >
-                {t('userProfile.logout')}
-              </button>
-            </div>
-          </div>
-
-          {/* Verification grid: label | value + badge + verify link */}
-          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 items-baseline text-sm">
-            {/* Email */}
-            <span className="text-gray-600 font-medium flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-              {t('userProfile.labelEmail')}
-            </span>
-            <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <span className="truncate text-gray-900">{user.email}</span>
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeClass(user.emailVerified, false)}`}
-              >
-                {badgeLabel(user.emailVerified, false)}
-              </span>
-              {!user.emailVerified && (
-                <Link
-                  to="/register"
-                  state={{ verifyEmail: true, email: user.email, from: '/user-profile' }}
-                  className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
-                >
-                  {t('userProfile.verifyLink')}
-                </Link>
-              )}
-            </div>
-
-            {/* Phone */}
-            <span className="text-gray-600 font-medium flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-              {t('userProfile.labelPhone')}
-            </span>
-            <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <span className="truncate text-gray-900">{user.phone ?? t('userProfile.phoneNotSet')}</span>
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeClass(user.phoneVerified, false)}`}
-              >
-                {badgeLabel(user.phoneVerified, false)}
-              </span>
-              {!user.phoneVerified && (
-                <Link
-                  to="/verify-user"
-                  state={{ verifyPhone: true, returnTo: '/user-profile' }}
-                  className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
-                >
-                  {t('userProfile.verifyLink')}
-                </Link>
-              )}
-            </div>
-
-            {/* Identity (only if seller or buyerDisputed) */}
-            {showIdentityRow && (
-              <>
-                <span className="text-gray-600 font-medium flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-                  {t('userProfile.labelIdentity')}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 min-w-0">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeClass(idStatus === 'approved', idStatus === 'pending')}`}
-                  >
-                    {badgeLabel(idStatus === 'approved', idStatus === 'pending')}
+              {/* Name, badge, member since - full width on mobile */}
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-start">
+                  <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                    {user.firstName} {user.lastName}
+                  </h2>
+                  {isSeller && <SellerBadge user={user} />}
+                </div>
+                <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-muted-foreground mt-1.5">
+                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>
+                    {t('userProfile.memberSince')}{' '}
+                    {user.createdAt ? formatMonthYear(user.createdAt) : formatMonthYear('2025-01-01')}
                   </span>
-                  {(idStatus === 'none' || idStatus === 'rejected') && (
+                </div>
+              </div>
+
+              {/* Actions: full-width stacked on mobile, column on sm+ */}
+              <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-shrink-0">
+                <Button variant="outline" size="lg" className="min-h-[44px] w-full sm:w-auto" type="button">
+                  {t('userProfile.editProfile')}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="lg"
+                  className="min-h-[44px] w-full sm:w-auto border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={logout}
+                >
+                  {t('userProfile.logout')}
+                </Button>
+              </div>
+            </div>
+
+            {/* Verification list: one row per item, stacked label + value on mobile */}
+            <div className="space-y-4 sm:space-y-3">
+              {/* Email */}
+              <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
+                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                  {t('userProfile.labelEmail')}
+                </span>
+                <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
+                  <span className="truncate text-foreground">{user.email}</span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                      user.emailVerified ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                    )}
+                  >
+                    {badgeLabel(user.emailVerified, false)}
+                  </span>
+                  {!user.emailVerified && (
+                    <Link
+                      to="/register"
+                      state={{ verifyEmail: true, email: user.email, from: '/user-profile' }}
+                      className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
+                    >
+                      {t('userProfile.verifyLink')}
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
+                  <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                  {t('userProfile.labelPhone')}
+                </span>
+                <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
+                  <span className="truncate text-foreground">{user.phone ?? t('userProfile.phoneNotSet')}</span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                      user.phoneVerified ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                    )}
+                  >
+                    {badgeLabel(user.phoneVerified, false)}
+                  </span>
+                  {!user.phoneVerified && (
                     <Link
                       to="/verify-user"
-                      state={{ verifyIdentity: true, returnTo: '/user-profile' }}
-                      className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                      state={{ verifyPhone: true, returnTo: '/user-profile' }}
+                      className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
                     >
                       {t('userProfile.verifyLink')}
                     </Link>
                   )}
                 </div>
-              </>
-            )}
+              </div>
 
-            {/* Bank account (sellers only) */}
-            {isSeller && (
-              <>
-                <span className="text-gray-600 font-medium flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
-                  {t('userProfile.labelBankAccount')}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 min-w-0">
-                  <span className="text-gray-900">
-                    {user.bankAccountLast4 != null
-                      ? `••• ${user.bankAccountLast4}`
-                      : t('userProfile.bankAccountNotSet')}
+              {/* Identity */}
+              {showIdentityRow && (
+                <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
+                  <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
+                    <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+                    {t('userProfile.labelIdentity')}
                   </span>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeClass(bankStatus === 'approved', bankStatus === 'pending')}`}
-                  >
-                    {badgeLabel(bankStatus === 'approved', bankStatus === 'pending')}
-                  </span>
-                  {bankStatus === 'none' && (
-                    <Link
-                      to="/bank-account"
-                      className="text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                  <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
+                    <span
+                      className={cn(
+                        'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                        idStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                      )}
                     >
-                      {t('userProfile.verifyLink')}
-                    </Link>
-                  )}
+                      {badgeLabel(idStatus === 'approved', idStatus === 'pending')}
+                    </span>
+                    {(idStatus === 'none' || idStatus === 'rejected') && (
+                      <Link
+                        to="/verify-user"
+                        state={{ verifyIdentity: true, returnTo: '/user-profile' }}
+                        className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
+                      >
+                        {t('userProfile.verifyLink')}
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </>
-            )}
-          </div>
+              )}
 
-          {/* Become a Seller / Verify seller data CTA */}
-          {(!isSeller || !bankSubmitted) && (
-            <div className="mt-6 pt-4 border-t border-gray-100">
-              <Link
-                to="/become-seller"
-                className="block w-full px-6 py-3.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-center"
-              >
-                {becomeSellerCtaLabel}
-              </Link>
+              {/* Bank account */}
+              {isSeller && (
+                <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
+                  <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
+                    <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
+                    {t('userProfile.labelBankAccount')}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
+                    <span className="text-foreground">
+                      {user.bankAccountLast4 != null
+                        ? `••• ${user.bankAccountLast4}`
+                        : t('userProfile.bankAccountNotSet')}
+                    </span>
+                    <span
+                      className={cn(
+                        'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                        bankStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                      )}
+                    >
+                      {badgeLabel(bankStatus === 'approved', bankStatus === 'pending')}
+                    </span>
+                    {bankStatus === 'none' && (
+                      <Link
+                        to="/bank-account"
+                        className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
+                      >
+                        {t('userProfile.verifyLink')}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Become a Seller / Verify seller data CTA */}
+            {(!isSeller || !bankSubmitted) && (
+              <div className="mt-6 pt-4 border-t border-border">
+                <Link
+                  to="/become-seller"
+                  className="flex items-center justify-center min-h-[48px] w-full px-6 py-3.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-center"
+                >
+                  {becomeSellerCtaLabel}
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

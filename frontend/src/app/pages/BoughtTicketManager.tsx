@@ -1160,30 +1160,30 @@ export function SellerDashboardPage() {
         {!isMobile && <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('sellerDashboard.title')}</h1>}
         <div className="mb-6">
           <div className="border-b border-gray-200">
-            <div className="flex flex-wrap gap-6">
+            <div className={`flex ${isMobile ? 'flex-nowrap gap-3' : 'flex-wrap gap-6'}`}>
               <button
                 onClick={() => setActiveTab('listed')}
-                className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
+                className={`pb-4 px-1 border-b-2 font-semibold transition-colors whitespace-nowrap ${
                   activeTab === 'listed' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {t('sellerDashboard.tabListed')}
+                {t(isMobile ? 'sellerDashboard.tabListedShort' : 'sellerDashboard.tabListed')}
               </button>
               <button
                 onClick={() => setActiveTab('sold')}
-                className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
+                className={`pb-4 px-1 border-b-2 font-semibold transition-colors whitespace-nowrap ${
                   activeTab === 'sold' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {t('sellerDashboard.tabSold')}
+                {t(isMobile ? 'sellerDashboard.tabSoldShort' : 'sellerDashboard.tabSold')}
               </button>
               <button
                 onClick={() => setActiveTab('received')}
-                className={`pb-4 px-1 border-b-2 font-semibold transition-colors ${
+                className={`pb-4 px-1 border-b-2 font-semibold transition-colors whitespace-nowrap ${
                   activeTab === 'received' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {t('sellerDashboard.tabReceived')}
+                {t(isMobile ? 'sellerDashboard.tabReceivedShort' : 'sellerDashboard.tabReceived')}
               </button>
             </div>
           </div>

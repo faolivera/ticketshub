@@ -176,7 +176,7 @@
   },
   "buyTicket": {
     "backToEvent": "Volver al evento",
-    "backToMyListings": "Volver a tus entradas publicadas",
+    "backToMyListings": "Volver a mis entradas publicadas",
     "ticketNotFound": "Entrada no encontrada",
     "returnToHome": "Volver al inicio",
     "ticketDetails": "Detalles de la Entrada",
@@ -355,8 +355,11 @@
   "sellerDashboard": {
     "title": "Mis Ventas",
     "tabListed": "Entradas Publicadas",
+    "tabListedShort": "Publicaciones",
     "tabSold": "Entradas Vendidas",
+    "tabSoldShort": "Ventas",
     "tabReceived": "Ofertas Recibidas",
+    "tabReceivedShort": "Ofertas",
     "offerReceived": "Oferta recibida",
     "fromBuyer": "De:",
     "listingPrice": "Precio base",
@@ -371,7 +374,7 @@
   "editListing": {
     "title": "Editar Publicación",
     "backToMyTickets": "Volver a Mis Entradas",
-    "backToSellerDashboard": "Volver a Mis ventas",
+    "backToSellerDashboard": "Volver a mis entradas publicadas",
     "listingNotFound": "Publicación no encontrada",
     "importantNote": "Importante:",
     "changesDisclaimer": "Los cambios solo tendrán efecto para las entradas vendidas nuevamente. Las entradas ya reservadas o vendidas mantendrán sus detalles originales.",
