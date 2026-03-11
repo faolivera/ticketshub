@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { ArrowLeft, Loader2, Send, Scale, Database } from 'lucide-react';
+import { Loader2, Send, Scale, Database } from 'lucide-react';
 import { formatCurrency } from '@/lib/format-currency';
 import { adminService } from '../../../api/services';
 import type {
@@ -35,6 +35,7 @@ import type {
   AdminSupportMessageItem,
 } from '../../../api/types/admin';
 import { formatDateTimeMedium } from '@/lib/format-date';
+import { BackButton } from '@/app/components/BackButton';
 
 const STATUS_OPTIONS = [
   { value: 'open', labelKey: 'admin.supportTickets.open' },
@@ -146,9 +147,7 @@ export function SupportTicketDetail() {
     return (
       <div className="space-y-6">
         <p className="text-destructive">Missing ticket ID.</p>
-        <Button asChild variant="outline">
-          <Link to="/admin/support-tickets">{t('admin.supportTickets.backToList')}</Link>
-        </Button>
+        <BackButton to="/admin/support-tickets" labelKey="admin.supportTickets.backToList" />
       </div>
     );
   }
@@ -165,9 +164,7 @@ export function SupportTicketDetail() {
     return (
       <div className="space-y-6">
         <p className="text-destructive">{error ?? t('admin.supportTickets.errorDetail')}</p>
-        <Button asChild variant="outline">
-          <Link to="/admin/support-tickets">{t('admin.supportTickets.backToList')}</Link>
-        </Button>
+        <BackButton to="/admin/support-tickets" labelKey="admin.supportTickets.backToList" />
       </div>
     );
   }
@@ -181,11 +178,7 @@ export function SupportTicketDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/admin/support-tickets">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-        </Button>
+        <BackButton to="/admin/support-tickets" labelKey="admin.supportTickets.backToList" className="mb-0" />
         <div>
           <h1 className="text-2xl font-bold">{t('admin.supportTickets.detailTitle')}</h1>
           <p className="text-muted-foreground text-sm font-mono">{ticket.id}</p>

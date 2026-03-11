@@ -11,6 +11,7 @@ export function Header() {
   const { user, isAuthenticated, logout, canSell } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isMobileLangOpen, setIsMobileLangOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -18,6 +19,11 @@ export function Header() {
     i18n.changeLanguage(lng);
     setIsLangDropdownOpen(false);
   };
+
+  // Close mobile lang dropdown when user dropdown closes
+  useEffect(() => {
+    if (!isDropdownOpen) setIsMobileLangOpen(false);
+  }, [isDropdownOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -54,8 +60,8 @@ export function Header() {
             </Link>
           )}
 
-          {/* Language Selector */}
-          <div className="relative" ref={langDropdownRef}>
+          {/* Language Selector - hidden on mobile (shown in user dropdown instead) */}
+          <div className="relative hidden md:block" ref={langDropdownRef}>
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
               className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -123,7 +129,7 @@ export function Header() {
                   </div>
                   <Link
                     to="/my-tickets"
-                    className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="hidden md:flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     <Ticket className="w-4 h-4" />
@@ -132,7 +138,7 @@ export function Header() {
                   {canSell?.() && (
                     <Link
                       to="/seller-dashboard"
-                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="hidden md:flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                       onClick={() => setIsDropdownOpen(false)}
                     >
                       <Ticket className="w-4 h-4" />
@@ -141,7 +147,7 @@ export function Header() {
                   )}
                   <Link
                     to="/support"
-                    className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="hidden md:flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     <MessageCircle className="w-4 h-4" />
@@ -155,6 +161,59 @@ export function Header() {
                     <User className="w-4 h-4" />
                     <span>{t('header.myProfile')}</span>
                   </Link>
+                  {/* Language selector on mobile: dropdown (hidden on desktop; header has its own) */}
+                  <div className="md:hidden border-t border-gray-200 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileLangOpen(!isMobileLangOpen)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
+                      aria-expanded={isMobileLangOpen}
+                      aria-haspopup="true"
+                    >
+                      <Languages className="w-4 h-4 shrink-0" />
+                      <span className="flex-1 text-left font-medium">{t('header.language')}</span>
+                      <span className="text-sm text-gray-500">
+                        {i18n.language === 'en' ? 'English' : 'Español'}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 shrink-0 transition-transform ${isMobileLangOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                    {isMobileLangOpen && (
+                      <div className="mt-1 py-1 bg-gray-50 rounded-lg">
+                        <button
+                          onClick={() => {
+                            changeLanguage('en');
+                            setIsMobileLangOpen(false);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                            i18n.language === 'en'
+                              ? 'bg-blue-50 text-blue-600 font-semibold'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <span aria-hidden>🇺🇸</span>
+                          <span>English</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            changeLanguage('es');
+                            setIsMobileLangOpen(false);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                            i18n.language === 'es'
+                              ? 'bg-blue-50 text-blue-600 font-semibold'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <span aria-hidden>🇪🇸</span>
+                          <span>Español</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="border-t border-gray-200 my-2"></div>
                   <button
                     className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"

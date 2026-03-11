@@ -15,6 +15,7 @@ import { SellerUnverifiedModalTrigger } from '../components/SellerUnverifiedModa
 import { BRAND_NAME } from '../../constants/brand';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate } from '@/lib/format-date';
+import { useIsMobile } from '../components/ui/use-mobile';
 
 type MyTicketsTab = 'tickets' | 'offers';
 type SellerDashboardTab = 'listed' | 'sold' | 'received';
@@ -839,6 +840,7 @@ function ListedTicketsGrid({
 export function MyTicketsPage() {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useUser();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [bought, setBought] = useState<TransactionWithDetails[]>([]);
@@ -929,7 +931,7 @@ export function MyTicketsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('boughtTickets.title')}</h1>
+        {!isMobile && <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('boughtTickets.title')}</h1>}
         <div className="mb-6">
           <div className="border-b border-gray-200">
             <div className="flex gap-8">
@@ -998,6 +1000,7 @@ export function MyTicketsPage() {
 export function SellerDashboardPage() {
   const { t } = useTranslation();
   const { user, isAuthenticated, canSell } = useUser();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [listed, setListed] = useState<TicketListingWithEvent[]>([]);
@@ -1154,7 +1157,7 @@ export function SellerDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('sellerDashboard.title')}</h1>
+        {!isMobile && <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('sellerDashboard.title')}</h1>}
         <div className="mb-6">
           <div className="border-b border-gray-200">
             <div className="flex flex-wrap gap-6">

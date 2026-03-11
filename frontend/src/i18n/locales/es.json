@@ -50,7 +50,8 @@
     "logout": "Cerrar Sesión",
     "login": "Iniciar Sesión",
     "signUp": "Registrarse",
-    "admin": "Admin"
+    "admin": "Admin",
+    "language": "Idioma"
   },
   "login": {
     "title": "Bienvenido de nuevo",
@@ -370,6 +371,7 @@
   "editListing": {
     "title": "Editar Publicación",
     "backToMyTickets": "Volver a Mis Entradas",
+    "backToSellerDashboard": "Volver a Mis ventas",
     "listingNotFound": "Publicación no encontrada",
     "importantNote": "Importante:",
     "changesDisclaimer": "Los cambios solo tendrán efecto para las entradas vendidas nuevamente. Las entradas ya reservadas o vendidas mantendrán sus detalles originales.",

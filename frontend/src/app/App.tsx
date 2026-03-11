@@ -47,9 +47,9 @@ export default function App() {
     <UserProvider>
       <SocketProvider>
       <BrowserRouter>
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col w-full min-w-0 overflow-x-hidden">
           <Header />
-          <main className="flex-1 pb-16 sm:pb-0">
+          <main className="flex-1 pb-16 sm:pb-0 w-full min-w-0">
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />

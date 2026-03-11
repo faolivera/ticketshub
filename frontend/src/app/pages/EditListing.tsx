@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Ticket, DollarSign, Save, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Calendar, Ticket, DollarSign, Save, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -8,11 +8,14 @@ import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import type { TicketListingWithEvent } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { formatDate } from '@/lib/format-date';
+import { useIsMobile } from '../components/ui/use-mobile';
+import { BackButton } from '../components/BackButton';
 
 export function EditListing() {
   const { t } = useTranslation();
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [listing, setListing] = useState<TicketListingWithEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -144,13 +147,9 @@ export function EditListing() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
-          <Link
-            to="/seller-dashboard?tab=listed"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            {t('editListing.backToMyTickets')}
-          </Link>
+          {!isMobile && (
+            <BackButton to="/seller-dashboard?tab=listed" labelKey="editListing.backToSellerDashboard" />
+          )}
           <h1 className="text-3xl font-bold text-gray-900">{t('editListing.title')}</h1>
         </div>
 

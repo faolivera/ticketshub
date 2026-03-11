@@ -50,7 +50,8 @@
     "logout": "Logout",
     "login": "Login",
     "signUp": "Sign Up",
-    "admin": "Admin"
+    "admin": "Admin",
+    "language": "Language"
   },
   "login": {
     "title": "Welcome back",
@@ -371,6 +372,7 @@
   "editListing": {
     "title": "Edit Listing",
     "backToMyTickets": "Back to My Tickets",
+    "backToSellerDashboard": "Back to My sales",
     "listingNotFound": "Listing not found",
     "importantNote": "Important:",
     "changesDisclaimer": "Changes will only take effect for newly sold tickets. Tickets already reserved or sold will keep their original details.",

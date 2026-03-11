@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { MapPin, Calendar, Clock, Ticket, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { MapPin, Calendar, Clock, Ticket, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -20,6 +20,7 @@ import type { SortOption, ViewMode } from '../components/TicketFilters';
 import { Badge } from '../components/ui/badge';
 import { cn } from '../components/ui/utils';
 import { useIsMobile } from '../components/ui/use-mobile';
+import { BackButton } from '../components/BackButton';
 import { formatDate, formatTime, formatDateTime, formatDateTimeShort } from '@/lib/format-date';
 
 /**
@@ -310,13 +311,7 @@ export function EventTickets() {
       />
       <JsonLd data={eventJsonLd} />
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <Link 
-          to="/" 
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t('eventTickets.backToEvents')}
-        </Link>
+        <BackButton to="/" labelKey="eventTickets.backToEvents" className="mb-6" />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
           <div className="flex flex-col md:flex-row">

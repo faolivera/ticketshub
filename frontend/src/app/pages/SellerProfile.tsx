@@ -114,7 +114,7 @@ export function SellerProfile() {
         description={t('seo.sellerProfile.description', { sellerName: seller.publicName })}
       />
       <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 lg:py-16">
-        <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-8" />
+        <BackButton className="mb-8" />
 
         {/* Seller identity & trust block */}
         <Card className="mb-10 overflow-hidden border-border">

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star, Copy, Check } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Calendar, MapPin, Clock, CheckCircle, CreditCard, Shield, MessageCircle, Mail, Upload, FileText, Image, AlertCircle, Eye, X, ThumbsUp, ThumbsDown, Minus, Star, Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
+import { BackButton } from '@/app/components/BackButton';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { UserReviewsCard } from '@/app/components/UserReviewsCard';
@@ -40,6 +41,7 @@ import { formatDate, formatDateTime } from '@/lib/format-date';
 import { useUser } from '../contexts/UserContext';
 import { useSocket, SOCKET_EVENTS } from '../contexts/SocketContext';
 import { SellerUnverifiedModalTrigger } from '../components/SellerUnverifiedModalTrigger';
+import { useIsMobile } from '../components/ui/use-mobile';
 import { isSellerUnverified } from '../components/SellerUnverifiedModal';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
@@ -50,8 +52,7 @@ export function MyTicket() {
   const { transactionId } = useParams();
   const { user } = useUser();
   const { socket } = useSocket();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const isMobile = useIsMobile();
   
   const [transaction, setTransaction] = useState<TransactionWithDetails | null>(null);
   const [paymentConfirmation, setPaymentConfirmation] = useState<PaymentConfirmation | null>(null);
@@ -147,14 +148,6 @@ export function MyTicket() {
 
   const isBuyer = transaction?.buyerId === user?.id;
   const isSeller = transaction?.sellerId === user?.id;
-
-  const handleBack = () => {
-    if (location.state?.from) {
-      navigate(location.state.from);
-    } else {
-      navigate(isBuyer ? '/my-tickets' : '/seller-dashboard?tab=sold');
-    }
-  };
 
   useEffect(() => {
     async function fetchData() {
@@ -626,13 +619,13 @@ export function MyTicket() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <button 
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t('myTicket.backToMyTickets')}
-        </button>
+        {!isMobile && (
+          <BackButton
+            to={isBuyer ? '/my-tickets' : '/seller-dashboard?tab=sold'}
+            labelKey="myTicket.backToMyTickets"
+            className="mb-6"
+          />
+        )}
 
         {reportSuccessTicketId && !showDisputeModal && (
           <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-center justify-between gap-4">

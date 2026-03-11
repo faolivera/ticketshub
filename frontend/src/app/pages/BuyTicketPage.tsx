@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Eye, AlertTriangle, MessageCircle, IdCard, Minus, Plus } from 'lucide-react';
+import { Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Eye, AlertTriangle, MessageCircle, IdCard, Minus, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -15,6 +15,7 @@ import type { BuyPageData, BuyPagePaymentMethodOption, CheckoutRisk, Offer } fro
 import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
+import { BackButton } from '@/app/components/BackButton';
 import { JsonLd } from '@/app/components/JsonLd';
 import { getBaseUrl } from '@/config/env';
 
@@ -539,13 +540,11 @@ export function BuyTicketPage() {
           </>
         )}
 
-        <Link
+        <BackButton
           to={isOwnListing ? '/seller-dashboard?tab=listed' : `/event/${listing.eventSlug}`}
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {isOwnListing ? t('buyTicket.backToMyListings') : t('buyTicket.backToEvent')}
-        </Link>
+          labelKey={isOwnListing ? 'buyTicket.backToMyListings' : 'buyTicket.backToEvent'}
+          className="mb-6"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">

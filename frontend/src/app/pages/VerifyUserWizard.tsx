@@ -87,7 +87,7 @@ export function VerifyUserWizard() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-lg px-4">
         <div className="mb-4">
-          <BackButton className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700" />
+          <BackButton />
         </div>
         <h1 className="mb-6 text-xl font-semibold text-gray-900">
           {t('verifyUser.title')}
