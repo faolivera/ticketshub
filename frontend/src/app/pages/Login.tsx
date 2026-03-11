@@ -50,16 +50,16 @@ export function Login() {
   const displayError = localError || error;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gray-50 flex items-start sm:items-center justify-center pt-5 pb-8 px-3 sm:pt-3 sm:pb-10 sm:px-4">
       <PageMeta title={t('seo.login.title')} description={t('seo.login.description')} />
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <Ticket className="w-10 h-10 text-blue-600" />
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <div className="text-center mb-4">
+            <div className="flex justify-center mb-2">
+              <Ticket className="w-9 h-9 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('login.title')}</h1>
-            <p className="text-gray-600">{t('login.subtitle')}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{t('login.title')}</h1>
+            <p className="text-gray-600 text-sm">{t('login.subtitle')}</p>
           </div>
 
           {displayError && (
@@ -115,7 +115,7 @@ export function Login() {
               {isSubmitting ? t('login.signingIn') : t('login.signIn')}
             </button>
 
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-sm text-gray-600 hidden sm:block">
               {t('login.noAccount')}{' '}
               <Link
                 to="/register"
