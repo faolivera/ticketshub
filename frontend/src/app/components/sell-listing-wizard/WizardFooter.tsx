@@ -10,6 +10,8 @@ interface WizardFooterProps {
   showPublish: boolean;
   canGoNext: boolean;
   isPublishing: boolean;
+  /** When true, Next button shows spinner and is disabled (e.g. validating price step) */
+  isNextLoading?: boolean;
   /** Mobile: sticky bottom with safe area; desktop: inline */
   isMobile: boolean;
   backLabel?: string;
@@ -22,6 +24,7 @@ export const WizardFooter: FC<WizardFooterProps> = ({
   showPublish,
   canGoNext,
   isPublishing,
+  isNextLoading = false,
   isMobile,
   backLabel,
   nextLabel,
@@ -71,13 +74,21 @@ export const WizardFooter: FC<WizardFooterProps> = ({
         <Button
           type="button"
           onClick={onNext}
-          disabled={!canGoNext}
+          disabled={!canGoNext || isNextLoading}
           className={cn(
             'min-h-[44px] md:min-h-[40px] text-base md:text-sm flex-1 md:flex-initial md:min-w-[120px]'
           )}
+          aria-busy={isNextLoading}
           aria-label={nextLabel ?? t('sellListingWizard.next')}
         >
-          {nextLabel ?? t('sellListingWizard.next')}
+          {isNextLoading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              {t('sellListingWizard.next')}
+            </>
+          ) : (
+            nextLabel ?? t('sellListingWizard.next')
+          )}
         </Button>
       )}
     </div>

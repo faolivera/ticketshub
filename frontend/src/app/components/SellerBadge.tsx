@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, AlertCircle } from 'lucide-react';
-import { VerificationHelper } from '@/lib/verification';
+import { SellerTier, VerificationHelper } from '@/lib/verification';
 import type { User } from '@/api/types/users';
 
 interface SellerBadgeProps {
@@ -20,7 +20,7 @@ export function SellerBadge({ user, size = 'md' }: SellerBadgeProps) {
         ? 'pending'
         : undefined;
 
-  if (tier === 0) {
+  if (tier === undefined) {
     return null;
   }
 
@@ -36,8 +36,8 @@ export function SellerBadge({ user, size = 'md' }: SellerBadgeProps) {
     lg: 'w-5 h-5',
   };
 
-  // Tier 1 - New Seller (no V3 or V4)
-  if (tier === 1) {
+  // UNVERIFIED_SELLER - can sell but missing V3 and/or V4
+  if (tier === SellerTier.UNVERIFIED_SELLER) {
     return (
       <span
         className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} bg-amber-100 text-amber-800 font-semibold rounded-full`}
@@ -48,8 +48,8 @@ export function SellerBadge({ user, size = 'md' }: SellerBadgeProps) {
     );
   }
 
-  // Tier 2 - Verified Seller (V3 + V4)
-  if (tier === 2 && verificationStatus === 'verified') {
+  // VERIFIED_SELLER (V3 + V4)
+  if (tier === SellerTier.VERIFIED_SELLER && verificationStatus === 'verified') {
     return (
       <span
         className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} bg-green-100 text-green-800 font-semibold rounded-full`}
@@ -60,7 +60,7 @@ export function SellerBadge({ user, size = 'md' }: SellerBadgeProps) {
     );
   }
 
-  if (tier === 2 && verificationStatus === 'pending') {
+  if (tier === SellerTier.VERIFIED_SELLER && verificationStatus === 'pending') {
     return (
       <span
         className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} bg-blue-100 text-blue-800 font-semibold rounded-full`}

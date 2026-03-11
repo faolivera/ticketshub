@@ -34,6 +34,21 @@ export interface GetSellTicketConfigResponse {
 }
 
 /**
+ * Request for POST /api/sell/validate (listing snapshot for risk validation).
+ */
+export interface ValidateSellListingRequest {
+  quantity: number;
+  pricePerTicket: { amount: number; currency: string };
+}
+
+/**
+ * Result of sell listing validation (same risk checks as createListing for Tier 0 sellers).
+ */
+export type ValidateSellListingResponse =
+  | { status: 'can_create' }
+  | { status: 'seller_risk_restriction' };
+
+/**
  * Chat config when user is participant and chat is visible (enabled or only_read).
  * - enabled: full chat with send
  * - only_read: chat visible, read-only; button shows "Read conversation"

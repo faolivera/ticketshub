@@ -43,7 +43,10 @@ import type { Offer, OfferTickets } from '../offers/offers.domain';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { TransactionManager } from '../../common/database';
 import { RiskEngineService } from '../risk-engine/risk-engine.service';
-import { VerificationHelper } from '../../common/utils/verification-helper';
+import {
+  SellerTier,
+  VerificationHelper,
+} from '../../common/utils/verification-helper';
 import {
   PRIVATE_STORAGE_PROVIDER,
   type FileStorageProvider,
@@ -315,7 +318,7 @@ export class TransactionsService {
             currency: ticketPriceTotal.currency,
           };
 
-          const tier = seller ? VerificationHelper.sellerTier(seller) : 0;
+          const tier = seller ? VerificationHelper.sellerTier(seller) : undefined;
           await this.ticketsService.reserveTickets(
             txCtx,
             listingId,
@@ -323,7 +326,7 @@ export class TransactionsService {
           );
 
           const holdHours =
-            tier === 2
+            tier === SellerTier.VERIFIED_SELLER
               ? (platformConfig?.riskEngine?.seller?.payoutHoldHoursDefault ??
                 24)
               : (platformConfig?.riskEngine?.seller

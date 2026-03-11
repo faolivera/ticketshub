@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { Ticket, Loader2, Calendar, X, Clock, ShieldCheck } from 'lucide-react';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Ticket, Loader2, Calendar, X, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { EmptyState } from '@/app/components/EmptyState';
+import { SellerRiskRestrictionDisclaimer } from '@/app/components/SellerRiskRestrictionDisclaimer';
 import { eventsService } from '@/api/services/events.service';
 import { ticketsService } from '@/api/services/tickets.service';
 import { bffService } from '@/api/services/bff.service';
@@ -56,6 +57,7 @@ export function SellListingWizard() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [showSellerRiskRestriction, setShowSellerRiskRestriction] = useState(false);
+  const [isValidatingStep, setIsValidatingStep] = useState(false);
 
   const [sellerPlatformFeePercentage, setSellerPlatformFeePercentage] = useState<number>(5);
   const [activePromotion, setActivePromotion] = useState<{
@@ -214,9 +216,39 @@ export function SellListingWizard() {
     setCurrentStep((s) => (s - 1) as WizardStepIndex);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setPublishError(null);
     setShowSellerRiskRestriction(false);
+    if (currentStep === 3) {
+      const quantity =
+        form.seatingType === 'numbered'
+          ? form.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim()).length
+          : form.quantity;
+      if (quantity < 1 || form.pricePerTicket <= 0) {
+        setCurrentStep(4);
+        if (returnToReview) setReturnToReview(false);
+        return;
+      }
+      setIsValidatingStep(true);
+      try {
+        const result = await bffService.validateSellListing({
+          quantity,
+          pricePerTicket: {
+            amount: Math.round(form.pricePerTicket * 100),
+            currency: sellerCurrency,
+          },
+        });
+        if (result.status === 'seller_risk_restriction') {
+          setShowSellerRiskRestriction(true);
+          return;
+        }
+        setCurrentStep(4);
+        if (returnToReview) setReturnToReview(false);
+      } finally {
+        setIsValidatingStep(false);
+      }
+      return;
+    }
     if (currentStep < 5) {
       const next = (currentStep + 1) as WizardStepIndex;
       setCurrentStep(next);
@@ -401,25 +433,7 @@ export function SellListingWizard() {
             )}
 
             {showSellerRiskRestriction && (
-              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
-                      {t('sellTicket.sellerRiskRestrictionTitle')}
-                    </p>
-                    <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-                      {t('sellTicket.sellerRiskRestrictionIntro')}
-                    </p>
-                    <Link
-                      to="/become-seller"
-                      className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
-                    >
-                      {t('sellTicket.sellerRiskRestrictionVerifyCta')}
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              <SellerRiskRestrictionDisclaimer className="mt-4" />
             )}
 
             {publishError && !showSellerRiskRestriction && (
@@ -435,6 +449,7 @@ export function SellListingWizard() {
                 showPublish={currentStep === 5}
                 canGoNext={canGoNext}
                 isPublishing={isPublishing}
+                isNextLoading={isValidatingStep}
                 isMobile={isMobile}
               />
             </div>

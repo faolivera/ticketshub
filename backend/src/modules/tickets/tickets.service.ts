@@ -33,7 +33,10 @@ import type {
   ListListingsQuery,
 } from './tickets.api';
 import { UsersService } from '../users/users.service';
-import { VerificationHelper } from '../../common/utils/verification-helper';
+import {
+  SellerTier,
+  VerificationHelper,
+} from '../../common/utils/verification-helper';
 import {
   EventStatus,
   EventDateStatus,
@@ -101,6 +104,54 @@ export class TicketsService {
       currency: l.pricePerTicket.currency,
     }));
     return { count: toSum.length, amounts };
+  }
+
+  /**
+   * Check whether adding/updating a listing would pass Tier 0 (unverified seller) limits.
+   * Callers only invoke this when seller is not VERIFIED_SELLER. Runs proximity validation when eventStartsAt is provided (event within configured hours window => not allowed).
+   * @param options.excludeListingId When updating an existing listing, pass its id so it is excluded from current totals and re-counted with newListingValue.
+   * @param options.eventStartsAt When provided, runs proximity check; if event is within window, returns false.
+   * @returns true if within limits and proximity ok, false otherwise (caller should throw SellerRiskRestrictionException or return seller_risk_restriction).
+   */
+  private async checkUnverifiedSellerListingLimits(
+    ctx: Ctx,
+    sellerId: string,
+    newListingValue: ConfigMoney,
+    options?: {
+      excludeListingId?: string;
+      eventStartsAt?: Date;
+    },
+  ): Promise<boolean> {
+    const excludeListingId = options?.excludeListingId;
+    const config = await this.configService.getPlatformConfig(ctx);
+
+    // Proximity: unverified sellers cannot list for events within the configured hours window (caller already ensured we're in unverified path)
+    if (options?.eventStartsAt) {
+      const proximityHours =
+        config?.riskEngine?.buyer?.phoneRequiredEventHours ??
+        this.nestConfigService.get<number>(
+          'platform.riskEngine.buyer.phoneRequiredEventHours',
+        )!;
+      const hoursUntilEvent =
+        (options.eventStartsAt.getTime() - Date.now()) / (1000 * 60 * 60);
+      if (hoursUntilEvent >= 0 && hoursUntilEvent <= proximityHours) {
+        return false;
+      }
+    }
+
+    const re = config.riskEngine.seller;
+    const { count: activeCount, amounts: activeAmounts } =
+      await this.getActiveListingsTotalsForSeller(ctx, sellerId, excludeListingId);
+    const newCount = activeCount + 1;
+    if (newCount > re.unverifiedSellerMaxSales) {
+      return false;
+    }
+    const totalInLimitCurrency = await this.conversionService.sumInCurrency(
+      ctx,
+      [...activeAmounts, newListingValue],
+      re.unverifiedSellerMaxAmount.currency,
+    );
+    return totalInLimitCurrency.amount <= re.unverifiedSellerMaxAmount.amount;
   }
 
   private validateListingSeatingConsistency(
@@ -228,6 +279,36 @@ export class TicketsService {
   }
 
   /**
+   * Validate whether the seller can create a listing from a risk perspective (Tier 0 limits).
+   * Does not validate event, terms, or other createListing rules. Used by the sell wizard before advancing from the price step.
+   */
+  async validateListingRisk(
+    ctx: Ctx,
+    sellerId: string,
+    data: { quantity: number; pricePerTicket: ConfigMoney },
+  ): Promise<{ status: 'can_create' | 'seller_risk_restriction' }> {
+    const user = await this.usersService.findById(ctx, sellerId);
+    if (!user || !VerificationHelper.canSell(user)) {
+      throw new ForbiddenException(
+        'Only sellers with verified email and phone can create listings',
+      );
+    }
+    if (VerificationHelper.sellerTier(user) === SellerTier.VERIFIED_SELLER) {
+      return { status: 'can_create' };
+    }
+    const newListingValue: ConfigMoney = {
+      amount: data.pricePerTicket.amount * data.quantity,
+      currency: data.pricePerTicket.currency,
+    };
+    const withinLimits = await this.checkUnverifiedSellerListingLimits(
+      ctx,
+      sellerId,
+      newListingValue,
+    );
+    return withinLimits ? { status: 'can_create' } : { status: 'seller_risk_restriction' };
+  }
+
+  /**
    * Create a new listing
    */
   async createListing(
@@ -240,32 +321,6 @@ export class TicketsService {
       throw new ForbiddenException(
         'Only sellers with verified email and phone can create listings',
       );
-    }
-
-    // Tier 0 (no V3): enforce max count and max total value of active listings.
-    if (VerificationHelper.sellerTier(user) === 0) {
-      const config = await this.configService.getPlatformConfig(ctx);
-      const re = config.riskEngine.seller;
-      const { count: activeCount, amounts: activeAmounts } =
-        await this.getActiveListingsTotalsForSeller(ctx, sellerId);
-      const newListingQuantity = data.quantity ?? data.ticketUnits?.length ?? 0;
-      const newCount = activeCount + 1;
-      if (newCount > re.unverifiedSellerMaxSales) {
-        throw new SellerRiskRestrictionException();
-      }
-      const limitMoney = re.unverifiedSellerMaxAmount;
-      const newListingValue: ConfigMoney = {
-        amount: data.pricePerTicket.amount * newListingQuantity,
-        currency: data.pricePerTicket.currency,
-      };
-      const totalInLimitCurrency = await this.conversionService.sumInCurrency(
-        ctx,
-        [...activeAmounts, newListingValue],
-        limitMoney.currency,
-      );
-      if (totalInLimitCurrency.amount > limitMoney.amount) {
-        throw new SellerRiskRestrictionException();
-      }
     }
 
     const hasAcceptedSellerTerms =
@@ -340,22 +395,22 @@ export class TicketsService {
       );
     }
 
-    // Sellers without V3 cannot create listings for events within the configured proximity window (e.g. 72h)
-    if (!VerificationHelper.hasV3(user)) {
-      const platformConfig = await this.configService.getPlatformConfig(ctx);
-      const hoursUntilEvent =
-        (eventDate.date.getTime() - Date.now()) / (1000 * 60 * 60);
-      const proximityHours =
-        platformConfig?.riskEngine?.buyer?.phoneRequiredEventHours ??
-        this.nestConfigService.get<number>(
-          'platform.riskEngine.buyer.phoneRequiredEventHours',
-        )!;
-      if (hoursUntilEvent >= 0 && hoursUntilEvent <= proximityHours) {
-        throw new ForbiddenException(
-          'Identity verification (KYC) is required to list tickets for events starting within the next ' +
-            proximityHours +
-            ' hours. Please complete identity verification first.',
-        );
+    // Not fully verified: enforce max count, max total value, and proximity (no V3 => no listing for events within X hours)
+    const tier = VerificationHelper.sellerTier(user);
+    if (tier !== SellerTier.VERIFIED_SELLER) {
+      const newListingQuantity = data.quantity ?? data.ticketUnits?.length ?? 0;
+      const newListingValue: ConfigMoney = {
+        amount: data.pricePerTicket.amount * newListingQuantity,
+        currency: data.pricePerTicket.currency,
+      };
+      const withinLimits = await this.checkUnverifiedSellerListingLimits(
+        ctx,
+        sellerId,
+        newListingValue,
+        { eventStartsAt: eventDate.date },
+      );
+      if (!withinLimits) {
+        throw new SellerRiskRestrictionException();
       }
     }
 
@@ -677,32 +732,26 @@ export class TicketsService {
         effectivePrice.currency,
       );
 
-      // Tier 0: ensure updated total value of active listings does not exceed limit
+      // Tier 0: ensure updated total value does not exceed limit and proximity (no V3 => no listing for events within X hours)
       const user = await this.usersService.findById(txCtx, sellerId);
-      if (user && VerificationHelper.sellerTier(user) === 0) {
-        const config = await this.configService.getPlatformConfig(txCtx);
-        const re = config.riskEngine.seller;
-        const { count: otherActiveCount, amounts: otherAmounts } =
-          await this.getActiveListingsTotalsForSeller(
-            txCtx,
-            listing.sellerId,
-            listing.id,
-          );
+      const sellerTier = user ? VerificationHelper.sellerTier(user) : undefined;
+      if (user && sellerTier !== SellerTier.VERIFIED_SELLER) {
+        const event = await this.eventsService.getEventById(txCtx, listing.eventId);
+        const eventDate = event?.dates.find((d) => d.id === listing.eventDateId);
         const thisListingValue: ConfigMoney = {
           amount: effectivePrice.amount * listing.ticketUnits.length,
           currency: effectivePrice.currency,
         };
-        const newCount = otherActiveCount + 1;
-        if (newCount > re.unverifiedSellerMaxSales) {
-          throw new SellerRiskRestrictionException();
-        }
-        const limitMoney = re.unverifiedSellerMaxAmount;
-        const totalInLimitCurrency = await this.conversionService.sumInCurrency(
+        const withinLimits = await this.checkUnverifiedSellerListingLimits(
           txCtx,
-          [...otherAmounts, thisListingValue],
-          limitMoney.currency,
+          listing.sellerId,
+          thisListingValue,
+          {
+            excludeListingId: listing.id,
+            eventStartsAt: eventDate?.date,
+          },
         );
-        if (totalInLimitCurrency.amount > limitMoney.amount) {
+        if (!withinLimits) {
           throw new SellerRiskRestrictionException();
         }
       }

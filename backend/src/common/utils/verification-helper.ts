@@ -2,6 +2,15 @@ import type { User } from '../../modules/users/users.domain';
 import { IdentityVerificationStatus } from '../../modules/users/users.domain';
 
 /**
+ * Seller tier: only defined when user is a seller (accepted terms) and can sell (V1+V2).
+ * VERIFIED_SELLER = can sell and has V3+V4 (full payout capability).
+ */
+export enum SellerTier {
+  UNVERIFIED_SELLER = 'UNVERIFIED_SELLER',
+  VERIFIED_SELLER = 'VERIFIED_SELLER',
+}
+
+/**
  * Centralized helper for verification state (V1-V4) and derived seller capability.
  * All gates should use these functions instead of checking raw fields or a "level" enum.
  */
@@ -33,14 +42,15 @@ export class VerificationHelper {
   }
 
   /**
-   * Seller tier: 0 = no V3/V4, 1 = V3 only, 2 = V3 + V4 (full payout capability).
-   * Only meaningful when isSeller is true.
+   * Seller tier: undefined when not a seller or when seller but cannot sell yet.
+   * UNVERIFIED_SELLER when canSell but missing V3 and/or V4.
+   * VERIFIED_SELLER when canSell and has V3 + V4 (full payout capability).
    */
-  static sellerTier(user: User): 0 | 1 | 2 {
-    if (!this.isSeller(user)) return 0;
-    if (this.hasV3(user) && this.hasV4(user)) return 2;
-    if (this.hasV3(user)) return 1;
-    return 0;
+  static sellerTier(user: User): SellerTier | undefined {
+    if (!this.isSeller(user)) return undefined;
+    if (!this.canSell(user)) return undefined;
+    if (this.hasV3(user) && this.hasV4(user)) return SellerTier.VERIFIED_SELLER;
+    return SellerTier.UNVERIFIED_SELLER;
   }
 
   static canReceivePayout(user: User): boolean {

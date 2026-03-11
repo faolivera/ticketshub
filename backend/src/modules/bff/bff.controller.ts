@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  Post,
+  Body,
   Param,
   Query,
   Inject,
@@ -26,6 +28,8 @@ import type {
   GetCheckoutRiskResponse,
   GetTransactionDetailsResponse,
   GetSellTicketConfigResponse,
+  ValidateSellListingRequest,
+  ValidateSellListingResponse,
 } from './bff.api';
 import {
   GetSellerProfileResponseSchema,
@@ -35,6 +39,7 @@ import {
   GetCheckoutRiskResponseSchema,
   GetTransactionDetailsResponseSchema,
   GetSellTicketConfigResponseSchema,
+  ValidateSellListingResponseSchema,
 } from './schemas/api.schemas';
 
 @Controller('api')
@@ -68,6 +73,25 @@ export class BffController {
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<GetSellTicketConfigResponse>> {
     const data = await this.bffService.getSellTicketConfig(ctx, user.id);
+    return { success: true, data };
+  }
+
+  /**
+   * Validate whether the seller can create a listing from a risk perspective (Tier 0 limits).
+   * Same checks as createListing; used by the sell wizard before advancing from the price step.
+   */
+  @Post('sell/validate')
+  @UseGuards(JwtAuthGuard)
+  @ValidateResponse(ValidateSellListingResponseSchema)
+  async validateSellListing(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Body() body: ValidateSellListingRequest,
+  ): Promise<ApiResponse<ValidateSellListingResponse>> {
+    if (body.quantity < 1 || body.pricePerTicket?.amount < 0) {
+      throw new BadRequestException('quantity and pricePerTicket.amount are required and must be valid');
+    }
+    const data = await this.bffService.validateSellListing(ctx, user.id, body);
     return { success: true, data };
   }
 

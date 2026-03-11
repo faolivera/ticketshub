@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   Calendar,
   X,
-  ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '@/api/services/events.service';
@@ -29,6 +28,7 @@ import {
 } from '@/api/types';
 import type { EventWithDates, EventDate, EventSection } from '@/api/types';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
+import { SellerRiskRestrictionDisclaimer } from '@/app/components/SellerRiskRestrictionDisclaimer';
 import type { ApiError } from '@/api/client';
 
 interface NumberedSeat {
@@ -663,25 +663,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
         </div>
 
         {showSellerRiskRestriction && (
-          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
-              <div className="min-w-0">
-                <p className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
-                  {t('sellTicket.sellerRiskRestrictionTitle')}
-                </p>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-                  {t('sellTicket.sellerRiskRestrictionIntro')}
-                </p>
-                <Link
-                  to="/become-seller"
-                  className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
-                >
-                  {t('sellTicket.sellerRiskRestrictionVerifyCta')}
-                </Link>
-              </div>
-            </div>
-          </div>
+          <SellerRiskRestrictionDisclaimer className="mb-6" />
         )}
 
         {error && !showSellerRiskRestriction && <ErrorAlert message={error} className="mb-6" />}

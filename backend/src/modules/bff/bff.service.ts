@@ -39,7 +39,11 @@ import type {
   BuyPagePaymentMethodOption,
 } from './bff.domain';
 import { RiskEngineService } from '../risk-engine/risk-engine.service';
-import type { GetSellTicketConfigResponse } from './bff.api';
+import type {
+  GetSellTicketConfigResponse,
+  ValidateSellListingRequest,
+  ValidateSellListingResponse,
+} from './bff.api';
 import { VerificationHelper } from '../../common/utils/verification-helper';
 
 @Injectable()
@@ -193,6 +197,21 @@ export class BffService {
       sellerPlatformFeePercentage: platformConfig.sellerPlatformFeePercentage,
       ...(activePromotion && { activePromotion }),
     };
+  }
+
+  /**
+   * Validate whether the seller can create a listing from a risk perspective (Tier 0 limits).
+   * Same logic as createListing risk checks; used by the sell wizard before advancing from the price step.
+   */
+  async validateSellListing(
+    ctx: Ctx,
+    userId: string,
+    body: ValidateSellListingRequest,
+  ): Promise<ValidateSellListingResponse> {
+    return this.ticketsService.validateListingRisk(ctx, userId, {
+      quantity: body.quantity,
+      pricePerTicket: body.pricePerTicket,
+    });
   }
 
   /**

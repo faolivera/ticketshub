@@ -4,6 +4,7 @@ import type { PaymentConfirmation } from '../payment-confirmations/payment-confi
 import type { Review } from '../reviews/reviews.domain';
 import type { BankTransferConfig } from '../payments/payments.domain';
 import type { Money } from '../transactions/transactions.domain';
+import type { CurrencyCode } from '../shared/money.domain';
 import type { SellerProfile, EventPageData, BuyPageData } from './bff.domain';
 
 /**
@@ -87,6 +88,22 @@ export interface GetSellTicketConfigResponse {
     config: { feePercentage: number };
   };
 }
+
+/**
+ * Request for POST /api/sell/validate (listing snapshot for risk validation only).
+ * quantity is the number of tickets (unnumbered count or numbered seats length).
+ */
+export interface ValidateSellListingRequest {
+  quantity: number;
+  pricePerTicket: { amount: number; currency: CurrencyCode };
+}
+
+/**
+ * Result of sell listing validation (same risk checks as createListing for Tier 0 sellers).
+ */
+export type ValidateSellListingResponse =
+  | { status: 'can_create' }
+  | { status: 'seller_risk_restriction' };
 
 /**
  * Chat config when the user is a participant and chat is visible (enabled or only_read).

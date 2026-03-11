@@ -325,3 +325,8 @@ export const GetTransactionDetailsResponseSchema = z.object({
   chat: TransactionDetailsChatConfigSchema.optional(),
   counterpartyEmail: z.string().optional(),
 });
+
+export const ValidateSellListingResponseSchema = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('can_create') }),
+  z.object({ status: z.literal('seller_risk_restriction') }),
+]);

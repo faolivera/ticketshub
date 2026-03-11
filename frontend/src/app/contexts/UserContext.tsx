@@ -3,7 +3,7 @@ import { authService } from '../../api/services/auth.service';
 import { usersService } from '../../api/services/users.service';
 import { getToken, removeToken } from '../../api/client';
 import { SELLER_UNVERIFIED_MODAL_DISMISSED_KEY } from '../components/SellerUnverifiedModal';
-import { VerificationHelper } from '../../lib/verification';
+import { SellerTier, VerificationHelper } from '../../lib/verification';
 import type {
   AuthenticatedUserPublicInfo,
   LoginRequest,
@@ -205,7 +205,7 @@ export function useUser() {
 /**
  * Hook to get seller tier (0, 1, 2) from V-flags for badges and UI
  */
-export function useSellerTier(): 0 | 1 | 2 {
+export function useSellerTier(): SellerTier | undefined {
   const { user } = useUser();
   return VerificationHelper.sellerTier(user);
 }
