@@ -13,6 +13,7 @@ import {
   Banknote,
   MessageSquare,
   Users,
+  Upload,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -47,6 +48,11 @@ const navItems: NavItem[] = [
     to: '/admin/events',
     icon: <Calendar className="w-4 h-4" />,
     labelKey: 'admin.sidebar.events',
+  },
+  {
+    to: '/admin/import-events',
+    icon: <Upload className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.importEvents',
   },
   {
     to: '/admin/transactions',

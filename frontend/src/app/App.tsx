@@ -31,6 +31,7 @@ import { MyTicket } from '@/app/pages/MyTicket';
 import { EditListing } from '@/app/pages/EditListing';
 import { AdminDashboard } from '@/app/pages/admin/AdminDashboard';
 import { EventManagement } from '@/app/pages/admin/EventManagement';
+import { ImportEvents } from '@/app/pages/admin/ImportEvents';
 import { UserManagement } from '@/app/pages/admin/UserManagement';
 import TransactionManagement from '@/app/pages/admin/TransactionManagement';
 import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManagement';
@@ -86,6 +87,7 @@ export default function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="events" element={<EventManagement />} />
+                <Route path="import-events" element={<ImportEvents />} />
                 <Route path="transactions" element={<TransactionManagement />} />
                 <Route path="seller-payouts" element={<SellerPayouts />} />
                 <Route path="payment-methods" element={<PaymentMethodsManagement />} />

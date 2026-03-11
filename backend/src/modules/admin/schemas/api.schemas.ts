@@ -710,3 +710,93 @@ export const AdminAddSupportTicketMessageResponseSchema = z.object({
   success: z.boolean(),
   messageId: z.string(),
 });
+
+// ==================== Admin Import Events ====================
+
+const ImportEventAddressSchema = z.object({
+  line1: z.string().min(1, 'line1 is required'),
+  line2: z.string().optional(),
+  city: z.string().min(1, 'city is required'),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+  countryCode: z.string().min(2).max(3, 'countryCode must be 2-3 characters'),
+});
+
+const ImportEventSectionItemSchema = z.object({
+  name: z.string().min(1, 'section name is required'),
+  seatingType: z.enum(['numbered', 'unnumbered']),
+});
+
+const ImportEventCategorySchema = z.enum([
+  'Concert',
+  'Sports',
+  'Theater',
+  'Festival',
+  'Conference',
+  'Comedy',
+  'Other',
+]);
+
+const isoDatetimeSchema = z.string().refine(
+  (val) => {
+    const parsed = Date.parse(val);
+    return !Number.isNaN(parsed);
+  },
+  { message: 'Must be a valid ISO 8601 date-time string' },
+);
+
+export const ImportEventItemSchema = z
+  .object({
+    name: z.string().min(1, 'name is required').max(200),
+    category: ImportEventCategorySchema,
+    venue: z.string().min(1, 'venue is required').max(200),
+    location: ImportEventAddressSchema,
+    dates: z.array(isoDatetimeSchema).min(1, 'At least one date is required'),
+    sections: z
+      .array(ImportEventSectionItemSchema)
+      .min(1, 'At least one section is required'),
+    imageIds: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => {
+      const names = data.sections.map((s) => s.name.toLowerCase());
+      return new Set(names).size === names.length;
+    },
+    { message: 'Section names must be unique per event', path: ['sections'] },
+  );
+
+export const ImportEventsPayloadSchema = z.object({
+  events: z.array(ImportEventItemSchema).min(1, 'At least one event is required'),
+});
+
+export const ImportEventsPreviewItemSchema = z.object({
+  index: z.number(),
+  name: z.string(),
+  category: ImportEventCategorySchema,
+  venue: z.string(),
+  location: ImportEventAddressSchema,
+  slug: z.string(),
+  datesCount: z.number(),
+  dateLabels: z.array(z.string()),
+  sections: z.array(ImportEventSectionItemSchema),
+});
+
+export const ImportEventsPreviewResponseSchema = z.object({
+  events: z.array(ImportEventsPreviewItemSchema),
+});
+
+export const ImportEventResultItemSchema = z.object({
+  index: z.number(),
+  success: z.boolean(),
+  eventId: z.string().optional(),
+  slug: z.string().optional(),
+  name: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const ImportEventsResultResponseSchema = z.object({
+  total: z.number(),
+  created: z.number(),
+  failed: z.number(),
+  results: z.array(ImportEventResultItemSchema),
+});

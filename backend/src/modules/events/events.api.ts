@@ -82,6 +82,7 @@ export type ListEventsResponse = EventWithDatesResponse[];
 export interface EventBannerUrls {
   square?: string;
   rectangle?: string;
+  og_image?: string;
 }
 
 /**
@@ -170,6 +171,7 @@ export interface GetEventBannersResponse {
   eventId: string;
   square?: EventBannerWithUrl;
   rectangle?: EventBannerWithUrl;
+  og_image?: EventBannerWithUrl;
 }
 
 /**

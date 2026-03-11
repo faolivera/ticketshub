@@ -135,8 +135,11 @@ export interface EventWithDates extends Event {
 
 /**
  * Event banner types
+ * - square: 1:1 (mobile, thumbnails)
+ * - rectangle: 16:9 (desktop cards)
+ * - og_image: 1200×630 for og:image / twitter:image (optional, admin only)
  */
-export type EventBannerType = 'square' | 'rectangle';
+export type EventBannerType = 'square' | 'rectangle' | 'og_image';
 
 export type EventBannerMimeType = 'image/png' | 'image/jpeg' | 'image/webp';
 
@@ -186,4 +189,5 @@ export interface EventBanner {
 export interface EventBanners {
   square?: EventBanner;
   rectangle?: EventBanner;
+  og_image?: EventBanner;
 }

@@ -43,6 +43,10 @@ import type {
   AdminUsersResponse,
   AdminUserDetailResponse,
   AdminUpdateUserRequest,
+  ImportEventsPayload,
+  ImportEventsPreviewResponse,
+  ImportEventsValidationErrorResponse,
+  ImportEventsResultResponse,
 } from '../types/admin';
 
 /**
@@ -178,6 +182,35 @@ export const adminService = {
   async deleteSection(sectionId: string): Promise<AdminDeleteSectionResponse> {
     const response = await apiClient.delete<AdminDeleteSectionResponse>(
       `/admin/events/sections/${sectionId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Preview import events: validate payload and return preview with generated slugs (no persistence).
+   * Returns validation errors in data when payload is invalid (still 200).
+   */
+  async getImportPreview(
+    payload: ImportEventsPayload
+  ): Promise<
+    ImportEventsPreviewResponse | ImportEventsValidationErrorResponse
+  > {
+    const response = await apiClient.post<
+      ImportEventsPreviewResponse | ImportEventsValidationErrorResponse
+    >('/admin/events/import/preview', payload);
+    return response.data;
+  },
+
+  /**
+   * Execute import: create events, dates, and sections (all approved).
+   * Validates payload first; throws on validation failure with errors in response.
+   */
+  async executeImport(
+    payload: ImportEventsPayload
+  ): Promise<ImportEventsResultResponse> {
+    const response = await apiClient.post<ImportEventsResultResponse>(
+      '/admin/events/import',
+      payload
     );
     return response.data;
   },
@@ -393,7 +426,7 @@ export const adminService = {
    */
   async uploadEventBanner(
     eventId: string,
-    bannerType: 'square' | 'rectangle',
+    bannerType: 'square' | 'rectangle' | 'og_image',
     file: File
   ): Promise<{ eventId: string; bannerType: string; url: string }> {
     const formData = new FormData();
@@ -414,7 +447,7 @@ export const adminService = {
    */
   async deleteEventBanner(
     eventId: string,
-    bannerType: 'square' | 'rectangle'
+    bannerType: 'square' | 'rectangle' | 'og_image'
   ): Promise<{ success: true }> {
     const response = await apiClient.delete<{ success: true }>(
       `/admin/events/${eventId}/banners/${bannerType}`

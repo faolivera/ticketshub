@@ -985,3 +985,87 @@ export interface AdminAddSupportTicketMessageResponse {
   success: boolean;
   messageId: string;
 }
+
+// ==================== Admin Import Events ====================
+
+export type ImportEventCategory =
+  | 'Concert'
+  | 'Sports'
+  | 'Theater'
+  | 'Festival'
+  | 'Conference'
+  | 'Comedy'
+  | 'Other';
+
+export type ImportEventSeatingType = 'numbered' | 'unnumbered';
+
+export interface ImportEventAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  state?: string;
+  postalCode?: string;
+  countryCode: string;
+}
+
+export interface ImportEventSectionItem {
+  name: string;
+  seatingType: ImportEventSeatingType;
+}
+
+export interface ImportEventItem {
+  name: string;
+  category: ImportEventCategory;
+  venue: string;
+  location: ImportEventAddress;
+  dates: string[];
+  sections: ImportEventSectionItem[];
+  imageIds?: string[];
+}
+
+export interface ImportEventsPayload {
+  events: ImportEventItem[];
+}
+
+export interface ImportEventsPreviewItem {
+  index: number;
+  name: string;
+  category: ImportEventCategory;
+  venue: string;
+  location: ImportEventAddress;
+  slug: string;
+  datesCount: number;
+  dateLabels: string[];
+  sections: ImportEventSectionItem[];
+}
+
+export interface ImportEventsPreviewResponse {
+  events: ImportEventsPreviewItem[];
+}
+
+export interface ImportEventValidationError {
+  index: number;
+  message: string;
+  field?: string;
+}
+
+export interface ImportEventsValidationErrorResponse {
+  valid: false;
+  errors: ImportEventValidationError[];
+}
+
+export interface ImportEventResultItem {
+  index: number;
+  success: boolean;
+  eventId?: string;
+  slug?: string;
+  name?: string;
+  error?: string;
+}
+
+export interface ImportEventsResultResponse {
+  total: number;
+  created: number;
+  failed: number;
+  results: ImportEventResultItem[];
+}

@@ -776,7 +776,7 @@ export class EventsService {
         };
 
         if (event.banners) {
-          const bannerUrls: { square?: string; rectangle?: string } = {};
+          const bannerUrls: { square?: string; rectangle?: string; og_image?: string } = {};
           if (event.banners.square) {
             bannerUrls.square = this.bannerStorage.getPublicUrl(
               event.id,
@@ -787,6 +787,12 @@ export class EventsService {
             bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
               event.id,
               event.banners.rectangle.filename,
+            );
+          }
+          if (event.banners.og_image) {
+            bannerUrls.og_image = this.bannerStorage.getPublicUrl(
+              event.id,
+              event.banners.og_image.filename,
             );
           }
           if (Object.keys(bannerUrls).length > 0) {
@@ -1157,9 +1163,11 @@ export class EventsService {
       throw new BadRequestException('Could not read image dimensions');
     }
 
-    const constraints = BANNER_CONSTRAINTS[bannerType];
+    // og_image has no dimension/aspect validation (optional, admin-only)
+    if (bannerType !== 'og_image') {
+      const constraints = BANNER_CONSTRAINTS[bannerType];
 
-    // TODO: Re-enable aspect ratio validation when ready for production
+      // TODO: Re-enable aspect ratio validation when ready for production
     // const actualRatio = metadata.width / metadata.height;
     // const ratioDiff = Math.abs(actualRatio - constraints.aspectRatio);
     //
@@ -1188,7 +1196,8 @@ export class EventsService {
     //   }
     // }
 
-    void constraints;
+      void constraints;
+    }
 
     const existingBanner = event.banners?.[bannerType];
     if (existingBanner) {
@@ -1327,6 +1336,16 @@ export class EventsService {
       };
     }
 
+    if (event.banners?.og_image) {
+      response.og_image = {
+        url: this.bannerStorage.getPublicUrl(
+          eventId,
+          event.banners.og_image.filename,
+        ),
+        banner: event.banners.og_image,
+      };
+    }
+
     return response;
   }
 
@@ -1335,18 +1354,18 @@ export class EventsService {
    */
   private async addBannerUrlsToEvent(event: EventWithDates): Promise<
     EventWithDatesResponse & {
-      bannerUrls?: { square?: string; rectangle?: string };
+      bannerUrls?: { square?: string; rectangle?: string; og_image?: string };
     }
   > {
     const result: EventWithDatesResponse & {
-      bannerUrls?: { square?: string; rectangle?: string };
+      bannerUrls?: { square?: string; rectangle?: string; og_image?: string };
     } = {
       ...event,
       images: [],
     };
 
     if (event.banners) {
-      const bannerUrls: { square?: string; rectangle?: string } = {};
+      const bannerUrls: { square?: string; rectangle?: string; og_image?: string } = {};
       if (event.banners.square) {
         bannerUrls.square = this.bannerStorage.getPublicUrl(
           event.id,
@@ -1357,6 +1376,12 @@ export class EventsService {
         bannerUrls.rectangle = this.bannerStorage.getPublicUrl(
           event.id,
           event.banners.rectangle.filename,
+        );
+      }
+      if (event.banners.og_image) {
+        bannerUrls.og_image = this.bannerStorage.getPublicUrl(
+          event.id,
+          event.banners.og_image.filename,
         );
       }
       if (Object.keys(bannerUrls).length > 0) {

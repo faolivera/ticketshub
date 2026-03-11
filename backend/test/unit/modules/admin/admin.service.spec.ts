@@ -118,6 +118,9 @@ describe('AdminService', () => {
       adminUpdateEventWithDates: jest.fn(),
       getAllEventsPaginated: jest.fn(),
       getEventById: jest.fn(),
+      createEvent: jest.fn(),
+      addEventDate: jest.fn(),
+      addEventSection: jest.fn(),
     };
 
     const mockTicketsRepository = {
@@ -1780,6 +1783,200 @@ describe('AdminService', () => {
       );
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('validateImportEvents', () => {
+    const validPayload = {
+      events: [
+        {
+          name: 'Test Concert',
+          category: 'Concert' as const,
+          venue: 'Arena',
+          location: {
+            line1: '123 Main St',
+            city: 'Buenos Aires',
+            countryCode: 'AR',
+          },
+          dates: ['2025-07-10T20:00:00.000Z'],
+          sections: [
+            { name: 'VIP', seatingType: 'numbered' as const },
+            { name: 'General', seatingType: 'unnumbered' as const },
+          ],
+        },
+      ],
+    };
+
+    it('should return valid and data when payload is valid', () => {
+      const result = service.validateImportEvents(validPayload);
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.data.events).toHaveLength(1);
+        expect(result.data.events[0].name).toBe('Test Concert');
+      }
+    });
+
+    it('should return valid false and errors when payload has invalid category', () => {
+      const invalid = {
+        events: [
+          {
+            ...validPayload.events[0],
+            category: 'InvalidCategory',
+          },
+        ],
+      };
+      const result = service.validateImportEvents(invalid);
+      expect(result.valid).toBe(false);
+      if (result.valid === false) {
+        expect(result.errors.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should return valid false when events array is empty', () => {
+      const result = service.validateImportEvents({ events: [] });
+      expect(result.valid).toBe(false);
+      if (result.valid === false) {
+        expect(result.errors.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should return valid false when section names are duplicated', () => {
+      const duplicateSections = {
+        events: [
+          {
+            ...validPayload.events[0],
+            sections: [
+              { name: 'VIP', seatingType: 'numbered' as const },
+              { name: 'VIP', seatingType: 'unnumbered' as const },
+            ],
+          },
+        ],
+      };
+      const result = service.validateImportEvents(duplicateSections);
+      expect(result.valid).toBe(false);
+    });
+  });
+
+  describe('getImportPreview', () => {
+    const validPayload = {
+      events: [
+        {
+          name: 'Summer Fest',
+          category: 'Festival' as const,
+          venue: 'Park',
+          location: {
+            line1: '1 Park Ave',
+            city: 'Cordoba',
+            countryCode: 'AR',
+          },
+          dates: ['2025-08-01T18:00:00.000Z', '2025-08-02T18:00:00.000Z'],
+          sections: [{ name: 'General', seatingType: 'unnumbered' as const }],
+        },
+      ],
+    };
+
+    it('should return preview with generated slugs and date labels', () => {
+      const result = service.getImportPreview(mockCtx, validPayload);
+      expect(result.events).toHaveLength(1);
+      expect(result.events[0].name).toBe('Summer Fest');
+      expect(result.events[0].slug).toMatch(/summer-fest-park/);
+      expect(result.events[0].datesCount).toBe(2);
+      expect(result.events[0].dateLabels).toHaveLength(2);
+      expect(result.events[0].sections).toHaveLength(1);
+    });
+  });
+
+  describe('executeImport', () => {
+    const validPayload = {
+      events: [
+        {
+          name: 'Imported Event',
+          category: 'Concert' as const,
+          venue: 'Hall',
+          location: {
+            line1: '50 Center St',
+            city: 'Mendoza',
+            countryCode: 'AR',
+          },
+          dates: ['2025-09-15T20:00:00.000Z'],
+          sections: [{ name: 'Floor', seatingType: 'numbered' as const }],
+        },
+      ],
+    };
+
+    const mockCreatedEvent: Event = {
+      id: 'evt_imported1',
+      slug: 'imported-event-hall-evt_imported1',
+      name: 'Imported Event',
+      category: EventCategory.Concert,
+      venue: 'Hall',
+      location: validPayload.events[0].location,
+      imageIds: [],
+      status: EventStatus.Approved,
+      createdBy: 'admin_1',
+      approvedBy: 'admin_1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should create event, dates, and sections and return results', async () => {
+      eventsService.createEvent.mockResolvedValue(mockCreatedEvent);
+      eventsService.addEventDate.mockResolvedValue({} as never);
+      eventsService.addEventSection.mockResolvedValue({} as never);
+
+      const result = await service.executeImport(
+        mockCtx,
+        validPayload,
+        'admin_1',
+      );
+
+      expect(result.total).toBe(1);
+      expect(result.created).toBe(1);
+      expect(result.failed).toBe(0);
+      expect(result.results[0].success).toBe(true);
+      expect(result.results[0].eventId).toBe('evt_imported1');
+      expect(result.results[0].slug).toBe('imported-event-hall-evt_imported1');
+      expect(eventsService.createEvent).toHaveBeenCalledWith(
+        mockCtx,
+        'admin_1',
+        Role.Admin,
+        expect.objectContaining({
+          name: 'Imported Event',
+          category: 'Concert',
+          venue: 'Hall',
+          location: validPayload.events[0].location,
+        }),
+      );
+      expect(eventsService.addEventDate).toHaveBeenCalledTimes(1);
+      expect(eventsService.addEventSection).toHaveBeenCalledTimes(1);
+    });
+
+    it('should report failed event and continue with next', async () => {
+      eventsService.createEvent
+        .mockRejectedValueOnce(new Error('Slug already exists'))
+        .mockResolvedValueOnce(mockCreatedEvent);
+      eventsService.addEventDate.mockResolvedValue({} as never);
+      eventsService.addEventSection.mockResolvedValue({} as never);
+
+      const twoEventsPayload = {
+        events: [
+          validPayload.events[0],
+          { ...validPayload.events[0], name: 'Second Event' },
+        ],
+      };
+
+      const result = await service.executeImport(
+        mockCtx,
+        twoEventsPayload,
+        'admin_1',
+      );
+
+      expect(result.total).toBe(2);
+      expect(result.created).toBe(1);
+      expect(result.failed).toBe(1);
+      expect(result.results[0].success).toBe(false);
+      expect(result.results[0].error).toBe('Slug already exists');
+      expect(result.results[1].success).toBe(true);
     });
   });
 });

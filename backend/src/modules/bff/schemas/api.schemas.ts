@@ -45,6 +45,7 @@ const TicketSeatSchema = z.object({
 const BannerUrlsSchema = z.object({
   square: z.string().optional(),
   rectangle: z.string().optional(),
+  og_image: z.string().optional(),
 });
 
 const TicketUnitSchema = z.object({

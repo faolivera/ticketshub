@@ -64,8 +64,25 @@ import type {
   AdminUserListItem,
   AdminUserDetailResponse,
   AdminUpdateUserRequest,
+  ImportEventsPayload,
+  ImportEventsPreviewResponse,
+  ImportEventsPreviewItem,
+  ImportEventsValidationErrorResponse,
+  ImportEventValidationError,
+  ImportEventsResultResponse,
+  ImportEventResultItem,
+  ImportEventItem,
 } from './admin.api';
-import { EventDateStatus, EventSectionStatus } from '../events/events.domain';
+import {
+  EventDateStatus,
+  EventSectionStatus,
+  generateEventSlug,
+} from '../events/events.domain';
+import { ImportEventsPayloadSchema } from './schemas/api.schemas';
+import { z } from 'zod';
+import type { CreateEventRequest } from '../events/events.api';
+import type { EventCategory } from '../events/events.domain';
+import type { SeatingType } from '../tickets/tickets.domain';
 import {
   IdentityVerificationStatus,
   Language,
@@ -1560,5 +1577,180 @@ export class AdminService {
       body.attachmentUrls,
     );
     return { success: true, messageId: message.id };
+  }
+
+  /**
+   * Validate import events payload. Returns validation errors per event index or the parsed payload.
+   */
+  validateImportEvents(
+    payload: unknown,
+  ):
+    | { valid: true; data: ImportEventsPayload }
+    | { valid: false; errors: ImportEventValidationError[] } {
+    const result = ImportEventsPayloadSchema.safeParse(payload);
+    if (result.success) {
+      return { valid: true, data: result.data };
+    }
+    const errors = this.formatZodErrorsToImportErrors(result.error);
+    return { valid: false, errors };
+  }
+
+  /**
+   * Build preview for import (no persistence). Validates payload; throws if invalid.
+   */
+  getImportPreview(
+    ctx: Ctx,
+    payload: ImportEventsPayload,
+  ): ImportEventsPreviewResponse {
+    this.logger.debug(ctx, 'getImportPreview', {
+      eventCount: payload.events.length,
+    });
+
+    const events: ImportEventsPreviewItem[] = payload.events.map(
+      (item, index) => {
+        const previewId = `preview-${index}`;
+        const slug = generateEventSlug(item.name, item.venue, previewId);
+        const dateLabels = item.dates.map((d) => {
+          try {
+            const date = new Date(d);
+            return date.toISOString();
+          } catch {
+            return d;
+          }
+        });
+        return {
+          index,
+          name: item.name,
+          category: item.category,
+          venue: item.venue,
+          location: item.location,
+          slug,
+          datesCount: item.dates.length,
+          dateLabels,
+          sections: item.sections,
+        };
+      },
+    );
+
+    return { events };
+  }
+
+  /**
+   * Execute import: create events, dates, and sections (all approved). Uses admin as createdBy/approvedBy.
+   * Returns per-event results; partial success is allowed (failed events are reported, created ones are committed).
+   */
+  async executeImport(
+    ctx: Ctx,
+    payload: ImportEventsPayload,
+    adminId: string,
+  ): Promise<ImportEventsResultResponse> {
+    this.logger.log(ctx, 'executeImport', {
+      adminId,
+      eventCount: payload.events.length,
+    });
+
+    const results: ImportEventResultItem[] = [];
+    let created = 0;
+    let failed = 0;
+
+    for (let index = 0; index < payload.events.length; index++) {
+      const item = payload.events[index];
+      try {
+        const createRequest: CreateEventRequest = {
+          name: item.name,
+          category: item.category as EventCategory,
+          venue: item.venue,
+          location: item.location,
+          imageIds: item.imageIds ?? [],
+        };
+        const event = await this.eventsService.createEvent(
+          ctx,
+          adminId,
+          Role.Admin,
+          createRequest,
+        );
+
+        for (const dateStr of item.dates) {
+          await this.eventsService.addEventDate(
+            ctx,
+            event.id,
+            adminId,
+            Role.Admin,
+            { date: dateStr },
+          );
+        }
+
+        for (const section of item.sections) {
+          await this.eventsService.addEventSection(
+            ctx,
+            event.id,
+            adminId,
+            Role.Admin,
+            {
+              name: section.name,
+              seatingType: section.seatingType as SeatingType,
+            },
+          );
+        }
+
+        results.push({
+          index,
+          success: true,
+          eventId: event.id,
+          slug: event.slug,
+          name: event.name,
+        });
+        created++;
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Unknown error during import';
+        this.logger.warn(ctx, 'Import event failed', {
+          index,
+          name: item.name,
+          error: message,
+        });
+        results.push({
+          index,
+          success: false,
+          name: item.name,
+          error: message,
+        });
+        failed++;
+      }
+    }
+
+    return {
+      total: payload.events.length,
+      created,
+      failed,
+      results,
+    };
+  }
+
+  private formatZodErrorsToImportErrors(
+    error: z.ZodError,
+  ): ImportEventValidationError[] {
+    const errors: ImportEventValidationError[] = [];
+    const seen = new Set<string>();
+
+    for (const issue of error.issues) {
+      const path = issue.path;
+      let index = -1;
+      if (path[0] === 'events' && typeof path[1] === 'number') {
+        index = path[1];
+      }
+      const key = `${index}:${issue.path.join('.')}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const field =
+        path.length > 2 ? String(path.slice(2).join('.')) : undefined;
+      errors.push({
+        index: index >= 0 ? index : 0,
+        message: issue.message,
+        field,
+      });
+    }
+
+    return errors.sort((a, b) => a.index - b.index);
   }
 }

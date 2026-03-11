@@ -126,6 +126,7 @@ export interface TicketListing {
 export interface BannerUrls {
   square?: string;
   rectangle?: string;
+  og_image?: string;
 }
 
 /**

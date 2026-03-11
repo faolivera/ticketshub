@@ -876,3 +876,141 @@ export interface AdminAddSupportTicketMessageResponse {
   success: boolean;
   messageId: string;
 }
+
+// ==================== Admin Import Events ====================
+
+/**
+ * Seating type for imported sections (must match EventSection.seatingType).
+ * Validation: use enum values 'numbered' | 'unnumbered'.
+ */
+export type ImportEventSeatingType = 'numbered' | 'unnumbered';
+
+/**
+ * Category for imported events (must match EventCategory).
+ * Validation: use enum values e.g. 'Concert' | 'Sports' | 'Theater' | 'Festival' | 'Conference' | 'Comedy' | 'Other'.
+ */
+export type ImportEventCategory =
+  | 'Concert'
+  | 'Sports'
+  | 'Theater'
+  | 'Festival'
+  | 'Conference'
+  | 'Comedy'
+  | 'Other';
+
+/**
+ * Address for imported event location.
+ * Validation: line1, city, countryCode required; countryCode typically 2-letter ISO (e.g. AR, US).
+ */
+export interface ImportEventAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  state?: string;
+  postalCode?: string;
+  countryCode: string;
+}
+
+/**
+ * Single section in an imported event.
+ * Validation: name non-empty; seatingType one of ImportEventSeatingType; section names should be unique per event.
+ */
+export interface ImportEventSectionItem {
+  name: string;
+  seatingType: ImportEventSeatingType;
+}
+
+/**
+ * Single event in the import JSON.
+ * Validation:
+ * - name, venue: non-empty
+ * - category: one of ImportEventCategory
+ * - location: valid ImportEventAddress
+ * - dates: at least one; each a valid ISO 8601 date-time string (e.g. "2025-06-15T20:00:00.000Z"); optional business rule: not in the past
+ * - sections: at least one; unique names per event; valid seatingType
+ * - imageIds: optional array of existing image IDs if supported
+ */
+export interface ImportEventItem {
+  name: string;
+  category: ImportEventCategory;
+  venue: string;
+  location: ImportEventAddress;
+  /** ISO 8601 date-time strings (minute precision). At least one required. */
+  dates: string[];
+  /** At least one section required; names unique per event. */
+  sections: ImportEventSectionItem[];
+  /** Optional existing image IDs to attach to the event. */
+  imageIds?: string[];
+}
+
+/**
+ * Root shape of the import events JSON file.
+ * Validation: events array required; may enforce max length (e.g. batch size) in the service.
+ */
+export interface ImportEventsPayload {
+  events: ImportEventItem[];
+}
+
+/**
+ * Single event in the import preview (no persistence).
+ * Includes generated slug for display (using preview id; actual slug may differ slightly on import).
+ */
+export interface ImportEventsPreviewItem {
+  index: number;
+  name: string;
+  category: ImportEventCategory;
+  venue: string;
+  location: ImportEventAddress;
+  /** Generated slug for preview (based on name, venue, and preview id). */
+  slug: string;
+  datesCount: number;
+  dateLabels: string[];
+  sections: ImportEventSectionItem[];
+}
+
+/**
+ * Response for POST /api/admin/events/import/preview.
+ * Validation runs first; if invalid, use ImportEventsValidationErrorResponse instead.
+ */
+export interface ImportEventsPreviewResponse {
+  events: ImportEventsPreviewItem[];
+}
+
+/**
+ * Validation error for a single event in the import payload.
+ */
+export interface ImportEventValidationError {
+  index: number;
+  message: string;
+  field?: string;
+}
+
+/**
+ * Response when import payload validation fails.
+ */
+export interface ImportEventsValidationErrorResponse {
+  valid: false;
+  errors: ImportEventValidationError[];
+}
+
+/**
+ * Result for a single created event (success or failure).
+ */
+export interface ImportEventResultItem {
+  index: number;
+  success: boolean;
+  eventId?: string;
+  slug?: string;
+  name?: string;
+  error?: string;
+}
+
+/**
+ * Response for POST /api/admin/events/import (execute import).
+ */
+export interface ImportEventsResultResponse {
+  total: number;
+  created: number;
+  failed: number;
+  results: ImportEventResultItem[];
+}

@@ -120,13 +120,14 @@ export function EditEventModal({
   const [warnings, setWarnings] = useState<string[]>([]);
 
   // Banner state
-  const [bannerUrls, setBannerUrls] = useState<{ square?: string; rectangle?: string }>({});
-  const [bannerUploading, setBannerUploading] = useState<'square' | 'rectangle' | null>(null);
-  const [bannerDeleting, setBannerDeleting] = useState<'square' | 'rectangle' | null>(null);
+  const [bannerUrls, setBannerUrls] = useState<{ square?: string; rectangle?: string; og_image?: string }>({});
+  const [bannerUploading, setBannerUploading] = useState<'square' | 'rectangle' | 'og_image' | null>(null);
+  const [bannerDeleting, setBannerDeleting] = useState<'square' | 'rectangle' | 'og_image' | null>(null);
   const [isDeleteBannerDialogOpen, setIsDeleteBannerDialogOpen] = useState(false);
-  const [deleteBannerType, setDeleteBannerType] = useState<'square' | 'rectangle' | null>(null);
+  const [deleteBannerType, setDeleteBannerType] = useState<'square' | 'rectangle' | 'og_image' | null>(null);
   const squareBannerInputRef = useRef<HTMLInputElement>(null);
   const rectangleBannerInputRef = useRef<HTMLInputElement>(null);
+  const ogImageBannerInputRef = useRef<HTMLInputElement>(null);
 
   const toSeatingType = (v: string): 'numbered' | 'unnumbered' =>
     v === 'numbered' ? 'numbered' : 'unnumbered';
@@ -286,7 +287,7 @@ export function EditEventModal({
     setSections(updated);
   };
 
-  const handleBannerUpload = async (bannerType: 'square' | 'rectangle', file: File) => {
+  const handleBannerUpload = async (bannerType: 'square' | 'rectangle' | 'og_image', file: File) => {
     if (!event) return;
 
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -315,7 +316,7 @@ export function EditEventModal({
     }
   };
 
-  const handleBannerFileChange = (bannerType: 'square' | 'rectangle') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerFileChange = (bannerType: 'square' | 'rectangle' | 'og_image') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       handleBannerUpload(bannerType, file);
@@ -323,7 +324,7 @@ export function EditEventModal({
     e.target.value = '';
   };
 
-  const openDeleteBannerDialog = (bannerType: 'square' | 'rectangle') => {
+  const openDeleteBannerDialog = (bannerType: 'square' | 'rectangle' | 'og_image') => {
     setDeleteBannerType(bannerType);
     setIsDeleteBannerDialogOpen(true);
   };
@@ -752,6 +753,81 @@ export function EditEventModal({
                         className="aspect-video w-full max-w-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 bg-muted/30 hover:bg-muted/50 hover:border-primary/50"
                       >
                         {bannerUploading === 'rectangle' ? (
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        ) : (
+                          <>
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              {t('admin.eventBanners.noBannerUploaded')}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* OG Image (social sharing) */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      {t('createEvent.ogImageBanner')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t('createEvent.ogImageBannerHint')}
+                    </p>
+                    <input
+                      ref={ogImageBannerInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleBannerFileChange('og_image')}
+                      className="hidden"
+                    />
+                    {bannerUrls.og_image ? (
+                      <div className="space-y-2">
+                        <div className="aspect-[1200/630] w-full max-w-[300px] overflow-hidden rounded-lg border">
+                          <img
+                            src={bannerUrls.og_image}
+                            alt="OG"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => ogImageBannerInputRef.current?.click()}
+                            disabled={bannerUploading === 'og_image'}
+                          >
+                            {bannerUploading === 'og_image' ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4 mr-1" />
+                            )}
+                            {t('admin.eventBanners.uploadOrReplace')}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => openDeleteBannerDialog('og_image')}
+                            disabled={bannerDeleting === 'og_image'}
+                          >
+                            {bannerDeleting === 'og_image' ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 mr-1" />
+                            )}
+                            {t('admin.eventBanners.deleteBanner')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => ogImageBannerInputRef.current?.click()}
+                        className="aspect-[1200/630] w-full max-w-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 bg-muted/30 hover:bg-muted/50 hover:border-primary/50"
+                      >
+                        {bannerUploading === 'og_image' ? (
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         ) : (
                           <>

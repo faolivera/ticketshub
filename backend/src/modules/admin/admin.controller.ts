@@ -65,6 +65,10 @@ import type {
   AdminUserDetailResponse,
   AdminUpdateUserRequest,
   AdminUpdateUserResponse,
+  ImportEventsPayload,
+  ImportEventsPreviewResponse,
+  ImportEventsValidationErrorResponse,
+  ImportEventsResultResponse,
 } from './admin.api';
 import {
   AdminPendingEventsResponseSchema,
@@ -90,6 +94,9 @@ import {
   AdminUsersResponseSchema,
   AdminUserDetailResponseSchema,
   AdminUpdateUserResponseSchema,
+  ImportEventsPayloadSchema,
+  ImportEventsPreviewResponseSchema,
+  ImportEventsResultResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { SeatingType } from '../tickets/tickets.domain';
@@ -470,6 +477,55 @@ export class AdminController {
   }
 
   /**
+   * Preview import events: validate payload and return preview with generated slugs (no persistence).
+   * Returns validation errors in data when payload is invalid (still 200).
+   */
+  @Post('events/import/preview')
+  async getImportPreview(
+    @Context() ctx: Ctx,
+    @Body() body: unknown,
+  ): Promise<
+    ApiResponse<
+      ImportEventsPreviewResponse | ImportEventsValidationErrorResponse
+    >
+  > {
+    const validation = this.adminService.validateImportEvents(body);
+    if (validation.valid === false) {
+      return {
+        success: true,
+        data: { valid: false, errors: validation.errors },
+      };
+    }
+    const data = this.adminService.getImportPreview(ctx, validation.data);
+    return { success: true, data };
+  }
+
+  /**
+   * Execute import: create events, dates, and sections (all approved). Validates payload first.
+   */
+  @Post('events/import')
+  @ValidateResponse(ImportEventsResultResponseSchema)
+  async executeImport(
+    @Context() ctx: Ctx,
+    @Body() body: unknown,
+    @User('id') adminId: string,
+  ): Promise<ApiResponse<ImportEventsResultResponse>> {
+    const validation = this.adminService.validateImportEvents(body);
+    if (validation.valid === false) {
+      throw new BadRequestException({
+        message: 'Import validation failed',
+        errors: validation.errors,
+      });
+    }
+    const data = await this.adminService.executeImport(
+      ctx,
+      validation.data,
+      adminId,
+    );
+    return { success: true, data };
+  }
+
+  /**
    * Search users by email for autocomplete (e.g. when creating promotions).
    * Query param: q (min 2 characters). Returns id and email only.
    */
@@ -661,9 +717,9 @@ export class AdminController {
     @Param('type') bannerType: string,
     @UploadedFile() file: Multer.File,
   ): Promise<ApiResponse<UploadEventBannerResponse>> {
-    if (bannerType !== 'square' && bannerType !== 'rectangle') {
+    if (bannerType !== 'square' && bannerType !== 'rectangle' && bannerType !== 'og_image') {
       throw new BadRequestException(
-        'Banner type must be "square" or "rectangle"',
+        'Banner type must be "square", "rectangle", or "og_image"',
       );
     }
 
@@ -698,9 +754,9 @@ export class AdminController {
     @Param('id') eventId: string,
     @Param('type') bannerType: string,
   ): Promise<ApiResponse<DeleteEventBannerResponse>> {
-    if (bannerType !== 'square' && bannerType !== 'rectangle') {
+    if (bannerType !== 'square' && bannerType !== 'rectangle' && bannerType !== 'og_image') {
       throw new BadRequestException(
-        'Banner type must be "square" or "rectangle"',
+        'Banner type must be "square", "rectangle", or "og_image"',
       );
     }
 

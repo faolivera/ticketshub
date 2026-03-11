@@ -62,6 +62,7 @@ export interface EventBanners {
 export interface EventBannerUrls {
   square?: string;
   rectangle?: string;
+  og_image?: string;
 }
 
 /**

@@ -140,8 +140,10 @@ export class SsrController {
         event.name,
       );
       const imagePath =
-        event.bannerUrls?.rectangle || event.bannerUrls?.square;
-      const ogImage = this.toAbsoluteImage(this.baseUrl(), imagePath);
+        event.bannerUrls?.og_image ??
+        event.bannerUrls?.rectangle ??
+        event.bannerUrls?.square;
+      const ogImage = this.toAbsoluteImage(this.baseUrl(), imagePath) ?? this.defaultOgImage;
       const meta = this.buildMeta(
         title,
         description,
@@ -218,8 +220,10 @@ export class SsrController {
         listing.eventName,
       );
       const imagePath =
-        listing.bannerUrls?.rectangle || listing.bannerUrls?.square;
-      const ogImage = this.toAbsoluteImage(this.baseUrl(), imagePath);
+        listing.bannerUrls?.og_image ??
+        listing.bannerUrls?.rectangle ??
+        listing.bannerUrls?.square;
+      const ogImage = this.toAbsoluteImage(this.baseUrl(), imagePath) ?? this.defaultOgImage;
       const meta = this.buildMeta(
         title,
         description,
