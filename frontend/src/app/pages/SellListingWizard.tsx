@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { Ticket, Loader2, Calendar, X, Clock } from 'lucide-react';
+import { Ticket, Loader2, Calendar, X, Clock, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
@@ -30,6 +30,7 @@ import { Label } from '@/app/components/ui/label';
 import { cn } from '@/app/components/ui/utils';
 import type { CurrencyCode } from '@/api/types';
 import { TicketType, DeliveryMethod } from '@/api/types';
+import type { ApiError } from '@/api/client';
 
 export function SellListingWizard() {
   const { t } = useTranslation();
@@ -54,6 +55,7 @@ export function SellListingWizard() {
   const [isLoadingEvent, setIsLoadingEvent] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [showSellerRiskRestriction, setShowSellerRiskRestriction] = useState(false);
 
   const [sellerPlatformFeePercentage, setSellerPlatformFeePercentage] = useState<number>(5);
   const [activePromotion, setActivePromotion] = useState<{
@@ -87,6 +89,7 @@ export function SellListingWizard() {
   const handleEventSelect = async (eventId: string) => {
     setIsLoadingEvent(true);
     setPublishError(null);
+    setShowSellerRiskRestriction(false);
     try {
       const ev = await eventsService.getEvent(eventId);
       setEvent(ev);
@@ -203,6 +206,7 @@ export function SellListingWizard() {
 
   const handleBack = () => {
     setPublishError(null);
+    setShowSellerRiskRestriction(false);
     if (currentStep === 0) return;
     if (returnToReview && currentStep === 5) {
       setReturnToReview(false);
@@ -212,6 +216,7 @@ export function SellListingWizard() {
 
   const handleNext = () => {
     setPublishError(null);
+    setShowSellerRiskRestriction(false);
     if (currentStep < 5) {
       const next = (currentStep + 1) as WizardStepIndex;
       setCurrentStep(next);
@@ -242,6 +247,7 @@ export function SellListingWizard() {
 
     setIsPublishing(true);
     setPublishError(null);
+    setShowSellerRiskRestriction(false);
     try {
       const listing = await ticketsService.createListing({
         eventId: form.eventId,
@@ -281,7 +287,14 @@ export function SellListingWizard() {
       navigate(`/buy/${listing.eventSlug}/${listing.id}`, { replace: true });
     } catch (err) {
       console.error('Failed to create listing:', err);
-      setPublishError(err instanceof Error ? err.message : t('sellTicket.createListingFailed'));
+      const apiErr = err as ApiError | undefined;
+      if (apiErr?.code === 'SELLER_RISK_RESTRICTION') {
+        setShowSellerRiskRestriction(true);
+        setPublishError(null);
+      } else {
+        setShowSellerRiskRestriction(false);
+        setPublishError(err instanceof Error ? err.message : t('sellTicket.createListingFailed'));
+      }
     } finally {
       setIsPublishing(false);
     }
@@ -387,7 +400,29 @@ export function SellListingWizard() {
               />
             )}
 
-            {publishError && (
+            {showSellerRiskRestriction && (
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                      {t('sellTicket.sellerRiskRestrictionTitle')}
+                    </p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                      {t('sellTicket.sellerRiskRestrictionIntro')}
+                    </p>
+                    <Link
+                      to="/become-seller"
+                      className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
+                    >
+                      {t('sellTicket.sellerRiskRestrictionVerifyCta')}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {publishError && !showSellerRiskRestriction && (
               <p className="mt-4 text-sm text-destructive" role="alert">
                 {publishError}
               </p>

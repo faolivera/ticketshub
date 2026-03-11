@@ -1307,7 +1307,10 @@
     "createSection": "Create Section",
     "createSectionFailed": "Failed to create section. Please try again.",
     "noSectionsFound": "No matching sections found",
-    "noDatesFound": "No matching dates found"
+    "noDatesFound": "No matching dates found",
+    "sellerRiskRestrictionTitle": "Verification required to publish",
+    "sellerRiskRestrictionIntro": "This listing exceeds the limits for unverified sellers. Please verify your seller details.",
+    "sellerRiskRestrictionVerifyCta": "Verify as seller"
   },
   "sellListingWizard": {
     "title": "Publish listing",

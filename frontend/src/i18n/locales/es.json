@@ -1306,7 +1306,10 @@
     "createSection": "Crear Sección",
     "createSectionFailed": "Error al crear la sección. Inténtalo de nuevo.",
     "noSectionsFound": "No se encontraron secciones coincidentes",
-    "noDatesFound": "No se encontraron fechas coincidentes"
+    "noDatesFound": "No se encontraron fechas coincidentes",
+    "sellerRiskRestrictionTitle": "Verificación requerida para publicar",
+    "sellerRiskRestrictionIntro": "Esta publicación supera los límites para vendedores no verificados, por favor verifica tus datos de vendedor.",
+    "sellerRiskRestrictionVerifyCta": "Verificarme como vendedor"
   },
   "sellListingWizard": {
     "title": "Publicar entrada",

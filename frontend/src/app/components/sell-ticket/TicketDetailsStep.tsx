@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Calendar,
   X,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { eventsService } from '@/api/services/events.service';
@@ -28,6 +29,7 @@ import {
 } from '@/api/types';
 import type { EventWithDates, EventDate, EventSection } from '@/api/types';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
+import type { ApiError } from '@/api/client';
 
 interface NumberedSeat {
   row: string;
@@ -67,6 +69,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSellerRiskRestriction, setShowSellerRiskRestriction] = useState(false);
 
   const [showCreateDateModal, setShowCreateDateModal] = useState(false);
   const [isCreatingDate, setIsCreatingDate] = useState(false);
@@ -172,6 +175,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setShowSellerRiskRestriction(false);
 
     if (!formData.eventId || !formData.eventDateId || !formData.eventSectionId || formData.pricePerTicket <= 0) {
       setError(t('sellTicket.pleaseCompleteAllFields'));
@@ -273,7 +277,14 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
       navigate(`/buy/${listing.eventSlug}/${listing.id}`);
     } catch (err) {
       console.error('Failed to create listing:', err);
-      setError(err instanceof Error ? err.message : t('sellTicket.createListingFailed'));
+      const apiErr = err as ApiError | undefined;
+      if (apiErr?.code === 'SELLER_RISK_RESTRICTION') {
+        setShowSellerRiskRestriction(true);
+        setError(null);
+      } else {
+        setShowSellerRiskRestriction(false);
+        setError(err instanceof Error ? err.message : t('sellTicket.createListingFailed'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -319,6 +330,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
 
     setIsCreatingSection(true);
     setError(null);
+    setShowSellerRiskRestriction(false);
 
     try {
       const seatingType =
@@ -399,6 +411,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
 
     setIsCreatingDate(true);
     setError(null);
+    setShowSellerRiskRestriction(false);
 
     try {
       const dateTime = new Date(`${newDateForm.date}T${newDateForm.time}`);
@@ -649,7 +662,29 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
           </div>
         </div>
 
-        {error && <ErrorAlert message={error} className="mb-6" />}
+        {showSellerRiskRestriction && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+              <div className="min-w-0">
+                <p className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                  {t('sellTicket.sellerRiskRestrictionTitle')}
+                </p>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                  {t('sellTicket.sellerRiskRestrictionIntro')}
+                </p>
+                <Link
+                  to="/become-seller"
+                  className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
+                >
+                  {t('sellTicket.sellerRiskRestrictionVerifyCta')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && !showSellerRiskRestriction && <ErrorAlert message={error} className="mb-6" />}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

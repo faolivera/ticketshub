@@ -6,6 +6,7 @@ import {
   BadRequestException,
   forwardRef,
 } from '@nestjs/common';
+import { SellerRiskRestrictionException } from '../../common/exceptions/seller-risk-restriction.exception';
 import { randomBytes } from 'crypto';
 import type { ITicketsRepository } from './tickets.repository.interface';
 import { TICKETS_REPOSITORY } from './tickets.repository.interface';
@@ -250,9 +251,7 @@ export class TicketsService {
       const newListingQuantity = data.quantity ?? data.ticketUnits?.length ?? 0;
       const newCount = activeCount + 1;
       if (newCount > re.unverifiedSellerMaxSales) {
-        throw new ForbiddenException(
-          `Unverified sellers are limited to ${re.unverifiedSellerMaxSales} active listings. Complete identity verification to list more.`,
-        );
+        throw new SellerRiskRestrictionException();
       }
       const limitMoney = re.unverifiedSellerMaxAmount;
       const newListingValue: ConfigMoney = {
@@ -265,10 +264,7 @@ export class TicketsService {
         limitMoney.currency,
       );
       if (totalInLimitCurrency.amount > limitMoney.amount) {
-        const limitMajor = limitMoney.amount / 100;
-        throw new ForbiddenException(
-          `Unverified sellers are limited to ${limitMoney.currency} ${limitMajor} total value in active listings. Complete identity verification to list more.`,
-        );
+        throw new SellerRiskRestrictionException();
       }
     }
 
@@ -698,9 +694,7 @@ export class TicketsService {
         };
         const newCount = otherActiveCount + 1;
         if (newCount > re.unverifiedSellerMaxSales) {
-          throw new ForbiddenException(
-            `Unverified sellers are limited to ${re.unverifiedSellerMaxSales} active listings. Complete identity verification to list more.`,
-          );
+          throw new SellerRiskRestrictionException();
         }
         const limitMoney = re.unverifiedSellerMaxAmount;
         const totalInLimitCurrency = await this.conversionService.sumInCurrency(
@@ -709,10 +703,7 @@ export class TicketsService {
           limitMoney.currency,
         );
         if (totalInLimitCurrency.amount > limitMoney.amount) {
-          const limitMajor = limitMoney.amount / 100;
-          throw new ForbiddenException(
-            `Unverified sellers are limited to ${limitMoney.currency} ${limitMajor} total value in active listings. Complete identity verification to list more.`,
-          );
+          throw new SellerRiskRestrictionException();
         }
       }
 

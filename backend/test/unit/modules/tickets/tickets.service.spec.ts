@@ -10,6 +10,7 @@ import type { ITicketsRepository } from '../../../../src/modules/tickets/tickets
 import { EventsService } from '../../../../src/modules/events/events.service';
 import { TransactionManager } from '../../../../src/common/database';
 import { OptimisticLockException } from '../../../../src/common/exceptions/optimistic-lock.exception';
+import { SellerRiskRestrictionException } from '../../../../src/common/exceptions/seller-risk-restriction.exception';
 import {
   ListingStatus,
   TicketType,
@@ -39,6 +40,7 @@ describe('TicketsService', () => {
   let usersService: jest.Mocked<UsersService>;
   let txManager: jest.Mocked<TransactionManager>;
   let termsService: jest.Mocked<TermsService>;
+  let conversionService: jest.Mocked<ConversionService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -282,6 +284,7 @@ describe('TicketsService', () => {
     usersService = module.get(UsersService);
     txManager = module.get(TransactionManager);
     termsService = module.get(TermsService);
+    conversionService = module.get(ConversionService);
   });
 
   describe('createListing', () => {
@@ -436,6 +439,48 @@ describe('TicketsService', () => {
       await expect(
         service.createListing(mockCtx, 'seller_123', baseCreateRequest),
       ).rejects.toThrow('Must accept seller terms first');
+    });
+
+    it('should throw SellerRiskRestrictionException when Tier 0 seller exceeds max active listings', async () => {
+      const tier0User = {
+        id: 'seller_123',
+        currency: 'ARS',
+        country: 'Argentina',
+        acceptedSellerTermsAt: new Date(),
+        emailVerified: true,
+        phoneVerified: true,
+        identityVerification: undefined,
+      };
+      usersService.findById.mockResolvedValueOnce(tier0User as any);
+      eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
+      ticketsRepository.getBySellerId.mockResolvedValueOnce([
+        { id: 'l1', status: ListingStatus.Active, pricePerTicket: { amount: 1000, currency: 'USD' }, ticketUnits: [{ id: 'u1' }] },
+        { id: 'l2', status: ListingStatus.Active, pricePerTicket: { amount: 1000, currency: 'USD' }, ticketUnits: [{ id: 'u2' }] },
+      ] as any);
+
+      await expect(
+        service.createListing(mockCtx, 'seller_123', baseCreateRequest),
+      ).rejects.toThrow(SellerRiskRestrictionException);
+    });
+
+    it('should throw SellerRiskRestrictionException when Tier 0 seller exceeds max total listing value', async () => {
+      const tier0User = {
+        id: 'seller_123',
+        currency: 'ARS',
+        country: 'Argentina',
+        acceptedSellerTermsAt: new Date(),
+        emailVerified: true,
+        phoneVerified: true,
+        identityVerification: undefined,
+      };
+      usersService.findById.mockResolvedValueOnce(tier0User as any);
+      eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
+      ticketsRepository.getBySellerId.mockResolvedValueOnce([]);
+      conversionService.sumInCurrency.mockResolvedValueOnce({ amount: 25000, currency: 'USD' });
+
+      await expect(
+        service.createListing(mockCtx, 'seller_123', baseCreateRequest),
+      ).rejects.toThrow(SellerRiskRestrictionException);
     });
 
     it('should throw ForbiddenException when seller has no V3 and event is within proximity window (72h)', async () => {

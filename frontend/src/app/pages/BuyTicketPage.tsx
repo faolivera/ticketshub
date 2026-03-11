@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Eye, AlertTriangle, MessageCircle, IdCard, Minus, Plus } from 'lucide-react';
+import { Ticket, MapPin, Calendar, Loader2, ShieldCheck, Award, Trophy, Eye, AlertTriangle, MessageCircle, IdCard, Minus, Plus, UserPlus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
@@ -21,6 +21,7 @@ import { getBaseUrl } from '@/config/env';
 
 function getBadgeIcon(badge: string) {
   const b = badge.toLowerCase();
+  if (b === 'new_seller') return <UserPlus className="w-4 h-4" />;
   if (b === 'trusted') return <ShieldCheck className="w-4 h-4" />;
   if (b === 'verified') return <Award className="w-4 h-4" />;
   if (b === 'best_seller') return <Trophy className="w-4 h-4" />;
@@ -29,6 +30,7 @@ function getBadgeIcon(badge: string) {
 
 function getBadgeColor(badge: string) {
   const b = badge.toLowerCase();
+  if (b === 'new_seller') return 'bg-gray-100 text-gray-600';
   if (b === 'trusted') return 'bg-blue-100 text-blue-700';
   if (b === 'verified') return 'bg-green-100 text-green-700';
   if (b === 'best_seller') return 'bg-purple-100 text-purple-700';
@@ -37,6 +39,7 @@ function getBadgeColor(badge: string) {
 
 function getBadgeLabel(badge: string, t: (key: string) => string) {
   const b = badge.toLowerCase();
+  if (b === 'new_seller') return t('eventTickets.newSeller');
   if (b === 'trusted') return t('eventTickets.badgeTrusted');
   if (b === 'verified') return t('eventTickets.badgeVerified');
   if (b === 'best_seller') return t('eventTickets.badgeBestSeller');
