@@ -1626,6 +1626,8 @@
     "promotions": {
       "title": "Promotions",
       "description": "Create and manage seller/buyer fee promotions. One promotion per user per type.",
+      "tabPromotions": "Promotions",
+      "tabPromotionCodes": "Promotion codes",
       "listTitle": "All promotions",
       "listDescription": "Filter by status or type, activate or deactivate.",
       "filterStatus": "Status",
@@ -1659,6 +1661,34 @@
       "activate": "Activate",
       "deactivate": "Deactivate",
       "noPromotions": "No promotions match the filters."
+    },
+    "promotionCodes": {
+      "listTitle": "Promotion codes",
+      "listDescription": "Codes that users can claim to receive a promotion. Create codes and set who can claim them (buyer, verified buyer, seller, verified seller).",
+      "create": "Create promotion code",
+      "createTitle": "New promotion code",
+      "createDescription": "The code will be normalized to uppercase. Set target audience and the promotion config applied when claimed.",
+      "code": "Code",
+      "codePlaceholder": "e.g. SAVE10",
+      "codeRequired": "Code is required",
+      "targetLabel": "Target audience",
+      "target": {
+        "buyer": "Any buyer",
+        "verified_buyer": "Verified buyer (email + phone)",
+        "seller": "Any seller (can sell)",
+        "verified_seller": "Verified seller (identity + bank)"
+      },
+      "type": "Promotion type",
+      "feePercent": "Fee %",
+      "usages": "Usages",
+      "createdAt": "Created",
+      "promotionMaxUsages": "Promotion max usages (per user)",
+      "promotionMaxUsagesHint": "Max times the created promotion can be used (e.g. for listings). 0 = unlimited.",
+      "codeMaxUsages": "Code max redemptions",
+      "codeMaxUsagesHint": "How many users can claim this code. 0 = unlimited.",
+      "validUntil": "Valid until",
+      "noPromotionCodes": "No promotion codes yet.",
+      "createError": "Failed to create promotion code"
     },
     "platformConfig": {
       "title": "Platform Settings",

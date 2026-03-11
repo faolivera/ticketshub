@@ -1625,6 +1625,8 @@
     "promotions": {
       "title": "Promociones",
       "description": "Crear y gestionar promociones de comisión para vendedores/compradores. Una promoción por usuario y tipo.",
+      "tabPromotions": "Promociones",
+      "tabPromotionCodes": "Códigos de promoción",
       "listTitle": "Todas las promociones",
       "listDescription": "Filtrar por estado o tipo, activar o desactivar.",
       "filterStatus": "Estado",
@@ -1658,6 +1660,34 @@
       "activate": "Activar",
       "deactivate": "Desactivar",
       "noPromotions": "No hay promociones que coincidan con los filtros."
+    },
+    "promotionCodes": {
+      "listTitle": "Códigos de promoción",
+      "listDescription": "Códigos que los usuarios pueden canjear para recibir una promoción. Crea códigos y define quién puede canjearlos (comprador, comprador verificado, vendedor, vendedor verificado).",
+      "create": "Crear código de promoción",
+      "createTitle": "Nuevo código de promoción",
+      "createDescription": "El código se normalizará a mayúsculas. Define el público objetivo y la configuración de la promoción aplicada al canjear.",
+      "code": "Código",
+      "codePlaceholder": "ej. SAVE10",
+      "codeRequired": "El código es obligatorio",
+      "targetLabel": "Público objetivo",
+      "target": {
+        "buyer": "Cualquier comprador",
+        "verified_buyer": "Comprador verificado (email + teléfono)",
+        "seller": "Cualquier vendedor (puede vender)",
+        "verified_seller": "Vendedor verificado (identidad + banco)"
+      },
+      "type": "Tipo de promoción",
+      "feePercent": "Comisión %",
+      "usages": "Usos",
+      "createdAt": "Creado",
+      "promotionMaxUsages": "Usos máximos de la promoción (por usuario)",
+      "promotionMaxUsagesHint": "Veces que la promoción creada puede usarse (ej. en listados). 0 = ilimitado.",
+      "codeMaxUsages": "Canjes máximos del código",
+      "codeMaxUsagesHint": "Cuántos usuarios pueden canjear este código. 0 = ilimitado.",
+      "validUntil": "Válido hasta",
+      "noPromotionCodes": "Aún no hay códigos de promoción.",
+      "createError": "Error al crear el código de promoción"
     },
     "platformConfig": {
       "title": "Configuración de Plataforma",

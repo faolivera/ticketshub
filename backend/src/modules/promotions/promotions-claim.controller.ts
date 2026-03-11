@@ -1,0 +1,49 @@
+import {
+  Controller,
+  Post,
+  Body,
+  Inject,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import { PromotionsService } from './promotions.service';
+import { Context } from '../../common/decorators/ctx.decorator';
+import { User } from '../../common/decorators/user.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
+import type { ApiResponse } from '../../common/types/api';
+import type { Ctx } from '../../common/types/context';
+import type {
+  ClaimPromotionCodeRequest,
+  ClaimPromotionCodeResponse,
+} from './promotions.api';
+import { ClaimPromotionCodeRequestSchema } from './schemas/api.schemas';
+
+@Controller('api/promotions')
+@UseGuards(JwtAuthGuard)
+export class PromotionsClaimController {
+  constructor(
+    @Inject(PromotionsService)
+    private readonly promotionsService: PromotionsService,
+  ) {}
+
+  @Post('claim')
+  async claim(
+    @Context() ctx: Ctx,
+    @Body() body: unknown,
+    @User() user: AuthenticatedUserPublicInfo,
+  ): Promise<ApiResponse<ClaimPromotionCodeResponse>> {
+    const parsed = ClaimPromotionCodeRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.flatten().fieldErrors);
+    }
+    const { code, role } = parsed.data as ClaimPromotionCodeRequest;
+    const promotion = await this.promotionsService.claimPromotionCode(
+      ctx,
+      role,
+      code,
+      user.id,
+    );
+    return { success: true, data: promotion };
+  }
+}

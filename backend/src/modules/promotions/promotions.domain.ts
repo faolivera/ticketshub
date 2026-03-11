@@ -48,13 +48,15 @@ export interface Promotion {
   validUntil: Date | null;
   createdAt: Date;
   createdBy: string;
+  /** Set when the promotion was created by claiming a promotion code */
+  promotionCodeId?: string;
 }
 
 /**
  * Promotion code entity
  */
-type PromotionConfig = Omit<Promotion, 'id' | "name" | "userId" | "createdAt" | "createdBy">;
-type PromotionConfigTarget = "seller" | "verified_seller" | "buyer" | "verified_buyer";
+type PromotionConfig = Omit<Promotion, 'id' | "name" | "userId" | "createdAt" | "createdBy" | "promotionCodeId">;
+export type PromotionConfigTarget = "seller" | "verified_seller" | "buyer" | "verified_buyer";
 export interface PromotionCode {
   id: string;
   code: string;

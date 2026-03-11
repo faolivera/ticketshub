@@ -34,6 +34,7 @@ export interface PromotionListItem {
   usedInListingIds: string[];
   status: PromotionStatus;
   validUntil: string | null;
+  promotionCodeId?: string;
   createdAt: string;
   createdBy: string;
 }
@@ -66,3 +67,43 @@ export interface SellTicketConfigResponse {
   sellerPlatformFeePercentage: number;
   activePromotion?: ActivePromotionSummary;
 }
+
+// --- Promotion codes (claim + admin) ---
+
+export interface ClaimPromotionCodeRequest {
+  code: string;
+  role: 'buyer' | 'seller';
+}
+
+export type ClaimPromotionCodeResponse = Promotion;
+
+export type PromotionConfigTarget =
+  | 'seller'
+  | 'verified_seller'
+  | 'buyer'
+  | 'verified_buyer';
+
+export interface CreatePromotionCodeRequest {
+  code: string;
+  target: PromotionConfigTarget;
+  promotionConfig: {
+    type: PromotionType;
+    config: { feePercentage: number };
+    maxUsages: number;
+    validUntil?: string | null;
+  };
+  maxUsages: number;
+}
+
+export interface PromotionCodeListItem {
+  id: string;
+  code: string;
+  target: PromotionConfigTarget;
+  promotionConfig: { type: PromotionType; config: { feePercentage: number }; maxUsages: number; validUntil: string | null };
+  maxUsages: number;
+  usedCount: number;
+  createdAt: string;
+  createdBy: string;
+}
+
+export type ListPromotionCodesResponse = PromotionCodeListItem[];

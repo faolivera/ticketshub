@@ -59,6 +59,7 @@ export class PromotionsRepository
     usedInListingIds: unknown;
     status: PrismaPromotionStatus;
     validUntil: Date | null;
+    promotionCodeId: string | null;
     createdAt: Date;
     createdBy: string;
   }): Promotion {
@@ -76,6 +77,7 @@ export class PromotionsRepository
       usedInListingIds,
       status: this.mapStatusFromDb(row.status),
       validUntil: row.validUntil,
+      promotionCodeId: row.promotionCodeId ?? undefined,
       createdAt: row.createdAt,
       createdBy: row.createdBy,
     };
@@ -100,6 +102,7 @@ export class PromotionsRepository
         usedInListingIds: promotion.usedInListingIds ?? [],
         status: this.mapStatusToDb(promotion.status),
         validUntil: promotion.validUntil ?? undefined,
+        promotionCodeId: promotion.promotionCodeId ?? undefined,
         createdBy: promotion.createdBy,
       },
     });

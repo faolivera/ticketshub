@@ -216,6 +216,13 @@ enum PromotionStatus {
   inactive
 }
 
+enum PromotionConfigTarget {
+  seller
+  verified_seller
+  buyer
+  verified_buyer
+}
+
 enum NotificationEventType {
   PAYMENT_REQUIRED
   BUYER_PAYMENT_SUBMITTED
@@ -413,6 +420,7 @@ model Promotion {
   usedInListingIds   Json           // string[] - listing IDs where promotion was applied
   status             PromotionStatus @default(active)
   validUntil         DateTime?
+  promotionCodeId    String?        // Set when created by claiming a promotion code
   createdAt          DateTime       @default(now())
   createdBy          String
 
@@ -420,6 +428,19 @@ model Promotion {
   user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("promotions")
+}
+
+model PromotionCode {
+  id              String                @id @default(uuid())
+  code            String                @unique
+  promotionConfig Json                  // type, config, maxUsages, usedInListingIds, status, validUntil
+  target          PromotionConfigTarget
+  maxUsages       Int                   @default(0)
+  usedCount       Int                   @default(0)
+  createdAt       DateTime              @default(now())
+  createdBy       String
+
+  @@map("promotion_codes")
 }
 
 model TicketListing {

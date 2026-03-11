@@ -703,6 +703,7 @@ export interface AdminPromotionListItem {
   usedInListingIds: string[];
   status: PromotionStatus;
   validUntil: string | null;
+  promotionCodeId?: string;
   createdAt: string;
   createdBy: string;
 }
@@ -721,6 +722,42 @@ export interface AdminCreatePromotionRequest {
 export interface AdminUserSearchItem {
   id: string;
   email: string;
+}
+
+// === Admin Promotion Codes (GET/POST /admin/promotions/promotion-codes) ===
+
+export type PromotionConfigTarget =
+  | 'seller'
+  | 'verified_seller'
+  | 'buyer'
+  | 'verified_buyer';
+
+export interface AdminPromotionCodeListItem {
+  id: string;
+  code: string;
+  target: PromotionConfigTarget;
+  promotionConfig: {
+    type: PromotionType;
+    config: { feePercentage: number };
+    maxUsages: number;
+    validUntil: string | null;
+  };
+  maxUsages: number;
+  usedCount: number;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface AdminCreatePromotionCodeRequest {
+  code: string;
+  target: PromotionConfigTarget;
+  promotionConfig: {
+    type: PromotionType;
+    config: { feePercentage: number };
+    maxUsages: number;
+    validUntil?: string | null;
+  };
+  maxUsages: number;
 }
 
 // === Admin Dashboard Metrics (GET /admin/dashboard-metrics) ===

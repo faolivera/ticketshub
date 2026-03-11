@@ -28,9 +28,39 @@ export const UpdatePromotionStatusRequestSchema = z.object({
   status: PromotionStatusSchema,
 });
 
+const PromotionConfigTargetSchema = z.enum([
+  'seller',
+  'verified_seller',
+  'buyer',
+  'verified_buyer',
+]);
+
+export const ClaimPromotionCodeRequestSchema = z.object({
+  code: z.string().min(1).max(64),
+  role: z.enum(['buyer', 'seller']),
+});
+
+export const CreatePromotionCodeRequestSchema = z.object({
+  code: z.string().min(1).max(64),
+  target: PromotionConfigTargetSchema,
+  promotionConfig: z.object({
+    type: PromotionTypeSchema,
+    config: z.object({ feePercentage: z.number().min(0).max(100) }),
+    maxUsages: z.number().int().min(0),
+    validUntil: z.string().datetime().optional().nullable(),
+  }),
+  maxUsages: z.number().int().min(0),
+});
+
 export type CreatePromotionRequestInput = z.infer<
   typeof CreatePromotionRequestSchema
 >;
 export type UpdatePromotionStatusRequestInput = z.infer<
   typeof UpdatePromotionStatusRequestSchema
+>;
+export type ClaimPromotionCodeRequestInput = z.infer<
+  typeof ClaimPromotionCodeRequestSchema
+>;
+export type CreatePromotionCodeRequestInput = z.infer<
+  typeof CreatePromotionCodeRequestSchema
 >;

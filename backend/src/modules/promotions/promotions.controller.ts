@@ -24,10 +24,13 @@ import type {
   CreatePromotionRequest,
   CreatePromotionResponse,
   ListPromotionsResponse,
+  ListPromotionCodesResponse,
+  CreatePromotionCodeRequest,
 } from './promotions.api';
 import {
   CreatePromotionRequestSchema,
   UpdatePromotionStatusRequestSchema,
+  CreatePromotionCodeRequestSchema,
 } from './schemas/api.schemas';
 import { PromotionStatus, PromotionType } from './promotions.domain';
 
@@ -104,5 +107,31 @@ export class PromotionsController {
       status,
     });
     return { success: true, data: { status: updated.status } };
+  }
+
+  @Get('promotion-codes')
+  async listPromotionCodes(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<ListPromotionCodesResponse>> {
+    const data = await this.promotionsService.listPromotionCodes(ctx);
+    return { success: true, data };
+  }
+
+  @Post('promotion-codes')
+  async createPromotionCode(
+    @Context() ctx: Ctx,
+    @Body() body: unknown,
+    @User() user: AuthenticatedUserPublicInfo,
+  ): Promise<ApiResponse<{ id: string; code: string }>> {
+    const parsed = CreatePromotionCodeRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.flatten().fieldErrors);
+    }
+    const data = await this.promotionsService.createPromotionCode(
+      ctx,
+      parsed.data as CreatePromotionCodeRequest,
+      user.id,
+    );
+    return { success: true, data };
   }
 }

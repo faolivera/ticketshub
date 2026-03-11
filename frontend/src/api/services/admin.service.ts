@@ -27,6 +27,8 @@ import type {
   UpdatePlatformConfigRequest,
   AdminPromotionListItem,
   AdminCreatePromotionRequest,
+  AdminPromotionCodeListItem,
+  AdminCreatePromotionCodeRequest,
   AdminUserSearchItem,
   AdminSellerPayoutsResponse,
   AdminCompletePayoutResponse,
@@ -534,6 +536,29 @@ export const adminService = {
     const response = await apiClient.patch<{ status: string }>(
       `/admin/promotions/${id}/status`,
       { status }
+    );
+    return response.data;
+  },
+
+  /**
+   * List promotion codes
+   */
+  async getPromotionCodes(): Promise<AdminPromotionCodeListItem[]> {
+    const response = await apiClient.get<AdminPromotionCodeListItem[]>(
+      '/admin/promotions/promotion-codes'
+    );
+    return response.data;
+  },
+
+  /**
+   * Create a promotion code
+   */
+  async createPromotionCode(
+    data: AdminCreatePromotionCodeRequest
+  ): Promise<{ id: string; code: string }> {
+    const response = await apiClient.post<{ id: string; code: string }>(
+      '/admin/promotions/promotion-codes',
+      data
     );
     return response.data;
   },

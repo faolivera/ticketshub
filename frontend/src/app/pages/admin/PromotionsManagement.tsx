@@ -34,13 +34,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { Tag, Plus, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Tag, Plus, X, Ticket } from 'lucide-react';
 import { adminService } from '../../../api/services/admin.service';
 import type {
   AdminPromotionListItem,
   AdminCreatePromotionRequest,
+  AdminPromotionCodeListItem,
+  AdminCreatePromotionCodeRequest,
   PromotionType,
   PromotionStatus,
+  PromotionConfigTarget,
   AdminUserSearchItem,
 } from '../../../api/types/admin';
 
@@ -73,6 +77,26 @@ export function PromotionsManagement() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  // Promotion codes tab state
+  const [activeTab, setActiveTab] = useState<'promotions' | 'promotion-codes'>('promotions');
+  const [promotionCodes, setPromotionCodes] = useState<AdminPromotionCodeListItem[]>([]);
+  const [codesLoading, setCodesLoading] = useState(false);
+  const [codesError, setCodesError] = useState<string | null>(null);
+  const [createCodeOpen, setCreateCodeOpen] = useState(false);
+  const [createCodeForm, setCreateCodeForm] = useState<AdminCreatePromotionCodeRequest>({
+    code: '',
+    target: 'buyer',
+    promotionConfig: {
+      type: 'SELLER_DISCOUNTED_FEE',
+      config: { feePercentage: 0 },
+      maxUsages: 0,
+      validUntil: undefined,
+    },
+    maxUsages: 0,
+  });
+  const [creatingCode, setCreatingCode] = useState(false);
+  const [createCodeError, setCreateCodeError] = useState<string | null>(null);
+
   const fetchPromotions = async () => {
     try {
       setLoading(true);
@@ -92,6 +116,23 @@ export function PromotionsManagement() {
   useEffect(() => {
     fetchPromotions();
   }, [statusFilter, typeFilter]);
+
+  const fetchPromotionCodes = async () => {
+    try {
+      setCodesLoading(true);
+      setCodesError(null);
+      const data = await adminService.getPromotionCodes();
+      setPromotionCodes(data);
+    } catch (err) {
+      setCodesError(err instanceof Error ? err.message : 'Failed to fetch promotion codes');
+    } finally {
+      setCodesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'promotion-codes') fetchPromotionCodes();
+  }, [activeTab]);
 
   useEffect(() => {
     if (createOpen) {
@@ -203,6 +244,40 @@ export function PromotionsManagement() {
     }
   };
 
+  const handleCreateCode = async () => {
+    if (!createCodeForm.code.trim()) {
+      setCreateCodeError(t('admin.promotionCodes.codeRequired'));
+      return;
+    }
+    try {
+      setCreatingCode(true);
+      setCreateCodeError(null);
+      await adminService.createPromotionCode(createCodeForm);
+      setCreateCodeOpen(false);
+      setCreateCodeForm({
+        code: '',
+        target: 'buyer',
+        promotionConfig: {
+          type: 'SELLER_DISCOUNTED_FEE',
+          config: { feePercentage: 0 },
+          maxUsages: 0,
+          validUntil: undefined,
+        },
+        maxUsages: 0,
+      });
+      await fetchPromotionCodes();
+    } catch (err) {
+      setCreateCodeError(
+        err instanceof Error ? err.message : t('admin.promotionCodes.createError')
+      );
+    } finally {
+      setCreatingCode(false);
+    }
+  };
+
+  const formatTargetLabel = (target: PromotionConfigTarget) =>
+    t(`admin.promotionCodes.target.${target}`);
+
   const formatDate = (iso: string | null) =>
     iso ? new Date(iso).toLocaleDateString(undefined, { dateStyle: 'short' }) : '—';
 
@@ -215,6 +290,19 @@ export function PromotionsManagement() {
         </p>
       </div>
 
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'promotions' | 'promotion-codes')}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="promotions" className="flex items-center gap-2">
+            <Tag className="w-4 h-4" />
+            {t('admin.promotions.tabPromotions')}
+          </TabsTrigger>
+          <TabsTrigger value="promotion-codes" className="flex items-center gap-2">
+            <Ticket className="w-4 h-4" />
+            {t('admin.promotions.tabPromotionCodes')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="promotions" className="mt-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -514,6 +602,233 @@ export function PromotionsManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="promotion-codes" className="mt-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>{t('admin.promotionCodes.listTitle')}</CardTitle>
+                <CardDescription>{t('admin.promotionCodes.listDescription')}</CardDescription>
+              </div>
+              <Button onClick={() => setCreateCodeOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                {t('admin.promotionCodes.create')}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {codesError && (
+                <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+                  {codesError}
+                </div>
+              )}
+              {codesLoading ? (
+                <p className="text-muted-foreground">{t('common.loading')}</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('admin.promotionCodes.code')}</TableHead>
+                      <TableHead>{t('admin.promotionCodes.targetLabel')}</TableHead>
+                      <TableHead>{t('admin.promotionCodes.type')}</TableHead>
+                      <TableHead>{t('admin.promotionCodes.feePercent')}</TableHead>
+                      <TableHead>{t('admin.promotionCodes.usages')}</TableHead>
+                      <TableHead>{t('admin.promotionCodes.createdAt')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {promotionCodes.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          {t('admin.promotionCodes.noPromotionCodes')}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      promotionCodes.map((pc) => (
+                        <TableRow key={pc.id}>
+                          <TableCell>
+                            <span className="font-mono font-medium">{pc.code}</span>
+                          </TableCell>
+                          <TableCell>{formatTargetLabel(pc.target)}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{pc.promotionConfig.type}</Badge>
+                          </TableCell>
+                          <TableCell>{pc.promotionConfig.config.feePercentage}%</TableCell>
+                          <TableCell>
+                            {pc.usedCount} / {pc.maxUsages === 0 ? '∞' : pc.maxUsages}
+                          </TableCell>
+                          <TableCell>{formatDate(pc.createdAt)}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          <Dialog open={createCodeOpen} onOpenChange={setCreateCodeOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>{t('admin.promotionCodes.createTitle')}</DialogTitle>
+                <DialogDescription>{t('admin.promotionCodes.createDescription')}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                {createCodeError && (
+                  <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+                    {createCodeError}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.code')}</Label>
+                  <Input
+                    value={createCodeForm.code}
+                    onChange={(e) =>
+                      setCreateCodeForm((prev) => ({ ...prev, code: e.target.value.trim().toUpperCase() }))
+                    }
+                    placeholder={t('admin.promotionCodes.codePlaceholder')}
+                    className="font-mono"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.targetLabel')}</Label>
+                  <Select
+                    value={createCodeForm.target}
+                    onValueChange={(v: PromotionConfigTarget) =>
+                      setCreateCodeForm((prev) => ({ ...prev, target: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="buyer">{t('admin.promotionCodes.target.buyer')}</SelectItem>
+                      <SelectItem value="verified_buyer">{t('admin.promotionCodes.target.verified_buyer')}</SelectItem>
+                      <SelectItem value="seller">{t('admin.promotionCodes.target.seller')}</SelectItem>
+                      <SelectItem value="verified_seller">{t('admin.promotionCodes.target.verified_seller')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.type')}</Label>
+                  <Select
+                    value={createCodeForm.promotionConfig.type}
+                    onValueChange={(v: PromotionType) =>
+                      setCreateCodeForm((prev) => ({
+                        ...prev,
+                        promotionConfig: {
+                          ...prev.promotionConfig,
+                          type: v,
+                        },
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SELLER_DISCOUNTED_FEE">
+                        {t('admin.promotions.typeSellerDiscountedFee')}
+                      </SelectItem>
+                      <SelectItem value="BUYER_DISCOUNTED_FEE">
+                        {t('admin.promotions.typeBuyerDiscountedFee')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.feePercent')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={createCodeForm.promotionConfig.config.feePercentage}
+                    onChange={(e) =>
+                      setCreateCodeForm((prev) => ({
+                        ...prev,
+                        promotionConfig: {
+                          ...prev.promotionConfig,
+                          config: {
+                            ...prev.promotionConfig.config,
+                            feePercentage: Number(e.target.value) || 0,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.promotionMaxUsages')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={createCodeForm.promotionConfig.maxUsages}
+                    onChange={(e) =>
+                      setCreateCodeForm((prev) => ({
+                        ...prev,
+                        promotionConfig: {
+                          ...prev.promotionConfig,
+                          maxUsages: Math.max(0, Number(e.target.value) || 0),
+                        },
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('admin.promotionCodes.promotionMaxUsagesHint')}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.codeMaxUsages')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={createCodeForm.maxUsages}
+                    onChange={(e) =>
+                      setCreateCodeForm((prev) => ({
+                        ...prev,
+                        maxUsages: Math.max(0, Number(e.target.value) || 0),
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('admin.promotionCodes.codeMaxUsagesHint')}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.validUntil')}</Label>
+                  <Input
+                    type="datetime-local"
+                    value={
+                      createCodeForm.promotionConfig.validUntil
+                        ? createCodeForm.promotionConfig.validUntil.slice(0, 16)
+                        : ''
+                    }
+                    onChange={(e) =>
+                      setCreateCodeForm((prev) => ({
+                        ...prev,
+                        promotionConfig: {
+                          ...prev.promotionConfig,
+                          validUntil: e.target.value
+                            ? new Date(e.target.value).toISOString()
+                            : undefined,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCreateCodeOpen(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button onClick={handleCreateCode} disabled={creatingCode}>
+                  {creatingCode ? t('common.saving') : t('admin.promotionCodes.create')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
