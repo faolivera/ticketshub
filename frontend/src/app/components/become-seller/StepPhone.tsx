@@ -7,6 +7,8 @@ import { otpService } from '@/api/services/otp.service';
 import { OTPType } from '@/api/types/otp';
 import { Button } from '@/app/components/ui/button';
 
+const PHONE_PREFIX = '+549';
+
 export interface StepPhoneProps {
   onComplete: () => void;
   /** When true, hides the "Back to profile" link (e.g. on /verify-user page). */
@@ -26,7 +28,8 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
 
   useEffect(() => {
     if (user?.phone && !user.phoneVerified) {
-      setPhoneNumber(user.phone);
+      const digits = (user.phone || '').replace(/\D/g, '');
+      setPhoneNumber(digits.startsWith('549') ? digits.slice(3) : digits);
     }
   }, [user?.phone, user?.phoneVerified]);
 
@@ -49,10 +52,11 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     }
     setLoading(true);
     setError(null);
+    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
     try {
       await otpService.sendOTP({
         type: OTPType.PhoneVerification,
-        phoneNumber: phoneNumber.trim(),
+        phoneNumber: fullPhoneNumber,
       });
       setPhase('verify');
       setTimer(60);
@@ -95,11 +99,12 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     }
     setLoading(true);
     setError(null);
+    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
     try {
       await otpService.verifyOTP({
         type: OTPType.PhoneVerification,
         code: fullCode,
-        phoneNumber: phoneNumber.trim(),
+        phoneNumber: fullPhoneNumber,
       });
       await refreshUser();
       onComplete();
@@ -114,10 +119,11 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     if (!canResend) return;
     setLoading(true);
     setError(null);
+    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
     try {
       await otpService.sendOTP({
         type: OTPType.PhoneVerification,
-        phoneNumber: phoneNumber.trim(),
+        phoneNumber: fullPhoneNumber,
       });
       setTimer(60);
       setCanResend(false);
@@ -171,19 +177,24 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
               {t('becomeSeller.step1.phoneLabel')}
             </label>
-            <input
-              type="tel"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={phoneNumber}
-              onChange={(e) => {
-                const digitsOnly = e.target.value.replace(/\D/g, '');
-                setPhoneNumber(digitsOnly);
-              }}
-              placeholder={t('becomeSeller.step1.phonePlaceholder')}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              disabled={loading}
-            />
+            <div className="flex rounded-lg border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+              <span className="inline-flex items-center rounded-l-lg border-0 border-r border-gray-300 bg-gray-50 px-4 py-3 text-gray-700">
+                {PHONE_PREFIX}
+              </span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={phoneNumber}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setPhoneNumber(digitsOnly);
+                }}
+                placeholder={t('becomeSeller.step1.phonePlaceholder')}
+                className="flex-1 min-w-0 rounded-r-lg border-0 bg-transparent px-4 py-3 focus:border-0 focus:outline-none focus:ring-0"
+                disabled={loading}
+              />
+            </div>
           </div>
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? (
@@ -199,7 +210,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
       ) : (
         <form onSubmit={handleVerify} className="space-y-4">
           <p className="text-sm text-gray-600">
-            {t('becomeSeller.step1.codeSent', { phone: phoneNumber })}
+            {t('becomeSeller.step1.codeSent', { phone: PHONE_PREFIX + phoneNumber })}
           </p>
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700">

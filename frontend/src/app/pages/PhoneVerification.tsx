@@ -7,6 +7,8 @@ import { otpService } from '@/api/services/otp.service';
 import { OTPType } from '@/api/types/otp';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 
+const PHONE_PREFIX = '+549';
+
 export function PhoneVerification() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -31,7 +33,8 @@ export function PhoneVerification() {
   // Pre-fill phone when user has a saved but unverified number (e.g. from registration)
   useEffect(() => {
     if (user?.phone && !user.phoneVerified && !hasPrefilledPhone.current) {
-      setPhoneNumber(user.phone);
+      const digits = (user.phone || '').replace(/\D/g, '');
+      setPhoneNumber(digits.startsWith('549') ? digits.slice(3) : digits);
       hasPrefilledPhone.current = true;
     }
   }, [user?.phone, user?.phoneVerified]);
@@ -54,16 +57,17 @@ export function PhoneVerification() {
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber) {
+    if (!phoneNumber.trim()) {
       setError(t('phoneVerification.pleaseEnterPhone'));
       return;
     }
     setIsLoading(true);
     setError(null);
+    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
     try {
       await otpService.sendOTP({
         type: OTPType.PhoneVerification,
-        phoneNumber: phoneNumber.trim(),
+        phoneNumber: fullPhoneNumber,
       });
       setStep('verify');
       setTimer(60);
@@ -112,8 +116,9 @@ export function PhoneVerification() {
 
     setIsLoading(true);
     setError(null);
+    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
     try {
-      await otpService.verifyOTP({ type: OTPType.PhoneVerification, code, phoneNumber });
+      await otpService.verifyOTP({ type: OTPType.PhoneVerification, code, phoneNumber: fullPhoneNumber });
       await refreshUser();
       navigate(returnTo);
     } catch (err) {
@@ -128,10 +133,11 @@ export function PhoneVerification() {
     
     setIsLoading(true);
     setError(null);
+    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
     try {
       await otpService.sendOTP({
         type: OTPType.PhoneVerification,
-        phoneNumber: phoneNumber.trim(),
+        phoneNumber: fullPhoneNumber,
       });
       setTimer(60);
       setCanResend(false);
@@ -173,7 +179,7 @@ export function PhoneVerification() {
                 {t('phoneVerification.verifyPhone')}
               </h1>
               <p className="text-gray-600">
-                {t('phoneVerification.verifyPhoneDescription', { phone: phoneNumber })}
+                {t('phoneVerification.verifyPhoneDescription', { phone: PHONE_PREFIX + phoneNumber })}
               </p>
             </div>
 
@@ -270,20 +276,25 @@ export function PhoneVerification() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {t('phoneVerification.phoneNumber')}
               </label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={phoneNumber}
-                onChange={(e) => {
-                  const digitsOnly = e.target.value.replace(/\D/g, '');
-                  setPhoneNumber(digitsOnly);
-                }}
-                placeholder="+1 (555) 123-4567"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={isLoading}
-              />
+              <div className="flex rounded-lg border border-gray-300 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+                <span className="inline-flex items-center rounded-l-lg border-0 border-r border-gray-300 bg-gray-50 px-4 py-3 text-gray-700">
+                  {PHONE_PREFIX}
+                </span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    const digitsOnly = e.target.value.replace(/\D/g, '');
+                    setPhoneNumber(digitsOnly);
+                  }}
+                  placeholder="11 1234-5678"
+                  className="flex-1 min-w-0 rounded-r-lg border-0 bg-transparent px-4 py-3 focus:outline-none focus:ring-0"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
             </div>
 
             {/* Method Selection */}
