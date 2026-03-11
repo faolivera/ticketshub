@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SocketGateway } from '../../../../src/modules/socket/socket.gateway';
+import { SocketGateway } from '../../../../src/common/socket/socket.gateway';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
 import { TransactionChatService } from '../../../../src/modules/transaction-chat/transaction-chat.service';

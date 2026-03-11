@@ -8,7 +8,7 @@ import type {
 } from './channel.interface';
 import type { IRealtimeBroadcaster } from '../../../common/realtime';
 import { REALTIME_BROADCASTER } from '../../realtime/realtime.module';
-import { NOTIFICATION } from '../../socket/socket.events';
+import { NOTIFICATION } from '../../../common/socket/socket.events';
 
 /**
  * In-app notification channel.

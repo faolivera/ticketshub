@@ -8,12 +8,12 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
-import type { AuthenticatedUserPublicInfo } from '../users/users.domain';
-import { UsersService } from '../users/users.service';
-import { TransactionsService } from '../transactions/transactions.service';
-import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
-import { InMemoryRealtimeBroadcaster } from '../../common/realtime';
-import type { Ctx } from '../../common/types/context';
+import type { AuthenticatedUserPublicInfo } from '../../modules/users/users.domain';
+import { UsersService } from '../../modules/users/users.service';
+import { TransactionsService } from '../../modules/transactions/transactions.service';
+import { TransactionChatService } from '../../modules/transaction-chat/transaction-chat.service';
+import { InMemoryRealtimeBroadcaster } from '../realtime';
+import type { Ctx } from '../types/context';
 import { CHAT_JOIN, CHAT_LEAVE, CHAT_MESSAGE } from './socket.events';
 
 const USER_ROOM_PREFIX = 'user:';

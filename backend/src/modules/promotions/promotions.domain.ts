@@ -49,3 +49,19 @@ export interface Promotion {
   createdAt: Date;
   createdBy: string;
 }
+
+/**
+ * Promotion code entity
+ */
+type PromotionConfig = Omit<Promotion, 'id' | "name" | "userId" | "createdAt" | "createdBy">;
+type PromotionConfigTarget = "seller" | "verified_seller" | "buyer" | "verified_buyer";
+export interface PromotionCode {
+  id: string;
+  code: string;
+  promotionConfig: PromotionConfig;
+  target: PromotionConfigTarget;
+  maxUsages: number;
+  usedCount: number;
+  createdAt: Date;
+  createdBy: string;
+}

@@ -30,7 +30,7 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { TransactionChatModule } from './modules/transaction-chat/transaction-chat.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
-import { SocketModule } from './modules/socket/socket.module';
+import { SocketModule } from './common/socket/socket.module';
 import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
 
 @Module({

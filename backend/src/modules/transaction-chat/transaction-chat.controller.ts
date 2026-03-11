@@ -24,7 +24,7 @@ import type {
 import { TransactionChatService } from './transaction-chat.service';
 import type { IRealtimeBroadcaster } from '../../common/realtime';
 import { REALTIME_BROADCASTER } from '../realtime/realtime.module';
-import { CHAT_MESSAGE } from '../socket/socket.events';
+import { CHAT_MESSAGE } from '../../common/socket/socket.events';
 
 const TRANSACTION_ROOM_PREFIX = 'transaction:';
 
