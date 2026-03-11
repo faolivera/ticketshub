@@ -4,10 +4,19 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { NotificationBell } from './NotificationBell';
+import { useIsMobile } from '@/app/components/ui/use-mobile';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+} from '@/app/components/ui/drawer';
 
 export function Header() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const { user, isAuthenticated, logout, canSell } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
@@ -25,8 +34,9 @@ export function Header() {
     if (!isDropdownOpen) setIsMobileLangOpen(false);
   }, [isDropdownOpen]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside (desktop only; mobile uses Drawer overlay)
   useEffect(() => {
+    if (isMobile) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
@@ -38,7 +48,7 @@ export function Header() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isMobile]);
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -113,14 +123,87 @@ export function Header() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] gap-2 px-3 py-2 sm:px-4 sm:min-w-0 sm:min-h-0 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors touch-manipulation"
               >
                 <User className="w-4 h-4 shrink-0" />
                 <span className="hidden sm:inline">{user?.firstName} {user?.lastName}</span>
                 <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {isDropdownOpen && (
+              {isMobile ? (
+                <Drawer open={isDropdownOpen} onOpenChange={setIsDropdownOpen} direction="top">
+                  <DrawerContent className="max-h-[90vh] flex flex-col">
+                    <DrawerHeader className="flex-shrink-0 border-b border-gray-200 pb-3">
+                      <div className="pr-10">
+                        <DrawerTitle className="text-lg font-semibold text-gray-900 truncate">
+                          {user?.firstName} {user?.lastName}
+                        </DrawerTitle>
+                      </div>
+                    </DrawerHeader>
+                    <nav className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 flex flex-col gap-1">
+                      <Link
+                        to="/user-profile"
+                        className="min-h-[44px] flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <User className="w-5 h-5 shrink-0 text-gray-500" />
+                        <span>{t('header.myProfile')}</span>
+                      </Link>
+                      <Link
+                        to="/support"
+                        className="min-h-[44px] flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <MessageCircle className="w-5 h-5 shrink-0 text-gray-500" />
+                        <span>{t('header.support')}</span>
+                      </Link>
+                      <div className="border-t border-gray-200 pt-3 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsMobileLangOpen(!isMobileLangOpen)}
+                          className="w-full min-h-[44px] flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                          aria-expanded={isMobileLangOpen}
+                          aria-haspopup="true"
+                        >
+                          <Languages className="w-5 h-5 shrink-0 text-gray-500" />
+                          <span className="flex-1 text-left font-medium">{t('header.language')}</span>
+                          <span className="text-sm text-gray-500">
+                            {i18n.language === 'en' ? 'English' : 'Español'}
+                          </span>
+                          <ChevronDown className={`w-5 h-5 shrink-0 transition-transform ${isMobileLangOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isMobileLangOpen && (
+                          <div className="mt-1 py-1 bg-gray-50 rounded-lg">
+                            <button
+                              onClick={() => { changeLanguage('en'); setIsMobileLangOpen(false); }}
+                              className={`w-full min-h-[44px] flex items-center gap-3 px-4 py-3 text-left transition-colors touch-manipulation ${i18n.language === 'en' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                            >
+                              <span aria-hidden>🇺🇸</span>
+                              <span>English</span>
+                            </button>
+                            <button
+                              onClick={() => { changeLanguage('es'); setIsMobileLangOpen(false); }}
+                              className={`w-full min-h-[44px] flex items-center gap-3 px-4 py-3 text-left transition-colors touch-manipulation ${i18n.language === 'es' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                            >
+                              <span aria-hidden>🇪🇸</span>
+                              <span>Español</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="border-t border-gray-200 my-2" />
+                      <button
+                        className="w-full min-h-[44px] flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors touch-manipulation"
+                        onClick={() => { setIsDropdownOpen(false); logout(); }}
+                      >
+                        <LogOut className="w-5 h-5 shrink-0" />
+                        <span>{t('header.logout')}</span>
+                      </button>
+                    </nav>
+                    <DrawerClose className="absolute top-4 right-4 rounded-full p-2 min-w-[44px] min-h-[44px] touch-manipulation" />
+                  </DrawerContent>
+                </Drawer>
+              ) : isDropdownOpen ? (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                   <div className="sm:hidden px-4 py-2 border-b border-gray-200">
                     <span className="font-semibold text-gray-900 truncate block">
@@ -226,7 +309,7 @@ export function Header() {
                     <span>{t('header.logout')}</span>
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
           ) : (
             <div className="flex items-center gap-1 sm:gap-2">
