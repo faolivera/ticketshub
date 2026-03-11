@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, User, Globe, ArrowLeft, Lock, Phone } from 'lucide-react';
+import { Mail, User, ArrowLeft, Lock, Phone } from 'lucide-react';
 import { authService } from '@/api/services/auth.service';
 import { otpService } from '@/api/services/otp.service';
 import { termsService } from '@/api/services/terms.service';
@@ -33,7 +33,6 @@ export function Register() {
     firstName: '',
     lastName: '',
     phone: '',
-    country: 'Argentina',
   });
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
@@ -47,11 +46,6 @@ export function Register() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsLoading, setTermsLoading] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
-
-  // Country is fixed to Argentina (backend default)
-  useEffect(() => {
-    setFormData(prev => ({ ...prev, country: 'Argentina' }));
-  }, []);
 
   // Fetch current terms on mount
   useEffect(() => {
@@ -101,7 +95,6 @@ export function Register() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone || undefined,
-        country: formData.country,
         termsAcceptance: {
           termsVersionId: termsVersionId!,
           method: AcceptanceMethod.Checkbox,
@@ -374,25 +367,6 @@ export function Register() {
               />
               <p className="text-sm text-gray-500 mt-1">
                 {t('register.phoneOptionalHint')}
-              </p>
-            </div>
-
-            {/* Country (fixed to Argentina) */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  {t('register.country')}
-                </div>
-              </label>
-              <div
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
-                aria-label={t('register.country')}
-              >
-                Argentina
-              </div>
-              <p className="text-sm text-gray-500 mt-1">
-                {t('register.countryFixed')}
               </p>
             </div>
 
