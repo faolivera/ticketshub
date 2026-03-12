@@ -525,7 +525,17 @@
     "uploadingPhoto": "Uploading...",
     "uploadError": "Failed to upload photo",
     "invalidFileType": "Invalid file type. Use JPG, PNG, WebP or GIF",
-    "fileTooLarge": "File too large. Maximum size is 5MB"
+    "fileTooLarge": "File too large. Maximum size is 5MB",
+    "avatarCrop": {
+      "title": "Edit profile photo",
+      "uploadImage": "Upload image",
+      "fileHint": "JPG, PNG or WEBP · max 10 MB",
+      "changeImage": "Change image",
+      "save": "Save",
+      "saving": "Saving…",
+      "close": "Close",
+      "saveError": "Could not save the image. Please try again."
+    }
   },
   "sellerProfile": {
     "title": "Seller Profile",

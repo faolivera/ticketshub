@@ -524,7 +524,17 @@
     "uploadingPhoto": "Subiendo...",
     "uploadError": "Error al subir foto",
     "invalidFileType": "Tipo de archivo inválido. Usa JPG, PNG, WebP o GIF",
-    "fileTooLarge": "Archivo demasiado grande. El tamaño máximo es 5MB"
+    "fileTooLarge": "Archivo demasiado grande. El tamaño máximo es 5MB",
+    "avatarCrop": {
+      "title": "Editar foto de perfil",
+      "uploadImage": "Subir imagen",
+      "fileHint": "JPG, PNG o WEBP · máx 10 MB",
+      "changeImage": "Cambiar imagen",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "close": "Cerrar",
+      "saveError": "No se pudo guardar la imagen. Intentá de nuevo."
+    }
   },
   "sellerProfile": {
     "title": "Perfil del Vendedor",

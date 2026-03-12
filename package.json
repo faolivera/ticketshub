@@ -27,6 +27,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "react-easy-crop": "^5.5.6"
   }
 }
-

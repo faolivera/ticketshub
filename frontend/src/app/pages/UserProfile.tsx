@@ -1,59 +1,31 @@
-import { Mail, Calendar, Phone, Camera, Loader2, Shield, CreditCard } from 'lucide-react';
+import { Mail, Calendar, Phone, Camera, Shield, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
 import { SellerBadge } from '@/app/components/SellerBadge';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { VerificationHelper } from '@/lib/verification';
 import { usersService } from '@/api/services';
 import { UserAvatar } from '@/app/components/UserAvatar';
+import AvatarCropModal from '@/app/components/Avatarcropmodal';
 import { formatMonthYear } from '@/lib/format-date';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { cn } from '@/app/components/ui/utils';
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_FILE_SIZE_MB = 5;
-
 export function UserProfile() {
   const { user, logout, refreshUser } = useUser();
   const { t } = useTranslation();
-  const [avatarUploading, setAvatarUploading] = useState(false);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarCropOpen, setAvatarCropOpen] = useState(false);
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click();
+    setAvatarCropOpen(true);
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    e.target.value = '';
-
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setAvatarError(t('userProfile.invalidFileType'));
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setAvatarError(t('userProfile.fileTooLarge'));
-      return;
-    }
-
-    setAvatarError(null);
-    setAvatarUploading(true);
-
-    try {
-      await usersService.uploadAvatar(file);
-      await refreshUser();
-    } catch (err) {
-      console.error('Failed to upload avatar:', err);
-      setAvatarError(t('userProfile.uploadError'));
-    } finally {
-      setAvatarUploading(false);
-    }
+  const handleAvatarSave = async (blob: Blob) => {
+    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+    await usersService.uploadAvatar(file);
+    await refreshUser();
   };
 
   if (!user) {
@@ -97,8 +69,7 @@ export function UserProfile() {
                   <button
                     type="button"
                     onClick={handleAvatarClick}
-                    disabled={avatarUploading}
-                    className="relative group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full disabled:cursor-not-allowed min-w-[72px] min-h-[72px] sm:min-w-0 sm:min-h-0"
+                    className="relative group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full min-w-[72px] min-h-[72px] sm:min-w-0 sm:min-h-0"
                     aria-label={t('userProfile.changePhoto')}
                   >
                     <UserAvatar
@@ -107,26 +78,9 @@ export function UserProfile() {
                       className="w-20 h-20 sm:w-16 sm:h-16 text-xl ring-2 ring-border"
                     />
                     <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      {avatarUploading ? (
-                        <Loader2 className="w-5 h-5 text-white animate-spin" />
-                      ) : (
-                        <Camera className="w-5 h-5 text-white" />
-                      )}
+                      <Camera className="w-5 h-5 text-white" />
                     </div>
                   </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    aria-hidden="true"
-                  />
-                  {avatarError && (
-                    <p className="absolute -bottom-5 left-0 right-0 text-xs text-destructive text-center whitespace-nowrap">
-                      {avatarError}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -297,6 +251,13 @@ export function UserProfile() {
             )}
           </CardContent>
         </Card>
+
+        <AvatarCropModal
+          open={avatarCropOpen}
+          onClose={() => setAvatarCropOpen(false)}
+          onSave={handleAvatarSave}
+          cropShape="round"
+        />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { TransactionManagerModule } from './common/database';
 import { DistributedLockModule } from './common/locks';
@@ -39,6 +40,7 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     ScheduleModule.forRoot(),
 
     // Global modules (must be first)
+    PrometheusModule.register(),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
