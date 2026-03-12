@@ -52,6 +52,7 @@
     "motion": "12.23.24",
     "next-themes": "0.4.6",
     "react-day-picker": "8.10.1",
+    "react-easy-crop": "^5.0.4",
     "react-dnd": "16.0.1",
     "react-dnd-html5-backend": "16.0.1",
     "react-helmet-async": "^3.0.0",
