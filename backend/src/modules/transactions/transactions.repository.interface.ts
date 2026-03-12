@@ -69,9 +69,13 @@ export interface ITransactionsRepository {
   getByListingIds(ctx: Ctx, listingIds: string[]): Promise<Transaction[]>;
 
   /**
-   * Get transactions pending transition to TransferringFund (TicketTransferred or DepositHold, depositReleaseAt passed, no dispute)
+   * Get transactions pending transition to TransferringFund (TicketTransferred or DepositHold, depositReleaseAt passed, no dispute).
+   * Optionally limited to avoid processing too many in one scheduler run.
    */
-  getPendingDepositRelease(ctx: Ctx): Promise<Transaction[]>;
+  getPendingDepositRelease(
+    ctx: Ctx,
+    limit?: number,
+  ): Promise<Transaction[]>;
 
   /**
    * Update transaction
@@ -113,14 +117,17 @@ export interface ITransactionsRepository {
   getIdsByStatuses(ctx: Ctx, statuses: TransactionStatus[]): Promise<string[]>;
 
   /**
-   * Find transactions with expired payment window
+   * Find transactions with expired payment window. Optionally limited for scheduler batch size.
    */
-  findExpiredPendingPayments(ctx: Ctx): Promise<Transaction[]>;
+  findExpiredPendingPayments(
+    ctx: Ctx,
+    limit?: number,
+  ): Promise<Transaction[]>;
 
   /**
-   * Find transactions with expired admin review window
+   * Find transactions with expired admin review window. Optionally limited for scheduler batch size.
    */
-  findExpiredAdminReviews(ctx: Ctx): Promise<Transaction[]>;
+  findExpiredAdminReviews(ctx: Ctx, limit?: number): Promise<Transaction[]>;
 
   /**
    * Find transaction by ID with pessimistic lock (FOR UPDATE).

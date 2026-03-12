@@ -29,6 +29,16 @@ export interface IOffersRepository {
       >
     >,
   ): Promise<Offer | undefined>;
+
+  /**
+   * Mark pending offers as cancelled by IDs (batch). Only affects offers with status pending.
+   */
+  cancelExpiredPendingByIds(
+    ctx: Ctx,
+    ids: string[],
+    cancelledAt: Date,
+  ): Promise<number>;
+
   findPendingOrAcceptedByListingId(
     ctx: Ctx,
     listingId: string,

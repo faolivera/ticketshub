@@ -783,12 +783,13 @@ export class TransactionsService {
   /**
    * Transition transactions to TransferringFund when depositReleaseAt has passed.
    * Does not release funds; admin pays manually then calls completePayout.
+   * @param limit Optional batch size (e.g. from scheduler config); when omitted, processes all.
    */
-  async processDepositReleases(ctx: Ctx): Promise<number> {
+  async processDepositReleases(ctx: Ctx, limit?: number): Promise<number> {
     this.logger.log(ctx, 'Processing deposit releases (to TransferringFund)');
 
     const pending =
-      await this.transactionsRepository.getPendingDepositRelease(ctx);
+      await this.transactionsRepository.getPendingDepositRelease(ctx, limit);
     let count = 0;
 
     for (const transaction of pending) {
@@ -978,13 +979,14 @@ export class TransactionsService {
   }
 
   /**
-   * Cancel all transactions with expired payment window (called by scheduler)
+   * Cancel all transactions with expired payment window (called by scheduler).
+   * @param limit Optional batch size (e.g. from scheduler config); when omitted, processes all.
    */
-  async cancelExpiredPendingPayments(ctx: Ctx): Promise<number> {
+  async cancelExpiredPendingPayments(ctx: Ctx, limit?: number): Promise<number> {
     this.logger.log(ctx, 'Cancelling expired pending payments');
 
     const expired =
-      await this.transactionsRepository.findExpiredPendingPayments(ctx);
+      await this.transactionsRepository.findExpiredPendingPayments(ctx, limit);
     let cancelled = 0;
 
     for (const transaction of expired) {
@@ -1011,13 +1013,14 @@ export class TransactionsService {
   }
 
   /**
-   * Cancel all transactions with expired admin review window (called by scheduler)
+   * Cancel all transactions with expired admin review window (called by scheduler).
+   * @param limit Optional batch size (e.g. from scheduler config); when omitted, processes all.
    */
-  async cancelExpiredAdminReviews(ctx: Ctx): Promise<number> {
+  async cancelExpiredAdminReviews(ctx: Ctx, limit?: number): Promise<number> {
     this.logger.log(ctx, 'Cancelling expired admin reviews');
 
     const expired =
-      await this.transactionsRepository.findExpiredAdminReviews(ctx);
+      await this.transactionsRepository.findExpiredAdminReviews(ctx, limit);
     let cancelled = 0;
 
     for (const transaction of expired) {

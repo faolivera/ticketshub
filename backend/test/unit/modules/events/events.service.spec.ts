@@ -75,6 +75,7 @@ describe('EventsService', () => {
     const mockEventsRepository = {
       findEventById: jest.fn(),
       findEventDateById: jest.fn(),
+      findEventDatesByIds: jest.fn().mockResolvedValue([]),
       findEventSectionById: jest.fn(),
       findEventDateByEventIdAndDate: jest.fn(),
       createEvent: jest.fn(),
@@ -559,9 +560,9 @@ describe('EventsService', () => {
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(
+      eventsRepository.findEventDatesByIds.mockResolvedValue([
         mockApprovedEventDate,
-      );
+      ]);
       eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(
         undefined,
       );
@@ -622,9 +623,9 @@ describe('EventsService', () => {
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(
+      eventsRepository.findEventDatesByIds.mockResolvedValue([
         mockApprovedEventDate,
-      );
+      ]);
       ticketsService.getListingsByDateId.mockResolvedValue([]);
       eventsRepository.deleteEventDate.mockResolvedValue();
       eventsRepository.getDatesByEventId.mockResolvedValue([]);
@@ -645,9 +646,9 @@ describe('EventsService', () => {
 
     it('should throw BadRequestException when deleting date with completed transactions', async () => {
       eventsRepository.findEventById.mockResolvedValue(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(
+      eventsRepository.findEventDatesByIds.mockResolvedValue([
         mockApprovedEventDate,
-      );
+      ]);
       ticketsService.getListingsByDateId.mockResolvedValue([mockListing]);
       transactionsService.hasCompletedTransactionsForListings.mockResolvedValue(
         true,
@@ -667,9 +668,9 @@ describe('EventsService', () => {
       eventsRepository.findEventById
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(
+      eventsRepository.findEventDatesByIds.mockResolvedValue([
         mockApprovedEventDate,
-      );
+      ]);
       ticketsService.getListingsByDateId.mockResolvedValue([mockListing]);
       transactionsService.hasCompletedTransactionsForListings.mockResolvedValue(
         false,
@@ -702,9 +703,9 @@ describe('EventsService', () => {
         eventId: 'evt_different',
       };
       eventsRepository.findEventById.mockResolvedValue(mockApprovedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(
+      eventsRepository.findEventDatesByIds.mockResolvedValue([
         dateFromDifferentEvent,
-      );
+      ]);
 
       await expect(
         service.adminUpdateEventWithDates(
@@ -750,9 +751,9 @@ describe('EventsService', () => {
         .mockResolvedValueOnce(mockApprovedEvent)
         .mockResolvedValueOnce(updatedEvent);
       eventsRepository.updateEvent.mockResolvedValue(updatedEvent);
-      eventsRepository.findEventDateById.mockResolvedValue(
+      eventsRepository.findEventDatesByIds.mockResolvedValue([
         mockApprovedEventDate,
-      );
+      ]);
       eventsRepository.findEventDateByEventIdAndDate.mockResolvedValue(
         undefined,
       );

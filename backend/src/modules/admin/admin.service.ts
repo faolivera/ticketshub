@@ -423,6 +423,7 @@ export class AdminService {
   /**
    * Get enriched payment confirmations for admin payments approval page.
    * Returns pending confirmations with additional transaction details.
+   * Uses a single batch query for transactions to avoid N+1.
    */
   async getAdminPayments(ctx: Ctx): Promise<AdminPaymentsResponse> {
     this.logger.log(ctx, 'Getting admin payments list');
@@ -430,13 +431,23 @@ export class AdminService {
     const pendingConfirmations =
       await this.paymentConfirmationsService.listPendingConfirmations(ctx);
 
+    if (pendingConfirmations.confirmations.length === 0) {
+      return { payments: [], total: 0 };
+    }
+
+    const transactionIds = [
+      ...new Set(
+        pendingConfirmations.confirmations.map((c) => c.transactionId),
+      ),
+    ];
+    const transactions =
+      await this.transactionsService.findByIds(ctx, transactionIds);
+    const transactionMap = new Map(transactions.map((t) => [t.id, t]));
+
     const enrichedPayments: AdminPaymentItem[] = [];
 
     for (const confirmation of pendingConfirmations.confirmations) {
-      const transaction = await this.transactionsService.findById(
-        ctx,
-        confirmation.transactionId,
-      );
+      const transaction = transactionMap.get(confirmation.transactionId);
 
       if (!transaction) {
         this.logger.warn(

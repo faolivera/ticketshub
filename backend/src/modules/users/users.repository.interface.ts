@@ -65,6 +65,11 @@ export interface IUsersRepository {
   findByEmail(ctx: Ctx, email: string): Promise<User | undefined>;
 
   /**
+   * Find users by emails (batch). Emails are trimmed and lowercased for lookup.
+   */
+  findByEmails(ctx: Ctx, emails: string[]): Promise<User[]>;
+
+  /**
    * Find user by Google sub (googleId)
    */
   findByGoogleId(ctx: Ctx, googleId: string): Promise<User | undefined>;

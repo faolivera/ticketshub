@@ -363,6 +363,18 @@ export class EventsRepository implements IEventsRepository {
     return date ? this.mapToEventDate(date) : undefined;
   }
 
+  async findEventDatesByIds(
+    _ctx: Ctx,
+    ids: string[],
+  ): Promise<EventDate[]> {
+    this.logger.debug(_ctx, 'findEventDatesByIds', { count: ids.length });
+    if (ids.length === 0) return [];
+    const dates = await this.prisma.eventDate.findMany({
+      where: { id: { in: ids } },
+    });
+    return dates.map((d) => this.mapToEventDate(d));
+  }
+
   async getDatesByEventId(_ctx: Ctx, eventId: string): Promise<EventDate[]> {
     this.logger.debug(_ctx, 'getDatesByEventId', { eventId });
     const dates = await this.prisma.eventDate.findMany({

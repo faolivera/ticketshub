@@ -213,4 +213,26 @@ export class PromotionsRepository
     });
     return result.count;
   }
+
+  async deactivateByUserIdsAndType(
+    ctx: Ctx,
+    userIds: string[],
+    type: PromotionType,
+  ): Promise<number> {
+    this.logger.debug(ctx, 'deactivateByUserIdsAndType', {
+      userIdCount: userIds.length,
+      type,
+    });
+    if (userIds.length === 0) return 0;
+    const client = this.getClient(ctx);
+    const result = await client.promotion.updateMany({
+      where: {
+        userId: { in: userIds },
+        type: this.mapTypeToDb(type),
+        status: PrismaPromotionStatus.active,
+      },
+      data: { status: PrismaPromotionStatus.inactive },
+    });
+    return result.count;
+  }
 }

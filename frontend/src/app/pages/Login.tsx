@@ -2,12 +2,44 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, Ticket } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 import { useUser } from '@/app/contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
 import { getGoogleClientId } from '@/config/env';
 
 const googleClientId = getGoogleClientId();
+
+/** Renders Google button or a skeleton while the GSI script loads. Must be used inside GoogleOAuthProvider. */
+function GoogleLoginButtonBlock({
+  onSuccess,
+  onError,
+  width,
+}: {
+  onSuccess: (credentialResponse: { credential?: string }) => void;
+  onError: () => void;
+  width: number;
+}) {
+  const { scriptLoadedSuccessfully } = useGoogleOAuth();
+  if (!scriptLoadedSuccessfully) {
+    return (
+      <div
+        className="skeleton-blink w-full h-[3.25rem] rounded-lg bg-gray-200"
+        aria-hidden
+      />
+    );
+  }
+  return (
+    <GoogleLogin
+      onSuccess={onSuccess}
+      onError={onError}
+      theme="outline"
+      size="large"
+      shape="rectangular"
+      width={width}
+      text="signin_with"
+    />
+  );
+}
 
 export function Login() {
   const { t } = useTranslation();
@@ -118,14 +150,10 @@ export function Login() {
                 ref={googleButtonContainerRef}
                 className="w-full flex items-center justify-center min-h-[3.25rem] rounded-lg overflow-hidden"
               >
-                <GoogleLogin
+                <GoogleLoginButtonBlock
                   onSuccess={handleGoogleSuccess}
                   onError={() => setLocalError(t('login.googleError'))}
-                  theme="outline"
-                  size="large"
-                  shape="rectangular"
                   width={googleButtonWidth}
-                  text="signin_with"
                 />
               </div>
               <div className="relative my-4">

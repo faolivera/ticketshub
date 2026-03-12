@@ -68,6 +68,16 @@ export class UsersRepository implements IUsersRepository {
     return user ? this.mapToUser(user) : undefined;
   }
 
+  async findByEmails(_ctx: Ctx, emails: string[]): Promise<User[]> {
+    this.logger.debug(_ctx, 'findByEmails', { count: emails.length });
+    if (emails.length === 0) return [];
+    const normalized = [...new Set(emails.map((e) => normalizeEmail(e)))];
+    const users = await this.prisma.user.findMany({
+      where: { email: { in: normalized } },
+    });
+    return users.map((u) => this.mapToUser(u));
+  }
+
   async findByGoogleId(_ctx: Ctx, googleId: string): Promise<User | undefined> {
     this.logger.debug(_ctx, 'findByGoogleId', { googleId });
     const user = await this.prisma.user.findUnique({

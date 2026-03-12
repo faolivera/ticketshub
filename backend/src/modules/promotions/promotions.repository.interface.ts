@@ -51,6 +51,15 @@ export interface IPromotionsRepository {
     userId: string,
     type: PromotionType,
   ): Promise<number>;
+
+  /**
+   * Set status to inactive for all promotions of the given type for the given users (batch).
+   */
+  deactivateByUserIdsAndType(
+    ctx: Ctx,
+    userIds: string[],
+    type: PromotionType,
+  ): Promise<number>;
 }
 
 export const PROMOTIONS_REPOSITORY = Symbol('IPromotionsRepository');

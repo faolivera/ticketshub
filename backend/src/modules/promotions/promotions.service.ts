@@ -76,10 +76,15 @@ export class PromotionsService {
     }
 
     const validUntil = body.validUntil ? new Date(body.validUntil) : null;
-    const created: Promotion[] = [];
 
+    await this.repository.deactivateByUserIdsAndType(
+      ctx,
+      userIds,
+      body.type,
+    );
+
+    const created: Promotion[] = [];
     for (const userId of userIds) {
-      await this.repository.deactivateByUserIdAndType(ctx, userId, body.type);
       const promotion = await this.repository.create(ctx, {
         userId,
         name: body.name,
@@ -111,13 +116,18 @@ export class PromotionsService {
       return users.map((u) => u.id);
     }
     if (body.emails?.length) {
-      const ids: string[] = [];
+      const users = await this.usersService.findByEmails(ctx, body.emails);
+      const foundEmails = new Set(
+        users.map((u) => u.email.toLowerCase()),
+      );
       for (const email of body.emails) {
-        const user = await this.usersService.findByEmail(ctx, email.trim());
-        if (user) ids.push(user.id);
-        else this.logger.warn(ctx, `No user found for email: ${email}`);
+        const trimmed = email.trim();
+        if (!trimmed) continue;
+        if (!foundEmails.has(trimmed.toLowerCase())) {
+          this.logger.warn(ctx, `No user found for email: ${trimmed}`);
+        }
       }
-      return [...new Set(ids)];
+      return [...new Set(users.map((u) => u.id))];
     }
     return [];
   }

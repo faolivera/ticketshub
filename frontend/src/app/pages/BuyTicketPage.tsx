@@ -754,7 +754,7 @@ export function BuyTicketPage() {
                   to={`/seller/${seller.id}`}
                   className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-gray-50 transition-colors"
                 >
-                  <UserAvatar name={seller.publicName} src={seller.pic?.src} className="h-12 w-12" />
+                  <UserAvatar name={seller.publicName} src={seller.pic?.src} className="h-18 w-18" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 truncate">{seller.publicName}</p>
                     {seller.badges.length > 0 && (

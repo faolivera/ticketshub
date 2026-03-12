@@ -79,11 +79,20 @@ export class NotificationsWorker {
         return;
       }
 
+      const recipientIds = recipients.map((r) => r.userId);
+      const users = await this.usersService.findByIds(ctx, recipientIds);
+      const localeByUserId = new Map(
+        users.map((u) => [u.id, u.language ?? this.defaultLocale]),
+      );
+
       for (const recipient of recipients) {
+        const locale =
+          localeByUserId.get(recipient.userId) ?? this.defaultLocale;
         await this.processRecipient(
           ctx,
           event,
           recipient.userId,
+          locale,
           channelConfig,
           processor.getTemplateVariables(event.context, recipient.userId),
         );
@@ -109,13 +118,10 @@ export class NotificationsWorker {
     ctx: Ctx,
     event: NotificationEvent,
     userId: string,
+    locale: string,
     channelConfig: NotificationChannelConfig,
     variables: Record<string, string>,
   ): Promise<void> {
-    // Get user to determine locale
-    const user = await this.usersService.findById(ctx, userId);
-    const locale = user?.language || this.defaultLocale;
-
     // Process enabled channels
     const channels: NotificationChannel[] = [];
     if (channelConfig.inAppEnabled) {

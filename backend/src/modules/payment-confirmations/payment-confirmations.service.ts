@@ -319,30 +319,45 @@ export class PaymentConfirmationsService {
 
   /**
    * List all pending payment confirmations (admin only).
+   * Uses batch queries to avoid N+1: one for confirmations, one for transactions,
+   * one for users (public info), one for listings.
    */
   async listPendingConfirmations(
     ctx: Ctx,
   ): Promise<ListPaymentConfirmationsResponse> {
     const pending = await this.repository.findAllPending(ctx);
+    if (pending.length === 0) {
+      return { confirmations: [], total: 0 };
+    }
+
+    const transactionIds = [...new Set(pending.map((c) => c.transactionId))];
+    const transactions = await this.transactionsService.findByIds(
+      ctx,
+      transactionIds,
+    );
+    const userIds = [
+      ...new Set(transactions.flatMap((t) => [t.buyerId, t.sellerId])),
+    ];
+    const listingIds = [...new Set(transactions.map((t) => t.listingId))];
+
+    const [userInfos, listings] = await Promise.all([
+      this.usersService.getPublicUserInfoByIds(ctx, userIds),
+      this.ticketsService.getListingsByIds(ctx, listingIds),
+    ]);
+
+    const transactionMap = new Map(transactions.map((t) => [t.id, t]));
+    const userInfoMap = new Map(userInfos.map((u) => [u.id, u]));
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
 
     const confirmationsWithDetails: PaymentConfirmationWithTransaction[] = [];
 
     for (const confirmation of pending) {
-      const transaction = await this.transactionsService.findById(
-        ctx,
-        confirmation.transactionId,
-      );
+      const transaction = transactionMap.get(confirmation.transactionId);
       if (!transaction) continue;
 
-      const [buyer, seller] = await Promise.all([
-        this.usersService.findById(ctx, transaction.buyerId),
-        this.usersService.findById(ctx, transaction.sellerId),
-      ]);
-
-      const listing = await this.ticketsService.getListingById(
-        ctx,
-        transaction.listingId,
-      );
+      const buyer = userInfoMap.get(transaction.buyerId);
+      const seller = userInfoMap.get(transaction.sellerId);
+      const listing = listingMap.get(transaction.listingId);
 
       confirmationsWithDetails.push({
         ...confirmation,

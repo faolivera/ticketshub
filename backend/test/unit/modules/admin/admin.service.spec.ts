@@ -108,6 +108,7 @@ describe('AdminService', () => {
 
     const mockTransactionsService = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
       getPaginated: jest.fn(),
       countByStatuses: jest.fn(),
       getIdsByStatuses: jest.fn(),
@@ -206,7 +207,7 @@ describe('AdminService', () => {
         confirmations: [mockConfirmationWithTransaction],
         total: 1,
       });
-      transactionsService.findById.mockResolvedValue(mockTransaction);
+      transactionsService.findByIds.mockResolvedValue([mockTransaction]);
 
       const result = await service.getAdminPayments(mockCtx);
 
@@ -240,7 +241,9 @@ describe('AdminService', () => {
         confirmations: [mockConfirmationWithTransaction],
         total: 1,
       });
-      transactionsService.findById.mockResolvedValue(transactionWith3Tickets);
+      transactionsService.findByIds.mockResolvedValue([
+        transactionWith3Tickets,
+      ]);
 
       const result = await service.getAdminPayments(mockCtx);
 
@@ -267,7 +270,7 @@ describe('AdminService', () => {
         confirmations: [mockConfirmationWithTransaction],
         total: 1,
       });
-      transactionsService.findById.mockResolvedValue(null);
+      transactionsService.findByIds.mockResolvedValue([]);
 
       const result = await service.getAdminPayments(mockCtx);
 
@@ -280,7 +283,7 @@ describe('AdminService', () => {
         confirmations: [mockConfirmationWithTransaction],
         total: 1,
       });
-      transactionsService.findById.mockResolvedValue(mockTransaction);
+      transactionsService.findByIds.mockResolvedValue([mockTransaction]);
 
       const result = await service.getAdminPayments(mockCtx);
 
@@ -311,9 +314,10 @@ describe('AdminService', () => {
         confirmations: [mockConfirmationWithTransaction, secondConfirmation],
         total: 2,
       });
-      transactionsService.findById
-        .mockResolvedValueOnce(mockTransaction)
-        .mockResolvedValueOnce(secondTransaction);
+      transactionsService.findByIds.mockResolvedValue([
+        mockTransaction,
+        secondTransaction,
+      ]);
 
       const result = await service.getAdminPayments(mockCtx);
 
@@ -334,7 +338,7 @@ describe('AdminService', () => {
         confirmations: [confirmationWithOptionals],
         total: 1,
       });
-      transactionsService.findById.mockResolvedValue(mockTransaction);
+      transactionsService.findByIds.mockResolvedValue([mockTransaction]);
 
       const result = await service.getAdminPayments(mockCtx);
 

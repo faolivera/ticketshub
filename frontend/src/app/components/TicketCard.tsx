@@ -236,12 +236,12 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, isBestPrice = false, v
       {/* Seller + CTA — pushed to bottom */}
       <div className="border-t border-gray-200 pt-3 mt-auto">
         <div className="flex items-center gap-2 mb-3">
-          <UserAvatar name={ticket.sellerName} src={ticket.sellerPicture} className="h-8 w-8" />
+          <UserAvatar name={ticket.sellerName} src={ticket.sellerPicture} className="h-12 w-12 md:h-10 md:w-10" />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
               <Link
                 to={`/seller/${ticket.seller}`}
-                className="text-sm font-semibold text-blue-600 hover:text-blue-700 truncate"
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700 truncate w-fit"
               >
                 {ticket.sellerName}
               </Link>

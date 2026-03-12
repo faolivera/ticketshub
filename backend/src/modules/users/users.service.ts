@@ -181,6 +181,16 @@ export class UsersService {
   }
 
   /**
+   * Find users by emails (batch). Emails are trimmed and deduped; lookup is case-insensitive.
+   */
+  async findByEmails(ctx: Ctx, emails: string[]): Promise<User[]> {
+    if (emails.length === 0) return [];
+    const trimmed = emails.map((e) => e.trim()).filter(Boolean);
+    if (trimmed.length === 0) return [];
+    return this.usersRepository.findByEmails(ctx, trimmed);
+  }
+
+  /**
    * Find user by ID (internal use, returns full user)
    */
   async findById(ctx: Ctx, id: string): Promise<User | undefined> {

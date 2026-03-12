@@ -190,3 +190,18 @@
     line-height: 1.5;
   }
 }
+
+/* Skeleton placeholder blink (e.g. Google login button loading) */
+@keyframes skeleton-blink {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton-blink {
+  animation: skeleton-blink 1.2s ease-in-out infinite;
+}

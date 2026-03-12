@@ -176,6 +176,30 @@ export class OffersRepository
     return this.mapToDomain(updated);
   }
 
+  async cancelExpiredPendingByIds(
+    ctx: Ctx,
+    ids: string[],
+    cancelledAt: Date,
+  ): Promise<number> {
+    this.logger.debug(ctx, 'cancelExpiredPendingByIds', {
+      count: ids.length,
+    });
+    if (ids.length === 0) return 0;
+    const client = this.getClient(ctx);
+    const result = await client.offer.updateMany({
+      where: {
+        id: { in: ids },
+        status: PrismaOfferStatus.pending,
+      },
+      data: {
+        status: PrismaOfferStatus.cancelled,
+        cancelledAt,
+        updatedAt: new Date(),
+      },
+    });
+    return result.count;
+  }
+
   async findPendingOrAcceptedByListingId(
     ctx: Ctx,
     listingId: string,

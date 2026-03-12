@@ -281,27 +281,31 @@ export class OffersService {
     });
   }
 
-  /** Mark expired pending offers as cancelled (lazy). */
+  /** Mark expired pending offers as cancelled (lazy). Uses batch update to avoid N+1. */
   private async applyLazyExpiration(
     ctx: Ctx,
     offers: Offer[],
   ): Promise<Offer[]> {
     const now = new Date();
-    const result: Offer[] = [];
-    for (const offer of offers) {
-      if (offer.status === 'pending' && offer.expiresAt < now) {
-        const cancelled = await this.offersRepository.update(ctx, offer.id, {
-          status: 'cancelled',
-          cancelledAt: now,
-        });
-        result.push(
-          cancelled ?? { ...offer, status: 'cancelled', cancelledAt: now },
-        );
-      } else {
-        result.push(offer);
-      }
+    const expired = offers.filter(
+      (o) => o.status === 'pending' && o.expiresAt < now,
+    );
+    const expiredIds = expired.map((o) => o.id);
+
+    if (expiredIds.length > 0) {
+      await this.offersRepository.cancelExpiredPendingByIds(
+        ctx,
+        expiredIds,
+        now,
+      );
     }
-    return result;
+
+    const expiredIdSet = new Set(expiredIds);
+    return offers.map((offer) =>
+      expiredIdSet.has(offer.id)
+        ? { ...offer, status: 'cancelled' as const, cancelledAt: now }
+        : offer,
+    );
   }
 
   async acceptOffer(

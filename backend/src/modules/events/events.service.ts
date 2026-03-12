@@ -835,13 +835,16 @@ export class EventsService {
     const warnings: string[] = [];
     const deletedDateIds: string[] = [];
 
-    // 1. Handle date deletions first
+    // 1. Handle date deletions first (batch load dates to avoid N+1)
     if (data.datesToDelete && data.datesToDelete.length > 0) {
+      const datesToDelete = await this.eventsRepository.findEventDatesByIds(
+        ctx,
+        data.datesToDelete,
+      );
+      const dateMap = new Map(datesToDelete.map((d) => [d.id, d]));
+
       for (const dateId of data.datesToDelete) {
-        const eventDate = await this.eventsRepository.findEventDateById(
-          ctx,
-          dateId,
-        );
+        const eventDate = dateMap.get(dateId);
         if (!eventDate) {
           this.logger.warn(ctx, `Date ${dateId} not found, skipping deletion`);
           continue;
@@ -914,15 +917,24 @@ export class EventsService {
       }
     }
 
-    // 3. Handle date updates and creations
+    // 3. Handle date updates and creations (batch load existing dates to avoid N+1)
     if (data.dates && data.dates.length > 0) {
+      const existingDateIds = data.dates
+        .map((d) => d.id)
+        .filter((id): id is string => Boolean(id));
+      const existingDates =
+        existingDateIds.length > 0
+          ? await this.eventsRepository.findEventDatesByIds(
+              ctx,
+              existingDateIds,
+            )
+          : [];
+      const existingDateMap = new Map(existingDates.map((d) => [d.id, d]));
+
       for (const dateUpdate of data.dates) {
         if (dateUpdate.id) {
           // Update existing date
-          const existingDate = await this.eventsRepository.findEventDateById(
-            ctx,
-            dateUpdate.id,
-          );
+          const existingDate = existingDateMap.get(dateUpdate.id);
           if (!existingDate) {
             throw new NotFoundException(
               `Event date ${dateUpdate.id} not found`,

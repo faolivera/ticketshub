@@ -123,6 +123,11 @@ export interface IEventsRepository {
   findEventDateById(ctx: Ctx, id: string): Promise<EventDate | undefined>;
 
   /**
+   * Find event dates by IDs (batch)
+   */
+  findEventDatesByIds(ctx: Ctx, ids: string[]): Promise<EventDate[]>;
+
+  /**
    * Get dates for an event
    */
   getDatesByEventId(ctx: Ctx, eventId: string): Promise<EventDate[]>;

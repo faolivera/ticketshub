@@ -276,8 +276,11 @@ export class TransactionsRepository
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
-  async getPendingDepositRelease(ctx: Ctx): Promise<Transaction[]> {
-    this.logger.debug(ctx, 'getPendingDepositRelease');
+  async getPendingDepositRelease(
+    ctx: Ctx,
+    limit?: number,
+  ): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'getPendingDepositRelease', { limit });
     const client = this.getClient(ctx);
     const now = new Date();
     const transactions = await client.transaction.findMany({
@@ -286,6 +289,8 @@ export class TransactionsRepository
         depositReleaseAt: { lte: now, not: null },
         disputeId: null,
       },
+      ...(limit !== undefined && { take: limit }),
+      orderBy: { depositReleaseAt: 'asc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
@@ -585,8 +590,11 @@ export class TransactionsRepository
     return transactions.map((t) => t.id);
   }
 
-  async findExpiredPendingPayments(ctx: Ctx): Promise<Transaction[]> {
-    this.logger.debug(ctx, 'findExpiredPendingPayments');
+  async findExpiredPendingPayments(
+    ctx: Ctx,
+    limit?: number,
+  ): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'findExpiredPendingPayments', { limit });
     const client = this.getClient(ctx);
     const now = new Date();
     const transactions = await client.transaction.findMany({
@@ -594,12 +602,17 @@ export class TransactionsRepository
         status: 'PendingPayment',
         paymentExpiresAt: { lt: now },
       },
+      ...(limit !== undefined && { take: limit }),
+      orderBy: { paymentExpiresAt: 'asc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }
 
-  async findExpiredAdminReviews(ctx: Ctx): Promise<Transaction[]> {
-    this.logger.debug(ctx, 'findExpiredAdminReviews');
+  async findExpiredAdminReviews(
+    ctx: Ctx,
+    limit?: number,
+  ): Promise<Transaction[]> {
+    this.logger.debug(ctx, 'findExpiredAdminReviews', { limit });
     const client = this.getClient(ctx);
     const now = new Date();
     const transactions = await client.transaction.findMany({
@@ -607,6 +620,8 @@ export class TransactionsRepository
         status: 'PaymentPendingVerification',
         adminReviewExpiresAt: { lt: now },
       },
+      ...(limit !== undefined && { take: limit }),
+      orderBy: { adminReviewExpiresAt: 'asc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
   }

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomBytes } from 'crypto';
 import { TransactionsService } from './transactions.service';
@@ -9,6 +10,7 @@ import type { Ctx } from '../../common/types/context';
 const LOCK_ID_EXPIRED_TRANSACTIONS = 'scheduler:transactions:expired';
 const LOCK_ID_DEPOSIT_RELEASES = 'scheduler:transactions:deposit-releases';
 const LOCK_TTL_SECONDS = 60;
+const DEFAULT_BATCH_LIMIT = 100;
 
 @Injectable()
 export class TransactionsScheduler {
@@ -17,7 +19,15 @@ export class TransactionsScheduler {
   constructor(
     private readonly transactionsService: TransactionsService,
     private readonly lockService: DistributedLockService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private getTransactionBatchLimit(): number {
+    return (
+      this.configService.get<number>('scheduler.transactionBatchLimit') ??
+      DEFAULT_BATCH_LIMIT
+    );
+  }
 
   /**
    * Generate a unique request ID for cron context
@@ -37,6 +47,8 @@ export class TransactionsScheduler {
       requestId: this.generateRequestId(),
     };
 
+    const batchLimit = this.getTransactionBatchLimit();
+
     const result = await this.lockService.withLockAndLog(
       ctx,
       LOCK_ID_EXPIRED_TRANSACTIONS,
@@ -44,11 +56,17 @@ export class TransactionsScheduler {
       async () => {
         // Cancel expired pending payments (10-minute timeout)
         const expiredPayments =
-          await this.transactionsService.cancelExpiredPendingPayments(ctx);
+          await this.transactionsService.cancelExpiredPendingPayments(
+            ctx,
+            batchLimit,
+          );
 
         // Cancel expired admin reviews (24-hour timeout)
         const expiredReviews =
-          await this.transactionsService.cancelExpiredAdminReviews(ctx);
+          await this.transactionsService.cancelExpiredAdminReviews(
+            ctx,
+            batchLimit,
+          );
 
         return { expiredPayments, expiredReviews };
       },
@@ -82,11 +100,14 @@ export class TransactionsScheduler {
       requestId: this.generateRequestId(),
     };
 
+    const batchLimit = this.getTransactionBatchLimit();
+
     const count = await this.lockService.withLockAndLog(
       ctx,
       LOCK_ID_DEPOSIT_RELEASES,
       LOCK_TTL_SECONDS,
-      async () => this.transactionsService.processDepositReleases(ctx),
+      async () =>
+        this.transactionsService.processDepositReleases(ctx, batchLimit),
     );
 
     if (count !== null && count > 0) {
