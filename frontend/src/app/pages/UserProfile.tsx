@@ -103,9 +103,6 @@ export function UserProfile() {
 
               {/* Actions: full-width stacked on mobile, column on sm+ */}
               <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-shrink-0">
-                <Button variant="outline" size="lg" className="min-h-[44px] w-full sm:w-auto" type="button">
-                  {t('userProfile.editProfile')}
-                </Button>
                 <Button
                   variant="destructive"
                   size="lg"
@@ -117,10 +114,10 @@ export function UserProfile() {
               </div>
             </div>
 
-            {/* Verification list: one row per item, stacked label + value on mobile */}
-            <div className="space-y-4 sm:space-y-3">
+            {/* Verification list: fixed label width so value column aligns; tighter on desktop */}
+            <div className="space-y-4 sm:space-y-2">
               {/* Email */}
-              <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
+              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
                 <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
                   <Mail className="w-3.5 h-3.5 flex-shrink-0" />
                   {t('userProfile.labelEmail')}
@@ -139,7 +136,7 @@ export function UserProfile() {
                     <Link
                       to="/register"
                       state={{ verifyEmail: true, email: user.email, from: '/user-profile' }}
-                      className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
+                      className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
                     >
                       {t('userProfile.verifyLink')}
                     </Link>
@@ -148,7 +145,7 @@ export function UserProfile() {
               </div>
 
               {/* Phone */}
-              <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
+              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
                 <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
                   <Phone className="w-3.5 h-3.5 flex-shrink-0" />
                   {t('userProfile.labelPhone')}
@@ -167,7 +164,7 @@ export function UserProfile() {
                     <Link
                       to="/verify-user"
                       state={{ verifyPhone: true, returnTo: '/user-profile' }}
-                      className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
+                      className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
                     >
                       {t('userProfile.verifyLink')}
                     </Link>
@@ -176,37 +173,35 @@ export function UserProfile() {
               </div>
 
               {/* Identity */}
-              {showIdentityRow && (
-                <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
-                  <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
-                    <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-                    {t('userProfile.labelIdentity')}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
-                    <span
-                      className={cn(
-                        'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                        idStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                      )}
-                    >
-                      {badgeLabel(idStatus === 'approved', idStatus === 'pending')}
-                    </span>
-                    {(idStatus === 'none' || idStatus === 'rejected') && (
-                      <Link
-                        to="/verify-user"
-                        state={{ verifyIdentity: true, returnTo: '/user-profile' }}
-                        className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
-                      >
-                        {t('userProfile.verifyLink')}
-                      </Link>
+              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
+                  <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+                  {t('userProfile.labelIdentity')}
+                </span>
+                <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
+                  <span
+                    className={cn(
+                      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                      idStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
                     )}
-                  </div>
+                  >
+                    {badgeLabel(idStatus === 'approved', idStatus === 'pending')}
+                  </span>
+                  {(idStatus === 'none' || idStatus === 'rejected') && (
+                    <Link
+                      to="/verify-user"
+                      state={{ verifyIdentity: true, returnTo: '/user-profile' }}
+                      className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
+                    >
+                      {t('userProfile.verifyLink')}
+                    </Link>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Bank account */}
               {isSeller && (
-                <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-0 sm:items-baseline">
+                <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
                   <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
                     <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
                     {t('userProfile.labelBankAccount')}
@@ -228,7 +223,7 @@ export function UserProfile() {
                     {bankStatus === 'none' && (
                       <Link
                         to="/bank-account"
-                        className="text-primary hover:underline font-medium whitespace-nowrap min-h-[44px] inline-flex items-center"
+                        className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
                       >
                         {t('userProfile.verifyLink')}
                       </Link>
