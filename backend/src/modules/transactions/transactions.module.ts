@@ -12,6 +12,7 @@ import { EventsModule } from '../events/events.module';
 import { ConfigModule } from '../config/config.module';
 import { OffersModule } from '../offers/offers.module';
 import { TransactionManagerModule } from '../../common/database';
+import { MetricsModule } from '../../common/metrics/metrics.module';
 import { RiskEngineModule } from '../risk-engine/risk-engine.module';
 import { TermsModule } from '../terms/terms.module';
 import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
@@ -19,6 +20,7 @@ import { TransactionChatModule } from '../transaction-chat/transaction-chat.modu
 @Module({
   imports: [
     TransactionManagerModule,
+    MetricsModule,
     forwardRef(() => TicketsModule),
     PaymentsModule,
     WalletModule,

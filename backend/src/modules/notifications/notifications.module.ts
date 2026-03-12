@@ -10,12 +10,13 @@ import { NotificationsSeeder } from './notifications.seeds';
 import { ProcessorRegistry, ALL_PROCESSORS } from './processors';
 import { ALL_CHANNELS } from './channels';
 import { ALL_TEMPLATE_SERVICES } from './templates';
+import { MetricsModule } from '../../common/metrics/metrics.module';
 import { UsersModule } from '../users/users.module';
 import { RealtimeModule } from '../realtime/realtime.module';
 
 @Global()
 @Module({
-  imports: [forwardRef(() => UsersModule), RealtimeModule],
+  imports: [MetricsModule, forwardRef(() => UsersModule), RealtimeModule],
   controllers: [NotificationsController, NotificationsAdminController],
   providers: [
     NotificationsService,

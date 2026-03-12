@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { MetricsModule } from './common/metrics/metrics.module';
+import { HttpMetricsInterceptor } from './common/metrics/http-metrics.interceptor';
 import { TransactionManagerModule } from './common/database';
 import { DistributedLockModule } from './common/locks';
 import { UsersModule } from './modules/users/users.module';
@@ -41,6 +44,7 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
 
     // Global modules (must be first)
     PrometheusModule.register(),
+    MetricsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
@@ -80,6 +84,9 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     SocketModule,
     BffModule,
     SsrModule,
+  ],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: HttpMetricsInterceptor },
   ],
 })
 export class AppModule {}

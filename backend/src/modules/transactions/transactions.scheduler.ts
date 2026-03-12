@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomBytes } from 'crypto';
 import { TransactionsService } from './transactions.service';
 import { DistributedLockService } from '../../common/locks';
+import { CronMetricsService } from '../../common/metrics/cron-metrics.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 
@@ -20,6 +21,7 @@ export class TransactionsScheduler {
     private readonly transactionsService: TransactionsService,
     private readonly lockService: DistributedLockService,
     private readonly configService: ConfigService,
+    private readonly cronMetrics: CronMetricsService,
   ) {}
 
   private getTransactionBatchLimit(): number {
@@ -42,51 +44,53 @@ export class TransactionsScheduler {
    */
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleExpiredTransactions(): Promise<void> {
-    const ctx: Ctx = {
-      source: 'CRON',
-      requestId: this.generateRequestId(),
-    };
+    await this.cronMetrics.run('handleExpiredTransactions', async () => {
+      const ctx: Ctx = {
+        source: 'CRON',
+        requestId: this.generateRequestId(),
+      };
 
-    const batchLimit = this.getTransactionBatchLimit();
+      const batchLimit = this.getTransactionBatchLimit();
 
-    const result = await this.lockService.withLockAndLog(
-      ctx,
-      LOCK_ID_EXPIRED_TRANSACTIONS,
-      LOCK_TTL_SECONDS,
-      async () => {
-        // Cancel expired pending payments (10-minute timeout)
-        const expiredPayments =
-          await this.transactionsService.cancelExpiredPendingPayments(
-            ctx,
-            batchLimit,
-          );
+      const result = await this.lockService.withLockAndLog(
+        ctx,
+        LOCK_ID_EXPIRED_TRANSACTIONS,
+        LOCK_TTL_SECONDS,
+        async () => {
+          // Cancel expired pending payments (10-minute timeout)
+          const expiredPayments =
+            await this.transactionsService.cancelExpiredPendingPayments(
+              ctx,
+              batchLimit,
+            );
 
-        // Cancel expired admin reviews (24-hour timeout)
-        const expiredReviews =
-          await this.transactionsService.cancelExpiredAdminReviews(
-            ctx,
-            batchLimit,
-          );
+          // Cancel expired admin reviews (24-hour timeout)
+          const expiredReviews =
+            await this.transactionsService.cancelExpiredAdminReviews(
+              ctx,
+              batchLimit,
+            );
 
-        return { expiredPayments, expiredReviews };
-      },
-    );
+          return { expiredPayments, expiredReviews };
+        },
+      );
 
-    if (result === null) {
-      return;
-    }
-
-    try {
-      const { expiredPayments, expiredReviews } = result;
-      if (expiredPayments > 0 || expiredReviews > 0) {
-        this.logger.log(
-          ctx,
-          `Expired transactions processed: ${expiredPayments} payments, ${expiredReviews} reviews`,
-        );
+      if (result === null) {
+        return;
       }
-    } catch (error) {
-      this.logger.error(ctx, `Error processing expired transactions: ${error}`);
-    }
+
+      try {
+        const { expiredPayments, expiredReviews } = result;
+        if (expiredPayments > 0 || expiredReviews > 0) {
+          this.logger.log(
+            ctx,
+            `Expired transactions processed: ${expiredPayments} payments, ${expiredReviews} reviews`,
+          );
+        }
+      } catch (error) {
+        this.logger.error(ctx, `Error processing expired transactions: ${error}`);
+      }
+    });
   }
 
   /**
@@ -95,26 +99,28 @@ export class TransactionsScheduler {
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handleDepositReleases(): Promise<void> {
-    const ctx: Ctx = {
-      source: 'CRON',
-      requestId: this.generateRequestId(),
-    };
+    await this.cronMetrics.run('handleDepositReleases', async () => {
+      const ctx: Ctx = {
+        source: 'CRON',
+        requestId: this.generateRequestId(),
+      };
 
-    const batchLimit = this.getTransactionBatchLimit();
+      const batchLimit = this.getTransactionBatchLimit();
 
-    const count = await this.lockService.withLockAndLog(
-      ctx,
-      LOCK_ID_DEPOSIT_RELEASES,
-      LOCK_TTL_SECONDS,
-      async () =>
-        this.transactionsService.processDepositReleases(ctx, batchLimit),
-    );
-
-    if (count !== null && count > 0) {
-      this.logger.log(
+      const count = await this.lockService.withLockAndLog(
         ctx,
-        `Deposit releases processed: ${count} transactions -> TransferringFund`,
+        LOCK_ID_DEPOSIT_RELEASES,
+        LOCK_TTL_SECONDS,
+        async () =>
+          this.transactionsService.processDepositReleases(ctx, batchLimit),
       );
-    }
+
+      if (count !== null && count > 0) {
+        this.logger.log(
+          ctx,
+          `Deposit releases processed: ${count} transactions -> TransferringFund`,
+        );
+      }
+    });
   }
 }
