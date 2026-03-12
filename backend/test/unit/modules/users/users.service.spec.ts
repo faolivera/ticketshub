@@ -38,6 +38,13 @@ jest.mock('bcrypt', () => ({
     ),
 }));
 
+const mockVerifyIdToken = jest.fn();
+jest.mock('google-auth-library', () => ({
+  OAuth2Client: jest.fn().mockImplementation(() => ({
+    verifyIdToken: mockVerifyIdToken,
+  })),
+}));
+
 describe('UsersService', () => {
   let service: UsersService;
   let usersRepository: jest.Mocked<IUsersRepository>;
@@ -88,6 +95,8 @@ describe('UsersService', () => {
     const mockUsersRepository = {
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByGoogleId: jest.fn(),
+      setGoogleId: jest.fn(),
       findByIds: jest.fn(),
       findByEmailContaining: jest.fn(),
       getSellers: jest.fn(),
@@ -96,9 +105,16 @@ describe('UsersService', () => {
       updateBasicInfo: jest.fn(),
       updateEmailVerified: jest.fn(),
       updatePhoneVerified: jest.fn(),
-      updateLevel: jest.fn(),
-      updateToVerifiedSeller: jest.fn(),
+      setPhone: jest.fn(),
+      setAcceptedSellerTermsAt: jest.fn(),
+      updateIdentityVerificationApproved: jest.fn(),
+      invalidateBankAccountVerification: jest.fn(),
       updateBankAccount: jest.fn(),
+      findUsersWithBankAccount: jest.fn(),
+      setBuyerDisputed: jest.fn(),
+      updateForAdmin: jest.fn(),
+      findManyPaginated: jest.fn(),
+      getAll: jest.fn(),
     };
 
     const mockImagesRepository = {
@@ -131,6 +147,7 @@ describe('UsersService', () => {
         const defaults: Record<string, unknown> = {
           'jwt.secret': 'test-secret',
           'jwt.expiresIn': '7d',
+          'google.clientId': 'test-google-client-id',
           'users.allowedAvatarMimeTypes': [
             'image/jpeg',
             'image/png',
@@ -217,6 +234,19 @@ describe('UsersService', () => {
       expect(result).toBeNull();
     });
 
+    it('should return null when user has no password (Google-only)', async () => {
+      const googleOnlyUser = { ...mockUser, password: undefined };
+      usersRepository.findByEmail.mockResolvedValue(googleOnlyUser);
+
+      const result = await service.login(
+        mockCtx,
+        mockUser.email,
+        'any-password',
+      );
+
+      expect(result).toBeNull();
+    });
+
     it('should succeed when email is in different case (case-insensitive lookup)', async () => {
       usersRepository.findByEmail.mockResolvedValue(mockUser);
       usersRepository.findById.mockResolvedValue(mockUser);
@@ -234,6 +264,58 @@ describe('UsersService', () => {
         mockCtx,
         'User@Example.COM',
       );
+    });
+  });
+
+  describe('loginWithGoogle', () => {
+    const googlePayload = {
+      sub: 'google-sub-123',
+      email: 'googleuser@example.com',
+      given_name: 'Google',
+      family_name: 'User',
+    };
+
+    beforeEach(() => {
+      mockVerifyIdToken.mockResolvedValue({
+        getPayload: () => googlePayload,
+      });
+    });
+
+    it('should return token and user when user exists by googleId', async () => {
+      usersRepository.findByGoogleId.mockResolvedValue(mockUser);
+      usersRepository.findById.mockResolvedValue(mockUser);
+      imagesRepository.findById.mockResolvedValue(mockImage);
+
+      const result = await service.loginWithGoogle(mockCtx, 'valid-id-token');
+
+      expect(result.token).toBeDefined();
+      expect(result.user.email).toBe(mockUser.email);
+      expect(usersRepository.findByGoogleId).toHaveBeenCalledWith(
+        mockCtx,
+        googlePayload.sub,
+      );
+    });
+
+    it('should throw when idToken is invalid', async () => {
+      mockVerifyIdToken.mockRejectedValue(new Error('Invalid token'));
+
+      await expect(
+        service.loginWithGoogle(mockCtx, 'invalid-token'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw when Google clientId is not configured', async () => {
+      const configGet = (service as any).configService.get as jest.Mock;
+      const originalGet = configGet.getMockImplementation();
+      configGet.mockImplementation((key: string) =>
+        key === 'google.clientId' ? undefined : originalGet?.(key) ?? 'test-secret',
+      );
+
+      await expect(
+        service.loginWithGoogle(mockCtx, 'valid-id-token'),
+      ).rejects.toThrow(BadRequestException);
+
+      configGet.mockImplementation(originalGet);
     });
   });
 

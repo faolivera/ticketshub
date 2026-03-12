@@ -35,6 +35,8 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  GoogleAuthRequest,
+  GoogleAuthResponse,
   UpgradeToSellerResponse,
   UploadAvatarResponse,
   UpdateBankAccountRequest,
@@ -89,6 +91,52 @@ export class UsersController {
     if (!result) {
       throw new UnauthorizedException('Invalid email or password');
     }
+
+    const fullUser = await this.usersService.getAuthenticatedUserInfo(
+      ctx,
+      result.user.id,
+    );
+    if (fullUser) {
+      const identityVerificationStatus =
+        await this.identityVerificationService.getVerificationStatusForUser(
+          ctx,
+          result.user.id,
+        );
+      const bankAccountStatus = fullUser.bankAccount
+        ? fullUser.bankAccount.verified
+          ? 'approved'
+          : 'pending'
+        : 'none';
+      return {
+        success: true,
+        data: {
+          ...result,
+          user: this.usersService.toPublicMeResponse(
+            fullUser,
+            identityVerificationStatus,
+            bankAccountStatus,
+          ),
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('auth/google')
+  @HttpCode(HttpStatus.OK)
+  @ValidateResponse(LoginResponseSchema)
+  async authGoogle(
+    @Context() ctx: Ctx,
+    @Body() body: GoogleAuthRequest,
+  ): Promise<ApiResponse<GoogleAuthResponse>> {
+    if (!body?.idToken?.trim()) {
+      throw new BadRequestException('idToken is required');
+    }
+    const result = await this.usersService.loginWithGoogle(ctx, body.idToken.trim());
 
     const fullUser = await this.usersService.getAuthenticatedUserInfo(
       ctx,

@@ -50,6 +50,7 @@ export const CreatePromotionCodeRequestSchema = z.object({
     validUntil: z.string().datetime().optional().nullable(),
   }),
   maxUsages: z.number().int().min(0),
+  validUntil: z.string().datetime().optional().nullable(),
 });
 
 export type CreatePromotionRequestInput = z.infer<

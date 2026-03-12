@@ -1,4 +1,10 @@
-import twilio from 'twilio';
+// Twilio is CommonJS; default import can be undefined at runtime (e.g. Nest build)
+const twilioLib = require('twilio');
+const twilio = (twilioLib.default ?? twilioLib) as (
+  accountSid: string,
+  authToken: string,
+) => import('twilio').Twilio;
+
 import { ContextLogger } from '../logger/context-logger';
 import type { Ctx } from '../types/context';
 import type { ISmsOtpProvider } from './sms-otp-provider.interface';
@@ -31,6 +37,7 @@ export class TwilioVerifyProvider implements ISmsOtpProvider {
         .verifications.create({
           to: phone,
           channel: 'sms',
+          locale: 'es',
         });
       this.logger.debug(ctx, 'startVerification sent', { phone });
     } catch (error) {
@@ -45,7 +52,6 @@ export class TwilioVerifyProvider implements ISmsOtpProvider {
     code: string,
   ): Promise<boolean> {
     this.logger.debug(ctx, 'checkVerification', { phone });
-
     try {
       const check = await this.client.verify.v2
         .services(this.verifyServiceSid)

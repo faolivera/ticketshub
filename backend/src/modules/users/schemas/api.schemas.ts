@@ -86,6 +86,10 @@ export const LoginResponseSchema = z.object({
   requiresEmailVerification: z.boolean().optional(),
 });
 
+export const GoogleAuthRequestSchema = z.object({
+  idToken: z.string().min(1, 'idToken is required'),
+});
+
 export const GetMeResponseSchema = PublicMeUserSchema;
 
 export const UpdateProfileResponseSchema = z.object({

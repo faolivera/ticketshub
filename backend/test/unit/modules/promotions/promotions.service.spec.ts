@@ -56,6 +56,7 @@ function createMockPromotionCode(overrides: Partial<PromotionCode> = {}): Promot
     target: 'seller',
     maxUsages: 100,
     usedCount: 0,
+    validUntil: null,
     createdAt: new Date(),
     createdBy: 'admin_1',
     ...overrides,
@@ -360,6 +361,18 @@ describe('PromotionsService', () => {
 
     it('should throw BadRequestException when code has no remaining usages', async () => {
       const pc = createMockPromotionCode({ maxUsages: 10, usedCount: 10 });
+      promotionCodesRepository.findByCode.mockResolvedValue(pc);
+
+      await expect(
+        service.claimPromotionCode(mockCtx, 'buyer', 'SAVE10', 'user_1'),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when code has expired (validUntil in the past)', async () => {
+      const past = new Date(Date.now() - 86400000);
+      const pc = createMockPromotionCode({ validUntil: past });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
 
       await expect(

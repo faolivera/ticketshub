@@ -42,6 +42,7 @@
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "bcrypt": "^6.0.0",
+    "google-auth-library": "^10.6.1",
     "hocon-config": "^1.0.94",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.19.0",

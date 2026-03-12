@@ -272,6 +272,14 @@ export class PromotionsService {
       throw new BadRequestException('Promotion code has no remaining usages');
     }
 
+    const now = new Date();
+    if (
+      promotionCode.validUntil != null &&
+      promotionCode.validUntil < now
+    ) {
+      throw new BadRequestException('Promotion code has expired');
+    }
+
     const user = await this.usersService.findById(ctx, userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -331,7 +339,6 @@ export class PromotionsService {
     }
 
     const validUntil = config.validUntil ?? null;
-    const now = new Date();
 
     const promotion = await this.repository.create(ctx, {
       userId,
@@ -362,15 +369,17 @@ export class PromotionsService {
   async listPromotionCodes(ctx: Ctx): Promise<ListPromotionCodesResponse> {
     const codes = await this.promotionCodesRepository.list(ctx);
     return codes.map((c) => {
-      const validUntil = c.promotionConfig.validUntil;
-      const validUntilStr =
-        validUntil == null
+      const configValidUntil = c.promotionConfig.validUntil;
+      const configValidUntilStr =
+        configValidUntil == null
           ? null
-          : typeof validUntil === 'string'
-            ? validUntil
-            : validUntil instanceof Date
-              ? validUntil.toISOString()
+          : typeof configValidUntil === 'string'
+            ? configValidUntil
+            : configValidUntil instanceof Date
+              ? configValidUntil.toISOString()
               : null;
+      const codeValidUntilStr =
+        c.validUntil == null ? null : c.validUntil.toISOString();
       return {
         id: c.id,
         code: c.code,
@@ -379,10 +388,11 @@ export class PromotionsService {
           type: c.promotionConfig.type,
           config: c.promotionConfig.config,
           maxUsages: c.promotionConfig.maxUsages,
-          validUntil: validUntilStr,
+          validUntil: configValidUntilStr,
         },
         maxUsages: c.maxUsages,
         usedCount: c.usedCount,
+        validUntil: codeValidUntilStr,
         createdAt: c.createdAt.toISOString(),
         createdBy: c.createdBy,
       };
@@ -418,8 +428,11 @@ export class PromotionsService {
       );
     }
 
-    const validUntil = body.promotionConfig.validUntil
+    const promotionConfigValidUntil = body.promotionConfig.validUntil
       ? new Date(body.promotionConfig.validUntil)
+      : null;
+    const codeValidUntil = body.validUntil
+      ? new Date(body.validUntil)
       : null;
     const promotionCode = await this.promotionCodesRepository.create(ctx, {
       code: body.code,
@@ -430,11 +443,12 @@ export class PromotionsService {
         usedCount: 0,
         usedInListingIds: [],
         status: PromotionStatus.Active,
-        validUntil,
+        validUntil: promotionConfigValidUntil,
       },
       target: body.target as PromotionConfigTarget,
       maxUsages: body.maxUsages,
       usedCount: 0,
+      validUntil: codeValidUntil,
       createdBy,
     });
 

@@ -12,6 +12,18 @@ export interface LoginRequest {
 }
 
 /**
+ * Request body for POST /users/auth/google
+ */
+export interface GoogleAuthRequest {
+  idToken: string;
+}
+
+/**
+ * Response for POST /users/auth/google (same shape as login)
+ */
+export type GoogleAuthResponse = LoginResponse;
+
+/**
  * Terms acceptance data included during registration
  */
 export interface TermsAcceptanceData {

@@ -25,6 +25,20 @@ export const authService = {
   },
 
   /**
+   * Login with Google ID token (from Google Sign-In)
+   */
+  async loginWithGoogle(idToken: string): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>('/users/auth/google', {
+      idToken,
+    });
+    const data = response.data;
+
+    setToken(data.token);
+
+    return data;
+  },
+
+  /**
    * Register with email, password, and profile
    */
   async register(data: RegisterRequest): Promise<RegisterResponse> {

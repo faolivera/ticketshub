@@ -1,19 +1,64 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Mail, Lock, Ticket } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useUser } from '@/app/contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
+import { termsService } from '@/api/services/terms.service';
+import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
+import { TermsModal } from '@/app/components/TermsModal';
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
 
 export function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, error, clearError } = useUser();
+  const { login, loginWithGoogle, refreshUser, error, clearError } = useUser();
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
+  const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
+
+  // Terms step after Google login when user has not accepted ToS (non-dismissible)
+  const [showTermsStep, setShowTermsStep] = useState(false);
+  const [termsVersionId, setTermsVersionId] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsLoading, setTermsLoading] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isAcceptingTerms, setIsAcceptingTerms] = useState(false);
+
+  // Measure container width so Google button matches full width (same as Sign In button)
+  useEffect(() => {
+    if (!googleClientId) return;
+    const el = googleButtonContainerRef.current;
+    if (!el) return;
+    const updateWidth = () => setGoogleButtonWidth(el.offsetWidth);
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [googleClientId]);
+
+  // Fetch current buyer terms when showing the mandatory terms step
+  useEffect(() => {
+    if (!showTermsStep) return;
+    setTermsLoading(true);
+    setTermsError(null);
+    termsService
+      .getCurrentTerms(TermsUserType.Buyer)
+      .then((terms) => setTermsVersionId(terms.id))
+      .catch((err) => {
+        console.error('Failed to fetch terms:', err);
+        setTermsError(t('login.termsLoadError'));
+      })
+      .finally(() => setTermsLoading(false));
+  }, [showTermsStep, t]);
 
   const redirectTarget =
     typeof location.state?.from === 'string'
@@ -47,7 +92,110 @@ export function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    const idToken = credentialResponse.credential;
+    if (!idToken) {
+      setLocalError(t('login.googleError'));
+      return;
+    }
+    setIsGoogleLoading(true);
+    setLocalError(null);
+    clearError();
+    try {
+      const response = await loginWithGoogle(idToken);
+      if (!response.user.tosAcceptedAt) {
+        setShowTermsStep(true);
+      } else {
+        navigate(redirectTarget);
+      }
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : t('login.googleError'));
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleAcceptTermsAndContinue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!termsVersionId || !termsAccepted) return;
+    setIsAcceptingTerms(true);
+    setTermsError(null);
+    try {
+      await termsService.acceptTerms(termsVersionId, AcceptanceMethod.Checkbox);
+      await refreshUser();
+      navigate(redirectTarget);
+    } catch (err) {
+      setTermsError(err instanceof Error ? err.message : t('login.genericError'));
+    } finally {
+      setIsAcceptingTerms(false);
+    }
+  };
+
   const displayError = localError || error;
+
+  // Mandatory terms step after Google login when user has not accepted ToS
+  if (showTermsStep) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-start sm:items-center justify-center pt-5 pb-8 px-3 sm:pt-3 sm:pb-10 sm:px-4">
+        <PageMeta title={t('seo.login.title')} description={t('seo.login.description')} />
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 overflow-hidden">
+            <div className="text-center mb-6">
+              <div className="flex justify-center mb-2">
+                <Ticket className="w-9 h-9 text-blue-600" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                {t('login.acceptTermsTitle')}
+              </h1>
+              <p className="text-gray-600 text-sm">{t('login.acceptTermsMessage')}</p>
+            </div>
+            {termsError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {termsError}
+              </div>
+            )}
+            <form onSubmit={handleAcceptTermsAndContinue} className="space-y-6">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="login-terms"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  disabled={termsLoading || !termsVersionId}
+                  className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+                />
+                <label htmlFor="login-terms" className="text-sm text-gray-700 cursor-pointer">
+                  {t('login.agreeToTerms')}{' '}
+                  <button
+                    type="button"
+                    onClick={() => termsVersionId && setShowTermsModal(true)}
+                    disabled={!termsVersionId || termsLoading}
+                    className="text-blue-600 hover:text-blue-700 font-semibold underline disabled:opacity-50"
+                  >
+                    {t('login.termsAndConditions')}
+                  </button>
+                </label>
+              </div>
+              <button
+                type="submit"
+                disabled={!termsAccepted || termsLoading || !termsVersionId || isAcceptingTerms}
+                className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isAcceptingTerms ? t('common.loading') : t('login.acceptAndContinue')}
+              </button>
+            </form>
+          </div>
+        </div>
+        {showTermsModal && termsVersionId && (
+          <TermsModal
+            termsVersionId={termsVersionId}
+            title={t('login.termsAndConditions')}
+            onClose={() => setShowTermsModal(false)}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-start sm:items-center justify-center pt-5 pb-8 px-3 sm:pt-3 sm:pb-10 sm:px-4">
@@ -63,9 +211,36 @@ export function Login() {
           </div>
 
           {displayError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {displayError}
             </div>
+          )}
+
+          {googleClientId && (
+            <>
+              <div
+                ref={googleButtonContainerRef}
+                className="w-full flex items-center justify-center min-h-[3.25rem] rounded-lg overflow-hidden"
+              >
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setLocalError(t('login.googleError'))}
+                  theme="outline"
+                  size="large"
+                  shape="rectangular"
+                  width={googleButtonWidth}
+                  text="signin_with"
+                />
+              </div>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">{t('login.or')}</span>
+                </div>
+              </div>
+            </>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">

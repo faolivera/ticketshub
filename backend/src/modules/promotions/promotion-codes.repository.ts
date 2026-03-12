@@ -33,6 +33,7 @@ export class PromotionCodesRepository
     target: PrismaPromotionConfigTarget;
     maxUsages: number;
     usedCount: number;
+    validUntil: Date | null;
     createdAt: Date;
     createdBy: string;
   }): PromotionCode {
@@ -43,6 +44,7 @@ export class PromotionCodesRepository
       target: this.mapTargetFromDb(row.target),
       maxUsages: row.maxUsages,
       usedCount: row.usedCount,
+      validUntil: row.validUntil,
       createdAt: row.createdAt,
       createdBy: row.createdBy,
     };
@@ -63,6 +65,7 @@ export class PromotionCodesRepository
         target: this.mapTargetToDb(data.target),
         maxUsages: data.maxUsages,
         usedCount: data.usedCount,
+        validUntil: data.validUntil ?? undefined,
         createdBy: data.createdBy,
       },
     });

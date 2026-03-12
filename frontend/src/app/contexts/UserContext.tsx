@@ -24,6 +24,7 @@ interface UserContextType {
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginRequest) => Promise<LoginResponse>;
+  loginWithGoogle: (idToken: string) => Promise<LoginResponse>;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
   refreshUser: () => Promise<void>;
@@ -119,6 +120,29 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   /**
+   * Login with Google ID token (from Google Sign-In button).
+   */
+  const loginWithGoogle = async (idToken: string): Promise<LoginResponse> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.loginWithGoogle(idToken);
+      setUser({
+        ...response.user,
+        hasSeenSellerIntro:
+          localStorage.getItem('hasSeenSellerIntro') === 'true',
+      });
+      return response;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Google sign-in failed';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
    * Logout - clear token and user state
    */
   const logout = () => {
@@ -181,6 +205,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         login,
+        loginWithGoogle,
         logout,
         updateUser,
         refreshUser,

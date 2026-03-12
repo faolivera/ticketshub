@@ -41,6 +41,7 @@ import {
 } from '../../common/storage/file-storage-provider.interface';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class UsersService {
@@ -234,10 +235,13 @@ export class UsersService {
     user: Omit<User, 'id' | 'country' | 'currency'> &
       Partial<Pick<User, 'country' | 'currency'>>,
   ): Promise<User> {
-    const hashedPassword = await this.hashPassword(user.password);
+    const password =
+      user.password != null
+        ? await this.hashPassword(user.password)
+        : undefined;
     return await this.usersRepository.add(ctx, {
       ...user,
-      password: hashedPassword,
+      password,
     });
   }
 
@@ -304,6 +308,7 @@ export class UsersService {
 
   /**
    * Authenticate user by email and password.
+   * Returns null if user does not exist, has no password (e.g. Google-only), or password does not match.
    */
   async login(
     ctx: Ctx,
@@ -313,6 +318,9 @@ export class UsersService {
     const user = await this.findByEmail(ctx, email);
     if (!user) {
       return null;
+    }
+    if (!user.password) {
+      return null; // Google-only user cannot login with password
     }
     const passwordMatch = await this.verifyPassword(password, user.password);
     if (!passwordMatch) {
@@ -369,6 +377,11 @@ export class UsersService {
     if (existing) {
       if (existing.emailVerified) {
         throw new ConflictException('Email already registered');
+      }
+      if (!existing.password) {
+        throw new BadRequestException(
+          'This account uses Google sign-in. Please sign in with Google.',
+        );
       }
       const passwordMatch = await this.verifyPassword(
         data.password,
@@ -438,6 +451,125 @@ export class UsersService {
       token,
       user: this.toPublicMeResponse(userInfo),
       requiresEmailVerification: true,
+    };
+  }
+
+  /**
+   * Authenticate or register user with Google ID token.
+   * If user exists by googleId: return token + user.
+   * If user exists by email: link googleId, set emailVerified, return token + user.
+   * Otherwise: create new user (no password, emailVerified true), return token + user.
+   */
+  async loginWithGoogle(
+    ctx: Ctx,
+    idToken: string,
+  ): Promise<LoginResponse> {
+    const clientId = this.configService.get<string>('google.clientId');
+    if (!clientId) {
+      this.logger.error(ctx, 'Google clientId not configured');
+      throw new BadRequestException('Google sign-in is not configured');
+    }
+
+    const client = new OAuth2Client(clientId);
+    let payload: {
+      sub: string;
+      email?: string;
+      email_verified?: boolean;
+      given_name?: string;
+      family_name?: string;
+      name?: string;
+      picture?: string;
+    };
+
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: clientId,
+      });
+      payload = ticket.getPayload();
+      if (!payload?.sub) {
+        throw new BadRequestException('Invalid Google token');
+      }
+    } catch (error) {
+      this.logger.warn(ctx, 'Google token verification failed', { error });
+      throw new BadRequestException('Invalid or expired Google token');
+    }
+
+    const googleId = payload.sub;
+    const email = (payload.email ?? '').trim().toLowerCase();
+    const firstName = payload.given_name ?? payload.name ?? 'User';
+    const lastName = payload.family_name ?? '';
+
+    if (!email) {
+      throw new BadRequestException('Google account has no email');
+    }
+
+    // 1. Existing user linked to this Google account
+    let user = await this.usersRepository.findByGoogleId(ctx, googleId);
+    if (user) {
+      const userInfo = await this.getAuthenticatedUserInfo(ctx, user.id);
+      if (!userInfo) {
+        throw new BadRequestException('User data error');
+      }
+      return {
+        token: this.generateToken(user),
+        user: this.toPublicMeResponse(userInfo),
+      };
+    }
+
+    // 2. Existing user with same email: link Google and optionally set emailVerified
+    user = await this.findByEmail(ctx, email);
+    if (user) {
+      await this.usersRepository.setGoogleId(ctx, user.id, googleId);
+      if (!user.emailVerified) {
+        await this.usersRepository.updateEmailVerified(ctx, user.id, true);
+      }
+      const updated = await this.usersRepository.findById(ctx, user.id);
+      if (!updated) {
+        throw new BadRequestException('User data error');
+      }
+      const userInfo = await this.getAuthenticatedUserInfo(ctx, updated.id);
+      if (!userInfo) {
+        throw new BadRequestException('User data error');
+      }
+      return {
+        token: this.generateToken(updated),
+        user: this.toPublicMeResponse(userInfo),
+      };
+    }
+
+    // 3. New user: create with Google data, no password, emailVerified true
+    const publicName =
+      lastName.trim()
+        ? `${firstName} ${lastName[0]}.`
+        : `${firstName}`;
+    const now = new Date();
+    const newUser = await this.add(ctx, {
+      email,
+      firstName,
+      lastName: lastName || 'User',
+      publicName,
+      role: Role.User,
+      status: UserStatus.Enabled,
+      imageId: 'default',
+      country: 'Argentina',
+      currency: 'ARS',
+      language: Language.ES,
+      emailVerified: true,
+      phoneVerified: false,
+      buyerDisputed: false,
+      createdAt: now,
+      updatedAt: now,
+      googleId,
+    });
+
+    const userInfo = await this.getAuthenticatedUserInfo(ctx, newUser.id);
+    if (!userInfo) {
+      throw new BadRequestException('User data error');
+    }
+    return {
+      token: this.generateToken(newUser),
+      user: this.toPublicMeResponse(userInfo),
     };
   }
 

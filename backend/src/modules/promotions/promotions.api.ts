@@ -93,6 +93,8 @@ export interface CreatePromotionCodeRequest {
     validUntil?: string | null;
   };
   maxUsages: number;
+  /** Last date (inclusive) when the code can be claimed. Omit or null = no expiry. */
+  validUntil?: string | null;
 }
 
 export interface PromotionCodeListItem {
@@ -102,6 +104,8 @@ export interface PromotionCodeListItem {
   promotionConfig: { type: PromotionType; config: { feePercentage: number }; maxUsages: number; validUntil: string | null };
   maxUsages: number;
   usedCount: number;
+  /** Last date (inclusive) when the code can be claimed. Null = no expiry. */
+  validUntil: string | null;
   createdAt: string;
   createdBy: string;
 }

@@ -355,16 +355,9 @@ export function Header() {
             <div className="hidden sm:flex items-center gap-1 sm:gap-2">
               <Link
                 to="/login"
-                className="py-2 text-sm text-indigo-600 font-semibold hover:underline underline-offset-2 sm:text-base sm:px-6 sm:py-2 sm:bg-white sm:border-2 sm:border-indigo-600 sm:rounded-full sm:hover:bg-indigo-50 sm:hover:no-underline sm:transition-colors"
-              >
-                {t('header.login')}
-              </Link>
-              <span className="text-gray-400 hidden sm:inline" aria-hidden="true">|</span>
-              <Link
-                to="/register"
                 className="py-2 text-sm text-indigo-600 font-semibold hover:underline underline-offset-2 sm:text-base sm:px-6 sm:py-2 sm:bg-indigo-600 sm:text-white sm:rounded-full sm:hover:bg-indigo-700 sm:hover:no-underline sm:transition-colors"
               >
-                {t('header.signUp')}
+                {t('header.enter')}
               </Link>
             </div>
           )}

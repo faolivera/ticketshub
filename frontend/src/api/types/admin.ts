@@ -744,6 +744,8 @@ export interface AdminPromotionCodeListItem {
   };
   maxUsages: number;
   usedCount: number;
+  /** Last date (inclusive) when the code can be claimed. Null = no expiry. */
+  validUntil: string | null;
   createdAt: string;
   createdBy: string;
 }
@@ -758,6 +760,8 @@ export interface AdminCreatePromotionCodeRequest {
     validUntil?: string | null;
   };
   maxUsages: number;
+  /** Last date (inclusive) when the code can be claimed. Omit or null = no expiry. */
+  validUntil?: string | null;
 }
 
 // === Admin Dashboard Metrics (GET /admin/dashboard-metrics) ===

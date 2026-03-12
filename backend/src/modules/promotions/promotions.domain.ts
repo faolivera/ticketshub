@@ -64,6 +64,8 @@ export interface PromotionCode {
   target: PromotionConfigTarget;
   maxUsages: number;
   usedCount: number;
+  /** Last date (inclusive) when the code can be claimed. Null = no expiry. */
+  validUntil: Date | null;
   createdAt: Date;
   createdBy: string;
 }

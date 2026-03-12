@@ -78,7 +78,10 @@ export interface User {
   publicName: string;
   imageId: string;
   phone?: string;
-  password: string;
+  /** Null for Google-only users */
+  password?: string;
+  /** Google sub (unique per Google account); set when user signs in with Google */
+  googleId?: string;
   country: string;
   currency: CurrencyCode;
   language: Language;

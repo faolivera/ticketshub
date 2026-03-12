@@ -290,7 +290,8 @@ model User {
   publicName             String
   imageId                String?
   phone                  String?
-  password               String
+  password               String?    // null for Google-only users
+  googleId               String?    @unique // Google sub (unique per Google account)
   country                String     @default("Germany")
   currency               String     @default("EUR")
   language               Language   @default(en)
@@ -437,6 +438,7 @@ model PromotionCode {
   target          PromotionConfigTarget
   maxUsages       Int                   @default(0)
   usedCount       Int                   @default(0)
+  validUntil      DateTime?             // last date (inclusive) when the code can be claimed
   createdAt       DateTime              @default(now())
   createdBy       String
 

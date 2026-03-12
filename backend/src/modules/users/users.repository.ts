@@ -68,6 +68,31 @@ export class UsersRepository implements IUsersRepository {
     return user ? this.mapToUser(user) : undefined;
   }
 
+  async findByGoogleId(_ctx: Ctx, googleId: string): Promise<User | undefined> {
+    this.logger.debug(_ctx, 'findByGoogleId', { googleId });
+    const user = await this.prisma.user.findUnique({
+      where: { googleId },
+    });
+    return user ? this.mapToUser(user) : undefined;
+  }
+
+  async setGoogleId(
+    _ctx: Ctx,
+    userId: string,
+    googleId: string,
+  ): Promise<User | undefined> {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { googleId },
+      });
+      return this.mapToUser(user);
+    } catch (error) {
+      this.logger.error(_ctx, 'setGoogleId failed:', error);
+      return undefined;
+    }
+  }
+
   async findByEmailContaining(_ctx: Ctx, searchTerm: string): Promise<User[]> {
     this.logger.debug(_ctx, 'findByEmailContaining');
     if (!searchTerm?.trim()) return [];
@@ -141,7 +166,8 @@ export class UsersRepository implements IUsersRepository {
         firstName: userData.firstName,
         lastName: userData.lastName,
         publicName: userData.publicName,
-        password: userData.password,
+        password: userData.password ?? null,
+        googleId: userData.googleId ?? undefined,
         role: userData.role,
         status: userData.status ?? 'Enabled',
         imageId: userData.imageId,
@@ -468,7 +494,8 @@ export class UsersRepository implements IUsersRepository {
       publicName: prismaUser.publicName,
       imageId: prismaUser.imageId ?? 'default',
       phone: prismaUser.phone ?? undefined,
-      password: prismaUser.password,
+      password: prismaUser.password ?? undefined,
+      googleId: prismaUser.googleId ?? undefined,
       country: prismaUser.country,
       currency: prismaUser.currency as User['currency'],
       language: this.mapLanguageFromDb(prismaUser.language),

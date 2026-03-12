@@ -93,6 +93,7 @@ export function PromotionsManagement() {
       validUntil: undefined,
     },
     maxUsages: 0,
+    validUntil: undefined,
   });
   const [creatingCode, setCreatingCode] = useState(false);
   const [createCodeError, setCreateCodeError] = useState<string | null>(null);
@@ -264,6 +265,7 @@ export function PromotionsManagement() {
           validUntil: undefined,
         },
         maxUsages: 0,
+        validUntil: undefined,
       });
       await fetchPromotionCodes();
     } catch (err) {
@@ -633,13 +635,14 @@ export function PromotionsManagement() {
                       <TableHead>{t('admin.promotionCodes.type')}</TableHead>
                       <TableHead>{t('admin.promotionCodes.feePercent')}</TableHead>
                       <TableHead>{t('admin.promotionCodes.usages')}</TableHead>
+                      <TableHead>{t('admin.promotionCodes.claimableUntil')}</TableHead>
                       <TableHead>{t('admin.promotionCodes.createdAt')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {promotionCodes.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                           {t('admin.promotionCodes.noPromotionCodes')}
                         </TableCell>
                       </TableRow>
@@ -657,6 +660,7 @@ export function PromotionsManagement() {
                           <TableCell>
                             {pc.usedCount} / {pc.maxUsages === 0 ? '∞' : pc.maxUsages}
                           </TableCell>
+                          <TableCell>{formatDate(pc.validUntil)}</TableCell>
                           <TableCell>{formatDate(pc.createdAt)}</TableCell>
                         </TableRow>
                       ))
@@ -795,6 +799,28 @@ export function PromotionsManagement() {
                   </p>
                 </div>
                 <div className="space-y-2">
+                  <Label>{t('admin.promotionCodes.claimableUntil')}</Label>
+                  <Input
+                    type="datetime-local"
+                    value={
+                      createCodeForm.validUntil
+                        ? createCodeForm.validUntil.slice(0, 16)
+                        : ''
+                    }
+                    onChange={(e) =>
+                      setCreateCodeForm((prev) => ({
+                        ...prev,
+                        validUntil: e.target.value
+                          ? new Date(e.target.value).toISOString()
+                          : undefined,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('admin.promotionCodes.claimableUntilHint')}
+                  </p>
+                </div>
+                <div className="space-y-2">
                   <Label>{t('admin.promotionCodes.validUntil')}</Label>
                   <Input
                     type="datetime-local"
@@ -815,6 +841,9 @@ export function PromotionsManagement() {
                       }))
                     }
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {t('admin.promotionCodes.validUntilHint')}
+                  </p>
                 </div>
               </div>
               <DialogFooter>

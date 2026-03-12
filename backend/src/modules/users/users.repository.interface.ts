@@ -65,6 +65,16 @@ export interface IUsersRepository {
   findByEmail(ctx: Ctx, email: string): Promise<User | undefined>;
 
   /**
+   * Find user by Google sub (googleId)
+   */
+  findByGoogleId(ctx: Ctx, googleId: string): Promise<User | undefined>;
+
+  /**
+   * Link Google account to existing user (set googleId)
+   */
+  setGoogleId(ctx: Ctx, userId: string, googleId: string): Promise<User | undefined>;
+
+  /**
    * Find users whose email contains the search term (case-insensitive)
    */
   findByEmailContaining(ctx: Ctx, searchTerm: string): Promise<User[]>;
