@@ -121,7 +121,7 @@ function AppContent() {
 export default function App() {
   if (googleClientId) {
     return (
-      <GoogleOAuthProvider clientId={googleClientId} locale={i18n.language}>
+      <GoogleOAuthProvider clientId={googleClientId} locale={'es'}>
         <AppContent />
       </GoogleOAuthProvider>
     );
