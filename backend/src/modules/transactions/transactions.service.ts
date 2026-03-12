@@ -43,6 +43,8 @@ import type { Offer, OfferTickets } from '../offers/offers.domain';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { TransactionManager } from '../../common/database';
 import { RiskEngineService } from '../risk-engine/risk-engine.service';
+import { TermsService } from '../terms/terms.service';
+import { TermsUserType } from '../terms/terms.domain';
 import {
   SellerTier,
   VerificationHelper,
@@ -83,6 +85,8 @@ export class TransactionsService {
     private readonly offersService: OffersService,
     @Inject(RiskEngineService)
     private readonly riskEngine: RiskEngineService,
+    @Inject(TermsService)
+    private readonly termsService: TermsService,
     private readonly txManager: TransactionManager,
     @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly privateStorage: FileStorageProvider,
@@ -205,6 +209,17 @@ export class TransactionsService {
     }
     if (!VerificationHelper.hasV1(buyer)) {
       throw new ForbiddenException('Email must be verified to purchase');
+    }
+
+    const hasAcceptedBuyerTerms = await this.termsService.hasAcceptedCurrentTerms(
+      ctx,
+      buyerId,
+      TermsUserType.Buyer,
+    );
+    if (!hasAcceptedBuyerTerms) {
+      throw new ForbiddenException(
+        'You must accept the buyer terms and conditions before purchasing',
+      );
     }
 
     let quantityForRisk = ticketUnitIds?.length ?? 0;

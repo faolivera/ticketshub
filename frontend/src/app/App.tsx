@@ -44,11 +44,12 @@ import { SellerPayouts } from '@/app/pages/admin/SellerPayouts';
 import SupportTicketsManagement from '@/app/pages/admin/SupportTicketsManagement';
 import SupportTicketDetail from '@/app/pages/admin/SupportTicketDetail';
 import { NotFound } from '@/app/pages/NotFound';
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+import { getGoogleClientId } from '@/config/env';
 
-export default function App() {
+const googleClientId = getGoogleClientId();
+
+function AppContent() {
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
     <UserProvider>
       <SocketProvider>
       <BrowserRouter>
@@ -113,6 +114,16 @@ export default function App() {
       </BrowserRouter>
       </SocketProvider>
     </UserProvider>
-    </GoogleOAuthProvider>
   );
+}
+
+export default function App() {
+  if (googleClientId) {
+    return (
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <AppContent />
+      </GoogleOAuthProvider>
+    );
+  }
+  return <AppContent />;
 }

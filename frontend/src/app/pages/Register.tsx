@@ -8,7 +8,7 @@ import { termsService } from '@/api/services/terms.service';
 import { useUser } from '@/app/contexts/UserContext';
 import { OTPType } from '@/api/types';
 import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
-import { TermsModal } from '@/app/components/TermsModal';
+import { ClientTnC } from '@/app/components/ClientTnC';
 import { PageMeta } from '@/app/components/PageMeta';
 
 export function Register() {
@@ -45,7 +45,6 @@ export function Register() {
   const [termsVersionId, setTermsVersionId] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsLoading, setTermsLoading] = useState(true);
-  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Fetch current terms on mount
   useEffect(() => {
@@ -61,12 +60,6 @@ export function Register() {
     };
     fetchTerms();
   }, []);
-
-  const handleOpenTermsModal = () => {
-    if (termsVersionId) {
-      setShowTermsModal(true);
-    }
-  };
 
   // Timer for resend
   useEffect(() => {
@@ -376,27 +369,13 @@ export function Register() {
             </div>
 
             {/* Terms and Conditions */}
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                disabled={!termsVersionId || termsLoading}
-                className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
-              />
-              <label htmlFor="terms" className="text-sm text-gray-700">
-                {t('register.agreeToTerms')}{' '}
-                <button
-                  type="button"
-                  onClick={handleOpenTermsModal}
-                  disabled={!termsVersionId || termsLoading}
-                  className="text-blue-600 hover:text-blue-700 font-semibold underline disabled:opacity-50"
-                >
-                  {t('register.termsAndConditions')}
-                </button>
-              </label>
-            </div>
+            <ClientTnC
+              termsVersionId={termsVersionId}
+              termsLoading={termsLoading}
+              checked={termsAccepted}
+              onCheckedChange={setTermsAccepted}
+              checkboxId="terms"
+            />
 
             {/* Submit */}
             <button
@@ -420,15 +399,6 @@ export function Register() {
           </form>
         </div>
       </div>
-
-      {/* Terms and Conditions Modal */}
-      {showTermsModal && termsVersionId && (
-        <TermsModal
-          termsVersionId={termsVersionId}
-          title={t('register.termsAndConditions')}
-          onClose={() => setShowTermsModal(false)}
-        />
-      )}
     </div>
   );
 }

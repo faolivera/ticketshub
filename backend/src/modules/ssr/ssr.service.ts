@@ -15,6 +15,8 @@ const PLACEHOLDERS = {
   OG_TYPE: '__OG_TYPE__',
   /** HTML comment so it's invisible in dev when Vite serves raw index.html. Replaced in prod by buildGaScript(). */
   GA_SCRIPT: /<!--\s*__GA_SCRIPT__\s*-->/g,
+  /** Replaced by buildConfigScript() so the client can read e.g. googleClientId at runtime (from backend env). */
+  CONFIG_SCRIPT: /<!--\s*__CONFIG_SCRIPT__\s*-->/g,
 } as const;
 
 /** Google Analytics measurement ID. Script injected only when app.environment is prod. */
@@ -55,7 +57,7 @@ export class SsrService {
    * Read index.html from client build path, replace meta placeholders, return HTML.
    * Injects Google Analytics (gtag) script only when app.environment is 'prod'.
    */
-  async getIndexHtml(meta: PageMetaDto): Promise<string> {
+  async getIndexHtml(meta: PageMetaDto, options?: { configScript?: boolean }): Promise<string> {
     const basePath = this.getClientBuildPath();
     const indexPath = path.join(basePath, 'index.html');
     const raw = await readFile(indexPath, 'utf-8');
@@ -64,18 +66,27 @@ export class SsrService {
     const canonicalUrl = escapeAttr(meta.canonicalUrl);
     const ogImage = escapeAttr(meta.ogImage);
     const ogType = escapeAttr(meta.ogType || 'website');
-    const env = this.configService.get<string>('app.environment') ?? 'dev';
-    const gaScript =
-      env === 'prod'
-        ? this.buildGaScript()
-        : '';
+    const gaScript = this.buildGaScript();
+    const configScript = options?.configScript ? this.buildConfigScript() : '';
     return raw
       .replace(new RegExp(PLACEHOLDERS.PAGE_TITLE, 'g'), title)
       .replace(new RegExp(PLACEHOLDERS.PAGE_DESCRIPTION, 'g'), description)
       .replace(new RegExp(PLACEHOLDERS.CANONICAL_URL, 'g'), canonicalUrl)
       .replace(new RegExp(PLACEHOLDERS.OG_IMAGE, 'g'), ogImage)
       .replace(new RegExp(PLACEHOLDERS.OG_TYPE, 'g'), ogType)
-      .replace(PLACEHOLDERS.GA_SCRIPT, gaScript);
+      .replace(PLACEHOLDERS.GA_SCRIPT, gaScript)
+      .replace(PLACEHOLDERS.CONFIG_SCRIPT, configScript);
+  }
+
+  /**
+   * Build script that sets window.__CONFIG__ (e.g. googleClientId) for the client.
+   * Uses backend config so prod can inject GOOGLE_CLIENT_ID at runtime; empty string hides Google login.
+   */
+  private buildConfigScript(): string {
+    const clientId =
+      this.configService.get<string>('google.clientId') ?? '';
+    const payload = JSON.stringify({ googleClientId: clientId });
+    return `<script>window.__CONFIG__ = ${payload};</script>`;
   }
 
   /**

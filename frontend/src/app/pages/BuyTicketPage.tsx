@@ -5,7 +5,11 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
 import { transactionsService } from '../../api/services/transactions.service';
+import { termsService } from '../../api/services/terms.service';
 import { offersService } from '../../api/services/offers.service';
+import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
+import type { GetTermsStatusResponse } from '@/api/types/terms';
+import { ClientTnC } from '@/app/components/ClientTnC';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage, ErrorAlert } from '../components/ErrorMessage';
 import { UserAvatar } from '../components/UserAvatar';
@@ -96,6 +100,13 @@ export function BuyTicketPage() {
   const [offerError, setOfferError] = useState<string | null>(null);
   /** Re-evaluated checkout risk when quantity or payment method changes (from GET checkout-risk). */
   const [localCheckoutRisk, setLocalCheckoutRisk] = useState<CheckoutRisk | null>(null);
+  /** Terms status for logged-in user; used to show T&C block when buyer has not accepted. */
+  const [termsStatus, setTermsStatus] = useState<GetTermsStatusResponse | null>(null);
+  const [termsStatusLoading, setTermsStatusLoading] = useState(false);
+  /** Current buyer terms version and acceptance state when we show the buy T&C block. */
+  const [buyTermsVersionId, setBuyTermsVersionId] = useState<string | null>(null);
+  const [buyTermsLoading, setBuyTermsLoading] = useState(false);
+  const [buyTermsAccepted, setBuyTermsAccepted] = useState(false);
 
   const listing = buyPageData?.listing ?? null;
   const seller = buyPageData?.seller ?? null;
@@ -109,6 +120,11 @@ export function BuyTicketPage() {
   const missingV2 = effectiveCheckoutRisk?.missingV2 ?? (effectiveCheckoutRisk?.requireV2 && !user?.phoneVerified);
   const missingV3 = effectiveCheckoutRisk?.missingV3 ?? (effectiveCheckoutRisk?.requireV3 && !user?.identityVerified);
   const cannotPurchaseDueToVerification = isAuthenticated && (missingV1 || missingV2 || missingV3);
+  /** Show T&C acceptance block when user is logged in and has not accepted buyer terms. */
+  const showBuyTermsBlock =
+    isAuthenticated &&
+    termsStatus?.buyer != null &&
+    !termsStatus.buyer.isCompliant;
 
   const isOwnListing = user?.id === listing?.sellerId;
   const isPendingOwnListing = isOwnListing && listing?.status === ListingStatus.Pending;
@@ -207,6 +223,51 @@ export function BuyTicketPage() {
     })();
     return () => { cancelled = true; };
   }, [offerIdFromUrl, listingId, isAuthenticated, listing?.id]);
+
+  // Fetch terms compliance status when user is authenticated (to show T&C block on /buy if needed).
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setTermsStatus(null);
+      return;
+    }
+    let cancelled = false;
+    setTermsStatusLoading(true);
+    termsService
+      .getTermsStatus()
+      .then((status) => {
+        if (!cancelled) setTermsStatus(status);
+      })
+      .catch(() => {
+        if (!cancelled) setTermsStatus(null);
+      })
+      .finally(() => {
+        if (!cancelled) setTermsStatusLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
+
+  // When we show the buy T&C block, fetch current buyer terms for the checkbox.
+  useEffect(() => {
+    if (!showBuyTermsBlock) {
+      setBuyTermsVersionId(null);
+      setBuyTermsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setBuyTermsLoading(true);
+    termsService
+      .getCurrentTerms(TermsUserType.Buyer)
+      .then((terms) => {
+        if (!cancelled) setBuyTermsVersionId(terms.id);
+      })
+      .catch(() => {
+        if (!cancelled) setBuyTermsVersionId(null);
+      })
+      .finally(() => {
+        if (!cancelled) setBuyTermsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [showBuyTermsBlock]);
 
   // When we have an accepted offer, sync quantity and selectedUnitIds to the offer's selection
   // so the UI shows exactly what was agreed (disabled controls display the offer's choice).
@@ -316,10 +377,23 @@ export function BuyTicketPage() {
       return;
     }
 
+    if (showBuyTermsBlock && (!buyTermsAccepted || !buyTermsVersionId)) {
+      setPurchaseError(t('buyTicket.acceptTermsRequired'));
+      return;
+    }
+
     setIsPurchasing(true);
     setPurchaseError(null);
 
     try {
+      if (showBuyTermsBlock && buyTermsVersionId) {
+        await termsService.acceptTerms(buyTermsVersionId, AcceptanceMethod.Checkbox);
+        const updated = await termsService.getTermsStatus();
+        setTermsStatus(updated);
+        setBuyTermsAccepted(false);
+        setBuyTermsVersionId(null);
+      }
+
       if (useOffer) {
         const response = await transactionsService.initiatePurchase({
           listingId: listingId,
@@ -357,8 +431,12 @@ export function BuyTicketPage() {
         setPurchaseError(t('buyTicket.pricesChanged'));
         await refreshBuyPageData();
       } else {
+        const message = err instanceof Error ? err.message : String(err);
+        const isTermsRequired =
+          typeof message === 'string' &&
+          (message.toLowerCase().includes('terms') || message.toLowerCase().includes('conditions'));
         setPurchaseError(
-          err instanceof Error ? err.message : t('buyTicket.purchaseFailed')
+          isTermsRequired ? t('buyTicket.acceptTermsRequired') : (message || t('buyTicket.purchaseFailed'))
         );
       }
     } finally {
@@ -939,13 +1017,26 @@ export function BuyTicketPage() {
               <ErrorAlert message={purchaseError} className="mb-4" />
             )}
 
+            {showBuyTermsBlock && (
+              <div className="mb-4">
+                <ClientTnC
+                  termsVersionId={buyTermsVersionId}
+                  termsLoading={buyTermsLoading}
+                  checked={buyTermsAccepted}
+                  onCheckedChange={setBuyTermsAccepted}
+                  checkboxId="buy-terms"
+                />
+              </div>
+            )}
+
             <button
               onClick={handlePurchase}
               disabled={
                 isPurchasing ||
                 (acceptedOffer ? !selectedPaymentMethod : (availableUnits.length === 0 || selectedQuantity === 0 || !pricingSnapshot)) ||
                 isOwnListing ||
-                cannotPurchaseDueToVerification
+                cannotPurchaseDueToVerification ||
+                (showBuyTermsBlock && !buyTermsAccepted)
               }
               className="w-full py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >

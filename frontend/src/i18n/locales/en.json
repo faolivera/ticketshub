@@ -222,6 +222,7 @@
     "mustBeLoggedIn": "You must be logged in to purchase tickets",
     "loginToBuy": "Login to Buy",
     "purchaseFailed": "Purchase failed. Please try again.",
+    "acceptTermsRequired": "You must accept the Terms and Conditions before purchasing.",
     "processing": "Processing...",
     "available": "available",
     "numberedTicketsAvailable": "Numbered tickets are available for seat selection",
@@ -701,6 +702,10 @@
     "registerError": "Registration failed. Please try again.",
     "verifyError": "Verification failed. Please check the code and try again.",
     "resendError": "Failed to resend code. Please try again.",
+    "agreeToTerms": "I agree to the",
+    "termsAndConditions": "Terms and Conditions"
+  },
+  "clientTnC": {
     "agreeToTerms": "I agree to the",
     "termsAndConditions": "Terms and Conditions"
   },

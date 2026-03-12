@@ -18,6 +18,7 @@ import { NotificationsService } from '../../../../src/modules/notifications/noti
 import { OffersService } from '../../../../src/modules/offers/offers.service';
 import { TransactionManager } from '../../../../src/common/database';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
+import { TermsService } from '../../../../src/modules/terms/terms.service';
 import { PRIVATE_STORAGE_PROVIDER } from '../../../../src/common/storage/file-storage-provider.interface';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import {
@@ -37,6 +38,7 @@ describe('TransactionsService', () => {
   let moduleRef: TestingModule;
   let transactionsRepository: jest.Mocked<ITransactionsRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
+  let termsService: jest.Mocked<TermsService>;
   let walletService: jest.Mocked<WalletService>;
   let txManager: jest.Mocked<TransactionManager>;
 
@@ -134,6 +136,7 @@ describe('TransactionsService', () => {
 
     const mockPaymentMethodsService = {
       findAll: jest.fn(),
+      findById: jest.fn().mockResolvedValue(null),
     };
 
     const mockPricingService = {
@@ -162,6 +165,10 @@ describe('TransactionsService', () => {
         requireV2: false,
         requireV3: false,
       }),
+    };
+
+    const mockTermsService = {
+      hasAcceptedCurrentTerms: jest.fn().mockResolvedValue(true),
     };
 
     const mockTxManager = {
@@ -202,6 +209,7 @@ describe('TransactionsService', () => {
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: OffersService, useValue: mockOffersService },
         { provide: RiskEngineService, useValue: mockRiskEngineService },
+        { provide: TermsService, useValue: mockTermsService },
         { provide: TransactionManager, useValue: mockTxManager },
         { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage },
       ],
@@ -211,6 +219,7 @@ describe('TransactionsService', () => {
     service = module.get<TransactionsService>(TransactionsService);
     transactionsRepository = module.get(TRANSACTIONS_REPOSITORY);
     ticketsService = module.get(TicketsService);
+    termsService = module.get(TermsService);
     walletService = module.get(WalletService);
     txManager = module.get(TransactionManager);
   });
@@ -1291,6 +1300,46 @@ describe('TransactionsService', () => {
           transferProofOriginalFilename: 'proof.pdf',
         }),
         1,
+      );
+    });
+  });
+
+  describe('initiatePurchase', () => {
+    it('should throw ForbiddenException when buyer has not accepted terms and conditions', async () => {
+      const listingId = 'listing_1';
+      const buyerId = 'buyer_1';
+      const sellerId = 'seller_1';
+      ticketsService.getListingById.mockResolvedValue({
+        id: listingId,
+        sellerId,
+        eventDate: new Date(),
+        pricePerTicket: { amount: 1000, currency: 'USD' },
+        ticketUnits: [],
+        seatingType: 'Unnumbered',
+        sellTogether: false,
+      } as never);
+      const mockUsersService = moduleRef.get(UsersService) as jest.Mocked<UsersService>;
+      mockUsersService.findById
+        .mockResolvedValueOnce({ id: buyerId, emailVerified: true } as never)
+        .mockResolvedValueOnce({ id: sellerId } as never);
+      termsService.hasAcceptedCurrentTerms.mockResolvedValue(false);
+
+      await expect(
+        service.initiatePurchase(
+          mockCtx,
+          buyerId,
+          listingId,
+          ['unit_1'],
+          'payway',
+          'snap_1',
+          undefined,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(termsService.hasAcceptedCurrentTerms).toHaveBeenCalledWith(
+        mockCtx,
+        buyerId,
+        'buyer',
       );
     });
   });

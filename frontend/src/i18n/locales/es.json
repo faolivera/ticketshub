@@ -260,6 +260,7 @@
     "mustBeLoggedIn": "Debes iniciar sesión para comprar entradas",
     "loginToBuy": "Iniciar Sesión para Comprar",
     "purchaseFailed": "La compra falló. Inténtalo de nuevo.",
+    "acceptTermsRequired": "Debes aceptar los Términos y Condiciones antes de comprar.",
     "processing": "Procesando..."
   },
   "boughtTickets": {
@@ -700,6 +701,10 @@
     "registerError": "Error al registrarse. Inténtalo de nuevo.",
     "verifyError": "Error al verificar. Revisa el código e inténtalo de nuevo.",
     "resendError": "Error al reenviar el código. Inténtalo de nuevo.",
+    "agreeToTerms": "Acepto los",
+    "termsAndConditions": "Términos y Condiciones"
+  },
+  "clientTnC": {
     "agreeToTerms": "Acepto los",
     "termsAndConditions": "Términos y Condiciones"
   },
