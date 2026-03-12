@@ -47,6 +47,7 @@ export class NotificationsScheduler {
       const ctx: Ctx = {
         ...SCHEDULER_CTX,
         requestId: `notifications-process-${Date.now()}`,
+        scheduledJobName: 'notifications_processEvents',
       };
 
       await this.lockService.withLockAndLog(
@@ -79,6 +80,7 @@ export class NotificationsScheduler {
       const ctx: Ctx = {
         ...SCHEDULER_CTX,
         requestId: `notifications-send-emails-${Date.now()}`,
+        scheduledJobName: 'notifications_sendPendingEmails',
       };
 
       await this.lockService.withLockAndLog(
@@ -111,6 +113,7 @@ export class NotificationsScheduler {
       const ctx: Ctx = {
         ...SCHEDULER_CTX,
         requestId: `notifications-retry-${Date.now()}`,
+        scheduledJobName: 'notifications_retryFailedEmails',
       };
 
       await this.lockService.withLockAndLog(
@@ -140,6 +143,7 @@ export class NotificationsScheduler {
       const ctx: Ctx = {
         ...SCHEDULER_CTX,
         requestId: `notifications-cleanup-${Date.now()}`,
+        scheduledJobName: 'notifications_cleanupOldNotifications',
       };
 
       await this.lockService.withLockAndLog(

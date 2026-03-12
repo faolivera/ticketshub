@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import {
   PrometheusModule,
   makeCounterProvider,
@@ -43,7 +44,8 @@ const CRON_DURATION_BUCKETS = [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120];
     }),
     HttpMetricsInterceptor,
     CronMetricsService,
+    { provide: APP_INTERCEPTOR, useClass: HttpMetricsInterceptor },
   ],
-  exports: [HttpMetricsInterceptor, CronMetricsService],
+  exports: [CronMetricsService],
 })
 export class MetricsModule {}

@@ -38,6 +38,11 @@ export interface Ctx {
   path?: string;
 
   /**
+   * Name of the scheduled job - only set when source is 'CRON'
+   */
+  scheduledJobName?: string;
+
+  /**
    * Additional metadata that can be attached to the context
    */
   metadata?: Record<string, unknown>;

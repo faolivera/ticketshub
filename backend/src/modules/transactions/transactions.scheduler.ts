@@ -48,6 +48,7 @@ export class TransactionsScheduler {
       const ctx: Ctx = {
         source: 'CRON',
         requestId: this.generateRequestId(),
+        scheduledJobName: 'handleExpiredTransactions',
       };
 
       const batchLimit = this.getTransactionBatchLimit();
@@ -103,6 +104,7 @@ export class TransactionsScheduler {
       const ctx: Ctx = {
         source: 'CRON',
         requestId: this.generateRequestId(),
+        scheduledJobName: 'handleDepositReleases',
       };
 
       const batchLimit = this.getTransactionBatchLimit();
