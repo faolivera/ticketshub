@@ -65,6 +65,9 @@
     "signIn": "Iniciar Sesión",
     "signinIn": "Iniciar Sesión",
     "signingIn": "Iniciando sesión...",
+    "signingInWithGoogle": "Iniciando sesión con Google...",
+    "or": "O",
+    "googleError": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
     "noAccount": "¿No tienes una cuenta?",
     "createAccount": "Crear cuenta",
     "genericError": "Error al iniciar sesión. Inténtalo de nuevo."

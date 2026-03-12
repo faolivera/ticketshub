@@ -1,0 +1,44 @@
+# TicketsHub app + optional Grafana Alloy for metrics (Grafana Cloud).
+# Run from this directory. Requires GITHUB_OWNER (and optionally ENV_FILE) when using the deploy script.
+# To enable the agent: set GRAFANA_CLOUD_* env vars (e.g. in ENV_FILE) and use --profile grafana.
+
+services:
+  ticketshub:
+    image: ghcr.io/${GITHUB_OWNER:-unknown}/ticketshub-lightsail:latest
+    container_name: ticketshub
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - lightsail_caddy_data:/data
+    env_file:
+      - ${ENV_FILE:-.env.default}
+    networks:
+      - app-network
+
+  # Grafana Alloy: scrapes /metrics from the app and remote-writes to Grafana Cloud.
+  # Start only with: docker compose --profile grafana up -d
+  # Requires in env: GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL, GRAFANA_CLOUD_USER, GRAFANA_CLOUD_API_KEY
+  grafana-agent:
+    image: grafana/alloy:latest
+    container_name: grafana-agent
+    restart: unless-stopped
+    command: ["run", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./alloy-config.alloy:/etc/alloy/config.alloy:ro
+    env_file:
+      - ${ENV_FILE:-.env.default}
+    networks:
+      - app-network
+    depends_on:
+      - ticketshub
+    profiles:
+      - grafana
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  lightsail_caddy_data:

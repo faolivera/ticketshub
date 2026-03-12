@@ -41,7 +41,7 @@
   },
   "header": {
     "home": "Home",
-    "enter": "Enter",
+    "enter": "Login",
     "myTickets": "My Tickets",
     "mySales": "My Sales",
     "myProfile": "My Profile",
@@ -65,6 +65,9 @@
     "signIn": "Sign In",
     "signinIn": "Sign In",
     "signingIn": "Signing in...",
+    "signingInWithGoogle": "Signing in with Google...",
+    "or": "Or",
+    "googleError": "Google sign-in failed. Please try again.",
     "noAccount": "Don't have an account?",
     "createAccount": "Create account",
     "genericError": "Login failed. Please try again."

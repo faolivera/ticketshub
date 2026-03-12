@@ -86,6 +86,7 @@ export function Login() {
   };
 
   const displayError = localError || error;
+  const isBusy = isSubmitting || isGoogleLoading;
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-start sm:items-center justify-center pt-5 pb-8 px-3 sm:pt-3 sm:pb-10 sm:px-4">
@@ -107,7 +108,12 @@ export function Login() {
           )}
 
           {googleClientId && (
-            <>
+            <>    
+              <div className="relative my-4">
+                <div className="relative flex justify-center text-sm">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+              </div>
               <div
                 ref={googleButtonContainerRef}
                 className="w-full flex items-center justify-center min-h-[3.25rem] rounded-lg overflow-hidden"
@@ -127,7 +133,9 @@ export function Login() {
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">{t('login.or')}</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    {t('login.or')}
+                  </span>
                 </div>
               </div>
             </>
@@ -174,13 +182,13 @@ export function Login() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isBusy}
               className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? t('login.signingIn') : t('login.signIn')}
+              {isSubmitting ? t('login.signingIn') : isGoogleLoading ? t('login.signingInWithGoogle') : t('login.signIn')}
             </button>
 
-            <p className="text-center text-sm text-gray-600 hidden sm:block">
+            <p className="text-center text-sm text-gray-600">
               {t('login.noAccount')}{' '}
               <Link
                 to="/register"

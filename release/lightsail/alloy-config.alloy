@@ -1,0 +1,25 @@
+// Grafana Alloy config: scrape Prometheus /metrics from the app and remote-write to Grafana Cloud.
+// Required env vars (set in ENV_FILE or environment):
+//   GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL  e.g. https://prometheus-prod-XX-XXX.grafana.net/api/prom/push
+//   GRAFANA_CLOUD_USER                          Grafana Cloud instance ID (numeric)
+//   GRAFANA_CLOUD_API_KEY                       Grafana Cloud metrics API token (glc_...)
+
+prometheus.scrape "ticketshub" {
+  targets = [{
+    __address__ = "ticketshub:3000",
+    job         = "ticketshub-backend",
+  }]
+  forward_to      = [prometheus.remote_write.default.receiver]
+  scrape_interval = "60s"
+  metrics_path    = "/metrics"
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL")
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_USER")
+      password = sys.env("GRAFANA_CLOUD_API_KEY")
+    }
+  }
+}

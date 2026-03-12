@@ -1,4 +1,5 @@
 import '@/i18n/config';
+import i18n from '@/i18n/config';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider } from '@/app/contexts/UserContext';
@@ -120,7 +121,7 @@ function AppContent() {
 export default function App() {
   if (googleClientId) {
     return (
-      <GoogleOAuthProvider clientId={googleClientId}>
+      <GoogleOAuthProvider clientId={googleClientId} locale={i18n.language}>
         <AppContent />
       </GoogleOAuthProvider>
     );

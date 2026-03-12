@@ -24,9 +24,23 @@ Docker image and scripts to run the full app (frontend + backend + Caddy) on an 
    GITHUB_OWNER=yourgithubuser ./release/lightsail/deploy-on-server.sh
    # With env file:
    ENV_FILE=/path/to/.env GITHUB_OWNER=yourgithubuser ./release/lightsail/deploy-on-server.sh
+   # With Grafana Alloy (metrics to Grafana Cloud):
+   ENV_FILE=/path/to/.env GITHUB_OWNER=yourgithubuser ./release/lightsail/deploy-on-server.sh --with-grafana-agent
    ```
 
 Caddy inside the container obtains and renews Let's Encrypt certificates automatically. Certificates are stored in the `lightsail_caddy_data` volume so they persist across restarts.
+
+### Grafana Alloy (metrics to Grafana Cloud)
+
+To run **Grafana Alloy** on the same instance (scrapes `/metrics` from the app and remote-writes to Grafana Cloud), pass `--with-grafana-agent` and set these variables in your `ENV_FILE`:
+
+| Variable | Description |
+|----------|-------------|
+| `GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL` | Remote write URL (e.g. `https://prometheus-prod-XX-XXX.grafana.net/api/prom/push`) |
+| `GRAFANA_CLOUD_USER` | Grafana Cloud instance ID (numeric) |
+| `GRAFANA_CLOUD_API_KEY` | Grafana Cloud metrics API token (e.g. `glc_...`) |
+
+Get these from **Grafana Cloud → Connections → Add new connection → Prometheus** (or Grafana Alloy). The app must expose `GET /metrics` (e.g. via `prom-client` in the backend) for Alloy to scrape.
 
 ## Build locally
 
