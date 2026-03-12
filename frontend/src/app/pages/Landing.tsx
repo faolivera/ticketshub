@@ -150,19 +150,23 @@ export function Landing() {
     return Object.values(EventCategory).filter(c => present.has(c));
   }, [events]);
 
-  // Transform and filter events
+  // Transform and filter events (guard against undefined string fields from API)
   const filteredEvents = useMemo(() => {
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = (searchTerm ?? '').toLowerCase();
 
     return events
       .filter(event => {
         if (activeCategory && event.category !== activeCategory) return false;
         if (!searchTerm) return true;
+        const name = (event.name ?? '').toLowerCase();
+        const venue = (event.venue ?? '').toLowerCase();
+        const city = (event.location?.city ?? '').toLowerCase();
+        const description = (event.description ?? '').toLowerCase();
         return (
-          event.name.toLowerCase().includes(searchLower) ||
-          event.venue.toLowerCase().includes(searchLower) ||
-          event.location.city.toLowerCase().includes(searchLower) ||
-          event.description.toLowerCase().includes(searchLower)
+          name.includes(searchLower) ||
+          venue.includes(searchLower) ||
+          city.includes(searchLower) ||
+          description.includes(searchLower)
         );
       })
       .map(transformEventForCard);
