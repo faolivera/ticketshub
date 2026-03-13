@@ -29,24 +29,9 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">{t('footer.followUs')}</h3>
             <div className="flex gap-4">
+
               <a 
-                href="https://facebook.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Facebook className="w-6 h-6" />
-              </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Twitter className="w-6 h-6" />
-              </a>
-              <a 
-                href="https://instagram.com" 
+                href="https://www.instagram.com/ticketshubar/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"
@@ -54,7 +39,7 @@ export function Footer() {
                 <Instagram className="w-6 h-6" />
               </a>
               <a 
-                href="mailto:contact@ticketshub.com.ar"
+                href="mailto:soporte@ticketshub.com.ar"
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 <Mail className="w-6 h-6" />

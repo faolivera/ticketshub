@@ -7,3 +7,7 @@ export const METRIC_HTTP_REQUESTS_TOTAL = 'http_requests_total';
 export const METRIC_CRON_JOB_DURATION = 'cron_job_duration_milliseconds';
 export const METRIC_CRON_JOB_RUNS_TOTAL = 'cron_job_runs_total';
 export const METRIC_LOG_ERRORS_TOTAL = 'log_errors_total';
+export const METRIC_DB_QUERY_DURATION = 'db_query_duration_milliseconds';
+export const METRIC_PG_POOL_CONNECTIONS_TOTAL = 'pg_pool_connections_total';
+export const METRIC_PG_POOL_CONNECTIONS_IDLE = 'pg_pool_connections_idle';
+export const METRIC_PG_POOL_CONNECTIONS_WAITING = 'pg_pool_connections_waiting';
