@@ -44,12 +44,15 @@ export class HttpMetricsInterceptor implements NestInterceptor {
 
     const method = request.method ?? 'GET';
     const path = request.route?.path ?? request.path ?? request.url ?? 'unknown';
-
-    const endTimer = this.requestDuration.startTimer();
+    const startMs = Date.now();
 
     response.once('finish', () => {
       const statusClass = getStatusClass(response.statusCode);
-      endTimer({ method, path, status_class: statusClass });
+      const durationMs = Date.now() - startMs;
+      this.requestDuration.observe(
+        { method, path, status_class: statusClass },
+        durationMs,
+      );
       this.requestsTotal.inc({ method, path, status_class: statusClass });
     });
 

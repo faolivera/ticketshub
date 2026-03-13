@@ -23,7 +23,7 @@ export class CronMetricsService {
   ) {}
 
   async run<T>(jobName: string, fn: () => Promise<T>): Promise<T> {
-    const endTimer = this.jobDuration.startTimer({ job_name: jobName });
+    const startMs = Date.now();
     let success = true;
     try {
       const result = await fn();
@@ -32,7 +32,8 @@ export class CronMetricsService {
       success = false;
       throw err;
     } finally {
-      endTimer();
+      const durationMs = Date.now() - startMs;
+      this.jobDuration.observe({ job_name: jobName }, durationMs);
       this.jobRunsTotal.inc({ job_name: jobName, success: success ? 'true' : 'false' });
     }
   }

@@ -14,17 +14,19 @@ import {
 import { HttpMetricsInterceptor } from './http-metrics.interceptor';
 import { CronMetricsService } from './cron-metrics.service';
 
-const HTTP_DURATION_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10];
-const CRON_DURATION_BUCKETS = [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120];
+/** Buckets in ms: typical web API + Postgres (most requests < 1s, tail up to ~10s). Based on Prometheus default latency buckets. */
+const HTTP_DURATION_BUCKETS_MS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+/** Buckets in ms: scheduled jobs from ~100ms to 2 minutes. */
+const CRON_DURATION_BUCKETS_MS = [100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000, 120000];
 
 @Module({
   imports: [PrometheusModule],
   providers: [
     makeHistogramProvider({
       name: METRIC_HTTP_REQUEST_DURATION,
-      help: 'HTTP request duration in seconds',
+      help: 'HTTP request duration in milliseconds',
       labelNames: ['method', 'path', 'status_class'],
-      buckets: HTTP_DURATION_BUCKETS,
+      buckets: HTTP_DURATION_BUCKETS_MS,
     }),
     makeCounterProvider({
       name: METRIC_HTTP_REQUESTS_TOTAL,
@@ -33,9 +35,9 @@ const CRON_DURATION_BUCKETS = [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120];
     }),
     makeHistogramProvider({
       name: METRIC_CRON_JOB_DURATION,
-      help: 'Scheduled job execution duration in seconds',
+      help: 'Scheduled job execution duration in milliseconds',
       labelNames: ['job_name'],
-      buckets: CRON_DURATION_BUCKETS,
+      buckets: CRON_DURATION_BUCKETS_MS,
     }),
     makeCounterProvider({
       name: METRIC_CRON_JOB_RUNS_TOTAL,
