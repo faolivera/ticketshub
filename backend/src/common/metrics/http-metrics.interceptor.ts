@@ -14,19 +14,21 @@ import {
   METRIC_HTTP_REQUESTS_TOTAL,
 } from './metrics.constants';
 
-function getStatusClass(statusCode: number): string {
-  if (statusCode >= 500) return '5xx';
-  if (statusCode >= 400) return '4xx';
-  if (statusCode >= 300) return '3xx';
-  if (statusCode >= 200) return '2xx';
-  return 'other';
+/**
+ * Returns "2xx" for successful responses so they aggregate cleanly.
+ * For 3xx, 4xx, and 5xx the exact code is returned (e.g. "301", "404", "500")
+ * so they can be individually queried in Prometheus/Grafana.
+ */
+function getStatusLabel(statusCode: number): string {
+  if (statusCode >= 200 && statusCode < 300) return '2xx';
+  return String(statusCode);
 }
 
 /**
  * Interceptor that records per-endpoint HTTP metrics for Prometheus:
  * - Request duration (histogram)
  * - Request count (counter)
- * - Response status class 2xx, 3xx, 4xx, 5xx (counter labels)
+ * - Response status: "2xx" for successes, exact code for 3xx/4xx/5xx
  */
 @Injectable()
 export class HttpMetricsInterceptor implements NestInterceptor {
@@ -47,13 +49,13 @@ export class HttpMetricsInterceptor implements NestInterceptor {
     const startMs = Date.now();
 
     response.once('finish', () => {
-      const statusClass = getStatusClass(response.statusCode);
+      const status = getStatusLabel(response.statusCode);
       const durationMs = Date.now() - startMs;
       this.requestDuration.observe(
-        { method, path, status_class: statusClass },
+        { method, path, status },
         durationMs,
       );
-      this.requestsTotal.inc({ method, path, status_class: statusClass });
+      this.requestsTotal.inc({ method, path, status });
     });
 
     return next.handle();

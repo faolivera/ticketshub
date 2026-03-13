@@ -25,13 +25,13 @@ const CRON_DURATION_BUCKETS_MS = [100, 250, 500, 1000, 2500, 5000, 10000, 30000,
     makeHistogramProvider({
       name: METRIC_HTTP_REQUEST_DURATION,
       help: 'HTTP request duration in milliseconds',
-      labelNames: ['method', 'path', 'status_class'],
+      labelNames: ['method', 'path', 'status'],
       buckets: HTTP_DURATION_BUCKETS_MS,
     }),
     makeCounterProvider({
       name: METRIC_HTTP_REQUESTS_TOTAL,
       help: 'Total HTTP requests',
-      labelNames: ['method', 'path', 'status_class'],
+      labelNames: ['method', 'path', 'status'],
     }),
     makeHistogramProvider({
       name: METRIC_CRON_JOB_DURATION,
