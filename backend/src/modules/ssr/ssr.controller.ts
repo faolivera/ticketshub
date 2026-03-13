@@ -82,7 +82,7 @@ export class SsrController {
       SSR_STATIC_META.login.description,
       '/login',
     );
-    const html = await this.ssrService.getIndexHtml(meta, { configScript: true });
+    const html = await this.ssrService.getIndexHtml(meta);
     res.send(html);
   }
 

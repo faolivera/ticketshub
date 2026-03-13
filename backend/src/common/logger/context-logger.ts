@@ -1,6 +1,27 @@
 import { Logger } from '@nestjs/common';
+import { Counter, register } from 'prom-client';
 import { Ctx } from '../types/context';
 import { isLogLevelEnabled } from './log-level-resolver';
+
+const LOG_ERRORS_METRIC = 'log_errors_total';
+
+let logErrorsCounter: Counter | undefined;
+
+function getLogErrorsCounter(): Counter {
+  if (!logErrorsCounter) {
+    try {
+      logErrorsCounter = new Counter({
+        name: LOG_ERRORS_METRIC,
+        help: 'Total number of error and fatal log entries emitted by the application',
+        labelNames: ['level', 'context'],
+      });
+    } catch {
+      // Already registered (e.g. across hot reloads or test runs); reuse from registry.
+      logErrorsCounter = register.getSingleMetric(LOG_ERRORS_METRIC) as Counter;
+    }
+  }
+  return logErrorsCounter;
+}
 
 /**
  * Wrapper around NestJS Logger that includes context information in log messages.
@@ -62,6 +83,7 @@ export class ContextLogger {
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.error(formattedMessage, ...optionalParams);
+    getLogErrorsCounter().inc({ level: 'error', context: this.contextName });
   }
 
   /**
@@ -110,5 +132,6 @@ export class ContextLogger {
     const contextPrefix = this.formatContext(ctx);
     const formattedMessage = `${contextPrefix}${message}`;
     this.logger.fatal(formattedMessage, ...optionalParams);
+    getLogErrorsCounter().inc({ level: 'fatal', context: this.contextName });
   }
 }

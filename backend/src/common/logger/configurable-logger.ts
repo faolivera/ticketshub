@@ -1,5 +1,12 @@
 import { ConsoleLogger } from '@nestjs/common';
+import { Counter, register } from 'prom-client';
 import { isLogLevelEnabled } from './log-level-resolver';
+
+const LOG_ERRORS_METRIC = 'log_errors_total';
+
+function getLogErrorsCounter(): Counter {
+  return register.getSingleMetric(LOG_ERRORS_METRIC) as Counter;
+}
 
 /**
  * Nest Logger that respects global and per-context log levels from config.
@@ -19,6 +26,7 @@ export class ConfigurableLogger extends ConsoleLogger {
   error(message: any, ...optionalParams: any[]): void {
     if (!isLogLevelEnabled(this.resolveContext(), 'error')) return;
     super.error(message, ...optionalParams);
+    getLogErrorsCounter()?.inc({ level: 'error', context: this.resolveContext() });
   }
 
   warn(message: any, ...optionalParams: any[]): void {
@@ -39,5 +47,6 @@ export class ConfigurableLogger extends ConsoleLogger {
   fatal(message: any, ...optionalParams: any[]): void {
     if (!isLogLevelEnabled(this.resolveContext(), 'fatal')) return;
     super.fatal(message, ...optionalParams);
+    getLogErrorsCounter()?.inc({ level: 'fatal', context: this.resolveContext() });
   }
 }

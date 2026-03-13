@@ -9,7 +9,7 @@
     "install:frontend": "cd frontend && npm install",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "grafana": "docker compose -f observability/local/docker-compose.yml up -d",
+    "grafana": "docker-compose -f observability/local/docker-compose.yml up -d",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && NODE_ENV=development npm run start:dev",
     "dev:frontend": "cd frontend && npm run dev",

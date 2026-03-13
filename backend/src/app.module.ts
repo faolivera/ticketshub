@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { MetricsModule } from './common/metrics/metrics.module';
+import configuration from './config/configuration';
 import { TransactionManagerModule } from './common/database';
 import { DistributedLockModule } from './common/locks';
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
-import configuration from './config/configuration';
 import { OTPModule } from './modules/otp/otp.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { EventsModule } from './modules/events/events.module';
@@ -40,14 +40,21 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     // Scheduling support for cron jobs
     ScheduleModule.forRoot(),
 
-    // Global modules (must be first)
-    PrometheusModule.register(),
-    MetricsModule,
+    // Global modules (must be first). ConfigModule before PrometheusModule so ConfigService is available for defaultLabels.
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
       ignoreEnvFile: true,
     }),
+    PrometheusModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        defaultLabels: {
+          environment: configService.get<string>('app.environment') ?? 'dev',
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    MetricsModule,
     PrismaModule,
     TransactionManagerModule,
     DistributedLockModule,

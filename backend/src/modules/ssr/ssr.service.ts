@@ -57,7 +57,7 @@ export class SsrService {
    * Read index.html from client build path, replace meta placeholders, return HTML.
    * Injects Google Analytics (gtag) script only when app.environment is 'prod'.
    */
-  async getIndexHtml(meta: PageMetaDto, options?: { configScript?: boolean }): Promise<string> {
+  async getIndexHtml(meta: PageMetaDto): Promise<string> {
     const basePath = this.getClientBuildPath();
     const indexPath = path.join(basePath, 'index.html');
     const raw = await readFile(indexPath, 'utf-8');
@@ -67,7 +67,7 @@ export class SsrService {
     const ogImage = escapeAttr(meta.ogImage);
     const ogType = escapeAttr(meta.ogType || 'website');
     const gaScript = this.buildGaScript();
-    const configScript = options?.configScript ? this.buildConfigScript() : '';
+    const configScript = this.buildConfigScript();
     return raw
       .replace(new RegExp(PLACEHOLDERS.PAGE_TITLE, 'g'), title)
       .replace(new RegExp(PLACEHOLDERS.PAGE_DESCRIPTION, 'g'), description)
