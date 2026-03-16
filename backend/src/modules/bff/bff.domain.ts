@@ -1,6 +1,6 @@
 import type { Image } from '../images/images.domain';
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
-import type { EventWithDatesResponse } from '../events/events.api';
+import type { PublicListEventItem } from '../events/events.api';
 
 export type SellerReviewType = 'positive' | 'neutral' | 'negative';
 
@@ -56,9 +56,9 @@ export interface ListingWithSeller extends TicketListingWithEvent {
   sellerReputation: SellerReputation;
 }
 
-/** Combined event page data: event details + enriched listings */
+/** Combined event page data: event (public shape) + enriched listings */
 export interface EventPageData {
-  event: EventWithDatesResponse;
+  event: PublicListEventItem;
   listings: ListingWithSeller[];
 }
 

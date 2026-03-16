@@ -1,4 +1,4 @@
-import type { EventWithDates, EventDate, EventSection } from '@/api/types';
+import type { PublicListEventItem, EventDate, EventSection } from '@/api/types';
 
 export type WizardStepIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -43,7 +43,7 @@ export const defaultWizardFormState: WizardFormState = {
 };
 
 export interface WizardData {
-  event: EventWithDates | null;
+  event: PublicListEventItem | null;
   selectedDate: EventDate | null;
   selectedSection: EventSection | null;
   form: WizardFormState;

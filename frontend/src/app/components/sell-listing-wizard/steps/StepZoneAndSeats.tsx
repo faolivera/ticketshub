@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Minus, Trash2 } from 'lucide-react';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
-import type { EventWithDates, EventSection } from '@/api/types';
+import type { PublicListEventItem, EventSection } from '@/api/types';
 import { EventSectionStatus, SeatingType } from '@/api/types';
 import type { WizardFormState, NumberedSeatInput } from '../types';
 import { cn } from '@/app/components/ui/utils';
 
 interface StepZoneAndSeatsProps {
-  event: EventWithDates;
+  event: PublicListEventItem;
   form: WizardFormState;
   onFormChange: (patch: Partial<WizardFormState>) => void;
   onCreateSection: () => void;

@@ -10,7 +10,7 @@ import { EventBanner } from '../components/EventBanner';
 import { TicketCard } from '../components/TicketCard';
 import { TicketFilters } from '../components/TicketFilters';
 import type { TransformedTicket } from '../components/TicketCard';
-import type { EventWithDates, ListingWithSeller } from '../../api/types';
+import type { PublicListEventItem, ListingWithSeller } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
@@ -26,7 +26,7 @@ import { formatDate, formatTime, formatDateTime, formatDateTimeShort } from '@/l
 /**
  * Transform BFF listing (with seller info) to UI format
  */
-function transformListing(listing: ListingWithSeller, eventDates: EventWithDates['dates']): TransformedTicket {
+function transformListing(listing: ListingWithSeller, eventDates: PublicListEventItem['dates']): TransformedTicket {
   const eventDate = eventDates.find(d => d.id === listing.eventDateId);
   const dateObj = eventDate ? new Date(eventDate.date) : new Date(listing.eventDate);
 
@@ -61,7 +61,7 @@ export function EventTickets() {
   const { eventSlug } = useParams<{ eventSlug: string }>();
   const { user } = useUser();
   
-  const [event, setEvent] = useState<EventWithDates | null>(null);
+  const [event, setEvent] = useState<PublicListEventItem | null>(null);
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

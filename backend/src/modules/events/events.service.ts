@@ -43,6 +43,7 @@ import type {
   AddEventSectionRequest,
   ListEventsQuery,
   EventWithDatesResponse,
+  PublicListEventItem,
   UploadEventBannerResponse,
   GetEventBannersResponse,
   DeleteEventBannerResponse,
@@ -855,6 +856,45 @@ export class EventsService {
         return result;
       }),
     );
+  }
+
+  /**
+   * Map full event to public shape (no sensitive or internal fields).
+   * Used by GET /api/events (list), GET /api/events/:id, and BFF event-page.
+   */
+  toPublicEventItem(
+    event: EventWithDatesResponse,
+    options?: { includeStatus?: boolean },
+  ): PublicListEventItem {
+    return {
+      id: event.id,
+      slug: event.slug,
+      name: event.name,
+      category: event.category,
+      venue: event.venue,
+      location: {
+        city: event.location?.city ?? '',
+        countryCode: event.location?.countryCode ?? '',
+      },
+      createdAt:
+        event.createdAt instanceof Date
+          ? event.createdAt.toISOString()
+          : String(event.createdAt),
+      ...(options?.includeStatus !== false && { status: event.status }),
+      bannerUrls: event.bannerUrls,
+      images: (event.images ?? []).map((img) => ({ src: img.src })),
+      dates: (event.dates ?? []).map((d) => ({
+        id: d.id,
+        date: d.date instanceof Date ? d.date.toISOString() : String(d.date),
+        status: d.status,
+      })),
+      sections: (event.sections ?? []).map((s) => ({
+        id: s.id,
+        name: s.name,
+        status: s.status,
+        seatingType: s.seatingType,
+      })),
+    };
   }
 
   private resolveImages(

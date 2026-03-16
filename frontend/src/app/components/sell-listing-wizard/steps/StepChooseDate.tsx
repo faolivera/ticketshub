@@ -2,12 +2,12 @@ import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, Plus, X } from 'lucide-react';
 import { formatDateTime } from '@/lib/format-date';
-import type { EventWithDates, EventDate } from '@/api/types';
+import type { PublicListEventItem, EventDate } from '@/api/types';
 import { EventDateStatus } from '@/api/types';
 import { cn } from '@/app/components/ui/utils';
 
 interface StepChooseDateProps {
-  event: EventWithDates;
+  event: PublicListEventItem;
   selectedDateId: string;
   onSelect: (date: EventDate) => void;
   onAddDate: () => void;

@@ -81,8 +81,8 @@ export type GetEventResponse = EventWithDatesResponse;
 export type ListEventsResponse = EventWithDatesResponse[];
 
 /**
- * Public list API: minimal, no sensitive or unused fields.
- * Used only by GET /api/events (landing).
+ * Single public event shape: non-sensitive fields only.
+ * Reused by GET /api/events (list), GET /api/events/:id, GET /api/event-page/:slug.
  */
 export interface PublicListEventLocation {
   city: string;
@@ -90,13 +90,16 @@ export interface PublicListEventLocation {
 }
 
 export interface PublicListEventDate {
+  id: string;
   date: string;
   status: string;
 }
 
 export interface PublicListEventSection {
+  id: string;
   name: string;
   status: string;
+  seatingType: SeatingType;
 }
 
 export interface PublicListEventItem {
@@ -107,6 +110,8 @@ export interface PublicListEventItem {
   venue: string;
   location: PublicListEventLocation;
   createdAt: string;
+  /** Omitted in list response; present for single-event and event-page */
+  status?: string;
   bannerUrls?: EventBannerUrls;
   images: Array<{ src: string }>;
   dates: PublicListEventDate[];

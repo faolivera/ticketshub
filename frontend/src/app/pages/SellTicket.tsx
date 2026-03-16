@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { EmptyState } from '@/app/components/EmptyState';
 import { eventsService } from '@/api/services/events.service';
-import type { EventWithDates } from '@/api/types';
+import type { PublicListEventItem } from '@/api/types';
 import { EventSelectionStep, TicketDetailsStep } from '@/app/components/sell-ticket';
 
 type WizardStep = 'select-event' | 'ticket-details';
@@ -19,7 +19,7 @@ export function SellTicket() {
   const { user, isAuthenticated, canSell } = useUser();
 
   const [step, setStep] = useState<WizardStep>('select-event');
-  const [selectedEvent, setSelectedEvent] = useState<EventWithDates | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<PublicListEventItem | null>(null);
   const [isLoadingEvent, setIsLoadingEvent] = useState(false);
 
   useEffect(() => {

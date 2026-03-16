@@ -26,7 +26,7 @@ import {
   EventDateStatus,
   EventSectionStatus,
 } from '@/api/types';
-import type { EventWithDates, EventDate, EventSection } from '@/api/types';
+import type { PublicListEventItem, EventDate, EventSection } from '@/api/types';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { SellerRiskRestrictionDisclaimer } from '@/app/components/SellerRiskRestrictionDisclaimer';
 import type { ApiError } from '@/api/client';
@@ -56,7 +56,7 @@ interface TicketListingForm {
 }
 
 interface TicketDetailsStepProps {
-  event: EventWithDates;
+  event: PublicListEventItem;
   onBack: () => void;
   preselectedDateISO?: string;
 }
@@ -83,7 +83,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
   );
 
   const [isPendingListing, setIsPendingListing] = useState(false);
-  const [currentEvent, setCurrentEvent] = useState<EventWithDates>(event);
+  const [currentEvent, setCurrentEvent] = useState<PublicListEventItem>(event);
   const [sellerPlatformFeePercentage, setSellerPlatformFeePercentage] = useState<number | null>(null);
   const [activePromotion, setActivePromotion] = useState<{
     id: string;

@@ -721,6 +721,17 @@ export class AdminService {
   }
 
   /**
+   * Get full event by ID (all fields, for admin only).
+   * Public GET /api/events/:id returns a reduced, non-sensitive shape.
+   */
+  async getEvent(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<import('../events/events.api').EventWithDatesResponse> {
+    return this.eventsService.getEventById(ctx, eventId);
+  }
+
+  /**
    * Get all ticket listings for a specific event.
    * Returns aggregated listing data with seller info, event date, and section.
    */

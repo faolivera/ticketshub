@@ -240,6 +240,17 @@ export const adminService = {
   /**
    * Get all ticket listings for a specific event
    */
+  /**
+   * Get full event by ID (all fields, admin only).
+   * Public GET /api/events/:id returns a reduced, non-sensitive shape.
+   */
+  async getEvent(eventId: string): Promise<import('../types/events').EventWithDates> {
+    const response = await apiClient.get<import('../types/events').EventWithDates>(
+      `/admin/events/${eventId}`
+    );
+    return response.data;
+  },
+
   async getEventListings(eventId: string): Promise<AdminEventListingsResponse> {
     const response = await apiClient.get<AdminEventListingsResponse>(
       `/admin/events/${eventId}/listings`

@@ -38,7 +38,6 @@ import type {
   AdminEventListingsResponse,
 } from '../../../../api/types/admin';
 import type { EventWithDates, EventDate } from '../../../../api/types/events';
-import { eventsService } from '../../../../api/services/events.service';
 import { EditEventModal } from './EditEventModal';
 
 const ITEMS_PER_PAGE = 20;
@@ -103,7 +102,7 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
   const handleOpenEditModal = async (eventId: string) => {
     try {
       setActionLoading(eventId);
-      const eventWithDates = await eventsService.getEvent(eventId);
+      const eventWithDates = await adminService.getEvent(eventId);
       setEditingEvent(eventWithDates);
       setEditingEventDates(eventWithDates.dates || []);
       setIsEditModalOpen(true);

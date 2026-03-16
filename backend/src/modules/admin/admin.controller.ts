@@ -74,6 +74,7 @@ import type {
   AdminPostEventsRankingQueueRequest,
   AdminPostEventsRankingQueueResponse,
 } from './admin.api';
+import type { EventWithDatesResponse } from '../events/events.api';
 import {
   AdminPendingEventsResponseSchema,
   AdminUpdateEventResponseSchema,
@@ -387,6 +388,19 @@ export class AdminController {
     @Param('eventId') eventId: string,
   ): Promise<ApiResponse<AdminEventListingsResponse>> {
     const data = await this.adminService.getEventListings(ctx, eventId);
+    return { success: true, data };
+  }
+
+  /**
+   * Get full event by ID (all fields). Use for admin/edit flows.
+   * Public GET /api/events/:id returns a reduced, non-sensitive shape only.
+   */
+  @Get('events/:eventId')
+  async getEvent(
+    @Context() ctx: Ctx,
+    @Param('eventId') eventId: string,
+  ): Promise<ApiResponse<EventWithDatesResponse>> {
+    const data = await this.adminService.getEvent(ctx, eventId);
     return { success: true, data };
   }
 

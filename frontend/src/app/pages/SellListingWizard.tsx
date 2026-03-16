@@ -23,7 +23,7 @@ import {
   type WizardStepIndex,
   type WizardFormState,
 } from '@/app/components/sell-listing-wizard';
-import type { EventWithDates, EventDate, EventSection } from '@/api/types';
+import type { PublicListEventItem, EventDate, EventSection } from '@/api/types';
 import { SeatingType } from '@/api/types';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -44,7 +44,7 @@ export function SellListingWizard() {
   const isMobile = useIsMobile();
 
   const [currentStep, setCurrentStep] = useState<WizardStepIndex>(0);
-  const [event, setEvent] = useState<EventWithDates | null>(null);
+  const [event, setEvent] = useState<PublicListEventItem | null>(null);
   const [form, setForm] = useState<WizardFormState>(defaultWizardFormState);
   const [returnToReview, setReturnToReview] = useState(false);
 

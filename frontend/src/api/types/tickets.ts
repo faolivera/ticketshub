@@ -203,9 +203,9 @@ export interface ListingWithSeller extends TicketListingWithEvent {
   sellerReputation: SellerReputation;
 }
 
-/** Combined event page data from BFF */
+/** Combined event page data from BFF (event is public shape) */
 export interface EventPageData {
-  event: import('./events').EventWithDates;
+  event: import('./events').PublicListEventItem;
   listings: ListingWithSeller[];
 }
 

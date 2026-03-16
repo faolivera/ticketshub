@@ -81,8 +81,11 @@ export class BffService {
    * Get event page data by slug: event details + enriched listings in a single call.
    */
   async getEventPageData(ctx: Ctx, eventSlug: string): Promise<EventPageData> {
-    const event = await this.eventsService.getEventBySlug(ctx, eventSlug);
-    const listings = await this.getEventListings(ctx, event.id);
+    const fullEvent = await this.eventsService.getEventBySlug(ctx, eventSlug);
+    const event = this.eventsService.toPublicEventItem(fullEvent, {
+      includeStatus: true,
+    });
+    const listings = await this.getEventListings(ctx, fullEvent.id);
     return { event, listings };
   }
 

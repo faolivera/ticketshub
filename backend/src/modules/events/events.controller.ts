@@ -46,7 +46,6 @@ import type {
   GetEventBannersResponse,
   DeleteEventBannerResponse,
   EventSelectResponse,
-  EventWithDatesResponse,
 } from './events.api';
 import {
   EventCategory,
@@ -56,31 +55,6 @@ import {
   type EventBannerMimeType,
 } from './events.domain';
 import type { EventSection } from './events.domain';
-
-function toPublicListEventItem(event: EventWithDatesResponse): PublicListEventItem {
-  return {
-    id: event.id,
-    slug: event.slug,
-    name: event.name,
-    category: event.category,
-    venue: event.venue,
-    location: {
-      city: event.location?.city ?? '',
-      countryCode: event.location?.countryCode ?? '',
-    },
-    createdAt:
-      event.createdAt instanceof Date
-        ? event.createdAt.toISOString()
-        : String(event.createdAt),
-    bannerUrls: event.bannerUrls,
-    images: (event.images ?? []).map((img) => ({ src: img.src })),
-    dates: (event.dates ?? []).map((d) => ({
-      date: d.date instanceof Date ? d.date.toISOString() : String(d.date),
-      status: d.status,
-    })),
-    sections: (event.sections ?? []).map((s) => ({ name: s.name, status: s.status })),
-  };
-}
 
 @Controller('api/events')
 export class EventsController {
@@ -129,7 +103,9 @@ export class EventsController {
       offset: offset ? parseInt(offset, 10) : undefined,
     };
     const events = await this.eventsService.listEvents(ctx, query, false);
-    const data: ListEventsPublicResponse = events.map(toPublicListEventItem);
+    const data: ListEventsPublicResponse = events.map((e) =>
+      this.eventsService.toPublicEventItem(e, { includeStatus: false }),
+    );
     return { success: true, data };
   }
 
@@ -153,15 +129,19 @@ export class EventsController {
   }
 
   /**
-   * Get event by ID
+   * Get event by ID (public shape only; no sensitive data).
+   * For full event data (admin), use GET /api/admin/events/:eventId.
    */
   @Get(':id')
   async getEvent(
     @Context() ctx: Ctx,
     @Param('id') id: string,
-  ): Promise<ApiResponse<GetEventResponse>> {
+  ): Promise<ApiResponse<PublicListEventItem>> {
     const event = await this.eventsService.getEventById(ctx, id);
-    return { success: true, data: event };
+    const data = this.eventsService.toPublicEventItem(event, {
+      includeStatus: true,
+    });
+    return { success: true, data };
   }
 
   /**

@@ -216,9 +216,10 @@ export interface AddEventSectionRequest {
 export type AddEventSectionResponse = EventSection;
 
 /**
- * Response for getting event details
+ * Response for GET /api/events/:id (public shape only).
+ * For full event (admin), use GET /api/admin/events/:eventId.
  */
-export type GetEventResponse = EventWithDates;
+export type GetEventResponse = PublicListEventItem;
 
 /**
  * Response for listing events (full; used by GET /events/my/events)
@@ -226,7 +227,7 @@ export type GetEventResponse = EventWithDates;
 export type ListEventsResponse = EventWithDates[];
 
 /**
- * Public list API (GET /events): minimal, no sensitive or unused fields.
+ * Single public event shape (non-sensitive). Used by GET /events (list), GET /events/:id, GET /event-page/:slug.
  */
 export interface PublicListEventLocation {
   city: string;
@@ -234,13 +235,16 @@ export interface PublicListEventLocation {
 }
 
 export interface PublicListEventDate {
+  id: string;
   date: string;
   status: string;
 }
 
 export interface PublicListEventSection {
+  id: string;
   name: string;
   status: string;
+  seatingType: SeatingType;
 }
 
 export interface PublicListEventItem {
@@ -251,6 +255,8 @@ export interface PublicListEventItem {
   venue: string;
   location: PublicListEventLocation;
   createdAt: string;
+  /** Omitted in list; present for single-event and event-page */
+  status?: string;
   /** Optional; used for client-side search filter when present */
   description?: string;
   bannerUrls?: EventBannerUrls;

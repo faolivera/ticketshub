@@ -2,12 +2,12 @@ import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/lib/format-date';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
-import type { EventWithDates, EventDate, EventSection } from '@/api/types';
+import type { PublicListEventItem, EventDate, EventSection } from '@/api/types';
 import type { WizardFormState } from '../types';
 import { cn } from '@/app/components/ui/utils';
 
 interface StepReviewAndPublishProps {
-  event: EventWithDates;
+  event: PublicListEventItem;
   selectedDate: EventDate | null;
   selectedSection: EventSection | null;
   form: WizardFormState;

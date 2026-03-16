@@ -179,7 +179,7 @@ export function EventManagement() {
   const handleOpenEditModal = async (eventId: string) => {
     try {
       setActionLoading(eventId);
-      const eventWithDates = await eventsService.getEvent(eventId);
+      const eventWithDates = await adminService.getEvent(eventId);
       setEditingEvent(eventWithDates);
       setEditingEventDates(eventWithDates.dates || []);
       setIsEditModalOpen(true);
