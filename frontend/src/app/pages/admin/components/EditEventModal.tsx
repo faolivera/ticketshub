@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Checkbox } from '../../../components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
 import { Badge } from '../../../components/ui/badge';
 import {
@@ -110,6 +111,7 @@ export function EditEventModal({
   });
   const [dates, setDates] = useState<DateFormState[]>([]);
   const [sections, setSections] = useState<SectionFormState[]>([]);
+  const [isPopular, setIsPopular] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sectionActionLoading, setSectionActionLoading] = useState<string | null>(null);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -160,6 +162,7 @@ export function EditEventModal({
           isDeleted: false,
         }))
       );
+      setIsPopular(event.isPopular ?? false);
       setBannerUrls(event.bannerUrls || {});
       setError(null);
       setWarnings([]);
@@ -383,6 +386,7 @@ export function EditEventModal({
         category,
         venue,
         location,
+        isPopular,
         dates: datesToUpdate,
         datesToDelete: datesToDelete.length > 0 ? datesToDelete : undefined,
       };
@@ -523,6 +527,17 @@ export function EditEventModal({
                     value={venue}
                     onChange={(e) => setVenue(e.target.value)}
                   />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isPopular"
+                    checked={isPopular}
+                    onCheckedChange={(checked) => setIsPopular(checked === true)}
+                  />
+                  <Label htmlFor="isPopular" className="cursor-pointer font-normal">
+                    {t('admin.events.edit.isPopular')}
+                  </Label>
                 </div>
 
                 <div className="space-y-3">

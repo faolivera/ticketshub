@@ -150,6 +150,7 @@ export interface AdminUpdateEventRequest {
   venue?: string;
   location?: AdminEventAddress;
   imageIds?: string[];
+  isPopular?: boolean;
   dates?: AdminEventDateUpdate[];
   datesToDelete?: string[]; // IDs of dates to remove
 }
@@ -167,6 +168,7 @@ export interface AdminUpdateEventResponse {
     location: AdminEventAddress;
     imageIds: string[];
     status: string;
+    isPopular: boolean;
     createdBy: string;
     approvedBy?: string;
     createdAt: Date;
@@ -1027,4 +1029,30 @@ export interface ImportEventsResultResponse {
   created: number;
   failed: number;
   results: ImportEventResultItem[];
+}
+
+// ----- Events ranking (score) config -----
+
+/**
+ * Response for GET /api/admin/events-ranking/config
+ */
+export interface AdminGetEventsRankingConfigResponse {
+  weightActiveListings: number;
+  weightTransactions: number;
+  weightProximity: number;
+  weightPopular: number;
+  jobIntervalMinutes: number;
+  lastRunAt: string | null;
+  updatedAt: string;
+}
+
+/**
+ * Request body for PATCH /api/admin/events-ranking/config. All fields optional.
+ */
+export interface AdminPatchEventsRankingConfigRequest {
+  weightActiveListings?: number;
+  weightTransactions?: number;
+  weightProximity?: number;
+  weightPopular?: number;
+  jobIntervalMinutes?: number;
 }

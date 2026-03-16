@@ -136,6 +136,7 @@ export interface AdminUpdateEventRequest {
   venue?: string;
   location?: Address;
   imageIds?: string[];
+  isPopular?: boolean;
   dates?: AdminEventDateUpdate[];
   datesToDelete?: string[];
 }
@@ -684,6 +685,30 @@ export interface UpdatePlatformConfigRequest {
     claims?: Partial<RiskEngineClaimsConfig>;
   };
   exchangeRates?: Partial<ExchangeRatesConfig>;
+}
+
+/**
+ * Response for GET /api/admin/events-ranking/config
+ */
+export interface AdminGetEventsRankingConfigResponse {
+  weightActiveListings: number;
+  weightTransactions: number;
+  weightProximity: number;
+  weightPopular: number;
+  jobIntervalMinutes: number;
+  lastRunAt: string | null;
+  updatedAt: string;
+}
+
+/**
+ * Request body for PATCH /api/admin/events-ranking/config. All fields optional.
+ */
+export interface AdminPatchEventsRankingConfigRequest {
+  weightActiveListings?: number;
+  weightTransactions?: number;
+  weightProximity?: number;
+  weightPopular?: number;
+  jobIntervalMinutes?: number;
 }
 
 // === Admin Promotions (GET/POST /admin/promotions, PATCH /admin/promotions/:id/status) ===

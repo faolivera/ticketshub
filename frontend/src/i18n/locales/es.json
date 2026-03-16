@@ -1549,6 +1549,7 @@
       "identityVerifications": "Verificación de Identidad",
       "notifications": "Notificaciones",
       "platformConfig": "Configuración de Plataforma",
+      "eventsScore": "Puntuación de eventos",
       "promotions": "Promociones",
       "supportTickets": "Tickets de soporte"
     },
@@ -1782,6 +1783,27 @@
         "usdToArsBetween": "El tipo de cambio USD a ARS debe estar entre 1 y 1000000."
       }
     },
+    "eventsScore": {
+      "title": "Puntuación de eventos",
+      "description": "Configura los pesos del ranking y la cadencia del job que recalcula la puntuación. Los eventos con entradas publicadas se puntúan por listados activos, transacciones completadas y proximidad a la fecha.",
+      "loading": "Cargando configuración…",
+      "weightsTitle": "Pesos del score",
+      "weightsDescription": "Peso de cada componente del ranking. Valores más altos dan más importancia a ese componente.",
+      "weightActiveListings": "Peso: tiene listados activos (0 o 1)",
+      "weightTransactions": "Peso: cantidad de transacciones completadas",
+      "weightProximity": "Peso: proximidad a la próxima fecha del evento",
+      "weightPopular": "Peso: popular (marcado por admin)",
+      "jobTitle": "Job de puntuación",
+      "jobDescription": "El job procesa la cola de eventos que requieren puntuación. Se ejecuta cada minuto pero solo hace el trabajo cuando ha pasado el intervalo desde la última ejecución.",
+      "jobIntervalMinutes": "Intervalo (minutos)",
+      "jobIntervalHint": "Entre {{min}} y {{max}} minutos.",
+      "lastRunAt": "Última ejecución",
+      "configUpdatedAt": "Config actualizada",
+      "save": "Guardar configuración",
+      "saving": "Guardando…",
+      "saveSuccess": "Configuración guardada.",
+      "validationRequired": "Ingresá al menos un valor válido para guardar."
+    },
     "dashboard": {
       "title": "Panel Principal",
       "subtitle": "Resumen de tus tareas de administración y métricas de la plataforma",
@@ -1960,6 +1982,7 @@
         "description": "Descripción",
         "category": "Categoría",
         "venue": "Recinto",
+        "isPopular": "Evento popular",
         "location": "Ubicación",
         "street": "Calle",
         "city": "Ciudad",

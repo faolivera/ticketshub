@@ -1550,6 +1550,7 @@
       "identityVerifications": "Identity Verification",
       "notifications": "Notifications",
       "platformConfig": "Platform Settings",
+      "eventsScore": "Events Score",
       "promotions": "Promotions",
       "supportTickets": "Support Tickets"
     },
@@ -1783,6 +1784,27 @@
         "usdToArsBetween": "USD to ARS rate must be between 1 and 1000000."
       }
     },
+    "eventsScore": {
+      "title": "Events Score",
+      "description": "Configure ranking weights and the job cadence for recomputing event scores. Events with published listings are scored by active listings, completed transactions, and proximity to event date.",
+      "loading": "Loading config…",
+      "weightsTitle": "Score weights",
+      "weightsDescription": "Weights for each component of the ranking score. Higher values give more importance to that component.",
+      "weightActiveListings": "Weight: has active listings (0 or 1)",
+      "weightTransactions": "Weight: completed transactions count",
+      "weightProximity": "Weight: proximity to next event date",
+      "weightPopular": "Weight: popular (admin-set)",
+      "jobTitle": "Scoring job",
+      "jobDescription": "The job processes the queue of events that need scoring. It runs every minute but only executes when the interval has passed since the last run.",
+      "jobIntervalMinutes": "Interval (minutes)",
+      "jobIntervalHint": "Between {{min}} and {{max}} minutes.",
+      "lastRunAt": "Last run",
+      "configUpdatedAt": "Config updated",
+      "save": "Save config",
+      "saving": "Saving…",
+      "saveSuccess": "Config saved.",
+      "validationRequired": "Please enter at least one valid value to save."
+    },
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Overview of your admin tasks and platform metrics",
@@ -1961,6 +1983,7 @@
         "description": "Description",
         "category": "Category",
         "venue": "Venue",
+        "isPopular": "Popular event",
         "location": "Location",
         "street": "Street",
         "city": "City",

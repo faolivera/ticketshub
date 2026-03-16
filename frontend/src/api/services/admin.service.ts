@@ -49,6 +49,8 @@ import type {
   ImportEventsPreviewResponse,
   ImportEventsValidationErrorResponse,
   ImportEventsResultResponse,
+  AdminGetEventsRankingConfigResponse,
+  AdminPatchEventsRankingConfigRequest,
 } from '../types/admin';
 
 /**
@@ -477,6 +479,31 @@ export const adminService = {
   ): Promise<PlatformConfig> {
     const response = await apiClient.patch<PlatformConfig>(
       '/admin/config/platform',
+      data
+    );
+    return response.data;
+  },
+
+  // === Events ranking config (admin only) ===
+
+  /**
+   * Get event ranking config (weights and job cadence).
+   */
+  async getEventsRankingConfig(): Promise<AdminGetEventsRankingConfigResponse> {
+    const response = await apiClient.get<AdminGetEventsRankingConfigResponse>(
+      '/admin/events-ranking/config'
+    );
+    return response.data;
+  },
+
+  /**
+   * Update event ranking config.
+   */
+  async patchEventsRankingConfig(
+    data: AdminPatchEventsRankingConfigRequest
+  ): Promise<AdminGetEventsRankingConfigResponse> {
+    const response = await apiClient.patch<AdminGetEventsRankingConfigResponse>(
+      '/admin/events-ranking/config',
       data
     );
     return response.data;

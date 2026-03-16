@@ -14,6 +14,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { PaymentMethodsService } from '../payments/payment-methods.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventsService } from '../events/events.service';
+import { EventScoringService } from '../event-scoring/event-scoring.service';
 import {
   TICKETS_REPOSITORY,
   type ITicketsRepository,
@@ -126,6 +127,8 @@ export class AdminService {
     private readonly prisma: PrismaService,
     @Inject(SupportService)
     private readonly supportService: SupportService,
+    @Inject(EventScoringService)
+    private readonly eventScoringService: EventScoringService,
   ) {}
 
   private static readonly USER_SEARCH_LIMIT = 20;
@@ -621,6 +624,10 @@ export class AdminService {
       data,
       adminId,
     );
+
+    if (data.isPopular !== undefined) {
+      await this.eventScoringService.requestScoring(ctx, eventId);
+    }
 
     this.logger.log(
       ctx,

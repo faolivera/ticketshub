@@ -1399,6 +1399,19 @@ export class TransactionsService {
   }
 
   /**
+   * Get completed transaction count per event (for event ranking). Returns map eventId -> count.
+   */
+  async getCompletedTransactionCountByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<Map<string, number>> {
+    return this.transactionsRepository.getCompletedTransactionCountByEventIds(
+      ctx,
+      eventIds,
+    );
+  }
+
+  /**
    * Mark transaction as disputed
    */
   async markDisputed(

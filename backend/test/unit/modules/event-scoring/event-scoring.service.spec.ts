@@ -1,0 +1,281 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import type { Ctx } from '../../../../src/common/types/context';
+import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
+import { EventScoringRepository } from '../../../../src/modules/event-scoring/event-scoring.repository';
+import { EventsService } from '../../../../src/modules/events/events.service';
+import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
+
+const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
+
+describe('EventScoringService', () => {
+  let service: EventScoringService;
+  let repository: jest.Mocked<EventScoringRepository>;
+  let eventsService: jest.Mocked<EventsService>;
+  let transactionsService: jest.Mocked<TransactionsService>;
+
+  beforeEach(async () => {
+    const mockRepository = {
+      enqueueEvent: jest.fn(),
+      getPendingEventIds: jest.fn(),
+      removeFromQueue: jest.fn(),
+      getConfig: jest.fn(),
+      updateConfig: jest.fn(),
+    };
+
+    const mockEventsService = {
+      getEventRankingComponentsBatch: jest.fn(),
+      updateEventRankingBatch: jest.fn(),
+    };
+
+    const mockTransactionsService = {
+      getCompletedTransactionCountByEventIds: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        EventScoringService,
+        { provide: EventScoringRepository, useValue: mockRepository },
+        { provide: EventsService, useValue: mockEventsService },
+        { provide: TransactionsService, useValue: mockTransactionsService },
+      ],
+    }).compile();
+
+    service = module.get<EventScoringService>(EventScoringService);
+    repository = module.get(EventScoringRepository);
+    eventsService = module.get(EventsService);
+    transactionsService = module.get(TransactionsService);
+  });
+
+  describe('requestScoring', () => {
+    it('should enqueue event for scoring', async () => {
+      repository.enqueueEvent.mockResolvedValue(undefined);
+
+      await service.requestScoring(mockCtx, 'event-123');
+
+      expect(repository.enqueueEvent).toHaveBeenCalledWith(mockCtx, 'event-123');
+    });
+  });
+
+  describe('getConfig', () => {
+    it('should return config when row exists', async () => {
+      const row = {
+        weightActiveListings: 1,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 5,
+        lastRunAt: new Date('2025-01-01T12:00:00Z'),
+        updatedAt: new Date('2025-01-01T12:00:00Z'),
+      };
+      repository.getConfig.mockResolvedValue(row);
+
+      const result = await service.getConfig(mockCtx);
+
+      expect(result).toEqual({
+        weightActiveListings: 1,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 5,
+        lastRunAt: '2025-01-01T12:00:00.000Z',
+        updatedAt: '2025-01-01T12:00:00.000Z',
+      });
+    });
+
+    it('should throw when config row is missing', async () => {
+      repository.getConfig.mockResolvedValue(null);
+
+      await expect(service.getConfig(mockCtx)).rejects.toThrow(
+        'Events ranking config not found',
+      );
+    });
+  });
+
+  describe('updateConfig', () => {
+    it('should update and return config', async () => {
+      const updated = {
+        weightActiveListings: 2,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 10,
+        lastRunAt: null,
+        updatedAt: new Date('2025-01-01T12:00:00Z'),
+      };
+      repository.updateConfig.mockResolvedValue(updated);
+
+      const result = await service.updateConfig(mockCtx, {
+        weightActiveListings: 2,
+        jobIntervalMinutes: 10,
+      });
+
+      expect(repository.updateConfig).toHaveBeenCalledWith(mockCtx, {
+        weightActiveListings: 2,
+        jobIntervalMinutes: 10,
+      });
+      expect(result.lastRunAt).toBe(null);
+      expect(result.updatedAt).toBe('2025-01-01T12:00:00.000Z');
+    });
+  });
+
+  describe('runScoringJob', () => {
+    it('should return processed 0 when no config', async () => {
+      repository.getConfig.mockResolvedValue(null);
+
+      const result = await service.runScoringJob(mockCtx);
+
+      expect(result.processed).toBe(0);
+      expect(repository.getPendingEventIds).not.toHaveBeenCalled();
+    });
+
+    it('should return processed 0 when queue is empty', async () => {
+      repository.getConfig.mockResolvedValue({
+        weightActiveListings: 1,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 5,
+        lastRunAt: null,
+        updatedAt: new Date(),
+      });
+      repository.getPendingEventIds.mockResolvedValue([]);
+
+      const result = await service.runScoringJob(mockCtx);
+
+      expect(result.processed).toBe(0);
+      expect(eventsService.getEventRankingComponentsBatch).not.toHaveBeenCalled();
+      expect(repository.removeFromQueue).not.toHaveBeenCalled();
+    });
+
+    it('should process events in batch and update ranking', async () => {
+      repository.getConfig.mockResolvedValue({
+        weightActiveListings: 1,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 5,
+        lastRunAt: null,
+        updatedAt: new Date(),
+      });
+      repository.getPendingEventIds.mockResolvedValue(['e1', 'e2']);
+      eventsService.getEventRankingComponentsBatch.mockResolvedValue(
+        new Map([
+          [
+            'e1',
+            {
+              hasActiveListings: true,
+              activeListingsCount: 2,
+              nextEventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              isPopular: false,
+            },
+          ],
+          [
+            'e2',
+            {
+              hasActiveListings: false,
+              activeListingsCount: 0,
+              nextEventDate: null,
+              isPopular: false,
+            },
+          ],
+        ]),
+      );
+      transactionsService.getCompletedTransactionCountByEventIds.mockResolvedValue(
+        new Map([
+          ['e1', 5],
+          ['e2', 0],
+        ]),
+      );
+      eventsService.updateEventRankingBatch.mockResolvedValue(undefined);
+
+      const result = await service.runScoringJob(mockCtx);
+
+      expect(result.processed).toBe(2);
+      expect(eventsService.getEventRankingComponentsBatch).toHaveBeenCalledWith(
+        mockCtx,
+        ['e1', 'e2'],
+      );
+      expect(transactionsService.getCompletedTransactionCountByEventIds).toHaveBeenCalledWith(
+        mockCtx,
+        ['e1', 'e2'],
+      );
+      expect(eventsService.updateEventRankingBatch).toHaveBeenCalledWith(
+        mockCtx,
+        expect.arrayContaining([
+          expect.objectContaining({ eventId: 'e1', rankingScore: expect.any(Number) }),
+          expect.objectContaining({ eventId: 'e2', rankingScore: expect.any(Number) }),
+        ]),
+      );
+      expect(repository.removeFromQueue).toHaveBeenCalledWith(
+        mockCtx,
+        expect.arrayContaining(['e1', 'e2']),
+      );
+      expect(repository.updateConfig).toHaveBeenCalledWith(mockCtx, {
+        lastRunAt: expect.any(Date),
+      });
+    });
+
+    it('should skip event not found in components map', async () => {
+      repository.getConfig.mockResolvedValue({
+        weightActiveListings: 1,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 5,
+        lastRunAt: null,
+        updatedAt: new Date(),
+      });
+      repository.getPendingEventIds.mockResolvedValue(['e1']);
+      eventsService.getEventRankingComponentsBatch.mockResolvedValue(new Map());
+      transactionsService.getCompletedTransactionCountByEventIds.mockResolvedValue(new Map());
+
+      const result = await service.runScoringJob(mockCtx);
+
+      expect(result.processed).toBe(0);
+      expect(eventsService.updateEventRankingBatch).not.toHaveBeenCalled();
+      expect(repository.removeFromQueue).not.toHaveBeenCalled();
+    });
+
+    it('should use transaction count 0 when event has no completed transactions', async () => {
+      repository.getConfig.mockResolvedValue({
+        weightActiveListings: 1,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 5,
+        lastRunAt: null,
+        updatedAt: new Date(),
+      });
+      repository.getPendingEventIds.mockResolvedValue(['e1']);
+      eventsService.getEventRankingComponentsBatch.mockResolvedValue(
+        new Map([
+          [
+            'e1',
+            {
+              hasActiveListings: true,
+              activeListingsCount: 1,
+              nextEventDate: null,
+              isPopular: false,
+            },
+          ],
+        ]),
+      );
+      transactionsService.getCompletedTransactionCountByEventIds.mockResolvedValue(new Map());
+      eventsService.updateEventRankingBatch.mockResolvedValue(undefined);
+
+      const result = await service.runScoringJob(mockCtx);
+
+      expect(result.processed).toBe(1);
+      expect(eventsService.updateEventRankingBatch).toHaveBeenCalledWith(
+        mockCtx,
+        expect.arrayContaining([
+          expect.objectContaining({
+            eventId: 'e1',
+            rankingScore: 1,
+            rankingUpdatedAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+  });
+});

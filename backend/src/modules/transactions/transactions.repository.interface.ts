@@ -162,6 +162,14 @@ export interface ITransactionsRepository {
     status: TransactionStatus,
     paymentMethodIds: string[],
   ): Promise<Transaction[]>;
+
+  /**
+   * Get completed transaction count per event (for event ranking). Returns map eventId -> count.
+   */
+  getCompletedTransactionCountByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<Map<string, number>>;
 }
 
 /**

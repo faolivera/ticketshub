@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { Transaction as PrismaTransaction } from '@prisma/client';
 import { TicketType as PrismaTicketType } from '@prisma/client';
@@ -643,6 +644,27 @@ export class TransactionsRepository
       orderBy: { createdAt: 'desc' },
     });
     return transactions.map((t) => this.mapToTransaction(t));
+  }
+
+  async getCompletedTransactionCountByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<Map<string, number>> {
+    this.logger.debug(ctx, 'getCompletedTransactionCountByEventIds', { count: eventIds.length });
+    if (eventIds.length === 0) return new Map();
+    const client = this.getClient(ctx);
+    const rows = await client.$queryRaw<Array<{ eventId: string; count: bigint }>>`
+      SELECT l."eventId", COUNT(t.id)::bigint as count
+      FROM transactions t
+      INNER JOIN ticket_listings l ON t."listingId" = l.id
+      WHERE t.status = 'Completed' AND l."eventId" IN (${Prisma.join(eventIds)})
+      GROUP BY l."eventId"
+    `;
+    const map = new Map<string, number>();
+    for (const row of rows) {
+      map.set(row.eventId, Number(row.count));
+    }
+    return map;
   }
 
   async findByIdForUpdate(

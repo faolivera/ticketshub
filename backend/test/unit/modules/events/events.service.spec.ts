@@ -59,6 +59,7 @@ describe('EventsService', () => {
     createdBy: 'user_123',
     createdAt: new Date(),
     updatedAt: new Date(),
+    isPopular: false,
   };
 
   const mockPendingEventDate: EventDate = {
@@ -175,6 +176,7 @@ describe('EventsService', () => {
       approvedBy: 'admin_1',
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
     };
 
     const mockApprovedSection: EventSection = {
@@ -478,6 +480,7 @@ describe('EventsService', () => {
       approvedBy: 'admin_123',
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
     };
 
     const mockApprovedEventDate: EventDate = {
@@ -899,6 +902,7 @@ describe('EventsService', () => {
       createdBy: 'user_123',
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
     };
 
     const mockSquareImageBuffer = Buffer.from('mock-square-image-data');
@@ -1037,6 +1041,7 @@ describe('EventsService', () => {
       createdBy: 'user_123',
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
     };
 
     it('should throw NotFoundException when event does not exist', async () => {
@@ -1157,6 +1162,7 @@ describe('EventsService', () => {
         createdBy: 'user_123',
         createdAt: new Date(),
         updatedAt: new Date(),
+        isPopular: false,
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithoutBanners);
 
@@ -1196,6 +1202,7 @@ describe('EventsService', () => {
         createdBy: 'user_123',
         createdAt: new Date(),
         updatedAt: new Date(),
+        isPopular: false,
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithBanner);
       bannerStorage.getPublicUrl.mockReturnValue(
@@ -1232,6 +1239,7 @@ describe('EventsService', () => {
         createdBy: 'user_123',
         createdAt: new Date(),
         updatedAt: new Date(),
+        isPopular: false,
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithoutBanner);
 
@@ -1270,6 +1278,7 @@ describe('EventsService', () => {
         createdBy: 'user_123',
         createdAt: new Date(),
         updatedAt: new Date(),
+        isPopular: false,
       };
       const approvedEvent = {
         ...eventWithBanner,
@@ -1309,6 +1318,7 @@ describe('EventsService', () => {
         createdBy: 'user_123',
         createdAt: new Date(),
         updatedAt: new Date(),
+        isPopular: false,
       };
       const rejectedEvent = {
         ...eventWithoutBanner,

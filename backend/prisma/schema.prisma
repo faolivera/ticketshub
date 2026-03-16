@@ -359,6 +359,12 @@ model Event {
   approvedById    String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+  /** Computed ranking score for list ordering; updated by event-scoring job. */
+  rankingScore    Float?
+  /** When ranking was last recomputed. */
+  rankingUpdatedAt DateTime?
+  /** Admin-set: mark as popular for ranking and display. */
+  isPopular       Boolean       @default(false)
 
   // Relations
   createdBy       User          @relation("EventCreator", fields: [createdById], references: [id])
@@ -366,6 +372,7 @@ model Event {
   dates           EventDate[]
   sections        EventSection[]
   listings        TicketListing[]
+  requireScoringQueueEntry EventRequireScoring?
 
   @@map("events")
 }
@@ -982,6 +989,31 @@ model SchedulerLock {
   expiresAt DateTime
 
   @@map("scheduler_locks")
+}
+
+/** Queue of events that need ranking recomputed. Job processes and clears rows. One row per event (upsert by eventId). */
+model EventRequireScoring {
+  eventId     String   @unique
+  requestedAt DateTime @default(now())
+
+  // Relations
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_require_scoring")
+}
+
+/** Singleton: one row (id = "default") for event ranking config. Weights and job cadence. */
+model EventsRankingConfig {
+  id                    String    @id @default("default")
+  weightActiveListings  Float     @default(1)
+  weightTransactions    Float     @default(1)
+  weightProximity       Float     @default(0.5)
+  weightPopular         Float     @default(1)
+  jobIntervalMinutes    Int       @default(5)
+  lastRunAt             DateTime?
+  updatedAt             DateTime  @updatedAt
+
+  @@map("events_ranking_config")
 }
 
 // Singleton: one row (id = "default") holds editable platform config. Seeded from HOCON on first read.

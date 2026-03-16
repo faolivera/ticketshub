@@ -40,6 +40,7 @@ import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManage
 import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerificationManagement';
 import { NotificationManagement } from '@/app/pages/admin/NotificationManagement';
 import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
+import { EventsScoreConfig } from '@/app/pages/admin/EventsScoreConfig';
 import { PromotionsManagement } from '@/app/pages/admin/PromotionsManagement';
 import { SellerPayouts } from '@/app/pages/admin/SellerPayouts';
 import SupportTicketsManagement from '@/app/pages/admin/SupportTicketsManagement';
@@ -100,6 +101,7 @@ function AppContent() {
                 <Route path="identity-verifications" element={<IdentityVerificationManagement />} />
                 <Route path="notifications" element={<NotificationManagement />} />
                 <Route path="platform-config" element={<PlatformConfig />} />
+                <Route path="events-score" element={<EventsScoreConfig />} />
                 <Route path="promotions" element={<PromotionsManagement />} />
                 <Route path="support-tickets" element={<SupportTicketsManagement />} />
                 <Route path="support-tickets/:id" element={<SupportTicketDetail />} />

@@ -34,6 +34,7 @@ import { TransactionChatModule } from './modules/transaction-chat/transaction-ch
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { SocketModule } from './common/socket/socket.module';
 import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
+import { EventScoringModule } from './modules/event-scoring/event-scoring.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     SupportModule,
     TermsModule,
     AdminModule,
+    EventScoringModule,
     PlatformConfigModule,
     RiskEngineModule,
     PromotionsModule,

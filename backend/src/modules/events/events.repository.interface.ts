@@ -96,6 +96,23 @@ export interface IEventsRepository {
   ): Promise<Event | undefined>;
 
   /**
+   * Get ranking-related components for many events in one go (active listings count, next event date).
+   * Used by event-scoring job to avoid N+1.
+   */
+  getEventRankingComponentsBatch(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<Map<string, { hasActiveListings: boolean; activeListingsCount: number; nextEventDate: Date | null; isPopular: boolean }>>;
+
+  /**
+   * Update ranking score and updatedAt for multiple events. Used by event-scoring job.
+   */
+  updateEventRankingBatch(
+    ctx: Ctx,
+    updates: Array<{ eventId: string; rankingScore: number; rankingUpdatedAt: Date }>,
+  ): Promise<void>;
+
+  /**
    * Delete event
    */
   deleteEvent(ctx: Ctx, id: string): Promise<void>;

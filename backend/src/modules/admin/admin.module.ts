@@ -10,10 +10,12 @@ import { EventsModule } from '../events/events.module';
 import { IdentityVerificationModule } from '../identity-verification/identity-verification.module';
 import { SupportModule } from '../support/support.module';
 import { PrismaModule } from '../../common/prisma/prisma.module';
+import { EventScoringModule } from '../event-scoring/event-scoring.module';
 
 @Module({
   imports: [
     PrismaModule,
+    EventScoringModule,
     PaymentConfirmationsModule,
     PaymentsModule,
     TransactionsModule,

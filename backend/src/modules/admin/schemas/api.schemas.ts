@@ -135,6 +135,7 @@ export const AdminUpdateEventRequestSchema = z.object({
   venue: z.string().min(2).max(200).optional(),
   location: AdminEventAddressSchema.optional(),
   imageIds: z.array(z.string()).optional(),
+  isPopular: z.boolean().optional(),
   dates: z.array(AdminEventDateUpdateSchema).optional(),
   datesToDelete: z.array(z.string()).optional(),
 });
@@ -149,6 +150,7 @@ const AdminEventResponseSchema = z.object({
   location: AdminEventAddressSchema,
   imageIds: z.array(z.string()),
   status: z.string(),
+  isPopular: z.boolean(),
   createdBy: z.string(),
   approvedBy: z.string().optional(),
   createdAt: z.coerce.date(),
@@ -815,4 +817,24 @@ export const ImportEventsResultResponseSchema = z.object({
   created: z.number(),
   failed: z.number(),
   results: z.array(ImportEventResultItemSchema),
+});
+
+// ----- Events ranking config -----
+
+export const AdminGetEventsRankingConfigResponseSchema = z.object({
+  weightActiveListings: z.number(),
+  weightTransactions: z.number(),
+  weightProximity: z.number(),
+  weightPopular: z.number(),
+  jobIntervalMinutes: z.number(),
+  lastRunAt: z.string().nullable(),
+  updatedAt: z.string(),
+});
+
+export const AdminPatchEventsRankingConfigRequestSchema = z.object({
+  weightActiveListings: z.number().min(0).optional(),
+  weightTransactions: z.number().min(0).optional(),
+  weightProximity: z.number().min(0).optional(),
+  weightPopular: z.number().min(0).optional(),
+  jobIntervalMinutes: z.number().int().min(1).max(1440).optional(),
 });

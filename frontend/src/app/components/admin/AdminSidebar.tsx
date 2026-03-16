@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Users,
   Upload,
+  BarChart3,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -83,6 +84,11 @@ const navItems: NavItem[] = [
     to: '/admin/platform-config',
     icon: <Settings className="w-4 h-4" />,
     labelKey: 'admin.sidebar.platformConfig',
+  },
+  {
+    to: '/admin/events-score',
+    icon: <BarChart3 className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.eventsScore',
   },
   {
     to: '/admin/promotions',

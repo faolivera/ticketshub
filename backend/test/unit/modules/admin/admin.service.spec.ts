@@ -12,6 +12,7 @@ import type { ITicketsRepository } from '../../../../src/modules/tickets/tickets
 import { TicketsService } from '../../../../src/modules/tickets/tickets.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { SupportService } from '../../../../src/modules/support/support.service';
+import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import { PaymentConfirmationStatus } from '../../../../src/modules/payment-confirmations/payment-confirmations.domain';
 import {
   TransactionStatus,
@@ -174,6 +175,10 @@ describe('AdminService', () => {
       getTicketsByTransactionIds: jest.fn().mockResolvedValue(new Map()),
     };
 
+    const mockEventScoringService = {
+      requestScoring: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -190,6 +195,7 @@ describe('AdminService', () => {
         { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage! },
         { provide: PrismaService, useValue: mockPrisma! },
         { provide: SupportService, useValue: mockSupportService },
+        { provide: EventScoringService, useValue: mockEventScoringService },
       ],
     }).compile();
 
@@ -506,6 +512,7 @@ describe('AdminService', () => {
         },
         imageIds: [],
         status: EventStatus.Approved,
+        isPopular: false,
         createdBy: 'user_123',
         approvedBy: 'admin_123',
         createdAt: new Date(),
@@ -621,6 +628,7 @@ describe('AdminService', () => {
       createdBy: 'user_123',
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
     };
 
     const mockUser: User = {
@@ -1941,6 +1949,7 @@ describe('AdminService', () => {
       approvedBy: 'admin_1',
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
     };
 
     it('should create event, dates, and sections and return results', async () => {

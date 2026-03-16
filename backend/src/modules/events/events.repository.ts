@@ -50,6 +50,7 @@ export class EventsRepository implements IEventsRepository {
         approvedById: event.approvedBy,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
+        isPopular: event.isPopular ?? false,
       },
     });
     return this.mapToEvent(created);
@@ -257,6 +258,7 @@ export class EventsRepository implements IEventsRepository {
       }
       if (updates.approvedBy !== undefined)
         data.approvedById = updates.approvedBy;
+      if (updates.isPopular !== undefined) data.isPopular = updates.isPopular;
 
       const updated = await this.prisma.event.update({
         where: { id },
@@ -267,6 +269,66 @@ export class EventsRepository implements IEventsRepository {
       this.logger.error(_ctx, 'events.repository updateEvent failed:', error);
       return undefined;
     }
+  }
+
+  async getEventRankingComponentsBatch(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<
+    Map<string, { hasActiveListings: boolean; activeListingsCount: number; nextEventDate: Date | null; isPopular: boolean }>
+  > {
+    this.logger.debug(ctx, 'getEventRankingComponentsBatch', { count: eventIds.length });
+    if (eventIds.length === 0) {
+      return new Map();
+    }
+    const now = new Date();
+    const events = await this.prisma.event.findMany({
+      where: { id: { in: eventIds } },
+      select: {
+        id: true,
+        isPopular: true,
+        listings: {
+          where: { status: 'Active' },
+          select: { id: true },
+        },
+        dates: {
+          where: { status: 'approved', date: { gte: now } },
+          orderBy: { date: 'asc' },
+          take: 1,
+          select: { date: true },
+        },
+      },
+    });
+    const map = new Map<
+      string,
+      { hasActiveListings: boolean; activeListingsCount: number; nextEventDate: Date | null; isPopular: boolean }
+    >();
+    for (const e of events) {
+      const activeListingsCount = e.listings.length;
+      map.set(e.id, {
+        hasActiveListings: activeListingsCount > 0,
+        activeListingsCount,
+        nextEventDate: e.dates[0]?.date ?? null,
+        isPopular: e.isPopular ?? false,
+      });
+    }
+    return map;
+  }
+
+  async updateEventRankingBatch(
+    ctx: Ctx,
+    updates: Array<{ eventId: string; rankingScore: number; rankingUpdatedAt: Date }>,
+  ): Promise<void> {
+    if (updates.length === 0) return;
+    this.logger.debug(ctx, 'updateEventRankingBatch', { count: updates.length });
+    await this.prisma.$transaction(
+      updates.map((u) =>
+        this.prisma.event.update({
+          where: { id: u.eventId },
+          data: { rankingScore: u.rankingScore, rankingUpdatedAt: u.rankingUpdatedAt },
+        }),
+      ),
+    );
   }
 
   async deleteEvent(_ctx: Ctx, id: string): Promise<void> {
@@ -669,6 +731,7 @@ export class EventsRepository implements IEventsRepository {
       approvedBy: prismaEvent.approvedById ?? undefined,
       createdAt: prismaEvent.createdAt,
       updatedAt: prismaEvent.updatedAt,
+      isPopular: prismaEvent.isPopular ?? false,
     };
   }
 

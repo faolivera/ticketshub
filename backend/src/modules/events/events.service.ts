@@ -157,6 +157,7 @@ export class EventsService {
       approvedBy: isAdmin ? userId : undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
     };
 
     return await this.eventsRepository.createEvent(ctx, event);
@@ -247,6 +248,36 @@ export class EventsService {
    */
   async getExistingImportSourceKeys(ctx: Ctx): Promise<Set<string>> {
     return this.eventsRepository.getExistingImportSourceKeys(ctx);
+  }
+
+  /**
+   * Get ranking components (active listings, next date) for many events. Used by event-scoring job.
+   */
+  async getEventRankingComponentsBatch(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<
+    Map<
+      string,
+      {
+        hasActiveListings: boolean;
+        activeListingsCount: number;
+        nextEventDate: Date | null;
+        isPopular: boolean;
+      }
+    >
+  > {
+    return this.eventsRepository.getEventRankingComponentsBatch(ctx, eventIds);
+  }
+
+  /**
+   * Update ranking score for multiple events. Used by event-scoring job.
+   */
+  async updateEventRankingBatch(
+    ctx: Ctx,
+    updates: Array<{ eventId: string; rankingScore: number; rankingUpdatedAt: Date }>,
+  ): Promise<void> {
+    return this.eventsRepository.updateEventRankingBatch(ctx, updates);
   }
 
   /**
@@ -936,6 +967,7 @@ export class EventsService {
     if (data.venue !== undefined) eventUpdates.venue = data.venue;
     if (data.location !== undefined) eventUpdates.location = data.location;
     if (data.imageIds !== undefined) eventUpdates.imageIds = data.imageIds;
+    if (data.isPopular !== undefined) eventUpdates.isPopular = data.isPopular;
 
     if (Object.keys(eventUpdates).length > 0) {
       const result = await this.eventsRepository.updateEvent(
@@ -1075,6 +1107,7 @@ export class EventsService {
         approvedBy: finalEvent.approvedBy,
         createdAt: finalEvent.createdAt,
         updatedAt: finalEvent.updatedAt,
+        isPopular: finalEvent.isPopular,
       },
       dates: finalDates.map((d) => ({
         id: d.id,

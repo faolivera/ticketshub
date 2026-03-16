@@ -69,6 +69,8 @@ import type {
   ImportEventsPreviewResponse,
   ImportEventsValidationErrorResponse,
   ImportEventsResultResponse,
+  AdminGetEventsRankingConfigResponse,
+  AdminPatchEventsRankingConfigRequest,
 } from './admin.api';
 import {
   AdminPendingEventsResponseSchema,
@@ -97,8 +99,11 @@ import {
   ImportEventsPayloadSchema,
   ImportEventsPreviewResponseSchema,
   ImportEventsResultResponseSchema,
+  AdminGetEventsRankingConfigResponseSchema,
+  AdminPatchEventsRankingConfigRequestSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
+import { EventScoringService } from '../event-scoring/event-scoring.service';
 import { SeatingType } from '../tickets/tickets.domain';
 import {
   BANNER_CONSTRAINTS,
@@ -120,6 +125,8 @@ export class AdminController {
     private readonly adminService: AdminService,
     @Inject(EventsService)
     private readonly eventsService: EventsService,
+    @Inject(EventScoringService)
+    private readonly eventScoringService: EventScoringService,
   ) {}
 
   /**
@@ -131,6 +138,31 @@ export class AdminController {
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<AdminDashboardMetricsResponse>> {
     const data = await this.adminService.getDashboardMetrics(ctx);
+    return { success: true, data };
+  }
+
+  /**
+   * Get event ranking config (weights and job cadence).
+   */
+  @Get('events-ranking/config')
+  @ValidateResponse(AdminGetEventsRankingConfigResponseSchema)
+  async getEventsRankingConfig(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<AdminGetEventsRankingConfigResponse>> {
+    const data = await this.eventScoringService.getConfig(ctx);
+    return { success: true, data };
+  }
+
+  /**
+   * Update event ranking config (weights and/or job interval).
+   */
+  @Patch('events-ranking/config')
+  @ValidateResponse(AdminGetEventsRankingConfigResponseSchema)
+  async patchEventsRankingConfig(
+    @Context() ctx: Ctx,
+    @Body() body: AdminPatchEventsRankingConfigRequest,
+  ): Promise<ApiResponse<AdminGetEventsRankingConfigResponse>> {
+    const data = await this.eventScoringService.updateConfig(ctx, body);
     return { success: true, data };
   }
 

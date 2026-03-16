@@ -38,6 +38,7 @@ describe('EventsService - getEventsForSelection', () => {
       approvedBy: 'admin_123',
       createdAt: new Date(),
       updatedAt: new Date(),
+      isPopular: false,
       ...overrides,
     };
   };
