@@ -182,7 +182,6 @@ describe('TicketsService', () => {
       approveEventDate: jest.fn(),
       listEvents: jest.fn(),
       getPendingEvents: jest.fn(),
-      getMyEvents: jest.fn(),
     };
 
     const mockTxManager = {

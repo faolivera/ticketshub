@@ -562,45 +562,6 @@ export class EventsService {
     return await this.attachImages(ctx, eventsWithDates);
   }
 
-  /**
-   * Get events created by a user
-   */
-  async getMyEvents(
-    ctx: Ctx,
-    userId: string,
-  ): Promise<EventWithDatesResponse[]> {
-    const events = await this.eventsRepository.getEventsByCreator(ctx, userId);
-
-    if (events.length === 0) return [];
-
-    const eventIds = events.map((e) => e.id);
-    const [allDates, allSections] = await Promise.all([
-      this.eventsRepository.getDatesByEventIds(ctx, eventIds),
-      this.eventsRepository.getSectionsByEventIds(ctx, eventIds),
-    ]);
-
-    const datesByEvent = new Map<string, EventDate[]>();
-    const sectionsByEvent = new Map<string, EventSection[]>();
-    for (const d of allDates) {
-      const arr = datesByEvent.get(d.eventId) ?? [];
-      arr.push(d);
-      datesByEvent.set(d.eventId, arr);
-    }
-    for (const s of allSections) {
-      const arr = sectionsByEvent.get(s.eventId) ?? [];
-      arr.push(s);
-      sectionsByEvent.set(s.eventId, arr);
-    }
-
-    const eventsWithDates: EventWithDates[] = events.map((event) => ({
-      ...event,
-      dates: datesByEvent.get(event.id) ?? [],
-      sections: sectionsByEvent.get(event.id) ?? [],
-    }));
-
-    return await this.attachImages(ctx, eventsWithDates);
-  }
-
   // ==================== Event Sections ====================
 
   /**

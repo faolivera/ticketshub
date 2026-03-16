@@ -37,13 +37,16 @@ import type {
   ApproveEventDateResponse,
   GetEventResponse,
   ListEventsResponse,
+  ListEventsPublicResponse,
   ListEventsQuery,
+  PublicListEventItem,
   AddEventSectionRequest,
   AddEventSectionResponse,
   UploadEventBannerResponse,
   GetEventBannersResponse,
   DeleteEventBannerResponse,
   EventSelectResponse,
+  EventWithDatesResponse,
 } from './events.api';
 import {
   EventCategory,
@@ -53,6 +56,31 @@ import {
   type EventBannerMimeType,
 } from './events.domain';
 import type { EventSection } from './events.domain';
+
+function toPublicListEventItem(event: EventWithDatesResponse): PublicListEventItem {
+  return {
+    id: event.id,
+    slug: event.slug,
+    name: event.name,
+    category: event.category,
+    venue: event.venue,
+    location: {
+      city: event.location?.city ?? '',
+      countryCode: event.location?.countryCode ?? '',
+    },
+    createdAt:
+      event.createdAt instanceof Date
+        ? event.createdAt.toISOString()
+        : String(event.createdAt),
+    bannerUrls: event.bannerUrls,
+    images: (event.images ?? []).map((img) => ({ src: img.src })),
+    dates: (event.dates ?? []).map((d) => ({
+      date: d.date instanceof Date ? d.date.toISOString() : String(d.date),
+      status: d.status,
+    })),
+    sections: (event.sections ?? []).map((s) => ({ name: s.name, status: s.status })),
+  };
+}
 
 @Controller('api/events')
 export class EventsController {
@@ -81,27 +109,28 @@ export class EventsController {
   }
 
   /**
-   * List approved events (public)
-   * Always includes pending and approved dates/sections (excludes rejected)
+   * List approved events (public).
+   * Only returns approved events; status is not exposed in the API.
+   * Returns minimal, non-sensitive fields only.
    */
   @Get()
   async listEvents(
     @Context() ctx: Ctx,
-    @Query('status') status?: string,
     @Query('category') category?: EventCategory,
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
-  ): Promise<ApiResponse<ListEventsResponse>> {
+  ): Promise<ApiResponse<ListEventsPublicResponse>> {
     const query: ListEventsQuery = {
-      status,
+      status: 'approved',
       category,
       search,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     };
     const events = await this.eventsService.listEvents(ctx, query, false);
-    return { success: true, data: events };
+    const data: ListEventsPublicResponse = events.map(toPublicListEventItem);
+    return { success: true, data };
   }
 
   /**
@@ -210,19 +239,6 @@ export class EventsController {
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<ListEventsResponse>> {
     const events = await this.eventsService.getPendingEvents(ctx);
-    return { success: true, data: events };
-  }
-
-  /**
-   * Get my events
-   */
-  @Get('my/events')
-  @UseGuards(JwtAuthGuard)
-  async getMyEvents(
-    @Context() ctx: Ctx,
-    @User() user: AuthenticatedUserPublicInfo,
-  ): Promise<ApiResponse<ListEventsResponse>> {
-    const events = await this.eventsService.getMyEvents(ctx, user.id);
     return { success: true, data: events };
   }
 

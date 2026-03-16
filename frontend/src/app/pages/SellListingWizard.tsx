@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { Ticket, Loader2, Calendar, X, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
@@ -37,7 +37,9 @@ export function SellListingWizard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const newEvent = location.state?.newEvent as { id: string } | undefined;
+  const eventNameFromUrl = searchParams.get('eventName') ?? '';
   const { user, isAuthenticated, canSell } = useUser();
   const isMobile = useIsMobile();
 
@@ -385,7 +387,11 @@ export function SellListingWizard() {
 
           <div className="px-4 md:px-6 py-6 md:py-8">
             {currentStep === 0 && (
-              <StepChooseEvent onSelect={handleEventSelect} isMobile={isMobile} />
+              <StepChooseEvent
+                onSelect={handleEventSelect}
+                isMobile={isMobile}
+                initialSearchTerm={eventNameFromUrl}
+              />
             )}
             {currentStep === 1 && event && (
               <StepChooseDate

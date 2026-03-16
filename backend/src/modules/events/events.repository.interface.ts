@@ -84,11 +84,6 @@ export interface IEventsRepository {
   getPendingEvents(ctx: Ctx): Promise<Event[]>;
 
   /**
-   * Get events by creator
-   */
-  getEventsByCreator(ctx: Ctx, userId: string): Promise<Event[]>;
-
-  /**
    * Update event
    */
   updateEvent(

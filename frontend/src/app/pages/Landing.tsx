@@ -21,14 +21,14 @@ import { PageMeta } from '@/app/components/PageMeta';
 import { JsonLd } from '@/app/components/JsonLd';
 import { getBaseUrl } from '@/config/env';
 import { eventsService } from '../../api/services/events.service';
-import type { EventWithDates } from '../../api/types';
+import type { PublicListEventItem } from '../../api/types';
 import { EventCategory, EventSectionStatus } from '../../api/types/events';
 import { formatDate, formatTime } from '@/lib/format-date';
 
 /**
  * Transform API event data to EventCard props format
  */
-function transformEventForCard(event: EventWithDates) {
+function transformEventForCard(event: PublicListEventItem) {
   // Transform dates to showTimes format
   const showTimes = event.dates
     .filter(d => d.status === 'approved')
@@ -118,7 +118,7 @@ export function Landing() {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<EventCategory | null>(null);
-  const [events, setEvents] = useState<EventWithDates[]>([]);
+  const [events, setEvents] = useState<PublicListEventItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -128,10 +128,7 @@ export function Landing() {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await eventsService.listEvents({ 
-          status: 'approved',
-          limit: 50 
-        });
+        const data = await eventsService.listEvents({ limit: 50 });
         setEvents(data);
       } catch (err) {
         console.error('Failed to fetch events:', err);

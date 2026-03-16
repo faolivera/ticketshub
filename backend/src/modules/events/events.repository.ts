@@ -230,15 +230,6 @@ export class EventsRepository implements IEventsRepository {
     return allEvents.map((e) => this.mapToEvent(e));
   }
 
-  async getEventsByCreator(_ctx: Ctx, userId: string): Promise<Event[]> {
-    this.logger.debug(_ctx, 'getEventsByCreator', { userId });
-    const events = await this.prisma.event.findMany({
-      where: { createdById: userId },
-      orderBy: { createdAt: 'desc' },
-    });
-    return events.map((e) => this.mapToEvent(e));
-  }
-
   async updateEvent(
     _ctx: Ctx,
     id: string,

@@ -76,9 +76,44 @@ export type ApproveEventDateResponse = EventDate;
 export type GetEventResponse = EventWithDatesResponse;
 
 /**
- * Response for listing events
+ * Response for listing events (full; used by my/events and internal callers)
  */
 export type ListEventsResponse = EventWithDatesResponse[];
+
+/**
+ * Public list API: minimal, no sensitive or unused fields.
+ * Used only by GET /api/events (landing).
+ */
+export interface PublicListEventLocation {
+  city: string;
+  countryCode: string;
+}
+
+export interface PublicListEventDate {
+  date: string;
+  status: string;
+}
+
+export interface PublicListEventSection {
+  name: string;
+  status: string;
+}
+
+export interface PublicListEventItem {
+  id: string;
+  slug: string;
+  name: string;
+  category: EventCategory;
+  venue: string;
+  location: PublicListEventLocation;
+  createdAt: string;
+  bannerUrls?: EventBannerUrls;
+  images: Array<{ src: string }>;
+  dates: PublicListEventDate[];
+  sections: PublicListEventSection[];
+}
+
+export type ListEventsPublicResponse = PublicListEventItem[];
 
 /**
  * Banner URLs for API responses

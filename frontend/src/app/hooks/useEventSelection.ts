@@ -18,13 +18,14 @@ interface UseEventSelectionReturn {
   error: string | null;
 }
 
-export function useEventSelection(): UseEventSelectionReturn {
+export function useEventSelection(initialSearchTerm?: string): UseEventSelectionReturn {
+  const initial = (initialSearchTerm ?? '').trim();
   const [events, setEvents] = useState<EventSelectItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
-  const [searchTerm, setSearchTermState] = useState('');
+  const [searchTerm, setSearchTermState] = useState(initial);
   const [error, setError] = useState<string | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -90,14 +91,14 @@ export function useEventSelection(): UseEventSelectionReturn {
   }, [fetchEvents, searchTerm]);
 
   useEffect(() => {
-    fetchEvents('', 0, false);
+    fetchEvents(initial, 0, false);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [fetchEvents]);
+  }, [fetchEvents, initial]);
 
   return {
     events,

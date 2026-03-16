@@ -342,25 +342,6 @@ describe('EventsRepository (Integration)', () => {
     });
   });
 
-  describe('getEventsByCreator', () => {
-    it('should return events by creator', async () => {
-      const anotherUserId = await createTestUser();
-      await repository.createEvent(
-        ctx,
-        createValidEvent({ createdBy: testUserId }),
-      );
-      await repository.createEvent(
-        ctx,
-        createValidEvent({ createdBy: anotherUserId }),
-      );
-
-      const events = await repository.getEventsByCreator(ctx, testUserId);
-
-      expect(events).toHaveLength(1);
-      expect(events[0].createdBy).toBe(testUserId);
-    });
-  });
-
   describe('updateEvent', () => {
     it('should return undefined for non-existent event', async () => {
       const result = await repository.updateEvent(ctx, 'non-existent-id', {

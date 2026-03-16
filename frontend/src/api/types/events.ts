@@ -221,15 +221,50 @@ export type AddEventSectionResponse = EventSection;
 export type GetEventResponse = EventWithDates;
 
 /**
- * Response for listing events
+ * Response for listing events (full; used by GET /events/my/events)
  */
 export type ListEventsResponse = EventWithDates[];
 
 /**
- * Query params for listing events
+ * Public list API (GET /events): minimal, no sensitive or unused fields.
+ */
+export interface PublicListEventLocation {
+  city: string;
+  countryCode: string;
+}
+
+export interface PublicListEventDate {
+  date: string;
+  status: string;
+}
+
+export interface PublicListEventSection {
+  name: string;
+  status: string;
+}
+
+export interface PublicListEventItem {
+  id: string;
+  slug: string;
+  name: string;
+  category: EventCategory;
+  venue: string;
+  location: PublicListEventLocation;
+  createdAt: string;
+  /** Optional; used for client-side search filter when present */
+  description?: string;
+  bannerUrls?: EventBannerUrls;
+  images: Array<{ src: string }>;
+  dates: PublicListEventDate[];
+  sections: PublicListEventSection[];
+}
+
+export type ListEventsPublicResponse = PublicListEventItem[];
+
+/**
+ * Query params for listing events (public API always returns approved events only).
  */
 export interface ListEventsQuery extends PaginationParams {
-  status?: string;
   category?: EventCategory;
   search?: string;
 }

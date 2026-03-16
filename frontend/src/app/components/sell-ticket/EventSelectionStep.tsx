@@ -8,6 +8,8 @@ import type { EventSelectItem } from '@/api/types';
 
 interface EventSelectionStepProps {
   onSelect: (eventId: string) => void;
+  /** Pre-fill the event search box (e.g. from URL ?eventName=...) */
+  initialSearchTerm?: string;
 }
 
 interface EventCardProps {
@@ -45,7 +47,7 @@ const EventCard = forwardRef<HTMLButtonElement, EventCardProps>(
 
 EventCard.displayName = 'EventCard';
 
-export function EventSelectionStep({ onSelect }: EventSelectionStepProps) {
+export function EventSelectionStep({ onSelect, initialSearchTerm = '' }: EventSelectionStepProps) {
   const { t } = useTranslation();
   const {
     events,
@@ -56,7 +58,7 @@ export function EventSelectionStep({ onSelect }: EventSelectionStepProps) {
     setSearchTerm,
     loadMore,
     error,
-  } = useEventSelection();
+  } = useEventSelection(initialSearchTerm);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastCardRef = useRef<HTMLButtonElement | null>(null);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, Navigate } from 'react-router-dom';
+import { Link, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { Ticket, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
@@ -13,7 +13,9 @@ type WizardStep = 'select-event' | 'ticket-details';
 export function SellTicket() {
   const { t } = useTranslation();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const newEvent = location.state?.newEvent;
+  const eventNameFromUrl = searchParams.get('eventName') ?? '';
   const { user, isAuthenticated, canSell } = useUser();
 
   const [step, setStep] = useState<WizardStep>('select-event');
@@ -87,7 +89,7 @@ export function SellTicket() {
 
                 <p className="text-gray-600 mb-8">{t('sellTicket.subtitle')}</p>
 
-                <EventSelectionStep onSelect={handleEventSelect} />
+                <EventSelectionStep onSelect={handleEventSelect} initialSearchTerm={eventNameFromUrl} />
               </>
             )}
 

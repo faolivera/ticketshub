@@ -428,7 +428,7 @@ export function EventTickets() {
               description={t('eventTickets.checkBackLater')}
               action={{
                 label: t('boughtTickets.startSelling'),
-                to: '/sell-ticket',
+                to: `/sell-ticket?eventName=${encodeURIComponent(event?.name ?? '')}`,
               }}
             />
           ) : (

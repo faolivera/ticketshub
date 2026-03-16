@@ -3,7 +3,7 @@ import type {
   CreateEventRequest,
   CreateEventResponse,
   GetEventResponse,
-  ListEventsResponse,
+  ListEventsPublicResponse,
   ListEventsQuery,
   AddEventDateRequest,
   AddEventDateResponse,
@@ -23,10 +23,10 @@ import type {
  */
 export const eventsService = {
   /**
-   * List events with optional filters
+   * List events (public API: minimal, non-sensitive fields only)
    */
-  async listEvents(query?: ListEventsQuery): Promise<ListEventsResponse> {
-    const response = await apiClient.get<ListEventsResponse>('/events', { params: query });
+  async listEvents(query?: ListEventsQuery): Promise<ListEventsPublicResponse> {
+    const response = await apiClient.get<ListEventsPublicResponse>('/events', { params: query });
     return response.data;
   },
 
@@ -51,14 +51,6 @@ export const eventsService = {
    */
   async addEventDate(eventId: string, data: AddEventDateRequest): Promise<AddEventDateResponse> {
     const response = await apiClient.post<AddEventDateResponse>(`/events/${eventId}/dates`, data);
-    return response.data;
-  },
-
-  /**
-   * Get my events (as creator)
-   */
-  async getMyEvents(): Promise<ListEventsResponse> {
-    const response = await apiClient.get<ListEventsResponse>('/events/my/events');
     return response.data;
   },
 

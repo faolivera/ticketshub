@@ -90,7 +90,6 @@ describe('EventsService', () => {
       getApprovedEvents: jest.fn(),
       getAllEvents: jest.fn(),
       getPendingEvents: jest.fn(),
-      getEventsByCreator: jest.fn(),
       getDatesByEventId: jest.fn(),
       getApprovedDatesByEventId: jest.fn(),
       getSectionsByEventId: jest.fn(),

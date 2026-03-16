@@ -23,6 +23,8 @@ const EVENT_CATEGORY_I18N: Record<EventCategory, string> = {
 interface StepChooseEventProps {
   onSelect: (eventId: string) => void;
   isMobile: boolean;
+  /** Pre-fill the search box (e.g. from URL ?eventName=...) */
+  initialSearchTerm?: string;
 }
 
 interface EventCardProps {
@@ -83,7 +85,7 @@ const EventCard = forwardRef<HTMLButtonElement, EventCardProps>(
 );
 EventCard.displayName = 'EventCard';
 
-export function StepChooseEvent({ onSelect, isMobile }: StepChooseEventProps) {
+export function StepChooseEvent({ onSelect, isMobile, initialSearchTerm = '' }: StepChooseEventProps) {
   const { t } = useTranslation();
   const {
     events,
@@ -94,7 +96,7 @@ export function StepChooseEvent({ onSelect, isMobile }: StepChooseEventProps) {
     setSearchTerm,
     loadMore,
     error,
-  } = useEventSelection();
+  } = useEventSelection(initialSearchTerm);
 
   const showEmpty = !isLoading && events.length === 0;
   const showNoSearchResults = searchTerm.trim() !== '' && events.length === 0 && !isLoading;
