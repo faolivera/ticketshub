@@ -6,6 +6,5 @@ import { loadHoconConfig } from './load-hocon';
  */
 export default function configuration(): Record<string, unknown> {
   const config = loadHoconConfig();
-  console.log('resend from HOCON:', config?.resend);
   return config;
 }

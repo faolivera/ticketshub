@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "buyerDisputed" BOOLEAN NOT NULL DEFAULT false;

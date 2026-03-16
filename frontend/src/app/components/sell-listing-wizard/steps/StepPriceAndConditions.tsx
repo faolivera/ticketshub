@@ -4,8 +4,6 @@ import { Input } from '@/app/components/ui/input';
 import { Switch } from '@/app/components/ui/switch';
 import { Label } from '@/app/components/ui/label';
 import type { WizardFormState } from '../types';
-import { formatCurrencyFromUnits } from '@/lib/format-currency';
-import { cn } from '@/app/components/ui/utils';
 
 interface StepPriceAndConditionsProps {
   form: WizardFormState;
@@ -27,14 +25,10 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const feePercent = effectiveFeePercent ?? sellerPlatformFeePercent;
   const ticketCount =
     form.seatingType === 'numbered'
       ? form.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim()).length
       : form.quantity;
-  const totalCharged = form.pricePerTicket * (ticketCount || 0);
-  const platformCommission = (totalCharged * feePercent) / 100;
-  const sellerReceives = totalCharged - platformCommission;
 
   return (
     <div className="space-y-6" role="group" aria-label={t('sellListingWizard.priceAndConditions')}>
@@ -64,20 +58,12 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
             className="border-0 rounded-none focus-visible:ring-0 min-h-[44px] text-base"
             placeholder="0.00"
             aria-invalid={form.pricePerTicket <= 0}
-            aria-describedby={form.pricePerTicket <= 0 ? 'price-error' : 'price-preview'}
+            aria-describedby={form.pricePerTicket <= 0 ? 'price-error' : undefined}
           />
         </div>
         {form.pricePerTicket <= 0 && (
           <p id="price-error" className="text-sm text-destructive mt-1" role="alert">
             {t('sellListingWizard.enterValidPrice')}
-          </p>
-        )}
-        {form.pricePerTicket > 0 && ticketCount > 0 && (
-          <p id="price-preview" className="text-sm text-muted-foreground mt-2">
-            {t('sellListingWizard.youReceive')}:{' '}
-            <span className="font-medium text-foreground">
-              {formatCurrencyFromUnits(sellerReceives, currency)}
-            </span>
           </p>
         )}
       </div>

@@ -27,6 +27,7 @@ export class EventScoringScheduler {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async runScoringTick(): Promise<void> {
+    console.log('runScoringTick');
     await this.cronMetrics.run('eventScoring_runScoringTick', async () => {
       const ctx: Ctx = {
         source: 'CRON',
