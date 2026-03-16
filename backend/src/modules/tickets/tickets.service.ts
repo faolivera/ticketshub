@@ -50,9 +50,13 @@ import type { Money as ConfigMoney } from '../config/config.domain';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { PlatformConfigService } from '../config/config.service';
 import { ConversionService } from '../config/conversion.service';
+import { ContextLogger } from '../../common/logger/context-logger';
+import { EventScoringService } from '../event-scoring/event-scoring.service';
 
 @Injectable()
 export class TicketsService {
+  private readonly logger = new ContextLogger(TicketsService.name);
+
   constructor(
     @Inject(TICKETS_REPOSITORY)
     private readonly ticketsRepository: ITicketsRepository,
@@ -65,6 +69,8 @@ export class TicketsService {
     private readonly configService: PlatformConfigService,
     private readonly conversionService: ConversionService,
     private readonly nestConfigService: NestConfigService,
+    @Inject(forwardRef(() => EventScoringService))
+    private readonly eventScoringService: EventScoringService,
   ) {}
 
   /**
@@ -507,6 +513,15 @@ export class TicketsService {
       },
     );
 
+    void this.eventScoringService
+      .requestScoring(ctx, data.eventId)
+      .catch((err) =>
+        this.logger.error(ctx, 'Event scoring enqueue failed', {
+          eventId: data.eventId,
+          error: err,
+        }),
+      );
+
     return await this.enrichListingWithEvent(ctx, created);
   }
 
@@ -799,7 +814,7 @@ export class TicketsService {
     listingId: string,
     sellerId: string,
   ): Promise<TicketListing> {
-    return this.txManager.executeInTransaction(ctx, async (txCtx) => {
+    const updated = await this.txManager.executeInTransaction(ctx, async (txCtx) => {
       const listing = await this.ticketsRepository.findByIdForUpdate(
         txCtx,
         listingId,
@@ -832,6 +847,17 @@ export class TicketsService {
         listing.version,
       );
     });
+
+    void this.eventScoringService
+      .requestScoring(ctx, updated.eventId)
+      .catch((err) =>
+        this.logger.error(ctx, 'Event scoring enqueue failed', {
+          eventId: updated.eventId,
+          error: err,
+        }),
+      );
+
+    return updated;
   }
 
   /**

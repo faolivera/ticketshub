@@ -61,6 +61,7 @@ import { UsersService } from '../users/users.service';
 import { VerificationHelper } from '../../common/utils/verification-helper';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
+import { EventScoringService } from '../event-scoring/event-scoring.service';
 
 @Injectable()
 export class EventsService {
@@ -81,6 +82,8 @@ export class EventsService {
     private readonly usersService: UsersService,
     @Inject(NotificationsService)
     private readonly notificationsService: NotificationsService,
+    @Inject(forwardRef(() => EventScoringService))
+    private readonly eventScoringService: EventScoringService,
   ) {}
 
   /**
@@ -439,6 +442,14 @@ export class EventsService {
 
     if (approved) {
       await this.ticketsService.activatePendingListingsForEvent(ctx, eventId);
+      void this.eventScoringService
+        .requestScoring(ctx, eventId)
+        .catch((err) =>
+          this.logger.error(ctx, 'Event scoring enqueue failed', {
+            eventId,
+            error: err,
+          }),
+        );
     }
 
     await this.notificationsService.emit(
@@ -502,6 +513,14 @@ export class EventsService {
         dateId,
         eventDate.eventId,
       );
+      void this.eventScoringService
+        .requestScoring(ctx, eventDate.eventId)
+        .catch((err) =>
+          this.logger.error(ctx, 'Event scoring enqueue failed', {
+            eventId: eventDate.eventId,
+            error: err,
+          }),
+        );
     }
 
     return updated;
@@ -682,6 +701,14 @@ export class EventsService {
         sectionId,
         section.eventId,
       );
+      void this.eventScoringService
+        .requestScoring(ctx, section.eventId)
+        .catch((err) =>
+          this.logger.error(ctx, 'Event scoring enqueue failed', {
+            eventId: section.eventId,
+            error: err,
+          }),
+        );
     }
 
     return updated;

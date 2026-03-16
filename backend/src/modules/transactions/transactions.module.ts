@@ -16,6 +16,7 @@ import { MetricsModule } from '../../common/metrics/metrics.module';
 import { RiskEngineModule } from '../risk-engine/risk-engine.module';
 import { TermsModule } from '../terms/terms.module';
 import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
+import { EventScoringModule } from '../event-scoring/event-scoring.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TransactionChatModule } from '../transaction-chat/transaction-chat.modu
     TermsModule,
     OffersModule,
     forwardRef(() => TransactionChatModule),
+    forwardRef(() => EventScoringModule),
   ],
   controllers: [TransactionsController],
   providers: [

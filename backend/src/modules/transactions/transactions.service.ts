@@ -58,6 +58,7 @@ import {
   PROOF_FILE_MAX_SIZE_BYTES,
   type ProofFileMimeType,
 } from './transactions.domain';
+import { EventScoringService } from '../event-scoring/event-scoring.service';
 
 @Injectable()
 export class TransactionsService {
@@ -90,6 +91,8 @@ export class TransactionsService {
     private readonly txManager: TransactionManager,
     @Inject(PRIVATE_STORAGE_PROVIDER)
     private readonly privateStorage: FileStorageProvider,
+    @Inject(forwardRef(() => EventScoringService))
+    private readonly eventScoringService: EventScoringService,
   ) {}
 
   /**
@@ -401,6 +404,15 @@ export class TransactionsService {
           };
         },
         { isolationLevel: 'Serializable' },
+      );
+
+    void this.eventScoringService
+      .requestScoring(ctx, listing.eventId)
+      .catch((err) =>
+        this.logger.error(ctx, 'Event scoring enqueue failed', {
+          eventId: listing.eventId,
+          error: err,
+        }),
       );
 
     await this.offersService.cancelAffectedOffers(ctx, listingId);
@@ -900,6 +912,14 @@ export class TransactionsService {
       ctx,
       updated.listingId,
     );
+    void this.eventScoringService
+      .requestScoring(ctx, listing.eventId)
+      .catch((err) =>
+        this.logger.error(ctx, 'Event scoring enqueue failed', {
+          eventId: listing.eventId,
+          error: err,
+        }),
+      );
     this.notificationsService
       .emit(ctx, NotificationEventType.TRANSACTION_COMPLETED, {
         transactionId: updated.id,
@@ -970,6 +990,19 @@ export class TransactionsService {
         );
       },
     );
+
+    const listing = await this.ticketsService.getListingById(
+      ctx,
+      updated.listingId,
+    );
+    void this.eventScoringService
+      .requestScoring(ctx, listing.eventId)
+      .catch((err) =>
+        this.logger.error(ctx, 'Event scoring enqueue failed', {
+          eventId: listing.eventId,
+          error: err,
+        }),
+      );
 
     this.logger.log(
       ctx,

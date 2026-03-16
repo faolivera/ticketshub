@@ -54,6 +54,14 @@ describe('EventScoringService', () => {
 
       expect(repository.enqueueEvent).toHaveBeenCalledWith(mockCtx, 'event-123');
     });
+
+    it('should not throw when enqueueEvent fails', async () => {
+      repository.enqueueEvent.mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        service.requestScoring(mockCtx, 'event-123'),
+      ).resolves.toBeUndefined();
+    });
   });
 
   describe('requestScoringBatch', () => {
@@ -78,6 +86,14 @@ describe('EventScoringService', () => {
 
       expect(result.enqueued).toBe(0);
       expect(repository.enqueueEvent).not.toHaveBeenCalled();
+    });
+
+    it('should return enqueued 0 and not throw when enqueueEvent fails', async () => {
+      repository.enqueueEvent.mockRejectedValue(new Error('DB error'));
+
+      const result = await service.requestScoringBatch(mockCtx, ['event-1']);
+
+      expect(result.enqueued).toBe(0);
     });
   });
 

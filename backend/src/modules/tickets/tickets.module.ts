@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { TermsModule } from '../terms/terms.module';
 import { ConfigModule } from '../config/config.module';
+import { EventScoringModule } from '../event-scoring/event-scoring.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ConfigModule } from '../config/config.module';
     PromotionsModule,
     TermsModule,
     ConfigModule,
+    forwardRef(() => EventScoringModule),
   ],
   controllers: [TicketsController],
   providers: [

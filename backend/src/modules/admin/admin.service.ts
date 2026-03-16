@@ -625,8 +625,18 @@ export class AdminService {
       adminId,
     );
 
-    if (data.isPopular !== undefined) {
-      await this.eventScoringService.requestScoring(ctx, eventId);
+    const datesChanged =
+      (data.dates && data.dates.length > 0) ||
+      (data.datesToDelete && data.datesToDelete.length > 0);
+    if (data.isPopular !== undefined || datesChanged) {
+      void this.eventScoringService
+        .requestScoring(ctx, eventId)
+        .catch((err) =>
+          this.logger.error(ctx, 'Event scoring enqueue failed', {
+            eventId,
+            error: err,
+          }),
+        );
     }
 
     this.logger.log(

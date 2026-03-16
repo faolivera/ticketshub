@@ -407,7 +407,7 @@ export class EventsRepository implements IEventsRepository {
     const [events, total] = await Promise.all([
       this.prisma.event.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { rankingScore: { sort: 'desc' as const, nulls: 'last' as const }},
         skip: options.offset,
         take: options.limit,
       }),

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import type { Ctx } from '../../common/types/context';
 import { ContextLogger } from '../../common/logger/context-logger';
 import { EventScoringRepository, type EventsRankingConfigRow } from './event-scoring.repository';
@@ -25,25 +25,38 @@ export class EventScoringService {
 
   constructor(
     private readonly eventScoringRepository: EventScoringRepository,
+    @Inject(forwardRef(() => EventsService))
     private readonly eventsService: EventsService,
+    @Inject(forwardRef(() => TransactionsService))
     private readonly transactionsService: TransactionsService,
   ) {}
 
   /**
    * Request that an event's ranking be recomputed. Enqueues the event; the job will process it asynchronously.
+   * Swallows errors so callers are never failed by scoring.
    */
-  async requestScoring(_ctx: Ctx, eventId: string): Promise<void> {
-    await this.eventScoringRepository.enqueueEvent(_ctx, eventId);
+  async requestScoring(ctx: Ctx, eventId: string): Promise<void> {
+    try {
+      await this.eventScoringRepository.enqueueEvent(ctx, eventId);
+    } catch (error) {
+      this.logger.error(ctx, 'requestScoring failed', { eventId, error });
+    }
   }
 
   /**
    * Enqueue one or more events for re-scoring. Returns the number of events enqueued.
+   * Swallows errors so callers are never failed by scoring.
    */
   async requestScoringBatch(ctx: Ctx, eventIds: string[]): Promise<{ enqueued: number }> {
-    for (const eventId of eventIds) {
-      await this.eventScoringRepository.enqueueEvent(ctx, eventId);
+    try {
+      for (const eventId of eventIds) {
+        await this.eventScoringRepository.enqueueEvent(ctx, eventId);
+      }
+      return { enqueued: eventIds.length };
+    } catch (error) {
+      this.logger.error(ctx, 'requestScoringBatch failed', { eventIds, error });
+      return { enqueued: 0 };
     }
-    return { enqueued: eventIds.length };
   }
 
   /**
