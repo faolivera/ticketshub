@@ -117,6 +117,7 @@ export class EventScoringService {
 
     const eventIds = await this.eventScoringRepository.getPendingEventIds(ctx);
     if (eventIds.length === 0) {
+      await this.eventScoringRepository.updateConfig(ctx, { lastRunAt: new Date() });
       return { processed: 0 };
     }
 
