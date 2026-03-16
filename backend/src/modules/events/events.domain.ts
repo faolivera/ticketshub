@@ -43,6 +43,14 @@ export enum EventCategory {
 }
 
 /**
+ * Import source metadata (admin-only). Never expose in public APIs.
+ */
+export interface EventImportInfo {
+  sourceCode: string;
+  sourceId: string;
+}
+
+/**
  * Event entity
  */
 export interface Event {
@@ -54,6 +62,8 @@ export interface Event {
   location: Address;
   imageIds: string[];
   banners?: EventBanners;
+  /** Admin-only: set when event was imported; never expose in public APIs. */
+  importInfo?: EventImportInfo;
 
   status: EventStatus;
   rejectionReason?: string;

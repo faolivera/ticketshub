@@ -927,8 +927,8 @@ export interface ImportEventSectionItem {
  * - category: one of ImportEventCategory
  * - location: valid ImportEventAddress
  * - dates: at least one; each a valid ISO 8601 date-time string (e.g. "2025-06-15T20:00:00.000Z"); optional business rule: not in the past
- * - sections: at least one; unique names per event; valid seatingType
- * - imageIds: optional array of existing image IDs if supported
+ * - sections: optional; when present, unique names per event; valid seatingType
+ * - sourceCode + sourceId: used for deduplication and storing importInfo on Event
  */
 export interface ImportEventItem {
   name: string;
@@ -937,10 +937,18 @@ export interface ImportEventItem {
   location: ImportEventAddress;
   /** ISO 8601 date-time strings (minute precision). At least one required. */
   dates: string[];
-  /** At least one section required; names unique per event. */
-  sections: ImportEventSectionItem[];
-  /** Optional existing image IDs to attach to the event. */
-  imageIds?: string[];
+  /** Optional sections; when present, names unique per event. */
+  sections?: ImportEventSectionItem[];
+  /** Source identifier for deduplication and Event.importInfo (e.g. "reventick"). */
+  sourceCode: string;
+  /** Source-specific event id for deduplication and Event.importInfo. */
+  sourceId: string;
+  /** Optional image URLs from source (square 1:1). */
+  imageSquareUrl?: string;
+  /** Optional image URLs from source (rectangle 16:9). */
+  imageRectangleUrl?: string;
+  /** Optional image URL for og:image. */
+  imageOGURL?: string;
 }
 
 /**
@@ -965,15 +973,19 @@ export interface ImportEventsPreviewItem {
   slug: string;
   datesCount: number;
   dateLabels: string[];
-  sections: ImportEventSectionItem[];
+  sections?: ImportEventSectionItem[];
+  sourceCode: string;
+  sourceId: string;
 }
 
 /**
  * Response for POST /api/admin/events/import/preview.
  * Validation runs first; if invalid, use ImportEventsValidationErrorResponse instead.
+ * eventsForImport is the deduped list of full items; client sends selected subset on execute.
  */
 export interface ImportEventsPreviewResponse {
   events: ImportEventsPreviewItem[];
+  eventsForImport: ImportEventItem[];
 }
 
 /**

@@ -1607,7 +1607,7 @@ export class AdminService {
   }
 
   /**
-   * Build preview for import (no persistence). Validates payload; throws if invalid.
+   * Build preview for import (no persistence). Validates payload, dedupes by (sourceCode, sourceId), then returns preview.
    */
   getImportPreview(
     ctx: Ctx,
@@ -1617,33 +1617,50 @@ export class AdminService {
       eventCount: payload.events.length,
     });
 
-    const events: ImportEventsPreviewItem[] = payload.events.map(
-      (item, index) => {
-        const previewId = `preview-${index}`;
-        const slug = generateEventSlug(item.name, item.venue, previewId);
-        const dateLabels = item.dates.map((d) => {
-          try {
-            const date = new Date(d);
-            return date.toISOString();
-          } catch {
-            return d;
-          }
-        });
-        return {
-          index,
-          name: item.name,
-          category: item.category,
-          venue: item.venue,
-          location: item.location,
-          slug,
-          datesCount: item.dates.length,
-          dateLabels,
-          sections: item.sections,
-        };
-      },
-    );
+    const deduped = this.dedupeImportEventsBySource(payload.events);
 
-    return { events };
+    const events: ImportEventsPreviewItem[] = deduped.map((item, index) => {
+      const previewId = `preview-${index}`;
+      const slug = generateEventSlug(item.name, item.venue, previewId);
+      const dateLabels = item.dates.map((d) => {
+        try {
+          const date = new Date(d);
+          return date.toISOString();
+        } catch {
+          return d;
+        }
+      });
+      return {
+        index,
+        name: item.name,
+        category: item.category,
+        venue: item.venue,
+        location: item.location,
+        slug,
+        datesCount: item.dates.length,
+        dateLabels,
+        sections: item.sections,
+        sourceCode: item.sourceCode,
+        sourceId: item.sourceId,
+      };
+    });
+
+    return { events, eventsForImport: deduped };
+  }
+
+  /**
+   * Dedupe import events by (sourceCode, sourceId), keeping first occurrence.
+   */
+  private dedupeImportEventsBySource(
+    items: ImportEventItem[],
+  ): ImportEventItem[] {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const key = `${item.sourceCode}:${item.sourceId}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   /**
@@ -1664,6 +1681,8 @@ export class AdminService {
     let created = 0;
     let failed = 0;
 
+    const sections = (item: ImportEventItem) => item.sections ?? [];
+
     for (let index = 0; index < payload.events.length; index++) {
       const item = payload.events[index];
       try {
@@ -1672,7 +1691,7 @@ export class AdminService {
           category: item.category as EventCategory,
           venue: item.venue,
           location: item.location,
-          imageIds: item.imageIds ?? [],
+          importInfo: { sourceCode: item.sourceCode, sourceId: item.sourceId },
         };
         const event = await this.eventsService.createEvent(
           ctx,
@@ -1691,7 +1710,7 @@ export class AdminService {
           );
         }
 
-        for (const section of item.sections) {
+        for (const section of sections(item)) {
           await this.eventsService.addEventSection(
             ctx,
             event.id,

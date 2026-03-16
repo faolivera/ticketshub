@@ -351,6 +351,8 @@ model Event {
   location        Json
   imageIds        String[]
   banners         Json?
+  /** Admin-only: source of import (e.g. reventick), never expose in public APIs. */
+  importInfo      Json?
   status          EventStatus   @default(pending)
   rejectionReason String?
   createdById     String

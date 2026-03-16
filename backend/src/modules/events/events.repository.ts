@@ -43,6 +43,7 @@ export class EventsRepository implements IEventsRepository {
         location: event.location as object,
         imageIds: event.imageIds,
         banners: event.banners ? (event.banners as object) : undefined,
+        importInfo: event.importInfo ? (event.importInfo as object) : undefined,
         status: this.mapEventStatusToDb(event.status),
         rejectionReason: event.rejectionReason,
         createdById: event.createdBy,
@@ -642,6 +643,9 @@ export class EventsRepository implements IEventsRepository {
       imageIds: prismaEvent.imageIds,
       banners: prismaEvent.banners
         ? (prismaEvent.banners as unknown as EventBanners)
+        : undefined,
+      importInfo: prismaEvent.importInfo
+        ? (prismaEvent.importInfo as { sourceCode: string; sourceId: string })
         : undefined,
       status: this.mapEventStatusFromDb(prismaEvent.status),
       rejectionReason: prismaEvent.rejectionReason ?? undefined,

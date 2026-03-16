@@ -20,6 +20,8 @@ export interface CreateEventRequest {
   venue: string;
   location: Address;
   imageIds?: string[];
+  /** Admin-only: set when creating from import; never expose in public APIs. */
+  importInfo?: { sourceCode: string; sourceId: string };
 }
 
 /**

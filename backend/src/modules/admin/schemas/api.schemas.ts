@@ -752,14 +752,18 @@ export const ImportEventItemSchema = z
     venue: z.string().min(1, 'venue is required').max(200),
     location: ImportEventAddressSchema,
     dates: z.array(isoDatetimeSchema).min(1, 'At least one date is required'),
-    sections: z
-      .array(ImportEventSectionItemSchema)
-      .min(1, 'At least one section is required'),
-    imageIds: z.array(z.string()).optional(),
+    sections: z.array(ImportEventSectionItemSchema).optional(),
+    sourceCode: z.string().min(1, 'sourceCode is required').max(100),
+    sourceId: z.string().min(1, 'sourceId is required').max(200),
+    imageSquareUrl: z.string().optional(),
+    imageRectangleUrl: z.string().optional(),
+    imageOGURL: z.string().optional(),
   })
   .refine(
     (data) => {
-      const names = data.sections.map((s) => s.name.toLowerCase());
+      const sections = data.sections ?? [];
+      if (sections.length === 0) return true;
+      const names = sections.map((s) => s.name.toLowerCase());
       return new Set(names).size === names.length;
     },
     { message: 'Section names must be unique per event', path: ['sections'] },
@@ -778,11 +782,14 @@ export const ImportEventsPreviewItemSchema = z.object({
   slug: z.string(),
   datesCount: z.number(),
   dateLabels: z.array(z.string()),
-  sections: z.array(ImportEventSectionItemSchema),
+  sections: z.array(ImportEventSectionItemSchema).optional(),
+  sourceCode: z.string(),
+  sourceId: z.string(),
 });
 
 export const ImportEventsPreviewResponseSchema = z.object({
   events: z.array(ImportEventsPreviewItemSchema),
+  eventsForImport: z.array(ImportEventItemSchema),
 });
 
 export const ImportEventResultItemSchema = z.object({

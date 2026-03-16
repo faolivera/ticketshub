@@ -130,6 +130,7 @@ export class EventsService {
       venue: data.venue,
       location: data.location,
       imageIds: data.imageIds || [],
+      importInfo: data.importInfo,
       status: isAdmin ? EventStatus.Approved : EventStatus.Pending,
       createdBy: userId,
       approvedBy: isAdmin ? userId : undefined,
@@ -770,8 +771,9 @@ export class EventsService {
 
     return Promise.all(
       events.map(async (event) => {
+        const { importInfo: _importInfo, ...eventPublic } = event;
         const result: EventWithDatesResponse = {
-          ...event,
+          ...eventPublic,
           images: this.resolveImages(event.imageIds || [], imagesMap),
         };
 
@@ -1369,10 +1371,11 @@ export class EventsService {
       bannerUrls?: { square?: string; rectangle?: string; og_image?: string };
     }
   > {
+    const { importInfo: _importInfo, ...eventPublic } = event;
     const result: EventWithDatesResponse & {
       bannerUrls?: { square?: string; rectangle?: string; og_image?: string };
     } = {
-      ...event,
+      ...eventPublic,
       images: [],
     };
 
