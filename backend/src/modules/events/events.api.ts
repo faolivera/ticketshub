@@ -22,6 +22,8 @@ export interface CreateEventRequest {
   imageIds?: string[];
   /** Admin-only: set when creating from import; never expose in public APIs. */
   importInfo?: { sourceCode: string; sourceId: string };
+  /** Admin-only: custom slug for /event/{slug}. If omitted, slug is generated from name, venue, and event id. */
+  slug?: string;
 }
 
 /**

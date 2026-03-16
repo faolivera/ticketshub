@@ -943,12 +943,14 @@ export interface ImportEventItem {
   sourceCode: string;
   /** Source-specific event id for deduplication and Event.importInfo. */
   sourceId: string;
-  /** Optional image URLs from source (square 1:1). */
-  imageSquareUrl?: string;
-  /** Optional image URLs from source (rectangle 16:9). */
-  imageRectangleUrl?: string;
-  /** Optional image URL for og:image. */
-  imageOGURL?: string;
+  /** Optional image as base64 or data URL (data:image/xxx;base64,...). Stored as event banner (square 1:1). */
+  imageSquareBase64?: string;
+  /** Optional image as base64 or data URL. Stored as event banner (rectangle 16:9). */
+  imageRectangleBase64?: string;
+  /** Optional image as base64 or data URL. Stored as event banner (og:image). */
+  imageOGBase64?: string;
+  /** Optional custom slug for the event URL. If omitted, slug is generated from name, venue, and event id. */
+  slug?: string;
 }
 
 /**

@@ -1519,7 +1519,22 @@
       "importPartialSuccess": "Se importaron {{created}} de {{total}} eventos. {{failed}} fallaron.",
       "importFailed": "Error al importar",
       "viewEvent": "Ver evento",
-      "noFileSelected": "Ningún archivo seleccionado"
+      "noFileSelected": "Ningún archivo seleccionado",
+      "selectAll": "Seleccionar todos los eventos",
+      "selectAllLabel": "Seleccionar todos",
+      "selectNoneLabel": "Seleccionar ninguno",
+      "selectEvent": "Seleccionar evento {{name}}",
+      "selectedCount": "{{count}} de {{total}} seleccionados",
+      "image": "Imagen",
+      "name": "Nombre",
+      "venue": "Lugar",
+      "city": "Ciudad",
+      "country": "País",
+      "slug": "Slug",
+      "namePlaceholder": "Nombre del evento",
+      "venuePlaceholder": "Nombre del lugar",
+      "cityPlaceholder": "Ciudad",
+      "slugHint": "Dejar vacío para generar desde nombre y lugar (se añade sufijo al crear)"
     },
     "sidebar": {
       "navigation": "Navegación",

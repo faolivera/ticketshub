@@ -1520,7 +1520,22 @@
       "importPartialSuccess": "Imported {{created}} of {{total}} events. {{failed}} failed.",
       "importFailed": "Import failed",
       "viewEvent": "View event",
-      "noFileSelected": "No file selected"
+      "noFileSelected": "No file selected",
+      "selectAll": "Select all events",
+      "selectAllLabel": "Select all",
+      "selectNoneLabel": "Select none",
+      "selectEvent": "Select event {{name}}",
+      "selectedCount": "{{count}} of {{total}} selected",
+      "image": "Image",
+      "name": "Name",
+      "venue": "Venue",
+      "city": "City",
+      "country": "Country",
+      "slug": "Slug",
+      "namePlaceholder": "Event name",
+      "venuePlaceholder": "Venue name",
+      "cityPlaceholder": "City",
+      "slugHint": "Leave empty to auto-generate from name and venue (id suffix added on create)"
     },
     "sidebar": {
       "navigation": "Navigation",

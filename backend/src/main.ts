@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { json, urlencoded } from 'express';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
 import { ContextInterceptor } from './common/interceptors/context.interceptor';
@@ -9,8 +10,16 @@ import { ContextLogger } from './common/logger/context-logger';
 import { setLogLevelConfig } from './common/logger/log-level-resolver';
 import { ON_APP_INIT_CTX } from './common/types/context';
 
+/** Max JSON/urlencoded body size for import and other large payloads (e.g. admin events import). */
+const BODY_PARSER_LIMIT = '10mb';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    bodyParser: false,
+  });
+  app.use(json({ limit: BODY_PARSER_LIMIT }));
+  app.use(urlencoded({ limit: BODY_PARSER_LIMIT, extended: true }));
 
   app.useWebSocketAdapter(new IoAdapter(app));
 

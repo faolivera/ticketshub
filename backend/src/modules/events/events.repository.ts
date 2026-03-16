@@ -88,6 +88,22 @@ export class EventsRepository implements IEventsRepository {
     return events.map((e) => this.mapToEvent(e));
   }
 
+  async getExistingImportSourceKeys(ctx: Ctx): Promise<Set<string>> {
+    this.logger.debug(ctx, 'getExistingImportSourceKeys');
+    const events = await this.prisma.event.findMany({
+      where: { importInfo: { not: null } },
+      select: { importInfo: true },
+    });
+    const keys = new Set<string>();
+    for (const row of events) {
+      const info = row.importInfo as { sourceCode?: string; sourceId?: string } | null;
+      if (info?.sourceCode != null && info?.sourceId != null) {
+        keys.add(`${info.sourceCode}:${info.sourceId}`);
+      }
+    }
+    return keys;
+  }
+
   async getDatesByEventIds(ctx: Ctx, eventIds: string[]): Promise<EventDate[]> {
     this.logger.debug(ctx, 'getDatesByEventIds', { count: eventIds.length });
     if (eventIds.length === 0) return [];

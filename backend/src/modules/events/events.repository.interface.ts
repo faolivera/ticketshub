@@ -39,6 +39,12 @@ export interface IEventsRepository {
   findEventsByIds(ctx: Ctx, ids: string[]): Promise<Event[]>;
 
   /**
+   * Get set of existing import source keys ("sourceCode:sourceId") for events that have importInfo.
+   * Used to dedupe import payloads against already-imported events.
+   */
+  getExistingImportSourceKeys(ctx: Ctx): Promise<Set<string>>;
+
+  /**
    * Get dates for multiple events (batch)
    */
   getDatesByEventIds(ctx: Ctx, eventIds: string[]): Promise<EventDate[]>;

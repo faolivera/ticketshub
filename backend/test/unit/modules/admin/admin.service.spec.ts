@@ -122,6 +122,8 @@ describe('AdminService', () => {
       createEvent: jest.fn(),
       addEventDate: jest.fn(),
       addEventSection: jest.fn(),
+      uploadBanner: jest.fn().mockResolvedValue({}),
+      getExistingImportSourceKeys: jest.fn().mockResolvedValue(new Set<string>()),
     };
 
     const mockTicketsRepository = {
@@ -1807,6 +1809,8 @@ describe('AdminService', () => {
             { name: 'VIP', seatingType: 'numbered' as const },
             { name: 'General', seatingType: 'unnumbered' as const },
           ],
+          sourceCode: 'test',
+          sourceId: 'test-1',
         },
       ],
     };
@@ -1875,18 +1879,32 @@ describe('AdminService', () => {
           },
           dates: ['2025-08-01T18:00:00.000Z', '2025-08-02T18:00:00.000Z'],
           sections: [{ name: 'General', seatingType: 'unnumbered' as const }],
+          sourceCode: 'test',
+          sourceId: 'summer-1',
         },
       ],
     };
 
-    it('should return preview with generated slugs and date labels', () => {
-      const result = service.getImportPreview(mockCtx, validPayload);
+    it('should return preview with generated slugs and date labels', async () => {
+      const result = await service.getImportPreview(mockCtx, validPayload);
       expect(result.events).toHaveLength(1);
+      expect(result.eventsForImport).toHaveLength(1);
       expect(result.events[0].name).toBe('Summer Fest');
       expect(result.events[0].slug).toMatch(/summer-fest-park/);
       expect(result.events[0].datesCount).toBe(2);
       expect(result.events[0].dateLabels).toHaveLength(2);
       expect(result.events[0].sections).toHaveLength(1);
+      expect(result.events[0].sourceCode).toBe('test');
+      expect(result.events[0].sourceId).toBe('summer-1');
+    });
+
+    it('should exclude events that already exist in DB by importInfo', async () => {
+      eventsService.getExistingImportSourceKeys.mockResolvedValue(
+        new Set(['test:summer-1']),
+      );
+      const result = await service.getImportPreview(mockCtx, validPayload);
+      expect(result.events).toHaveLength(0);
+      expect(result.eventsForImport).toHaveLength(0);
     });
   });
 
@@ -1904,6 +1922,8 @@ describe('AdminService', () => {
           },
           dates: ['2025-09-15T20:00:00.000Z'],
           sections: [{ name: 'Floor', seatingType: 'numbered' as const }],
+          sourceCode: 'test',
+          sourceId: 'imported-1',
         },
       ],
     };
@@ -1949,6 +1969,7 @@ describe('AdminService', () => {
           category: 'Concert',
           venue: 'Hall',
           location: validPayload.events[0].location,
+          importInfo: { sourceCode: 'test', sourceId: 'imported-1' },
         }),
       );
       expect(eventsService.addEventDate).toHaveBeenCalledTimes(1);
@@ -1965,7 +1986,7 @@ describe('AdminService', () => {
       const twoEventsPayload = {
         events: [
           validPayload.events[0],
-          { ...validPayload.events[0], name: 'Second Event' },
+          { ...validPayload.events[0], name: 'Second Event', sourceId: 'imported-2' },
         ],
       };
 
@@ -1981,6 +2002,56 @@ describe('AdminService', () => {
       expect(result.results[0].success).toBe(false);
       expect(result.results[0].error).toBe('Slug already exists');
       expect(result.results[1].success).toBe(true);
+    });
+
+    it('should store base64 images as event banners when provided', async () => {
+      const minimalPngBase64 =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      const payloadWithImages = {
+        events: [
+          {
+            ...validPayload.events[0],
+            imageSquareBase64: `data:image/png;base64,${minimalPngBase64}`,
+            imageRectangleBase64: `data:image/png;base64,${minimalPngBase64}`,
+          },
+        ],
+      };
+
+      eventsService.createEvent.mockResolvedValue(mockCreatedEvent);
+      eventsService.addEventDate.mockResolvedValue({} as never);
+      eventsService.addEventSection.mockResolvedValue({} as never);
+      eventsService.uploadBanner.mockResolvedValue({} as never);
+
+      const result = await service.executeImport(
+        mockCtx,
+        payloadWithImages,
+        'admin_1',
+      );
+
+      expect(result.created).toBe(1);
+      expect(eventsService.uploadBanner).toHaveBeenCalledTimes(2);
+      expect(eventsService.uploadBanner).toHaveBeenCalledWith(
+        mockCtx,
+        'evt_imported1',
+        'admin_1',
+        Role.Admin,
+        'square',
+        expect.objectContaining({
+          mimetype: 'image/png',
+          originalname: 'square.png',
+        }),
+      );
+      expect(eventsService.uploadBanner).toHaveBeenCalledWith(
+        mockCtx,
+        'evt_imported1',
+        'admin_1',
+        Role.Admin,
+        'rectangle',
+        expect.objectContaining({
+          mimetype: 'image/png',
+          originalname: 'rectangle.png',
+        }),
+      );
     });
   });
 });

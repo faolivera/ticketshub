@@ -755,9 +755,18 @@ export const ImportEventItemSchema = z
     sections: z.array(ImportEventSectionItemSchema).optional(),
     sourceCode: z.string().min(1, 'sourceCode is required').max(100),
     sourceId: z.string().min(1, 'sourceId is required').max(200),
-    imageSquareUrl: z.string().optional(),
-    imageRectangleUrl: z.string().optional(),
-    imageOGURL: z.string().optional(),
+    imageSquareBase64: z.string().optional(),
+    imageRectangleBase64: z.string().optional(),
+    imageOGBase64: z.string().optional(),
+    slug: z
+      .string()
+      .min(2, 'slug must be at least 2 characters')
+      .max(120, 'slug must be at most 120 characters')
+      .regex(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        'Slug must be lowercase letters, numbers, and hyphens only',
+      )
+      .optional(),
   })
   .refine(
     (data) => {

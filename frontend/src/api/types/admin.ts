@@ -1060,8 +1060,14 @@ export interface ImportEventItem {
   venue: string;
   location: ImportEventAddress;
   dates: string[];
-  sections: ImportEventSectionItem[];
-  imageIds?: string[];
+  sections?: ImportEventSectionItem[];
+  sourceCode: string;
+  sourceId: string;
+  imageSquareBase64?: string;
+  imageRectangleBase64?: string;
+  imageOGBase64?: string;
+  /** Optional custom slug for the event URL. If omitted, slug is generated from name, venue, and event id. */
+  slug?: string;
 }
 
 export interface ImportEventsPayload {
@@ -1077,11 +1083,14 @@ export interface ImportEventsPreviewItem {
   slug: string;
   datesCount: number;
   dateLabels: string[];
-  sections: ImportEventSectionItem[];
+  sections?: ImportEventSectionItem[];
+  sourceCode: string;
+  sourceId: string;
 }
 
 export interface ImportEventsPreviewResponse {
   events: ImportEventsPreviewItem[];
+  eventsForImport: ImportEventItem[];
 }
 
 export interface ImportEventValidationError {

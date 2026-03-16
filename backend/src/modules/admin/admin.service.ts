@@ -81,7 +81,7 @@ import {
 import { ImportEventsPayloadSchema } from './schemas/api.schemas';
 import { z } from 'zod';
 import type { CreateEventRequest } from '../events/events.api';
-import type { EventCategory } from '../events/events.domain';
+import type { EventBannerType, EventCategory } from '../events/events.domain';
 import type { SeatingType } from '../tickets/tickets.domain';
 import {
   IdentityVerificationStatus,
@@ -1607,19 +1607,25 @@ export class AdminService {
   }
 
   /**
-   * Build preview for import (no persistence). Validates payload, dedupes by (sourceCode, sourceId), then returns preview.
+   * Build preview for import (no persistence). Validates payload, dedupes by (sourceCode, sourceId)
+   * within the payload and against existing events in the DB, then returns preview.
    */
-  getImportPreview(
+  async getImportPreview(
     ctx: Ctx,
     payload: ImportEventsPayload,
-  ): ImportEventsPreviewResponse {
+  ): Promise<ImportEventsPreviewResponse> {
     this.logger.debug(ctx, 'getImportPreview', {
       eventCount: payload.events.length,
     });
 
     const deduped = this.dedupeImportEventsBySource(payload.events);
+    const existingKeys = await this.eventsService.getExistingImportSourceKeys(ctx);
+    const toImport = deduped.filter((item) => {
+      const key = `${item.sourceCode}:${item.sourceId}`;
+      return !existingKeys.has(key);
+    });
 
-    const events: ImportEventsPreviewItem[] = deduped.map((item, index) => {
+    const events: ImportEventsPreviewItem[] = toImport.map((item, index) => {
       const previewId = `preview-${index}`;
       const slug = generateEventSlug(item.name, item.venue, previewId);
       const dateLabels = item.dates.map((d) => {
@@ -1645,7 +1651,98 @@ export class AdminService {
       };
     });
 
-    return { events, eventsForImport: deduped };
+    return { events, eventsForImport: toImport };
+  }
+
+  /**
+   * Parse base64 or data URL image string into buffer and mime type.
+   * Accepts: "data:image/png;base64,..." or raw base64 (defaults to image/jpeg).
+   * Returns null if invalid or unsupported mime type.
+   */
+  private parseBase64Image(
+    value: string,
+  ): { buffer: Buffer; mimeType: string } | null {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    let base64: string;
+    let mimeType = 'image/jpeg';
+
+    if (trimmed.startsWith('data:')) {
+      const match = trimmed.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/i);
+      if (!match) return null;
+      mimeType = match[1].toLowerCase();
+      base64 = match[2];
+    } else {
+      base64 = trimmed;
+    }
+
+    try {
+      const buffer = Buffer.from(base64, 'base64');
+      if (buffer.length === 0) return null;
+      return { buffer, mimeType };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Store event banner images from import item base64 fields.
+   * Logs and skips on decode or upload failure so event import still succeeds.
+   */
+  private async storeImportBannerImages(
+    ctx: Ctx,
+    eventId: string,
+    adminId: string,
+    item: ImportEventItem,
+  ): Promise<void> {
+    const bannerFields: { key: keyof ImportEventItem; type: EventBannerType }[] = [
+      { key: 'imageSquareBase64', type: 'square' },
+      { key: 'imageRectangleBase64', type: 'rectangle' },
+      { key: 'imageOGBase64', type: 'og_image' },
+    ];
+
+    for (const { key, type } of bannerFields) {
+      const base64 = item[key];
+      if (typeof base64 !== 'string') continue;
+
+      const parsed = this.parseBase64Image(base64);
+      if (!parsed) {
+        this.logger.warn(ctx, 'Import banner skipped: invalid base64 or mime', {
+          eventId,
+          bannerType: type,
+        });
+        continue;
+      }
+
+      try {
+        const ext =
+          parsed.mimeType === 'image/png'
+            ? 'png'
+            : parsed.mimeType === 'image/webp'
+              ? 'webp'
+              : 'jpg';
+        await this.eventsService.uploadBanner(
+          ctx,
+          eventId,
+          adminId,
+          Role.Admin,
+          type,
+          {
+            buffer: parsed.buffer,
+            originalname: `${type}.${ext}`,
+            mimetype: parsed.mimeType,
+            size: parsed.buffer.length,
+          },
+        );
+      } catch (err) {
+        this.logger.warn(ctx, 'Import banner upload failed', {
+          eventId,
+          bannerType: type,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
   }
 
   /**
@@ -1692,6 +1789,8 @@ export class AdminService {
           venue: item.venue,
           location: item.location,
           importInfo: { sourceCode: item.sourceCode, sourceId: item.sourceId },
+          ...(item.slug != null &&
+            item.slug.trim() !== '' && { slug: item.slug.trim() }),
         };
         const event = await this.eventsService.createEvent(
           ctx,
@@ -1722,6 +1821,8 @@ export class AdminService {
             },
           );
         }
+
+        await this.storeImportBannerImages(ctx, event.id, adminId, item);
 
         results.push({
           index,

@@ -496,7 +496,7 @@ export class AdminController {
         data: { valid: false, errors: validation.errors },
       };
     }
-    const data = this.adminService.getImportPreview(ctx, validation.data);
+    const data = await this.adminService.getImportPreview(ctx, validation.data);
     return { success: true, data };
   }
 

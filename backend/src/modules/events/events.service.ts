@@ -122,9 +122,30 @@ export class EventsService {
     }
 
     const eventId = this.generateId('evt');
+    let slug: string;
+    if (data.slug != null && data.slug.trim() !== '') {
+      const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+      if (!slugRegex.test(data.slug.trim())) {
+        throw new BadRequestException(
+          'Slug must be lowercase letters, numbers, and hyphens only',
+        );
+      }
+      const existing = await this.eventsRepository.findEventBySlug(
+        ctx,
+        data.slug.trim(),
+      );
+      if (existing) {
+        throw new ConflictException(
+          `Event with slug "${data.slug.trim()}" already exists`,
+        );
+      }
+      slug = data.slug.trim();
+    } else {
+      slug = generateEventSlug(data.name, data.venue, eventId);
+    }
     const event: Event = {
       id: eventId,
-      slug: generateEventSlug(data.name, data.venue, eventId),
+      slug,
       name: data.name,
       category: data.category,
       venue: data.venue,
@@ -218,6 +239,14 @@ export class EventsService {
     }));
 
     return await this.attachImages(ctx, eventsWithDates);
+  }
+
+  /**
+   * Get set of existing import source keys ("sourceCode:sourceId") for events that have importInfo.
+   * Used by admin import to dedupe against already-imported events.
+   */
+  async getExistingImportSourceKeys(ctx: Ctx): Promise<Set<string>> {
+    return this.eventsRepository.getExistingImportSourceKeys(ctx);
   }
 
   /**
