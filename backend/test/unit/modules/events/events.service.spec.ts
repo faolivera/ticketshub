@@ -249,7 +249,10 @@ describe('EventsService', () => {
       );
       expect(eventsRepository.listEventsPaginated).toHaveBeenCalledWith(
         mockCtx,
-        expect.objectContaining({ approvedOnly: true }),
+        expect.objectContaining({
+          approvedOnly: true,
+          orderBy: 'rankingScore',
+        }),
       );
       expect(eventsRepository.getDatesByEventIds).toHaveBeenCalledWith(
         mockCtx,
@@ -283,7 +286,10 @@ describe('EventsService', () => {
       expect(result[0].sections).toHaveLength(2);
       expect(eventsRepository.listEventsPaginated).toHaveBeenCalledWith(
         mockCtx,
-        expect.objectContaining({ approvedOnly: false }),
+        expect.objectContaining({
+          approvedOnly: false,
+          orderBy: 'createdAt',
+        }),
       );
       expect(eventsRepository.getDatesByEventIds).toHaveBeenCalled();
       expect(eventsRepository.getSectionsByEventIds).toHaveBeenCalled();

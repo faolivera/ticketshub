@@ -37,6 +37,16 @@ export class EventScoringService {
   }
 
   /**
+   * Enqueue one or more events for re-scoring. Returns the number of events enqueued.
+   */
+  async requestScoringBatch(ctx: Ctx, eventIds: string[]): Promise<{ enqueued: number }> {
+    for (const eventId of eventIds) {
+      await this.eventScoringRepository.enqueueEvent(ctx, eventId);
+    }
+    return { enqueued: eventIds.length };
+  }
+
+  /**
    * Get current ranking config for admin.
    */
   async getConfig(ctx: Ctx): Promise<GetEventsRankingConfigResponse> {

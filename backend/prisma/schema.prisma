@@ -374,6 +374,7 @@ model Event {
   listings        TicketListing[]
   requireScoringQueueEntry EventRequireScoring?
 
+  @@index([status, rankingScore(sort: Desc)])
   @@map("events")
 }
 

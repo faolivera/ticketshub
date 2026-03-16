@@ -51,6 +51,7 @@ import type {
   ImportEventsResultResponse,
   AdminGetEventsRankingConfigResponse,
   AdminPatchEventsRankingConfigRequest,
+  AdminPostEventsRankingQueueResponse,
 } from '../types/admin';
 
 /**
@@ -505,6 +506,19 @@ export const adminService = {
     const response = await apiClient.patch<AdminGetEventsRankingConfigResponse>(
       '/admin/events-ranking/config',
       data
+    );
+    return response.data;
+  },
+
+  /**
+   * Enqueue one or more events for re-scoring. Returns the number enqueued.
+   */
+  async postEventsRankingQueue(
+    eventIds: string[]
+  ): Promise<AdminPostEventsRankingQueueResponse> {
+    const response = await apiClient.post<AdminPostEventsRankingQueueResponse>(
+      '/admin/events-ranking/queue',
+      { eventIds }
     );
     return response.data;
   },

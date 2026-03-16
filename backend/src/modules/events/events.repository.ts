@@ -146,9 +146,14 @@ export class EventsRepository implements IEventsRepository {
       search?: string;
       limit: number;
       offset: number;
+      orderBy?: 'createdAt' | 'rankingScore';
     },
   ): Promise<{ events: Event[]; total: number }> {
-    this.logger.debug(_ctx, 'listEventsPaginated', { limit: opts.limit, offset: opts.offset });
+    this.logger.debug(_ctx, 'listEventsPaginated', {
+      limit: opts.limit,
+      offset: opts.offset,
+      orderBy: opts.orderBy ?? 'createdAt',
+    });
     const where: Record<string, unknown> = {};
     if (opts.approvedOnly) {
       where.status = 'approved';
@@ -166,10 +171,14 @@ export class EventsRepository implements IEventsRepository {
         { venue: { contains: term, mode: 'insensitive' } },
       ];
     }
+    const orderBy =
+      opts.orderBy === 'rankingScore'
+        ? { rankingScore: { sort: 'desc' as const, nulls: 'last' as const } }
+        : { createdAt: 'desc' as const };
     const [events, total] = await Promise.all([
       this.prisma.event.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip: opts.offset,
         take: opts.limit,
       }),

@@ -62,6 +62,7 @@ export interface IEventsRepository {
   /**
    * List events with optional filters and pagination (DB-level).
    * When approvedOnly is true, only approved events; otherwise all.
+   * orderBy: 'rankingScore' for public listing (e.g. landing); default 'createdAt'.
    */
   listEventsPaginated(
     ctx: Ctx,
@@ -72,6 +73,7 @@ export interface IEventsRepository {
       search?: string;
       limit: number;
       offset: number;
+      orderBy?: 'createdAt' | 'rankingScore';
     },
   ): Promise<{ events: Event[]; total: number }>;
 

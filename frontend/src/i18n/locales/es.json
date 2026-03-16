@@ -1802,7 +1802,22 @@
       "save": "Guardar configuración",
       "saving": "Guardando…",
       "saveSuccess": "Configuración guardada.",
-      "validationRequired": "Ingresá al menos un valor válido para guardar."
+      "validationRequired": "Ingresá al menos un valor válido para guardar.",
+      "queueTitle": "Encolar re-puntuación",
+      "queueDescription": "Seleccioná uno o más eventos para agregarlos a la cola de puntuación. El job recalculará su score en la próxima ejecución.",
+      "searchPlaceholder": "Buscar eventos por nombre…",
+      "search": "Buscar",
+      "eventsLoading": "Cargando eventos…",
+      "noEvents": "No hay eventos.",
+      "pagePrev": "Anterior",
+      "pageNext": "Siguiente",
+      "pageOf": "Página {{page}} de {{totalPages}} ({{total}} en total)",
+      "selectAll": "Seleccionar todos",
+      "clearSelection": "Quitar selección",
+      "selectedCount": "{{count}} seleccionados",
+      "enqueueRescoring": "Encolar re-puntuación",
+      "enqueueing": "Encolando…",
+      "queueSuccess": "{{count}} evento(s) encolados para re-puntuación."
     },
     "dashboard": {
       "title": "Panel Principal",

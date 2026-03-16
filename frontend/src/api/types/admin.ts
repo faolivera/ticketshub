@@ -711,6 +711,20 @@ export interface AdminPatchEventsRankingConfigRequest {
   jobIntervalMinutes?: number;
 }
 
+/**
+ * Request body for POST /api/admin/events-ranking/queue.
+ */
+export interface AdminPostEventsRankingQueueRequest {
+  eventIds: string[];
+}
+
+/**
+ * Response for POST /api/admin/events-ranking/queue.
+ */
+export interface AdminPostEventsRankingQueueResponse {
+  enqueued: number;
+}
+
 // === Admin Promotions (GET/POST /admin/promotions, PATCH /admin/promotions/:id/status) ===
 
 export type PromotionType = 'SELLER_DISCOUNTED_FEE' | 'BUYER_DISCOUNTED_FEE';

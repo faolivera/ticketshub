@@ -71,6 +71,8 @@ import type {
   ImportEventsResultResponse,
   AdminGetEventsRankingConfigResponse,
   AdminPatchEventsRankingConfigRequest,
+  AdminPostEventsRankingQueueRequest,
+  AdminPostEventsRankingQueueResponse,
 } from './admin.api';
 import {
   AdminPendingEventsResponseSchema,
@@ -101,6 +103,8 @@ import {
   ImportEventsResultResponseSchema,
   AdminGetEventsRankingConfigResponseSchema,
   AdminPatchEventsRankingConfigRequestSchema,
+  AdminPostEventsRankingQueueRequestSchema,
+  AdminPostEventsRankingQueueResponseSchema,
 } from './schemas/api.schemas';
 import { EventsService } from '../events/events.service';
 import { EventScoringService } from '../event-scoring/event-scoring.service';
@@ -163,6 +167,25 @@ export class AdminController {
     @Body() body: AdminPatchEventsRankingConfigRequest,
   ): Promise<ApiResponse<AdminGetEventsRankingConfigResponse>> {
     const data = await this.eventScoringService.updateConfig(ctx, body);
+    return { success: true, data };
+  }
+
+  /**
+   * Enqueue one or more events for re-scoring. The job will process them asynchronously.
+   */
+  @Post('events-ranking/queue')
+  @ValidateResponse(AdminPostEventsRankingQueueResponseSchema)
+  async postEventsRankingQueue(
+    @Context() ctx: Ctx,
+    @Body() body: AdminPostEventsRankingQueueRequest,
+  ): Promise<ApiResponse<AdminPostEventsRankingQueueResponse>> {
+    const parsed = AdminPostEventsRankingQueueRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException(
+        parsed.error.flatten().fieldErrors?.eventIds?.[0] ?? 'Invalid request body',
+      );
+    }
+    const data = await this.eventScoringService.requestScoringBatch(ctx, parsed.data.eventIds);
     return { success: true, data };
   }
 

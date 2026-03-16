@@ -56,6 +56,31 @@ describe('EventScoringService', () => {
     });
   });
 
+  describe('requestScoringBatch', () => {
+    it('should enqueue all events and return count', async () => {
+      repository.enqueueEvent.mockResolvedValue(undefined);
+
+      const result = await service.requestScoringBatch(mockCtx, [
+        'event-1',
+        'event-2',
+        'event-3',
+      ]);
+
+      expect(result.enqueued).toBe(3);
+      expect(repository.enqueueEvent).toHaveBeenCalledTimes(3);
+      expect(repository.enqueueEvent).toHaveBeenNthCalledWith(1, mockCtx, 'event-1');
+      expect(repository.enqueueEvent).toHaveBeenNthCalledWith(2, mockCtx, 'event-2');
+      expect(repository.enqueueEvent).toHaveBeenNthCalledWith(3, mockCtx, 'event-3');
+    });
+
+    it('should return enqueued 0 when eventIds is empty', async () => {
+      const result = await service.requestScoringBatch(mockCtx, []);
+
+      expect(result.enqueued).toBe(0);
+      expect(repository.enqueueEvent).not.toHaveBeenCalled();
+    });
+  });
+
   describe('getConfig', () => {
     it('should return config when row exists', async () => {
       const row = {
@@ -271,7 +296,7 @@ describe('EventScoringService', () => {
         expect.arrayContaining([
           expect.objectContaining({
             eventId: 'e1',
-            rankingScore: 1,
+            rankingScore: 2, // weightActiveListings (1) + activeListingsCount (1)
             rankingUpdatedAt: expect.any(Date),
           }),
         ]),

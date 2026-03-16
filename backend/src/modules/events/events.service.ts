@@ -291,6 +291,7 @@ export class EventsService {
   ): Promise<EventWithDatesResponse[]> {
     const offset = query.offset ?? 0;
     const limit = query.limit ?? 20;
+    const isPublicListing = !includeAllStatuses && !query.search?.trim();
     const result = await this.eventsRepository.listEventsPaginated(ctx, {
       approvedOnly: !includeAllStatuses,
       status: query.status as EventStatus | undefined,
@@ -298,6 +299,7 @@ export class EventsService {
       search: query.search,
       limit,
       offset,
+      orderBy: isPublicListing ? 'rankingScore' : 'createdAt',
     });
 
     const events = result.events;

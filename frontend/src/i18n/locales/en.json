@@ -1803,7 +1803,22 @@
       "save": "Save config",
       "saving": "Saving…",
       "saveSuccess": "Config saved.",
-      "validationRequired": "Please enter at least one valid value to save."
+      "validationRequired": "Please enter at least one valid value to save.",
+      "queueTitle": "Enqueue re-scoring",
+      "queueDescription": "Select one or more events to add to the scoring queue. The job will recompute their ranking score on the next run.",
+      "searchPlaceholder": "Search events by name…",
+      "search": "Search",
+      "eventsLoading": "Loading events…",
+      "noEvents": "No events found.",
+      "pagePrev": "Previous",
+      "pageNext": "Next",
+      "pageOf": "Page {{page}} of {{totalPages}} ({{total}} total)",
+      "selectAll": "Select all",
+      "clearSelection": "Clear selection",
+      "selectedCount": "{{count}} selected",
+      "enqueueRescoring": "Enqueue re-scoring",
+      "enqueueing": "Enqueueing…",
+      "queueSuccess": "{{count}} event(s) enqueued for re-scoring."
     },
     "dashboard": {
       "title": "Dashboard",

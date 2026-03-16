@@ -10,16 +10,19 @@ import {
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { Checkbox } from '../../components/ui/checkbox';
 import { adminService } from '../../../api/services/admin.service';
 import type {
   AdminGetEventsRankingConfigResponse,
   AdminPatchEventsRankingConfigRequest,
+  AdminAllEventItem,
 } from '../../../api/types/admin';
 
 const MIN_WEIGHT = 0;
 const MAX_WEIGHT = 10;
 const MIN_JOB_INTERVAL = 1;
 const MAX_JOB_INTERVAL = 1440;
+const EVENTS_PAGE_SIZE = 10;
 
 export function EventsScoreConfig() {
   const { t } = useTranslation();
@@ -34,6 +37,17 @@ export function EventsScoreConfig() {
   const [weightProximity, setWeightProximity] = useState('');
   const [weightPopular, setWeightPopular] = useState('');
   const [jobIntervalMinutes, setJobIntervalMinutes] = useState('');
+
+  const [events, setEvents] = useState<AdminAllEventItem[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [eventsTotal, setEventsTotal] = useState(0);
+  const [eventsTotalPages, setEventsTotalPages] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
+  const [enqueueing, setEnqueueing] = useState(false);
+  const [queueSuccess, setQueueSuccess] = useState<string | null>(null);
+  const [queueError, setQueueError] = useState<string | null>(null);
 
   const fetchConfig = async () => {
     try {
@@ -53,9 +67,38 @@ export function EventsScoreConfig() {
     }
   };
 
+  const fetchEvents = async (page: number, search: string) => {
+    try {
+      setEventsLoading(true);
+      const data = await adminService.getAllEvents({
+        page,
+        limit: EVENTS_PAGE_SIZE,
+        search: search.trim() || undefined,
+      });
+      setEvents(data.events);
+      setEventsPage(data.page);
+      setEventsTotal(data.total);
+      setEventsTotalPages(data.totalPages);
+    } catch {
+      setEvents([]);
+      setEventsTotal(0);
+      setEventsTotalPages(0);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    fetchEvents(1, searchQuery);
+  };
+
   useEffect(() => {
     fetchConfig();
   }, []);
+
+  useEffect(() => {
+    if (!loading) fetchEvents(1, '');
+  }, [loading]);
 
   const handleSave = async () => {
     const payload: AdminPatchEventsRankingConfigRequest = {};
@@ -94,6 +137,40 @@ export function EventsScoreConfig() {
       setError(e instanceof Error ? e.message : 'Failed to save config');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleEventSelection = (eventId: string) => {
+    setSelectedEventIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(eventId)) next.delete(eventId);
+      else next.add(eventId);
+      return next;
+    });
+  };
+
+  const selectAllEvents = () => {
+    setSelectedEventIds(new Set(events.map((e) => e.id)));
+  };
+
+  const clearEventSelection = () => {
+    setSelectedEventIds(new Set());
+  };
+
+  const handleEnqueueRescoring = async () => {
+    const ids = Array.from(selectedEventIds);
+    if (ids.length === 0) return;
+    try {
+      setEnqueueing(true);
+      setQueueError(null);
+      setQueueSuccess(null);
+      const data = await adminService.postEventsRankingQueue(ids);
+      setQueueSuccess(t('admin.eventsScore.queueSuccess', { count: data.enqueued }));
+      setSelectedEventIds(new Set());
+    } catch (e) {
+      setQueueError(e instanceof Error ? e.message : 'Failed to enqueue');
+    } finally {
+      setEnqueueing(false);
     }
   };
 
@@ -216,6 +293,137 @@ export function EventsScoreConfig() {
       <Button onClick={handleSave} disabled={saving}>
         {saving ? t('admin.eventsScore.saving') : t('admin.eventsScore.save')}
       </Button>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('admin.eventsScore.queueTitle')}</CardTitle>
+          <CardDescription>{t('admin.eventsScore.queueDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {queueError && (
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {queueError}
+            </div>
+          )}
+          {queueSuccess && (
+            <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+              {queueSuccess}
+            </div>
+          )}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex flex-1 gap-2">
+              <Input
+                type="search"
+                placeholder={t('admin.eventsScore.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="max-w-xs"
+                aria-label={t('admin.eventsScore.searchPlaceholder')}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSearch}
+                disabled={eventsLoading}
+              >
+                {t('admin.eventsScore.search')}
+              </Button>
+            </div>
+          </div>
+
+          {eventsLoading ? (
+            <p className="text-sm text-muted-foreground">{t('admin.eventsScore.eventsLoading')}</p>
+          ) : events.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('admin.eventsScore.noEvents')}</p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllEvents}
+                  disabled={enqueueing}
+                >
+                  {t('admin.eventsScore.selectAll')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearEventSelection}
+                  disabled={enqueueing || selectedEventIds.size === 0}
+                >
+                  {t('admin.eventsScore.clearSelection')}
+                </Button>
+                <span className="flex items-center text-sm text-muted-foreground">
+                  {t('admin.eventsScore.selectedCount', { count: selectedEventIds.size })}
+                </span>
+              </div>
+              <ul className="max-h-[280px] overflow-y-auto space-y-2 rounded-md border p-3">
+                {events.map((event) => (
+                  <li
+                    key={event.id}
+                    className="flex items-center gap-3 rounded p-2 hover:bg-muted/50"
+                  >
+                    <Checkbox
+                      id={`event-${event.id}`}
+                      checked={selectedEventIds.has(event.id)}
+                      onCheckedChange={() => toggleEventSelection(event.id)}
+                      disabled={enqueueing}
+                    />
+                    <label
+                      htmlFor={`event-${event.id}`}
+                      className="flex-1 cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {event.name}
+                    </label>
+                    <span className="text-xs text-muted-foreground">{event.status}</span>
+                  </li>
+                ))}
+              </ul>
+              {eventsTotalPages > 1 && (
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchEvents(eventsPage - 1, searchQuery)}
+                    disabled={eventsLoading || eventsPage <= 1}
+                  >
+                    {t('admin.eventsScore.pagePrev')}
+                  </Button>
+                  <span className="text-muted-foreground">
+                    {t('admin.eventsScore.pageOf', {
+                      page: eventsPage,
+                      totalPages: eventsTotalPages,
+                      total: eventsTotal,
+                    })}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchEvents(eventsPage + 1, searchQuery)}
+                    disabled={eventsLoading || eventsPage >= eventsTotalPages}
+                  >
+                    {t('admin.eventsScore.pageNext')}
+                  </Button>
+                </div>
+              )}
+              <Button
+                onClick={handleEnqueueRescoring}
+                disabled={selectedEventIds.size === 0 || enqueueing}
+              >
+                {enqueueing
+                  ? t('admin.eventsScore.enqueueing')
+                  : t('admin.eventsScore.enqueueRescoring')}
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

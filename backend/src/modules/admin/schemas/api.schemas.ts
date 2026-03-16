@@ -838,3 +838,11 @@ export const AdminPatchEventsRankingConfigRequestSchema = z.object({
   weightPopular: z.number().min(0).optional(),
   jobIntervalMinutes: z.number().int().min(1).max(1440).optional(),
 });
+
+export const AdminPostEventsRankingQueueRequestSchema = z.object({
+  eventIds: z.array(z.string().min(1)).min(1).max(500),
+});
+
+export const AdminPostEventsRankingQueueResponseSchema = z.object({
+  enqueued: z.number(),
+});

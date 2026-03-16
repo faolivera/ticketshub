@@ -1056,3 +1056,17 @@ export interface AdminPatchEventsRankingConfigRequest {
   weightPopular?: number;
   jobIntervalMinutes?: number;
 }
+
+/**
+ * Request body for POST /api/admin/events-ranking/queue. Enqueue events for re-scoring.
+ */
+export interface AdminPostEventsRankingQueueRequest {
+  eventIds: string[];
+}
+
+/**
+ * Response for POST /api/admin/events-ranking/queue.
+ */
+export interface AdminPostEventsRankingQueueResponse {
+  enqueued: number;
+}
