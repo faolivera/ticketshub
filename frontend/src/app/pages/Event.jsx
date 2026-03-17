@@ -266,8 +266,13 @@ export default function EventDetail() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        .ev-hero-inner { display: grid; grid-template-columns: 260px 1fr; overflow: hidden; }
-        @media(max-width:720px){ .ev-hero-inner{ grid-template-columns:1fr; } .ev-poster{ aspect-ratio:16/8!important; } }
+        .ev-hero-wrap { position: relative; overflow: hidden; }
+        .ev-hero-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; filter: blur(14px); transform: scale(1.08); }
+        .ev-hero-overlay { position: absolute; inset: 0; z-index: 0; background:${V}5c }
+        .ev-hero-inner { position: relative; z-index: 1; display: block; overflow: hidden; }
+        .ev-hero-content .date-pill { color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+        .ev-hero-content .date-pill:hover:not(.active) { color: #fff; border-color: rgba(255,255,255,0.5); }
+        .ev-hero-content .date-pill.active { background: ${VLIGHT}; border-color: ${V}; color: ${V}; text-shadow: none; }
         .tk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
         .tk-list { display: flex; flex-direction: column; gap: 12px; }
         @media(max-width:960px){ .tk-grid{ grid-template-columns:repeat(2,1fr)!important; } }
@@ -345,30 +350,29 @@ export default function EventDetail() {
           <ArrowLeft size={15} /> {t("eventTickets.backToEvents")}
         </Link>
 
-        {/* Hero */}
-        <div ref={heroRef} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, overflow: "hidden", marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+        {/* Hero: blurred event image as background only (no poster), overlay + content */}
+        <div ref={heroRef} className="ev-hero-wrap" style={{ border: `1px solid ${BORDER}`, borderRadius: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <div className="ev-hero-bg" style={{ backgroundImage: `url(${EVENT.img})` }} aria-hidden />
+          <div className="ev-hero-overlay" aria-hidden />
           <div className="ev-hero-inner">
-            <div className="ev-poster" style={{ aspectRatio: "1", overflow: "hidden", background: "#111", flexShrink: 0 }}>
-              <img src={EVENT.img} alt={EVENT.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            </div>
-            <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 0 }}>
+            <div className="ev-hero-content" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 0 }}>
               <div style={{ marginBottom: 16 }}>
-                <CategoryBadge label={EVENT.category} />
-                <h1 style={{ ...E, fontSize: "clamp(24px,3vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.5px", color: DARK, margin: "10px 0 4px" }}>
+                <CategoryBadge label={EVENT.category} hero />
+                <h1 style={{ ...E, fontSize: "clamp(24px,3vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.5px", color: "#fff", margin: "10px 0 4px", textShadow: "0 1px 3px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.4)" }}>
                   {EVENT.name}
                 </h1>
-                {EVENT.subtitle && <p style={{ fontSize: 14.5, color: MUTED }}>{EVENT.subtitle}</p>}
+                {EVENT.subtitle && <p style={{ fontSize: 14.5, color: "rgba(255,255,255,0.88)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>{EVENT.subtitle}</p>}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: MUTED }}>
-                  <MapPin size={14} style={{ color: BLUE, flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, color: DARK }}>{EVENT.venue}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "rgba(255,255,255,0.85)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+                  <MapPin size={14} style={{ color: BLIGHT, flexShrink: 0 }} />
+                  <span style={{ fontWeight: 600, color: "#fff" }}>{EVENT.venue}</span>
                   {EVENT.location && <><span>·</span><span>{EVENT.location}</span></>}
                 </div>
               </div>
               {EVENT.dates?.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
-                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700, color: MUTED, marginBottom: 8 }}>Seleccioná una fecha</p>
+                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700, color: "rgba(255,255,255,0.75)", marginBottom: 8, textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>Seleccioná una fecha</p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                     {EVENT.dates.map((d, i) => (
                       <button key={d.id} type="button" className={`date-pill${dateIdx === i ? " active" : ""}`} onClick={() => setDateIdx(i)}>
@@ -378,15 +382,15 @@ export default function EventDetail() {
                   </div>
                 </div>
               )}
-              <div style={{ padding: "16px 18px", background: SURFACE, borderRadius: 14, border: `1px solid ${BORDER}`, marginBottom: 16 }}>
+              <div style={{ padding: "16px 18px", background: "rgba(0,0,0,0.28)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.18)", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
                   <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: MUTED, marginBottom: 4 }}>Entradas desde</p>
-                    <p style={{ fontSize: 32, fontWeight: 800, color: V, lineHeight: 1 }}>
-                      {fmt(minPrice)} <span style={{ fontSize: 12, fontWeight: 500, color: MUTED }}>ARS</span>
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "rgba(255,255,255,0.8)", marginBottom: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>Entradas desde</p>
+                    <p style={{ fontSize: 32, fontWeight: 800, color: V, lineHeight: 1, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
+                      {fmt(minPrice)} <span style={{ fontSize: 12, fontWeight: 500, color: VLIGHT }}>ARS</span>
                     </p>
-                    <p style={{ fontSize: 12.5, color: MUTED, marginTop: 4 }}>
-                      <span style={{ fontWeight: 600, color: DARK }}>{sorted.reduce((acc, t) => acc + t.qty, 0)} entradas</span> disponibles
+                    <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.85)", marginTop: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                      <span style={{ fontWeight: 600, color: "#fff" }}>{sorted.reduce((acc, t) => acc + t.qty, 0)} entradas</span> disponibles
                       {activeDate && ` · ${sellersCount} vendedor${sellersCount !== 1 ? "es" : ""}`}
                     </p>
                   </div>
@@ -401,11 +405,11 @@ export default function EventDetail() {
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
                 {[
-                  { icon: <Lock size={12} style={{ color: BLUE }} />, text: t("landing.trustSecurePayment") },
-                  { icon: <CheckCircle size={12} style={{ color: GREEN }} />, text: t("eventTickets.buyerProtection") },
-                  { icon: <RefreshCw size={12} style={{ color: "#b45309" }} />, text: t("landing.trustRefund") },
+                  { icon: <Lock size={12} style={{ color: BLIGHT }} />, text: t("landing.trustSecurePayment") },
+                  { icon: <CheckCircle size={12} style={{ color: "#86efac" }} />, text: t("eventTickets.buyerProtection") },
+                  { icon: <RefreshCw size={12} style={{ color: "#fde68a" }} />, text: t("landing.trustRefund") },
                 ].map(({ icon, text }) => (
-                  <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED, fontWeight: 500 }}>
+                  <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "rgba(255,255,255,0.85)", fontWeight: 500, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {icon} {text}
                   </div>
                 ))}
@@ -595,7 +599,14 @@ function TicketListRow({ ticket, eventSlug }) {
   );
 }
 
-function CategoryBadge({ label }) {
+function CategoryBadge({ label, hero }) {
+  if (hero) {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 11px", borderRadius: 100, background: "rgba(0,0,0,0.4)", color: "rgba(255,255,255,0.95)", border: "1px solid rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+        {label}
+      </span>
+    );
+  }
   return (
     <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 11px", borderRadius: 100, background: BG, color: MUTED, border: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600 }}>
       {label}

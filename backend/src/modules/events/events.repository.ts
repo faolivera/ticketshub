@@ -51,6 +51,7 @@ export class EventsRepository implements IEventsRepository {
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
         isPopular: event.isPopular ?? false,
+        highlight: event.highlight ?? false,
       },
     });
     return this.mapToEvent(created);
@@ -259,6 +260,7 @@ export class EventsRepository implements IEventsRepository {
       if (updates.approvedBy !== undefined)
         data.approvedById = updates.approvedBy;
       if (updates.isPopular !== undefined) data.isPopular = updates.isPopular;
+      if (updates.highlight !== undefined) data.highlight = updates.highlight;
 
       const updated = await this.prisma.event.update({
         where: { id },
@@ -751,6 +753,7 @@ export class EventsRepository implements IEventsRepository {
       createdAt: prismaEvent.createdAt,
       updatedAt: prismaEvent.updatedAt,
       isPopular: prismaEvent.isPopular ?? false,
+      highlight: prismaEvent.highlight ?? false,
     };
   }
 

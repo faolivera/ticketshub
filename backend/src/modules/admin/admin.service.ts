@@ -706,6 +706,8 @@ export class AdminService {
         },
         listingsCount: stats.listingsCount,
         availableTicketsCount: stats.availableTicketsCount,
+        hasRectangleBanner: Boolean(event.banners?.rectangle),
+        highlight: event.highlight ?? false,
       };
     });
 

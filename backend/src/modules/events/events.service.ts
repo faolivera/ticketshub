@@ -162,6 +162,7 @@ export class EventsService {
       createdAt: new Date(),
       updatedAt: new Date(),
       isPopular: false,
+      highlight: false,
     };
 
     return await this.eventsRepository.createEvent(ctx, event);
@@ -999,6 +1000,14 @@ export class EventsService {
     if (data.location !== undefined) eventUpdates.location = data.location;
     if (data.imageIds !== undefined) eventUpdates.imageIds = data.imageIds;
     if (data.isPopular !== undefined) eventUpdates.isPopular = data.isPopular;
+    if (data.highlight !== undefined) {
+      if (data.highlight && !event.banners?.rectangle) {
+        throw new BadRequestException(
+          'Event must have a rectangle banner to be set as featured',
+        );
+      }
+      eventUpdates.highlight = data.highlight;
+    }
 
     if (Object.keys(eventUpdates).length > 0) {
       const result = await this.eventsRepository.updateEvent(
@@ -1139,6 +1148,7 @@ export class EventsService {
         createdAt: finalEvent.createdAt,
         updatedAt: finalEvent.updatedAt,
         isPopular: finalEvent.isPopular,
+        highlight: finalEvent.highlight,
       },
       dates: finalDates.map((d) => ({
         id: d.id,
@@ -1395,10 +1405,14 @@ export class EventsService {
     const updatedBanners: EventBanners = { ...event.banners };
     delete updatedBanners[bannerType];
 
-    await this.eventsRepository.updateEvent(ctx, eventId, {
+    const updatePayload: { banners?: EventBanners; highlight?: boolean } = {
       banners:
         Object.keys(updatedBanners).length > 0 ? updatedBanners : undefined,
-    });
+    };
+    if (bannerType === 'rectangle' && event.highlight) {
+      updatePayload.highlight = false;
+    }
+    await this.eventsRepository.updateEvent(ctx, eventId, updatePayload);
 
     this.logger.log(ctx, `${bannerType} banner deleted for event ${eventId}`);
 

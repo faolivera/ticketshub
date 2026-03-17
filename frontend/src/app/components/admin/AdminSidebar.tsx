@@ -15,6 +15,7 @@ import {
   Users,
   Upload,
   BarChart3,
+  Star,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -89,6 +90,11 @@ const navItems: NavItem[] = [
     to: '/admin/events-score',
     icon: <BarChart3 className="w-4 h-4" />,
     labelKey: 'admin.sidebar.eventsScore',
+  },
+  {
+    to: '/admin/featured-events',
+    icon: <Star className="w-4 h-4" />,
+    labelKey: 'admin.sidebar.featuredEvents',
   },
   {
     to: '/admin/promotions',

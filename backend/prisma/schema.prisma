@@ -365,6 +365,8 @@ model Event {
   rankingUpdatedAt DateTime?
   /** Admin-set: mark as popular for ranking and display. */
   isPopular       Boolean       @default(false)
+  /** Admin-set: featured event; requires rectangle banner. */
+  highlight       Boolean       @default(false)
 
   // Relations
   createdBy       User          @relation("EventCreator", fields: [createdById], references: [id])

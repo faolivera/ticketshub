@@ -39,6 +39,7 @@ describe('EventsService - getEventsForSelection', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       isPopular: false,
+      highlight: false,
       ...overrides,
     };
   };

@@ -41,6 +41,7 @@ import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerifi
 import { NotificationManagement } from '@/app/pages/admin/NotificationManagement';
 import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
 import { EventsScoreConfig } from '@/app/pages/admin/EventsScoreConfig';
+import { FeaturedEventsManagement } from '@/app/pages/admin/FeaturedEventsManagement';
 import { PromotionsManagement } from '@/app/pages/admin/PromotionsManagement';
 import { SellerPayouts } from '@/app/pages/admin/SellerPayouts';
 import SupportTicketsManagement from '@/app/pages/admin/SupportTicketsManagement';
@@ -102,6 +103,7 @@ function AppLayout() {
                 <Route path="notifications" element={<NotificationManagement />} />
                 <Route path="platform-config" element={<PlatformConfig />} />
                 <Route path="events-score" element={<EventsScoreConfig />} />
+                <Route path="featured-events" element={<FeaturedEventsManagement />} />
                 <Route path="promotions" element={<PromotionsManagement />} />
                 <Route path="support-tickets" element={<SupportTicketsManagement />} />
                 <Route path="support-tickets/:id" element={<SupportTicketDetail />} />

@@ -629,6 +629,7 @@ describe('AdminService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       isPopular: false,
+      highlight: false,
     };
 
     const mockUser: User = {

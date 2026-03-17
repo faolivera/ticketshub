@@ -238,6 +238,8 @@ export const AdminAllEventItemSchema = z.object({
   createdBy: AdminEventCreatorInfoSchema,
   listingsCount: z.number(),
   availableTicketsCount: z.number(),
+  hasRectangleBanner: z.boolean(),
+  highlight: z.boolean(),
 });
 
 export const AdminAllEventsResponseSchema = z.object({
