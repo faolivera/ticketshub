@@ -2168,6 +2168,7 @@
       "proofPreviewBuyerName": "Nombre del Comprador",
       "proofPreviewTotalAmount": "Monto Total de Transferencia",
       "proofPreviewDestinationAccount": "Cuenta de Destino",
+      "proofPreviewAlias": "Alias",
       "proofPreviewHolderName": "Titular de la Cuenta",
       "proofPreviewIban": "IBAN / CBU",
       "proofPreviewBic": "BIC",

@@ -1319,9 +1319,19 @@ export default function TransactionManagement() {
                         {t('admin.transactions.proofPreviewDestinationAccount')}
                       </span>
                       <span className="font-medium">
-                        {detailCache[previewTransactionId].bankTransferDestination?.iban ?? '-'}
+                        {detailCache[previewTransactionId].bankTransferDestination?.cbuOrCvu ?? '-'}
                       </span>
                     </div>
+                    {detailCache[previewTransactionId].bankTransferDestination?.alias && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">
+                          {t('admin.transactions.proofPreviewAlias')}
+                        </span>
+                        <span className="font-medium">
+                          {detailCache[previewTransactionId].bankTransferDestination.alias}
+                        </span>
+                      </div>
+                    )}
                     {detailCache[previewTransactionId].bankTransferDestination?.bic && (
                       <div>
                         <span className="text-muted-foreground block text-xs">

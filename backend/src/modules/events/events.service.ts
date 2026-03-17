@@ -268,6 +268,7 @@ export class EventsService {
         activeListingsCount: number;
         nextEventDate: Date | null;
         isPopular: boolean;
+        city: string;
       }
     >
   > {

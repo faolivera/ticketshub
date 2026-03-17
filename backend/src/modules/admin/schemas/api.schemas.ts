@@ -368,6 +368,7 @@ const AdminSellerPayoutItemSchema = z.object({
     .object({
       holderName: z.string(),
       cbuOrCvu: z.string(),
+      alias: z.string().optional(),
       bankName: z.string().optional(),
       cuitCuil: z.string().optional(),
     })
@@ -396,6 +397,7 @@ const AdminTransactionDetailPaymentConfirmationSchema =
 const BankTransferDestinationSchema = z.object({
   holderName: z.string(),
   cbuOrCvu: z.string(),
+  alias: z.string().optional(),
   bankName: z.string().optional(),
   cuitCuil: z.string().optional(),
 });

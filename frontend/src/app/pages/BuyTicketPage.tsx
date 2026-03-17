@@ -20,6 +20,7 @@ import { SeatingType, TicketUnitStatus, ListingStatus } from '../../api/types';
 import { useUser } from '../contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
 import { BackButton } from '@/app/components/BackButton';
+import { CurrencyAmountInput } from '@/app/components/ui/CurrencyAmountInput';
 import { JsonLd } from '@/app/components/JsonLd';
 import { getBaseUrl } from '@/config/env';
 
@@ -824,21 +825,17 @@ export function BuyTicketPage() {
                 ) : (
                   <>
                     <div className="mb-4">
-                      <label className="text-sm text-gray-600 block mb-1">
-                        {t('buyTicket.yourOfferPrice')} ({listingCurrency})
+                      <label className="text-sm text-gray-600 block mb-1" htmlFor="offer-price">
+                        {t('buyTicket.yourOfferPrice')}
                       </label>
-                      <input
-                        type="number"
+                      <CurrencyAmountInput
+                        id="offer-price"
+                        value={Math.floor(offerPriceCents / 100)}
+                        onChange={(v) => setOfferPriceCents(v * 100)}
+                        currency={listingCurrency}
                         min={0}
-                        max={(listing.pricePerTicket.amount ?? 0) / 100}
-                        step="0.01"
-                        value={offerPriceCents === 0 ? '' : offerPriceCents / 100}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setOfferPriceCents(v === '' ? 0 : Math.round(parseFloat(v) * 100));
-                        }}
-                        placeholder="—"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        max={listing.pricePerTicket.amount != null ? Math.floor(listing.pricePerTicket.amount / 100) : undefined}
+                        className="w-full"
                       />
                     </div>
                     {offerError && <ErrorAlert message={offerError} className="mb-4" />}

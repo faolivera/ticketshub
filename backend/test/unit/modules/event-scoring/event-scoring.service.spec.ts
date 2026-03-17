@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import type { Ctx } from '../../../../src/common/types/context';
 import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import { EventScoringRepository } from '../../../../src/modules/event-scoring/event-scoring.repository';
@@ -12,6 +13,7 @@ describe('EventScoringService', () => {
   let repository: jest.Mocked<EventScoringRepository>;
   let eventsService: jest.Mocked<EventsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
+  let mockConfigGet: jest.Mock;
 
   beforeEach(async () => {
     const mockRepository = {
@@ -31,10 +33,16 @@ describe('EventScoringService', () => {
       getCompletedTransactionCountByEventIds: jest.fn(),
     };
 
+    mockConfigGet = jest.fn((key: string) => {
+      if (key === 'eventScoring.cityWeights') return {};
+      return undefined;
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventScoringService,
         { provide: EventScoringRepository, useValue: mockRepository },
+        { provide: ConfigService, useValue: { get: mockConfigGet } },
         { provide: EventsService, useValue: mockEventsService },
         { provide: TransactionsService, useValue: mockTransactionsService },
       ],
@@ -208,6 +216,7 @@ describe('EventScoringService', () => {
               activeListingsCount: 2,
               nextEventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
               isPopular: false,
+              city: '',
             },
           ],
           [
@@ -217,6 +226,7 @@ describe('EventScoringService', () => {
               activeListingsCount: 0,
               nextEventDate: null,
               isPopular: false,
+              city: '',
             },
           ],
         ]),
@@ -297,6 +307,7 @@ describe('EventScoringService', () => {
               activeListingsCount: 1,
               nextEventDate: null,
               isPopular: false,
+              city: '',
             },
           ],
         ]),
@@ -317,6 +328,60 @@ describe('EventScoringService', () => {
           }),
         ]),
       );
+    });
+
+    it('should multiply score by city weight when eventScoring.cityWeights is configured', async () => {
+      mockConfigGet.mockImplementation((key: string) => {
+        if (key === 'eventScoring.cityWeights')
+          return { 'Buenos Aires': 2, 'Córdoba': 1.5 };
+        return undefined;
+      });
+      repository.getConfig.mockResolvedValue({
+        weightActiveListings: 1,
+        weightTransactions: 1,
+        weightProximity: 0.5,
+        weightPopular: 1,
+        jobIntervalMinutes: 5,
+        lastRunAt: null,
+        updatedAt: new Date(),
+      });
+      repository.getPendingEventIds.mockResolvedValue(['e1', 'e2']);
+      eventsService.getEventRankingComponentsBatch.mockResolvedValue(
+        new Map([
+          [
+            'e1',
+            {
+              hasActiveListings: true,
+              activeListingsCount: 1,
+              nextEventDate: null,
+              isPopular: false,
+              city: 'Buenos Aires',
+            },
+          ],
+          [
+            'e2',
+            {
+              hasActiveListings: true,
+              activeListingsCount: 1,
+              nextEventDate: null,
+              isPopular: false,
+              city: 'Unknown City',
+            },
+          ],
+        ]),
+      );
+      transactionsService.getCompletedTransactionCountByEventIds.mockResolvedValue(new Map());
+      eventsService.updateEventRankingBatch.mockResolvedValue(undefined);
+
+      const result = await service.runScoringJob(mockCtx);
+
+      expect(result.processed).toBe(2);
+      const updateCalls = eventsService.updateEventRankingBatch.mock.calls[0][1];
+      const e1Update = updateCalls.find((u: { eventId: string }) => u.eventId === 'e1');
+      const e2Update = updateCalls.find((u: { eventId: string }) => u.eventId === 'e2');
+      // Base score for both: 1 (weightActiveListings) + 1 (activeListingsCount) = 2.
+      expect(e1Update.rankingScore).toBe(4); // 2 * city weight 2
+      expect(e2Update.rankingScore).toBe(2); // 2 * default weight 1 (city not in map)
     });
   });
 });

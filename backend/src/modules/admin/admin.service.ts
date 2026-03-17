@@ -991,6 +991,7 @@ export class AdminService {
       bankTransferDestination = {
         holderName: seller.bankAccount.holderName,
         cbuOrCvu: seller.bankAccount.cbuOrCvu,
+        ...(seller.bankAccount.alias && { alias: seller.bankAccount.alias }),
       };
     }
 
@@ -1173,6 +1174,7 @@ export class AdminService {
           ? {
               holderName: seller.bankAccount.holderName,
               cbuOrCvu: seller.bankAccount.cbuOrCvu,
+              ...(seller.bankAccount.alias && { alias: seller.bankAccount.alias }),
             }
           : undefined;
 

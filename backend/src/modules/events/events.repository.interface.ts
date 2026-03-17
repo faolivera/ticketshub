@@ -99,7 +99,18 @@ export interface IEventsRepository {
   getEventRankingComponentsBatch(
     ctx: Ctx,
     eventIds: string[],
-  ): Promise<Map<string, { hasActiveListings: boolean; activeListingsCount: number; nextEventDate: Date | null; isPopular: boolean }>>;
+  ): Promise<
+    Map<
+      string,
+      {
+        hasActiveListings: boolean;
+        activeListingsCount: number;
+        nextEventDate: Date | null;
+        isPopular: boolean;
+        city: string;
+      }
+    >
+  >;
 
   /**
    * Update ranking score and updatedAt for multiple events. Used by event-scoring job.

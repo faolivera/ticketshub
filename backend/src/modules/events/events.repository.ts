@@ -275,7 +275,16 @@ export class EventsRepository implements IEventsRepository {
     ctx: Ctx,
     eventIds: string[],
   ): Promise<
-    Map<string, { hasActiveListings: boolean; activeListingsCount: number; nextEventDate: Date | null; isPopular: boolean }>
+    Map<
+      string,
+      {
+        hasActiveListings: boolean;
+        activeListingsCount: number;
+        nextEventDate: Date | null;
+        isPopular: boolean;
+        city: string;
+      }
+    >
   > {
     this.logger.debug(ctx, 'getEventRankingComponentsBatch', { count: eventIds.length });
     if (eventIds.length === 0) {
@@ -287,6 +296,7 @@ export class EventsRepository implements IEventsRepository {
       select: {
         id: true,
         isPopular: true,
+        location: true,
         listings: {
           where: { status: 'Active' },
           select: { id: true },
@@ -301,15 +311,24 @@ export class EventsRepository implements IEventsRepository {
     });
     const map = new Map<
       string,
-      { hasActiveListings: boolean; activeListingsCount: number; nextEventDate: Date | null; isPopular: boolean }
+      {
+        hasActiveListings: boolean;
+        activeListingsCount: number;
+        nextEventDate: Date | null;
+        isPopular: boolean;
+        city: string;
+      }
     >();
     for (const e of events) {
       const activeListingsCount = e.listings.length;
+      const location = e.location as { city?: string } | null;
+      const city = (location?.city && String(location.city).trim()) || '';
       map.set(e.id, {
         hasActiveListings: activeListingsCount > 0,
         activeListingsCount,
         nextEventDate: e.dates[0]?.date ?? null,
         isPopular: e.isPopular ?? false,
+        city,
       });
     }
     return map;

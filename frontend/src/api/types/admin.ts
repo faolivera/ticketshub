@@ -480,7 +480,8 @@ export interface AdminTransactionDetail {
   payoutReceiptFiles: AdminTransactionPayoutReceiptFile[];
   bankTransferDestination?: {
     holderName: string;
-    iban: string;
+    cbuOrCvu: string;
+    alias?: string;
     bic?: string;
     bankName?: string;
     cuitCuil?: string;
@@ -520,7 +521,8 @@ export interface AdminTransactionDetailResponse {
   payoutReceiptFiles: AdminTransactionPayoutReceiptFile[];
   bankTransferDestination?: {
     holderName: string;
-    iban: string;
+    cbuOrCvu: string;
+    alias?: string;
     bic?: string;
     bankName?: string;
     cuitCuil?: string;
@@ -964,8 +966,8 @@ export interface AdminSellerPayoutItem {
   sellerReceives: Money;
   bankTransferDestination?: {
     holderName: string;
-    iban: string;
-    bic?: string;
+    cbuOrCvu: string;
+    alias?: string;
     bankName?: string;
     cuitCuil?: string;
   };

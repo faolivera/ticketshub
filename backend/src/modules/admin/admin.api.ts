@@ -521,6 +521,7 @@ export interface AdminTransactionDetailResponse {
   bankTransferDestination?: {
     holderName: string;
     cbuOrCvu: string;
+    alias?: string;
     bankName?: string;
     cuitCuil?: string;
   };
@@ -553,6 +554,7 @@ export interface AdminSellerPayoutItem {
   bankTransferDestination?: {
     holderName: string;
     cbuOrCvu: string;
+    alias?: string;
     bankName?: string;
     cuitCuil?: string;
   };

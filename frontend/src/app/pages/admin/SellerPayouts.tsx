@@ -207,7 +207,10 @@ export function SellerPayouts() {
                     {payout.bankTransferDestination ? (
                       <div className="text-sm">
                         <div>{payout.bankTransferDestination.holderName}</div>
-                        <div className="font-mono text-xs">{payout.bankTransferDestination.iban}</div>
+                        <div className="font-mono text-xs">{payout.bankTransferDestination.cbuOrCvu}</div>
+                        {payout.bankTransferDestination.alias && (
+                          <div className="text-muted-foreground text-xs">{payout.bankTransferDestination.alias}</div>
+                        )}
                         {payout.bankTransferDestination.bankName && (
                           <div className="text-muted-foreground">{payout.bankTransferDestination.bankName}</div>
                         )}

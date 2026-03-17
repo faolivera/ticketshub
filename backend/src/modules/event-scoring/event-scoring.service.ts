@@ -1,4 +1,5 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Ctx } from '../../common/types/context';
 import { ContextLogger } from '../../common/logger/context-logger';
 import { EventScoringRepository, type EventsRankingConfigRow } from './event-scoring.repository';
@@ -16,7 +17,11 @@ interface EventScoreComponents {
   completedTransactionsCount: number;
   nextEventDate: Date | null;
   isPopular: boolean;
+  city: string;
 }
+
+/** Default multiplier when city has no configured weight. */
+const DEFAULT_CITY_WEIGHT = 1;
 
 @Injectable()
 export class EventScoringService {
@@ -25,6 +30,7 @@ export class EventScoringService {
 
   constructor(
     private readonly eventScoringRepository: EventScoringRepository,
+    private readonly configService: ConfigService,
     @Inject(forwardRef(() => EventsService))
     private readonly eventsService: EventsService,
     @Inject(forwardRef(() => TransactionsService))
@@ -143,6 +149,7 @@ export class EventScoringService {
           nextEventDate: eventData.nextEventDate,
           isPopular: eventData.isPopular,
           completedTransactionsCount,
+          city: eventData.city,
         };
         const score = this.computeScore(components, config);
         updates.push({ eventId, rankingScore: score, rankingUpdatedAt: now });
@@ -168,6 +175,7 @@ export class EventScoringService {
    * - Transactions: count (capped) * weightTransactions
    * - Proximity: 1 / (daysUntilNext + 1) * weightProximity, or 0 if no future date
    * - Popular: 0 or 1 (admin-set) * weightPopular
+   * - City: multiplier from eventScoring.cityWeights (HOCON), case-insensitive; default 1.
    */
   private computeScore(components: EventScoreComponents, config: EventsRankingConfigRow): number {
     let score = 0;
@@ -194,6 +202,20 @@ export class EventScoringService {
       score += config.weightProximity * proximityFactor;
     }
 
-    return score;
+    const cityWeight = this.getCityWeight(components.city);
+    return score * cityWeight;
+  }
+
+  /**
+   * Resolve city weight from HOCON eventScoring.cityWeights (case-insensitive). Returns 1 if not configured.
+   */
+  private getCityWeight(city: string): number {
+    if (!city || !city.trim()) return DEFAULT_CITY_WEIGHT;
+    const cityWeights =
+      this.configService.get<Record<string, number>>('eventScoring.cityWeights') ?? {};
+    const key = Object.keys(cityWeights).find(
+      (k) => k.trim().toLowerCase() === city.trim().toLowerCase(),
+    );
+    return key != null ? cityWeights[key] : DEFAULT_CITY_WEIGHT;
   }
 }
