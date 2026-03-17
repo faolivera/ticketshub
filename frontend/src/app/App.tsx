@@ -1,6 +1,6 @@
 import '@/i18n/config';
 import i18n from '@/i18n/config';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider } from '@/app/contexts/UserContext';
 import { SocketProvider } from '@/app/contexts/SocketContext';
@@ -10,11 +10,11 @@ import { MobileNav } from '@/app/components/MobileNav';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { AdminProtectedRoute } from '@/app/components/admin/AdminProtectedRoute';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { Landing } from '@/app/pages/Landing';
-import { EventTickets } from '@/app/pages/EventTickets';
+import LandingNew from '@/app/pages/LandingNew';
+import EventDetail from '@/app/pages/Event';
 import { UserProfile } from '@/app/pages/UserProfile';
 import { SellerProfile } from '@/app/pages/SellerProfile';
-import { BuyTicketPage } from '@/app/pages/BuyTicketPage';
+import Checkout from '@/app/pages/Checkout';
 import { MyTicketsPage, SellerDashboardPage } from '@/app/pages/BoughtTicketManager';
 import { HowItWorks } from '@/app/pages/HowItWorks';
 import { Contact } from '@/app/pages/Contact';
@@ -50,20 +50,20 @@ import { getGoogleClientId } from '@/config/env';
 
 const googleClientId = getGoogleClientId();
 
-function AppContent() {
+function AppLayout() {
+  const location = useLocation();
+  const isNewLayout = location.pathname === '/' || /^\/event\/[^/]+$/.test(location.pathname) || /^\/buy\/[^/]+\/[^/]+$/.test(location.pathname);
+
   return (
-    <UserProvider>
-      <SocketProvider>
-      <BrowserRouter>
-        <div className="min-h-screen flex flex-col w-full min-w-0 overflow-x-hidden">
-          <Header />
-          <main className="flex-1 pb-16 sm:pb-0 w-full min-w-0">
-            <Routes>
+    <div className="min-h-screen flex flex-col w-full min-w-0 overflow-x-hidden">
+      {!isNewLayout && <Header />}
+      <main className="flex-1 pb-16 sm:pb-0 w-full min-w-0">
+        <Routes>
               {/* Public routes */}
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={<LandingNew />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/event/:eventSlug" element={<EventTickets />} />
+              <Route path="/event/:eventSlug" element={<EventDetail />} />
               <Route path="/seller/:sellerId" element={<SellerProfile />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/contact" element={<Contact />} />
@@ -87,7 +87,7 @@ function AppContent() {
               <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
               <Route path="/bank-account" element={<ProtectedRoute><BankAccountPage /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
-              <Route path="/buy/:eventSlug/:listingId" element={<BuyTicketPage />} />
+              <Route path="/buy/:eventSlug/:listingId" element={<Checkout />} />
 
               {/* Admin routes — require Admin role */}
               <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
@@ -110,10 +110,19 @@ function AppContent() {
               {/* Catch-all: unknown routes */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </main>
-          <Footer />
-          <MobileNav />
-        </div>
+      </main>
+      {!isNewLayout && <Footer />}
+      {!isNewLayout && <MobileNav />}
+    </div>
+  );
+}
+
+function AppContent() {
+  return (
+    <UserProvider>
+      <SocketProvider>
+      <BrowserRouter>
+        <AppLayout />
       </BrowserRouter>
       </SocketProvider>
     </UserProvider>
