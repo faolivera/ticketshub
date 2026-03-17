@@ -1566,7 +1566,8 @@
     },
     "featuredEvents": {
       "title": "Featured Events",
-      "description": "Set which events are featured. Events must have a rectangle image to be featured.",
+      "description": "Set which events are featured on the landing page.",
+      "preview": "Preview of featured events as shown on the landing page",
       "eventName": "Event",
       "status": "Status",
       "rectangleBanner": "Rectangle image",

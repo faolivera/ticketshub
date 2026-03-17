@@ -94,6 +94,7 @@ export class EventsController {
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @Query('highlighted') highlighted?: string,
   ): Promise<ApiResponse<ListEventsPublicResponse>> {
     const query: ListEventsQuery = {
       status: 'approved',
@@ -101,6 +102,7 @@ export class EventsController {
       search,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
+      highlighted: highlighted === 'true' ? true : undefined,
     };
     const events = await this.eventsService.listEvents(ctx, query, false);
     const data: ListEventsPublicResponse = events.map((e) =>

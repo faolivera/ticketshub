@@ -268,7 +268,7 @@ export default function EventDetail() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         .ev-hero-wrap { position: relative; overflow: hidden; }
         .ev-hero-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; filter: blur(14px); transform: scale(1.08); }
-        .ev-hero-overlay { position: absolute; inset: 0; z-index: 0; background:${V}5c }
+        .ev-hero-overlay { position: absolute; inset: 0; z-index: 0; background: rgba(0,0,0,0.55) }
         .ev-hero-inner { position: relative; z-index: 1; display: block; overflow: hidden; }
         .ev-hero-content .date-pill { color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
         .ev-hero-content .date-pill:hover:not(.active) { color: #fff; border-color: rgba(255,255,255,0.5); }
@@ -382,15 +382,15 @@ export default function EventDetail() {
                   </div>
                 </div>
               )}
-              <div style={{ padding: "16px 18px", background: "rgba(0,0,0,0.28)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.18)", marginBottom: 16 }}>
+              <div style={{ padding: "16px 18px", background: "rgba(255, 255, 255, 0.53)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.18)", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
                   <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "rgba(255,255,255,0.8)", marginBottom: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>Entradas desde</p>
-                    <p style={{ fontSize: 32, fontWeight: 800, color: V, lineHeight: 1, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: V, marginBottom: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>Entradas desde</p>
+                    <p style={{ fontSize: 32, fontWeight: 800, color: VLIGHT, lineHeight: 1, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
                       {fmt(minPrice)} <span style={{ fontSize: 12, fontWeight: 500, color: VLIGHT }}>ARS</span>
                     </p>
-                    <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.85)", marginTop: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
-                      <span style={{ fontWeight: 600, color: "#fff" }}>{sorted.reduce((acc, t) => acc + t.qty, 0)} entradas</span> disponibles
+                    <p style={{ fontSize: 12.5, color: V, marginTop: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                      <span style={{ fontWeight: 600, color: V }}>{sorted.reduce((acc, t) => acc + t.qty, 0)} entradas</span> disponibles
                       {activeDate && ` · ${sellersCount} vendedor${sellersCount !== 1 ? "es" : ""}`}
                     </p>
                   </div>

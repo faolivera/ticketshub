@@ -21,6 +21,7 @@ import { Input } from '../../components/ui/input';
 import { Star, Upload, ImageIcon } from 'lucide-react';
 import { adminService } from '../../../api/services/admin.service';
 import type { AdminAllEventItem } from '../../../api/types/admin';
+import { HighlightedEventsHero } from '../../components/landing/HighlightedEventsHero';
 
 const PAGE_SIZE = 20;
 
@@ -124,6 +125,9 @@ export function FeaturedEventsManagement() {
 
   return (
     <div className="space-y-6">
+      <section aria-label={t('admin.featuredEvents.preview')}>
+        <HighlightedEventsHero />
+      </section>
       <Card>
         <CardHeader>
           <CardTitle>{t('admin.featuredEvents.title')}</CardTitle>
@@ -188,7 +192,7 @@ export function FeaturedEventsManagement() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {event.hasRectangleBanner ? (
+                          {Boolean(event.hasRectangleBanner) ? (
                             <span className="flex items-center gap-1 text-green-600">
                               <ImageIcon className="h-4 w-4" />
                               {t('admin.featuredEvents.hasRectangle')}
@@ -200,32 +204,26 @@ export function FeaturedEventsManagement() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {event.hasRectangleBanner ? (
-                            <Button
-                              size="sm"
-                              variant={event.highlight ? 'secondary' : 'outline'}
-                              onClick={() => handleSetHighlight(event.id, !event.highlight)}
-                              disabled={actionLoading === event.id}
-                            >
-                              {actionLoading === event.id ? (
-                                t('admin.featuredEvents.updating')
-                              ) : event.highlight ? (
-                                <>
-                                  <Star className="h-4 w-4 fill-current mr-1" />
-                                  {t('admin.featuredEvents.removeFeatured')}
-                                </>
-                              ) : (
-                                <>
-                                  <Star className="h-4 w-4 mr-1" />
-                                  {t('admin.featuredEvents.setFeatured')}
-                                </>
-                              )}
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">
-                              —
-                            </span>
-                          )}
+                          <Button
+                            size="sm"
+                            variant={Boolean(event.highlight) ? 'secondary' : 'outline'}
+                            onClick={() => handleSetHighlight(event.id, !Boolean(event.highlight))}
+                            disabled={actionLoading === event.id}
+                          >
+                            {actionLoading === event.id ? (
+                              t('admin.featuredEvents.updating')
+                            ) : Boolean(event.highlight) ? (
+                              <>
+                                <Star className="h-4 w-4 fill-current mr-1" />
+                                {t('admin.featuredEvents.removeFeatured')}
+                              </>
+                            ) : (
+                              <>
+                                <Star className="h-4 w-4 mr-1" />
+                                {t('admin.featuredEvents.setFeatured')}
+                              </>
+                            )}
+                          </Button>
                         </TableCell>
                         <TableCell>
                           <input

@@ -148,6 +148,7 @@ export class EventsRepository implements IEventsRepository {
       limit: number;
       offset: number;
       orderBy?: 'createdAt' | 'rankingScore';
+      highlighted?: boolean;
     },
   ): Promise<{ events: Event[]; total: number }> {
     this.logger.debug(_ctx, 'listEventsPaginated', {
@@ -164,6 +165,9 @@ export class EventsRepository implements IEventsRepository {
     }
     if (opts.category !== undefined) {
       where.category = this.mapEventCategoryToDb(opts.category);
+    }
+    if (opts.highlighted === true) {
+      where.highlight = true;
     }
     if (opts.search?.trim()) {
       const term = opts.search.trim();

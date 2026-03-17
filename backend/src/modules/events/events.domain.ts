@@ -75,7 +75,7 @@ export interface Event {
   updatedAt: Date;
   /** Admin-set: mark as popular for ranking and display. */
   isPopular: boolean;
-  /** Admin-set: featured event; requires rectangle banner. */
+  /** Admin-set: featured event (shown in landing hero). */
   highlight: boolean;
 }
 

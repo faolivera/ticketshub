@@ -1565,7 +1565,8 @@
     },
     "featuredEvents": {
       "title": "Eventos destacados",
-      "description": "Define qué eventos son destacados. El evento debe tener imagen rectangular para poder destacarse.",
+      "description": "Define qué eventos se muestran como destacados en la página de inicio.",
+      "preview": "Vista previa de eventos destacados como en la página de inicio",
       "eventName": "Evento",
       "status": "Estado",
       "rectangleBanner": "Imagen rectangular",

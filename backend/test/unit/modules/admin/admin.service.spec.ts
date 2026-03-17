@@ -513,6 +513,7 @@ describe('AdminService', () => {
         imageIds: [],
         status: EventStatus.Approved,
         isPopular: false,
+        highlight: false,
         createdBy: 'user_123',
         approvedBy: 'admin_123',
         createdAt: new Date(),
@@ -1951,6 +1952,7 @@ describe('AdminService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       isPopular: false,
+      highlight: false,
     };
 
     it('should create event, dates, and sections and return results', async () => {

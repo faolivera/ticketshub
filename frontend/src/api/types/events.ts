@@ -88,7 +88,7 @@ export interface Event {
   updatedAt: Date;
   /** Admin-set: mark as popular for ranking and display. */
   isPopular: boolean;
-  /** Admin-set: featured event; requires rectangle banner. */
+  /** Admin-set: featured event (shown in landing hero). */
   highlight: boolean;
 }
 
@@ -275,6 +275,8 @@ export type ListEventsPublicResponse = PublicListEventItem[];
 export interface ListEventsQuery extends PaginationParams {
   category?: EventCategory;
   search?: string;
+  /** When true, return only featured (highlighted) events. */
+  highlighted?: boolean;
 }
 
 /** Minimal event for selection UI */

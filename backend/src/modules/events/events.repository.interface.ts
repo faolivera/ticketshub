@@ -74,6 +74,7 @@ export interface IEventsRepository {
       limit: number;
       offset: number;
       orderBy?: 'createdAt' | 'rankingScore';
+      highlighted?: boolean;
     },
   ): Promise<{ events: Event[]; total: number }>;
 

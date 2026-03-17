@@ -67,6 +67,7 @@ describe('EventsRepository (Integration)', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       isPopular: false,
+      highlight: false,
       ...overrides,
     };
   };

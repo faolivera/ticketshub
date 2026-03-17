@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { eventsService } from "@/api/services/events.service";
 import { formatDate } from "@/lib/format-date";
 import { V, VLIGHT, BLUE, BLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E } from "@/lib/design-tokens";
-import { LandingHeader, LandingFooter, ShieldSVG, MapSVG } from "@/app/components/landing";
+import { LandingHeader, LandingFooter, HighlightedEventsHero, ShieldSVG, MapSVG } from "@/app/components/landing";
 import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar } from "lucide-react";
 
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
@@ -149,51 +149,7 @@ export default function TicketsHub() {
       <div style={{ maxWidth:1280, margin:"0 auto", padding:"24px 24px 0" }}>
 
         {/* ── HERO BOX ── */}
-        <div style={{
-          background:"white", borderRadius:20, overflow:"hidden",
-          border:`1px solid ${BORDER}`,
-          boxShadow:"0 2px 12px rgba(0,0,0,0.06)",
-          marginBottom:14,
-        }}>
-          {/* Hero inner with image background */}
-          <div style={{ position:"relative", overflow:"hidden" }}>
-            {/* Background concert image */}
-            <img
-              src="https://picsum.photos/seed/hero_concert_wide/1400/400"
-              alt=""
-              style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center 35%" }}
-            />
-            {/* Overlay: strong on left for readability, fades right */}
-            <div style={{ position:"absolute", inset:0, background:"linear-gradient(105deg, rgba(15,15,26,0.88) 0%, rgba(15,15,26,0.72) 40%, rgba(15,15,26,0.25) 75%, rgba(15,15,26,0.1) 100%)" }} />
-
-            {/* Content */}
-            <div className="th-hero-wrap" style={{ position:"relative", zIndex:2, padding:"44px 44px 44px" }}>
-              <div style={{ flex:"0 0 auto", maxWidth:480 }}>
-                <h1 style={{ ...E, fontSize:"clamp(24px, 3.2vw, 40px)", color:"white", lineHeight:1.18, marginBottom:12, letterSpacing:"-0.5px" }}>
-                  Las mejores experiencias no se agotan.{" "}
-                  <em style={{ color:"#c4b5fd", fontStyle:"italic" }}>Solo cambian de manos.</em>
-                </h1>
-                <p style={{ fontSize:14.5, color:"rgba(255,255,255,0.7)", lineHeight:1.65, marginBottom:24 }}>
-                  Encontrá entradas para eventos agotados o publicá las tuyas. Pago seguro y entradas verificadas.
-                </p>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:10 }}>
-                  <button style={{ display:"flex", alignItems:"center", gap:8, padding:"11px 22px", borderRadius:10, background:V, border:"none", color:"white", fontSize:14, fontWeight:700, cursor:"pointer", ...S, boxShadow:"0 4px 18px rgba(109,40,217,0.4)" }}>
-                    Encontrá tu entrada <ArrowRight size={14} />
-                  </button>
-                  <button style={{ display:"flex", alignItems:"center", gap:8, padding:"11px 20px", borderRadius:10, background:"rgba(255,255,255,0.12)", border:"1.5px solid rgba(255,255,255,0.25)", color:"white", fontSize:14, fontWeight:600, cursor:"pointer", backdropFilter:"blur(8px)", ...S }}>
-                    Publicá la tuya
-                  </button>
-                </div>
-                {/* Trust micro-signals */}
-                <div style={{ display:"flex", flexWrap:"wrap", gap:18, marginTop:22 }}>
-                  {[{ ico:<ShieldSVG size={13} color="#a78bfa"/>, txt:"Pago protegido" },{ ico:<CheckSVG size={13}/>, txt:"Entradas verificadas" },{ ico:<UsersSVG size={13}/>, txt:"+12.000 compradores" }].map(({ico,txt}) => (
-                    <div key={txt} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12.5, color:"rgba(255,255,255,0.6)", fontWeight:500 }}>{ico}{txt}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <HighlightedEventsHero />
 
         {/* ── SEARCH + FILTERS BOX ── */}
         <div style={{

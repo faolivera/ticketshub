@@ -694,6 +694,13 @@ export class AdminService {
         listingsCount: 0,
         availableTicketsCount: 0,
       };
+      const banners = event.banners;
+      const hasRectangleBanner = Boolean(
+        banners &&
+          typeof banners === 'object' &&
+          (banners as Record<string, unknown>).rectangle != null,
+      );
+      const highlight = event.highlight === true;
 
       return {
         id: event.id,
@@ -706,8 +713,8 @@ export class AdminService {
         },
         listingsCount: stats.listingsCount,
         availableTicketsCount: stats.availableTicketsCount,
-        hasRectangleBanner: Boolean(event.banners?.rectangle),
-        highlight: event.highlight ?? false,
+        hasRectangleBanner,
+        highlight,
       };
     });
 

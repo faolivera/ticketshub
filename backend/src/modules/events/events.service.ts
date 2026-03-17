@@ -306,6 +306,7 @@ export class EventsService {
       limit,
       offset,
       orderBy: isPublicListing ? 'rankingScore' : 'createdAt',
+      highlighted: query.highlighted,
     });
 
     const events = result.events;
@@ -1001,11 +1002,6 @@ export class EventsService {
     if (data.imageIds !== undefined) eventUpdates.imageIds = data.imageIds;
     if (data.isPopular !== undefined) eventUpdates.isPopular = data.isPopular;
     if (data.highlight !== undefined) {
-      if (data.highlight && !event.banners?.rectangle) {
-        throw new BadRequestException(
-          'Event must have a rectangle banner to be set as featured',
-        );
-      }
       eventUpdates.highlight = data.highlight;
     }
 
@@ -1405,13 +1401,10 @@ export class EventsService {
     const updatedBanners: EventBanners = { ...event.banners };
     delete updatedBanners[bannerType];
 
-    const updatePayload: { banners?: EventBanners; highlight?: boolean } = {
+    const updatePayload: { banners?: EventBanners } = {
       banners:
         Object.keys(updatedBanners).length > 0 ? updatedBanners : undefined,
     };
-    if (bannerType === 'rectangle' && event.highlight) {
-      updatePayload.highlight = false;
-    }
     await this.eventsRepository.updateEvent(ctx, eventId, updatePayload);
 
     this.logger.log(ctx, `${bannerType} banner deleted for event ${eventId}`);

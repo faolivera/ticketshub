@@ -151,7 +151,7 @@ export interface AdminUpdateEventRequest {
   location?: AdminEventAddress;
   imageIds?: string[];
   isPopular?: boolean;
-  /** Set as featured; requires event to have rectangle banner. */
+  /** Set as featured (shown in landing hero). */
   highlight?: boolean;
   dates?: AdminEventDateUpdate[];
   datesToDelete?: string[]; // IDs of dates to remove
@@ -272,7 +272,7 @@ export interface AdminAllEventItem {
   createdBy: AdminEventCreatorInfo;
   listingsCount: number;
   availableTicketsCount: number;
-  /** True when event has banners.rectangle (required for highlight). */
+  /** True when event has banners.rectangle. */
   hasRectangleBanner: boolean;
   /** Admin-set: featured event. */
   highlight: boolean;

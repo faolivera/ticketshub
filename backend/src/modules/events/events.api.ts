@@ -146,6 +146,8 @@ export interface ListEventsQuery {
   search?: string;
   limit?: number;
   offset?: number;
+  /** When true, return only events with highlight=true (featured). */
+  highlighted?: boolean;
 }
 
 /**
