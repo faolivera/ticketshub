@@ -1,3 +1,5 @@
+import { User } from "../users/users.domain";
+
 /**
  * Promotion type - determines which fee is discounted
  */
@@ -69,3 +71,26 @@ export interface PromotionCode {
   createdAt: Date;
   createdBy: string;
 }
+
+/**
+ * Reasons why a promotion code claim is invalid (for ValidationPromotionCodeResult).
+ */
+export type InvalidPromotionCodeReason =
+  | 'code_not_found'
+  | 'no_remaining_usages'
+  | 'expired'
+  | 'already_claimed'
+  | 'user_not_found'
+  | 'wrong_target'
+  | 'seller_verification_required'
+  | 'verified_seller_required'
+  | 'buyer_verification_required'
+  | 'verified_buyer_required';
+
+/**
+ * Result of validating a promotion code for claim.
+ * Use status 'valid' with optional user/promotionCode when from validatePromotionCodeForUser.
+ */
+export type ValidationPromotionCodeResult =
+  | { status: 'valid', user: User; promotionCode: PromotionCode }
+  | { status: 'invalid'; reason: InvalidPromotionCodeReason };

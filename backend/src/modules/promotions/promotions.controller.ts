@@ -11,6 +11,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PromotionsService } from './promotions.service';
+import { PromotionCodesService } from './promotion-codes.service';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { User } from '../../common/decorators/user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -26,6 +27,8 @@ import type {
   ListPromotionsResponse,
   ListPromotionCodesResponse,
   CreatePromotionCodeRequest,
+  UpdatePromotionCodeRequest,
+  PromotionCodeListItem,
 } from './promotions.api';
 import {
   CreatePromotionRequestSchema,
@@ -41,6 +44,8 @@ export class PromotionsController {
   constructor(
     @Inject(PromotionsService)
     private readonly promotionsService: PromotionsService,
+    @Inject(PromotionCodesService)
+    private readonly promotionCodesService: PromotionCodesService,
   ) {}
 
   @Post()
@@ -113,7 +118,7 @@ export class PromotionsController {
   async listPromotionCodes(
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<ListPromotionCodesResponse>> {
-    const data = await this.promotionsService.listPromotionCodes(ctx);
+    const data = await this.promotionCodesService.listPromotionCodes(ctx);
     return { success: true, data };
   }
 
@@ -127,10 +132,28 @@ export class PromotionsController {
     if (!parsed.success) {
       throw new BadRequestException(parsed.error.flatten().fieldErrors);
     }
-    const data = await this.promotionsService.createPromotionCode(
+    const data = await this.promotionCodesService.createPromotionCode(
       ctx,
       parsed.data as CreatePromotionCodeRequest,
       user.id,
+    );
+    return { success: true, data };
+  }
+
+  @Patch('promotion-codes/:id')
+  async updatePromotionCode(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ): Promise<ApiResponse<PromotionCodeListItem>> {
+    const parsed = CreatePromotionCodeRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.flatten().fieldErrors);
+    }
+    const data = await this.promotionCodesService.updatePromotionCode(
+      ctx,
+      id,
+      parsed.data as UpdatePromotionCodeRequest,
     );
     return { success: true, data };
   }

@@ -33,6 +33,9 @@ export interface CreateListingRequest {
 
   // Ticket details
   eventSectionId: string;
+
+  /** Optional promotion code to claim and apply to this listing (seller flow). */
+  promotionCode?: string;
 }
 
 export interface CreateListingTicketUnitInput {

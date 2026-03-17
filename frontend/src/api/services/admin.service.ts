@@ -29,6 +29,7 @@ import type {
   AdminCreatePromotionRequest,
   AdminPromotionCodeListItem,
   AdminCreatePromotionCodeRequest,
+  AdminUpdatePromotionCodeRequest,
   AdminUserSearchItem,
   AdminSellerPayoutsResponse,
   AdminCompletePayoutResponse,
@@ -610,6 +611,20 @@ export const adminService = {
   ): Promise<{ id: string; code: string }> {
     const response = await apiClient.post<{ id: string; code: string }>(
       '/admin/promotions/promotion-codes',
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Update a promotion code
+   */
+  async updatePromotionCode(
+    id: string,
+    data: AdminUpdatePromotionCodeRequest
+  ): Promise<AdminPromotionCodeListItem> {
+    const response = await apiClient.patch<AdminPromotionCodeListItem>(
+      `/admin/promotions/promotion-codes/${id}`,
       data
     );
     return response.data;

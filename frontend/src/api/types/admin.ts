@@ -803,6 +803,9 @@ export interface AdminCreatePromotionCodeRequest {
   validUntil?: string | null;
 }
 
+/** Same shape as create; used for updating a promotion code. */
+export type AdminUpdatePromotionCodeRequest = AdminCreatePromotionCodeRequest;
+
 // === Admin Dashboard Metrics (GET /admin/dashboard-metrics) ===
 
 export interface AdminDashboardMetricsUsers {

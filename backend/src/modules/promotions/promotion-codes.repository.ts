@@ -98,6 +98,34 @@ export class PromotionCodesRepository
     return rows.map((r) => this.mapToDomain(r));
   }
 
+  async update(
+    ctx: Ctx,
+    id: string,
+    data: Partial<
+      Omit<PromotionCode, 'id' | 'createdAt' | 'createdBy' | 'usedCount'>
+    >,
+  ): Promise<PromotionCode | undefined> {
+    this.logger.debug(ctx, 'update', { id });
+    const client = this.getClient(ctx);
+    const existing = await client.promotionCode.findUnique({ where: { id } });
+    if (!existing) return undefined;
+    const updateData: Parameters<typeof client.promotionCode.update>[0]['data'] =
+      {};
+    if (data.code !== undefined)
+      updateData.code = data.code.trim().toUpperCase();
+    if (data.target !== undefined)
+      updateData.target = this.mapTargetToDb(data.target);
+    if (data.promotionConfig !== undefined)
+      updateData.promotionConfig = data.promotionConfig as object;
+    if (data.maxUsages !== undefined) updateData.maxUsages = data.maxUsages;
+    if (data.validUntil !== undefined) updateData.validUntil = data.validUntil;
+    const updated = await client.promotionCode.update({
+      where: { id },
+      data: updateData,
+    });
+    return this.mapToDomain(updated);
+  }
+
   async incrementUsedCount(
     ctx: Ctx,
     id: string,

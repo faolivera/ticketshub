@@ -17,3 +17,4 @@ export * from './offers';
 export * from './bff';
 export * from './admin';
 export * from './config';
+export * from './promotions';

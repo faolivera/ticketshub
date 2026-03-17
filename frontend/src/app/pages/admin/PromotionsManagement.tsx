@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Tag, Plus, X, Ticket } from 'lucide-react';
+import { Tag, Plus, X, Ticket, Pencil } from 'lucide-react';
 import { adminService } from '../../../api/services/admin.service';
 import type {
   AdminPromotionListItem,
@@ -97,6 +97,7 @@ export function PromotionsManagement() {
   });
   const [creatingCode, setCreatingCode] = useState(false);
   const [createCodeError, setCreateCodeError] = useState<string | null>(null);
+  const [editingCodeId, setEditingCodeId] = useState<string | null>(null);
 
   const fetchPromotions = async () => {
     try {
@@ -245,7 +246,43 @@ export function PromotionsManagement() {
     }
   };
 
-  const handleCreateCode = async () => {
+  const openCreateCodeModal = () => {
+    setEditingCodeId(null);
+    setCreateCodeForm({
+      code: '',
+      target: 'buyer',
+      promotionConfig: {
+        type: 'SELLER_DISCOUNTED_FEE',
+        config: { feePercentage: 0 },
+        maxUsages: 0,
+        validUntil: undefined,
+      },
+      maxUsages: 0,
+      validUntil: undefined,
+    });
+    setCreateCodeError(null);
+    setCreateCodeOpen(true);
+  };
+
+  const openEditCodeModal = (pc: AdminPromotionCodeListItem) => {
+    setEditingCodeId(pc.id);
+    setCreateCodeForm({
+      code: pc.code,
+      target: pc.target,
+      promotionConfig: {
+        type: pc.promotionConfig.type,
+        config: { ...pc.promotionConfig.config },
+        maxUsages: pc.promotionConfig.maxUsages,
+        validUntil: pc.promotionConfig.validUntil ?? undefined,
+      },
+      maxUsages: pc.maxUsages,
+      validUntil: pc.validUntil ?? undefined,
+    });
+    setCreateCodeError(null);
+    setCreateCodeOpen(true);
+  };
+
+  const handleSaveCode = async () => {
     if (!createCodeForm.code.trim()) {
       setCreateCodeError(t('admin.promotionCodes.codeRequired'));
       return;
@@ -253,8 +290,13 @@ export function PromotionsManagement() {
     try {
       setCreatingCode(true);
       setCreateCodeError(null);
-      await adminService.createPromotionCode(createCodeForm);
+      if (editingCodeId) {
+        await adminService.updatePromotionCode(editingCodeId, createCodeForm);
+      } else {
+        await adminService.createPromotionCode(createCodeForm);
+      }
       setCreateCodeOpen(false);
+      setEditingCodeId(null);
       setCreateCodeForm({
         code: '',
         target: 'buyer',
@@ -270,7 +312,11 @@ export function PromotionsManagement() {
       await fetchPromotionCodes();
     } catch (err) {
       setCreateCodeError(
-        err instanceof Error ? err.message : t('admin.promotionCodes.createError')
+        err instanceof Error
+          ? err.message
+          : editingCodeId
+            ? t('admin.promotionCodes.editError')
+            : t('admin.promotionCodes.createError')
       );
     } finally {
       setCreatingCode(false);
@@ -613,7 +659,7 @@ export function PromotionsManagement() {
                 <CardTitle>{t('admin.promotionCodes.listTitle')}</CardTitle>
                 <CardDescription>{t('admin.promotionCodes.listDescription')}</CardDescription>
               </div>
-              <Button onClick={() => setCreateCodeOpen(true)}>
+              <Button onClick={openCreateCodeModal}>
                 <Plus className="w-4 h-4 mr-2" />
                 {t('admin.promotionCodes.create')}
               </Button>
@@ -637,12 +683,13 @@ export function PromotionsManagement() {
                       <TableHead>{t('admin.promotionCodes.usages')}</TableHead>
                       <TableHead>{t('admin.promotionCodes.claimableUntil')}</TableHead>
                       <TableHead>{t('admin.promotionCodes.createdAt')}</TableHead>
+                      <TableHead>{t('admin.promotions.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {promotionCodes.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                           {t('admin.promotionCodes.noPromotionCodes')}
                         </TableCell>
                       </TableRow>
@@ -662,6 +709,16 @@ export function PromotionsManagement() {
                           </TableCell>
                           <TableCell>{formatDate(pc.validUntil)}</TableCell>
                           <TableCell>{formatDate(pc.createdAt)}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditCodeModal(pc)}
+                              aria-label={t('admin.promotionCodes.edit')}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     )}
@@ -674,8 +731,16 @@ export function PromotionsManagement() {
           <Dialog open={createCodeOpen} onOpenChange={setCreateCodeOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>{t('admin.promotionCodes.createTitle')}</DialogTitle>
-                <DialogDescription>{t('admin.promotionCodes.createDescription')}</DialogDescription>
+                <DialogTitle>
+                  {editingCodeId
+                    ? t('admin.promotionCodes.editTitle')
+                    : t('admin.promotionCodes.createTitle')}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingCodeId
+                    ? t('admin.promotionCodes.editDescription')
+                    : t('admin.promotionCodes.createDescription')}
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 {createCodeError && (
@@ -850,8 +915,12 @@ export function PromotionsManagement() {
                 <Button variant="outline" onClick={() => setCreateCodeOpen(false)}>
                   {t('common.cancel')}
                 </Button>
-                <Button onClick={handleCreateCode} disabled={creatingCode}>
-                  {creatingCode ? t('common.saving') : t('admin.promotionCodes.create')}
+                <Button onClick={handleSaveCode} disabled={creatingCode}>
+                  {creatingCode
+                    ? t('common.saving')
+                    : editingCodeId
+                      ? t('admin.promotionCodes.save')
+                      : t('admin.promotionCodes.create')}
                 </Button>
               </DialogFooter>
             </DialogContent>

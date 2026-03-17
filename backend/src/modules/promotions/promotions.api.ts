@@ -110,4 +110,20 @@ export interface PromotionCodeListItem {
   createdBy: string;
 }
 
+/** Request body to update a promotion code (same shape as create). */
+export interface UpdatePromotionCodeRequest extends CreatePromotionCodeRequest {}
+
 export type ListPromotionCodesResponse = PromotionCodeListItem[];
+
+/**
+ * Response of GET /api/promotions/seller/check?code=XXX
+ * Returned only when code exists, target is seller|verified_seller, not expired,
+ * usedCount < maxUsages, and type is BUYER_DISCOUNTED_FEE.
+ */
+export interface CheckSellerPromotionCodeResponse {
+  code: string;
+  name: string;
+  target: PromotionConfigTarget;
+  type: PromotionType;
+  config: { feePercentage: number };
+}

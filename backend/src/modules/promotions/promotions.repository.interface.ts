@@ -19,6 +19,16 @@ export interface IPromotionsRepository {
 
   findById(ctx: Ctx, id: string): Promise<Promotion | undefined>;
 
+  /**
+   * Find all promotions claimed by the given user for the given promotion code (any status).
+   * Used to enforce one claim per user per code.
+   */
+  findByUserIdAndPromotionCodeId(
+    ctx: Ctx,
+    userId: string,
+    promotionCodeId: string,
+  ): Promise<Promotion[]>;
+
   findActiveByUserIdAndType(
     ctx: Ctx,
     userId: string,

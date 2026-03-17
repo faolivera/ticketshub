@@ -43,6 +43,8 @@ import {
   EventSectionStatus,
 } from '../events/events.domain';
 import { PromotionsService } from '../promotions/promotions.service';
+import { PromotionCodesService } from '../promotions/promotion-codes.service';
+import type { Promotion } from '../promotions/promotions.domain';
 import { PromotionType } from '../promotions/promotions.domain';
 import { TermsService } from '../terms/terms.service';
 import { TermsUserType } from '../terms/terms.domain';
@@ -65,6 +67,7 @@ export class TicketsService {
     private readonly usersService: UsersService,
     private readonly txManager: TransactionManager,
     private readonly promotionsService: PromotionsService,
+    private readonly promotionCodesService: PromotionCodesService,
     private readonly termsService: TermsService,
     private readonly configService: PlatformConfigService,
     private readonly conversionService: ConversionService,
@@ -463,11 +466,31 @@ export class TicketsService {
     const created = await this.txManager.executeInTransaction(
       ctx,
       async (txCtx) => {
-        const activePromotion = await this.promotionsService.getActiveForUser(
-          txCtx,
-          sellerId,
-          PromotionType.SELLER_DISCOUNTED_FEE,
-        );
+        let activePromotion: Promotion | null = null;
+        if (data.promotionCode?.trim()) {
+          try {
+            const claimed = await this.promotionCodesService.claimPromotionCode(
+              txCtx,
+              'seller',
+              data.promotionCode.trim(),
+              sellerId,
+            );
+            activePromotion = claimed;
+          } catch (err) {
+            this.logger.warn(ctx, 'Promotion code claim failed in createListing', {
+              code: data.promotionCode,
+              error: err,
+            });
+            throw err;
+          }
+        }
+        if (!activePromotion) {
+          activePromotion = await this.promotionsService.getActiveForUser(
+            txCtx,
+            sellerId,
+            PromotionType.SELLER_DISCOUNTED_FEE,
+          );
+        }
         const hasPromotion =
           activePromotion &&
           (activePromotion.maxUsages === 0 ||

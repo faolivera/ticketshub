@@ -1,12 +1,14 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
+  Query,
   Inject,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
-import { PromotionsService } from './promotions.service';
+import { PromotionCodesService } from './promotion-codes.service';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { User } from '../../common/decorators/user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -16,6 +18,7 @@ import type { Ctx } from '../../common/types/context';
 import type {
   ClaimPromotionCodeRequest,
   ClaimPromotionCodeResponse,
+  CheckSellerPromotionCodeResponse,
 } from './promotions.api';
 import { ClaimPromotionCodeRequestSchema } from './schemas/api.schemas';
 
@@ -23,9 +26,25 @@ import { ClaimPromotionCodeRequestSchema } from './schemas/api.schemas';
 @UseGuards(JwtAuthGuard)
 export class PromotionsClaimController {
   constructor(
-    @Inject(PromotionsService)
-    private readonly promotionsService: PromotionsService,
+    @Inject(PromotionCodesService)
+    private readonly promotionCodesService: PromotionCodesService,
   ) {}
+
+  @Get('seller/check')
+  async checkSellerCode(
+    @Context() ctx: Ctx,
+    @Query('code') code: string | undefined,
+    @User() user: AuthenticatedUserPublicInfo,
+  ): Promise<ApiResponse<CheckSellerPromotionCodeResponse | null>> {
+    if (!code || typeof code !== 'string' || !code.trim()) {
+      return { success: true, data: null };
+    }
+    const data = await this.promotionCodesService.checkSellerPromotionCode(
+      ctx,
+      code.trim(),
+    );
+    return { success: true, data };
+  }
 
   @Post('claim')
   async claim(
@@ -38,7 +57,7 @@ export class PromotionsClaimController {
       throw new BadRequestException(parsed.error.flatten().fieldErrors);
     }
     const { code, role } = parsed.data as ClaimPromotionCodeRequest;
-    const promotion = await this.promotionsService.claimPromotionCode(
+    const promotion = await this.promotionCodesService.claimPromotionCode(
       ctx,
       role,
       code,

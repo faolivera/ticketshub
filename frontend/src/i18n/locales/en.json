@@ -1396,6 +1396,14 @@
     "delivery": "Delivery",
     "summaryTitle": "Sale summary",
     "platformFee": "Platform commission",
+    "promotionCode": "Promotion code",
+    "promotionCodePlaceholder": "Enter code",
+    "claimPromo": "Claim",
+    "claiming": "Checking…",
+    "promotionCodeInvalid": "Invalid or expired promotion code",
+    "promotionCodeCheckFailed": "Could not check promotion code",
+    "promotionVerifiedSellerDisclaimer": "This promotion is for verified sellers. Complete verification to use it.",
+    "becomeVerifiedSeller": "Become a verified seller",
     "selectEventToContinue": "Select an event to continue",
     "selectDateToContinue": "Select a date to continue",
     "enterValidPrice": "Enter a price greater than 0",
@@ -1723,7 +1731,12 @@
       "codeMaxUsagesHint": "How many users can claim this code. 0 = unlimited.",
       "validUntil": "Valid until",
       "noPromotionCodes": "No promotion codes yet.",
-      "createError": "Failed to create promotion code"
+      "createError": "Failed to create promotion code",
+      "edit": "Edit",
+      "editTitle": "Edit promotion code",
+      "editDescription": "Update the code target, promotion config, and validity.",
+      "save": "Save changes",
+      "editError": "Failed to update promotion code"
     },
     "platformConfig": {
       "title": "Platform Settings",

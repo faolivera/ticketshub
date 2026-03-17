@@ -3,26 +3,22 @@ import {
   Inject,
   BadRequestException,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PROMOTIONS_REPOSITORY } from './promotions.repository.interface';
-import { PROMOTION_CODES_REPOSITORY } from './promotion-codes.repository.interface';
 import type {
   IPromotionsRepository,
   ListPromotionsFilters,
 } from './promotions.repository.interface';
-import type { IPromotionCodesRepository } from './promotion-codes.repository.interface';
 import { PlatformConfigService } from '../config/config.service';
 import { UsersService } from '../users/users.service';
 import { ContextLogger } from '../../common/logger/context-logger';
-import { VerificationHelper, SellerTier } from '../../common/utils/verification-helper';
 import type { Ctx } from '../../common/types/context';
 import {
   PromotionType,
   PromotionStatus,
   type Promotion,
   type PromotionSnapshot,
-  type PromotionConfigTarget,
+  type PromotionCode,
 } from './promotions.domain';
 import type {
   CreatePromotionRequest,
@@ -31,9 +27,6 @@ import type {
   PromotionListItem,
   UpdatePromotionStatusRequest,
   ActivePromotionSummary,
-  ClaimPromotionCodeResponse,
-  CreatePromotionCodeRequest,
-  ListPromotionCodesResponse,
 } from './promotions.api';
 
 @Injectable()
@@ -43,8 +36,6 @@ export class PromotionsService {
   constructor(
     @Inject(PROMOTIONS_REPOSITORY)
     private readonly repository: IPromotionsRepository,
-    @Inject(PROMOTION_CODES_REPOSITORY)
-    private readonly promotionCodesRepository: IPromotionCodesRepository,
     private readonly platformConfigService: PlatformConfigService,
     private readonly usersService: UsersService,
   ) {}
@@ -258,80 +249,30 @@ export class PromotionsService {
   }
 
   /**
-   * Claim a promotion code as buyer or seller. Validates code target vs user role/verification,
-   * then creates a promotion for the user and increments the code's used count.
+   * Whether the user has already claimed a promotion for this promotion code.
+   * Used by PromotionCodeService when validating claim.
    */
-  async claimPromotionCode(
+  async hasUserClaimedPromotionCode(
     ctx: Ctx,
-    role: 'buyer' | 'seller',
-    code: string,
     userId: string,
-  ): Promise<ClaimPromotionCodeResponse> {
-    const promotionCode = await this.promotionCodesRepository.findByCode(
+    promotionCodeId: string,
+  ): Promise<boolean> {
+    const existing = await this.repository.findByUserIdAndPromotionCodeId(
       ctx,
-      code,
+      userId,
+      promotionCodeId,
     );
-    if (!promotionCode) {
-      throw new NotFoundException('Promotion code not found');
-    }
+    return existing.length > 0;
+  }
 
-    if (
-      promotionCode.maxUsages > 0 &&
-      promotionCode.usedCount >= promotionCode.maxUsages
-    ) {
-      throw new BadRequestException('Promotion code has no remaining usages');
-    }
-
-    const now = new Date();
-    if (
-      promotionCode.validUntil != null &&
-      promotionCode.validUntil < now
-    ) {
-      throw new BadRequestException('Promotion code has expired');
-    }
-
-    const user = await this.usersService.findById(ctx, userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const target = promotionCode.target;
-
-    if (role === 'buyer') {
-      if (target !== 'buyer' && target !== 'verified_buyer') {
-        throw new ForbiddenException(
-          'This promotion code is not available for buyers',
-        );
-      }
-      if (target === 'verified_buyer') {
-        if (!VerificationHelper.hasV1(user) || !VerificationHelper.hasV2(user)) {
-          throw new ForbiddenException(
-            'This promotion code requires a verified account (email and phone)',
-          );
-        }
-      }
-    } else {
-      if (target !== 'seller' && target !== 'verified_seller') {
-        throw new ForbiddenException(
-          'This promotion code is not available for sellers',
-        );
-      }
-      if (!VerificationHelper.canSell(user)) {
-        throw new ForbiddenException(
-          'Only sellers with verified email and phone can claim this code',
-        );
-      }
-      if (target === 'verified_seller') {
-        if (VerificationHelper.sellerTier(user) !== SellerTier.VERIFIED_SELLER) {
-          throw new ForbiddenException(
-            'This promotion code requires a verified seller account (identity and bank verified)',
-          );
-        }
-      }
-    }
-
-    const platformConfig =
-      await this.platformConfigService.getPlatformConfig(ctx);
+  /**
+   * Create a promotion from a claimed promotion code. Used by PromotionCodeService.claimPromotionCode.
+   */
+  async createFromPromotionCodeClaim(
+    ctx: Ctx,
+    userId: string,
+    promotionCode: PromotionCode,
+  ): Promise<Promotion> {
     const config = promotionCode.promotionConfig as {
       type: PromotionType;
       config: { feePercentage: number };
@@ -340,17 +281,8 @@ export class PromotionsService {
       status: PromotionStatus;
       validUntil: Date | null;
     };
-    if (
-      config.config.feePercentage > platformConfig.sellerPlatformFeePercentage
-    ) {
-      throw new BadRequestException(
-        `Promotion fee percentage cannot exceed platform seller fee (${platformConfig.sellerPlatformFeePercentage}%)`,
-      );
-    }
-
     const validUntil = config.validUntil ?? null;
-
-    const promotion = await this.repository.create(ctx, {
+    return this.repository.create(ctx, {
       userId,
       name: promotionCode.code,
       type: config.type,
@@ -363,106 +295,6 @@ export class PromotionsService {
       createdBy: userId,
       promotionCodeId: promotionCode.id,
     });
-
-    await this.promotionCodesRepository.incrementUsedCount(ctx, promotionCode.id);
-
-    this.logger.log(
-      ctx,
-      `User ${userId} claimed promotion code ${promotionCode.code} (${promotionCode.id})`,
-    );
-    return promotion;
   }
 
-  /**
-   * List all promotion codes (admin).
-   */
-  async listPromotionCodes(ctx: Ctx): Promise<ListPromotionCodesResponse> {
-    const codes = await this.promotionCodesRepository.list(ctx);
-    return codes.map((c) => {
-      const configValidUntil = c.promotionConfig.validUntil;
-      const configValidUntilStr =
-        configValidUntil == null
-          ? null
-          : typeof configValidUntil === 'string'
-            ? configValidUntil
-            : configValidUntil instanceof Date
-              ? configValidUntil.toISOString()
-              : null;
-      const codeValidUntilStr =
-        c.validUntil == null ? null : c.validUntil.toISOString();
-      return {
-        id: c.id,
-        code: c.code,
-        target: c.target,
-        promotionConfig: {
-          type: c.promotionConfig.type,
-          config: c.promotionConfig.config,
-          maxUsages: c.promotionConfig.maxUsages,
-          validUntil: configValidUntilStr,
-        },
-        maxUsages: c.maxUsages,
-        usedCount: c.usedCount,
-        validUntil: codeValidUntilStr,
-        createdAt: c.createdAt.toISOString(),
-        createdBy: c.createdBy,
-      };
-    });
-  }
-
-  /**
-   * Create a promotion code (admin).
-   */
-  async createPromotionCode(
-    ctx: Ctx,
-    body: CreatePromotionCodeRequest,
-    createdBy: string,
-  ): Promise<{ id: string; code: string }> {
-    const platformConfig =
-      await this.platformConfigService.getPlatformConfig(ctx);
-    if (
-      body.promotionConfig.config.feePercentage >
-      platformConfig.sellerPlatformFeePercentage
-    ) {
-      throw new BadRequestException(
-        `Promotion fee percentage (${body.promotionConfig.config.feePercentage}%) cannot exceed platform seller fee (${platformConfig.sellerPlatformFeePercentage}%)`,
-      );
-    }
-
-    const existing = await this.promotionCodesRepository.findByCode(
-      ctx,
-      body.code,
-    );
-    if (existing) {
-      throw new BadRequestException(
-        `Promotion code "${body.code}" already exists`,
-      );
-    }
-
-    const promotionConfigValidUntil = body.promotionConfig.validUntil
-      ? new Date(body.promotionConfig.validUntil)
-      : null;
-    const codeValidUntil = body.validUntil
-      ? new Date(body.validUntil)
-      : null;
-    const promotionCode = await this.promotionCodesRepository.create(ctx, {
-      code: body.code,
-      promotionConfig: {
-        type: body.promotionConfig.type,
-        config: body.promotionConfig.config,
-        maxUsages: body.promotionConfig.maxUsages,
-        usedCount: 0,
-        usedInListingIds: [],
-        status: PromotionStatus.Active,
-        validUntil: promotionConfigValidUntil,
-      },
-      target: body.target as PromotionConfigTarget,
-      maxUsages: body.maxUsages,
-      usedCount: 0,
-      validUntil: codeValidUntil,
-      createdBy,
-    });
-
-    this.logger.log(ctx, `Created promotion code ${promotionCode.code}`);
-    return { id: promotionCode.id, code: promotionCode.code };
-  }
 }

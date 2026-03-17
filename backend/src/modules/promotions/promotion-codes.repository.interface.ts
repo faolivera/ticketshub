@@ -13,6 +13,17 @@ export interface IPromotionCodesRepository {
 
   list(ctx: Ctx): Promise<PromotionCode[]>;
 
+  update(
+    ctx: Ctx,
+    id: string,
+    data: Partial<
+      Omit<
+        PromotionCode,
+        'id' | 'createdAt' | 'createdBy' | 'usedCount'
+      >
+    >,
+  ): Promise<PromotionCode | undefined>;
+
   incrementUsedCount(ctx: Ctx, id: string): Promise<PromotionCode | undefined>;
 }
 

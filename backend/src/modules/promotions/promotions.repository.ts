@@ -116,6 +116,23 @@ export class PromotionsRepository
     return row ? this.mapToDomain(row) : undefined;
   }
 
+  async findByUserIdAndPromotionCodeId(
+    ctx: Ctx,
+    userId: string,
+    promotionCodeId: string,
+  ): Promise<Promotion[]> {
+    this.logger.debug(ctx, 'findByUserIdAndPromotionCodeId', {
+      userId,
+      promotionCodeId,
+    });
+    const client = this.getClient(ctx);
+    const rows = await client.promotion.findMany({
+      where: { userId, promotionCodeId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map((r) => this.mapToDomain(r));
+  }
+
   async findActiveByUserIdAndType(
     ctx: Ctx,
     userId: string,

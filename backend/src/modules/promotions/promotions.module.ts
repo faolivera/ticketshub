@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PromotionsController } from './promotions.controller';
 import { PromotionsClaimController } from './promotions-claim.controller';
 import { PromotionsService } from './promotions.service';
+import { PromotionCodesService } from './promotion-codes.service';
 import { PromotionsRepository } from './promotions.repository';
 import { PromotionCodesRepository } from './promotion-codes.repository';
 import { PROMOTIONS_REPOSITORY } from './promotions.repository.interface';
@@ -22,7 +23,8 @@ import { UsersModule } from '../users/users.module';
       useClass: PromotionCodesRepository,
     },
     PromotionsService,
+    PromotionCodesService,
   ],
-  exports: [PromotionsService],
+  exports: [PromotionsService, PromotionCodesService],
 })
 export class PromotionsModule {}

@@ -3,12 +3,14 @@ import { useNavigate, useLocation, useSearchParams, Navigate } from 'react-route
 import { Ticket, Loader2, Calendar, X, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
+import { VerificationHelper, SellerTier } from '@/lib/verification';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { EmptyState } from '@/app/components/EmptyState';
 import { SellerRiskRestrictionDisclaimer } from '@/app/components/SellerRiskRestrictionDisclaimer';
 import { eventsService } from '@/api/services/events.service';
 import { ticketsService } from '@/api/services/tickets.service';
 import { bffService } from '@/api/services/bff.service';
+import { promotionsService } from '@/api/services/promotions.service';
 import {
   WizardProgress,
   WizardFooter,
@@ -68,6 +70,11 @@ export function SellListingWizard() {
     type: string;
     config: { feePercentage: number };
   } | null>(null);
+
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [checkedPromotion, setCheckedPromotion] = useState<import('@/api/types/promotions').CheckSellerPromotionCodeResponse | null>(null);
+  const [promotionCheckError, setPromotionCheckError] = useState<string | null>(null);
+  const [isCheckingPromo, setIsCheckingPromo] = useState(false);
 
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
@@ -263,6 +270,33 @@ export function SellListingWizard() {
     setReturnToReview(true);
   };
 
+  const handleClaimPromo = async () => {
+    const code = promoCodeInput.trim();
+    if (!code) return;
+    setPromotionCheckError(null);
+    setIsCheckingPromo(true);
+    try {
+      const result = await promotionsService.checkSellerPromotionCode(code);
+      setCheckedPromotion(result ?? null);
+      if (!result) {
+        setPromotionCheckError(t('sellListingWizard.promotionCodeInvalid'));
+      }
+    } catch {
+      setCheckedPromotion(null);
+      setPromotionCheckError(t('sellListingWizard.promotionCodeCheckFailed'));
+    } finally {
+      setIsCheckingPromo(false);
+    }
+  };
+
+  const isStep6PromotionApplicable =
+    checkedPromotion &&
+    (checkedPromotion.target === 'seller' ||
+      (checkedPromotion.target === 'verified_seller' &&
+        VerificationHelper.sellerTier(user) === SellerTier.VERIFIED_SELLER));
+  const promotionCodeToSend =
+    isStep6PromotionApplicable && promoCodeInput.trim() ? promoCodeInput.trim() : undefined;
+
   const handlePublish = async () => {
     if (!event || !form.eventDateId || !form.eventSectionId || form.pricePerTicket <= 0) return;
 
@@ -317,6 +351,7 @@ export function SellListingWizard() {
               },
             }
           : undefined,
+        promotionCode: promotionCodeToSend,
       });
       navigate(`/buy/${listing.eventSlug}/${listing.id}`, { replace: true });
     } catch (err) {
@@ -435,6 +470,13 @@ export function SellListingWizard() {
                 effectiveFeePercent={activePromotion ? effectiveFeePercent : undefined}
                 promotionName={activePromotion?.name}
                 onEditStep={handleEditStep}
+                promoCodeInput={promoCodeInput}
+                onPromoCodeChange={setPromoCodeInput}
+                onClaimPromo={handleClaimPromo}
+                checkedPromotion={checkedPromotion}
+                promotionCheckError={promotionCheckError}
+                isCheckingPromo={isCheckingPromo}
+                user={user}
               />
             )}
 

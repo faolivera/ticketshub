@@ -1395,6 +1395,14 @@
     "delivery": "Entrega",
     "summaryTitle": "Resumen de venta",
     "platformFee": "Comisión de la plataforma",
+    "promotionCode": "Código de promoción",
+    "promotionCodePlaceholder": "Ingresá el código",
+    "claimPromo": "Reclamar",
+    "claiming": "Verificando…",
+    "promotionCodeInvalid": "Código de promoción inválido o vencido",
+    "promotionCodeCheckFailed": "No se pudo verificar el código",
+    "promotionVerifiedSellerDisclaimer": "Esta promoción es para vendedores verificados. Completá la verificación para usarla.",
+    "becomeVerifiedSeller": "Ser vendedor verificado",
     "selectEventToContinue": "Seleccioná un evento para continuar",
     "selectDateToContinue": "Seleccioná una fecha para continuar",
     "enterValidPrice": "Ingresá un precio mayor a 0",
@@ -1722,7 +1730,12 @@
       "codeMaxUsagesHint": "Cuántos usuarios pueden canjear este código. 0 = ilimitado.",
       "validUntil": "Válido hasta",
       "noPromotionCodes": "Aún no hay códigos de promoción.",
-      "createError": "Error al crear el código de promoción"
+      "createError": "Error al crear el código de promoción",
+      "edit": "Editar",
+      "editTitle": "Editar código de promoción",
+      "editDescription": "Actualiza el público objetivo, la configuración de la promoción y la validez.",
+      "save": "Guardar cambios",
+      "editError": "Error al actualizar el código de promoción"
     },
     "platformConfig": {
       "title": "Configuración de Plataforma",
