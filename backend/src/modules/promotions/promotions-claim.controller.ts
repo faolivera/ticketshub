@@ -42,6 +42,7 @@ export class PromotionsClaimController {
     const data = await this.promotionCodesService.checkSellerPromotionCode(
       ctx,
       code.trim(),
+      user.id,
     );
     return { success: true, data };
   }
@@ -60,7 +61,7 @@ export class PromotionsClaimController {
     const promotion = await this.promotionCodesService.claimPromotionCode(
       ctx,
       role,
-      code,
+      code.trim(),
       user.id,
     );
     return { success: true, data: promotion };

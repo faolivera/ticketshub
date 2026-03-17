@@ -2,7 +2,6 @@ import {
   Injectable,
   Inject,
   BadRequestException,
-  ConflictException,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -202,7 +201,9 @@ export class PromotionCodesService {
     let invalidReason: InvalidPromotionCodeReason | null = null;
     const validationResult = role === 'seller' ? await this.validatePromotionCodeForSeller(ctx, userId, code) : await this.validatePromotionCodeForBuyer(ctx, userId, code);
     if(validationResult.status !== 'valid') {
-      throw new ForbiddenException(this.getForbiddenMessageForReason(invalidReason));
+      const reason = this.getForbiddenMessageForReason(invalidReason);
+      this.logger.warn(ctx, `User ${userId} tried to claim promotion code ${code} but failed validation: ${reason}`);
+      throw new ForbiddenException(reason);
     } else {
       user = validationResult.user;
       promotionCode = validationResult.promotionCode;

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PromotionCodesService } from '../../../../src/modules/promotions/promotion-codes.service';
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
@@ -155,7 +155,7 @@ describe('PromotionCodesService', () => {
     it('should return null when code does not exist', async () => {
       promotionCodesRepository.findByCode.mockResolvedValue(undefined);
 
-      const result = await service.checkSellerPromotionCode(mockCtx, 'MISSING');
+      const result = await service.checkSellerPromotionCode(mockCtx, 'MISSING', 'user_1');
 
       expect(result).toBeNull();
       expect(promotionCodesRepository.findByCode).toHaveBeenCalledWith(
@@ -178,8 +178,9 @@ describe('PromotionCodesService', () => {
         },
       });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
+      usersService.findById.mockResolvedValue(createMockUser());
 
-      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10');
+      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10', 'user_1');
 
       expect(result).toBeNull();
     });
@@ -200,8 +201,9 @@ describe('PromotionCodesService', () => {
         },
       });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
+      usersService.findById.mockResolvedValue(createMockUser());
 
-      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10');
+      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10', 'user_1');
 
       expect(result).toBeNull();
     });
@@ -222,13 +224,14 @@ describe('PromotionCodesService', () => {
         },
       });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
+      usersService.findById.mockResolvedValue(createMockUser());
 
-      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10');
+      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10', 'user_1');
 
       expect(result).toBeNull();
     });
 
-    it('should return null when type is not SELLER_DISCOUNTED_FEE', async () => {
+    it('should return config when type is not SELLER_DISCOUNTED_FEE (service returns config for any valid seller code)', async () => {
       const pc = createMockPromotionCode({
         target: 'seller',
         promotionConfig: {
@@ -242,10 +245,17 @@ describe('PromotionCodesService', () => {
         },
       });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
+      usersService.findById.mockResolvedValue(createMockUser());
 
-      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10');
+      const result = await service.checkSellerPromotionCode(mockCtx, 'SAVE10', 'user_1');
 
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        code: 'SAVE10',
+        name: 'SAVE10',
+        target: 'seller',
+        type: PromotionType.BUYER_DISCOUNTED_FEE,
+        config: { feePercentage: 0 },
+      });
     });
 
     it('should return config when valid SELLER_DISCOUNTED_FEE and target seller', async () => {
@@ -262,8 +272,9 @@ describe('PromotionCodesService', () => {
         },
       });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
+      usersService.findById.mockResolvedValue(createMockUser());
 
-      const result = await service.checkSellerPromotionCode(mockCtx, ' SAVE10 ');
+      const result = await service.checkSellerPromotionCode(mockCtx, ' SAVE10 ', 'user_1');
 
       expect(result).toEqual({
         code: 'SAVE10',
@@ -293,8 +304,9 @@ describe('PromotionCodesService', () => {
         },
       });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
+      usersService.findById.mockResolvedValue(createMockUser());
 
-      const result = await service.checkSellerPromotionCode(mockCtx, 'VERIFIED');
+      const result = await service.checkSellerPromotionCode(mockCtx, 'VERIFIED', 'user_1');
 
       expect(result).toEqual({
         code: 'VERIFIED',
@@ -307,29 +319,29 @@ describe('PromotionCodesService', () => {
   });
 
   describe('claimPromotionCode', () => {
-    it('should throw NotFoundException when code does not exist', async () => {
+    it('should throw ForbiddenException when code does not exist', async () => {
       promotionCodesRepository.findByCode.mockResolvedValue(undefined);
 
       await expect(
         service.claimPromotionCode(mockCtx, 'buyer', 'INVALID', 'user_1'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(ForbiddenException);
 
       expect(promotionsService.createFromPromotionCodeClaim).not.toHaveBeenCalled();
     });
 
-    it('should throw BadRequestException when code has no remaining usages', async () => {
+    it('should throw ForbiddenException when code has no remaining usages', async () => {
       const pc = createMockPromotionCode({ maxUsages: 10, usedCount: 10 });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
       usersService.findById.mockResolvedValue(createMockUser());
 
       await expect(
         service.claimPromotionCode(mockCtx, 'buyer', 'SAVE10', 'user_1'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ForbiddenException);
 
       expect(promotionsService.createFromPromotionCodeClaim).not.toHaveBeenCalled();
     });
 
-    it('should throw BadRequestException when code has expired (validUntil in the past)', async () => {
+    it('should throw ForbiddenException when code has expired (validUntil in the past)', async () => {
       const past = new Date(Date.now() - 86400000);
       const pc = createMockPromotionCode({ validUntil: past });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
@@ -337,12 +349,12 @@ describe('PromotionCodesService', () => {
 
       await expect(
         service.claimPromotionCode(mockCtx, 'buyer', 'SAVE10', 'user_1'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ForbiddenException);
 
       expect(promotionsService.createFromPromotionCodeClaim).not.toHaveBeenCalled();
     });
 
-    it('should throw ConflictException when user has already claimed this promotion code', async () => {
+    it('should throw ForbiddenException when user has already claimed this promotion code', async () => {
       const pc = createMockPromotionCode({ target: 'buyer' });
       promotionCodesRepository.findByCode.mockResolvedValue(pc);
       usersService.findById.mockResolvedValue(createMockUser());
@@ -350,7 +362,7 @@ describe('PromotionCodesService', () => {
 
       await expect(
         service.claimPromotionCode(mockCtx, 'buyer', 'SAVE10', 'user_1'),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(ForbiddenException);
 
       expect(promotionsService.createFromPromotionCodeClaim).not.toHaveBeenCalled();
       expect(promotionsService.hasUserClaimedPromotionCode).toHaveBeenCalledWith(
