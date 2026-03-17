@@ -1,8 +1,8 @@
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@/app/components/ui/input';
 import { Switch } from '@/app/components/ui/switch';
 import { Label } from '@/app/components/ui/label';
+import { CurrencyAmountInput } from '@/app/components/ui/CurrencyAmountInput';
 import type { WizardFormState } from '../types';
 
 interface StepPriceAndConditionsProps {
@@ -42,21 +42,13 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
         <Label htmlFor="wizard-price" className="text-sm font-medium">
           {t('sellListingWizard.pricePerTicket')} <span className="text-destructive">*</span>
         </Label>
-        <div className="mt-2 flex rounded-lg border bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring">
-          <span className="flex items-center pl-4 pr-2 text-muted-foreground font-medium border-r bg-muted/50 min-w-[3rem]">
-            {currency === 'ARS' ? '$' : currency}
-          </span>
-          <Input
+        <div className="mt-2">
+          <CurrencyAmountInput
             id="wizard-price"
-            type="number"
+            value={Math.floor(form.pricePerTicket) || 0}
+            onChange={(v) => onFormChange({ pricePerTicket: v })}
+            currency={currency}
             min={0}
-            step="0.01"
-            value={form.pricePerTicket || ''}
-            onChange={(e) =>
-              onFormChange({ pricePerTicket: parseFloat(e.target.value) || 0 })
-            }
-            className="border-0 rounded-none focus-visible:ring-0 min-h-[44px] text-base"
-            placeholder="0.00"
             aria-invalid={form.pricePerTicket <= 0}
             aria-describedby={form.pricePerTicket <= 0 ? 'price-error' : undefined}
           />
@@ -87,16 +79,16 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
               <Label htmlFor="wizard-min-offer" className="text-sm">
                 {t('sellListingWizard.minimumOffer')}
               </Label>
-              <Input
-                id="wizard-min-offer"
-                type="number"
-                min={0}
-                max={form.pricePerTicket || undefined}
-                step="0.01"
-                value={form.bestOfferMinPrice}
-                onChange={(e) => onFormChange({ bestOfferMinPrice: e.target.value })}
-                className="mt-1 max-w-[160px] min-h-[44px]"
-              />
+              <div className="mt-1 max-w-[200px]">
+                <CurrencyAmountInput
+                  id="wizard-min-offer"
+                  value={Math.floor(parseFloat(form.bestOfferMinPrice) || 0)}
+                  onChange={(v) => onFormChange({ bestOfferMinPrice: v === 0 ? '' : String(v) })}
+                  currency={currency}
+                  min={0}
+                  max={form.pricePerTicket > 0 ? Math.floor(form.pricePerTicket) : undefined}
+                />
+              </div>
             </div>
           )}
         </div>
