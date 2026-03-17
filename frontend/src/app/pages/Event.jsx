@@ -266,38 +266,40 @@ export default function EventDetail() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        .ev-hero-wrap { position: relative; overflow: hidden; }
-        .ev-hero-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; filter: blur(14px); transform: scale(1.08); }
-        .ev-hero-overlay { position: absolute; inset: 0; z-index: 0; background: rgba(0,0,0,0.55) }
-        .ev-hero-inner { position: relative; z-index: 1; display: block; overflow: hidden; }
-        .ev-hero-content .date-pill { color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-        .ev-hero-content .date-pill:hover:not(.active) { color: #fff; border-color: rgba(255,255,255,0.5); }
-        .ev-hero-content .date-pill.active { background: ${VLIGHT}; border-color: ${V}; color: ${V}; text-shadow: none; }
+
+        /* Ticket grid */
         .tk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-        .tk-list { display: flex; flex-direction: column; gap: 12px; }
         @media(max-width:960px){ .tk-grid{ grid-template-columns:repeat(2,1fr)!important; } }
         @media(max-width:580px){ .tk-grid{ grid-template-columns:1fr!important; } }
+
+        /* Sector pills */
         .sec-pill { padding: 6px 14px; border-radius: 100px; border: 1.5px solid ${BORD2}; font-size: 12.5px; font-weight: 600; cursor: pointer; background: transparent; color: ${MUTED}; transition: all 0.14s; white-space: nowrap; font-family:'Plus Jakarta Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; }
         .sec-pill.active { background: ${V}; border-color: ${V}; color: white; }
         .sec-pill:hover:not(.active) { border-color: #9ca3af; color: ${DARK}; }
+
+        /* Date pills */
         .date-pill { padding: 6px 14px; border-radius: 100px; border: 1.5px solid ${BORD2}; font-size: 12.5px; font-weight: 600; cursor: pointer; background: transparent; color: ${MUTED}; transition: all 0.14s; white-space: nowrap; font-family:'Plus Jakarta Sans',sans-serif; }
         .date-pill.active { background: ${VLIGHT}; border-color: ${V}; color: ${V}; }
         .date-pill:hover:not(.active) { border-color: #9ca3af; color: ${DARK}; }
+
+        /* Ticket card */
         .tk-card { background: white; border: 1px solid ${BORDER}; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.18s, transform 0.18s; cursor: pointer; }
         .tk-card:hover { box-shadow: 0 8px 24px rgba(109,40,217,0.11); transform: translateY(-2px); }
         .tk-card.best-opt { border: 2px solid ${V}; }
-        .tk-list-row { background: white; border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; transition: box-shadow 0.18s; }
-        .tk-list-row:hover { box-shadow: 0 4px 16px rgba(109,40,217,0.08); }
-        .tk-list-row.best-opt { border: 2px solid ${V}; }
+
+        /* Sort select */
         .sort-sel { border: 1.5px solid ${BORD2}; border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family:'Plus Jakarta Sans',sans-serif; color: ${DARK}; background: white; cursor: pointer; outline: none; }
+
+        /* Sticky bar */
         .sticky-bar { position:fixed; top:0; left:0; right:0; z-index:200; background:rgba(249,249,247,0.97); backdrop-filter:blur(14px); border-bottom:1px solid ${BORDER}; transform:translateY(-100%); transition:transform 0.22s ease; }
         .sticky-bar.visible { transform:translateY(0); }
-        .btn-buy { background:${V}; color:white; border:none; border-radius:10px; width:100%; padding:11px 14px; font-size:13.5px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:background 0.15s; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; }
+
+        /* CTA buy button */
+        .btn-buy { background:${V}; color:white; border:none; border-radius:10px; width:100%; padding:11px 14px; font-size:13.5px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:background 0.15s; display:flex; align-items:center; justify-content:center; gap:8px; }
         .btn-buy:hover { background:#5b21b6; }
         .btn-buy.seated { background:${BLUE}; }
         .btn-buy.seated:hover { background:#162d4a; }
-        .view-btn { width: 32px; height: 32px; border-radius: 7px; border: 1.5px solid ${BORD2}; background: white; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.14s; flex-shrink: 0; }
-        .view-btn.active { background: ${VLIGHT}; border-color: ${V}; }
+
         .pills-row::-webkit-scrollbar { height: 0; }
       `}</style>
 
@@ -351,7 +353,7 @@ export default function EventDetail() {
         </Link>
 
         {/* Hero: blurred event image as background only (no poster), overlay + content */}
-        <div ref={heroRef} className="ev-hero-wrap" style={{ border: `1px solid ${BORDER}`, borderRadius: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+        {/* <div ref={heroRef} className="ev-hero-wrap" style={{ border: `1px solid ${BORDER}`, borderRadius: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
           <div className="ev-hero-bg" style={{ backgroundImage: `url(${EVENT.img})` }} aria-hidden />
           <div className="ev-hero-overlay" aria-hidden />
           <div className="ev-hero-inner">
@@ -416,7 +418,130 @@ export default function EventDetail() {
               </div>
             </div>
           </div>
+        </div> */}
+
+<div ref={heroRef} style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, boxShadow: "0 2px 20px rgba(0,0,0,0.14)", position: "relative" }}>
+
+{/* Blurred background image — neutral brightness so any palette works */}
+<div style={{
+  position: "absolute", inset: 0, zIndex: 0,
+  backgroundImage: `url(${EVENT.img})`,
+  backgroundSize: "cover", backgroundPosition: "center",
+  filter: "blur(22px) brightness(0.5) saturate(1.2)",
+  transform: "scale(1.1)",
+}} />
+
+{/* Layer 1 — horizontal scrim */}
+<div style={{
+  position: "absolute", inset: 0, zIndex: 1,
+  background: "linear-gradient(to right, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.22) 45%, rgba(0,0,0,0.11) 75%, rgba(0,0,0,0.08) 100%)",
+}} />
+
+{/* Layer 2 — vertical scrim */}
+<div style={{
+  position: "absolute", inset: 0, zIndex: 1,
+  background: "linear-gradient(to bottom, rgba(0,0,0,0.22) 0%, transparent 30%, transparent 60%, rgba(0,0,0,0.38) 100%)",
+}} />
+
+{/* Content */}
+<div style={{ position: "relative", zIndex: 2, padding: "clamp(24px,4vw,40px)", display: "flex", gap: "clamp(20px,3vw,36px)", alignItems: "flex-start", flexWrap: "wrap" }}>
+
+  {/* Info — white text on dark bg */}
+  <div style={{ flex: 1, minWidth: 260, display: "flex", flexDirection: "column", gap: 0 }}>
+
+    {/* Category badge — dark pill with blur: always legible on any image */}
+    <div style={{ marginBottom: 12 }}>
+      <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 12px", borderRadius: 100, background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.18)", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)", letterSpacing: "0.02em" }}>
+        {EVENT.category}
+      </span>
+    </div>
+
+    {/* Title — white always, no text-shadow needed with directional overlay */}
+    <h1 style={{ ...E, fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 400, lineHeight: 1.15, letterSpacing: "-0.5px", color: "white", marginBottom: 6 }}>
+      {EVENT.name}
+    </h1>
+    <p style={{ fontSize: 15, color: "rgba(255,255,255,0.78)", marginBottom: 18 }}>{EVENT.subtitle}</p>
+
+    {/* Meta */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "rgba(255,255,255,0.7)" }}>
+        <MapPin size={14} style={{ color: "#a78bfa", flexShrink: 0 }} />
+        <span style={{ fontWeight: 600, color: "white" }}>{EVENT.venue}</span>
+        <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
+        <span>{EVENT.location}</span>
+      </div>
+    </div>
+
+    {/* Date selector — pill style adapted for dark */}
+    <div style={{ marginBottom: 22 }}>
+      <p style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, color: "rgba(255,255,255,0.45)", marginBottom: 9 }}>
+        Seleccioná una fecha
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+        {EVENT.dates.map((d, i) => (
+          <button
+            key={i}
+            onClick={() => setDateIdx(i)}
+            style={{
+              padding: "6px 14px", borderRadius: 100, fontSize: 12.5, fontWeight: 600,
+              cursor: "pointer", transition: "all 0.14s", whiteSpace: "nowrap",
+              border: dateIdx === i ? "1.5px solid rgba(196,181,253,0.9)" : "1.5px solid rgba(255,255,255,0.2)",
+              background: dateIdx === i ? "rgba(109,40,217,0.7)" : "rgba(255,255,255,0.1)",
+              color: dateIdx === i ? "white" : "rgba(255,255,255,0.7)",
+              backdropFilter: "blur(8px)",
+              ...S,
+            }}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Price + CTA — frosted dark glass: violet price readable on ANY image */}
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      flexWrap: "wrap", gap: 16,
+      padding: "14px 18px", borderRadius: 14, marginBottom: 20,
+      background: "rgba(0,0,0,0.45)",
+      border: "1px solid rgba(255,255,255,0.12)",
+      backdropFilter: "blur(12px)",
+    }}>
+      <div>
+        <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c4b5fd", marginBottom: 4 }}>
+          Entradas desde
+        </p>
+        <p style={{ fontSize: "clamp(26px,3.5vw,36px)", fontWeight: 800, color: "white", lineHeight: 1 }}>
+          {minPrice}
+          <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginLeft: 6 }}>ARS</span>
+        </p>
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 5 }}>
+          <span style={{ color: "#c4b5fd", fontWeight: 600 }}>{activeDate.count} entradas</span> disponibles
+        </p>
+      </div>
+      <button
+        onClick={scrollToTickets}
+        style={{ display: "flex", alignItems: "center", gap: 8, padding: "13px 24px", borderRadius: 11, background: V, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", ...S, boxShadow: "0 4px 20px rgba(109,40,217,0.5)", flexShrink: 0 }}
+      >
+        Ver entradas <ArrowRight size={15} />
+      </button>
+    </div>
+
+    {/* Trust micro-signals — higher opacity for legibility on any image */}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+      {[
+        { icon: <Lock size={12} style={{ color: "#c4b5fd" }} />,          text: "Pago en escrow" },
+        { icon: <CheckCircle size={12} style={{ color: "#86efac" }} />,   text: "Entradas verificadas" },
+        { icon: <RefreshCw size={12} style={{ color: "#fde68a" }} />,     text: "Reembolso garantizado" },
+      ].map(({ icon, text }) => (
+        <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>
+          {icon} {text}
         </div>
+      ))}
+    </div>
+  </div>
+</div>
+</div>
 
         {/* Tickets section */}
         <div ref={ticketsRef} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>

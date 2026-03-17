@@ -54,11 +54,16 @@ export default function TicketsHub() {
   const [cityOpen,    setCityOpen]   = useState(false);
   const [citySearch,  setCitySearch] = useState("");
   const [query,       setQuery]      = useState("");
-  const [hoveredCard, setHovered]    = useState(null);
-  const [events,      setEvents]     = useState([]);
-  const [isLoading,   setIsLoading]  = useState(true);
-  const [error,       setError]      = useState(null);
+  const [hoveredCard,    setHovered]       = useState(null);
+  const [events,         setEvents]        = useState([]);
+  const [isLoading,      setIsLoading]     = useState(true);
+  const [isLoadingMore,  setIsLoadingMore] = useState(false);
+  const [error,          setError]         = useState(null);
+  const [offset,         setOffset]        = useState(0);
+  const [hasMore,        setHasMore]       = useState(true);
   const cityRef = useRef(null);
+
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     let cancelled = false;
@@ -66,8 +71,13 @@ export default function TicketsHub() {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await eventsService.listEvents({ limit: 50 });
-        if (!cancelled) setEvents(Array.isArray(data) ? data : []);
+        const data = await eventsService.listEvents({ limit: PAGE_SIZE, offset: 0 });
+        const list = Array.isArray(data) ? data : [];
+        if (!cancelled) {
+          setEvents(list);
+          setOffset(list.length);
+          setHasMore(list.length === PAGE_SIZE);
+        }
       } catch (err) {
         if (!cancelled) setError(t("landing.errorLoadingEvents"));
         console.error("Failed to fetch events:", err);
@@ -78,6 +88,22 @@ export default function TicketsHub() {
     fetchEvents();
     return () => { cancelled = true; };
   }, [t]);
+
+  async function handleLoadMore() {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const data = await eventsService.listEvents({ limit: PAGE_SIZE, offset });
+      const newBatch = Array.isArray(data) ? data : [];
+      setEvents((prev) => [...prev, ...newBatch]);
+      setOffset((prev) => prev + newBatch.length);
+      setHasMore(newBatch.length === PAGE_SIZE);
+    } catch (err) {
+      console.error("Failed to load more events:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
 
   useEffect(() => {
     const l = document.createElement("link");
@@ -141,6 +167,7 @@ export default function TicketsHub() {
         input:focus{ border-color:${V}!important; box-shadow:0 0 0 3px rgba(109,40,217,0.1)!important; outline:none; }
         .th-card-btn:hover{ background:${V}!important; border-color:${V}!important; color:white!important; }
         .th-date-pill:hover{ border-color:${V}!important; color:${V}!important; background:${VLIGHT}!important; }
+        @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
       `}</style>
 
       <LandingHeader homeHref="#eventos" />
@@ -243,41 +270,48 @@ export default function TicketsHub() {
             <p style={{ fontSize:14 }}>{query.trim() ? "No encontramos eventos con esa búsqueda." : "No hay eventos disponibles."}</p>
           </div>
         ) : (
-          <div className="th-grid">
-            {filtered.map((event, i) => (
-              <EventCard key={event.id} event={event} index={i} hovered={hoveredCard === event.id} onHover={setHovered} />
-            ))}
-          </div>
+          <>
+            <div className="th-grid">
+              {filtered.map((event, i) => (
+                <EventCard key={event.id} event={event} index={i} hovered={hoveredCard === event.id} onHover={setHovered} />
+              ))}
+            </div>
+
+            {/* Load more button — only shown when not filtering and there are more pages */}
+            {!query.trim() && (hasMore || isLoadingMore) && (
+              <div style={{ display:"flex", justifyContent:"center", marginTop:36 }}>
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  style={{
+                    display:"flex", alignItems:"center", gap:8,
+                    padding:"11px 28px", borderRadius:10,
+                    border:`1.5px solid ${BORD2}`,
+                    background: isLoadingMore ? VLIGHT : "white",
+                    color: isLoadingMore ? V : DARK,
+                    fontSize:14, fontWeight:600, cursor: isLoadingMore ? "default" : "pointer",
+                    transition:"all 0.16s", ...S,
+                  }}
+                  onMouseEnter={e => { if (!isLoadingMore) { e.currentTarget.style.borderColor = V; e.currentTarget.style.color = V; e.currentTarget.style.background = VLIGHT; } }}
+                  onMouseLeave={e => { if (!isLoadingMore) { e.currentTarget.style.borderColor = BORD2; e.currentTarget.style.color = DARK; e.currentTarget.style.background = "white"; } }}
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <RefreshCw size={14} style={{ animation:"spin 0.8s linear infinite" }} />
+                      {t("landing.loadingMore")}
+                    </>
+                  ) : (
+                    <>
+                      {t("landing.loadMore")}
+                      <ChevronDown size={14} />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {/* ══════ TRUST SECTION ══════ */}
-      <section style={{ background:"white", borderTop:`1px solid ${BORDER}`, borderBottom:`1px solid ${BORDER}`, padding:"52px 24px" }}>
-        <div style={{ maxWidth:1280, margin:"0 auto" }}>
-          <div style={{ textAlign:"center", marginBottom:40 }}>
-            <div style={{ display:"inline-flex", alignItems:"center", gap:7, color:BLUE, fontSize:11.5, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", marginBottom:10 }}>
-              <ShieldSVG size={12} color={BLUE} /> Por qué confiar en TicketsHub
-            </div>
-            <h2 style={{ ...E, fontSize:"clamp(22px, 2.8vw, 34px)", color:DARK, letterSpacing:"-0.3px", lineHeight:1.2 }}>
-              Tu tranquilidad, nuestra prioridad
-            </h2>
-            <p style={{ color:MUTED, marginTop:10, maxWidth:440, margin:"10px auto 0", lineHeight:1.7, fontSize:14.5 }}>
-              La reventa no tiene por qué ser una apuesta. Cada parte del proceso está diseñada para que compres y vendas sin incertidumbre.
-            </p>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:18 }}>
-            {TRUST.map(({ Icon, title, desc, color, bg }) => (
-              <div key={title} style={{ background:CARD, borderRadius:16, padding:"28px 24px", border:`1px solid ${BORDER}`, boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>
-                <div style={{ width:44, height:44, borderRadius:11, background:bg, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:16, color }}>
-                  <Icon size={20} />
-                </div>
-                <h3 style={{ fontSize:16, fontWeight:700, color:DARK, marginBottom:8 }}>{title}</h3>
-                <p style={{ color:MUTED, lineHeight:1.65, fontSize:13.5 }}>{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <LandingFooter />
     </div>
