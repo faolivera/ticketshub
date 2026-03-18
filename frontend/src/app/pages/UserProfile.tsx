@@ -383,8 +383,8 @@ export function UserProfile() {
                 }
                 status={bankVerifStatus}
                 verifyLabel={t('userProfile.verifyLink')}
-                verifyTo="/bank-account"
-                verifyState={undefined}
+                verifyTo="/verify-user"
+                verifyState={{ verifyBankAccount: true, returnTo: '/user-profile' }}
                 showVerify={bankStatus === 'none'}
               />
             )}

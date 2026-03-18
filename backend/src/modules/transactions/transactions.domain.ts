@@ -265,6 +265,8 @@ export interface TransactionWithDetails extends Transaction {
   eventName: string;
   eventDate: Date;
   venue: string;
+  /** Listing section (or ticket type fallback) for seller/buyer dashboards */
+  sectionName: string;
   buyerName: string;
   sellerName: string;
   bannerUrls?: BannerUrls;

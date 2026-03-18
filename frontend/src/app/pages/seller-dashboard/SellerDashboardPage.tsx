@@ -28,22 +28,21 @@ function fmt(amount: number, currency: string) {
   return formatCurrency(amount, currency).replace(/[,.]00$/, '');
 }
 
-// ─── SectionHeader ────────────────────────────────────────────────────────────
-function SectionHeader({ icon, label, color = MUTED, count, countBg, countColor }: {
-  icon: React.ReactNode; label: string; color?: string;
-  count?: number; countBg?: string; countColor?: string;
+// ─── SubLabel — section title inside a panel ──────────────────────────────────
+function SubLabel({ icon, label, color = HINT, count }: {
+  icon: React.ReactNode; label: string; color?: string; count?: number;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-      {icon}
-      <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color, ...S }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 9 }}>
+      <span style={{ color: HINT }}>{icon}</span>
+      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color, ...S }}>
         {label}
       </span>
       {count !== undefined && count > 0 && (
         <span style={{
-          minWidth: 18, height: 18, borderRadius: 9, padding: '0 5px',
-          fontSize: 10.5, fontWeight: 700,
-          background: countBg ?? BORD2, color: countColor ?? CARD,
+          minWidth: 16, height: 16, borderRadius: 8, padding: '0 4px',
+          fontSize: 10, fontWeight: 700,
+          background: VLIGHT, color: V, border: '1px solid #ddd6fe',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {count}
@@ -95,47 +94,77 @@ function IconBtn({ href, onClick, title, children, active }: {
   );
 }
 
-// ─── ACTION REQUIRED card ─────────────────────────────────────────────────────
-function ActionRequiredCard({ tx, t }: {
+// ─── ACTION REQUIRED — same card footprint as ReceivedOfferCard ───────────────
+function sectorLabel(sectionName: string, t: (k: string, o?: Record<string, string>) => string) {
+  if (!sectionName || sectionName === 'General') {
+    return t('boughtTickets.generalAdmission', { defaultValue: 'General' });
+  }
+  return sectionName;
+}
+
+function ActionRequiredTransactionCard({ tx, t }: {
   tx: TransactionWithDetails;
   t: (k: string, o?: Record<string, string>) => string;
 }) {
-  const [hov, setHov] = useState(false);
-  const status = getTransactionStatusInfo(tx.status, t, true);
-  const price  = tx.pricePerTicket ? fmt(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
+  const actionLabels: Record<string, string> = {
+    TicketTransferred:  t('sellerDashboard.action.waitingBuyerConfirm', { defaultValue: 'El comprador debe confirmar la recepción' }),
+    PaymentReceived:    t('sellerDashboard.action.transferTicket',      { defaultValue: 'Tenés que transferir la entrada' }),
+    PendingPayment:     t('sellerDashboard.action.waitingPayment',      { defaultValue: 'Esperando pago del comprador' }),
+    PaymentPendingVerification: t('sellerDashboard.action.paymentPendingVerification', { defaultValue: 'Pago en verificación' }),
+    DepositHold:        t('sellerDashboard.action.depositHold',         { defaultValue: 'Fondos en escrow — revisá la transacción' }),
+    TransferringFund:   t('sellerDashboard.action.transferringFund',    { defaultValue: 'Liberando fondos — revisá la transacción' }),
+    Disputed:           t('sellerDashboard.action.disputed',            { defaultValue: 'Hay una disputa abierta' }),
+  };
+  const what = actionLabels[tx.status as string]
+    ?? t('sellerDashboard.action.viewDetails', { defaultValue: 'Revisá la transacción' });
+  const qty = Math.max(1, tx.quantity || 1);
+  const perTicket = fmt(Math.round(tx.ticketPrice.amount / qty), tx.ticketPrice.currency);
+  const sector = sectorLabel(tx.sectionName ?? '', t);
 
   return (
-    <Link to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
-      <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-        style={{
-          display: 'flex', background: CARD, borderRadius: 14,
-          border: `1.5px solid ${V}`, overflow: 'hidden',
-          boxShadow: hov ? '0 4px 14px rgba(109,40,217,0.12)' : 'none',
-          transition: 'box-shadow 0.14s',
-        }}>
-        <Thumb url={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle} name={tx.eventName} size={72} />
-        <div style={{ flex: 1, padding: '10px 13px', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 4 }}>
-          <div>
-            <p style={{ fontSize: 14, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2, ...S }}>
-              {tx.eventName}
-            </p>
-            <p style={{ fontSize: 12, color: MUTED, ...S }}>
-              {formatDate(new Date(tx.eventDate))}
-              {tx.ticketType && ` · ${tx.ticketType}`}
-              {price && <span style={{ fontWeight: 700, color: DARK }}> · {price}</span>}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: V, display: 'flex', alignItems: 'center', gap: 4, ...S }}>
-              <AlertCircle size={11} />{status.label}
-            </span>
-            <span style={{ padding: '6px 14px', borderRadius: 8, background: V, color: CARD, fontSize: 12, fontWeight: 700, flexShrink: 0, ...S }}>
-              {t('boughtTickets.viewTransaction', { defaultValue: 'Ver' })} →
-            </span>
-          </div>
+    <div style={{ background: CARD, borderRadius: 14, border: '1px solid #ddd6fe', overflow: 'hidden' }}>
+      <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', flexShrink: 0 }}>
+          <div style={{ width: 3, alignSelf: 'stretch', background: '#f59e0b', flexShrink: 0 }} />
+          <Thumb url={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle} name={tx.eventName} size={64} />
+        </div>
+        <div style={{ flex: 1, padding: '9px 12px', minWidth: 0 }}>
+          <p style={{ fontSize: 13.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 6, ...S }}>
+            {tx.eventName}
+          </p>
+          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
+            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelEventDate', { defaultValue: 'Event date' })}</span>
+            {' · '}{formatDate(new Date(tx.eventDate))}
+          </p>
+          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
+            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelSector', { defaultValue: 'Sector' })}</span>
+            {' · '}{sector}
+          </p>
+          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
+            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelTicketValue', { defaultValue: 'Ticket price' })}</span>
+            {' · '}<span style={{ fontWeight: 700, color: DARK }}>{perTicket}</span>
+            <span style={{ color: HINT }}>{' '}{t('sellerDashboard.perTicketAbbr', { defaultValue: '/ ticket' })}</span>
+          </p>
+          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 6, ...S }}>
+            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelBuyer', { defaultValue: 'Buyer' })}</span>
+            {' · '}<span style={{ fontWeight: 700, color: DARK }}>{tx.buyerName}</span>
+          </p>
+          <p style={{ fontSize: 12, color: MUTED, display: 'flex', alignItems: 'flex-start', gap: 5, ...S }}>
+            <AlertCircle size={12} style={{ color: '#f59e0b', flexShrink: 0, marginTop: 1 }} />
+            {what}
+          </p>
         </div>
       </div>
-    </Link>
+      <Link to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          padding: '10px 11px', borderTop: '1px solid #f0ebff',
+          background: V, color: CARD, fontSize: 13, fontWeight: 700, ...S,
+        }}>
+          {t('sellerDashboard.viewTransaction', { defaultValue: 'View transaction' })} →
+        </div>
+      </Link>
+    </div>
   );
 }
 
@@ -156,20 +185,34 @@ function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing, t }: {
   const ticketLabel = offer.tickets.type === 'numbered'
     ? `${offer.tickets.seats.length} ${offer.tickets.seats.length === 1 ? t('boughtTickets.seat', { defaultValue: 'entrada' }) : t('boughtTickets.seats', { defaultValue: 'entradas' })}`
     : `${offer.tickets.count} ${offer.tickets.count === 1 ? t('boughtTickets.ticket', { defaultValue: 'entrada' }) : t('boughtTickets.tickets', { defaultValue: 'entradas' })}`;
+  const sector = sectorLabel(ctx.sectionName ?? '', t);
 
   return (
     <div style={{ background: CARD, borderRadius: 14, border: '1px solid #ddd6fe', overflow: 'hidden' }}>
       <div style={{ display: 'flex' }}>
         <Thumb url={ctx.bannerUrls?.square ?? ctx.bannerUrls?.rectangle} name={ctx.eventName} size={64} />
         <div style={{ flex: 1, padding: '9px 12px', minWidth: 0 }}>
-          <p style={{ fontSize: 13.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2, ...S }}>
+          <p style={{ fontSize: 13.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4, ...S }}>
             {ctx.eventName}
           </p>
-          <p style={{ fontSize: 12, color: MUTED, marginBottom: 4, ...S }}>
-            {ticketLabel} · de <span style={{ fontWeight: 700, color: DARK }}>{ctx.buyerName}</span>
+          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 2, ...S }}>
+            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelEventDate', { defaultValue: 'Event date' })}</span>
+            {' · '}{formatDate(new Date(ctx.eventDate))}
+            <span style={{ color: BORD2 }}>{' · '}</span>
+            {ticketLabel}
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 2, ...S }}>
+            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelSector', { defaultValue: 'Sector' })}</span>
+            {' · '}{sector}
+          </p>
+          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 6, ...S }}>
+            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelBuyer', { defaultValue: 'Buyer' })}</span>
+            {' · '}<span style={{ fontWeight: 700, color: DARK }}>{ctx.buyerName}</span>
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+            <span style={{ fontSize: 11, color: HINT, ...S }}>{t('sellerDashboard.offerOriginal', { defaultValue: 'Original' })}</span>
             <span style={{ fontSize: 12, color: HINT, textDecoration: 'line-through', ...S }}>{listing}</span>
+            <span style={{ fontSize: 11, color: HINT, ...S }}>{t('sellerDashboard.offerOfferedLabel', { defaultValue: 'Offered' })}</span>
             <span style={{ fontSize: 14, fontWeight: 800, color: V, ...S }}>{offered}</span>
             {discount > 0 && (
               <span style={{ fontSize: 10.5, fontWeight: 700, padding: '1px 6px', borderRadius: 100, background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', ...S }}>
@@ -437,234 +480,261 @@ export function SellerDashboardPage() {
   if (!isAuthenticated) return guardCard(t('boughtTickets.loginRequired'), t('boughtTickets.loginToView'), t('header.login'), '/register');
   if (!canSell())        return guardCard(t('sellerDashboard.title'), t('boughtTickets.listedTicketsWillAppear'), t('boughtTickets.startSelling'), '/become-seller');
 
-  // ── Left column: attention items ──────────────────────────────────────────
+  // ── Left column: Actividad panel ─────────────────────────────────────────
+  const totalAttentionCount = actionRequired.length + pendingOffers.length;
   const attentionCol = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {actionRequired.length > 0 && (
-        <div>
-          <SectionHeader
-            icon={<AlertCircle size={13} />}
-            label={t('boughtTickets.pendingAwaitingMyAction')}
-            color={V} count={actionRequired.length} countBg={V} countColor={CARD}
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {actionRequired.map(tx => <ActionRequiredCard key={tx.id} tx={tx} t={t} />)}
-          </div>
-        </div>
-      )}
-
-      {pendingOffers.length > 0 && (
-        <div>
-          <SectionHeader
-            icon={<AlertCircle size={12} />}
-            label={t('sellerDashboard.tabReceived')}
-            color={MUTED} count={pendingOffers.length} countBg={VLIGHT} countColor={V}
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {pendingOffers.map(o => (
-              <ReceivedOfferCard
-                key={o.id} offer={o} t={t}
-                onAccept={handleAcceptOffer}
-                onReject={handleRejectOffer}
-                isProcessing={processingOfferId === o.id}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {salesInProgress.length > 0 && (
-        <div>
-          <SectionHeader
-            icon={<Clock size={12} />}
-            label={t('boughtTickets.pendingAwaitingOtherAction')}
-            color={HINT}
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {salesInProgress.map(tx => <SaleWaitingRow key={tx.id} tx={tx} t={t} />)}
-          </div>
-        </div>
-      )}
-
-      {/* Empty attention state */}
-      {actionRequired.length === 0 && pendingOffers.length === 0 && salesInProgress.length === 0 && (
-        <div style={{ background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, padding: '20px 18px', textAlign: 'center' }}>
-          <p style={{ fontSize: 13, color: HINT, ...S }}>
-            {t('sellerDashboard.noAttentionItems', { defaultValue: 'Todo al día. Sin ofertas ni ventas pendientes.' })}
-          </p>
-        </div>
-      )}
-
-      {/* History preview — last 3 completed sales + closed offers */}
-      {(completedSales.length > 0 || closedOffers.length > 0) && (
-        <div>
-          <button type="button" onClick={() => setShowHistory(v => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: HINT, ...S }}>
-              {t('sellerDashboard.history', { defaultValue: 'Historial' })}
-            </span>
-            <span style={{ fontSize: 10, color: HINT }}>{showHistory ? '▲' : '▼'}</span>
-          </button>
-          {showHistory && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, opacity: 0.75 }}>
-              {/* Last 3 completed sales */}
-              {completedSales.slice(0, 3).map(tx => {
-                const price = tx.pricePerTicket ? fmt(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
-                const url   = tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle;
-                const isCompleted = tx.status === 'Completed';
-                return (
-                  <Link key={tx.id} to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
-                    <div style={{ display: 'flex', background: CARD, borderRadius: 11, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
-                      <div style={{ width: 48, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
-                        {url && <img src={url} alt={tx.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.3)' }} />}
-                      </div>
-                      <div style={{ flex: 1, padding: '8px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>
-                            {tx.eventName}
-                          </p>
-                          <p style={{ fontSize: 11.5, color: MUTED, ...S }}>
-                            {formatDate(new Date(tx.eventDate))}{price && ` · ${price}`}
-                          </p>
-                        </div>
-                        <span style={{
-                          fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0,
-                          background: isCompleted ? GLIGHT : BG,
-                          color: isCompleted ? GREEN : MUTED,
-                          border: `1px solid ${isCompleted ? GBORD : BORD2}`, ...S,
-                        }}>
-                          {isCompleted ? t('boughtTickets.completed') : t('boughtTickets.cancelled')}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-              {/* Last 3 closed offers */}
-              {closedOffers.slice(0, 3).map(o => {
-                const ctx    = o.receivedContext;
-                const offered = fmt(o.offeredPrice.amount, o.offeredPrice.currency);
-                const url     = ctx.bannerUrls?.square ?? ctx.bannerUrls?.rectangle;
-                const isAccepted = o.status === 'accepted';
-                return (
-                  <div key={o.id} style={{ display: 'flex', background: CARD, borderRadius: 11, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
-                    <div style={{ width: 48, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
-                      {url && <img src={url} alt={ctx.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.5)' }} />}
-                    </div>
-                    <div style={{ flex: 1, padding: '8px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>
-                          {ctx.eventName}
-                        </p>
-                        <p style={{ fontSize: 11.5, color: MUTED, ...S }}>
-                          {t('sellerDashboard.fromBuyer', { defaultValue: 'De' })} {ctx.buyerName} · {offered}
-                        </p>
-                      </div>
-                      <span style={{
-                        fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0,
-                        background: isAccepted ? GLIGHT : BG,
-                        color: isAccepted ? GREEN : MUTED,
-                        border: `1px solid ${isAccepted ? GBORD : BORD2}`, ...S,
-                      }}>
-                        {isAccepted ? t('boughtTickets.offerStatusAccepted') : t('boughtTickets.offerStatusRejected')}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              {/* Link to full history */}
-              <Link to="/seller-dashboard/historial" style={{ textDecoration: 'none' }}>
-                <div style={{
-                  padding: '10px 14px', borderRadius: 11,
-                  background: BG, border: `1px solid ${BORDER}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  fontSize: 13, fontWeight: 700, color: V, cursor: 'pointer', ...S,
-                }}>
-                  {t('sellerDashboard.viewFullHistory', { defaultValue: 'Ver historial completo' })} →
-                </div>
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  // ── Right column: listings ────────────────────────────────────────────────
-  const listingsCol = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div>
-        <SectionHeader
-          icon={<CheckCircle size={12} />}
-          label={t('boughtTickets.activeListings')}
-          color={GREEN} count={activeListings.length} countBg={GLIGHT} countColor={GREEN}
-        />
-        {activeListings.length === 0 ? (
-          <div style={{ background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, padding: '28px 20px', textAlign: 'center' }}>
-            <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 14, ...S }}>
-              {t('boughtTickets.listedTicketsWillAppear')}
-            </p>
-            <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
-              <button style={{
-                padding: '8px 18px', borderRadius: 9, border: 'none',
-                background: V, color: CARD, fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, ...S,
-              }}>
-                <Plus size={13} />{t('boughtTickets.startSelling')}
-              </button>
-            </Link>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {activeListings.map(l => (
-              <ListingRow
-                key={l.id} listing={l} t={t}
-                copiedListingId={copiedListingId}
-                onCopyLink={handleCopyLink}
-                pendingOfferCount={pendingByListing.get(l.id) ?? 0}
-              />
-            ))}
-          </div>
+    <div style={{
+      background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`,
+      overflow: 'hidden',
+    }}>
+      {/* Panel header */}
+      <div style={{
+        padding: '13px 16px', borderBottom: `1px solid #f0f0ee`,
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: V, flexShrink: 0 }} />
+        <span style={{ fontSize: 14, fontWeight: 800, color: DARK, ...S }}>
+          {t('sellerDashboard.activityPanel', { defaultValue: 'Actividad' })}
+        </span>
+        {totalAttentionCount > 0 && (
+          <span style={{
+            minWidth: 18, height: 18, borderRadius: 9, padding: '0 5px',
+            fontSize: 10.5, fontWeight: 700, background: V, color: CARD,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {totalAttentionCount}
+          </span>
+        )}
+        {totalAttentionCount > 0 && (
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: HINT, ...S }}>
+            {t('sellerDashboard.requiresAttention', { defaultValue: 'Requiere atención' })}
+          </span>
         )}
       </div>
 
-      {pastListings.length > 0 && (
-        <div>
-          <button type="button" onClick={() => setShowPast(v => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: HINT, ...S }}>
-              {t('boughtTickets.pastListings')} ({pastListings.length})
-            </span>
-            <span style={{ fontSize: 10, color: HINT }}>{showPast ? '▲' : '▼'}</span>
-          </button>
-          {showPast && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8, opacity: 0.75 }}>
-              {pastListings.map(l => {
-                const url    = l.bannerUrls?.rectangle ?? l.bannerUrls?.square;
-                const sector = l.sectionName || l.type || 'General';
-                const price  = fmt(l.pricePerTicket.amount, l.pricePerTicket.currency);
-                return (
-                  <div key={l.id} style={{ background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
-                    <div style={{ height: 64, background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
-                      {url && <img src={url} alt={l.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.4)', opacity: 0.75 }} />}
-                    </div>
-                    <div style={{ padding: '8px 10px' }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: DARK, marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>{sector}</p>
-                      <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>{l.eventName}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 12.5, fontWeight: 700, color: DARK, ...S }}>{price}</span>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 6px', borderRadius: 100, background: BG, color: MUTED, border: `1px solid ${BORD2}`, ...S }}>
-                          {l.status}
+      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* Sub-section: action required */}
+        {actionRequired.length > 0 && (
+          <div>
+            <SubLabel icon={<AlertCircle size={11} />} label={t('boughtTickets.pendingAwaitingMyAction')} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {actionRequired.map(tx => <ActionRequiredTransactionCard key={tx.id} tx={tx} t={t} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Sub-section: pending offers */}
+        {pendingOffers.length > 0 && (
+          <div>
+            <SubLabel
+              icon={<AlertCircle size={11} />}
+              label={t('sellerDashboard.tabReceived')}
+              count={pendingOffers.length}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {pendingOffers.map(o => (
+                <ReceivedOfferCard
+                  key={o.id} offer={o} t={t}
+                  onAccept={handleAcceptOffer}
+                  onReject={handleRejectOffer}
+                  isProcessing={processingOfferId === o.id}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sub-section: sales in progress (waiting) */}
+        {salesInProgress.length > 0 && (
+          <div>
+            <SubLabel icon={<Clock size={11} />} label={t('boughtTickets.pendingAwaitingOtherAction')} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {salesInProgress.map(tx => <SaleWaitingRow key={tx.id} tx={tx} t={t} />)}
+            </div>
+          </div>
+        )}
+
+        {/* All clear */}
+        {actionRequired.length === 0 && pendingOffers.length === 0 && salesInProgress.length === 0 && (
+          <p style={{ fontSize: 13, color: HINT, textAlign: 'center', padding: '8px 0', ...S }}>
+            {t('sellerDashboard.noAttentionItems', { defaultValue: 'Todo al día. Sin ofertas ni ventas pendientes.' })}
+          </p>
+        )}
+
+        {/* History preview */}
+        {(completedSales.length > 0 || closedOffers.length > 0) && (
+          <div>
+            <button type="button" onClick={() => setShowHistory(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: showHistory ? 10 : 0, width: '100%' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: HINT, ...S }}>
+                {t('sellerDashboard.history', { defaultValue: 'Historial' })}
+              </span>
+              <span style={{ fontSize: 9, color: HINT }}>{showHistory ? '▲' : '▼'}</span>
+              {!showHistory && (
+                <span style={{ marginLeft: 'auto', fontSize: 11.5, color: V, fontWeight: 600, ...S }}>
+                  {t('sellerDashboard.viewFullHistory', { defaultValue: 'Ver historial' })} →
+                </span>
+              )}
+            </button>
+            {showHistory && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, opacity: 0.75 }}>
+                {completedSales.slice(0, 3).map(tx => {
+                  const price = tx.pricePerTicket ? fmt(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
+                  const url   = tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle;
+                  const isCompleted = tx.status === 'Completed';
+                  return (
+                    <Link key={tx.id} to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
+                      <div style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                        <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
+                          {url && <img src={url} alt={tx.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.3)' }} />}
+                        </div>
+                        <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>{tx.eventName}</p>
+                            <p style={{ fontSize: 11.5, color: MUTED, ...S }}>{formatDate(new Date(tx.eventDate))}{price && ` · ${price}`}</p>
+                          </div>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0, background: isCompleted ? GLIGHT : BG, color: isCompleted ? GREEN : MUTED, border: `1px solid ${isCompleted ? GBORD : BORD2}`, ...S }}>
+                            {isCompleted ? t('boughtTickets.completed') : t('boughtTickets.cancelled')}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+                {closedOffers.slice(0, 3).map(o => {
+                  const ctx = o.receivedContext;
+                  const offered = fmt(o.offeredPrice.amount, o.offeredPrice.currency);
+                  const url = ctx.bannerUrls?.square ?? ctx.bannerUrls?.rectangle;
+                  const isAccepted = o.status === 'accepted';
+                  return (
+                    <div key={o.id} style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                      <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
+                        {url && <img src={url} alt={ctx.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.5)' }} />}
+                      </div>
+                      <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>{ctx.eventName}</p>
+                          <p style={{ fontSize: 11.5, color: MUTED, ...S }}>{t('sellerDashboard.fromBuyer', { defaultValue: 'De' })} {ctx.buyerName} · {offered}</p>
+                        </div>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0, background: isAccepted ? GLIGHT : BG, color: isAccepted ? GREEN : MUTED, border: `1px solid ${isAccepted ? GBORD : BORD2}`, ...S }}>
+                          {isAccepted ? t('boughtTickets.offerStatusAccepted') : t('boughtTickets.offerStatusRejected')}
                         </span>
                       </div>
                     </div>
+                  );
+                })}
+                <Link to="/seller-dashboard/historial" style={{ textDecoration: 'none' }}>
+                  <div style={{ padding: '9px 14px', borderRadius: 10, background: BG, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: V, cursor: 'pointer', ...S }}>
+                    {t('sellerDashboard.viewFullHistory', { defaultValue: 'Ver historial completo' })} →
                   </div>
-                );
-              })}
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // ── Right column: listings panel ─────────────────────────────────────────
+  const listingsCol = (
+    <div style={{
+      background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`,
+      overflow: 'hidden',
+    }}>
+      {/* Panel header */}
+      <div style={{
+        padding: '13px 16px', borderBottom: `1px solid #f0f0ee`,
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, flexShrink: 0 }} />
+        <span style={{ fontSize: 14, fontWeight: 800, color: DARK, ...S }}>
+          {t('sellerDashboard.listingsPanel', { defaultValue: 'Mis publicaciones' })}
+        </span>
+        {activeListings.length > 0 && (
+          <span style={{
+            minWidth: 18, height: 18, borderRadius: 9, padding: '0 6px',
+            fontSize: 10.5, fontWeight: 700, background: GLIGHT, color: GREEN,
+            border: `1px solid ${GBORD}`,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', ...S,
+          }}>
+            {activeListings.length} {t('sellerDashboard.active', { defaultValue: 'activas' })}
+          </span>
+        )}
+        <Link to="/sell-ticket" style={{ textDecoration: 'none', marginLeft: 'auto' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: V, display: 'flex', alignItems: 'center', gap: 4, ...S }}>
+            <Plus size={12} />{t('sellerDashboard.newListing', { defaultValue: 'Publicar' })}
+          </span>
+        </Link>
+      </div>
+
+      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div>
+          {activeListings.length > 0 && (
+            <SubLabel icon={<CheckCircle size={11} />} label={t('boughtTickets.activeListings')} color={GREEN} />
+          )}
+          {activeListings.length === 0 ? (
+            <div style={{ borderRadius: 12, border: `1px solid ${BORDER}`, padding: '24px 20px', textAlign: 'center' }}>
+              <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 14, ...S }}>
+                {t('boughtTickets.listedTicketsWillAppear')}
+              </p>
+              <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
+                <button style={{ padding: '8px 18px', borderRadius: 9, border: 'none', background: V, color: CARD, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, ...S }}>
+                  <Plus size={13} />{t('boughtTickets.startSelling')}
+                </button>
+              </Link>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {activeListings.map(l => (
+                <ListingRow
+                  key={l.id} listing={l} t={t}
+                  copiedListingId={copiedListingId}
+                  onCopyLink={handleCopyLink}
+                  pendingOfferCount={pendingByListing.get(l.id) ?? 0}
+                />
+              ))}
             </div>
           )}
         </div>
-      )}
+
+        {pastListings.length > 0 && (
+          <div>
+            <button type="button" onClick={() => setShowPast(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: showPast ? 10 : 0 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: HINT, ...S }}>
+                {t('boughtTickets.pastListings')} ({pastListings.length})
+              </span>
+              <span style={{ fontSize: 9, color: HINT }}>{showPast ? '▲' : '▼'}</span>
+            </button>
+            {showPast && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8, opacity: 0.75 }}>
+                {pastListings.map(l => {
+                  const url    = l.bannerUrls?.rectangle ?? l.bannerUrls?.square;
+                  const sector = l.sectionName || l.type || 'General';
+                  const price  = fmt(l.pricePerTicket.amount, l.pricePerTicket.currency);
+                  return (
+                    <div key={l.id} style={{ background: BG, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                      <div style={{ height: 64, background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
+                        {url && <img src={url} alt={l.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.4)', opacity: 0.75 }} />}
+                      </div>
+                      <div style={{ padding: '8px 10px' }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: DARK, marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>{sector}</p>
+                        <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>{l.eventName}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 12.5, fontWeight: 700, color: DARK, ...S }}>{price}</span>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 6px', borderRadius: 100, background: BG, color: MUTED, border: `1px solid ${BORD2}`, ...S }}>{l.status}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 

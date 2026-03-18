@@ -363,7 +363,10 @@
     "offerLabel": "Offer",
     "myTicketsTabTickets": "My tickets",
     "myTicketsTabOffers": "My offers",
-    "filterByOffer": "Showing one offer"
+    "filterByOffer": "Showing one offer",
+    "backToPurchases": "My purchases",
+    "noHistoryYet": "No history yet",
+    "completedPurchasesAppearHere": "Completed purchases and closed offers will appear here."
   },
   "sellerDashboard": {
     "title": "My Sales",
@@ -379,7 +382,25 @@
     "offeredPrice": "Offered price",
     "noReceivedOffers": "No offers on your listings",
     "receivedOffersWillAppear": "Offers you receive on your listings will appear here",
-    "filterByOffer": "Showing one offer"
+    "filterByOffer": "Showing one offer",
+    "viewTransaction": "View transaction",
+    "labelEventDate": "Event date",
+    "labelSector": "Sector",
+    "labelTicketValue": "Ticket price",
+    "labelBuyer": "Buyer",
+    "perTicketAbbr": "/ ticket",
+    "offerOriginal": "Original",
+    "offerOfferedLabel": "Offered",
+    "action": {
+      "waitingBuyerConfirm": "Waiting for buyer to confirm receipt",
+      "transferTicket": "You need to transfer the ticket",
+      "waitingPayment": "Waiting for buyer payment",
+      "paymentPendingVerification": "Payment under verification",
+      "depositHold": "Funds in escrow — review the transaction",
+      "transferringFund": "Releasing funds — review the transaction",
+      "disputed": "There is an open dispute",
+      "viewDetails": "Review the transaction"
+    }
   },
   "ditListing": {
     "description": "Description"
@@ -1166,7 +1187,13 @@
     "title": "Verify your account",
     "progress": {
       "phone": "Phone",
-      "identity": "Identity"
+      "identity": "Identity",
+      "bankAccount": "Bank account"
+    },
+    "bankStep": {
+      "continue": "Continue",
+      "verifiedHint": "Your bank details are approved. You can continue.",
+      "pendingHint": "We are reviewing your bank details. You can continue once approved."
     },
     "stepIndicator": "Step {{current}} of {{total}}",
     "backToProfile": "Back to profile",

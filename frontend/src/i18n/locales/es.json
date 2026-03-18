@@ -362,7 +362,10 @@
     "filterTypeOffer": "Oferta",
     "myTicketsTabTickets": "Mis entradas",
     "myTicketsTabOffers": "Mis ofertas",
-    "filterByOffer": "Mostrando una oferta"
+    "filterByOffer": "Mostrando una oferta",
+    "backToPurchases": "Mis compras",
+    "noHistoryYet": "Aún no tenés historial",
+    "completedPurchasesAppearHere": "Las compras completadas y ofertas cerradas aparecerán aquí."
   },
   "sellerDashboard": {
     "title": "Mis Ventas",
@@ -378,7 +381,25 @@
     "offeredPrice": "Precio ofertado",
     "noReceivedOffers": "No hay ofertas en tus anuncios",
     "receivedOffersWillAppear": "Las ofertas que recibas en tus publicaciones aparecerán aquí",
-    "filterByOffer": "Mostrando una oferta"
+    "filterByOffer": "Mostrando una oferta",
+    "viewTransaction": "Ver transacción",
+    "labelEventDate": "Fecha del evento",
+    "labelSector": "Sector",
+    "labelTicketValue": "Valor de la entrada",
+    "labelBuyer": "Comprador",
+    "perTicketAbbr": "/ entrada",
+    "offerOriginal": "Original",
+    "offerOfferedLabel": "Ofertado",
+    "action": {
+      "waitingBuyerConfirm": "El comprador debe confirmar la recepción",
+      "transferTicket": "Tenés que transferir la entrada",
+      "waitingPayment": "Esperando pago del comprador",
+      "paymentPendingVerification": "Pago en verificación",
+      "depositHold": "Fondos en escrow — revisá la transacción",
+      "transferringFund": "Liberando fondos — revisá la transacción",
+      "disputed": "Hay una disputa abierta",
+      "viewDetails": "Revisá la transacción"
+    }
   },
   "ditListing": {
     "description": "Descripción"
@@ -1165,7 +1186,13 @@
     "title": "Verificá tu cuenta",
     "progress": {
       "phone": "Teléfono",
-      "identity": "Identidad"
+      "identity": "Identidad",
+      "bankAccount": "Cuenta bancaria"
+    },
+    "bankStep": {
+      "continue": "Continuar",
+      "verifiedHint": "Tus datos bancarios están aprobados. Podés continuar.",
+      "pendingHint": "Estamos revisando tus datos bancarios. Podés continuar cuando estén aprobados."
     },
     "stepIndicator": "Paso {{current}} de {{total}}",
     "backToProfile": "Volver al perfil",

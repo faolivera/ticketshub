@@ -37,6 +37,8 @@ export interface OfferReceivedContext {
   eventName: string;
   eventSlug: string;
   eventDate: string;
+  /** Event section / listing sector label */
+  sectionName: string;
   listingPrice: Money;
   bannerUrls?: { square?: string; rectangle?: string };
   buyerName: string;

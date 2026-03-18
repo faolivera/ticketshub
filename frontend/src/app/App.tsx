@@ -17,7 +17,7 @@ import { UserProfile } from '@/app/pages/UserProfile';
 import { SellerProfile } from '@/app/pages/SellerProfile';
 import Checkout from '@/app/pages/Checkout';
 import { SellerDashboardPage } from '@/app/pages/seller-dashboard/SellerDashboardPage';
-import { MyTicketsPage } from '@/app/pages/my-tickets/MyTicketsPage';
+import { MyTicketsPage, BuyerHistoryPage } from '@/app/pages/my-tickets/MyTicketsPage';
 import { SellerHistoryPage } from '@/app/pages/seller-dashboard/SellerHistoryPage';
 import { HowItWorks } from '@/app/pages/HowItWorks';
 import { Contact } from '@/app/pages/Contact';
@@ -27,7 +27,6 @@ import { SellListingWizard } from '@/app/pages/SellListingWizard';
 import { CreateEvent } from '@/app/pages/CreateEvent';
 import { Login } from '@/app/pages/Login';
 import { Register } from '@/app/pages/Register';
-import { BankAccountPage } from '@/app/pages/BankAccountPage';
 import { BecomeSellerWizard } from '@/app/pages/BecomeSellerWizard';
 import { VerifyUserWizard } from '@/app/pages/VerifyUserWizard';
 import { MyTicket } from '@/app/pages/MyTicket';
@@ -94,6 +93,7 @@ function AppLayout() {
 
               {/* Protected routes — require authentication */}
               <Route path="/my-tickets" element={<ProtectedRoute><MyTicketsPage /></ProtectedRoute>} />
+              <Route path="/my-tickets/historial" element={<ProtectedRoute><BuyerHistoryPage /></ProtectedRoute>} />
               <Route path="/bought-tickets" element={<Navigate to="/my-tickets" replace />} />
               <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboardPage /></ProtectedRoute>} />
               <Route path="/transaction/:transactionId" element={<ProtectedRoute><MyTicket /></ProtectedRoute>} />
@@ -102,7 +102,18 @@ function AppLayout() {
               <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/verify-user" element={<ProtectedRoute><VerifyUserWizard /></ProtectedRoute>} />
               <Route path="/become-seller" element={<ProtectedRoute><BecomeSellerWizard /></ProtectedRoute>} />
-              <Route path="/bank-account" element={<ProtectedRoute><BankAccountPage /></ProtectedRoute>} />
+              <Route
+                path="/bank-account"
+                element={
+                  <ProtectedRoute>
+                    <Navigate
+                      replace
+                      to="/verify-user"
+                      state={{ verifyBankAccount: true, returnTo: '/user-profile' }}
+                    />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
               <Route path="/seller-dashboard/historial" element={<ProtectedRoute><SellerHistoryPage /></ProtectedRoute>} />
               <Route path="/buy/:eventSlug/:listingId" element={<Checkout />} />

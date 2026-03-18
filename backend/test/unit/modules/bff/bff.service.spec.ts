@@ -77,6 +77,7 @@ describe('BffService', () => {
     eventName: 'Test Event',
     eventDate: new Date(),
     venue: 'Test Venue',
+    sectionName: 'GA',
     buyerName: 'John Buyer',
     sellerName: 'Jane Seller',
     version: 1,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CreditCard, CheckCircle, Loader2 } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { usersService } from '@/api/services/users.service';
@@ -23,8 +23,12 @@ const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 const CBU_CVU_LENGTH = 22;
 
+export type StepBankVariant = 'becomeSeller' | 'verifyUser';
+
 export interface StepBankProps {
   onComplete: () => void;
+  /** becomeSeller: after save or if data exists, CTA to sell. verifyUser: continue wizard / profile flow. */
+  variant?: StepBankVariant;
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -69,13 +73,14 @@ function TextInput({ value, onChange, placeholder, inputMode, mono }: {
   );
 }
 
-function PrimaryBtn({ label, loading, disabled, type = 'submit' }: {
+function PrimaryBtn({ label, loading, disabled, type = 'submit', onClick }: {
   label: string; loading?: boolean; disabled?: boolean; type?: 'submit' | 'button';
+  onClick?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isDisabled = disabled || loading;
   return (
-    <button type={type} disabled={isDisabled}
+    <button type={type} disabled={isDisabled} onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -93,9 +98,9 @@ function PrimaryBtn({ label, loading, disabled, type = 'submit' }: {
   );
 }
 
-export function StepBank({ onComplete }: StepBankProps) {
+export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps) {
   const { t } = useTranslation();
-  const { refreshUser } = useUser();
+  const { user, refreshUser } = useUser();
 
   const [bankAccount, setBankAccount] = useState<MyBankAccount | null>(null);
   const [loading,     setLoading]     = useState(true);
@@ -151,7 +156,57 @@ export function StepBank({ onComplete }: StepBankProps) {
     );
   }
 
-  // ── Already submitted / existing ─────────────────────────────────────────
+  // ── Verify-user wizard: already has bank on file → acknowledge and continue ─
+  if (variant === 'verifyUser' && bankAccount != null && !submitted) {
+    const verified = user?.bankDetailsVerified === true;
+    return (
+      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+        <div
+          style={{
+            background: verified ? GLIGHT : '#fffbeb',
+            borderBottom: `1px solid ${verified ? GBORD : '#fde68a'}`,
+            padding: '18px 20px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 14,
+          }}
+        >
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              background: verified ? GLIGHT : '#fffbeb',
+              border: `1.5px solid ${verified ? GBORD : '#fde68a'}`,
+            }}
+          >
+            {verified ? (
+              <CheckCircle size={22} style={{ color: GREEN }} />
+            ) : (
+              <Clock size={22} style={{ color: '#d97706' }} />
+            )}
+          </div>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: DARK, marginBottom: 3, ...S }}>
+              {verified ? t('bankAccount.verified') : t('bankAccount.pendingApproval')}
+            </p>
+            <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>
+              {verified ? t('verifyUser.bankStep.verifiedHint') : t('verifyUser.bankStep.pendingHint')}
+            </p>
+          </div>
+        </div>
+        <div style={{ padding: '16px 20px' }}>
+          <PrimaryBtn label={t('verifyUser.bankStep.continue')} type="button" onClick={() => onComplete()} />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Already submitted / existing (become-seller flow) ─────────────────────
   if (submitted || bankAccount != null) {
     return (
       <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>

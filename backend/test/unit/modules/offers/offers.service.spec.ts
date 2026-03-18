@@ -226,6 +226,7 @@ describe('OffersService', () => {
         receivedContext: {
           listingId: 'listing_1',
           eventName: 'Concert',
+          sectionName: 'GA',
           listingPrice: { amount: 15000, currency: 'EUR' },
           buyerName: 'John D.',
           bannerUrls: { rectangle: 'https://example.com/rect.jpg' },

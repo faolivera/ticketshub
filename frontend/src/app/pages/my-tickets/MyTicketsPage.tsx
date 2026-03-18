@@ -1,188 +1,340 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Ticket, AlertCircle, Clock, CheckCircle, X } from 'lucide-react';
+import { Ticket, AlertCircle, Clock } from 'lucide-react';
 import { ticketsService } from '@/api/services/tickets.service';
 import { offersService }  from '@/api/services/offers.service';
 import { useUser }        from '@/app/contexts/UserContext';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert }     from '@/app/components/ErrorMessage';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
+import { formatCurrency } from '@/lib/format-currency';
+import { formatDate }     from '@/lib/format-date';
 import type { TransactionWithDetails, OfferWithListingSummary } from '@/api/types';
-
-import { TransactionCard } from './TransactionCard';
-import { OfferCard }       from './OfferCard';
 import {
   isUserRequiredActor, TERMINAL_STATUSES,
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, S,
+  getTransactionStatusInfo, getWaitingForLabel,
+  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
 } from './transactionUtils';
 
-type Tab = 'tickets' | 'offers';
-function isValidTab(v: string | null): v is Tab { return v === 'tickets' || v === 'offers'; }
+// ─── Helpers (mirrors SellerDashboardPage) ────────────────────────────────────
+function fmt(amount: number, currency: string) {
+  return formatCurrency(amount, currency).replace(/[,.]00$/, '');
+}
 
-function SectionLabel({ icon, label, color = HINT }: { icon: React.ReactNode; label: string; color?: string }) {
+// ─── Thumb (mirrors SellerDashboardPage) ──────────────────────────────────────
+function Thumb({ url, name, size }: { url?: string | null; name: string; size: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color, marginBottom: 10, ...S }}>
-      {icon}<span>{label}</span>
+    <div style={{
+      width: size, flexShrink: 0, alignSelf: 'stretch',
+      background: VLIGHT, overflow: 'hidden', position: 'relative',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {url
+        ? <img src={url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+        : <Ticket size={size * 0.32} style={{ color: V, opacity: 0.4 }} />
+      }
     </div>
   );
 }
 
-function EmptyTab({ icon, title, subtitle, ctaLabel, ctaTo }: { icon: React.ReactNode; title: string; subtitle: string; ctaLabel?: string; ctaTo?: string }) {
-  return (
-    <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, padding: '48px 24px', textAlign: 'center' }}>
-      <div style={{ width: 52, height: 52, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>{icon}</div>
-      <p style={{ fontSize: 16, fontWeight: 800, color: DARK, marginBottom: 6, ...S }}>{title}</p>
-      <p style={{ fontSize: 13.5, color: MUTED, marginBottom: ctaLabel ? 20 : 0, lineHeight: 1.55, ...S }}>{subtitle}</p>
-      {ctaLabel && ctaTo && (
-        <Link to={ctaTo} style={{ textDecoration: 'none' }}>
-          <button style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>{ctaLabel}</button>
-        </Link>
-      )}
-    </div>
-  );
-}
-
-function TicketsTab({ grouped, userId, t }: {
-  grouped: { pendingMyAction: TransactionWithDetails[]; pendingOtherAction: TransactionWithDetails[]; completed: TransactionWithDetails[] };
-  userId: string | undefined;
-  t: (key: string, opts?: Record<string, string>) => string;
+// ─── SubLabel (mirrors SellerDashboardPage) ───────────────────────────────────
+function SubLabel({ icon, label, color = HINT }: {
+  icon: React.ReactNode; label: string; color?: string;
 }) {
-  const { pendingMyAction, pendingOtherAction, completed } = grouped;
-  if (pendingMyAction.length + pendingOtherAction.length + completed.length === 0) {
-    return (
-      <EmptyTab
-        icon={<Ticket size={24} style={{ color: BORD2 }} />}
-        title={t('boughtTickets.noTicketsYet')}
-        subtitle={t('boughtTickets.purchasedTicketsWillAppear')}
-        ctaLabel={t('landing.upcomingEvents')}
-        ctaTo="/"
-      />
-    );
-  }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      {pendingMyAction.length > 0 && (
-        <div>
-          <SectionLabel icon={<AlertCircle size={13} />} label={t('boughtTickets.pendingAwaitingMyAction')} color={V} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {pendingMyAction.map(tx => <TransactionCard key={tx.id} transaction={tx} userId={userId} role="buyer" variant="action" fromUrl="/my-tickets" />)}
-          </div>
-        </div>
-      )}
-      {pendingOtherAction.length > 0 && (
-        <div>
-          <SectionLabel icon={<Clock size={12} />} label={t('boughtTickets.pendingAwaitingOtherAction')} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pendingOtherAction.map(tx => <TransactionCard key={tx.id} transaction={tx} userId={userId} role="buyer" variant="waiting" fromUrl="/my-tickets" />)}
-          </div>
-        </div>
-      )}
-      {completed.length > 0 && (
-        <div>
-          <SectionLabel icon={<CheckCircle size={12} />} label={t('boughtTickets.completedTickets')} color={V === '#6d28d9' ? '#15803d' : V} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
-            {completed.map(tx => <TransactionCard key={tx.id} transaction={tx} userId={userId} role="buyer" variant="completed" fromUrl="/my-tickets" />)}
-          </div>
-        </div>
-      )}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 9 }}>
+      <span style={{ color: HINT }}>{icon}</span>
+      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color, ...S }}>
+        {label}
+      </span>
     </div>
   );
 }
 
-function OffersTab({ offers, offersLoading, offerIdFilter, onClearFilter, t }: {
-  offers: OfferWithListingSummary[];
-  offersLoading: boolean;
-  offerIdFilter: string | null;
-  onClearFilter: () => void;
-  t: (key: string, opts?: Record<string, string>) => string;
+// ─── ACCEPTED OFFER BANNER — most urgent, full CTA ───────────────────────────
+function AcceptedOfferBanner({ offer, highlighted, t }: {
+  offer: OfferWithListingSummary;
+  highlighted: boolean;
+  t: (k: string, o?: Record<string, string>) => string;
 }) {
-  if (offersLoading && offers.length === 0) return <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />;
+  const ref          = useRef<HTMLDivElement>(null);
+  const summary      = offer.listingSummary;
+  const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
+  const listingPrice = (summary as any).listingPrice
+    ? fmt((summary as any).listingPrice.amount, (summary as any).listingPrice.currency)
+    : null;
 
-  const accepted = offers.filter(o => o.status === 'accepted');
-  const pending  = offers.filter(o => o.status === 'pending');
-  const terminal = offers.filter(o => ['rejected', 'converted', 'cancelled'].includes(o.status));
+  const ticketLabel = offer.tickets.type === 'numbered'
+    ? `${offer.tickets.seats.length} ${offer.tickets.seats.length === 1 ? t('boughtTickets.seat', { defaultValue: 'entrada' }) : t('boughtTickets.seats', { defaultValue: 'entradas' })}`
+    : `${offer.tickets.count} ${offer.tickets.count === 1 ? t('boughtTickets.ticket', { defaultValue: 'entrada' }) : t('boughtTickets.tickets', { defaultValue: 'entradas' })}`;
 
-  if (accepted.length + pending.length + terminal.length === 0) {
-    return (
-      <EmptyTab
-        icon={<Ticket size={24} style={{ color: BORD2 }} />}
-        title={t('boughtTickets.noOffersYet', { defaultValue: 'Todavía no hiciste ofertas' })}
-        subtitle={t('boughtTickets.offersWillAppear', { defaultValue: 'Cuando hagas una oferta a un vendedor, aparecerá acá.' })}
-        ctaLabel={t('landing.upcomingEvents')}
-        ctaTo="/"
-      />
-    );
-  }
+  useEffect(() => {
+    if (highlighted) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlighted]);
+
+  const to = `/buy/${summary.eventSlug}/${offer.listingId}?offerId=${offer.id}`;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {offerIdFilter && (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 100, background: VLIGHT, color: V, border: '1px solid #ddd6fe', alignSelf: 'flex-start', ...S }}>
-          {t('boughtTickets.filterByOffer')}
-          <button type="button" onClick={onClearFilter} style={{ background: 'none', border: 'none', cursor: 'pointer', color: V, padding: 0, display: 'flex' }} aria-label={t('common.clearFilter')}>
-            <X size={13} />
-          </button>
+    <div ref={ref} style={{
+      background: CARD, borderRadius: 16,
+      border: `1.5px solid ${V}`, overflow: 'hidden',
+      boxShadow: highlighted ? `0 0 0 3px ${VLIGHT}` : 'none',
+    }}>
+      <div style={{ display: 'flex' }}>
+        <Thumb url={summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle} name={summary.eventName} size={88} />
+        <div style={{ flex: 1, padding: '11px 13px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <span style={{
+            alignSelf: 'flex-start', fontSize: 10.5, fontWeight: 700,
+            padding: '2px 8px', borderRadius: 100,
+            background: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', ...S,
+          }}>
+            ⏱ {t('boughtTickets.offerAcceptedUrgent', { defaultValue: 'Tiempo limitado para pagar' })}
+          </span>
+          <p style={{ fontSize: 14.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
+            {summary.eventName}
+          </p>
+          <p style={{ fontSize: 12.5, color: MUTED, ...S }}>
+            {ticketLabel} · {formatDate(new Date(summary.eventDate))}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {listingPrice && (
+              <span style={{ fontSize: 12, color: BORD2, textDecoration: 'line-through', ...S }}>{listingPrice}</span>
+            )}
+            <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{offeredPrice}</span>
+            <span style={{ fontSize: 11, color: MUTED, ...S }}>
+              {t('boughtTickets.yourOffer', { defaultValue: 'tu oferta' })}
+            </span>
+          </div>
+        </div>
+      </div>
+      <Link to={to} style={{ textDecoration: 'none' }}>
+        <div style={{
+          padding: '11px 16px', borderTop: '1px solid #f0ebff',
+          background: V, color: CARD,
+          fontSize: 13.5, fontWeight: 700, textAlign: 'center', cursor: 'pointer', ...S,
+        }}>
+          {t('boughtTickets.completePurchase')} →
+        </div>
+      </Link>
+    </div>
+  );
+}
+
+// ─── BUYER ACTION ROW — needs buyer attention, no inline actions ──────────────
+function BuyerActionRow({ tx, t }: {
+  tx: TransactionWithDetails;
+  t: (k: string, o?: Record<string, string>) => string;
+}) {
+  const [hov, setHov] = useState(false);
+  const actionLabels: Record<string, string> = {
+    TicketTransferred:          t('boughtTickets.action.confirmReceipt',   { defaultValue: 'Confirmá que recibiste la entrada' }),
+    PendingPayment:             t('boughtTickets.action.completePayment',  { defaultValue: 'Completá el pago para continuar' }),
+    PaymentPendingVerification: t('boughtTickets.action.paymentVerifying', { defaultValue: 'Tu pago está siendo verificado' }),
+    Disputed:                   t('boughtTickets.action.disputed',         { defaultValue: 'Hay una disputa abierta' }),
+  };
+  const what = actionLabels[tx.status as string]
+    ?? t('boughtTickets.action.viewDetails', { defaultValue: 'Revisá la transacción' });
+
+  return (
+    <Link to={`/transaction/${tx.id}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
+      <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+        display: 'flex', alignItems: 'center',
+        background: hov ? '#fdfcff' : CARD, borderRadius: 12,
+        border: `1px solid ${hov ? '#ddd6fe' : BORDER}`,
+        overflow: 'hidden', transition: 'all 0.14s',
+      }}>
+        {/* Violet bar — buyer urgency (vs amber for seller) */}
+        <div style={{ width: 3, alignSelf: 'stretch', background: V, flexShrink: 0 }} />
+        <Thumb url={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle} name={tx.eventName} size={52} />
+        <div style={{ flex: 1, padding: '9px 12px', minWidth: 0 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2, ...S }}>
+            {tx.eventName}
+          </p>
+          <p style={{ fontSize: 12, color: MUTED, display: 'flex', alignItems: 'center', gap: 4, ...S }}>
+            <AlertCircle size={11} style={{ color: V, flexShrink: 0 }} />
+            {what}
+          </p>
+        </div>
+        <span style={{
+          margin: '0 12px', padding: '6px 13px', borderRadius: 8, flexShrink: 0,
+          background: VLIGHT, color: V, border: '1px solid #ddd6fe',
+          fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', ...S,
+        }}>
+          Ver →
         </span>
-      )}
-      {accepted.length > 0 && (
-        <div>
-          <SectionLabel icon={<AlertCircle size={13} />} label={t('boughtTickets.offersRequireAction', { defaultValue: 'Oferta aceptada — completá la compra' })} color={V} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {accepted.map(o => <OfferCard key={o.id} offer={o} />)}
+      </div>
+    </Link>
+  );
+}
+
+// ─── BUYER WAITING ROW — in-progress, no action needed ───────────────────────
+function BuyerWaitingRow({ tx, t }: {
+  tx: TransactionWithDetails;
+  t: (k: string, o?: Record<string, string>) => string;
+}) {
+  const [hov, setHov] = useState(false);
+  const waiting = getWaitingForLabel(tx.requiredActor, t);
+  const status  = getTransactionStatusInfo(tx.status, t, false);
+
+  return (
+    <Link to={`/transaction/${tx.id}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
+      <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+        display: 'flex', background: CARD, borderRadius: 12,
+        border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
+        transition: 'border-color 0.13s',
+      }}>
+        <Thumb url={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle} name={tx.eventName} size={52} />
+        <div style={{ flex: 1, padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>
+              {tx.eventName}
+            </p>
+            <p style={{ fontSize: 12, color: MUTED, ...S }}>{formatDate(new Date(tx.eventDate))}</p>
+          </div>
+          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: HINT, ...S }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+            <span style={{ whiteSpace: 'nowrap' }}>{waiting || status.label}</span>
           </div>
         </div>
-      )}
-      {pending.length > 0 && (
-        <div>
-          <SectionLabel icon={<Clock size={12} />} label={t('boughtTickets.offersWaiting', { defaultValue: 'Esperando respuesta' })} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pending.map(o => <OfferCard key={o.id} offer={o} />)}
+      </div>
+    </Link>
+  );
+}
+
+// ─── PENDING OFFER ROW — buyer waiting for seller's response ─────────────────
+function PendingOfferRow({ offer, highlighted, t }: {
+  offer: OfferWithListingSummary;
+  highlighted: boolean;
+  t: (k: string, o?: Record<string, string>) => string;
+}) {
+  const divRef       = useRef<HTMLDivElement>(null);
+  const summary      = offer.listingSummary;
+  const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
+
+  useEffect(() => {
+    if (highlighted) divRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlighted]);
+
+  return (
+    <Link to={`/buy/${summary.eventSlug}/${offer.listingId}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
+      <div ref={divRef} style={{
+        display: 'flex', background: highlighted ? '#fdfcff' : CARD, borderRadius: 12,
+        border: `1px solid ${highlighted ? '#ddd6fe' : BORDER}`, overflow: 'hidden',
+        transition: 'border-color 0.13s',
+      }}>
+        <Thumb url={summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle} name={summary.eventName} size={52} />
+        <div style={{ flex: 1, padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
+                {summary.eventName}
+              </p>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 100, flexShrink: 0,
+                background: VLIGHT, color: V, border: '1px solid #ddd6fe', ...S,
+              }}>
+                {t('boughtTickets.offerLabel', { defaultValue: 'Oferta' })}
+              </span>
+            </div>
+            <p style={{ fontSize: 12, color: MUTED, ...S }}>
+              {formatDate(new Date(summary.eventDate))}
+              {' · '}
+              <span style={{ fontWeight: 700, color: V }}>{offeredPrice}</span>
+              {' '}
+              <span style={{ color: HINT }}>{t('boughtTickets.yourOffer', { defaultValue: 'tu oferta' })}</span>
+            </p>
+          </div>
+          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: HINT, ...S }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#9ca3af' }} />
+            <span style={{ whiteSpace: 'nowrap' }}>{t('boughtTickets.offerStatusPending')}</span>
           </div>
         </div>
-      )}
-      {terminal.length > 0 && (
-        <div>
-          <SectionLabel icon={null} label={t('boughtTickets.expiredCancelledOffers')} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {terminal.map(o => <OfferCard key={o.id} offer={o} />)}
-          </div>
+      </div>
+    </Link>
+  );
+}
+
+// ─── HISTORY rows — compact, muted ───────────────────────────────────────────
+function HistoryTxRow({ tx, t }: { tx: TransactionWithDetails; t: (k: string, o?: Record<string, string>) => string }) {
+  const status = getTransactionStatusInfo(tx.status, t, false);
+  return (
+    <Link to={`/transaction/${tx.id}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
+      <div style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden', opacity: 0.8 }}>
+        <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
+          {(tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle) && (
+            <img src={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle!} alt={tx.eventName}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.3)' }} />
+          )}
         </div>
-      )}
+        <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>{tx.eventName}</p>
+            <p style={{ fontSize: 11.5, color: MUTED, ...S }}>{formatDate(new Date(tx.eventDate))}</p>
+          </div>
+          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0, background: status.color, color: status.textColor, border: `1px solid ${status.border}`, ...S }}>
+            {status.label}
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function HistoryOfferRow({ offer, t }: { offer: OfferWithListingSummary; t: (k: string, o?: Record<string, string>) => string }) {
+  const summary      = offer.listingSummary;
+  const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
+  const isConverted  = offer.status === 'converted';
+  const badgeBg = isConverted ? GLIGHT : BG;
+  const badgeColor = isConverted ? GREEN : MUTED;
+  const badgeBorder = isConverted ? GBORD : BORD2;
+  const label = isConverted ? t('boughtTickets.offerStatusConverted') : offer.status === 'rejected' ? t('boughtTickets.offerStatusRejected') : t('boughtTickets.offerStatusCancelled');
+
+  return (
+    <div style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden', opacity: 0.75 }}>
+      <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
+        {(summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle) && (
+          <img src={summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle!} alt={summary.eventName}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.5)' }} />
+        )}
+      </div>
+      <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>{summary.eventName}</p>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 100, flexShrink: 0, background: VLIGHT, color: V, border: '1px solid #ddd6fe', ...S }}>
+              {t('boughtTickets.offerLabel', { defaultValue: 'Oferta' })}
+            </span>
+          </div>
+          <p style={{ fontSize: 11.5, color: MUTED, ...S }}>{offeredPrice} · {formatDate(new Date(summary.eventDate))}</p>
+        </div>
+        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0, background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}`, ...S }}>{label}</span>
+      </div>
     </div>
   );
 }
 
-export function MyTicketsPage() {
-  const { t }                         = useTranslation();
-  const { user, isAuthenticated }     = useUser();
-  const [searchParams, setSearchParams] = useSearchParams();
+// ═════════════════════════════════════════════════════════════════════════════
+export type MyTicketsPageProps = {
+  /** Full buyer history at `/my-tickets/historial` */
+  historyOnly?: boolean;
+};
+
+export function MyTicketsPage({ historyOnly = false }: MyTicketsPageProps = {}) {
+  const { t }                     = useTranslation();
+  const { user, isAuthenticated } = useUser();
+  const [searchParams]            = useSearchParams();
 
   const [bought,        setBought]        = useState<TransactionWithDetails[]>([]);
   const [myOffers,      setMyOffers]      = useState<OfferWithListingSummary[]>([]);
-  const [offersLoading, setOffersLoading] = useState(false);
   const [isLoading,     setIsLoading]     = useState(true);
   const [error,         setError]         = useState<string | null>(null);
+  const [showHistory,   setShowHistory]   = useState(false);
 
-  const tabFromUrl     = searchParams.get('tab');
+  // Deep-link from notifications: ?offerId=xxx highlights + scrolls to that offer
   const offerIdFromUrl = searchParams.get('offerId');
-  const activeTab: Tab = offerIdFromUrl ? 'offers' : (isValidTab(tabFromUrl) ? tabFromUrl : 'tickets');
 
-  // Preserved URL normalization logic
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'offers' || tab === 'my-offers') setSearchParams(p => { const n = new URLSearchParams(p); n.set('tab','offers'); return n; }, { replace: true });
-    else if (tab === 'bought') setSearchParams(p => { const n = new URLSearchParams(p); n.set('tab','tickets'); return n; }, { replace: true });
-  }, [searchParams, setSearchParams]);
-
-  useEffect(() => {
-    if (offerIdFromUrl && tabFromUrl !== 'offers') setSearchParams(p => { const n = new URLSearchParams(p); n.set('tab','offers'); if (p.get('offerId')) n.set('offerId', p.get('offerId')!); return n; }, { replace: true });
-  }, [offerIdFromUrl, tabFromUrl, setSearchParams]);
-
-  const setTab = (tab: Tab) => setSearchParams(p => { const n = new URLSearchParams(p); n.set('tab', tab); if (tab !== 'offers') n.delete('offerId'); return n; });
-  const clearOfferIdFilter = () => setSearchParams(p => { const n = new URLSearchParams(p); n.delete('offerId'); return n; }, { replace: true });
-
-  // Preserved data fetching
+  // ── Fetching ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isAuthenticated) return;
     setIsLoading(true); setError(null);
@@ -194,30 +346,74 @@ export function MyTicketsPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    setOffersLoading(true);
     offersService.listMyOffers()
       .then(res => setMyOffers(Array.isArray(res) ? res : []))
-      .catch(() => setMyOffers([]))
-      .finally(() => setOffersLoading(false));
+      .catch(() => setMyOffers([]));
   }, [isAuthenticated]);
 
-  // Preserved grouping logic
-  const groupedBought = useMemo(() => {
-    const pendingMyAction: TransactionWithDetails[]    = [];
-    const pendingOtherAction: TransactionWithDetails[] = [];
-    const completed: TransactionWithDetails[]          = [];
-    for (const tx of bought) {
-      if (TERMINAL_STATUSES.includes(tx.status))          completed.push(tx);
-      else if (isUserRequiredActor(tx, user?.id, 'buyer')) pendingMyAction.push(tx);
-      else                                                  pendingOtherAction.push(tx);
-    }
-    return { pendingMyAction, pendingOtherAction, completed };
-  }, [bought, user?.id]);
+  // ── Derived ───────────────────────────────────────────────────────────────
+  const actionRequired = useMemo(() =>
+    bought.filter(tx => !TERMINAL_STATUSES.includes(tx.status) && isUserRequiredActor(tx, user?.id, 'buyer')),
+  [bought, user?.id]);
 
-  const offersFiltered = useMemo(() =>
-    offerIdFromUrl ? myOffers.filter(o => o.id === offerIdFromUrl) : myOffers,
-  [myOffers, offerIdFromUrl]);
+  const waitingTx = useMemo(() =>
+    bought.filter(tx => !TERMINAL_STATUSES.includes(tx.status) && !isUserRequiredActor(tx, user?.id, 'buyer')),
+  [bought, user?.id]);
 
+  const acceptedOffers = useMemo(() => myOffers.filter(o => o.status === 'accepted'),  [myOffers]);
+  const pendingOffers  = useMemo(() => myOffers.filter(o => o.status === 'pending'),   [myOffers]);
+  const terminalOffers = useMemo(() => myOffers.filter(o => ['rejected', 'converted', 'cancelled'].includes(o.status)), [myOffers]);
+
+  const completedTx = useMemo(() =>
+    bought.filter(tx => TERMINAL_STATUSES.includes(tx.status))
+      .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()),
+  [bought]);
+
+  const attentionCount = acceptedOffers.length + actionRequired.length;
+  const hasActive      = attentionCount > 0 || waitingTx.length > 0 || pendingOffers.length > 0;
+  const dotColor       = attentionCount > 0 ? V : hasActive ? '#f59e0b' : GREEN;
+  const hasHistory     = completedTx.length > 0 || terminalOffers.length > 0;
+  const hasAnything    = bought.length + myOffers.length > 0;
+
+  // ── Full history route (/my-tickets/historial) ────────────────────────────
+  if (historyOnly && isAuthenticated) {
+    const hasHistoryContent = completedTx.length > 0 || terminalOffers.length > 0;
+    return (
+      <div style={{ minHeight: '100vh', background: BG, ...S }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+          @keyframes spin { to { transform: rotate(360deg) } }
+        `}</style>
+        <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 48, maxWidth: 560 }}>
+          <Link
+            to="/my-tickets"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: V, textDecoration: 'none', marginBottom: 18, ...S }}
+          >
+            ← {t('boughtTickets.backToPurchases', { defaultValue: 'Mis compras' })}
+          </Link>
+          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
+            {t('sellerDashboard.history', { defaultValue: 'Historial' })}
+          </h1>
+          {isLoading && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
+          {error && <ErrorAlert message={error} className="mb-6" />}
+          {!isLoading && !error && !hasHistoryContent && (
+            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, padding: '40px 24px', textAlign: 'center' }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: DARK, marginBottom: 6, ...S }}>{t('boughtTickets.noHistoryYet', { defaultValue: 'Aún no tenés historial' })}</p>
+              <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.55, ...S }}>{t('boughtTickets.completedPurchasesAppearHere', { defaultValue: 'Las compras completadas y ofertas cerradas aparecerán aquí.' })}</p>
+            </div>
+          )}
+          {!isLoading && !error && hasHistoryContent && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {completedTx.map(tx => <HistoryTxRow key={tx.id} tx={tx} t={t} />)}
+              {terminalOffers.map(o => <HistoryOfferRow key={o.id} offer={o} t={t} />)}
+            </div>
+          )}
+        </PageContentMaxWidth>
+      </div>
+    );
+  }
+
+  // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -228,7 +424,9 @@ export function MyTicketsPage() {
           <p style={{ fontSize: 18, fontWeight: 800, color: DARK, marginBottom: 8, ...S }}>{t('boughtTickets.loginRequired')}</p>
           <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.55, ...S }}>{t('boughtTickets.loginToView')}</p>
           <Link to="/register" style={{ textDecoration: 'none' }}>
-            <button style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>{t('header.login')}</button>
+            <button style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
+              {t('header.login')}
+            </button>
           </Link>
         </div>
       </div>
@@ -237,45 +435,152 @@ export function MyTicketsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, ...S }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
-      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 48 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @keyframes spin { to { transform: rotate(360deg) } }
+      `}</style>
+      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 48, maxWidth: 560 }}>
+
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
           {t('boughtTickets.title')}
         </h1>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}`, marginBottom: 24 }}>
-          {(['tickets', 'offers'] as Tab[]).map(tab => {
-            const labels: Record<Tab, string> = { tickets: t('boughtTickets.myTicketsTabTickets'), offers: t('boughtTickets.myTicketsTabOffers') };
-            const isActive = activeTab === tab;
-            const badge = tab === 'tickets' ? groupedBought.pendingMyAction.length : offersFiltered.filter(o => o.status === 'accepted').length;
-            return (
-              <button key={tab} type="button" onClick={() => setTab(tab)} style={{
-                padding: '10px 0', marginRight: 28, border: 'none',
-                borderBottom: `2px solid ${isActive ? V : 'transparent'}`,
-                background: 'transparent', cursor: 'pointer',
-                fontSize: 14, fontWeight: 600, color: isActive ? V : MUTED,
-                transition: 'all 0.14s', display: 'flex', alignItems: 'center', gap: 7, ...S,
-              }}>
-                {labels[tab]}
-                {badge > 0 && (
-                  <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: V, color: 'white', fontSize: 10.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>
-                    {badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
         {isLoading && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
         {error     && <ErrorAlert message={error} className="mb-6" />}
-        {!isLoading && !error && (
-          activeTab === 'tickets'
-            ? <TicketsTab grouped={groupedBought} userId={user?.id} t={t} />
-            : <OffersTab offers={offersFiltered} offersLoading={offersLoading} offerIdFilter={offerIdFromUrl} onClearFilter={clearOfferIdFilter} t={t} />
+
+        {/* Empty state */}
+        {!isLoading && !error && !hasAnything && (
+          <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Ticket size={24} style={{ color: BORD2 }} />
+            </div>
+            <p style={{ fontSize: 16, fontWeight: 800, color: DARK, marginBottom: 6, ...S }}>{t('boughtTickets.noTicketsYet')}</p>
+            <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 22, lineHeight: 1.55, ...S }}>{t('boughtTickets.purchasedTicketsWillAppear')}</p>
+            <Link to="/" style={{ textDecoration: 'none' }}>
+              <button style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
+                {t('landing.upcomingEvents')}
+              </button>
+            </Link>
+          </div>
+        )}
+
+        {/* Single panel */}
+        {!isLoading && !error && hasAnything && (
+          <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+
+            {/* Panel header — mirrors SellerDashboardPage pattern */}
+            <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+              <span style={{ fontSize: 14, fontWeight: 800, color: DARK, ...S }}>
+                {t('boughtTickets.myPurchases', { defaultValue: 'Mis compras' })}
+              </span>
+              {attentionCount > 0 && (
+                <span style={{ minWidth: 18, height: 18, borderRadius: 9, padding: '0 5px', fontSize: 10.5, fontWeight: 700, background: V, color: CARD, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {attentionCount}
+                </span>
+              )}
+              {attentionCount > 0 && (
+                <span style={{ marginLeft: 'auto', fontSize: 11, color: HINT, ...S }}>
+                  {t('sellerDashboard.requiresAttention', { defaultValue: 'Requiere atención' })}
+                </span>
+              )}
+            </div>
+
+            <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+              {/* 1 — Accepted offers: most urgent */}
+              {acceptedOffers.length > 0 && (
+                <div>
+                  <SubLabel
+                    icon={<AlertCircle size={11} />}
+                    label={t('boughtTickets.offersRequireAction', { defaultValue: 'Oferta aceptada — completá la compra' })}
+                    color={V}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {acceptedOffers.map(o => (
+                      <AcceptedOfferBanner key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 2 — Transactions needing buyer action */}
+              {actionRequired.length > 0 && (
+                <div>
+                  <SubLabel icon={<AlertCircle size={11} />} label={t('boughtTickets.pendingAwaitingMyAction')} color={V} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {actionRequired.map(tx => <BuyerActionRow key={tx.id} tx={tx} t={t} />)}
+                  </div>
+                </div>
+              )}
+
+              {/* 3 — In progress: waiting transactions + pending offers mixed */}
+              {(waitingTx.length > 0 || pendingOffers.length > 0) && (
+                <div>
+                  <SubLabel icon={<Clock size={11} />} label={t('boughtTickets.pendingAwaitingOtherAction')} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {waitingTx.map(tx => <BuyerWaitingRow key={tx.id} tx={tx} t={t} />)}
+                    {pendingOffers.map(o => (
+                      <PendingOfferRow key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* All clear */}
+              {attentionCount === 0 && waitingTx.length === 0 && pendingOffers.length === 0 && (
+                <p style={{ fontSize: 13, color: HINT, textAlign: 'center', padding: '8px 0', ...S }}>
+                  {t('boughtTickets.allClear', { defaultValue: 'Todo al día. Sin compras pendientes.' })}
+                </p>
+              )}
+
+              {/* 4 — History: collapsible preview */}
+              {hasHistory && (
+                <div>
+                  <button type="button" onClick={() => setShowHistory(v => !v)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: showHistory ? 10 : 0, width: '100%' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: HINT, ...S }}>
+                      {t('sellerDashboard.history', { defaultValue: 'Historial' })}
+                    </span>
+                    <span style={{ fontSize: 9, color: HINT }}>{showHistory ? '▲' : '▼'}</span>
+                    {!showHistory && (
+                      <Link
+                        to="/my-tickets/historial"
+                        onClick={e => e.stopPropagation()}
+                        style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 600, color: V, textDecoration: 'none', ...S }}
+                      >
+                        {t('boughtTickets.viewHistory', { defaultValue: 'Ver todo' })} →
+                      </Link>
+                    )}
+                  </button>
+                  {showHistory && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      {completedTx.slice(0, 4).map(tx => <HistoryTxRow key={tx.id} tx={tx} t={t} />)}
+                      {terminalOffers.slice(0, 3).map(o => <HistoryOfferRow key={o.id} offer={o} t={t} />)}
+                      <Link to="/my-tickets/historial" style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          padding: '9px 14px', borderRadius: 10,
+                          background: BG, border: `1px solid ${BORDER}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          fontSize: 13, fontWeight: 700, color: V, cursor: 'pointer', ...S,
+                        }}>
+                          {t('boughtTickets.viewFullHistory', { defaultValue: 'Ver historial completo' })} →
+                        </div>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
         )}
       </PageContentMaxWidth>
     </div>
   );
+}
+
+/** Buyer purchase history (all completed transactions + closed offers). */
+export function BuyerHistoryPage() {
+  return <MyTicketsPage historyOnly />;
 }

@@ -221,6 +221,10 @@ export class OffersService {
               listing.eventDate instanceof Date
                 ? listing.eventDate.toISOString()
                 : String(listing.eventDate),
+            sectionName:
+              listing.sectionName?.trim() ||
+              String(listing.type ?? '') ||
+              'General',
             listingPrice: listing.pricePerTicket,
             bannerUrls: listing.bannerUrls,
             buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
@@ -230,6 +234,7 @@ export class OffersService {
             eventName: 'Unknown Event',
             eventSlug: 'event-' + offer.listingId,
             eventDate: new Date().toISOString(),
+            sectionName: 'General',
             listingPrice: { amount: 0, currency: 'EUR' },
             buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
           };

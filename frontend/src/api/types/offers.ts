@@ -68,6 +68,7 @@ export interface OfferReceivedContext {
   eventName: string;
   eventSlug: string;
   eventDate: string;
+  sectionName?: string;
   listingPrice: { amount: number; currency: string };
   bannerUrls?: { square?: string; rectangle?: string };
   buyerName: string;

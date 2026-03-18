@@ -2,9 +2,11 @@ import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
+import { VerificationHelper } from '@/lib/verification';
 import { type WizardStepConfig } from '@/app/components/wizard/WizardProgressBar';
 import { StepPhone } from '@/app/components/become-seller/StepPhone';
 import { StepIdentity } from '@/app/components/become-seller/StepIdentity';
+import { StepBank } from '@/app/components/become-seller/StepBank';
 import { ArrowLeft, Check } from 'lucide-react';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -17,25 +19,27 @@ const BORDER = '#e5e7eb';
 const GREEN  = '#15803d';
 const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
-// ─── Types (unchanged) ────────────────────────────────────────────────────────
-export type VerifyUserStepType = 'phone' | 'identity';
+// ─── Types ────────────────────────────────────────────────────────────────────
+export type VerifyUserStepType = 'phone' | 'identity' | 'bankAccount';
 export interface VerifyUserLocationState {
-  verifyPhone?:    boolean;
-  verifyIdentity?: boolean;
-  returnTo?:       string;
+  verifyPhone?:       boolean;
+  verifyIdentity?:    boolean;
+  verifyBankAccount?: boolean;
+  returnTo?:          string;
 }
 
-// ─── Step building (unchanged) ────────────────────────────────────────────────
 function buildSteps(state: VerifyUserLocationState | null): VerifyUserStepType[] {
   if (!state) return [];
   const steps: VerifyUserStepType[] = [];
-  if (state.verifyPhone)    steps.push('phone');
-  if (state.verifyIdentity) steps.push('identity');
+  if (state.verifyPhone)        steps.push('phone');
+  if (state.verifyIdentity)     steps.push('identity');
+  if (state.verifyBankAccount)  steps.push('bankAccount');
   return steps;
 }
 const STEP_CONFIG: Record<VerifyUserStepType, WizardStepConfig> = {
-  phone:    { id: 'phone',    labelKey: 'verifyUser.progress.phone'    },
-  identity: { id: 'identity', labelKey: 'verifyUser.progress.identity' },
+  phone:        { id: 'phone',        labelKey: 'verifyUser.progress.phone'        },
+  identity:     { id: 'identity',     labelKey: 'verifyUser.progress.identity'     },
+  bankAccount:  { id: 'bankAccount',  labelKey: 'verifyUser.progress.bankAccount'  },
 };
 function buildProgressSteps(stepTypes: VerifyUserStepType[]): WizardStepConfig[] {
   return stepTypes.map(s => STEP_CONFIG[s]);
@@ -102,7 +106,13 @@ export function VerifyUserWizard() {
   const { user, refreshUser } = useUser();
 
   const state         = location.state as VerifyUserLocationState | null;
-  const steps         = useMemo(() => buildSteps(state), [state?.verifyPhone, state?.verifyIdentity]);
+  const steps         = useMemo(() => {
+    const raw = buildSteps(state);
+    if (user && !VerificationHelper.isSeller(user)) {
+      return raw.filter(s => s !== 'bankAccount');
+    }
+    return raw;
+  }, [state?.verifyPhone, state?.verifyIdentity, state?.verifyBankAccount, user]);
   const progressSteps = useMemo(() => buildProgressSteps(steps), [steps]);
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -149,8 +159,9 @@ export function VerifyUserWizard() {
           <Stepper steps={progressSteps} currentStepIndex={currentStepIndex} completedStepIndices={completedStepIndices} />
         )}
 
-        {currentStep === 'phone'    && <StepPhone    onComplete={handleStepComplete} hideBackToProfile />}
-        {currentStep === 'identity' && <StepIdentity onComplete={handleStepComplete} />}
+        {currentStep === 'phone'        && <StepPhone    onComplete={handleStepComplete} hideBackToProfile />}
+        {currentStep === 'identity'     && <StepIdentity onComplete={handleStepComplete} />}
+        {currentStep === 'bankAccount'  && <StepBank     variant="verifyUser" onComplete={handleStepComplete} />}
       </div>
     </div>
   );

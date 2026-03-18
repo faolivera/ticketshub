@@ -172,6 +172,8 @@ export interface TransactionWithDetails extends Transaction {
   eventName: string;
   eventDate: Date;
   venue: string;
+  /** Listing section (or type fallback); present when API includes it */
+  sectionName?: string;
   buyerName: string;
   sellerName: string;
   bannerUrls?: BannerUrls;

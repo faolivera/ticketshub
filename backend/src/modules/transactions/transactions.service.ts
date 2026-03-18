@@ -1303,11 +1303,16 @@ export class TransactionsService {
     const buyerInfo = userInfoMap.get(transaction.buyerId);
     const sellerInfo = userInfoMap.get(transaction.sellerId);
 
+    const sectionName =
+      listing.sectionName?.trim() ||
+      String(listing.type ?? '') ||
+      'General';
     return {
       ...transaction,
       eventName: listing.eventName,
       eventDate: listing.eventDate,
       venue: listing.venue,
+      sectionName,
       buyerName: buyerInfo?.publicName ?? 'Unknown',
       sellerName: sellerInfo?.publicName ?? 'Unknown',
       bannerUrls: listing.bannerUrls,
@@ -1340,11 +1345,17 @@ export class TransactionsService {
       const listing = listingMap.get(t.listingId);
       const buyerInfo = userInfoMap.get(t.buyerId);
       const sellerInfo = userInfoMap.get(t.sellerId);
+      const sectionName = listing
+        ? listing.sectionName?.trim() ||
+          String(listing.type ?? '') ||
+          'General'
+        : 'General';
       return {
         ...t,
         eventName: listing?.eventName ?? 'Unknown',
         eventDate: listing?.eventDate ?? new Date(),
         venue: listing?.venue ?? 'Unknown',
+        sectionName,
         buyerName: buyerInfo?.publicName ?? 'Unknown',
         sellerName: sellerInfo?.publicName ?? 'Unknown',
         bannerUrls: listing?.bannerUrls,
@@ -1609,11 +1620,17 @@ export class TransactionsService {
       const paymentMethod = t.paymentMethodId
         ? paymentMethodMap.get(t.paymentMethodId)
         : undefined;
+      const sectionName = listing
+        ? listing.sectionName?.trim() ||
+          String(listing.type ?? '') ||
+          'General'
+        : 'General';
       return {
         ...t,
         eventName: listing?.eventName ?? 'Unknown',
         eventDate: listing?.eventDate ?? new Date(),
         venue: listing?.venue ?? 'Unknown',
+        sectionName,
         buyerName: buyerInfo?.publicName ?? 'Unknown',
         sellerName: sellerInfo?.publicName ?? 'Unknown',
         bannerUrls: listing?.bannerUrls,
