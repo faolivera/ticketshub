@@ -13,6 +13,8 @@ import { PlatformConfigService } from '../../../../src/modules/config/config.ser
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import { TransactionChatService } from '../../../../src/modules/transaction-chat/transaction-chat.service';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
+import { OffersService } from '../../../../src/modules/offers/offers.service';
+import { PrismaService } from '../../../../src/common/prisma/prisma.service';
 import { RiskLevel } from '../../../../src/modules/risk-engine/risk-engine.domain';
 import {
   TransactionStatus,
@@ -51,6 +53,11 @@ describe('BffService', () => {
   let paymentMethodsService: jest.Mocked<PaymentMethodsService>;
   let pricingService: jest.Mocked<PricingService>;
   let riskEngine: jest.Mocked<RiskEngineService>;
+  let prismaService: { $queryRaw: jest.Mock };
+  let offersService: jest.Mocked<{
+    getOffersWithListingSummaryByIds: jest.Mock;
+    getOffersWithReceivedContextByIds: jest.Mock;
+  }>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -118,6 +125,16 @@ describe('BffService', () => {
       getCompletedSalesTotalBatch: jest.fn(),
       findById: jest.fn(),
       listTransactions: jest.fn(),
+      getTransactionsWithDetailsByIds: jest.fn(),
+    };
+
+    const mockOffersService = {
+      getOffersWithListingSummaryByIds: jest.fn(),
+      getOffersWithReceivedContextByIds: jest.fn(),
+    };
+
+    const mockPrismaService = {
+      $queryRaw: jest.fn(),
     };
 
     const mockTicketsService = {
@@ -200,10 +217,14 @@ describe('BffService', () => {
           useValue: mockTransactionChatService,
         },
         { provide: RiskEngineService, useValue: mockRiskEngineService },
+        { provide: OffersService, useValue: mockOffersService },
+        { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
     service = module.get<BffService>(BffService);
+    prismaService = module.get(PrismaService);
+    offersService = module.get(OffersService);
     eventsService = module.get(EventsService);
     usersService = module.get(UsersService);
     transactionsService = module.get(TransactionsService);
@@ -914,6 +935,54 @@ describe('BffService', () => {
       await expect(
         service.getEventPageData(mockCtx, 'nonexistent'),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getActivityHistory', () => {
+    beforeEach(() => {
+      prismaService.$queryRaw.mockReset();
+      transactionsService.getTransactionsWithDetailsByIds.mockReset();
+      offersService.getOffersWithListingSummaryByIds.mockReset();
+      offersService.getOffersWithReceivedContextByIds.mockReset();
+    });
+
+    it('returns transaction items for buyer', async () => {
+      prismaService.$queryRaw.mockResolvedValue([
+        { id: 'txn_123', kind: 'transaction', sort_at: new Date() },
+      ]);
+      transactionsService.getTransactionsWithDetailsByIds.mockResolvedValue([
+        mockTransactionWithDetails,
+      ]);
+      const res = await service.getActivityHistory(
+        mockCtx,
+        'buyer_u',
+        'buyer',
+        null,
+        15,
+      );
+      expect(res.items).toHaveLength(1);
+      expect(res.items[0]).toMatchObject({ type: 'transaction' });
+      expect(res.hasMore).toBe(false);
+      expect(res.nextCursor).toBeNull();
+    });
+
+    it('sets hasMore when page is full', async () => {
+      const sixteen = [...Array(16)].map((_, i) => ({
+        id: `t${i}`,
+        kind: 'transaction',
+        sort_at: new Date(),
+      }));
+      prismaService.$queryRaw.mockResolvedValue(sixteen);
+      transactionsService.getTransactionsWithDetailsByIds.mockImplementation(
+        (_ctx, ids: string[]) =>
+          Promise.resolve(
+            ids.map((id) => ({ ...mockTransactionWithDetails, id })),
+          ),
+      );
+      const res = await service.getActivityHistory(mockCtx, 'u', 'buyer', null, 15);
+      expect(res.hasMore).toBe(true);
+      expect(res.nextCursor).toBeTruthy();
+      expect(res.items).toHaveLength(15);
     });
   });
 });

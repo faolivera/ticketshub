@@ -23,6 +23,7 @@ describe('OffersService', () => {
     const mockOffersRepository = {
       create: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findByListingId: jest.fn(),
       findByListingIds: jest.fn(),
       findByUserId: jest.fn(),
@@ -248,6 +249,22 @@ describe('OffersService', () => {
 
       expect(result).toEqual([]);
       expect(offersRepository.findByListingIds).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getOffersWithListingSummaryByIds', () => {
+    it('returns empty when no ids', async () => {
+      const result = await service.getOffersWithListingSummaryByIds(mockCtx, []);
+      expect(result).toEqual([]);
+      expect(offersRepository.findByIds).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getOffersWithReceivedContextByIds', () => {
+    it('returns empty when no ids', async () => {
+      const result = await service.getOffersWithReceivedContextByIds(mockCtx, []);
+      expect(result).toEqual([]);
+      expect(offersRepository.findByIds).not.toHaveBeenCalled();
     });
   });
 });

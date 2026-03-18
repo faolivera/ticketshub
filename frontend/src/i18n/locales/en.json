@@ -106,7 +106,10 @@
     "categoryComedy": "Comedy",
     "categoryOther": "Other",
     "filters": "Filters",
-    "applyFilters": "Apply"
+    "applyFilters": "Apply",
+    "cityLabel": "City",
+    "eventTypeLabel": "Event type",
+    "searchCityPlaceholder": "Search city..."
   },
   "eventCard": {
     "trending": "Trending",
@@ -365,8 +368,11 @@
     "myTicketsTabOffers": "My offers",
     "filterByOffer": "Showing one offer",
     "backToPurchases": "My purchases",
+    "labelSeller": "Seller",
+    "loadMoreHistory": "Load more",
     "noHistoryYet": "No history yet",
-    "completedPurchasesAppearHere": "Completed purchases and closed offers will appear here."
+    "completedPurchasesAppearHere": "Completed purchases and closed offers will appear here.",
+    "depositHold": "Protected funds"
   },
   "sellerDashboard": {
     "title": "My Sales",
@@ -396,11 +402,12 @@
       "transferTicket": "You need to transfer the ticket",
       "waitingPayment": "Waiting for buyer payment",
       "paymentPendingVerification": "Payment under verification",
-      "depositHold": "Funds in escrow — review the transaction",
+      "depositHold": "Protected funds — review the transaction",
       "transferringFund": "Releasing funds — review the transaction",
       "disputed": "There is an open dispute",
       "viewDetails": "Review the transaction"
-    }
+    },
+    "openFullHistory": "Open full history"
   },
   "ditListing": {
     "description": "Description"
@@ -619,8 +626,8 @@
     "paymentProtectionDesc": "Your money is held securely until you confirm receipt",
     "disputeWindow": "Dispute Window",
     "disputeWindowDesc": "3 days after the event to report any issues",
-    "verifiedTickets": "Verified Tickets",
-    "verifiedTicketsDesc": "All tickets are verified before transfer",
+    "verifiedTickets": "Verified sellers",
+    "verifiedTicketsDesc": "Sellers verify their identity before they can receive payouts",
     "sellerRatings": "Seller Ratings",
     "sellerRatingsDesc": "Review seller history and ratings before purchasing",
     "guaranteedPayment": "Guaranteed Payment",
@@ -970,11 +977,11 @@
     "escrowCardTitle": "Protected purchase",
     "escrowBuyerWaiting": "Your money is safe. It is not released to the seller until you confirm you received the ticket and the event has passed.",
     "escrowBuyerReleased": "This transaction completed successfully.",
-    "escrowSellerWaiting": "Your payout is held in escrow. It is released automatically after the event or when the buyer confirms receipt.",
+    "escrowSellerWaiting": "Your funds are protected. They are released automatically after the event or when the buyer confirms receipt.",
     "escrowSellerReleased": "You will receive {{amount}} in your account within the next 24 business hours.",
     "escrowTimeline": {
       "buyer1": "Receipt confirmed",
-      "buyer2": "Funds in custody",
+      "buyer2": "Protected funds",
       "buyer3": "Event: {{date}}",
       "buyer4": "Funds released to seller",
       "seller1": "Payment received",
@@ -998,7 +1005,7 @@
       "buyerPaymentReceivedSubtitle": "Waiting for the seller to transfer your ticket.",
       "buyerTicketArrivedTitle": "Your ticket arrived",
       "buyerTicketArrivedSubtitle": "{{name}} transferred your ticket. Confirm receipt when you have it.",
-      "buyerEscrowTitle": "Receipt confirmed — funds in escrow",
+      "buyerEscrowTitle": "Receipt confirmed — protected funds",
       "buyerEscrowSubtitle": "Funds are released to the seller after the event. You can still report a problem if needed.",
       "buyerReleasingTitle": "Releasing funds",
       "buyerReleasingSubtitle": "The payout to the seller is being processed.",
@@ -1014,8 +1021,8 @@
       "sellerTransferTitle": "Payment confirmed — transfer the ticket",
       "sellerTransferSubtitle": "{{name}} paid. Send the ticket using the buyer's contact details.",
       "sellerAwaitConfirmTitle": "Waiting for buyer confirmation",
-      "sellerEscrowHoldTitle": "Funds in escrow — release pending",
-      "sellerAwaitConfirmSubtitle": "{{name}} must confirm receipt. Your funds are protected in escrow.",
+      "sellerEscrowHoldTitle": "Protected funds — release pending",
+      "sellerAwaitConfirmSubtitle": "{{name}} must confirm receipt. Your funds are protected.",
       "sellerReleasingTitle": "Releasing your payout",
       "sellerReleasingSubtitle": "Your payout is being processed.",
       "sellerFundsReleasedTitle": "Funds released",
@@ -1025,7 +1032,7 @@
       "sentAsLabel": "You sent as:"
     },
     "confirmReceiptWarning": "By confirming, you acknowledge you received the ticket. This cannot be undone.",
-    "confirmReceiptEscrowNote": "Funds stay in escrow until {{date}} — they are not released to the seller yet.",
+    "confirmReceiptEscrowNote": "Funds stay protected until {{date}} — they are not released to the seller yet.",
     "paymentInfoBuyerFeeDetail": "Percentage of subtotal",
     "cancelled": {
       "BuyerCancelled": "You cancelled this transaction",

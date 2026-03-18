@@ -17,8 +17,8 @@ import {
 import { ArrowRight, Lock, CheckCircle, RefreshCw } from "lucide-react";
 
 const TRUST = [
-  { Icon: Lock, title: "Pago en escrow", color: TRUST_ESCROW },
-  { Icon: CheckCircle, title: "Entradas verificadas", color: TRUST_VERIFIED },
+  { Icon: Lock, title: "Fondos protegidos", color: TRUST_ESCROW },
+  { Icon: CheckCircle, title: "Vendedores verificados", color: TRUST_VERIFIED },
   { Icon: RefreshCw, title: "Garantía total", color: AMBER_c1 },
 ];
 

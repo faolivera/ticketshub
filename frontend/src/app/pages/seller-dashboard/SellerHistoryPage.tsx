@@ -1,17 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Ticket, CheckCircle, X, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Ticket, CheckCircle, X } from 'lucide-react';
 import { ticketsService } from '@/api/services/tickets.service';
-import { offersService }  from '@/api/services/offers.service';
 import { useUser }        from '@/app/contexts/UserContext';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert }     from '@/app/components/ErrorMessage';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import type { TransactionWithDetails, OfferWithReceivedContext } from '@/api/types';
+import type { ActivityHistoryItem } from '@/api/types/bff';
 import {
-  TERMINAL_STATUSES,
   getTransactionStatusInfo,
   getOfferStatusInfo,
   V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
@@ -38,7 +37,7 @@ function Thumb({ url, name, size }: { url?: string | null; name: string; size: n
 }
 
 // ─── Completed sale row ───────────────────────────────────────────────────────
-function CompletedSaleRow({ tx, t }: {
+export function CompletedSaleRow({ tx, t }: {
   tx: TransactionWithDetails;
   t: (k: string, o?: Record<string, string>) => string;
 }) {
@@ -83,7 +82,7 @@ function CompletedSaleRow({ tx, t }: {
 }
 
 // ─── Closed offer row ─────────────────────────────────────────────────────────
-function ClosedOfferRow({ offer, t }: {
+export function ClosedOfferRow({ offer, t }: {
   offer: OfferWithReceivedContext;
   t: (k: string, o?: Record<string, string>) => string;
 }) {
@@ -92,7 +91,7 @@ function ClosedOfferRow({ offer, t }: {
   const statusInfo    = getOfferStatusInfo(offer.status, t);
   const offered       = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
   const listing       = fmt(ctx.listingPrice.amount, ctx.listingPrice.currency);
-  const isAccepted    = offer.status === 'accepted';
+  const isAccepted    = offer.status === 'accepted' || offer.status === 'converted';
 
   const ticketLabel = offer.tickets.type === 'numbered'
     ? `${offer.tickets.seats.length} ${offer.tickets.seats.length === 1 ? t('boughtTickets.seat', { defaultValue: 'entrada' }) : t('boughtTickets.seats', { defaultValue: 'entradas' })}`
@@ -104,7 +103,8 @@ function ClosedOfferRow({ offer, t }: {
       style={{
         display: 'flex', background: CARD, borderRadius: 13,
         border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
-        transition: 'border-color 0.13s', opacity: isAccepted ? 1 : 0.75,
+        transition: 'border-color 0.13s',
+        opacity: offer.status === 'rejected' || offer.status === 'cancelled' ? 0.75 : 1,
       }}
     >
       <Thumb url={ctx.bannerUrls?.square ?? ctx.bannerUrls?.rectangle} name={ctx.eventName} size={60} />
@@ -130,86 +130,39 @@ function ClosedOfferRow({ offer, t }: {
   );
 }
 
-// ─── Section block ────────────────────────────────────────────────────────────
-function HistorySection({ title, count, children, defaultOpen = true }: {
-  title: string; count: number; children: React.ReactNode; defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div style={{ marginBottom: 28 }}>
-      <button type="button" onClick={() => setOpen(v => !v)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8, marginBottom: open ? 10 : 0,
-          background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%',
-        }}
-      >
-        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: MUTED, ...S }}>
-          {title}
-        </span>
-        <span style={{
-          minWidth: 18, height: 18, borderRadius: 9, padding: '0 5px',
-          fontSize: 10.5, fontWeight: 700, background: BG, color: MUTED,
-          border: `1px solid ${BORD2}`,
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {count}
-        </span>
-        <ChevronDown size={13} style={{ color: HINT, marginLeft: 'auto', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.14s' }} />
-      </button>
-      {open && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ═════════════════════════════════════════════════════════════════════════════
 export function SellerHistoryPage() {
-  const { t }                              = useTranslation();
-  const { isAuthenticated, canSell }       = useUser();
+  const { t }                        = useTranslation();
+  const { isAuthenticated, canSell } = useUser();
 
-  const [sold,           setSold]           = useState<TransactionWithDetails[]>([]);
-  const [receivedOffers, setReceivedOffers] = useState<OfferWithReceivedContext[]>([]);
-  const [isLoading,      setIsLoading]      = useState(true);
-  const [error,          setError]          = useState<string | null>(null);
+  const [items,       setItems]       = useState<ActivityHistoryItem[]>([]);
+  const [hasMore,     setHasMore]     = useState(false);
+  const [loading,     setLoading]     = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+  const cursorRef     = useRef<string | null>(null);
+
+  const loadPage = useCallback(async (append: boolean) => {
+    if (append) setLoadingMore(true);
+    else { setLoading(true); setError(null); }
+    try {
+      const res = await ticketsService.getActivityHistory('seller', append ? cursorRef.current : null, 20);
+      cursorRef.current = res.nextCursor;
+      setItems(prev => (append ? [...prev, ...res.items] : res.items));
+      setHasMore(res.hasMore);
+    } catch {
+      setError(t('common.errorLoading'));
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     if (!isAuthenticated || !canSell()) return;
-    setIsLoading(true); setError(null);
-    Promise.all([
-      ticketsService.getMyTickets(),
-      offersService.listReceivedOffers(),
-    ])
-      .then(([tickets, offers]) => {
-        setSold(tickets.sold);
-        setReceivedOffers(Array.isArray(offers) ? offers : []);
-      })
-      .catch(() => setError(t('common.errorLoading')))
-      .finally(() => setIsLoading(false));
-  }, [isAuthenticated, canSell, t]);
-
-  const completedSales = useMemo(() =>
-    sold
-      .filter(tx => TERMINAL_STATUSES.includes(tx.status))
-      .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()),
-  [sold]);
-
-  const closedOffers = useMemo(() =>
-    receivedOffers.filter(o => ['accepted', 'rejected', 'cancelled'].includes(o.status)),
-  [receivedOffers]);
-
-  // ── Split completed sales by status ──────────────────────────────────────
-  const salesCompleted  = useMemo(() => completedSales.filter(tx => tx.status === 'Completed'), [completedSales]);
-  const salesTerminated = useMemo(() => completedSales.filter(tx => tx.status !== 'Completed'), [completedSales]);
-
-  // ── Split closed offers by status ────────────────────────────────────────
-  const offersAccepted  = useMemo(() => closedOffers.filter(o => o.status === 'accepted'),  [closedOffers]);
-  const offersRejected  = useMemo(() => closedOffers.filter(o => o.status !== 'accepted'),  [closedOffers]);
-
-  const hasAnything = completedSales.length + closedOffers.length > 0;
+    cursorRef.current = null;
+    void loadPage(false);
+  }, [isAuthenticated, canSell, loadPage]);
 
   return (
     <div style={{ minHeight: '100vh', background: BG, padding: '24px 16px 56px', ...S }}>
@@ -217,7 +170,6 @@ export function SellerHistoryPage() {
 
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
 
-        {/* Back link + title */}
         <Link to="/seller-dashboard" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 16, fontSize: 13.5, fontWeight: 600, color: MUTED, ...S }}>
           <ArrowLeft size={14} /> {t('sellerDashboard.title')}
         </Link>
@@ -226,10 +178,10 @@ export function SellerHistoryPage() {
           {t('sellerDashboard.history', { defaultValue: 'Historial' })}
         </h1>
 
-        {isLoading && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
-        {error     && <ErrorAlert message={error} className="mb-6" />}
+        {loading && items.length === 0 && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
+        {error && <ErrorAlert message={error} className="mb-6" />}
 
-        {!isLoading && !error && !hasAnything && (
+        {!loading && !error && items.length === 0 && (
           <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <Ticket size={22} style={{ color: BORD2 }} />
@@ -243,61 +195,33 @@ export function SellerHistoryPage() {
           </div>
         )}
 
-        {!isLoading && !error && hasAnything && (
-          <>
-            {/* ── Completed sales ──────────────────────────────────────── */}
-            {completedSales.length > 0 && (
-              <>
-                {salesCompleted.length > 0 && (
-                  <HistorySection
-                    title={t('boughtTickets.completedTickets')}
-                    count={salesCompleted.length}
-                  >
-                    {salesCompleted.map(tx => <CompletedSaleRow key={tx.id} tx={tx} t={t} />)}
-                  </HistorySection>
-                )}
-
-                {salesTerminated.length > 0 && (
-                  <HistorySection
-                    title={t('sellerDashboard.cancelledRefunded', { defaultValue: 'Canceladas y reembolsadas' })}
-                    count={salesTerminated.length}
-                    defaultOpen={false}
-                  >
-                    {salesTerminated.map(tx => <CompletedSaleRow key={tx.id} tx={tx} t={t} />)}
-                  </HistorySection>
-                )}
-              </>
+        {items.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {items.map(item =>
+              item.type === 'transaction'
+                ? <CompletedSaleRow key={`tx-${item.transaction.id}`} tx={item.transaction} t={t} />
+                : (
+                    <ClosedOfferRow
+                      key={`of-${(item.offer as OfferWithReceivedContext).id}`}
+                      offer={item.offer as OfferWithReceivedContext}
+                      t={t}
+                    />
+                  ),
             )}
-
-            {/* ── Divider ──────────────────────────────────────────────── */}
-            {completedSales.length > 0 && closedOffers.length > 0 && (
-              <div style={{ height: 1, background: BORDER, margin: '4px 0 28px' }} />
+            {hasMore && (
+              <button
+                type="button"
+                disabled={loadingMore}
+                onClick={() => void loadPage(true)}
+                style={{
+                  padding: '12px 16px', borderRadius: 10, border: `1px solid ${BORDER}`,
+                  background: BG, fontSize: 14, fontWeight: 700, color: V, cursor: loadingMore ? 'wait' : 'pointer', ...S,
+                }}
+              >
+                {loadingMore ? t('common.loading') : t('boughtTickets.loadMoreHistory', { defaultValue: 'Cargar más' })}
+              </button>
             )}
-
-            {/* ── Closed offers ────────────────────────────────────────── */}
-            {closedOffers.length > 0 && (
-              <>
-                {offersAccepted.length > 0 && (
-                  <HistorySection
-                    title={t('sellerDashboard.acceptedOffers', { defaultValue: 'Ofertas aceptadas' })}
-                    count={offersAccepted.length}
-                  >
-                    {offersAccepted.map(o => <ClosedOfferRow key={o.id} offer={o} t={t} />)}
-                  </HistorySection>
-                )}
-
-                {offersRejected.length > 0 && (
-                  <HistorySection
-                    title={t('sellerDashboard.closedOffers', { defaultValue: 'Rechazadas y canceladas' })}
-                    count={offersRejected.length}
-                    defaultOpen={false}
-                  >
-                    {offersRejected.map(o => <ClosedOfferRow key={o.id} offer={o} t={t} />)}
-                  </HistorySection>
-                )}
-              </>
-            )}
-          </>
+          </div>
         )}
       </div>
     </div>

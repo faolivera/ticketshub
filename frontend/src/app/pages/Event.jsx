@@ -562,8 +562,8 @@ export default function EventDetail() {
     {/* Trust micro-signals — higher opacity for legibility on any image */}
     <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
       {[
-        { icon: <Lock size={12} style={{ color: V_MUTED_LIGHT }} />, text: "Pago en escrow" },
-        { icon: <CheckCircle size={12} style={{ color: GREEN_LIGHT }} />, text: "Entradas verificadas" },
+        { icon: <Lock size={12} style={{ color: V_MUTED_LIGHT }} />, text: "Fondos protegidos" },
+        { icon: <CheckCircle size={12} style={{ color: GREEN_LIGHT }} />, text: "Vendedores verificados" },
         { icon: <RefreshCw size={12} style={{ color: ABORD }} />, text: "Reembolso garantizado" },
       ].map(({ icon, text }) => (
         <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>

@@ -1,5 +1,9 @@
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import type { TransactionWithDetails } from '../transactions/transactions.domain';
+import type {
+  OfferWithListingSummary,
+  OfferWithReceivedContext,
+} from '../offers/offers.api';
 import type { PaymentConfirmation } from '../payment-confirmations/payment-confirmations.domain';
 import type { Review } from '../reviews/reviews.domain';
 import type { BankTransferConfig } from '../payments/payments.domain';
@@ -34,6 +38,23 @@ export type GetSellerProfileResponse = SellerProfile;
  * Get my tickets response
  */
 export type GetMyTicketsResponse = GetMyTicketsData;
+
+/** Paginated terminal transactions + closed offers for buyer or seller activity history. */
+export type ActivityHistoryItem =
+  | { type: 'transaction'; transaction: BffTransactionWithDetails }
+  | {
+      type: 'offer';
+      offer: OfferWithListingSummary | OfferWithReceivedContext;
+    };
+
+export interface GetActivityHistoryData {
+  items: ActivityHistoryItem[];
+  hasMore: boolean;
+  /** Opaque cursor for the next page; null when hasMore is false */
+  nextCursor: string | null;
+}
+
+export type GetActivityHistoryResponse = GetActivityHistoryData;
 
 /**
  * Get event page data response (event + enriched listings)

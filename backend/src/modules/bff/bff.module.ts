@@ -12,6 +12,7 @@ import { PromotionsModule } from '../promotions/promotions.module';
 import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
 import { EventsModule } from '../events/events.module';
 import { RiskEngineModule } from '../risk-engine/risk-engine.module';
+import { OffersModule } from '../offers/offers.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { RiskEngineModule } from '../risk-engine/risk-engine.module';
     PromotionsModule,
     EventsModule,
     RiskEngineModule,
+    OffersModule,
   ],
   controllers: [BffController],
   providers: [BffService],

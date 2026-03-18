@@ -3,7 +3,9 @@ import {
   Inject,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { UsersService } from '../users/users.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { TicketsService } from '../tickets/tickets.service';
@@ -28,7 +30,11 @@ import type {
   GetMyTicketsData,
   GetTransactionDetailsResponse,
   TransactionReviewsData,
+  GetActivityHistoryData,
+  ActivityHistoryItem,
 } from './bff.api';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import { OffersService } from '../offers/offers.service';
 import type {
   SellerProfile,
   ListingWithSeller,
@@ -75,6 +81,9 @@ export class BffService {
     private readonly eventsService: EventsService,
     @Inject(RiskEngineService)
     private readonly riskEngine: RiskEngineService,
+    @Inject(OffersService)
+    private readonly offersService: OffersService,
+    private readonly prisma: PrismaService,
   ) {}
 
   /**
@@ -377,6 +386,136 @@ export class BffService {
     const bought = boughtRaw.map((tx) => this.toBffTransaction(tx));
     const sold = soldRaw.map((tx) => this.toBffTransaction(tx));
     return { bought, sold, listed };
+  }
+
+  private encodeActivityHistoryCursor(offset: number): string {
+    return Buffer.from(JSON.stringify({ o: offset }), 'utf8').toString(
+      'base64url',
+    );
+  }
+
+  private decodeActivityHistoryCursor(cursor: string | null): number {
+    if (!cursor?.trim()) return 0;
+    try {
+      const raw = Buffer.from(cursor, 'base64url').toString('utf8');
+      const j = JSON.parse(raw) as { o?: unknown };
+      const o = j.o;
+      if (typeof o !== 'number' || !Number.isFinite(o) || o < 0) return 0;
+      return Math.floor(o);
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Paginated terminal transactions + closed offers (buyer or seller), newest first.
+   */
+  async getActivityHistory(
+    ctx: Ctx,
+    userId: string,
+    role: 'buyer' | 'seller',
+    cursor: string | null,
+    limit: number,
+  ): Promise<GetActivityHistoryData> {
+    if (role !== 'buyer' && role !== 'seller') {
+      throw new BadRequestException('role must be buyer or seller');
+    }
+    const lim = Math.min(Math.max(limit, 1), 50);
+    const offset = this.decodeActivityHistoryCursor(cursor);
+    const take = lim + 1;
+
+    const buyerUnion = Prisma.sql`
+      SELECT * FROM (
+        (SELECT t.id, 'transaction'::text AS kind,
+          COALESCE(t."completedAt", t."cancelledAt", t."refundedAt", t."updatedAt") AS sort_at
+        FROM transactions t
+        WHERE t."buyerId" = ${userId}
+          AND t.status::text IN ('Completed','Cancelled','Refunded'))
+        UNION ALL
+        (SELECT o.id, 'offer',
+          COALESCE(o."rejectedAt", o."cancelledAt", o."acceptedAt", o."updatedAt") AS sort_at
+        FROM offers o
+        WHERE o."userId" = ${userId}
+          AND o.status::text IN ('rejected','converted','cancelled'))
+      ) AS u
+      ORDER BY sort_at DESC
+      LIMIT ${take}
+      OFFSET ${offset}
+    `;
+
+    const sellerUnion = Prisma.sql`
+      SELECT * FROM (
+        (SELECT t.id, 'transaction'::text AS kind,
+          COALESCE(t."completedAt", t."cancelledAt", t."refundedAt", t."updatedAt") AS sort_at
+        FROM transactions t
+        WHERE t."sellerId" = ${userId}
+          AND t.status::text IN ('Completed','Cancelled','Refunded'))
+        UNION ALL
+        (SELECT o.id, 'offer',
+          COALESCE(o."rejectedAt", o."cancelledAt", o."acceptedAt", o."updatedAt") AS sort_at
+        FROM offers o
+        INNER JOIN ticket_listings l ON l.id = o."listingId"
+        WHERE l."sellerId" = ${userId}
+          AND o.status::text IN ('rejected','converted','cancelled'))
+      ) AS u
+      ORDER BY sort_at DESC
+      LIMIT ${take}
+      OFFSET ${offset}
+    `;
+
+    const rows = await this.prisma.$queryRaw<
+      { id: string; kind: string; sort_at: Date }[]
+    >(role === 'buyer' ? buyerUnion : sellerUnion);
+
+    this.logger.debug(ctx, 'getActivityHistory', {
+      role,
+      rowCount: rows.length,
+      offset,
+    });
+
+    const hasMore = rows.length > lim;
+    const page = hasMore ? rows.slice(0, lim) : rows;
+    const txIds = page
+      .filter((r) => r.kind === 'transaction')
+      .map((r) => r.id);
+    const offerIds = page.filter((r) => r.kind === 'offer').map((r) => r.id);
+
+    const [txDetails, buyerOffers, sellerOffers] = await Promise.all([
+      this.transactionsService.getTransactionsWithDetailsByIds(ctx, txIds),
+      role === 'buyer' && offerIds.length > 0
+        ? this.offersService.getOffersWithListingSummaryByIds(ctx, offerIds)
+        : Promise.resolve([]),
+      role === 'seller' && offerIds.length > 0
+        ? this.offersService.getOffersWithReceivedContextByIds(ctx, offerIds)
+        : Promise.resolve([]),
+    ]);
+
+    const txMap = new Map(
+      txDetails.map((t) => [t.id, this.toBffTransaction(t)]),
+    );
+    const offerMap = new Map<string, (typeof buyerOffers)[0] | (typeof sellerOffers)[0]>();
+    if (role === 'buyer') {
+      for (const o of buyerOffers) offerMap.set(o.id, o);
+    } else {
+      for (const o of sellerOffers) offerMap.set(o.id, o);
+    }
+
+    const items: ActivityHistoryItem[] = [];
+    for (const row of page) {
+      if (row.kind === 'transaction') {
+        const tx = txMap.get(row.id);
+        if (tx) items.push({ type: 'transaction', transaction: tx });
+      } else {
+        const o = offerMap.get(row.id);
+        if (o) items.push({ type: 'offer', offer: o });
+      }
+    }
+
+    return {
+      items,
+      hasMore,
+      nextCursor: hasMore ? this.encodeActivityHistoryCursor(offset + lim) : null,
+    };
   }
 
   /**

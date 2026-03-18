@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,18 +10,22 @@ import { offersService }  from '@/api/services/offers.service';
 import { useUser }        from '@/app/contexts/UserContext';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert }     from '@/app/components/ErrorMessage';
+import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { SellerUnverifiedModalTrigger } from '@/app/components/SellerUnverifiedModalTrigger';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import type {
   TransactionWithDetails, TicketListingWithEvent, OfferWithReceivedContext,
 } from '@/api/types';
+import type { ActivityHistoryItem } from '@/api/types/bff';
+import { CompletedSaleRow, ClosedOfferRow } from '@/app/pages/seller-dashboard/SellerHistoryPage';
 import { TicketUnitStatus } from '@/api/types';
 import {
   isUserRequiredActor, TERMINAL_STATUSES,
   getTransactionStatusInfo, getWaitingForLabel,
   V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
 } from '@/app/pages/my-tickets/transactionUtils';
+import { TransactionActionRequiredCard } from '@/app/pages/my-tickets/TransactionActionRequiredCard';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(amount: number, currency: string) {
@@ -94,78 +98,11 @@ function IconBtn({ href, onClick, title, children, active }: {
   );
 }
 
-// ─── ACTION REQUIRED — same card footprint as ReceivedOfferCard ───────────────
 function sectorLabel(sectionName: string, t: (k: string, o?: Record<string, string>) => string) {
   if (!sectionName || sectionName === 'General') {
     return t('boughtTickets.generalAdmission', { defaultValue: 'General' });
   }
   return sectionName;
-}
-
-function ActionRequiredTransactionCard({ tx, t }: {
-  tx: TransactionWithDetails;
-  t: (k: string, o?: Record<string, string>) => string;
-}) {
-  const actionLabels: Record<string, string> = {
-    TicketTransferred:  t('sellerDashboard.action.waitingBuyerConfirm', { defaultValue: 'El comprador debe confirmar la recepción' }),
-    PaymentReceived:    t('sellerDashboard.action.transferTicket',      { defaultValue: 'Tenés que transferir la entrada' }),
-    PendingPayment:     t('sellerDashboard.action.waitingPayment',      { defaultValue: 'Esperando pago del comprador' }),
-    PaymentPendingVerification: t('sellerDashboard.action.paymentPendingVerification', { defaultValue: 'Pago en verificación' }),
-    DepositHold:        t('sellerDashboard.action.depositHold',         { defaultValue: 'Fondos en escrow — revisá la transacción' }),
-    TransferringFund:   t('sellerDashboard.action.transferringFund',    { defaultValue: 'Liberando fondos — revisá la transacción' }),
-    Disputed:           t('sellerDashboard.action.disputed',            { defaultValue: 'Hay una disputa abierta' }),
-  };
-  const what = actionLabels[tx.status as string]
-    ?? t('sellerDashboard.action.viewDetails', { defaultValue: 'Revisá la transacción' });
-  const qty = Math.max(1, tx.quantity || 1);
-  const perTicket = fmt(Math.round(tx.ticketPrice.amount / qty), tx.ticketPrice.currency);
-  const sector = sectorLabel(tx.sectionName ?? '', t);
-
-  return (
-    <div style={{ background: CARD, borderRadius: 14, border: '1px solid #ddd6fe', overflow: 'hidden' }}>
-      <div style={{ display: 'flex' }}>
-        <div style={{ display: 'flex', flexShrink: 0 }}>
-          <div style={{ width: 3, alignSelf: 'stretch', background: '#f59e0b', flexShrink: 0 }} />
-          <Thumb url={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle} name={tx.eventName} size={64} />
-        </div>
-        <div style={{ flex: 1, padding: '9px 12px', minWidth: 0 }}>
-          <p style={{ fontSize: 13.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 6, ...S }}>
-            {tx.eventName}
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelEventDate', { defaultValue: 'Event date' })}</span>
-            {' · '}{formatDate(new Date(tx.eventDate))}
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelSector', { defaultValue: 'Sector' })}</span>
-            {' · '}{sector}
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelTicketValue', { defaultValue: 'Ticket price' })}</span>
-            {' · '}<span style={{ fontWeight: 700, color: DARK }}>{perTicket}</span>
-            <span style={{ color: HINT }}>{' '}{t('sellerDashboard.perTicketAbbr', { defaultValue: '/ ticket' })}</span>
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 6, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelBuyer', { defaultValue: 'Buyer' })}</span>
-            {' · '}<span style={{ fontWeight: 700, color: DARK }}>{tx.buyerName}</span>
-          </p>
-          <p style={{ fontSize: 12, color: MUTED, display: 'flex', alignItems: 'flex-start', gap: 5, ...S }}>
-            <AlertCircle size={12} style={{ color: '#f59e0b', flexShrink: 0, marginTop: 1 }} />
-            {what}
-          </p>
-        </div>
-      </div>
-      <Link to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          padding: '10px 11px', borderTop: '1px solid #f0ebff',
-          background: V, color: CARD, fontSize: 13, fontWeight: 700, ...S,
-        }}>
-          {t('sellerDashboard.viewTransaction', { defaultValue: 'View transaction' })} →
-        </div>
-      </Link>
-    </div>
-  );
 }
 
 // ─── OFFER RECEIVED card ──────────────────────────────────────────────────────
@@ -383,6 +320,26 @@ export function SellerDashboardPage() {
   const [processingOfferId, setProcessingOfferId] = useState<string | null>(null);
   const [showPast,          setShowPast]          = useState(false);
   const [showHistory,       setShowHistory]       = useState(false);
+  const [sdHistItems,       setSdHistItems]       = useState<ActivityHistoryItem[]>([]);
+  const [sdHistHasMore,     setSdHistHasMore]     = useState(false);
+  const [sdHistLoading,     setSdHistLoading]     = useState(false);
+  const sdHistCursorRef     = useRef<string | null>(null);
+  const sdHistExpandedOnce  = useRef(false);
+
+  const loadSellerHistoryPage = useCallback(async (append: boolean) => {
+    setSdHistLoading(true);
+    try {
+      const res = await ticketsService.getActivityHistory(
+        'seller',
+        append ? sdHistCursorRef.current : null,
+        12,
+      );
+      sdHistCursorRef.current = res.nextCursor;
+      setSdHistItems(prev => (append ? [...prev, ...res.items] : res.items));
+      setSdHistHasMore(res.hasMore);
+    } catch { /* optional: toast */ }
+    finally { setSdHistLoading(false); }
+  }, []);
 
   // ── Fetching ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -400,6 +357,13 @@ export function SellerDashboardPage() {
       .then(res => setReceivedOffers(Array.isArray(res) ? res : []))
       .catch(() => setReceivedOffers([]));
   }, [isAuthenticated, canSell]);
+
+  useEffect(() => {
+    if (!showHistory || sdHistExpandedOnce.current) return;
+    sdHistExpandedOnce.current = true;
+    sdHistCursorRef.current = null;
+    void loadSellerHistoryPage(false);
+  }, [showHistory, loadSellerHistoryPage]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleCopyLink = async (listing: TicketListingWithEvent) => {
@@ -519,7 +483,9 @@ export function SellerDashboardPage() {
           <div>
             <SubLabel icon={<AlertCircle size={11} />} label={t('boughtTickets.pendingAwaitingMyAction')} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {actionRequired.map(tx => <ActionRequiredTransactionCard key={tx.id} tx={tx} t={t} />)}
+              {actionRequired.map(tx => (
+                <TransactionActionRequiredCard key={tx.id} tx={tx} variant="seller" t={t} linkFrom="/seller-dashboard" />
+              ))}
             </div>
           </div>
         )}
@@ -578,57 +544,46 @@ export function SellerDashboardPage() {
               )}
             </button>
             {showHistory && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, opacity: 0.75 }}>
-                {completedSales.slice(0, 3).map(tx => {
-                  const price = tx.pricePerTicket ? fmt(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
-                  const url   = tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle;
-                  const isCompleted = tx.status === 'Completed';
-                  return (
-                    <Link key={tx.id} to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
-                      <div style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
-                        <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
-                          {url && <img src={url} alt={tx.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.3)' }} />}
-                        </div>
-                        <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>{tx.eventName}</p>
-                            <p style={{ fontSize: 11.5, color: MUTED, ...S }}>{formatDate(new Date(tx.eventDate))}{price && ` · ${price}`}</p>
-                          </div>
-                          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0, background: isCompleted ? GLIGHT : BG, color: isCompleted ? GREEN : MUTED, border: `1px solid ${isCompleted ? GBORD : BORD2}`, ...S }}>
-                            {isCompleted ? t('boughtTickets.completed') : t('boughtTickets.cancelled')}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-                {closedOffers.slice(0, 3).map(o => {
-                  const ctx = o.receivedContext;
-                  const offered = fmt(o.offeredPrice.amount, o.offeredPrice.currency);
-                  const url = ctx.bannerUrls?.square ?? ctx.bannerUrls?.rectangle;
-                  const isAccepted = o.status === 'accepted';
-                  return (
-                    <div key={o.id} style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
-                      <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
-                        {url && <img src={url} alt={ctx.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.5)' }} />}
-                      </div>
-                      <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 1, ...S }}>{ctx.eventName}</p>
-                          <p style={{ fontSize: 11.5, color: MUTED, ...S }}>{t('sellerDashboard.fromBuyer', { defaultValue: 'De' })} {ctx.buyerName} · {offered}</p>
-                        </div>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 100, flexShrink: 0, background: isAccepted ? GLIGHT : BG, color: isAccepted ? GREEN : MUTED, border: `1px solid ${isAccepted ? GBORD : BORD2}`, ...S }}>
-                          {isAccepted ? t('boughtTickets.offerStatusAccepted') : t('boughtTickets.offerStatusRejected')}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-                <Link to="/seller-dashboard/historial" style={{ textDecoration: 'none' }}>
-                  <div style={{ padding: '9px 14px', borderRadius: 10, background: BG, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: V, cursor: 'pointer', ...S }}>
-                    {t('sellerDashboard.viewFullHistory', { defaultValue: 'Ver historial completo' })} →
-                  </div>
-                </Link>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.92 }}>
+                {sdHistLoading && sdHistItems.length === 0 && (
+                  <p style={{ fontSize: 12.5, color: MUTED, textAlign: 'center', padding: 8, ...S }}>{t('common.loading')}</p>
+                )}
+                {!sdHistLoading && sdHistItems.length === 0 && (
+                  <p style={{ fontSize: 12.5, color: MUTED, textAlign: 'center', padding: 8, ...S }}>
+                    {t('sellerDashboard.noHistory', { defaultValue: 'Sin historial todavía' })}
+                  </p>
+                )}
+                {sdHistItems.map(item =>
+                  item.type === 'transaction'
+                    ? <CompletedSaleRow key={`sd-tx-${item.transaction.id}`} tx={item.transaction} t={t} />
+                    : (
+                        <ClosedOfferRow
+                          key={`sd-of-${(item.offer as OfferWithReceivedContext).id}`}
+                          offer={item.offer as OfferWithReceivedContext}
+                          t={t}
+                        />
+                      ),
+                )}
+                {sdHistHasMore && (
+                  <button
+                    type="button"
+                    disabled={sdHistLoading}
+                    onClick={() => void loadSellerHistoryPage(true)}
+                    style={{
+                      padding: '9px 14px', borderRadius: 10, background: BG, border: `1px solid ${BORDER}`,
+                      fontSize: 13, fontWeight: 700, color: V, cursor: sdHistLoading ? 'wait' : 'pointer', ...S,
+                    }}
+                  >
+                    {sdHistLoading ? t('common.loading') : t('boughtTickets.loadMoreHistory', { defaultValue: 'Cargar más' })}
+                  </button>
+                )}
+                {sdHistItems.length > 0 && (
+                  <Link to="/seller-dashboard/historial" style={{ textDecoration: 'none', alignSelf: 'center' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: HINT, ...S }}>
+                      {t('sellerDashboard.openFullHistory', { defaultValue: 'Abrir historial completo' })} →
+                    </span>
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -739,7 +694,7 @@ export function SellerDashboardPage() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, padding: '24px 16px 56px', ...S }}>
+    <div style={{ minHeight: '100vh', background: BG, ...S }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
@@ -749,7 +704,7 @@ export function SellerDashboardPage() {
         }
       `}</style>
 
-      <div style={{ maxWidth: 960, margin: '0 auto' }}>
+      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 56 }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
           <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px' }}>
@@ -791,7 +746,7 @@ export function SellerDashboardPage() {
             </div>
           )
         )}
-      </div>
+      </PageContentMaxWidth>
 
       <SellerUnverifiedModalTrigger showWhen={salesInProgress.length > 0} />
     </div>

@@ -1,4 +1,5 @@
 import type { TransactionWithDetails } from './transactions';
+import type { OfferWithListingSummary, OfferWithReceivedContext } from './offers';
 import type { PaymentConfirmation } from './payment-confirmations';
 import type { Review } from './reviews';
 import type { BankTransferConfig } from './tickets';
@@ -47,6 +48,17 @@ export interface ValidateSellListingRequest {
 export type ValidateSellListingResponse =
   | { status: 'can_create' }
   | { status: 'seller_risk_restriction' };
+
+/** GET /api/activity-history */
+export type ActivityHistoryItem =
+  | { type: 'transaction'; transaction: TransactionWithDetails }
+  | { type: 'offer'; offer: OfferWithListingSummary | OfferWithReceivedContext };
+
+export interface GetActivityHistoryResponse {
+  items: ActivityHistoryItem[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
 
 /**
  * Chat config when user is participant and chat is visible (enabled or only_read).

@@ -11,6 +11,7 @@ import type {
   GetMyTicketsResponse,
   GetBuyPageResponse,
   GetCheckoutRiskResponse,
+  GetActivityHistoryResponse,
 } from '../types';
 
 /**
@@ -70,6 +71,20 @@ export const ticketsService = {
    */
   async getMyTickets(): Promise<GetMyTicketsResponse> {
     const response = await apiClient.get<GetMyTicketsResponse>('/my-tickets');
+    return response.data;
+  },
+
+  /**
+   * Paginated terminal transactions + closed offers (buyer or seller).
+   */
+  async getActivityHistory(
+    role: 'buyer' | 'seller',
+    cursor: string | null | undefined,
+    limit = 15,
+  ): Promise<GetActivityHistoryResponse> {
+    const params: Record<string, string | number> = { role, limit };
+    if (cursor) params.cursor = cursor;
+    const response = await apiClient.get<GetActivityHistoryResponse>('/activity-history', { params });
     return response.data;
   },
 

@@ -137,7 +137,7 @@ export function AppFooter() {
           <p style={{ fontSize: 12 }}>© {new Date().getFullYear()} TicketsHub · Buenos Aires, Argentina</p>
           <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12 }}>
             <ShieldSVG size={11} color={V_SOFT} />
-            <span style={{ color: FOOTER_CAPTION }}>Transacciones protegidas con escrow</span>
+            <span style={{ color: FOOTER_CAPTION }}>Transacciones con fondos protegidos</span>
           </div>
         </div>
       </div>

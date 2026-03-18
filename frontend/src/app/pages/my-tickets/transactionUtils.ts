@@ -42,7 +42,7 @@ export function getTransactionStatusInfo(
     case 'TicketTransferred':
       return { label: t('boughtTickets.transferConfirmed'), color: '#e4edf7', textColor: '#1e3a5f', border: '#bfd3ea' };
     case 'DepositHold':
-      return { label: t('boughtTickets.depositHold', { defaultValue: 'Fondos en escrow' }), color: '#f0ebff', textColor: '#6d28d9', border: '#ddd6fe' };
+      return { label: t('boughtTickets.depositHold', { defaultValue: 'Fondos protegidos' }), color: '#f0ebff', textColor: '#6d28d9', border: '#ddd6fe' };
     case 'TransferringFund':
       return { label: t('boughtTickets.transferringFund', { defaultValue: 'Liberando fondos' }), color: '#f0ebff', textColor: '#6d28d9', border: '#ddd6fe' };
     case 'Completed':

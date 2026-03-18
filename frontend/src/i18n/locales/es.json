@@ -106,7 +106,10 @@
     "categoryComedy": "Comedia",
     "categoryOther": "Otros",
     "filters": "Filtros",
-    "applyFilters": "Aplicar"
+    "applyFilters": "Aplicar",
+    "cityLabel": "Ciudad",
+    "eventTypeLabel": "Tipo de evento",
+    "searchCityPlaceholder": "Buscar ciudad..."
   },
   "eventCard": {
     "trending": "Tendencia",
@@ -364,8 +367,11 @@
     "myTicketsTabOffers": "Mis ofertas",
     "filterByOffer": "Mostrando una oferta",
     "backToPurchases": "Mis compras",
+    "labelSeller": "Vendedor",
+    "loadMoreHistory": "Cargar más",
     "noHistoryYet": "Aún no tenés historial",
-    "completedPurchasesAppearHere": "Las compras completadas y ofertas cerradas aparecerán aquí."
+    "completedPurchasesAppearHere": "Las compras completadas y ofertas cerradas aparecerán aquí.",
+    "depositHold": "Fondos protegidos"
   },
   "sellerDashboard": {
     "title": "Mis Ventas",
@@ -395,11 +401,12 @@
       "transferTicket": "Tenés que transferir la entrada",
       "waitingPayment": "Esperando pago del comprador",
       "paymentPendingVerification": "Pago en verificación",
-      "depositHold": "Fondos en escrow — revisá la transacción",
+      "depositHold": "Fondos protegidos — revisá la transacción",
       "transferringFund": "Liberando fondos — revisá la transacción",
       "disputed": "Hay una disputa abierta",
       "viewDetails": "Revisá la transacción"
-    }
+    },
+    "openFullHistory": "Abrir historial completo"
   },
   "ditListing": {
     "description": "Descripción"
@@ -618,8 +625,8 @@
     "paymentProtectionDesc": "Tu dinero se mantiene seguro hasta que confirmes la recepción",
     "disputeWindow": "Ventana de Disputa",
     "disputeWindowDesc": "3 días después del evento para reportar cualquier problema",
-    "verifiedTickets": "Entradas Verificadas",
-    "verifiedTicketsDesc": "Todas las entradas son verificadas antes de la transferencia",
+    "verifiedTickets": "Vendedores verificados",
+    "verifiedTicketsDesc": "Los vendedores verifican su identidad antes de poder cobrar",
     "sellerRatings": "Calificaciones de Vendedores",
     "sellerRatingsDesc": "Revisa el historial y calificaciones del vendedor antes de comprar",
     "guaranteedPayment": "Pago Garantizado",
@@ -969,11 +976,11 @@
     "escrowCardTitle": "Compra protegida",
     "escrowBuyerWaiting": "Tu dinero está seguro. No se libera al vendedor hasta que confirmes recibir la entrada y pase el evento.",
     "escrowBuyerReleased": "La transacción se completó correctamente.",
-    "escrowSellerWaiting": "Tu dinero está en custodia. Se libera automáticamente después del evento o cuando el comprador confirme.",
+    "escrowSellerWaiting": "Tus fondos están protegidos. Se liberan automáticamente después del evento o cuando el comprador confirme.",
     "escrowSellerReleased": "Recibirás {{amount}} en tu cuenta en las próximas 24 horas hábiles.",
     "escrowTimeline": {
       "buyer1": "Recepción confirmada",
-      "buyer2": "Fondos en custodia",
+      "buyer2": "Fondos protegidos",
       "buyer3": "Evento: {{date}}",
       "buyer4": "Fondos liberados al vendedor",
       "seller1": "Pago recibido",
@@ -997,7 +1004,7 @@
       "buyerPaymentReceivedSubtitle": "Esperando que el vendedor transfiera tu entrada.",
       "buyerTicketArrivedTitle": "Tu entrada llegó",
       "buyerTicketArrivedSubtitle": "{{name}} te transfirió la entrada. Confirmá cuando la tengas.",
-      "buyerEscrowTitle": "Recepción confirmada — fondos en custodia",
+      "buyerEscrowTitle": "Recepción confirmada — fondos protegidos",
       "buyerEscrowSubtitle": "Los fondos se liberan al vendedor después del evento. Podés reportar un problema si hace falta.",
       "buyerReleasingTitle": "Liberando fondos",
       "buyerReleasingSubtitle": "Se está procesando el pago al vendedor.",
@@ -1013,7 +1020,7 @@
       "sellerTransferTitle": "Pago confirmado — transferí la entrada",
       "sellerTransferSubtitle": "{{name}} pagó. Enviá la entrada usando los datos de contacto.",
       "sellerAwaitConfirmTitle": "Esperando confirmación del comprador",
-      "sellerEscrowHoldTitle": "Fondos en custodia — liberación pendiente",
+      "sellerEscrowHoldTitle": "Fondos protegidos — liberación pendiente",
       "sellerAwaitConfirmSubtitle": "{{name}} debe confirmar la recepción. Tus fondos están protegidos.",
       "sellerReleasingTitle": "Liberando tu pago",
       "sellerReleasingSubtitle": "Se está procesando tu cobro.",
@@ -1024,7 +1031,7 @@
       "sentAsLabel": "Enviaste como:"
     },
     "confirmReceiptWarning": "Al confirmar, reconocés que recibiste la entrada. Esta acción no se puede deshacer.",
-    "confirmReceiptEscrowNote": "Los fondos quedan en custodia hasta {{date}} — aún no se liberan al vendedor.",
+    "confirmReceiptEscrowNote": "Los fondos quedan protegidos hasta {{date}} — aún no se liberan al vendedor.",
     "paymentInfoBuyerFeeDetail": "Porcentaje del subtotal",
     "cancelled": {
       "BuyerCancelled": "Cancelaste esta transacción",

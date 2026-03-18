@@ -1364,6 +1364,22 @@ export class TransactionsService {
   }
 
   /**
+   * Load transactions with BFF display fields (batch), preserving input id order.
+   */
+  async getTransactionsWithDetailsByIds(
+    ctx: Ctx,
+    ids: string[],
+  ): Promise<TransactionWithDetails[]> {
+    if (ids.length === 0) return [];
+    const transactions = await this.transactionsRepository.findByIds(ctx, ids);
+    const order = new Map(ids.map((id, i) => [id, i]));
+    transactions.sort(
+      (a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0),
+    );
+    return this.enrichTransactions(ctx, transactions);
+  }
+
+  /**
    * List user's transactions
    */
   async listTransactions(

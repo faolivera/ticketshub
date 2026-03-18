@@ -488,4 +488,103 @@ export class OffersService {
       }
     }
   }
+
+  /**
+   * Buyer-view offers by IDs (for paginated activity history).
+   */
+  async getOffersWithListingSummaryByIds(
+    ctx: Ctx,
+    offerIds: string[],
+  ): Promise<OfferWithListingSummary[]> {
+    if (offerIds.length === 0) return [];
+    let offers = await this.offersRepository.findByIds(ctx, offerIds);
+    offers = await this.applyLazyExpiration(ctx, offers);
+    if (offers.length === 0) return [];
+    const listingIds = [...new Set(offers.map((o) => o.listingId))];
+    const listings = await this.ticketsService.getListingsByIds(
+      ctx,
+      listingIds,
+    );
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
+    const sellerIds = [...new Set(listings.map((l) => l.sellerId))];
+    const sellers = await this.usersService.findByIds(ctx, sellerIds);
+    const sellerNameMap = new Map(
+      sellers.map((u) => [u.id, u.publicName ?? 'Unknown']),
+    );
+    return offers.map((offer): OfferWithListingSummary => {
+      const listing = listingMap.get(offer.listingId);
+      const summary: OfferListingSummary = listing
+        ? {
+            eventName: listing.eventName,
+            eventSlug: listing.eventSlug,
+            eventDate:
+              listing.eventDate instanceof Date
+                ? listing.eventDate.toISOString()
+                : String(listing.eventDate),
+            sellerName: sellerNameMap.get(listing.sellerId) ?? 'Unknown',
+            bannerUrls: listing.bannerUrls,
+          }
+        : {
+            eventName: 'Unknown Event',
+            eventSlug: 'event-unknown',
+            eventDate: new Date().toISOString(),
+            sellerName: 'Unknown',
+          };
+      return { ...offer, listingSummary: summary };
+    });
+  }
+
+  /**
+   * Seller-view offers by IDs (for paginated activity history).
+   */
+  async getOffersWithReceivedContextByIds(
+    ctx: Ctx,
+    offerIds: string[],
+  ): Promise<OfferWithReceivedContext[]> {
+    if (offerIds.length === 0) return [];
+    let offers = await this.offersRepository.findByIds(ctx, offerIds);
+    offers = await this.applyLazyExpiration(ctx, offers);
+    if (offers.length === 0) return [];
+    const listingIds = [...new Set(offers.map((o) => o.listingId))];
+    const listings = await this.ticketsService.getListingsByIds(
+      ctx,
+      listingIds,
+    );
+    const listingMap = new Map(listings.map((l) => [l.id, l]));
+    const buyerIds = [...new Set(offers.map((o) => o.userId))];
+    const buyers = await this.usersService.findByIds(ctx, buyerIds);
+    const buyerNameMap = new Map(
+      buyers.map((u) => [u.id, u.publicName ?? 'Unknown']),
+    );
+    return offers.map((offer): OfferWithReceivedContext => {
+      const listing = listingMap.get(offer.listingId);
+      const context: OfferReceivedContext = listing
+        ? {
+            listingId: listing.id,
+            eventName: listing.eventName,
+            eventSlug: listing.eventSlug,
+            eventDate:
+              listing.eventDate instanceof Date
+                ? listing.eventDate.toISOString()
+                : String(listing.eventDate),
+            sectionName:
+              listing.sectionName?.trim() ||
+              String(listing.type ?? '') ||
+              'General',
+            listingPrice: listing.pricePerTicket,
+            bannerUrls: listing.bannerUrls,
+            buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
+          }
+        : {
+            listingId: offer.listingId,
+            eventName: 'Unknown Event',
+            eventSlug: 'event-' + offer.listingId,
+            eventDate: new Date().toISOString(),
+            sectionName: 'General',
+            listingPrice: { amount: 0, currency: 'EUR' },
+            buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
+          };
+      return { ...offer, receivedContext: context };
+    });
+  }
 }

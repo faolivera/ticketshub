@@ -17,7 +17,7 @@ import { UserProfile } from '@/app/pages/UserProfile';
 import { SellerProfile } from '@/app/pages/SellerProfile';
 import Checkout from '@/app/pages/Checkout';
 import { SellerDashboardPage } from '@/app/pages/seller-dashboard/SellerDashboardPage';
-import { MyTicketsPage, BuyerHistoryPage } from '@/app/pages/my-tickets/MyTicketsPage';
+import { MyTicketsPage } from '@/app/pages/my-tickets/MyTicketsPage';
 import { SellerHistoryPage } from '@/app/pages/seller-dashboard/SellerHistoryPage';
 import { HowItWorks } from '@/app/pages/HowItWorks';
 import { Contact } from '@/app/pages/Contact';
@@ -93,7 +93,7 @@ function AppLayout() {
 
               {/* Protected routes — require authentication */}
               <Route path="/my-tickets" element={<ProtectedRoute><MyTicketsPage /></ProtectedRoute>} />
-              <Route path="/my-tickets/historial" element={<ProtectedRoute><BuyerHistoryPage /></ProtectedRoute>} />
+              <Route path="/my-tickets/historial" element={<Navigate to="/my-tickets" replace />} />
               <Route path="/bought-tickets" element={<Navigate to="/my-tickets" replace />} />
               <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboardPage /></ProtectedRoute>} />
               <Route path="/transaction/:transactionId" element={<ProtectedRoute><MyTicket /></ProtectedRoute>} />

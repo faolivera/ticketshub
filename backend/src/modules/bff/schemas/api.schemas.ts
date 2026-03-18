@@ -332,3 +332,17 @@ export const ValidateSellListingResponseSchema = z.discriminatedUnion('status', 
   z.object({ status: z.literal('can_create') }),
   z.object({ status: z.literal('seller_risk_restriction') }),
 ]);
+
+export const GetActivityHistoryResponseSchema = z.object({
+  items: z.array(
+    z.discriminatedUnion('type', [
+      z.object({
+        type: z.literal('transaction'),
+        transaction: BffTransactionWithDetailsSchema,
+      }),
+      z.object({ type: z.literal('offer'), offer: z.any() }),
+    ]),
+  ),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+});

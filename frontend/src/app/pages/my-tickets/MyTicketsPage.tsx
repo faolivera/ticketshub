@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Ticket, AlertCircle, Clock } from 'lucide-react';
@@ -11,11 +11,13 @@ import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import type { TransactionWithDetails, OfferWithListingSummary } from '@/api/types';
+import type { ActivityHistoryItem } from '@/api/types/bff';
 import {
   isUserRequiredActor, TERMINAL_STATUSES,
   getTransactionStatusInfo, getWaitingForLabel,
   V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
 } from './transactionUtils';
+import { TransactionActionRequiredCard } from './TransactionActionRequiredCard';
 
 // ─── Helpers (mirrors SellerDashboardPage) ────────────────────────────────────
 function fmt(amount: number, currency: string) {
@@ -118,53 +120,6 @@ function AcceptedOfferBanner({ offer, highlighted, t }: {
         </div>
       </Link>
     </div>
-  );
-}
-
-// ─── BUYER ACTION ROW — needs buyer attention, no inline actions ──────────────
-function BuyerActionRow({ tx, t }: {
-  tx: TransactionWithDetails;
-  t: (k: string, o?: Record<string, string>) => string;
-}) {
-  const [hov, setHov] = useState(false);
-  const actionLabels: Record<string, string> = {
-    TicketTransferred:          t('boughtTickets.action.confirmReceipt',   { defaultValue: 'Confirmá que recibiste la entrada' }),
-    PendingPayment:             t('boughtTickets.action.completePayment',  { defaultValue: 'Completá el pago para continuar' }),
-    PaymentPendingVerification: t('boughtTickets.action.paymentVerifying', { defaultValue: 'Tu pago está siendo verificado' }),
-    Disputed:                   t('boughtTickets.action.disputed',         { defaultValue: 'Hay una disputa abierta' }),
-  };
-  const what = actionLabels[tx.status as string]
-    ?? t('boughtTickets.action.viewDetails', { defaultValue: 'Revisá la transacción' });
-
-  return (
-    <Link to={`/transaction/${tx.id}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
-      <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
-        display: 'flex', alignItems: 'center',
-        background: hov ? '#fdfcff' : CARD, borderRadius: 12,
-        border: `1px solid ${hov ? '#ddd6fe' : BORDER}`,
-        overflow: 'hidden', transition: 'all 0.14s',
-      }}>
-        {/* Violet bar — buyer urgency (vs amber for seller) */}
-        <div style={{ width: 3, alignSelf: 'stretch', background: V, flexShrink: 0 }} />
-        <Thumb url={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle} name={tx.eventName} size={52} />
-        <div style={{ flex: 1, padding: '9px 12px', minWidth: 0 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2, ...S }}>
-            {tx.eventName}
-          </p>
-          <p style={{ fontSize: 12, color: MUTED, display: 'flex', alignItems: 'center', gap: 4, ...S }}>
-            <AlertCircle size={11} style={{ color: V, flexShrink: 0 }} />
-            {what}
-          </p>
-        </div>
-        <span style={{
-          margin: '0 12px', padding: '6px 13px', borderRadius: 8, flexShrink: 0,
-          background: VLIGHT, color: V, border: '1px solid #ddd6fe',
-          fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', ...S,
-        }}>
-          Ver →
-        </span>
-      </div>
-    </Link>
   );
 }
 
@@ -315,12 +270,7 @@ function HistoryOfferRow({ offer, t }: { offer: OfferWithListingSummary; t: (k: 
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-export type MyTicketsPageProps = {
-  /** Full buyer history at `/my-tickets/historial` */
-  historyOnly?: boolean;
-};
-
-export function MyTicketsPage({ historyOnly = false }: MyTicketsPageProps = {}) {
+export function MyTicketsPage() {
   const { t }                     = useTranslation();
   const { user, isAuthenticated } = useUser();
   const [searchParams]            = useSearchParams();
@@ -329,8 +279,12 @@ export function MyTicketsPage({ historyOnly = false }: MyTicketsPageProps = {}) 
   const [myOffers,      setMyOffers]      = useState<OfferWithListingSummary[]>([]);
   const [isLoading,     setIsLoading]     = useState(true);
   const [error,         setError]         = useState<string | null>(null);
-  const [showHistory,   setShowHistory]   = useState(false);
-
+  const [historyItems,   setHistoryItems]   = useState<ActivityHistoryItem[]>([]);
+  const [historyHasMore, setHistoryHasMore] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError,   setHistoryError]   = useState<string | null>(null);
+  const [historyFetched, setHistoryFetched] = useState(false);
+  const historyCursorRef = useRef<string | null>(null);
   // Deep-link from notifications: ?offerId=xxx highlights + scrolls to that offer
   const offerIdFromUrl = searchParams.get('offerId');
 
@@ -362,56 +316,36 @@ export function MyTicketsPage({ historyOnly = false }: MyTicketsPageProps = {}) 
 
   const acceptedOffers = useMemo(() => myOffers.filter(o => o.status === 'accepted'),  [myOffers]);
   const pendingOffers  = useMemo(() => myOffers.filter(o => o.status === 'pending'),   [myOffers]);
-  const terminalOffers = useMemo(() => myOffers.filter(o => ['rejected', 'converted', 'cancelled'].includes(o.status)), [myOffers]);
-
-  const completedTx = useMemo(() =>
-    bought.filter(tx => TERMINAL_STATUSES.includes(tx.status))
-      .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()),
-  [bought]);
 
   const attentionCount = acceptedOffers.length + actionRequired.length;
   const hasActive      = attentionCount > 0 || waitingTx.length > 0 || pendingOffers.length > 0;
   const dotColor       = attentionCount > 0 ? V : hasActive ? '#f59e0b' : GREEN;
-  const hasHistory     = completedTx.length > 0 || terminalOffers.length > 0;
   const hasAnything    = bought.length + myOffers.length > 0;
 
-  // ── Full history route (/my-tickets/historial) ────────────────────────────
-  if (historyOnly && isAuthenticated) {
-    const hasHistoryContent = completedTx.length > 0 || terminalOffers.length > 0;
-    return (
-      <div style={{ minHeight: '100vh', background: BG, ...S }}>
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-          @keyframes spin { to { transform: rotate(360deg) } }
-        `}</style>
-        <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 48, maxWidth: 560 }}>
-          <Link
-            to="/my-tickets"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: V, textDecoration: 'none', marginBottom: 18, ...S }}
-          >
-            ← {t('boughtTickets.backToPurchases', { defaultValue: 'Mis compras' })}
-          </Link>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
-            {t('sellerDashboard.history', { defaultValue: 'Historial' })}
-          </h1>
-          {isLoading && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
-          {error && <ErrorAlert message={error} className="mb-6" />}
-          {!isLoading && !error && !hasHistoryContent && (
-            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, padding: '40px 24px', textAlign: 'center' }}>
-              <p style={{ fontSize: 15, fontWeight: 700, color: DARK, marginBottom: 6, ...S }}>{t('boughtTickets.noHistoryYet', { defaultValue: 'Aún no tenés historial' })}</p>
-              <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.55, ...S }}>{t('boughtTickets.completedPurchasesAppearHere', { defaultValue: 'Las compras completadas y ofertas cerradas aparecerán aquí.' })}</p>
-            </div>
-          )}
-          {!isLoading && !error && hasHistoryContent && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {completedTx.map(tx => <HistoryTxRow key={tx.id} tx={tx} t={t} />)}
-              {terminalOffers.map(o => <HistoryOfferRow key={o.id} offer={o} t={t} />)}
-            </div>
-          )}
-        </PageContentMaxWidth>
-      </div>
-    );
-  }
+  const loadHistoryPage = useCallback(async (append: boolean) => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const cursor = append ? historyCursorRef.current : null;
+      const res    = await ticketsService.getActivityHistory('buyer', cursor, 15);
+      historyCursorRef.current = res.nextCursor;
+      setHistoryItems(prev => (append ? [...prev, ...res.items] : res.items));
+      setHistoryHasMore(res.hasMore);
+    } catch {
+      setHistoryError(t('common.errorLoading'));
+    } finally {
+      setHistoryLoading(false);
+      setHistoryFetched(true);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    if (!isAuthenticated || isLoading || !hasAnything) return;
+    historyCursorRef.current = null;
+    setHistoryItems([]);
+    setHistoryFetched(false);
+    void loadHistoryPage(false);
+  }, [isAuthenticated, isLoading, hasAnything, loadHistoryPage]);
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isAuthenticated) {
@@ -438,8 +372,13 @@ export function MyTicketsPage({ historyOnly = false }: MyTicketsPageProps = {}) 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
+        .mt-buyer-grid { display: flex; flex-direction: column; gap: 24px; }
+        @media (min-width: 768px) {
+          .mt-buyer-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); gap: 24px; align-items: start; }
+          .mt-history-scroll { max-height: min(55vh, 440px) !important; }
+        }
       `}</style>
-      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 48, maxWidth: 560 }}>
+      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 48 }}>
 
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
           {t('boughtTickets.title')}
@@ -464,123 +403,156 @@ export function MyTicketsPage({ historyOnly = false }: MyTicketsPageProps = {}) 
           </div>
         )}
 
-        {/* Single panel */}
+        {/* Mis compras (left / top) + Historial (right on desktop, bottom on mobile) */}
         {!isLoading && !error && hasAnything && (
-          <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+          <div className="mt-buyer-grid">
+            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: 'hidden', minWidth: 0 }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                <span style={{ fontSize: 14, fontWeight: 800, color: DARK, ...S }}>
+                  {t('boughtTickets.myPurchases', { defaultValue: 'Mis compras' })}
+                </span>
+                {attentionCount > 0 && (
+                  <span style={{ minWidth: 18, height: 18, borderRadius: 9, padding: '0 5px', fontSize: 10.5, fontWeight: 700, background: V, color: CARD, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {attentionCount}
+                  </span>
+                )}
+                {attentionCount > 0 && (
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: HINT, ...S }}>
+                    {t('sellerDashboard.requiresAttention', { defaultValue: 'Requiere atención' })}
+                  </span>
+                )}
+              </div>
 
-            {/* Panel header — mirrors SellerDashboardPage pattern */}
-            <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
-              <span style={{ fontSize: 14, fontWeight: 800, color: DARK, ...S }}>
-                {t('boughtTickets.myPurchases', { defaultValue: 'Mis compras' })}
-              </span>
-              {attentionCount > 0 && (
-                <span style={{ minWidth: 18, height: 18, borderRadius: 9, padding: '0 5px', fontSize: 10.5, fontWeight: 700, background: V, color: CARD, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {attentionCount}
-                </span>
-              )}
-              {attentionCount > 0 && (
-                <span style={{ marginLeft: 'auto', fontSize: 11, color: HINT, ...S }}>
-                  {t('sellerDashboard.requiresAttention', { defaultValue: 'Requiere atención' })}
-                </span>
-              )}
+              <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {acceptedOffers.length > 0 && (
+                  <div>
+                    <SubLabel
+                      icon={<AlertCircle size={11} />}
+                      label={t('boughtTickets.offersRequireAction', { defaultValue: 'Oferta aceptada — completá la compra' })}
+                      color={V}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {acceptedOffers.map(o => (
+                        <AcceptedOfferBanner key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {actionRequired.length > 0 && (
+                  <div>
+                    <SubLabel icon={<AlertCircle size={11} />} label={t('boughtTickets.pendingAwaitingMyAction')} color={V} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {actionRequired.map(tx => (
+                        <TransactionActionRequiredCard key={tx.id} tx={tx} variant="buyer" t={t} linkFrom="/my-tickets" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(waitingTx.length > 0 || pendingOffers.length > 0) && (
+                  <div>
+                    <SubLabel icon={<Clock size={11} />} label={t('boughtTickets.pendingAwaitingOtherAction')} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {waitingTx.map(tx => <BuyerWaitingRow key={tx.id} tx={tx} t={t} />)}
+                      {pendingOffers.map(o => (
+                        <PendingOfferRow key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {attentionCount === 0 && waitingTx.length === 0 && pendingOffers.length === 0 && (
+                  <p style={{ fontSize: 13, color: HINT, textAlign: 'center', padding: '8px 0', ...S }}>
+                    {t('boughtTickets.allClear', { defaultValue: 'Todo al día. Sin compras pendientes.' })}
+                  </p>
+                )}
+              </div>
             </div>
 
-            <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-              {/* 1 — Accepted offers: most urgent */}
-              {acceptedOffers.length > 0 && (
-                <div>
-                  <SubLabel
-                    icon={<AlertCircle size={11} />}
-                    label={t('boughtTickets.offersRequireAction', { defaultValue: 'Oferta aceptada — completá la compra' })}
-                    color={V}
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {acceptedOffers.map(o => (
-                      <AcceptedOfferBanner key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} />
-                    ))}
+            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <Clock size={14} style={{ color: HINT, flexShrink: 0 }} />
+                <span style={{ fontSize: 14, fontWeight: 800, color: DARK, ...S }}>
+                  {t('sellerDashboard.history', { defaultValue: 'Historial' })}
+                </span>
+              </div>
+              {/* List scrolls here; "Cargar más" stays fixed below so it is never clipped */}
+              <div
+                className="mt-history-scroll"
+                style={{
+                  maxHeight: 'min(45vh, 340px)',
+                  minHeight: 0,
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  WebkitOverflowScrolling: 'touch',
+                  overscrollBehavior: 'contain',
+                  padding: 14,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                {historyError && (
+                  <ErrorAlert message={historyError} className="mb-2" />
+                )}
+                {historyLoading && historyItems.length === 0 && (
+                  <LoadingSpinner size="md" text={t('common.loading')} className="py-6" />
+                )}
+                {historyFetched && !historyLoading && historyItems.length === 0 && !historyError && (
+                  <div style={{ padding: '20px 12px', textAlign: 'center' }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: DARK, marginBottom: 6, ...S }}>
+                      {t('boughtTickets.noHistoryYet', { defaultValue: 'Aún no tenés historial' })}
+                    </p>
+                    <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, ...S }}>
+                      {t('boughtTickets.completedPurchasesAppearHere', { defaultValue: 'Las compras completadas y ofertas cerradas aparecerán aquí.' })}
+                    </p>
                   </div>
-                </div>
-              )}
-
-              {/* 2 — Transactions needing buyer action */}
-              {actionRequired.length > 0 && (
-                <div>
-                  <SubLabel icon={<AlertCircle size={11} />} label={t('boughtTickets.pendingAwaitingMyAction')} color={V} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {actionRequired.map(tx => <BuyerActionRow key={tx.id} tx={tx} t={t} />)}
-                  </div>
-                </div>
-              )}
-
-              {/* 3 — In progress: waiting transactions + pending offers mixed */}
-              {(waitingTx.length > 0 || pendingOffers.length > 0) && (
-                <div>
-                  <SubLabel icon={<Clock size={11} />} label={t('boughtTickets.pendingAwaitingOtherAction')} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {waitingTx.map(tx => <BuyerWaitingRow key={tx.id} tx={tx} t={t} />)}
-                    {pendingOffers.map(o => (
-                      <PendingOfferRow key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* All clear */}
-              {attentionCount === 0 && waitingTx.length === 0 && pendingOffers.length === 0 && (
-                <p style={{ fontSize: 13, color: HINT, textAlign: 'center', padding: '8px 0', ...S }}>
-                  {t('boughtTickets.allClear', { defaultValue: 'Todo al día. Sin compras pendientes.' })}
-                </p>
-              )}
-
-              {/* 4 — History: collapsible preview */}
-              {hasHistory && (
-                <div>
-                  <button type="button" onClick={() => setShowHistory(v => !v)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: showHistory ? 10 : 0, width: '100%' }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: HINT, ...S }}>
-                      {t('sellerDashboard.history', { defaultValue: 'Historial' })}
-                    </span>
-                    <span style={{ fontSize: 9, color: HINT }}>{showHistory ? '▲' : '▼'}</span>
-                    {!showHistory && (
-                      <Link
-                        to="/my-tickets/historial"
-                        onClick={e => e.stopPropagation()}
-                        style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 600, color: V, textDecoration: 'none', ...S }}
-                      >
-                        {t('boughtTickets.viewHistory', { defaultValue: 'Ver todo' })} →
-                      </Link>
-                    )}
+                )}
+                {historyItems.map((item) =>
+                  item.type === 'transaction'
+                    ? <HistoryTxRow key={`tx-${item.transaction.id}`} tx={item.transaction} t={t} />
+                    : (
+                        <HistoryOfferRow
+                          key={`of-${(item.offer as OfferWithListingSummary).id}`}
+                          offer={item.offer as OfferWithListingSummary}
+                          t={t}
+                        />
+                      ),
+                )}
+              </div>
+              {historyHasMore && (
+                <div style={{ padding: '10px 14px 14px', borderTop: '1px solid #f0f0ee', background: CARD }}>
+                  <button
+                    type="button"
+                    disabled={historyLoading}
+                    onClick={() => void loadHistoryPage(true)}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 10,
+                      background: BG,
+                      border: `1px solid ${BORDER}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: V,
+                      cursor: historyLoading ? 'wait' : 'pointer',
+                      ...S,
+                      width: '100%',
+                    }}
+                  >
+                    {historyLoading ? t('common.loading') : t('boughtTickets.loadMoreHistory', { defaultValue: 'Cargar más' })}
                   </button>
-                  {showHistory && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      {completedTx.slice(0, 4).map(tx => <HistoryTxRow key={tx.id} tx={tx} t={t} />)}
-                      {terminalOffers.slice(0, 3).map(o => <HistoryOfferRow key={o.id} offer={o} t={t} />)}
-                      <Link to="/my-tickets/historial" style={{ textDecoration: 'none' }}>
-                        <div style={{
-                          padding: '9px 14px', borderRadius: 10,
-                          background: BG, border: `1px solid ${BORDER}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                          fontSize: 13, fontWeight: 700, color: V, cursor: 'pointer', ...S,
-                        }}>
-                          {t('boughtTickets.viewFullHistory', { defaultValue: 'Ver historial completo' })} →
-                        </div>
-                      </Link>
-                    </div>
-                  )}
                 </div>
               )}
-
             </div>
           </div>
         )}
       </PageContentMaxWidth>
     </div>
   );
-}
-
-/** Buyer purchase history (all completed transactions + closed offers). */
-export function BuyerHistoryPage() {
-  return <MyTicketsPage historyOnly />;
 }

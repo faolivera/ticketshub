@@ -30,6 +30,7 @@ import type {
   GetSellTicketConfigResponse,
   ValidateSellListingRequest,
   ValidateSellListingResponse,
+  GetActivityHistoryResponse,
 } from './bff.api';
 import {
   GetSellerProfileResponseSchema,
@@ -40,6 +41,7 @@ import {
   GetTransactionDetailsResponseSchema,
   GetSellTicketConfigResponseSchema,
   ValidateSellListingResponseSchema,
+  GetActivityHistoryResponseSchema,
 } from './schemas/api.schemas';
 
 @Controller('api')
@@ -106,6 +108,34 @@ export class BffController {
     @User() user: AuthenticatedUserPublicInfo,
   ): Promise<ApiResponse<GetMyTicketsResponse>> {
     const data = await this.bffService.getMyTickets(ctx, user.id);
+    return { success: true, data };
+  }
+
+  /**
+   * Paginated history: terminal transactions + closed offers (buyer or seller).
+   */
+  @Get('activity-history')
+  @UseGuards(JwtAuthGuard)
+  @ValidateResponse(GetActivityHistoryResponseSchema)
+  async getActivityHistory(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Query('role') role: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limitStr?: string,
+  ): Promise<ApiResponse<GetActivityHistoryResponse>> {
+    if (role !== 'buyer' && role !== 'seller') {
+      throw new BadRequestException('role must be buyer or seller');
+    }
+    const parsed = parseInt(limitStr ?? '15', 10);
+    const limit = Number.isFinite(parsed) ? parsed : 15;
+    const data = await this.bffService.getActivityHistory(
+      ctx,
+      user.id,
+      role as 'buyer' | 'seller',
+      cursor?.trim() ? cursor : null,
+      limit,
+    );
     return { success: true, data };
   }
 

@@ -41,7 +41,7 @@ import {
 } from "@/lib/design-tokens";
 import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero";
 import { ShieldSVG, MapSVG } from "@/app/components/site/SiteBrandIcons";
-import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar } from "lucide-react";
+import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar, SlidersHorizontal } from "lucide-react";
 
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
 
@@ -75,18 +75,26 @@ function eventToCardShape(apiEvent) {
 }
 
 const CATS   = ["Todos","Recital","Festival","Teatro","Deportes","Electrónica"];
+/** Maps landing pill label to API EventCategory */
+const CAT_TO_API = {
+  Recital: "Concert",
+  Festival: "Festival",
+  Teatro: "Theater",
+  Deportes: "Sports",
+  Electrónica: "Other",
+};
 const CITIES = ["Todas las ciudades","Buenos Aires","Córdoba","Rosario","Mendoza","La Plata","Tucumán"];
 const TRUST = [
   {
     Icon: Lock,
-    title: "Pago en escrow",
+    title: "Fondos protegidos",
     desc: "Tu plata está protegida hasta que tenés tu entrada en mano. No antes.",
     color: TRUST_ESCROW,
     bg: TRUST_ESCROW_BG,
   },
   {
     Icon: CheckCircle,
-    title: "Entradas verificadas",
+    title: "Vendedores verificados",
     desc: "Cada entrada pasa por nuestro proceso de validación antes de publicarse.",
     color: TRUST_VERIFIED,
     bg: TRUST_VERIFIED_BG,
@@ -107,6 +115,7 @@ export default function TicketsHub() {
   const [activeCity,  setActiveCity] = useState("Todas las ciudades");
   const [cityOpen,    setCityOpen]   = useState(false);
   const [citySearch,  setCitySearch] = useState("");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [query,       setQuery]      = useState("");
   const [hoveredCard,    setHovered]       = useState(null);
   const [events,         setEvents]        = useState([]);
@@ -115,7 +124,8 @@ export default function TicketsHub() {
   const [error,          setError]         = useState(null);
   const [offset,         setOffset]        = useState(0);
   const [hasMore,        setHasMore]       = useState(true);
-  const cityRef = useRef(null);
+  const cityRefDesktop = useRef(null);
+  const cityRefMobile = useRef(null);
 
   const PAGE_SIZE = 12;
 
@@ -169,7 +179,11 @@ export default function TicketsHub() {
 
   useEffect(() => {
     const h = (e) => {
-      if (cityRef.current && !cityRef.current.contains(e.target)) { setCityOpen(false); setCitySearch(""); }
+      const inDesk = cityRefDesktop.current?.contains(e.target);
+      const inMob = cityRefMobile.current?.contains(e.target);
+      if (inDesk || inMob) return;
+      setCityOpen(false);
+      setCitySearch("");
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
@@ -181,6 +195,14 @@ export default function TicketsHub() {
     const searchLower = (query || "").trim().toLowerCase();
     return events
       .filter((e) => {
+        if (activeCity !== "Todas las ciudades") {
+          const c = (e.location?.city || "").trim();
+          if (c !== activeCity) return false;
+        }
+        if (activeCat !== "Todos") {
+          const apiCat = CAT_TO_API[activeCat];
+          if (apiCat && e.category !== apiCat) return false;
+        }
         if (!searchLower) return true;
         const name = (e.name || "").toLowerCase();
         const venue = (e.venue || "").toLowerCase();
@@ -189,7 +211,7 @@ export default function TicketsHub() {
         return name.includes(searchLower) || venue.includes(searchLower) || city.includes(searchLower) || description.includes(searchLower);
       })
       .map(eventToCardShape);
-  }, [events, query]);
+  }, [events, query, activeCity, activeCat]);
 
   const catPill = (active) => ({
     display:"inline-flex", alignItems:"center",
@@ -237,65 +259,186 @@ export default function TicketsHub() {
           boxShadow: SHADOW_CARD_MD,
           padding:"14px 18px",
           marginBottom:28,
-          display:"flex", alignItems:"center", gap:14,
-          flexWrap:"wrap",
         }}>
-
-          {/* Search input — grows */}
-          <div style={{ position:"relative", flex:"1 1 220px", minWidth:0 }}>
-            <Search size={15} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:MUTED, pointerEvents:"none" }} />
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Buscá artista, evento o venue..."
-              style={{ width:"100%", padding:"9px 12px 9px 36px", border:`1.5px solid ${BORDER}`, borderRadius:10, fontSize:13.5, color:DARK, background:BG, transition:"border-color 0.18s, box-shadow 0.18s", ...S }}
-            />
-          </div>
-
-          {/* Divider */}
-          <div style={{ width:1, height:28, background:BORD2, flexShrink:0 }} />
-
-          {/* City dropdown */}
-          <div ref={cityRef} style={{ position:"relative", flexShrink:0 }}>
-            <button
-              onClick={() => { setCityOpen(!cityOpen); setCitySearch(""); }}
-              style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 12px", borderRadius:9, background:cityOpen ? VLIGHT : BG, border:`1.5px solid ${cityOpen ? V : BORDER}`, cursor:"pointer", ...S, fontSize:13, fontWeight:600, color:activeCity==="Todas las ciudades" ? MUTED : DARK, transition:"all 0.14s", whiteSpace:"nowrap" }}
-            >
-              <MapSVG size={13} color={activeCity==="Todas las ciudades" ? MUTED : BLUE} />
-              {activeCity==="Todas las ciudades" ? "Ciudad" : activeCity}
-              <ChevronDown size={12} style={{ color:MUTED, transform:cityOpen?"rotate(180deg)":"none", transition:"transform 0.14s" }} />
-            </button>
-            {cityOpen && (
-              <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, background:"white", border:`1px solid ${BORDER}`, borderRadius:12, boxShadow: SHADOW_DROP_LG, minWidth:210, zIndex:200, overflow:"hidden" }}>
-                <div style={{ padding:"9px 9px 7px", borderBottom:`1px solid ${BORDER}` }}>
-                  <div style={{ position:"relative" }}>
-                    <Search size={12} style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", color:MUTED }} />
-                    <input autoFocus value={citySearch} onChange={e => setCitySearch(e.target.value)} placeholder="Buscar ciudad..." style={{ width:"100%", padding:"6px 8px 6px 27px", border:`1px solid ${BORDER}`, borderRadius:7, fontSize:13, color:DARK, background:BG, ...S }} />
+          {/* Desktop: unchanged layout (hidden ≤768px) */}
+          <div className="th-desk-only" style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", width:"100%" }}>
+            <div style={{ position:"relative", flex:"1 1 220px", minWidth:0 }}>
+              <Search size={15} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:MUTED, pointerEvents:"none" }} />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("landing.searchPlaceholder")}
+                style={{ width:"100%", padding:"9px 12px 9px 36px", border:`1.5px solid ${BORDER}`, borderRadius:10, fontSize:13.5, color:DARK, background:BG, transition:"border-color 0.18s, box-shadow 0.18s", ...S }}
+              />
+            </div>
+            <div style={{ width:1, height:28, background:BORD2, flexShrink:0 }} />
+            <div ref={cityRefDesktop} style={{ position:"relative", flexShrink:0 }}>
+              <button
+                type="button"
+                onClick={() => { setCityOpen(!cityOpen); setCitySearch(""); }}
+                style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 12px", borderRadius:9, background:cityOpen ? VLIGHT : BG, border:`1.5px solid ${cityOpen ? V : BORDER}`, cursor:"pointer", ...S, fontSize:13, fontWeight:600, color:activeCity==="Todas las ciudades" ? MUTED : DARK, transition:"all 0.14s", whiteSpace:"nowrap" }}
+              >
+                <MapSVG size={13} color={activeCity==="Todas las ciudades" ? MUTED : BLUE} />
+                {activeCity==="Todas las ciudades" ? t("landing.cityLabel") : activeCity}
+                <ChevronDown size={12} style={{ color:MUTED, transform:cityOpen?"rotate(180deg)":"none", transition:"transform 0.14s" }} />
+              </button>
+              {cityOpen && (
+                <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, background:"white", border:`1px solid ${BORDER}`, borderRadius:12, boxShadow: SHADOW_DROP_LG, minWidth:210, zIndex:200, overflow:"hidden" }}>
+                  <div style={{ padding:"9px 9px 7px", borderBottom:`1px solid ${BORDER}` }}>
+                    <div style={{ position:"relative" }}>
+                      <Search size={12} style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", color:MUTED }} />
+                      <input autoFocus value={citySearch} onChange={(e) => setCitySearch(e.target.value)} placeholder={t("landing.searchCityPlaceholder")} style={{ width:"100%", padding:"6px 8px 6px 27px", border:`1px solid ${BORDER}`, borderRadius:7, fontSize:13, color:DARK, background:BG, ...S }} />
+                    </div>
+                  </div>
+                  <div style={{ maxHeight:185, overflowY:"auto" }}>
+                    {filteredCities.map((city) => (
+                      <button key={city} type="button" className="th-city-opt"
+                        onClick={() => { setActiveCity(city); setCityOpen(false); setCitySearch(""); }}
+                        style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", padding:"9px 13px", background:activeCity===city?VLIGHT:"white", border:"none", cursor:"pointer", textAlign:"left", fontSize:13, fontWeight:activeCity===city?600:400, color:activeCity===city?V:DARK, transition:"background 0.1s", ...S }}
+                      >
+                        {city}
+                        {activeCity===city && <Check size={12} style={{ color:V }} />}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div style={{ maxHeight:185, overflowY:"auto" }}>
-                  {filteredCities.map(city => (
-                    <button key={city} className="th-city-opt"
-                      onClick={() => { setActiveCity(city); setCityOpen(false); setCitySearch(""); }}
-                      style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", padding:"9px 13px", background:activeCity===city?VLIGHT:"white", border:"none", cursor:"pointer", textAlign:"left", fontSize:13, fontWeight:activeCity===city?600:400, color:activeCity===city?V:DARK, transition:"background 0.1s", ...S }}
+              )}
+            </div>
+            <div style={{ width:1, height:28, background:BORD2, flexShrink:0 }} />
+            <div className="th-frow" style={{ display:"flex", alignItems:"center", gap:6, overflowX:"auto", flex:"0 1 auto" }}>
+              {CATS.map((c) => (
+                <button key={c} type="button" onClick={() => setActiveCat(c)} style={catPill(activeCat===c)}>{c}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile: search + filters button; panel expands below */}
+          <div className="th-mob-only" style={{ width:"100%" }}>
+            <div style={{ display:"flex", alignItems:"stretch", gap:10, width:"100%" }}>
+              <div style={{ position:"relative", flex:1, minWidth:0 }}>
+                <Search size={15} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:MUTED, pointerEvents:"none" }} />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t("landing.searchPlaceholder")}
+                  style={{ width:"100%", minHeight:44, padding:"10px 12px 10px 36px", border:`1.5px solid ${BORDER}`, borderRadius:10, fontSize:15, color:DARK, background:BG, transition:"border-color 0.18s, box-shadow 0.18s", ...S }}
+                />
+              </div>
+              <button
+                type="button"
+                aria-label={t("landing.filters")}
+                aria-expanded={mobileFiltersOpen}
+                onClick={() => setMobileFiltersOpen((o) => !o)}
+                style={{
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  flexShrink:0, width:44, minWidth:44, minHeight:44, padding:0, borderRadius:10,
+                  border:`1.5px solid ${mobileFiltersOpen ? V : BORDER}`,
+                  background: mobileFiltersOpen ? VLIGHT : BG,
+                  color: mobileFiltersOpen ? V : DARK,
+                  cursor:"pointer", ...S,
+                }}
+              >
+                <SlidersHorizontal size={20} strokeWidth={2.2} aria-hidden />
+              </button>
+            </div>
+            {mobileFiltersOpen && (
+              <div
+                style={{
+                  marginTop:14,
+                  paddingTop:14,
+                  borderTop:`1px solid ${BORDER}`,
+                  display:"flex",
+                  flexDirection:"column",
+                  gap:18,
+                }}
+              >
+                <div>
+                  <span style={{ display:"block", fontSize:12, fontWeight:700, color:MUTED, textTransform:"uppercase", letterSpacing:"0.04em", marginBottom:8 }}>
+                    {t("landing.cityLabel")}
+                  </span>
+                  <div ref={cityRefMobile} style={{ position:"relative", width:"100%" }}>
+                    <button
+                      type="button"
+                      onClick={() => { setCityOpen(!cityOpen); setCitySearch(""); }}
+                      style={{
+                        display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", minHeight:48,
+                        gap:10, padding:"10px 14px", borderRadius:10,
+                        background:cityOpen ? VLIGHT : BG, border:`1.5px solid ${cityOpen ? V : BORDER}`,
+                        cursor:"pointer", ...S, fontSize:15, fontWeight:600, color:activeCity==="Todas las ciudades" ? MUTED : DARK,
+                      }}
                     >
-                      {city}
-                      {activeCity===city && <Check size={12} style={{ color:V }} />}
+                      <span style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <MapSVG size={16} color={activeCity==="Todas las ciudades" ? MUTED : BLUE} />
+                        {activeCity==="Todas las ciudades" ? t("landing.cityLabel") : activeCity}
+                      </span>
+                      <ChevronDown size={18} style={{ color:MUTED, flexShrink:0, transform:cityOpen?"rotate(180deg)":"none", transition:"transform 0.14s" }} />
                     </button>
-                  ))}
+                    {cityOpen && (
+                      <div style={{
+                        position:"absolute", top:"calc(100% + 6px)", left:0, right:0,
+                        background:"white", border:`1px solid ${BORDER}`, borderRadius:12,
+                        boxShadow: SHADOW_DROP_LG, zIndex:200, overflow:"hidden", maxHeight:260,
+                        display:"flex", flexDirection:"column",
+                      }}>
+                        <div style={{ padding:10, borderBottom:`1px solid ${BORDER}`, flexShrink:0 }}>
+                          <div style={{ position:"relative" }}>
+                            <Search size={14} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:MUTED }} />
+                            <input
+                              autoFocus
+                              value={citySearch}
+                              onChange={(e) => setCitySearch(e.target.value)}
+                              placeholder={t("landing.searchCityPlaceholder")}
+                              style={{ width:"100%", minHeight:44, padding:"8px 10px 8px 32px", border:`1px solid ${BORDER}`, borderRadius:8, fontSize:15, color:DARK, background:BG, ...S }}
+                            />
+                          </div>
+                        </div>
+                        <div style={{ overflowY:"auto", flex:1, WebkitOverflowScrolling:"touch" }}>
+                          {filteredCities.map((city) => (
+                            <button
+                              key={city}
+                              type="button"
+                              className="th-city-opt"
+                              onClick={() => { setActiveCity(city); setCityOpen(false); setCitySearch(""); }}
+                              style={{
+                                display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%",
+                                minHeight:48, padding:"12px 14px", background:activeCity===city?VLIGHT:"white",
+                                border:"none", borderBottom:`1px solid ${BORDER}`, cursor:"pointer", textAlign:"left",
+                                fontSize:15, fontWeight:activeCity===city?600:500, color:activeCity===city?V:DARK, ...S,
+                              }}
+                            >
+                              {city}
+                              {activeCity===city && <Check size={16} style={{ color:V }} />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ display:"block", fontSize:12, fontWeight:700, color:MUTED, textTransform:"uppercase", letterSpacing:"0.04em", marginBottom:10 }}>
+                    {t("landing.eventTypeLabel")}
+                  </span>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                    {CATS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setActiveCat(c)}
+                        style={{
+                          ...catPill(activeCat===c),
+                          padding:"10px 16px",
+                          fontSize:14,
+                          minHeight:44,
+                        }}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Divider */}
-          <div style={{ width:1, height:28, background:BORD2, flexShrink:0 }} />
-
-          {/* Category pills */}
-          <div className="th-frow" style={{ display:"flex", alignItems:"center", gap:6, overflowX:"auto", flex:"0 1 auto" }}>
-            {CATS.map(c => (
-              <button key={c} onClick={() => setActiveCat(c)} style={catPill(activeCat===c)}>{c}</button>
-            ))}
           </div>
         </div>
 

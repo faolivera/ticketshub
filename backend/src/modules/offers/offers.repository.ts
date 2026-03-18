@@ -90,6 +90,16 @@ export class OffersRepository
     return row ? this.mapToDomain(row) : undefined;
   }
 
+  async findByIds(ctx: Ctx, ids: string[]): Promise<Offer[]> {
+    this.logger.debug(ctx, 'findByIds', { count: ids.length });
+    if (ids.length === 0) return [];
+    const client = this.getClient(ctx);
+    const rows = await client.offer.findMany({
+      where: { id: { in: ids } },
+    });
+    return rows.map((r) => this.mapToDomain(r));
+  }
+
   async findByListingId(ctx: Ctx, listingId: string): Promise<Offer[]> {
     this.logger.debug(ctx, 'findByListingId', { listingId });
     const client = this.getClient(ctx);
