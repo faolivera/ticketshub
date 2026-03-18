@@ -10,7 +10,45 @@ import { ticketsService } from "@/api/services/tickets.service";
 import { formatDate, formatTime } from "@/lib/format-date";
 import { UserAvatar } from "@/app/components/UserAvatar";
 import { BackButton } from "@/app/components/BackButton";
-import { V, VLIGHT, BLUE, BLIGHT, DARK, MUTED, HINT, BG, CARD, SURFACE, BORDER, BORD2, GREEN, S, E } from "@/lib/design-tokens";
+import {
+  V,
+  VLIGHT,
+  BLUE,
+  BLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  SURFACE,
+  BORDER,
+  BORD2,
+  GREEN,
+  S,
+  E,
+  ERROR,
+  V_HOVER,
+  BLUE_HOVER,
+  VL_BORDER,
+  SHADOW_DROP,
+  SHADOW_CARD,
+  SHADOW_CARD_MD,
+  SURFACE_STICKY,
+  SHADOW_TICKET_HOVER,
+  GREEN_LIGHT,
+  ABORD,
+  V_SOFT,
+  V_MUTED_LIGHT,
+  SHADOW_V_SOFT,
+  SHADOW_V_STRONG,
+  AMBER_BG_LIGHT,
+  AMBER,
+  BLUE_BORDER_LIGHT,
+  OVERLAY_DARK_45,
+  OVERLAY_V_70,
+  SHADOW_HERO,
+  WHITE,
+} from "@/lib/design-tokens";
 
 const SORTS = ["Mejor opción", "Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
@@ -252,7 +290,7 @@ export default function EventDetail() {
     return (
       <div style={{ ...S, background: BG, minHeight: "100vh", padding: 24 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", textAlign: "center", padding: "48px 24px" }}>
-          <p style={{ color: "#b91c1c", fontSize: 16 }}>{error || t("eventTickets.eventNotFound")}</p>
+          <p style={{ color: ERROR, fontSize: 16 }}>{error || t("eventTickets.eventNotFound")}</p>
           <BackButton to="/" labelKey="eventTickets.backToEvents" />
         </div>
       </div>
@@ -273,30 +311,30 @@ export default function EventDetail() {
         /* Sector pills */
         .sec-pill { padding: 6px 14px; border-radius: 100px; border: 1.5px solid ${BORD2}; font-size: 12.5px; font-weight: 600; cursor: pointer; background: transparent; color: ${MUTED}; transition: all 0.14s; white-space: nowrap; font-family:'Plus Jakarta Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; }
         .sec-pill.active { background: ${V}; border-color: ${V}; color: white; }
-        .sec-pill:hover:not(.active) { border-color: #9ca3af; color: ${DARK}; }
+        .sec-pill:hover:not(.active) { border-color: ${HINT}; color: ${DARK}; }
 
         /* Date pills */
         .date-pill { padding: 6px 14px; border-radius: 100px; border: 1.5px solid ${BORD2}; font-size: 12.5px; font-weight: 600; cursor: pointer; background: transparent; color: ${MUTED}; transition: all 0.14s; white-space: nowrap; font-family:'Plus Jakarta Sans',sans-serif; }
         .date-pill.active { background: ${VLIGHT}; border-color: ${V}; color: ${V}; }
-        .date-pill:hover:not(.active) { border-color: #9ca3af; color: ${DARK}; }
+        .date-pill:hover:not(.active) { border-color: ${HINT}; color: ${DARK}; }
 
         /* Ticket card */
         .tk-card { background: white; border: 1px solid ${BORDER}; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.18s, transform 0.18s; cursor: pointer; }
-        .tk-card:hover { box-shadow: 0 8px 24px rgba(109,40,217,0.11); transform: translateY(-2px); }
+        .tk-card:hover { box-shadow: ${SHADOW_TICKET_HOVER}; transform: translateY(-2px); }
         .tk-card.best-opt { border: 2px solid ${V}; }
 
         /* Sort select */
         .sort-sel { border: 1.5px solid ${BORD2}; border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family:'Plus Jakarta Sans',sans-serif; color: ${DARK}; background: white; cursor: pointer; outline: none; }
 
         /* Sticky bar */
-        .sticky-bar { position:fixed; top:0; left:0; right:0; z-index:200; background:rgba(249,249,247,0.97); backdrop-filter:blur(14px); border-bottom:1px solid ${BORDER}; transform:translateY(-100%); transition:transform 0.22s ease; }
+        .sticky-bar { position:fixed; top:0; left:0; right:0; z-index:200; background:${SURFACE_STICKY}; backdrop-filter:blur(14px); border-bottom:1px solid ${BORDER}; transform:translateY(-100%); transition:transform 0.22s ease; }
         .sticky-bar.visible { transform:translateY(0); }
 
         /* CTA buy button */
         .btn-buy { background:${V}; color:white; border:none; border-radius:10px; width:100%; padding:11px 14px; font-size:13.5px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:background 0.15s; display:flex; align-items:center; justify-content:center; gap:8px; }
-        .btn-buy:hover { background:#5b21b6; }
+        .btn-buy:hover { background:${V_HOVER}; }
         .btn-buy.seated { background:${BLUE}; }
-        .btn-buy.seated:hover { background:#162d4a; }
+        .btn-buy.seated:hover { background:${BLUE_HOVER}; }
 
         .pills-row::-webkit-scrollbar { height: 0; }
       `}</style>
@@ -314,13 +352,13 @@ export default function EventDetail() {
               <button
                 type="button"
                 onClick={() => setDateOpen(!dateOpen)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 7, background: VLIGHT, border: "1px solid #ddd6fe", color: V, fontSize: 12.5, fontWeight: 600, cursor: "pointer", ...S, whiteSpace: "nowrap" }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 7, background: VLIGHT, border: `1px solid ${VL_BORDER}`, color: V, fontSize: 12.5, fontWeight: 600, cursor: "pointer", ...S, whiteSpace: "nowrap" }}
               >
                 {activeDate?.label}
                 <ChevronDown size={12} style={{ transform: dateOpen ? "rotate(180deg)" : "none", transition: "transform 0.14s" }} />
               </button>
               {dateOpen && EVENT.dates?.length > 0 && (
-                <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "white", border: `1px solid ${BORDER}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.1)", zIndex: 300, overflow: "hidden", minWidth: 200 }}>
+                <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "white", border: `1px solid ${BORDER}`, borderRadius: 10, boxShadow: SHADOW_DROP, zIndex: 300, overflow: "hidden", minWidth: 200 }}>
                   {EVENT.dates.map((d, i) => (
                     <button key={d.id} type="button" onClick={() => { setDateIdx(i); setDateOpen(false); }}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "10px 14px", background: dateIdx === i ? VLIGHT : "white", border: "none", cursor: "pointer", fontSize: 13, fontWeight: dateIdx === i ? 600 : 400, color: dateIdx === i ? V : DARK, ...S }}
@@ -354,7 +392,7 @@ export default function EventDetail() {
             <div className="ev-hero-content" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 0 }}>
               <div style={{ marginBottom: 16 }}>
                 <CategoryBadge label={EVENT.category} hero />
-                <h1 style={{ ...E, fontSize: "clamp(24px,3vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.5px", color: "#fff", margin: "10px 0 4px", textShadow: "0 1px 3px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.4)" }}>
+                <h1 style={{ ...E, fontSize: "clamp(24px,3vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.5px", color: WHITE, margin: "10px 0 4px", textShadow: "0 1px 3px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.4)" }}>
                   {EVENT.name}
                 </h1>
                 {EVENT.subtitle && <p style={{ fontSize: 14.5, color: "rgba(255,255,255,0.88)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>{EVENT.subtitle}</p>}
@@ -362,7 +400,7 @@ export default function EventDetail() {
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "rgba(255,255,255,0.85)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
                   <MapPin size={14} style={{ color: BLIGHT, flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, color: "#fff" }}>{EVENT.venue}</span>
+                  <span style={{ fontWeight: 600, color: WHITE }}>{EVENT.venue}</span>
                   {EVENT.location && <><span>·</span><span>{EVENT.location}</span></>}
                 </div>
               </div>
@@ -393,7 +431,7 @@ export default function EventDetail() {
                   <button
                     type="button"
                     onClick={scrollToTickets}
-                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 10, background: V, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", ...S, boxShadow: "0 4px 18px rgba(109,40,217,0.28)", flexShrink: 0 }}
+                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 10, background: V, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", ...S, boxShadow: SHADOW_V_SOFT, flexShrink: 0 }}
                   >
                     Ver entradas <ArrowRight size={15} />
                   </button>
@@ -402,8 +440,8 @@ export default function EventDetail() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
                 {[
                   { icon: <Lock size={12} style={{ color: BLIGHT }} />, text: t("landing.trustSecurePayment") },
-                  { icon: <CheckCircle size={12} style={{ color: "#86efac" }} />, text: t("eventTickets.buyerProtection") },
-                  { icon: <RefreshCw size={12} style={{ color: "#fde68a" }} />, text: t("landing.trustRefund") },
+                  { icon: <CheckCircle size={12} style={{ color: GREEN_LIGHT }} />, text: t("eventTickets.buyerProtection") },
+                  { icon: <RefreshCw size={12} style={{ color: ABORD }} />, text: t("landing.trustRefund") },
                 ].map(({ icon, text }) => (
                   <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "rgba(255,255,255,0.85)", fontWeight: 500, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {icon} {text}
@@ -414,7 +452,7 @@ export default function EventDetail() {
           </div>
         </div> */}
 
-<div ref={heroRef} style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, boxShadow: "0 2px 20px rgba(0,0,0,0.14)", position: "relative" }}>
+<div ref={heroRef} style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, boxShadow: SHADOW_HERO, position: "relative" }}>
 
 {/* Blurred background image — neutral brightness so any palette works */}
 <div style={{
@@ -459,7 +497,7 @@ export default function EventDetail() {
     {/* Meta */}
     <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "rgba(255,255,255,0.7)" }}>
-        <MapPin size={14} style={{ color: "#a78bfa", flexShrink: 0 }} />
+        <MapPin size={14} style={{ color: V_SOFT, flexShrink: 0 }} />
         <span style={{ fontWeight: 600, color: "white" }}>{EVENT.venue}</span>
         <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
         <span>{EVENT.location}</span>
@@ -480,7 +518,7 @@ export default function EventDetail() {
               padding: "6px 14px", borderRadius: 100, fontSize: 12.5, fontWeight: 600,
               cursor: "pointer", transition: "all 0.14s", whiteSpace: "nowrap",
               border: dateIdx === i ? "1.5px solid rgba(196,181,253,0.9)" : "1.5px solid rgba(255,255,255,0.2)",
-              background: dateIdx === i ? "rgba(109,40,217,0.7)" : "rgba(255,255,255,0.1)",
+              background: dateIdx === i ? OVERLAY_V_70 : "rgba(255,255,255,0.1)",
               color: dateIdx === i ? "white" : "rgba(255,255,255,0.7)",
               backdropFilter: "blur(8px)",
               ...S,
@@ -497,12 +535,12 @@ export default function EventDetail() {
       display: "flex", alignItems: "center", justifyContent: "space-between",
       flexWrap: "wrap", gap: 16,
       padding: "14px 18px", borderRadius: 14, marginBottom: 20,
-      background: "rgba(0,0,0,0.45)",
+      background: OVERLAY_DARK_45,
       border: "1px solid rgba(255,255,255,0.12)",
       backdropFilter: "blur(12px)",
     }}>
       <div>
-        <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c4b5fd", marginBottom: 4 }}>
+        <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: V_MUTED_LIGHT, marginBottom: 4 }}>
           Entradas desde
         </p>
         <p style={{ fontSize: "clamp(26px,3.5vw,36px)", fontWeight: 800, color: "white", lineHeight: 1 }}>
@@ -510,12 +548,12 @@ export default function EventDetail() {
           <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginLeft: 6 }}>ARS</span>
         </p>
         <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 5 }}>
-          <span style={{ color: "#c4b5fd", fontWeight: 600 }}>{activeDate.count} entradas</span> disponibles
+          <span style={{ color: V_MUTED_LIGHT, fontWeight: 600 }}>{activeDate.count} entradas</span> disponibles
         </p>
       </div>
       <button
         onClick={scrollToTickets}
-        style={{ display: "flex", alignItems: "center", gap: 8, padding: "13px 24px", borderRadius: 11, background: V, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", ...S, boxShadow: "0 4px 20px rgba(109,40,217,0.5)", flexShrink: 0 }}
+        style={{ display: "flex", alignItems: "center", gap: 8, padding: "13px 24px", borderRadius: 11, background: V, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", ...S, boxShadow: SHADOW_V_STRONG, flexShrink: 0 }}
       >
         Ver entradas <ArrowRight size={15} />
       </button>
@@ -524,9 +562,9 @@ export default function EventDetail() {
     {/* Trust micro-signals — higher opacity for legibility on any image */}
     <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
       {[
-        { icon: <Lock size={12} style={{ color: "#c4b5fd" }} />,          text: "Pago en escrow" },
-        { icon: <CheckCircle size={12} style={{ color: "#86efac" }} />,   text: "Entradas verificadas" },
-        { icon: <RefreshCw size={12} style={{ color: "#fde68a" }} />,     text: "Reembolso garantizado" },
+        { icon: <Lock size={12} style={{ color: V_MUTED_LIGHT }} />, text: "Pago en escrow" },
+        { icon: <CheckCircle size={12} style={{ color: GREEN_LIGHT }} />, text: "Entradas verificadas" },
+        { icon: <RefreshCw size={12} style={{ color: ABORD }} />, text: "Reembolso garantizado" },
       ].map(({ icon, text }) => (
         <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>
           {icon} {text}
@@ -538,7 +576,7 @@ export default function EventDetail() {
 </div>
 
         {/* Tickets section */}
-        <div ref={ticketsRef} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+        <div ref={ticketsRef} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, boxShadow: SHADOW_CARD_MD }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
             <div>
               <h2 style={{ ...E, fontSize: 22, fontWeight: 400, color: DARK, letterSpacing: "-0.3px" }}>Entradas disponibles</h2>
@@ -609,7 +647,7 @@ function TicketCard({ ticket, eventSlug }) {
   return (
     <div className={`tk-card${isBest ? " best-opt" : ""}`}>
       {isBest && (
-        <div style={{ background: VLIGHT, borderBottom: "1px solid #ddd6fe", padding: "7px 14px", display: "flex", alignItems: "center", gap: 7 }}>
+        <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: "7px 14px", display: "flex", alignItems: "center", gap: 7 }}>
           <Star size={12} style={{ color: V, fill: V }} />
           <span style={{ fontSize: 11.5, fontWeight: 700, color: V }}>Mejor opción · Precio más bajo</span>
         </div>
@@ -629,17 +667,17 @@ function TicketCard({ ticket, eventSlug }) {
         </div>
         <div style={{ minHeight: 24, marginBottom: 12, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
           {urgency === "últimas" && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", fontSize: 11, fontWeight: 700 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}`, fontSize: 11, fontWeight: 700 }}>
               <Zap size={9} /> Última{qty > 1 ? "s" : ""} {qty}
             </span>
           )}
           {seated && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: BLIGHT, color: BLUE, border: "1px solid #bfd3ea", fontSize: 11, fontWeight: 600 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: BLIGHT, color: BLUE, border: `1px solid ${BLUE_BORDER_LIGHT}`, fontSize: 11, fontWeight: 600 }}>
               Numerada
             </span>
           )}
           {acceptsOffers && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", fontSize: 11, fontWeight: 600 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}`, fontSize: 11, fontWeight: 600 }}>
               <MessageCircle size={10} /> {t("eventTickets.acceptsOffers")}
             </span>
           )}
@@ -689,10 +727,10 @@ function TicketListRow({ ticket, eventSlug }) {
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
         {badge === "best" && (
-          <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 9px", borderRadius: 100, background: VLIGHT, color: V, border: "1px solid #ddd6fe", fontSize: 11, fontWeight: 700 }}>Mejor precio</span>
+          <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 9px", borderRadius: 100, background: VLIGHT, color: V, border: `1px solid ${VL_BORDER}`, fontSize: 11, fontWeight: 700 }}>Mejor precio</span>
         )}
         {acceptsOffers && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", fontSize: 11, fontWeight: 600 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}`, fontSize: 11, fontWeight: 600 }}>
             <MessageCircle size={10} /> {t("eventTickets.acceptsOffers")}
           </span>
         )}

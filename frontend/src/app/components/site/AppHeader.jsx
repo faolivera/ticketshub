@@ -4,7 +4,21 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { NotificationBell } from "@/app/components/NotificationBell";
 import { HubSVG } from "./SiteBrandIcons";
-import { V, VLIGHT, DARK, MUTED, BORDER, S, E } from "@/lib/design-tokens";
+import {
+  V,
+  VLIGHT,
+  V_c1,
+  DARK,
+  MUTED,
+  BORDER,
+  S,
+  E,
+  BG_STICKY_HEADER,
+  SHADOW_DROP,
+  SHADOW_DROP_LG,
+  SHADOW_LANG_PILL,
+  DESTRUCTIVE,
+} from "@/lib/design-tokens";
 import { ChevronDown, Languages, LogOut, MessageCircle, Shield, Ticket, User } from "lucide-react";
 
 /**
@@ -46,7 +60,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
           position: "sticky",
           top: 0,
           zIndex: 100,
-          background: "rgba(243,243,240,0.97)",
+          background: BG_STICKY_HEADER,
           backdropFilter: "blur(16px)",
           borderBottom: `1px solid ${BORDER}`,
         }}
@@ -100,7 +114,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
                   gap: 6,
                   padding: "6px 12px",
                   borderRadius: 8,
-                  background: "#7c3aed",
+                  background: V_c1,
                   color: "white",
                   fontSize: 12,
                   fontWeight: 600,
@@ -150,7 +164,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
                       background: "white",
                       border: `1px solid ${BORDER}`,
                       borderRadius: 10,
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                      boxShadow: SHADOW_DROP,
                       zIndex: 50,
                       overflow: "hidden",
                     }}
@@ -234,7 +248,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
                         background: "white",
                         border: `1px solid ${BORDER}`,
                         borderRadius: 10,
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                        boxShadow: SHADOW_DROP,
                         zIndex: 50,
                         overflow: "hidden",
                       }}
@@ -339,7 +353,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
                       background: "white",
                       border: `1px solid ${BORDER}`,
                       borderRadius: 12,
-                      boxShadow: "0 8px 28px rgba(0,0,0,0.12)",
+                      boxShadow: SHADOW_DROP_LG,
                       zIndex: 50,
                       padding: 6,
                     }}
@@ -479,7 +493,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
                               fontSize: 12,
                               fontWeight: 700,
                               letterSpacing: "0.06em",
-                              boxShadow: i18n.language === "en" ? "0 1px 3px rgba(109,40,217,0.35)" : "none",
+                              boxShadow: i18n.language === "en" ? SHADOW_LANG_PILL : "none",
                               transition: "background 0.15s, color 0.15s, box-shadow 0.15s",
                               ...S,
                             }}
@@ -503,7 +517,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
                               fontSize: 12,
                               fontWeight: 700,
                               letterSpacing: "0.06em",
-                              boxShadow: i18n.language === "es" ? "0 1px 3px rgba(109,40,217,0.35)" : "none",
+                              boxShadow: i18n.language === "es" ? SHADOW_LANG_PILL : "none",
                               transition: "background 0.15s, color 0.15s, box-shadow 0.15s",
                               ...S,
                             }}
@@ -527,7 +541,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
                         gap: 10,
                         padding: "10px 12px",
                         borderRadius: 8,
-                        color: "#dc2626",
+                        color: DESTRUCTIVE,
                         border: "none",
                         background: "none",
                         cursor: "pointer",

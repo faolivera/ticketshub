@@ -3,7 +3,42 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { eventsService } from "@/api/services/events.service";
 import { formatDate } from "@/lib/format-date";
-import { V, VLIGHT, BLUE, BLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E } from "@/lib/design-tokens";
+import {
+  V,
+  VLIGHT,
+  BLUE,
+  BLIGHT,
+  DARK,
+  MUTED,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  S,
+  E,
+  TRUST_ESCROW,
+  TRUST_ESCROW_BG,
+  TRUST_VERIFIED,
+  TRUST_VERIFIED_BG,
+  AMBER_c1,
+  ABG,
+  AMBER,
+  ABORD,
+  AMBER_BG_LIGHT,
+  ERROR,
+  BADGE_DEMAND_BG,
+  ERROR_DARK,
+  BADGE_DEMAND_BORDER,
+  SHADOW_CARD_HOVER,
+  SHADOW_CARD_SM,
+  SHADOW_DROP_LG,
+  SHADOW_CARD_MD,
+  GRADIENT_CARD_TOP,
+  OVERLAY_V_STRONG,
+  OVERLAY_DARK_45,
+  V_SOFT,
+  V_FOCUS_RING,
+} from "@/lib/design-tokens";
 import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero";
 import { ShieldSVG, MapSVG } from "@/app/components/site/SiteBrandIcons";
 import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar } from "lucide-react";
@@ -41,10 +76,28 @@ function eventToCardShape(apiEvent) {
 
 const CATS   = ["Todos","Recital","Festival","Teatro","Deportes","Electrónica"];
 const CITIES = ["Todas las ciudades","Buenos Aires","Córdoba","Rosario","Mendoza","La Plata","Tucumán"];
-const TRUST  = [
-  { Icon:Lock,        title:"Pago en escrow",         desc:"Tu plata está protegida hasta que tenés tu entrada en mano. No antes.",                 color:"#4f46e5", bg:"#eef2ff" },
-  { Icon:CheckCircle, title:"Entradas verificadas",   desc:"Cada entrada pasa por nuestro proceso de validación antes de publicarse.",              color:"#0f766e", bg:"#f0fdfa" },
-  { Icon:RefreshCw,   title:"Garantía total",          desc:"Si el evento no ocurre o la entrada es inválida, devolvemos el 100% de tu dinero.",    color:"#b45309", bg:"#fffbeb" },
+const TRUST = [
+  {
+    Icon: Lock,
+    title: "Pago en escrow",
+    desc: "Tu plata está protegida hasta que tenés tu entrada en mano. No antes.",
+    color: TRUST_ESCROW,
+    bg: TRUST_ESCROW_BG,
+  },
+  {
+    Icon: CheckCircle,
+    title: "Entradas verificadas",
+    desc: "Cada entrada pasa por nuestro proceso de validación antes de publicarse.",
+    color: TRUST_VERIFIED,
+    bg: TRUST_VERIFIED_BG,
+  },
+  {
+    Icon: RefreshCw,
+    title: "Garantía total",
+    desc: "Si el evento no ocurre o la entrada es inválida, devolvemos el 100% de tu dinero.",
+    color: AMBER_c1,
+    bg: ABG,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -165,7 +218,7 @@ export default function TicketsHub() {
         @media(max-width:768px){ .th-desk-only{ display:none!important; } }
         .th-frow::-webkit-scrollbar{ height:0; }
         .th-city-opt:hover{ background:${BG}!important; }
-        input:focus{ border-color:${V}!important; box-shadow:0 0 0 3px rgba(109,40,217,0.1)!important; outline:none; }
+        input:focus{ border-color:${V}!important; box-shadow:${V_FOCUS_RING}!important; outline:none; }
         .th-card-btn:hover{ background:${V}!important; border-color:${V}!important; color:white!important; }
         .th-date-pill:hover{ border-color:${V}!important; color:${V}!important; background:${VLIGHT}!important; }
         @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
@@ -181,7 +234,7 @@ export default function TicketsHub() {
         <div style={{
           background:CARD, borderRadius:16,
           border:`1px solid ${BORDER}`,
-          boxShadow:"0 2px 10px rgba(0,0,0,0.05)",
+          boxShadow: SHADOW_CARD_MD,
           padding:"14px 18px",
           marginBottom:28,
           display:"flex", alignItems:"center", gap:14,
@@ -213,7 +266,7 @@ export default function TicketsHub() {
               <ChevronDown size={12} style={{ color:MUTED, transform:cityOpen?"rotate(180deg)":"none", transition:"transform 0.14s" }} />
             </button>
             {cityOpen && (
-              <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, background:"white", border:`1px solid ${BORDER}`, borderRadius:12, boxShadow:"0 8px 28px rgba(0,0,0,0.1)", minWidth:210, zIndex:200, overflow:"hidden" }}>
+              <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, background:"white", border:`1px solid ${BORDER}`, borderRadius:12, boxShadow: SHADOW_DROP_LG, minWidth:210, zIndex:200, overflow:"hidden" }}>
                 <div style={{ padding:"9px 9px 7px", borderBottom:`1px solid ${BORDER}` }}>
                   <div style={{ position:"relative" }}>
                     <Search size={12} style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", color:MUTED }} />
@@ -256,7 +309,7 @@ export default function TicketsHub() {
         </div>
 
         {error ? (
-          <div style={{ textAlign:"center", padding:"56px 24px", color:"#b91c1c" }}>
+          <div style={{ textAlign:"center", padding:"56px 24px", color: ERROR }}>
             <p style={{ fontSize:14 }}>{error}</p>
           </div>
         ) : isLoading ? (
@@ -323,8 +376,14 @@ function EventCard({ event, index, hovered, onHover }) {
   const datesLabel = dates.length === 0 ? "" : dates.join(", ");
 
   const urgBadge = (type) => {
-    if (type === "últimas") return { bg: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" };
-    if (type === "demanda") return { bg: "#fee2e2", color: "#991b1b", border: "1px solid #fca5a5" };
+    if (type === "últimas")
+      return { bg: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}` };
+    if (type === "demanda")
+      return {
+        bg: BADGE_DEMAND_BG,
+        color: ERROR_DARK,
+        border: `1px solid ${BADGE_DEMAND_BORDER}`,
+      };
     return {};
   };
 
@@ -338,7 +397,7 @@ function EventCard({ event, index, hovered, onHover }) {
           borderRadius: 14,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
-          boxShadow: hovered ? "0 10px 28px rgba(109,40,217,0.12), 0 2px 6px rgba(0,0,0,0.06)" : "0 1px 4px rgba(0,0,0,0.05)",
+          boxShadow: hovered ? SHADOW_CARD_HOVER : SHADOW_CARD_SM,
           transform: hovered ? "translateY(-3px)" : "translateY(0)",
           transition: "all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
           cursor: "pointer",
@@ -350,7 +409,7 @@ function EventCard({ event, index, hovered, onHover }) {
             alt={event.name}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block", transform: hovered ? "scale(1.05)" : "scale(1)", transition: "transform 0.38s ease" }}
           />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,15,26,0.55) 0%, transparent 52%)" }} />
+          <div style={{ position: "absolute", inset: 0, background: GRADIENT_CARD_TOP }} />
 
           {event.badge && (
             <div style={{ position: "absolute", top: 9, left: 9 }}>
@@ -361,13 +420,13 @@ function EventCard({ event, index, hovered, onHover }) {
           )}
 
           {multi && (
-            <div style={{ position: "absolute", top: 9, right: 9, background: "rgba(109,40,217,0.82)", backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 700, color: "white", ...S2 }}>
+            <div style={{ position: "absolute", top: 9, right: 9, background: OVERLAY_V_STRONG, backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 700, color: "white", ...S2 }}>
               {dates.length} fechas
             </div>
           )}
 
           {!event.badge && event.available != null && (
-            <div style={{ position: "absolute", bottom: 8, right: 9, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 600, color: "white", ...S2 }}>
+            <div style={{ position: "absolute", bottom: 8, right: 9, background: OVERLAY_DARK_45, backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 600, color: "white", ...S2 }}>
               {event.available} disponibles
             </div>
           )}
@@ -415,8 +474,37 @@ function EventCard({ event, index, hovered, onHover }) {
 
 // ─── HERO-ONLY SVG ICONS ─────────────────────────────────────────────────────
 function CheckSVG({ size = 13 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={V_SOFT}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
 }
 function UsersSVG({ size = 13 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={V_SOFT}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 00-3-3.87" />
+      <path d="M16 3.13a4 4 0 010 7.75" />
+    </svg>
+  );
 }

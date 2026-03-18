@@ -1,13 +1,25 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { eventsService } from "@/api/services/events.service";
-import { V, BORDER, S, E } from "@/lib/design-tokens";
+import {
+  V,
+  BORDER,
+  S,
+  E,
+  TRUST_ESCROW,
+  TRUST_VERIFIED,
+  AMBER_c1,
+  SHADOW_CARD,
+  GRADIENT_HERO_OVERLAY,
+  SHADOW_HERO_CTA,
+  OVERLAY_DARK_45,
+} from "@/lib/design-tokens";
 import { ArrowRight, Lock, CheckCircle, RefreshCw } from "lucide-react";
 
 const TRUST = [
-  { Icon: Lock, title: "Pago en escrow", color: "#4f46e5" },
-  { Icon: CheckCircle, title: "Entradas verificadas", color: "#0f766e" },
-  { Icon: RefreshCw, title: "Garantía total", color: "#b45309" },
+  { Icon: Lock, title: "Pago en escrow", color: TRUST_ESCROW },
+  { Icon: CheckCircle, title: "Entradas verificadas", color: TRUST_VERIFIED },
+  { Icon: RefreshCw, title: "Garantía total", color: AMBER_c1 },
 ];
 
 const ROTATE_INTERVAL_MS = 6000;
@@ -94,7 +106,7 @@ export function HighlightedEventsHero() {
         borderRadius: 20,
         overflow: "hidden",
         border: `1px solid ${BORDER}`,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+        boxShadow: SHADOW_CARD,
         marginBottom: 14,
       }}
     >
@@ -131,7 +143,7 @@ export function HighlightedEventsHero() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(105deg, rgba(15,15,26,0.88) 0%, rgba(15,15,26,0.72) 40%, rgba(15,15,26,0.25) 75%, rgba(15,15,26,0.1) 100%)",
+              GRADIENT_HERO_OVERLAY,
           }}
         />
         <div
@@ -185,7 +197,7 @@ export function HighlightedEventsHero() {
                 cursor: "pointer",
                 textDecoration: "none",
                 ...S,
-                boxShadow: "0 4px 18px rgba(109,40,217,0.4)",
+                boxShadow: SHADOW_HERO_CTA,
               }}
             >
               Ver Entradas <ArrowRight size={14} />
@@ -210,7 +222,7 @@ export function HighlightedEventsHero() {
                 alignItems: "center",
                 padding: preferSquareLayout ? "8px 10px" : "12px 16px",
                 borderRadius: 12,
-                backgroundColor: "rgba(0,0,0,0.45)",
+                backgroundColor: OVERLAY_DARK_45,
                 backdropFilter: "blur(6px)",
                 maxWidth: "100%",
                 overflowX: preferSquareLayout ? "auto" : undefined,

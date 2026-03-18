@@ -15,8 +15,31 @@ import { formatDateTime, formatMonthYear } from "@/lib/format-date";
 import { formatCurrencyFromUnits } from "@/lib/format-currency";
 import { useUser } from "@/app/contexts/UserContext";
 import {
-  V, VLIGHT, BLUE, DARK, MUTED, HINT, BG, CARD, SURFACE, BORDER, BORD2,
-  GREEN, GLIGHT, GBORD, AMBER, ABG, ABORD, S, E
+  V,
+  VLIGHT,
+  BLUE,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  SURFACE,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  AMBER,
+  ABG,
+  ABORD,
+  S,
+  E,
+  V_FOCUS_RING,
+  AMBER_TEXT_DARK,
+  AMBER_BG_LIGHT,
+  SHADOW_CARD,
+  SHADOW_CARD_SM,
+  WARN_SOLID,
 } from "@/lib/design-tokens";
 import { LoadingSpinner } from "@/app/components/LoadingSpinner";
 import { ErrorMessage, ErrorAlert } from "@/app/components/ErrorMessage";
@@ -508,9 +531,9 @@ export default function Checkout() {
         .qty-btn:disabled { opacity: 0.35; cursor: not-allowed; }
         .pay-option { padding: 13px 16px; border-radius: 10px; border: 1.5px solid ${BORD2}; background: white; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.14s; }
         .pay-option.selected { border-color: ${V}; background: ${VLIGHT}; }
-        .pay-option:hover:not(.selected) { border-color: #9ca3af; }
+        .pay-option:hover:not(.selected) { border-color: ${HINT}; }
         .offer-input { width: 100%; padding: 10px 14px; border: 1.5px solid ${BORD2}; border-radius: 10px; font-size: 14px; color: ${DARK}; background: ${BG}; font-family: 'Plus Jakarta Sans', sans-serif; outline: none; transition: border-color 0.15s; }
-        .offer-input:focus { border-color: ${V}; box-shadow: 0 0 0 3px rgba(109,40,217,0.1); }
+        .offer-input:focus { border-color: ${V}; box-shadow: ${V_FOCUS_RING}; }
         .checkbox-custom { width: 18px; height: 18px; border-radius: 5px; border: 2px solid ${BORD2}; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.14s; }
         .checkbox-custom.checked { background: ${V}; border-color: ${V}; }
       `}</style>
@@ -529,7 +552,7 @@ export default function Checkout() {
           {isOwnListing && (
             <div style={{ background: ABG, border: `1.5px solid ${ABORD}`, borderRadius: 14, padding: 18 }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: AMBER, marginBottom: 4 }}>{t("buyTicket.ownListingPreview")}</p>
-              <p style={{ fontSize: 13, color: "#78350f", lineHeight: 1.5 }}>{t("buyTicket.ownListingPreviewDescription")}</p>
+              <p style={{ fontSize: 13, color: AMBER_TEXT_DARK, lineHeight: 1.5 }}>{t("buyTicket.ownListingPreviewDescription")}</p>
             </div>
           )}
 
@@ -686,12 +709,12 @@ export default function Checkout() {
           {isAuthenticated && (missingV2 || missingV3) && (
             <div style={{ background: ABG, border: `1.5px solid ${ABORD}`, borderRadius: 14, padding: 18 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 9, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: AMBER_BG_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <AlertCircle size={18} style={{ color: AMBER }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: AMBER, marginBottom: 4 }}>{t("buyTicket.verificationRequiredTitle")}</p>
-                  <p style={{ fontSize: 13, color: "#78350f", lineHeight: 1.55, marginBottom: 14 }}>
+                  <p style={{ fontSize: 13, color: AMBER_TEXT_DARK, lineHeight: 1.55, marginBottom: 14 }}>
                     {t("buyTicket.verificationRequiredIntro")} {[missingV1 && t("buyTicket.missingEmail"), missingV2 && t("buyTicket.missingPhone"), missingV3 && t("buyTicket.missingIdentity")].filter(Boolean).join(", ")}.
                   </p>
                   <Link
@@ -716,7 +739,7 @@ export default function Checkout() {
 
         {/* Right column */}
         <div className="co-sticky">
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, overflow: "hidden", boxShadow: SHADOW_CARD }}>
             <div style={{ padding: "20px 22px 16px", borderBottom: `1px solid ${BORDER}` }}>
               <h2 style={{ ...E, fontSize: 20, fontWeight: 400, color: DARK, letterSpacing: "-0.3px", marginBottom: 2 }}>{t("buyTicket.paymentSummary")}</h2>
               <p style={{ fontSize: 13, color: MUTED }}>{listing.eventName} · {sectorName}</p>
@@ -838,7 +861,7 @@ export default function Checkout() {
 
 function Section({ title, children }) {
   return (
-    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "22px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "22px", boxShadow: SHADOW_CARD_SM }}>
       <h2 style={{ ...E, fontSize: 20, fontWeight: 400, color: DARK, letterSpacing: "-0.3px", marginBottom: 18 }}>{title}</h2>
       {children}
     </div>
@@ -871,7 +894,7 @@ function PriceLine({ label, sub, value }) {
 function BuyButton({ label, variant, onClick, total, disabled, isLoading }) {
   const styles = {
     primary: { background: V, color: "white", opacity: 1, cursor: "pointer" },
-    warn: { background: "#f59e0b", color: "white", opacity: 1, cursor: "pointer" },
+    warn: { background: WARN_SOLID, color: "white", opacity: 1, cursor: "pointer" },
     disabled: { background: BORD2, color: MUTED, opacity: 0.8, cursor: "not-allowed" },
   };
   const st = styles[variant] || styles.disabled;

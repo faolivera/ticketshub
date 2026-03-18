@@ -1,12 +1,23 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { HubSVG, ShieldSVG } from "./SiteBrandIcons";
-import { V, DARK, BORDER, S, E } from "@/lib/design-tokens";
+import {
+  V,
+  DARK,
+  BORDER,
+  S,
+  E,
+  FOOTER_MUTED,
+  FOOTER_LINK,
+  FOOTER_BORDER_TOP,
+  FOOTER_CAPTION,
+  V_SOFT,
+} from "@/lib/design-tokens";
 
 /** Global site footer (non-admin routes). */
 export function AppFooter() {
   return (
-    <footer style={{ background: DARK, color: "rgba(255,255,255,0.5)", padding: "40px 24px 26px" }}>
+    <footer style={{ background: DARK, color: FOOTER_MUTED, padding: "40px 24px 26px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         <div
           style={{
@@ -41,19 +52,19 @@ export function AppFooter() {
             <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>Plataforma</div>
             <Link
               to="/"
-              style={{ display: "block", fontSize: 13, marginBottom: 7, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}
+              style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
               Explorar eventos
             </Link>
             <Link
               to="/sell-ticket"
-              style={{ display: "block", fontSize: 13, marginBottom: 7, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}
+              style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
               Vender entradas
             </Link>
             <Link
               to="/how-it-works"
-              style={{ display: "block", fontSize: 13, marginBottom: 7, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}
+              style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
               Cómo funciona
             </Link>
@@ -62,19 +73,19 @@ export function AppFooter() {
             <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>Soporte</div>
             <Link
               to="/support"
-              style={{ display: "block", fontSize: 13, marginBottom: 7, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}
+              style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
               Centro de ayuda
             </Link>
             <Link
               to="/contact"
-              style={{ display: "block", fontSize: 13, marginBottom: 7, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}
+              style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
               Contacto
             </Link>
             <Link
               to="/how-it-works"
-              style={{ display: "block", fontSize: 13, marginBottom: 7, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}
+              style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
               Garantías
             </Link>
@@ -114,7 +125,7 @@ export function AppFooter() {
         </div>
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderTop: `1px solid ${FOOTER_BORDER_TOP}`,
             paddingTop: 18,
             display: "flex",
             flexWrap: "wrap",
@@ -125,8 +136,8 @@ export function AppFooter() {
         >
           <p style={{ fontSize: 12 }}>© {new Date().getFullYear()} TicketsHub · Buenos Aires, Argentina</p>
           <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12 }}>
-            <ShieldSVG size={11} color="#a78bfa" />
-            <span style={{ color: "rgba(255,255,255,0.35)" }}>Transacciones protegidas con escrow</span>
+            <ShieldSVG size={11} color={V_SOFT} />
+            <span style={{ color: FOOTER_CAPTION }}>Transacciones protegidas con escrow</span>
           </div>
         </div>
       </div>
