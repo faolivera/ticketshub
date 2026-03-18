@@ -28,7 +28,7 @@ export const UserAvatar: FC<UserAvatarProps> = ({
     <Avatar className={cn('flex-shrink-0', className)}>
       <AvatarImage src={src} alt={alt ?? name} />
       <AvatarFallback
-        className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold"
+        className="bg-muted text-muted-foreground font-semibold"
         style={{ fontSize: '40cqw' }}
       >
         {getInitials(name)}

@@ -60,13 +60,12 @@ function SubLabel({ icon, label, color = HINT }: {
 }
 
 // ─── ACCEPTED OFFER BANNER — most urgent, full CTA ───────────────────────────
-function AcceptedOfferBanner({ offer, highlighted, t, thumbSize, isMobile }: {
+function AcceptedOfferBanner({ offer, highlighted, t }: {
   offer: OfferWithListingSummary;
   highlighted: boolean;
   t: (k: string, o?: Record<string, string>) => string;
-  thumbSize: number;
-  isMobile: boolean;
 }) {
+  const isMobile     = useIsMobile();
   const ref          = useRef<HTMLDivElement>(null);
   const summary      = offer.listingSummary;
   const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
@@ -75,99 +74,100 @@ function AcceptedOfferBanner({ offer, highlighted, t, thumbSize, isMobile }: {
     : null;
 
   const ticketLabel = offer.tickets.type === 'numbered'
-    ? `${offer.tickets.seats.length} ${offer.tickets.seats.length === 1 ? t('boughtTickets.seat', { defaultValue: 'entrada' }) : t('boughtTickets.seats', { defaultValue: 'entradas' })}`
-    : `${offer.tickets.count} ${offer.tickets.count === 1 ? t('boughtTickets.ticket', { defaultValue: 'entrada' }) : t('boughtTickets.tickets', { defaultValue: 'entradas' })}`;
+    ? `${offer.tickets.seats.length} ${offer.tickets.seats.length === 1
+        ? t('boughtTickets.seat', { defaultValue: 'entrada' })
+        : t('boughtTickets.seats', { defaultValue: 'entradas' })}`
+    : `${offer.tickets.count} ${offer.tickets.count === 1
+        ? t('boughtTickets.ticket', { defaultValue: 'entrada' })
+        : t('boughtTickets.tickets', { defaultValue: 'entradas' })}`;
 
   useEffect(() => {
     if (highlighted) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [highlighted]);
 
-  const to = `/buy/${summary.eventSlug}/${offer.listingId}?offerId=${offer.id}`;
-
+  const to       = `/buy/${summary.eventSlug}/${offer.listingId}?offerId=${offer.id}`;
   const bannerUrl = summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle;
 
-  const offerBody = (
-    <div style={{ flex: 1, padding: '11px 13px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5, alignSelf: 'stretch' }}>
-      <span style={{
-        alignSelf: 'flex-start', fontSize: 10.5, fontWeight: 700,
-        padding: '2px 8px', borderRadius: 100,
-        background: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', ...S,
-      }}>
-        ⏱ {t('boughtTickets.offerAcceptedUrgent', { defaultValue: 'Tiempo limitado para pagar' })}
-      </span>
-      <p style={{ fontSize: 14.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
-        {summary.eventName}
-      </p>
-      <p style={{ fontSize: 12.5, color: MUTED, ...S }}>
-        {ticketLabel} · {formatDate(new Date(summary.eventDate))}
-      </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {listingPrice && (
-          <span style={{ fontSize: 12, color: BORD2, textDecoration: 'line-through', ...S }}>{listingPrice}</span>
-        )}
-        <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{offeredPrice}</span>
-        <span style={{ fontSize: 11, color: MUTED, ...S }}>
-          {t('boughtTickets.yourOffer', { defaultValue: 'tu oferta' })}
-        </span>
-      </div>
-    </div>
-  );
-
-  const rowAlign = isMobile ? ('stretch' as const) : ('flex-start' as const);
+  const imageStyle: React.CSSProperties = isMobile
+    ? { width: 'clamp(80px, 26vw, 100px)', flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, overflow: 'hidden', position: 'relative' }
+    : { aspectRatio: '1', flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, overflow: 'hidden', position: 'relative', minWidth: 100, maxWidth: 160 };
 
   return (
     <div ref={ref} style={{
-      background: CARD, borderRadius: 16,
-      border: `1.5px solid ${V}`, overflow: 'hidden',
+      background: CARD, borderRadius: 14,
+      border: `1.5px solid ${V}`,   // thicker — most urgent card
+      overflow: 'hidden',
       boxShadow: highlighted ? `0 0 0 3px ${VLIGHT}` : 'none',
+      transition: 'box-shadow 0.2s',
     }}>
-      <div style={{ display: 'flex', alignItems: rowAlign }}>
-        {isMobile ? (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              flexShrink: 0,
-              alignSelf: 'stretch',
-              minHeight: 0,
-            }}
-          >
-            <div style={{ width: 3, alignSelf: 'stretch', background: V, flexShrink: 0 }} />
-            <div
-              style={{
-                width: 'clamp(72px, 26vw, 100px)',
-                flexShrink: 0,
-                alignSelf: 'stretch',
-                background: VLIGHT,
-                overflow: 'hidden',
-                position: 'relative',
-              }}
-            >
-              {bannerUrl ? (
-                <img
-                  src={bannerUrl}
-                  alt={summary.eventName}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', position: 'absolute', inset: 0 }}
-                />
-              ) : (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ticket size={28} style={{ color: V, opacity: 0.4 }} />
-                </div>
-              )}
-            </div>
+      <div style={{ display: 'flex' }}>
+
+        {/* Accent bar — solid violet, same as border */}
+        <div style={{ width: 3, flexShrink: 0, background: V, alignSelf: 'stretch' }} />
+
+        {/* Image */}
+        <div style={imageStyle}>
+          {bannerUrl
+            ? <img src={bannerUrl} alt={summary.eventName}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
+            : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Ticket size={28} style={{ color: V, opacity: 0.3 }} />
+              </div>
+          }
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, padding: '11px 13px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+
+          {/* Urgency badge */}
+          <span style={{
+            alignSelf: 'flex-start',
+            fontSize: 10.5, fontWeight: 700,
+            padding: '2px 8px', borderRadius: 100,
+            background: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', ...S,
+          }}>
+            ⏱ {t('boughtTickets.offerAcceptedUrgent', { defaultValue: 'Tiempo limitado para pagar' })}
+          </span>
+
+          {/* Event name */}
+          <p style={{ fontSize: 14, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
+            {summary.eventName}
+          </p>
+
+          {/* tickets · date */}
+          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.4, ...S }}>
+            {ticketLabel}
+            <span style={{ color: '#d1d5db' }}>{' · '}</span>
+            {formatDate(new Date(summary.eventDate))}
+          </p>
+
+          {/* Price */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 2 }}>
+            {listingPrice && (
+              <span style={{ fontSize: 12, color: '#d1d5db', textDecoration: 'line-through', ...S }}>{listingPrice}</span>
+            )}
+            <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{offeredPrice}</span>
+            <span style={{ fontSize: 11.5, color: MUTED, ...S }}>
+              {t('boughtTickets.yourOffer', { defaultValue: 'tu oferta' })}
+            </span>
           </div>
-        ) : (
-          <Thumb url={bannerUrl} name={summary.eventName} size={thumbSize} square />
-        )}
-        {offerBody}
+
+        </div>
       </div>
-      <Link to={to} style={{ textDecoration: 'none' }}>
+
+      {/* CTA — full width, solid violet */}
+      <Link to={to} style={{ textDecoration: 'none', display: 'block' }}>
         <div style={{
-          padding: '11px 16px', borderTop: '1px solid #f0ebff',
+          padding: '11px 16px',
+          borderTop: `1px solid #ddd6fe`,
           background: V, color: CARD,
-          fontSize: 13.5, fontWeight: 700, textAlign: 'center', cursor: 'pointer', ...S,
+          fontSize: 13.5, fontWeight: 700,
+          textAlign: 'center', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          ...S,
         }}>
-          {t('boughtTickets.completePurchase')} →
+          {t('boughtTickets.completePurchase')}
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </div>
       </Link>
     </div>

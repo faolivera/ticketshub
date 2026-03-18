@@ -6,6 +6,7 @@ import { supportService } from '@/api/services';
 import type { SupportTicketWithMessages, SupportMessage } from '@/api/types';
 import { SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY } from '@/api/types/support';
 import { formatDateTimeMedium } from '@/lib/format-date';
+import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 
 const V      = '#6d28d9';
 const VLIGHT = '#f0ebff';
@@ -96,11 +97,15 @@ export function SupportCaseDetail() {
 
   if (error || !ticket) {
     return (
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '24px 16px' }}>
-        <p style={{ fontSize: 13.5, color: '#dc2626', marginBottom: 12, ...S }}>{error ?? t('support.errorLoad')}</p>
-        <Link to="/support" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13.5, fontWeight: 600, color: MUTED, textDecoration: 'none', ...S }}>
-          <ArrowLeft size={14} /> {t('support.backToList')}
-        </Link>
+      <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
+          <div style={{ maxWidth: 680, margin: '0 auto' }}>
+            <p style={{ fontSize: 13.5, color: '#dc2626', marginBottom: 12, ...S }}>{error ?? t('support.errorLoad')}</p>
+            <Link to="/support" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13.5, fontWeight: 600, color: MUTED, textDecoration: 'none', ...S }}>
+              <ArrowLeft size={14} /> {t('support.backToList')}
+            </Link>
+          </div>
+        </PageContentMaxWidth>
       </div>
     );
   }
@@ -108,13 +113,14 @@ export function SupportCaseDetail() {
   const statusCfg = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.open;
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, padding: 'clamp(20px,4vw,40px) 16px' }}>
+    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
         .th-textarea{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid ${BORDER};background:${CARD};font-size:14px;color:${DARK};outline:none;resize:vertical;min-height:88px;font-family:'Plus Jakarta Sans',sans-serif;box-sizing:border-box;transition:border-color 0.15s;line-height:1.55}
         .th-textarea:focus{border-color:${V};box-shadow:0 0 0 3px ${VLIGHT}}
       `}</style>
 
+      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
 
         {/* Back */}
@@ -283,6 +289,7 @@ export function SupportCaseDetail() {
           )}
         </div>
       </div>
+      </PageContentMaxWidth>
     </div>
   );
 }

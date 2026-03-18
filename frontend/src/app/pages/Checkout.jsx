@@ -17,7 +17,6 @@ import { useUser } from "@/app/contexts/UserContext";
 import {
   V,
   VLIGHT,
-  BLUE,
   DARK,
   MUTED,
   HINT,
@@ -48,8 +47,6 @@ import { PageMeta } from "@/app/components/PageMeta";
 import { BackButton } from "@/app/components/BackButton";
 import { SeatingType, TicketUnitStatus } from "@/api/types";
 
-const STEPS = ["Selección", "Confirmar", "Pago"];
-
 function getInitials(name) {
   if (!name || !name.trim()) return "??";
   const parts = name.trim().split(/\s+/);
@@ -77,7 +74,6 @@ export default function Checkout() {
   const [buyPageData, setBuyPageData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [step, setStep] = useState(1);
   const [quantity, setQuantity] = useState(1);
   const [selectedUnitIds, setSelectedUnitIds] = useState([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
@@ -518,18 +514,18 @@ export default function Checkout() {
       />
 
       <style>{`
-        .co-layout { display: grid; grid-template-columns: 1fr 400px; gap: 20px; max-width: 1000px; margin: 0 auto; padding: 24px; }
+        .co-layout { display: grid; grid-template-columns: 1fr 400px; column-gap: 20px; row-gap: 8px; max-width: 1000px; margin: 0 auto; padding: 24px; }
         .co-back { grid-column: 1 / -1; }
         @media(max-width: 860px) { .co-layout { grid-template-columns: 1fr; } .co-sticky { position: static !important; } }
         .co-sticky { position: sticky; top: 24px; align-self: start; }
-        .seat-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid ${BORD2}; background: white; color: ${DARK}; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.14s; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .seat-btn { padding: 8px 16px; border-radius: 10px; border: 1.5px solid ${BORD2}; background: white; color: ${DARK}; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.14s; font-family: 'Plus Jakarta Sans', sans-serif; }
         .seat-btn:hover:not(.selected):not(.full) { border-color: ${V}; color: ${V}; background: ${VLIGHT}; }
         .seat-btn.selected { background: ${V}; border-color: ${V}; color: white; }
         .seat-btn.full { opacity: 0.4; cursor: not-allowed; }
-        .qty-btn { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid ${BORD2}; background: white; color: ${DARK}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.14s; flex-shrink: 0; }
+        .qty-btn { width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid ${BORD2}; background: white; color: ${DARK}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.14s; flex-shrink: 0; }
         .qty-btn:hover:not(:disabled) { border-color: ${V}; color: ${V}; }
         .qty-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-        .pay-option { padding: 13px 16px; border-radius: 10px; border: 1.5px solid ${BORD2}; background: white; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.14s; }
+        .pay-option { padding: 13px 16px; border-radius: 12px; border: 1.5px solid ${BORD2}; background: white; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.14s; }
         .pay-option.selected { border-color: ${V}; background: ${VLIGHT}; }
         .pay-option:hover:not(.selected) { border-color: ${HINT}; }
         .offer-input { width: 100%; padding: 10px 14px; border: 1.5px solid ${BORD2}; border-radius: 10px; font-size: 14px; color: ${DARK}; background: ${BG}; font-family: 'Plus Jakarta Sans', sans-serif; outline: none; transition: border-color 0.15s; }
@@ -542,7 +538,7 @@ export default function Checkout() {
       <div className="co-layout" style={{ flex: 1 }}>
         <div className="co-back">
           <BackButton
-            to={isOwnListing ? "/seller-dashboard?tab=listed" : `/event/${eventSlug}`}
+            to={isOwnListing ? "/seller-dashboard" : `/event/${eventSlug}`}
             labelKey={isOwnListing ? "buyTicket.backToMyListings" : "buyTicket.backToEvent"}
             embedded
           />
@@ -561,8 +557,8 @@ export default function Checkout() {
               <p style={{ fontSize: 12, color: MUTED, marginBottom: 2 }}>{t("buyTicket.event")}</p>
               <p style={{ fontSize: 16, fontWeight: 700, color: DARK, marginBottom: 10 }}>{listing.eventName}</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <MetaRow icon={<Calendar size={13} style={{ color: BLUE }} />} text={eventDateFormatted} />
-                <MetaRow icon={<MapPin size={13} style={{ color: BLUE }} />} text={listing.venue} />
+                <MetaRow icon={<Calendar size={13} style={{ color: MUTED }} />} text={eventDateFormatted} />
+                <MetaRow icon={<MapPin size={13} style={{ color: MUTED }} />} text={listing.venue} />
               </div>
             </div>
             <div style={{ marginBottom: 20 }}>
@@ -661,7 +657,7 @@ export default function Checkout() {
                   ) : pendingOffer ? (
                     <div style={{ padding: 12, background: GLIGHT, border: `1px solid ${GBORD}`, borderRadius: 12 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: GREEN }}>{t("buyTicket.offerSubmitted")}</p>
-                      <Link to="/my-tickets?tab=offers" style={{ fontSize: 12, color: GREEN, marginTop: 4, display: "inline-block" }}>{t("buyTicket.viewMyOffers")}</Link>
+                      <Link to="/my-tickets" style={{ fontSize: 12, color: GREEN, marginTop: 4, display: "inline-block" }}>{t("buyTicket.viewMyOffers")}</Link>
                     </div>
                   ) : (
                     <>
@@ -691,7 +687,7 @@ export default function Checkout() {
                             type="button"
                             disabled={isSubmittingOffer || !isAuthenticated}
                             onClick={handleSubmitOffer}
-                            style={{ width: "100%", padding: "11px", borderRadius: 10, background: AMBER, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, ...S }}
+                            style={{ width: "100%", padding: "11px", borderRadius: 12, background: AMBER, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, ...S }}
                           >
                             {isSubmittingOffer ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
                             {isSubmittingOffer ? t("common.loading") : t("buyTicket.submitOffer")}
@@ -720,19 +716,12 @@ export default function Checkout() {
                   <Link
                     to="/verify-user"
                     state={{ verifyPhone: missingV2, verifyIdentity: missingV3, returnTo: `/buy/${eventSlug}/${listingId}` }}
-                    style={{ display: "inline-block", padding: "10px 20px", borderRadius: 9, background: AMBER, border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", ...S }}
+                    style={{ display: "inline-block", padding: "10px 20px", borderRadius: 12, background: AMBER, border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", ...S }}
                   >
                     {t("buyTicket.completeVerification")}
                   </Link>
                 </div>
               </div>
-            </div>
-          )}
-
-          {isAuthenticated && !missingV2 && !missingV3 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: GLIGHT, border: `1px solid ${GBORD}`, borderRadius: 12 }}>
-              <CheckCircle size={16} style={{ color: GREEN, flexShrink: 0 }} />
-              <p style={{ fontSize: 13, fontWeight: 600, color: GREEN }}>{t("buyTicket.identityVerified")}</p>
             </div>
           )}
         </div>
@@ -829,9 +818,9 @@ export default function Checkout() {
             <div style={{ padding: "12px 22px", borderBottom: `1px solid ${BORDER}`, background: SURFACE }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 {[
-                  { icon: <Lock size={12} style={{ color: BLUE }} />, text: t("buyTicket.securePayment") },
-                  { icon: <Shield size={12} style={{ color: BLUE }} />, text: t("landing.trustRefund") },
-                  { icon: <CreditCard size={12} style={{ color: BLUE }} />, text: t("landing.trustSecurePayment") },
+                  { icon: <Lock size={12} style={{ color: V }} />, text: t("buyTicket.securePayment") },
+                  { icon: <Shield size={12} style={{ color: V }} />, text: t("landing.trustRefund") },
+                  { icon: <CreditCard size={12} style={{ color: V }} />, text: t("landing.trustSecurePayment") },
                 ].map(({ icon, text }) => (
                   <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <div style={{ marginTop: 1, flexShrink: 0 }}>{icon}</div>

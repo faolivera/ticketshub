@@ -5,6 +5,7 @@ import { Loader2, ChevronRight, HelpCircle, MessageCircle } from 'lucide-react';
 import { supportService } from '@/api/services';
 import type { SupportTicket, SupportTicketStatus } from '@/api/types';
 import { formatDateTimeShort } from '@/lib/format-date';
+import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 
 const V      = '#6d28d9';
 const VLIGHT = '#f0ebff';
@@ -76,7 +77,7 @@ export function SupportListPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, padding: 'clamp(20px,4vw,40px) 16px' }}>
+    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
         .th-select{padding:9px 14px;border-radius:10px;border:1.5px solid ${BORDER};background:${CARD};font-size:13.5px;color:${DARK};outline:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;appearance:none;min-height:40px;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
@@ -84,6 +85,7 @@ export function SupportListPage() {
         .ticket-row:hover{border-color:${BORD2}!important;background:${BG}!important}
       `}</style>
 
+      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
 
         {/* Header */}
@@ -198,6 +200,7 @@ export function SupportListPage() {
           </div>
         )}
       </div>
+      </PageContentMaxWidth>
     </div>
   );
 }

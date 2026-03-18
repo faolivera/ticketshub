@@ -525,6 +525,10 @@ export function SellListingWizard() {
   }
   if (user && !canSell()) return <Navigate to="/become-seller" replace />;
 
+  /** Context column is empty on step 0 without event; avoid reserving 300px so the wizard card stays centered */
+  const hasDesktopContextColumn = !isMobile && !(!event && currentStep === 0);
+  const isDesktopWizardOnly = !isMobile && !hasDesktopContextColumn;
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: BG }}>
@@ -560,18 +564,28 @@ export function SellListingWizard() {
         </div>
       )}
 
-      {/* Page layout — single column mobile, two columns desktop */}
+      {/* Page layout — centered wizard when sidebar empty; two columns when context panel is shown */}
       <div style={{
-          maxWidth: 1040, margin: '0 auto',
+          maxWidth: hasDesktopContextColumn ? 1040 : undefined,
+          width: '100%',
+          margin: '0 auto',
           padding: 'clamp(16px,3vw,32px)',
-          display: isMobile ? 'block' : 'grid',
-          gridTemplateColumns: '1fr 300px',
-          gap: 20,
-          alignItems: 'start',
+          display: isMobile ? 'block' : hasDesktopContextColumn ? 'grid' : 'flex',
+          justifyContent: isDesktopWizardOnly ? 'center' : undefined,
+          gridTemplateColumns: hasDesktopContextColumn ? '1fr 300px' : undefined,
+          gap: hasDesktopContextColumn ? 20 : undefined,
+          alignItems: hasDesktopContextColumn ? 'start' : undefined,
         }}>
 
         {/* ── Wizard card ───────────────────────────────────────────────── */}
-        <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+        <div style={{
+          background: CARD,
+          borderRadius: 20,
+          border: `1px solid ${BORDER}`,
+          overflow: 'hidden',
+          width: '100%',
+          maxWidth: isDesktopWizardOnly ? 720 : undefined,
+        }}>
 
           {/* Header */}
           <div style={{ padding: 'clamp(16px,3vw,24px)', paddingBottom: 0 }}>
@@ -654,8 +668,8 @@ export function SellListingWizard() {
           </div>
         </div>
 
-        {/* ── Context sidebar — only rendered on desktop ───────────────── */}
-        {!isMobile && (
+        {/* ── Context sidebar — desktop only when panel has content ───────── */}
+        {hasDesktopContextColumn && (
           <div>
             <ContextPanel
               currentStep={currentStep}
