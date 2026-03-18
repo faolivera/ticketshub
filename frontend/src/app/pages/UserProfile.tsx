@@ -1,4 +1,4 @@
-import { Mail, Calendar, Phone, Camera, Shield, CreditCard } from 'lucide-react';
+import { Mail, Calendar, Phone, Camera, Shield, CreditCard, LogOut, ChevronRight, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
@@ -9,18 +9,176 @@ import { usersService } from '@/api/services';
 import { UserAvatar } from '@/app/components/UserAvatar';
 import AvatarCropModal from '@/app/components/Avatarcropmodal';
 import { formatMonthYear } from '@/lib/format-date';
-import { Card, CardContent } from '@/app/components/ui/card';
-import { Button } from '@/app/components/ui/button';
-import { cn } from '@/app/components/ui/utils';
 
+// ─── TicketsHub design tokens ─────────────────────────────────────────────────
+const V      = '#6d28d9';
+const VLIGHT = '#f0ebff';
+const BLUE   = '#1e3a5f';
+const BLIGHT = '#e4edf7';
+const DARK   = '#0f0f1a';
+const MUTED  = '#6b7280';
+const BG     = '#f3f3f0';
+const CARD   = '#ffffff';
+const BORDER = '#e5e7eb';
+const BORD2  = '#d1d5db';
+const GREEN  = '#15803d';
+const GLIGHT = '#f0fdf4';
+const GBORD  = '#bbf7d0';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+type VerifStatus = 'verified' | 'pending' | 'rejected' | 'none';
+
+interface VerifRowProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  status: VerifStatus;
+  verifyLabel: string;
+  verifyTo?: string;
+  verifyState?: object;
+  showVerify: boolean;
+}
+
+// ─── Verification status badge ────────────────────────────────────────────────
+function StatusBadge({ status }: { status: VerifStatus }) {
+  const cfg: Record<VerifStatus, { bg: string; color: string; border: string; icon: React.ReactNode; text: string }> = {
+    verified: {
+      bg: GLIGHT, color: GREEN, border: `1px solid ${GBORD}`,
+      icon: <CheckCircle size={11} />,
+      text: 'Verificado',
+    },
+    pending: {
+      bg: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
+      icon: <Clock size={11} />,
+      text: 'Verificando',
+    },
+    rejected: {
+      bg: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5',
+      icon: <AlertCircle size={11} />,
+      text: 'Rechazado',
+    },
+    none: {
+      bg: '#f9fafb', color: MUTED, border: `1px solid ${BORD2}`,
+      icon: <AlertCircle size={11} />,
+      text: 'Sin verificar',
+    },
+  };
+  const c = cfg[status];
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '3px 8px', borderRadius: 100,
+      background: c.bg, color: c.color, border: c.border,
+      fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap',
+    }}>
+      {c.icon} {c.text}
+    </span>
+  );
+}
+
+// ─── Verification row ─────────────────────────────────────────────────────────
+function VerifRow({ icon, label, value, status, verifyLabel, verifyTo, verifyState, showVerify }: VerifRowProps) {
+  const [hovered, setHovered] = useState(false);
+
+  if (!showVerify) {
+    // Read-only row (nothing to action)
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '13px 16px', borderRadius: 12,
+        background: BG, border: `1px solid ${BORDER}`,
+      }}>
+        <div style={{ color: MUTED, flexShrink: 0, display: 'flex' }}>{icon}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</p>
+          <p style={{ fontSize: 13.5, fontWeight: 500, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</p>
+        </div>
+        <StatusBadge status={status} />
+      </div>
+    );
+  }
+
+  // Tappable row with verify CTA
+  return (
+    <Link
+      to={verifyTo!}
+      state={verifyState}
+      style={{ textDecoration: 'none' }}
+    >
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '13px 16px', borderRadius: 12,
+          background: hovered ? VLIGHT : BG,
+          border: hovered ? `1px solid #ddd6fe` : `1px solid ${BORDER}`,
+          cursor: 'pointer', transition: 'all 0.14s',
+        }}
+      >
+        <div style={{ color: hovered ? V : MUTED, flexShrink: 0, display: 'flex', transition: 'color 0.14s' }}>{icon}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</p>
+          <p style={{ fontSize: 13.5, fontWeight: 500, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <StatusBadge status={status} />
+          <span style={{
+            fontSize: 12.5, fontWeight: 700, color: V,
+            display: 'flex', alignItems: 'center', gap: 3,
+            padding: '4px 10px', borderRadius: 8,
+            background: hovered ? 'rgba(109,40,217,0.1)' : 'transparent',
+            transition: 'background 0.14s', whiteSpace: 'nowrap',
+          }}>
+            {verifyLabel} <ChevronRight size={13} />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ─── Completion progress bar ──────────────────────────────────────────────────
+function ProfileCompletion({ steps }: { steps: Array<{ label: string; done: boolean }> }) {
+  const done = steps.filter(s => s.done).length;
+  const pct  = Math.round((done / steps.length) * 100);
+  if (pct === 100) return null;
+
+  return (
+    <div style={{
+      padding: '14px 16px', borderRadius: 12,
+      background: VLIGHT, border: '1px solid #ddd6fe', marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: V }}>Completá tu perfil</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: V }}>{done}/{steps.length}</p>
+      </div>
+      <div style={{ height: 5, background: '#ddd6fe', borderRadius: 100, marginBottom: 10, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: V, borderRadius: 100, transition: 'width 0.4s ease' }} />
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {steps.map(s => (
+          <span key={s.label} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 11.5, fontWeight: 600, padding: '2px 8px', borderRadius: 100,
+            background: s.done ? GLIGHT : 'rgba(255,255,255,0.7)',
+            color: s.done ? GREEN : MUTED,
+            border: s.done ? `1px solid ${GBORD}` : '1px solid #ddd6fe',
+          }}>
+            {s.done ? <CheckCircle size={10} /> : <div style={{ width: 10, height: 10, borderRadius: '50%', border: `1.5px solid ${MUTED}` }} />}
+            {s.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 export function UserProfile() {
   const { user, logout, refreshUser } = useUser();
   const { t } = useTranslation();
   const [avatarCropOpen, setAvatarCropOpen] = useState(false);
-
-  const handleAvatarClick = () => {
-    setAvatarCropOpen(true);
-  };
 
   const handleAvatarSave = async (blob: Blob) => {
     const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
@@ -28,72 +186,111 @@ export function UserProfile() {
     await refreshUser();
   };
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
-  const isSeller = VerificationHelper.isSeller(user);
-  const showIdentityRow = isSeller || user.buyerDisputed === true;
-  const idStatus = user.identityVerificationStatus ?? 'none';
-  const bankStatus = user.bankAccountStatus ?? 'none';
-  const identitySubmitted =
-    idStatus === 'pending' || idStatus === 'approved' || idStatus === 'rejected';
-  const bankSubmitted =
-    bankStatus === 'pending' || bankStatus === 'approved';
+  // ── Derived state (preserving original logic exactly) ─────────────────────
+  const isSeller        = VerificationHelper.isSeller(user);
+  const idStatus        = user.identityVerificationStatus ?? 'none';
+  const bankStatus      = user.bankAccountStatus ?? 'none';
+  const identitySubmitted = idStatus === 'pending' || idStatus === 'approved' || idStatus === 'rejected';
+  const bankSubmitted     = bankStatus === 'pending' || bankStatus === 'approved';
+
   const becomeSellerCtaLabel = !isSeller
     ? t('becomeSeller.cta.becomeSeller')
     : !identitySubmitted
       ? t('becomeSeller.cta.verifySellerData')
       : t('becomeSeller.cta.completeVerification');
 
-  const badgeLabel = (verified: boolean, pending: boolean) => {
-    if (verified) return t('userProfile.badgeVerified');
-    if (pending) return t('userProfile.badgeVerifying');
-    return t('userProfile.badgeNotVerified');
-  };
+  const idVerifStatus: VerifStatus =
+    idStatus === 'approved' ? 'verified' :
+    idStatus === 'pending'  ? 'pending'  :
+    idStatus === 'rejected' ? 'rejected' : 'none';
+
+  const bankVerifStatus: VerifStatus =
+    bankStatus === 'approved' ? 'verified' :
+    bankStatus === 'pending'  ? 'pending'  : 'none';
+
+  // ── Profile completion steps ───────────────────────────────────────────────
+  const completionSteps = [
+    { label: 'Email',     done: user.emailVerified   },
+    { label: 'Teléfono',  done: user.phoneVerified   },
+    { label: 'Identidad', done: idStatus === 'approved' },
+    ...(isSeller ? [{ label: 'Cuenta bancaria', done: bankStatus === 'approved' }] : []),
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">
+    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px 80px' }}>
+
+        {/* Page title */}
+        <h1 style={{
+          fontFamily: "'DM Serif Display', serif",
+          fontSize: 'clamp(22px, 3vw, 28px)',
+          fontWeight: 400, color: DARK,
+          letterSpacing: '-0.4px', marginBottom: 20,
+        }}>
           {t('userProfile.title')}
         </h1>
 
-        <Card className="border-border overflow-hidden">
-          <CardContent className="p-4 sm:p-6">
-            {/* Profile header: stacked on mobile, row on sm+ */}
-            <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
-              {/* Avatar: centered on mobile, left on desktop */}
-              <div className="flex flex-col items-center sm:items-start gap-3">
-                <div className="relative flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleAvatarClick}
-                    className="relative group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full min-w-[72px] min-h-[72px] sm:min-w-0 sm:min-h-0"
-                    aria-label={t('userProfile.changePhoto')}
+        {/* ── PROFILE CARD ── */}
+        <div style={{
+          background: CARD, borderRadius: 20,
+          border: `1px solid ${BORDER}`,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+          overflow: 'hidden', marginBottom: 16,
+        }}>
+
+          {/* Header strip — avatar + name + logout */}
+          <div style={{ padding: '22px 20px 20px', borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+
+              {/* Avatar with edit overlay */}
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  onClick={() => setAvatarCropOpen(true)}
+                  aria-label={t('userProfile.changePhoto')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '50%', position: 'relative', display: 'block' }}
+                  className="avatar-edit-btn"
+                >
+                  <UserAvatar
+                    name={`${user.firstName} ${user.lastName}`}
+                    src={user.pic?.src}
+                    className="w-16 h-16 text-lg ring-2 ring-border"
+                    style={{ width: 64, height: 64, borderRadius: '50%', display: 'block' }}
+                  />
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    background: 'rgba(0,0,0,0)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    transition: 'background 0.15s',
+                  }}
+                    className="avatar-overlay"
                   >
-                    <UserAvatar
-                      name={`${user.firstName} ${user.lastName}`}
-                      src={user.pic?.src}
-                      className="w-20 h-20 sm:w-16 sm:h-16 text-xl ring-2 ring-border"
-                    />
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Camera className="w-5 h-5 text-white" />
+                    <div style={{
+                      width: 26, height: 26, borderRadius: '50%',
+                      background: 'rgba(0,0,0,0.55)', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      opacity: 0,
+                    }}
+                      className="avatar-cam"
+                    >
+                      <Camera size={13} color="white" />
                     </div>
-                  </button>
-                </div>
+                  </div>
+                </button>
               </div>
 
-              {/* Name, badge, member since - full width on mobile */}
-              <div className="flex-1 min-w-0 text-center sm:text-left">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-start">
-                  <h2 className="text-lg sm:text-xl font-bold text-foreground">
+              {/* Name + meta */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 4 }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: DARK, letterSpacing: '-0.3px' }}>
                     {user.firstName} {user.lastName}
                   </h2>
                   {isSeller && <SellerBadge user={user} />}
                 </div>
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-muted-foreground mt-1.5">
-                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: MUTED }}>
+                  <Calendar size={13} style={{ flexShrink: 0 }} />
                   <span>
                     {t('userProfile.memberSince')}{' '}
                     {user.createdAt ? formatMonthYear(user.createdAt) : formatMonthYear('2025-01-01')}
@@ -101,159 +298,172 @@ export function UserProfile() {
                 </div>
               </div>
 
-              {/* Actions: full-width stacked on mobile, column on sm+ */}
-              <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-shrink-0">
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  className="min-h-[44px] w-full sm:w-auto border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  onClick={logout}
-                >
-                  {t('userProfile.logout')}
-                </Button>
-              </div>
+              {/* Logout — subtle, not alarming */}
+              <button
+                type="button"
+                onClick={logout}
+                title={t('userProfile.logout')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 36, height: 36, borderRadius: 9,
+                  background: BG, border: `1px solid ${BORD2}`,
+                  cursor: 'pointer', color: MUTED, transition: 'all 0.14s', flexShrink: 0,
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = '#fca5a5';
+                  (e.currentTarget as HTMLButtonElement).style.color = '#dc2626';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = BG;
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = BORD2;
+                  (e.currentTarget as HTMLButtonElement).style.color = MUTED;
+                }}
+              >
+                <LogOut size={15} />
+              </button>
             </div>
+          </div>
 
-            {/* Verification list: fixed label width so value column aligns; tighter on desktop */}
-            <div className="space-y-4 sm:space-y-2">
-              {/* Email */}
-              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
-                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                  {t('userProfile.labelEmail')}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
-                  <span className="truncate text-foreground">{user.email}</span>
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                      user.emailVerified ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                    )}
+          {/* Verification rows */}
+          <div style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+            <ProfileCompletion steps={completionSteps} />
+
+            {/* Email */}
+            <VerifRow
+              icon={<Mail size={15} />}
+              label={t('userProfile.labelEmail')}
+              value={user.email}
+              status={user.emailVerified ? 'verified' : 'none'}
+              verifyLabel={t('userProfile.verifyLink')}
+              verifyTo="/register"
+              verifyState={{ verifyEmail: true, email: user.email, from: '/user-profile' }}
+              showVerify={!user.emailVerified}
+            />
+
+            {/* Phone */}
+            <VerifRow
+              icon={<Phone size={15} />}
+              label={t('userProfile.labelPhone')}
+              value={user.phone ?? t('userProfile.phoneNotSet')}
+              status={user.phoneVerified ? 'verified' : 'none'}
+              verifyLabel={t('userProfile.verifyLink')}
+              verifyTo="/verify-user"
+              verifyState={{ verifyPhone: true, returnTo: '/user-profile' }}
+              showVerify={!user.phoneVerified}
+            />
+
+            {/* Identity */}
+            <VerifRow
+              icon={<Shield size={15} />}
+              label={t('userProfile.labelIdentity')}
+              value={
+                idStatus === 'approved' ? 'Verificada'    :
+                idStatus === 'pending'  ? 'En revisión'   :
+                idStatus === 'rejected' ? 'Rechazada'     :
+                'No verificada'
+              }
+              status={idVerifStatus}
+              verifyLabel={t('userProfile.verifyLink')}
+              verifyTo="/verify-user"
+              verifyState={{ verifyIdentity: true, returnTo: '/user-profile' }}
+              showVerify={idStatus === 'none' || idStatus === 'rejected'}
+            />
+
+            {/* Bank account — sellers only */}
+            {isSeller && (
+              <VerifRow
+                icon={<CreditCard size={15} />}
+                label={t('userProfile.labelBankAccount')}
+                value={
+                  user.bankAccountLast4 != null
+                    ? `••• ${user.bankAccountLast4}`
+                    : t('userProfile.bankAccountNotSet')
+                }
+                status={bankVerifStatus}
+                verifyLabel={t('userProfile.verifyLink')}
+                verifyTo="/bank-account"
+                verifyState={undefined}
+                showVerify={bankStatus === 'none'}
+              />
+            )}
+          </div>
+
+          {/* Become seller CTA */}
+          {(!isSeller || !bankSubmitted) && (
+            <div style={{ padding: '0 16px 18px' }}>
+              <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
+                <div style={{
+                  padding: '14px 16px', borderRadius: 12,
+                  background: isSeller ? VLIGHT : BG,
+                  border: isSeller ? '1px solid #ddd6fe' : `1px solid ${BORDER}`,
+                  marginBottom: 12,
+                }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: isSeller ? V : DARK, marginBottom: 3 }}>
+                    {isSeller ? 'Completá tu perfil de vendedor' : 'Empezá a vender en TicketsHub'}
+                  </p>
+                  <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>
+                    {isSeller
+                      ? 'Verificá tu identidad y cuenta bancaria para recibir pagos.'
+                      : 'Vendé tus entradas de forma segura. El proceso tarda menos de 5 minutos.'}
+                  </p>
+                </div>
+                <Link to="/become-seller" style={{ textDecoration: 'none' }}>
+                  <button
+                    type="button"
+                    style={{
+                      width: '100%', padding: '13px', borderRadius: 11,
+                      background: V, border: 'none', color: 'white',
+                      fontSize: 14, fontWeight: 700,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      cursor: 'pointer', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', gap: 8,
+                      boxShadow: '0 4px 18px rgba(109,40,217,0.28)',
+                      transition: 'background 0.14s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#5b21b6')}
+                    onMouseLeave={e => (e.currentTarget.style.background = V)}
                   >
-                    {badgeLabel(user.emailVerified, false)}
-                  </span>
-                  {!user.emailVerified && (
-                    <Link
-                      to="/register"
-                      state={{ verifyEmail: true, email: user.email, from: '/user-profile' }}
-                      className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
-                    >
-                      {t('userProfile.verifyLink')}
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
-                  <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-                  {t('userProfile.labelPhone')}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
-                  <span className="truncate text-foreground">{user.phone ?? t('userProfile.phoneNotSet')}</span>
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                      user.phoneVerified ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                    )}
-                  >
-                    {badgeLabel(user.phoneVerified, false)}
-                  </span>
-                  {!user.phoneVerified && (
-                    <Link
-                      to="/verify-user"
-                      state={{ verifyPhone: true, returnTo: '/user-profile' }}
-                      className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
-                    >
-                      {t('userProfile.verifyLink')}
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {/* Identity */}
-              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
-                  <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-                  {t('userProfile.labelIdentity')}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                      idStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                    )}
-                  >
-                    {badgeLabel(idStatus === 'approved', idStatus === 'pending')}
-                  </span>
-                  {(idStatus === 'none' || idStatus === 'rejected') && (
-                    <Link
-                      to="/verify-user"
-                      state={{ verifyIdentity: true, returnTo: '/user-profile' }}
-                      className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
-                    >
-                      {t('userProfile.verifyLink')}
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {/* Bank account */}
-              {isSeller && (
-                <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-1.5 sm:gap-y-0 sm:items-center min-h-[2.75rem] sm:min-h-0">
-                  <span className="text-muted-foreground font-medium flex items-center gap-1.5 text-sm">
-                    <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
-                    {t('userProfile.labelBankAccount')}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-2 min-w-0 pl-5 sm:pl-0">
-                    <span className="text-foreground">
-                      {user.bankAccountLast4 != null
-                        ? `••• ${user.bankAccountLast4}`
-                        : t('userProfile.bankAccountNotSet')}
-                    </span>
-                    <span
-                      className={cn(
-                        'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                        bankStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                      )}
-                    >
-                      {badgeLabel(bankStatus === 'approved', bankStatus === 'pending')}
-                    </span>
-                    {bankStatus === 'none' && (
-                      <Link
-                        to="/bank-account"
-                        className="text-primary hover:underline font-medium whitespace-nowrap py-2 -my-2 inline-flex items-center min-h-[44px] sm:min-h-0 sm:py-0 sm:my-0"
-                      >
-                        {t('userProfile.verifyLink')}
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Become a Seller / Verify seller data CTA */}
-            {(!isSeller || !bankSubmitted) && (
-              <div className="mt-6 pt-4 border-t border-border">
-                <Link
-                  to="/become-seller"
-                  className="flex items-center justify-center min-h-[48px] w-full px-6 py-3.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-center"
-                >
-                  {becomeSellerCtaLabel}
+                    {becomeSellerCtaLabel}
+                    <ChevronRight size={16} />
+                  </button>
                 </Link>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+        </div>
 
-        <AvatarCropModal
-          open={avatarCropOpen}
-          onClose={() => setAvatarCropOpen(false)}
-          onSave={handleAvatarSave}
-          cropShape="round"
-        />
+        {/* Logout — visible as text link below card on mobile for discoverability */}
+        <div style={{ textAlign: 'center', paddingTop: 4 }}>
+          <button
+            type="button"
+            onClick={logout}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 13, color: MUTED,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              textDecoration: 'underline', padding: '8px',
+            }}
+          >
+            {t('userProfile.logout')}
+          </button>
+        </div>
       </div>
+
+      {/* Avatar crop modal — untouched */}
+      <AvatarCropModal
+        open={avatarCropOpen}
+        onClose={() => setAvatarCropOpen(false)}
+        onSave={handleAvatarSave}
+        cropShape="round"
+      />
+
+      {/* Avatar hover styles — minimal CSS injection */}
+      <style>{`
+        .avatar-edit-btn:hover .avatar-cam { opacity: 1 !important; }
+        .avatar-edit-btn:hover .avatar-overlay { background: rgba(0,0,0,0.3) !important; }
+      `}</style>
     </div>
   );
 }

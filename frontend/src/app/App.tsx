@@ -1,12 +1,12 @@
 import '@/i18n/config';
 import i18n from '@/i18n/config';
+import { useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider } from '@/app/contexts/UserContext';
 import { SocketProvider } from '@/app/contexts/SocketContext';
-import { Header } from '@/app/components/Header';
-import { Footer } from '@/app/components/Footer';
-import { MobileNav } from '@/app/components/MobileNav';
+import { LandingHeader, LandingFooter } from '@/app/components/landing';
+import { MobileNavWithRouting } from '@/app/components/MobileNav';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { AdminProtectedRoute } from '@/app/components/admin/AdminProtectedRoute';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
@@ -51,14 +51,33 @@ import { getGoogleClientId } from '@/config/env';
 
 const googleClientId = getGoogleClientId();
 
+/** Reset window scroll on every navigation (including browser back/forward). */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function AppLayout() {
   const location = useLocation();
-  const isNewLayout = location.pathname === '/' || /^\/event\/[^/]+$/.test(location.pathname) || /^\/buy\/[^/]+\/[^/]+$/.test(location.pathname);
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const landingHomeHref = location.pathname === '/' ? '#eventos' : '/';
+  /** Same shell bg as Login/Register — avoids white flex-1 gap above footer on mobile */
+  const authShellBg =
+    location.pathname === '/login' || location.pathname === '/register';
 
   return (
     <div className="min-h-screen flex flex-col w-full min-w-0 overflow-x-hidden">
-      {!isNewLayout && <Header />}
-      <main className="flex-1 pb-16 sm:pb-0 w-full min-w-0">
+      <ScrollToTop />
+      {!isAdminRoute && <LandingHeader homeHref={landingHomeHref} />}
+      <main
+        className={
+          'flex-1 pb-16 md:pb-0 w-full min-w-0' +
+          (authShellBg ? ' bg-[#f3f3f0]' : '')
+        }
+      >
         <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingNew />} />
@@ -113,8 +132,8 @@ function AppLayout() {
               <Route path="*" element={<NotFound />} />
             </Routes>
       </main>
-      {!isNewLayout && <Footer />}
-      {!isNewLayout && <MobileNav />}
+      {!isAdminRoute && <LandingFooter />}
+      {!isAdminRoute && <MobileNavWithRouting />}
     </div>
   );
 }

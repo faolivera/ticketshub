@@ -97,7 +97,7 @@ export function BankAccountPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-lg mx-auto px-4">
-        <BackButton className="mb-6" />
+        <BackButton />
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-6">

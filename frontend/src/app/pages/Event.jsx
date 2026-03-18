@@ -8,7 +8,8 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { ticketsService } from "@/api/services/tickets.service";
 import { formatDate, formatTime } from "@/lib/format-date";
-import { LandingHeader, LandingFooter } from "@/app/components/landing";
+import { UserAvatar } from "@/app/components/UserAvatar";
+import { BackButton } from "@/app/components/BackButton";
 import { V, VLIGHT, BLUE, BLIGHT, DARK, MUTED, HINT, BG, CARD, SURFACE, BORDER, BORD2, GREEN, S, E } from "@/lib/design-tokens";
 
 const SORTS = ["Mejor opción", "Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
@@ -87,7 +88,8 @@ function buildEventAndTickets(apiEvent, listings, currentUserId) {
       priceNum,
       currency: listing.pricePerTicket?.currency || "ARS",
       seller: listing.sellerPublicName || "Vendedor",
-      initials: getInitials(listing.sellerPublicName),
+      sellerId: listing.sellerId,
+      sellerAvatarUrl: listing.sellerPic?.src ?? null,
       verified,
       newSeller: badges.some((b) => String(b).toLowerCase().includes("new")),
       badge: null,
@@ -239,11 +241,9 @@ export default function EventDetail() {
   if (isLoading) {
     return (
       <div style={{ ...S, background: BG, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <LandingHeader homeHref="/" />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <p style={{ color: MUTED }}>{t("common.loading") || "Cargando..."}</p>
         </div>
-        <LandingFooter />
       </div>
     );
   }
@@ -251,12 +251,10 @@ export default function EventDetail() {
   if (error || !EVENT) {
     return (
       <div style={{ ...S, background: BG, minHeight: "100vh", padding: 24 }}>
-        <LandingHeader homeHref="/" />
         <div style={{ maxWidth: 1280, margin: "0 auto", textAlign: "center", padding: "48px 24px" }}>
           <p style={{ color: "#b91c1c", fontSize: 16 }}>{error || t("eventTickets.eventNotFound")}</p>
-          <Link to="/" style={{ display: "inline-block", marginTop: 16, color: V, fontWeight: 600 }}>{t("eventTickets.backToEvents")}</Link>
+          <BackButton to="/" labelKey="eventTickets.backToEvents" />
         </div>
-        <LandingFooter />
       </div>
     );
   }
@@ -303,8 +301,6 @@ export default function EventDetail() {
         .pills-row::-webkit-scrollbar { height: 0; }
       `}</style>
 
-      <LandingHeader homeHref="/" />
-
       {/* Sticky bar */}
       <div className={`sticky-bar${sticky ? " visible" : ""}`}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
@@ -348,9 +344,7 @@ export default function EventDetail() {
       </div>
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 64px" }}>
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 7, color: MUTED, fontSize: 13.5, fontWeight: 500, marginBottom: 16, textDecoration: "none", ...S }}>
-          <ArrowLeft size={15} /> {t("eventTickets.backToEvents")}
-        </Link>
+        <BackButton to="/" labelKey="eventTickets.backToEvents" />
 
         {/* Hero: blurred event image as background only (no poster), overlay + content */}
         {/* <div ref={heroRef} className="ev-hero-wrap" style={{ border: `1px solid ${BORDER}`, borderRadius: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
@@ -602,15 +596,13 @@ export default function EventDetail() {
           )}
         </div>
       </div>
-
-      <LandingFooter />
     </div>
   );
 }
 
 function TicketCard({ ticket, eventSlug }) {
   const { t } = useTranslation();
-  const { sector, seated, acceptsOffers, qty, price, seller, initials, verified, newSeller, badge, urgency, listingId } = ticket;
+  const { sector, seated, acceptsOffers, qty, price, seller, sellerId, sellerAvatarUrl, verified, newSeller, badge, urgency, listingId } = ticket;
   const isBest = badge === "best";
   const ctaLabel = seated ? (t("eventTickets.selectSeats") || "Elegir asientos") : "Comprar";
 
@@ -652,10 +644,8 @@ function TicketCard({ ticket, eventSlug }) {
             </span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 11px", background: SURFACE, borderRadius: 9, border: `1px solid ${BORDER}`, marginBottom: 0 }}>
-          <div style={{ width: 28, height: 28, borderRadius: "50%", background: VLIGHT, color: V, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
-            {initials}
-          </div>
+        <Link to={`/seller/${sellerId}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 11px", background: SURFACE, borderRadius: 9, border: `1px solid ${BORDER}`, marginBottom: 0, textDecoration: "none" }}>
+          <UserAvatar name={seller} src={sellerAvatarUrl ?? undefined} className="size-10" />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: DARK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{seller}</p>
             <div style={{ marginTop: 2 }}>
@@ -670,7 +660,7 @@ function TicketCard({ ticket, eventSlug }) {
               )}
             </div>
           </div>
-        </div>
+        </Link>
       </div>
       <div style={{ padding: "12px 16px 14px", marginTop: 12 }}>
         <Link to={`/buy/${eventSlug}/${listingId}`} className={`btn-buy${seated ? " seated" : ""}`}>
@@ -690,7 +680,7 @@ function TicketCard({ ticket, eventSlug }) {
 
 function TicketListRow({ ticket, eventSlug }) {
   const { t } = useTranslation();
-  const { sector, qty, price, seller, initials, verified, badge, acceptsOffers, listingId } = ticket;
+  const { sector, qty, price, seller, sellerId, sellerAvatarUrl, verified, badge, acceptsOffers, listingId } = ticket;
   return (
     <div className={`tk-list-row${badge === "best" ? " best-opt" : ""}`}>
       <div style={{ flex: "1 1 140px", minWidth: 0 }}>
@@ -707,13 +697,13 @@ function TicketListRow({ ticket, eventSlug }) {
           </span>
         )}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 140px", minWidth: 0 }}>
-        <div style={{ width: 28, height: 28, borderRadius: "50%", background: VLIGHT, color: V, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
+      <Link to={`/seller/${sellerId}`} style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 140px", minWidth: 0, textDecoration: "none" }}>
+        <UserAvatar name={seller} src={sellerAvatarUrl ?? undefined} className="size-10" />
         <div style={{ minWidth: 0 }}>
           <p style={{ fontSize: 13, fontWeight: 600, color: DARK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{seller}</p>
           {verified ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: GREEN }}><CheckCircle size={10} /> Verificado</span> : <span style={{ fontSize: 10.5, color: HINT }}>Vendedor nuevo</span>}
         </div>
-      </div>
+      </Link>
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0, marginLeft: "auto" }}>
         <p style={{ fontSize: 19, fontWeight: 800, color: V, whiteSpace: "nowrap" }}>${price}</p>
         <Link to={`/buy/${eventSlug}/${listingId}`} className="btn-buy" style={{ width: "auto", padding: "9px 20px", fontSize: 13 }}>

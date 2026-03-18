@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
   Ticket,
   Plus,
   Loader2,
@@ -12,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { BackButton } from '@/app/components/BackButton';
 import { eventsService } from '@/api/services/events.service';
 import { ticketsService } from '@/api/services/tickets.service';
 import { bffService } from '@/api/services/bff.service';
@@ -643,14 +643,7 @@ export function TicketDetailsStep({ event, onBack, preselectedDateISO }: TicketD
       )}
 
       <div className="space-y-6">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t('sellTicket.backToEvents')}
-        </button>
+        <BackButton onAction={onBack} labelKey="sellTicket.backToEvents" />
 
         <div className="bg-gray-100 rounded-lg p-4">
           <div className="flex items-center gap-3">

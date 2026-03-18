@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Phone, MessageSquare, ArrowLeft, Loader2 } from 'lucide-react';
+import { Phone, MessageSquare, Loader2 } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
 import { otpService } from '@/api/services/otp.service';
 import { OTPType } from '@/api/types/otp';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
+import { BackButton } from '@/app/components/BackButton';
 
 const PHONE_PREFIX = '+549';
 
@@ -159,13 +160,7 @@ export function PhoneVerification() {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-md mx-auto px-4">
           <div className="bg-white rounded-lg shadow-md p-8">
-            <button
-              onClick={() => setStep('input')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {t('phoneVerification.back')}
-            </button>
+            <BackButton onAction={() => setStep('input')} labelKey="phoneVerification.back" />
 
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -246,13 +241,7 @@ export function PhoneVerification() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-md mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('phoneVerification.back')}
-          </button>
+          <BackButton onAction={() => navigate(-1)} labelKey="phoneVerification.back" />
 
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">

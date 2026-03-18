@@ -1,15 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock, Ticket } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 import { useUser } from '@/app/contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
 import { getGoogleClientId } from '@/config/env';
 
+// ─── TicketsHub design tokens ─────────────────────────────────────────────────
+const V      = '#6d28d9';
+const VLIGHT = '#f0ebff';
+const DARK   = '#0f0f1a';
+const MUTED  = '#6b7280';
+const BG     = '#f3f3f0';
+const CARD   = '#ffffff';
+const BORDER = '#e5e7eb';
+const BORD2  = '#d1d5db';
+const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+
 const googleClientId = getGoogleClientId();
 
-/** Renders Google button or a skeleton while the GSI script loads. Must be used inside GoogleOAuthProvider. */
+// ─── Google button block ──────────────────────────────────────────────────────
 function GoogleLoginButtonBlock({
   onSuccess,
   onError,
@@ -20,14 +31,20 @@ function GoogleLoginButtonBlock({
   width: number;
 }) {
   const { scriptLoadedSuccessfully } = useGoogleOAuth();
+
   if (!scriptLoadedSuccessfully) {
     return (
       <div
-        className="skeleton-blink w-full h-[3.25rem] rounded-lg bg-gray-200"
         aria-hidden
+        style={{
+          width: '100%', height: 52, borderRadius: 11,
+          background: BG, border: `1px solid ${BORDER}`,
+          animation: 'pulse 1.5s ease-in-out infinite',
+        }}
       />
     );
   }
+
   return (
     <GoogleLogin
       onSuccess={onSuccess}
@@ -41,30 +58,91 @@ function GoogleLoginButtonBlock({
   );
 }
 
+// ─── Divider ──────────────────────────────────────────────────────────────────
+function Divider({ label }: { label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
+      <div style={{ flex: 1, height: 1, background: BORDER }} />
+      <span style={{ fontSize: 12.5, fontWeight: 600, color: MUTED, ...S }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: BORDER }} />
+    </div>
+  );
+}
+
+// ─── Input field ─────────────────────────────────────────────────────────────
+interface InputFieldProps {
+  label: string;
+  icon: React.ReactNode;
+  name: string;
+  type: string;
+  value: string;
+  placeholder: string;
+  autoComplete: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+}
+
+function InputField({ label, icon, name, type, value, placeholder, autoComplete, onChange, disabled }: InputFieldProps) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div>
+      <label style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        fontSize: 12.5, fontWeight: 700, color: MUTED,
+        textTransform: 'uppercase', letterSpacing: '0.05em',
+        marginBottom: 8, ...S,
+      }}>
+        {icon} {label}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        disabled={disabled}
+        required
+        style={{
+          width: '100%', padding: '12px 14px',
+          border: `1.5px solid ${focused ? V : BORD2}`,
+          borderRadius: 11, fontSize: 14, color: DARK,
+          background: disabled ? BG : CARD,
+          outline: 'none', transition: 'border-color 0.14s',
+          boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
+          ...S,
+        }}
+      />
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 export function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { login, loginWithGoogle, error, clearError } = useUser();
 
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData]         = useState({ email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
-  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
+  const [localError, setLocalError]     = useState<string | null>(null);
+  const googleButtonContainerRef        = useRef<HTMLDivElement>(null);
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
 
-  // Measure container width so Google button matches full width (same as Sign In button)
   useEffect(() => {
     if (!googleClientId) return;
     const el = googleButtonContainerRef.current;
     if (!el) return;
-    const updateWidth = () => setGoogleButtonWidth(el.offsetWidth);
-    updateWidth();
-    const observer = new ResizeObserver(updateWidth);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [googleClientId]);
+    const update = () => setGoogleButtonWidth(el.offsetWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const redirectTarget =
     typeof location.state?.from === 'string'
@@ -81,7 +159,6 @@ export function Login() {
     e.preventDefault();
     setIsSubmitting(true);
     setLocalError(null);
-
     try {
       const response = await login({ email: formData.email, password: formData.password });
       if (response.requiresEmailVerification) {
@@ -100,10 +177,7 @@ export function Login() {
 
   const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
     const idToken = credentialResponse.credential;
-    if (!idToken) {
-      setLocalError(t('login.googleError'));
-      return;
-    }
+    if (!idToken) { setLocalError(t('login.googleError')); return; }
     setIsGoogleLoading(true);
     setLocalError(null);
     clearError();
@@ -121,34 +195,77 @@ export function Login() {
   const isBusy = isSubmitting || isGoogleLoading;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-start sm:items-center justify-center pt-5 pb-8 px-3 sm:pt-3 sm:pb-10 sm:px-4">
+    <div
+      className="login-page-shell"
+      style={{
+        minHeight: '100vh', background: BG,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px 16px', ...S,
+      }}
+    >
       <PageMeta title={t('seo.login.title')} description={t('seo.login.description')} />
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-          <div className="text-center mb-4">
-            <div className="flex justify-center mb-2">
-              <Ticket className="w-9 h-9 text-blue-600" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{t('login.title')}</h1>
-            <p className="text-gray-600 text-sm">{t('login.subtitle')}</p>
-          </div>
 
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        /* Below LandingHeader: avoid vertical center in full viewport — huge empty top on mobile */
+        @media (max-width: 768px) {
+          .login-page-shell {
+            align-items: flex-start !important;
+            justify-content: center;
+            min-height: 0 !important;
+            padding-top: max(12px, env(safe-area-inset-top, 0px));
+            padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+          }
+        }
+      `}</style>
+
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        {/* Brand header */}
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+
+          <h1 style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 'clamp(24px, 3vw, 30px)',
+            fontWeight: 400, color: DARK,
+            letterSpacing: '-0.4px', marginBottom: 6,
+          }}>
+            {t('login.title')}
+          </h1>
+          <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.5 }}>
+            {t('login.subtitle')}
+          </p>
+        </div>
+
+        {/* Card */}
+        <div style={{
+          background: CARD, borderRadius: 20,
+          border: `1px solid ${BORDER}`,
+          boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
+          padding: '28px 24px',
+        }}>
+
+          {/* Error message */}
           {displayError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div style={{
+              padding: '12px 14px', borderRadius: 11, marginBottom: 20,
+              background: '#fef2f2', border: '1px solid #fca5a5',
+              fontSize: 13.5, color: '#dc2626', lineHeight: 1.5,
+            }}>
               {displayError}
             </div>
           )}
 
+          {/* Google login */}
           {googleClientId && (
-            <>    
-              <div className="relative my-4">
-                <div className="relative flex justify-center text-sm">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-              </div>
+            <>
               <div
                 ref={googleButtonContainerRef}
-                className="w-full flex items-center justify-center min-h-[3.25rem] rounded-lg overflow-hidden"
+                style={{
+                  width: '100%', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                  minHeight: 52, borderRadius: 11, overflow: 'hidden',
+                }}
               >
                 <GoogleLoginButtonBlock
                   onSuccess={handleGoogleSuccess}
@@ -156,78 +273,106 @@ export function Login() {
                   width={googleButtonWidth}
                 />
               </div>
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    {t('login.or')}
-                  </span>
-                </div>
-              </div>
+              <Divider label={t('login.or')} />
             </>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  {t('login.email')}
-                </div>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder={t('login.emailPlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                autoComplete="email"
-              />
-            </div>
+          {/* Email + password form */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <InputField
+              label={t('login.email')}
+              icon={<Mail size={13} />}
+              name="email"
+              type="email"
+              value={formData.email}
+              placeholder={t('login.emailPlaceholder')}
+              autoComplete="email"
+              onChange={handleChange}
+              disabled={isBusy}
+            />
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4" />
-                  {t('login.password')}
-                </div>
-              </label>
-              <input
-                type="password"
+              <InputField
+                label={t('login.password')}
+                icon={<Lock size={13} />}
                 name="password"
+                type="password"
                 value={formData.password}
-                onChange={handleChange}
                 placeholder={t('login.passwordPlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
                 autoComplete="current-password"
+                onChange={handleChange}
+                disabled={isBusy}
               />
+              {/* Forgot password — right aligned, under field */}
+              <div style={{ textAlign: 'right', marginTop: 7 }}>
+                <Link
+                  to="/forgot-password"
+                  style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: V, textDecoration: 'none', ...S,
+                  }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={isBusy}
-              className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{
+                width: '100%', padding: '13px',
+                borderRadius: 11, border: 'none',
+                background: isBusy ? BORD2 : V,
+                color: 'white', fontSize: 14.5, fontWeight: 700,
+                cursor: isBusy ? 'not-allowed' : 'pointer',
+                boxShadow: isBusy ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+                transition: 'all 0.15s', ...S,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+              onMouseEnter={e => { if (!isBusy) (e.currentTarget as HTMLButtonElement).style.background = '#5b21b6'; }}
+              onMouseLeave={e => { if (!isBusy) (e.currentTarget as HTMLButtonElement).style.background = V; }}
             >
-              {isSubmitting ? t('login.signingIn') : isGoogleLoading ? t('login.signingInWithGoogle') : t('login.signIn')}
+              {isSubmitting
+                ? t('login.signingIn')
+                : isGoogleLoading
+                  ? t('login.signingInWithGoogle')
+                  : t('login.signIn')}
             </button>
-
-            <p className="text-center text-sm text-gray-600">
-              {t('login.noAccount')}{' '}
-              <Link
-                to="/register"
-                state={{ from: redirectTarget }}
-                className="text-blue-600 hover:text-blue-700 font-semibold"
-              >
-                {t('login.createAccount')}
-              </Link>
-            </p>
           </form>
+
+          {/* Register link */}
+          <p style={{ textAlign: 'center', fontSize: 13.5, color: MUTED, marginTop: 20, ...S }}>
+            {t('login.noAccount')}{' '}
+            <Link
+              to="/register"
+              state={{ from: redirectTarget }}
+              style={{ color: V, fontWeight: 700, textDecoration: 'none', ...S }}
+            >
+              {t('login.createAccount')}
+            </Link>
+          </p>
         </div>
+
+        {/* Trust strip */}
+        <div style={{
+          display: 'flex', justifyContent: 'center', flexWrap: 'wrap',
+          gap: 18, marginTop: 20,
+        }}>
+          {[
+            { icon: '🔒', text: 'Conexión segura' },
+            { icon: '🛡️', text: 'Tus datos protegidos' },
+          ].map(({ icon, text }) => (
+            <div key={text} style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              fontSize: 12.5, color: MUTED, fontWeight: 500,
+            }}>
+              <span style={{ fontSize: 13 }}>{icon}</span> {text}
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );

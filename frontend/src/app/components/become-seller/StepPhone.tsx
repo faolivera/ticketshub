@@ -1,30 +1,104 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Phone, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { otpService } from '@/api/services/otp.service';
 import { OTPType } from '@/api/types/otp';
-import { Button } from '@/app/components/ui/button';
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const V      = '#6d28d9';
+const VLIGHT = '#f0ebff';
+const DARK   = '#0f0f1a';
+const MUTED  = '#6b7280';
+const HINT   = '#9ca3af';
+const BG     = '#f3f3f0';
+const CARD   = '#ffffff';
+const BORDER = '#e5e7eb';
+const BORD2  = '#d1d5db';
+const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 const PHONE_PREFIX = '+549';
 
 export interface StepPhoneProps {
   onComplete: () => void;
-  /** When true, hides the "Back to profile" link (e.g. on /verify-user page). */
   hideBackToProfile?: boolean;
 }
 
+// ─── OTP digit input ─────────────────────────────────────────────────────────
+function OtpInput({ id, value, onChange, onKeyDown, disabled }: {
+  id: string; value: string;
+  onChange: (v: string) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  disabled?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      id={id}
+      type="text"
+      inputMode="numeric"
+      maxLength={1}
+      value={value}
+      onChange={e => { if (/^\d*$/.test(e.target.value)) onChange(e.target.value); }}
+      onKeyDown={onKeyDown}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      disabled={disabled}
+      style={{
+        width: 46, height: 54, textAlign: 'center',
+        fontSize: 22, fontWeight: 800, color: DARK,
+        border: `2px solid ${value ? V : focused ? V : BORD2}`,
+        borderRadius: 12,
+        background: value ? VLIGHT : CARD,
+        outline: 'none',
+        boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
+        transition: 'all 0.14s', ...S,
+      }}
+    />
+  );
+}
+
+// ─── Primary button ───────────────────────────────────────────────────────────
+function PrimaryBtn({ label, loading, loadingLabel, disabled }: {
+  label: string; loading?: boolean; loadingLabel?: string; disabled?: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const isDisabled = disabled || loading;
+  return (
+    <button
+      type="submit"
+      disabled={isDisabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: '100%', padding: '13px', borderRadius: 11, border: 'none',
+        background: isDisabled ? BORD2 : hovered ? '#5b21b6' : V,
+        color: 'white', fontSize: 14.5, fontWeight: 700,
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+        transition: 'all 0.15s',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
+      }}
+    >
+      {loading && <Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} />}
+      {loading ? (loadingLabel ?? label) : label}
+    </button>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
   const { t } = useTranslation();
   const { user, refreshUser } = useUser();
+
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [phase, setPhase] = useState<'input' | 'verify'>('input');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(60);
-  const [canResend, setCanResend] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [phase,       setPhase]       = useState<'input' | 'verify'>('input');
+  const [code,        setCode]        = useState(['', '', '', '', '', '']);
+  const [timer,       setTimer]       = useState(60);
+  const [canResend,   setCanResend]   = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+  const [phoneFocused,setPhoneFocused]= useState(false);
 
   useEffect(() => {
     if (user?.phone && !user.phoneVerified) {
@@ -35,77 +109,58 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
 
   useEffect(() => {
     if (phase === 'verify' && timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => (prev <= 1 ? 0 : prev - 1));
-        setCanResend((prev) => prev || timer <= 1);
+      const id = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) { setCanResend(true); return 0; }
+          return prev - 1;
+        });
       }, 1000);
-      return () => clearInterval(interval);
+      return () => clearInterval(id);
     }
     if (phase === 'verify' && timer === 0) setCanResend(true);
   }, [phase, timer]);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber.trim()) {
-      setError(t('becomeSeller.step1.pleaseEnterPhone'));
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
+    if (!phoneNumber.trim()) { setError(t('becomeSeller.step1.pleaseEnterPhone')); return; }
+    setLoading(true); setError(null);
     try {
-      await otpService.sendOTP({
-        type: OTPType.PhoneVerification,
-        phoneNumber: fullPhoneNumber,
-      });
-      setPhase('verify');
-      setTimer(60);
-      setCanResend(false);
+      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: PHONE_PREFIX + phoneNumber.trim() });
+      setPhase('verify'); setTimer(60); setCanResend(false);
     } catch (err: unknown) {
       const apiErr = err as { code?: string; message?: string };
-      const msg =
-        apiErr?.code === 'INVALID_PHONE_NUMBER'
-          ? t('verifyUser.invalidPhoneNumber')
-          : apiErr?.message ?? t('becomeSeller.step1.sendError');
-      setError(msg);
+      setError(apiErr?.code === 'INVALID_PHONE_NUMBER' ? t('verifyUser.invalidPhoneNumber') : apiErr?.message ?? t('becomeSeller.step1.sendError'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const next = [...code];
-      next[index] = value;
-      setCode(next);
-      if (value && index < 5) {
-        document.getElementById(`become-seller-otp-${index + 1}`)?.focus();
-      }
-    }
+    const next = [...code]; next[index] = value; setCode(next);
+    if (value && index < 5) document.getElementById(`th-otp-${index + 1}`)?.focus();
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      document.getElementById(`become-seller-otp-${index - 1}`)?.focus();
-    }
+    if (e.key === 'Backspace' && !code[index] && index > 0) document.getElementById(`th-otp-${index - 1}`)?.focus();
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!text) return;
+    const next = [...code];
+    text.split('').forEach((d, i) => { if (i < 6) next[i] = d; });
+    setCode(next);
+    document.getElementById(`th-otp-${Math.min(text.length, 5)}`)?.focus();
   };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     const fullCode = code.join('');
-    if (fullCode.length !== 6) {
-      setError(t('becomeSeller.step1.pleaseEnterCompleteCode'));
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
+    if (fullCode.length !== 6) { setError(t('becomeSeller.step1.pleaseEnterCompleteCode')); return; }
+    setLoading(true); setError(null);
     try {
-      await otpService.verifyOTP({
-        type: OTPType.PhoneVerification,
-        code: fullCode,
-        phoneNumber: fullPhoneNumber,
-      });
+      await otpService.verifyOTP({ type: OTPType.PhoneVerification, code: fullCode, phoneNumber: PHONE_PREFIX + phoneNumber.trim() });
       await refreshUser();
       onComplete();
     } catch (err) {
@@ -117,150 +172,136 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
 
   const handleResend = async () => {
     if (!canResend) return;
-    setLoading(true);
-    setError(null);
-    const fullPhoneNumber = PHONE_PREFIX + phoneNumber.trim();
+    setLoading(true); setError(null);
     try {
-      await otpService.sendOTP({
-        type: OTPType.PhoneVerification,
-        phoneNumber: fullPhoneNumber,
-      });
-      setTimer(60);
-      setCanResend(false);
-      setCode(['', '', '', '', '', '']);
+      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: PHONE_PREFIX + phoneNumber.trim() });
+      setTimer(60); setCanResend(false); setCode(['', '', '', '', '', '']);
     } catch (err: unknown) {
       const apiErr = err as { code?: string; message?: string };
-      const msg =
-        apiErr?.code === 'INVALID_PHONE_NUMBER'
-          ? t('verifyUser.invalidPhoneNumber')
-          : apiErr?.message ?? t('becomeSeller.step1.sendError');
-      setError(msg);
+      setError(apiErr?.code === 'INVALID_PHONE_NUMBER' ? t('verifyUser.invalidPhoneNumber') : apiErr?.message ?? t('becomeSeller.step1.sendError'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-          <Phone className="h-5 w-5 text-blue-600" />
+    <>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ background: VLIGHT, borderBottom: `1px solid #ddd6fe`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Phone size={20} color="white" />
+          </div>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: DARK, marginBottom: 3, ...S }}>{t('becomeSeller.step1.title')}</p>
+            <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>{t('becomeSeller.step1.description')}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            {t('becomeSeller.step1.title')}
-          </h2>
-          <p className="text-sm text-gray-600">
-            {t('becomeSeller.step1.description')}
-          </p>
+
+        {/* Body */}
+        <div style={{ padding: '20px' }}>
+
+          {error && (
+            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: '#fef2f2', border: '1px solid #fca5a5', fontSize: 13.5, color: '#dc2626', lineHeight: 1.5, ...S }}>
+              {error}
+            </div>
+          )}
+
+          {phase === 'input' ? (
+            <form onSubmit={handleSendCode} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, ...S }}>
+                  <Phone size={13} /> {t('becomeSeller.step1.phoneLabel')}
+                </label>
+                {/* Prefix + number row */}
+                <div style={{
+                  display: 'flex', borderRadius: 11, overflow: 'hidden',
+                  border: `1.5px solid ${phoneFocused ? V : BORD2}`,
+                  boxShadow: phoneFocused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
+                  transition: 'border-color 0.14s, box-shadow 0.14s', background: CARD,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '0 14px', background: BG, borderRight: `1.5px solid ${phoneFocused ? V : BORD2}`, fontSize: 14, fontWeight: 600, color: DARK, flexShrink: 0, transition: 'border-color 0.14s', ...S }}>
+                    {PHONE_PREFIX}
+                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                    onFocus={() => setPhoneFocused(true)}
+                    onBlur={() => setPhoneFocused(false)}
+                    placeholder={t('becomeSeller.step1.phonePlaceholder')}
+                    disabled={loading}
+                    style={{ flex: 1, minWidth: 0, padding: '12px 14px', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: DARK, ...S }}
+                  />
+                </div>
+              </div>
+              <PrimaryBtn label={t('becomeSeller.step1.sendCode')} loading={loading} loadingLabel={t('becomeSeller.step1.sending')} />
+            </form>
+
+          ) : (
+            <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Code sent info */}
+              <div style={{ padding: '12px 14px', borderRadius: 11, background: BG, border: `1px solid ${BORDER}` }}>
+                <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>
+                  {t('becomeSeller.step1.codeSent', { phone: PHONE_PREFIX + phoneNumber })}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setPhase('input'); setError(null); setCode(['', '', '', '', '', '']); }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: V, padding: '4px 0 0', textDecoration: 'underline', ...S }}
+                >
+                  Cambiar número
+                </button>
+              </div>
+
+              {/* OTP inputs */}
+              <div>
+                <label style={{ display: 'block', textAlign: 'center', fontSize: 11.5, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14, ...S }}>
+                  {t('becomeSeller.step1.enterCode')}
+                </label>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                  {code.map((digit, i) => (
+                    <OtpInput
+                      key={i}
+                      id={`th-otp-${i}`}
+                      value={digit}
+                      onChange={v => handleOtpChange(i, v)}
+                      onKeyDown={e => handleOtpKeyDown(i, e)}
+                      disabled={loading}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <PrimaryBtn
+                label={t('becomeSeller.step1.verify')}
+                loading={loading}
+                loadingLabel={t('becomeSeller.step1.verifying')}
+                disabled={code.some(d => d === '')}
+              />
+
+              {/* Resend */}
+              <div style={{ textAlign: 'center' }}>
+                {canResend ? (
+                  <button type="button" onClick={handleResend} disabled={loading}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 700, color: V, textDecoration: 'underline', ...S }}>
+                    {t('becomeSeller.step1.resendCode')}
+                  </button>
+                ) : (
+                  <p style={{ fontSize: 13, color: HINT, ...S }}>
+                    {t('becomeSeller.step1.resendIn', { seconds: timer })}
+                  </p>
+                )}
+              </div>
+            </form>
+          )}
         </div>
       </div>
-
-      {!hideBackToProfile && (
-        <Link
-          to="/user-profile"
-          className="mb-4 inline-block text-sm text-blue-600 hover:text-blue-700"
-        >
-          {t('becomeSeller.step1.backToProfile')}
-        </Link>
-      )}
-
-      {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {phase === 'input' ? (
-        <form onSubmit={handleSendCode} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('becomeSeller.step1.phoneLabel')}
-            </label>
-            <div className="flex rounded-lg border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-              <span className="inline-flex items-center rounded-l-lg border-0 border-r border-gray-300 bg-gray-50 px-4 py-3 text-gray-700">
-                {PHONE_PREFIX}
-              </span>
-              <input
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={phoneNumber}
-                onChange={(e) => {
-                  const digitsOnly = e.target.value.replace(/\D/g, '');
-                  setPhoneNumber(digitsOnly);
-                }}
-                placeholder={t('becomeSeller.step1.phonePlaceholder')}
-                className="flex-1 min-w-0 rounded-r-lg border-0 bg-transparent px-4 py-3 focus:border-0 focus:outline-none focus:ring-0"
-                disabled={loading}
-              />
-            </div>
-          </div>
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t('becomeSeller.step1.sending')}
-              </>
-            ) : (
-              t('becomeSeller.step1.sendCode')
-            )}
-          </Button>
-        </form>
-      ) : (
-        <form onSubmit={handleVerify} className="space-y-4">
-          <p className="text-sm text-gray-600">
-            {t('becomeSeller.step1.codeSent', { phone: PHONE_PREFIX + phoneNumber })}
-          </p>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              {t('becomeSeller.step1.enterCode')}
-            </label>
-            <div className="flex justify-center gap-2">
-              {code.map((digit, i) => (
-                <input
-                  key={i}
-                  id={`become-seller-otp-${i}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className="h-12 w-11 rounded-lg border border-gray-300 text-center text-lg font-semibold focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  disabled={loading}
-                />
-              ))}
-            </div>
-          </div>
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t('becomeSeller.step1.verifying')}
-              </>
-            ) : (
-              t('becomeSeller.step1.verify')
-            )}
-          </Button>
-          <div className="text-center text-sm">
-            {canResend ? (
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={loading}
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                {t('becomeSeller.step1.resendCode')}
-              </button>
-            ) : (
-              <span className="text-gray-500">
-                {t('becomeSeller.step1.resendIn', { seconds: timer })}
-              </span>
-            )}
-          </div>
-        </form>
-      )}
-    </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft, MapPin, Calendar, Shield, Lock,
+  MapPin, Calendar, Shield, Lock,
   CheckCircle, AlertCircle, ChevronDown, ChevronUp,
   Minus, Plus, Check, CreditCard, MessageCircle, Loader2
 } from "lucide-react";
@@ -14,7 +14,6 @@ import { TermsUserType, AcceptanceMethod } from "@/api/types/terms";
 import { formatDateTime, formatMonthYear } from "@/lib/format-date";
 import { formatCurrencyFromUnits } from "@/lib/format-currency";
 import { useUser } from "@/app/contexts/UserContext";
-import { LandingHeader, LandingFooter } from "@/app/components/landing";
 import {
   V, VLIGHT, BLUE, DARK, MUTED, HINT, BG, CARD, SURFACE, BORDER, BORD2,
   GREEN, GLIGHT, GBORD, AMBER, ABG, ABORD, S, E
@@ -23,6 +22,7 @@ import { LoadingSpinner } from "@/app/components/LoadingSpinner";
 import { ErrorMessage, ErrorAlert } from "@/app/components/ErrorMessage";
 import { ClientTnC } from "@/app/components/ClientTnC";
 import { PageMeta } from "@/app/components/PageMeta";
+import { BackButton } from "@/app/components/BackButton";
 import { SeatingType, TicketUnitStatus } from "@/api/types";
 
 const STEPS = ["Selección", "Confirmar", "Pago"];
@@ -83,7 +83,8 @@ export default function Checkout() {
   const missingV2 = effectiveCheckoutRisk?.missingV2 ?? (effectiveCheckoutRisk?.requireV2 && !user?.phoneVerified);
   const missingV3 = effectiveCheckoutRisk?.missingV3 ?? (effectiveCheckoutRisk?.requireV3 && !user?.identityVerified);
   const cannotPurchaseDueToVerification = isAuthenticated && (missingV1 || missingV2 || missingV3);
-  const verified = isAuthenticated && !missingV2 && !missingV3;
+  /** Guests are not blocked by buy-button copy; they go to login on purchase. */
+  const buyButtonBlockedByIdentity = isAuthenticated && (missingV2 || missingV3);
 
   const showBuyTermsBlock =
     isAuthenticated &&
@@ -468,7 +469,7 @@ export default function Checkout() {
 
   const btnLabel = !canProceed
     ? (isNumberedListing ? t("buyTicket.selectSeats") : t("buyTicket.quantity"))
-    : !verified
+    : buyButtonBlockedByIdentity
       ? t("buyTicket.identityRequiredToPurchase")
       : showBuyTermsBlock && !buyTermsAccepted
         ? t("buyTicket.acceptTermsRequired")
@@ -476,7 +477,7 @@ export default function Checkout() {
 
   const btnAction = !canProceed
     ? null
-    : !verified
+    : buyButtonBlockedByIdentity
       ? null
       : showBuyTermsBlock && !buyTermsAccepted
         ? null
@@ -491,10 +492,10 @@ export default function Checkout() {
         description={t("seo.buyTicket.description", { eventName: listing.eventName })}
         image={listing.bannerUrls?.rectangle ?? listing.bannerUrls?.square}
       />
-      <LandingHeader homeHref="/" />
 
       <style>{`
         .co-layout { display: grid; grid-template-columns: 1fr 400px; gap: 20px; max-width: 1000px; margin: 0 auto; padding: 24px; }
+        .co-back { grid-column: 1 / -1; }
         @media(max-width: 860px) { .co-layout { grid-template-columns: 1fr; } .co-sticky { position: static !important; } }
         .co-sticky { position: sticky; top: 24px; align-self: start; }
         .seat-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid ${BORD2}; background: white; color: ${DARK}; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.14s; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -513,39 +514,15 @@ export default function Checkout() {
         .checkbox-custom.checked { background: ${V}; border-color: ${V}; }
       `}</style>
 
-      {/* Top nav */}
-      <div style={{ background: "rgba(249,249,247,0.97)", backdropFilter: "blur(14px)", borderBottom: `1px solid ${BORDER}`, position: "sticky", top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link
-            to={isOwnListing ? "/seller-dashboard?tab=listed" : `/event/${eventSlug}`}
-            style={{ display: "flex", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", color: MUTED, fontSize: 14, fontWeight: 500, ...S, padding: "6px 0", textDecoration: "none" }}
-          >
-            <ArrowLeft size={16} /> {isOwnListing ? t("buyTicket.backToMyListings") : t("buyTicket.backToEvent")}
-          </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-            {STEPS.map((s, i) => {
-              const idx = i + 1;
-              const done = idx < step;
-              const active = idx === step;
-              return (
-                <div key={s} style={{ display: "flex", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: done ? V : active ? V : BORDER, color: done || active ? "white" : MUTED }}>
-                      {done ? <Check size={12} /> : idx}
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? DARK : MUTED, whiteSpace: "nowrap" }}>{s}</span>
-                  </div>
-                  {i < STEPS.length - 1 && <div style={{ width: 32, height: 1, background: BORDER, margin: "0 10px" }} />}
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ width: 120 }} />
-        </div>
-      </div>
 
       <div className="co-layout" style={{ flex: 1 }}>
-        {/* Left column */}
+        <div className="co-back">
+          <BackButton
+            to={isOwnListing ? "/seller-dashboard?tab=listed" : `/event/${eventSlug}`}
+            labelKey={isOwnListing ? "buyTicket.backToMyListings" : "buyTicket.backToEvent"}
+            embedded
+          />
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Own listing warning */}
           {isOwnListing && (
@@ -705,7 +682,7 @@ export default function Checkout() {
           )}
 
           {/* Verification */}
-          {!verified && isAuthenticated && (missingV2 || missingV3) && (
+          {isAuthenticated && (missingV2 || missingV3) && (
             <div style={{ background: ABG, border: `1.5px solid ${ABORD}`, borderRadius: 14, padding: 18 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 9, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -728,7 +705,7 @@ export default function Checkout() {
             </div>
           )}
 
-          {verified && isAuthenticated && (
+          {isAuthenticated && !missingV2 && !missingV3 && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: GLIGHT, border: `1px solid ${GBORD}`, borderRadius: 12 }}>
               <CheckCircle size={16} style={{ color: GREEN, flexShrink: 0 }} />
               <p style={{ fontSize: 13, fontWeight: 600, color: GREEN }}>{t("buyTicket.identityVerified")}</p>
@@ -834,8 +811,6 @@ export default function Checkout() {
           </div>
         </div>
       </div>
-
-      <LandingFooter />
     </div>
   );
 }

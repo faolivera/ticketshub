@@ -14,13 +14,45 @@ const ROTATE_INTERVAL_MS = 6000;
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/1400/400";
 
 /**
- * Hero with same dimensions as the landing hero. Rotates through featured events,
- * shows rectangle banner, "Ver Entradas" button (links to event page), and trust messages bottom-right.
+ * Hero with same dimensions as the landing hero on desktop; square crop + square banner on mobile.
+ * Rotates through featured events, "Ver Entradas" links to event page, trust messages bottom-right.
  */
+const MOBILE_MAX_WIDTH = "(max-width: 767px)";
+
+function resolveBannerSrc(ev, preferSquare) {
+  if (preferSquare) {
+    return (
+      ev.bannerUrls?.square ||
+      ev.bannerUrls?.rectangle ||
+      ev.images?.[0]?.src ||
+      DEFAULT_IMAGE
+    );
+  }
+  return (
+    ev.bannerUrls?.rectangle ||
+    ev.bannerUrls?.square ||
+    ev.images?.[0]?.src ||
+    DEFAULT_IMAGE
+  );
+}
+
 export function HighlightedEventsHero() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
+  const [preferSquareLayout, setPreferSquareLayout] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia(MOBILE_MAX_WIDTH).matches
+      : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MAX_WIDTH);
+    const onChange = () => setPreferSquareLayout(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,11 +87,6 @@ export function HighlightedEventsHero() {
   if (loading || events.length === 0) return null;
 
   const event = events[index];
-  const img =
-    event.bannerUrls?.rectangle ||
-    event.bannerUrls?.square ||
-    event.images?.[0]?.src ||
-    DEFAULT_IMAGE;
 
   return (
     <div
@@ -76,22 +103,30 @@ export function HighlightedEventsHero() {
         style={{
           position: "relative",
           overflow: "hidden",
-          aspectRatio: "1400/400",
-          minHeight: 280,
+          aspectRatio: preferSquareLayout ? "1 / 1" : "1400 / 400",
+          minHeight: preferSquareLayout ? undefined : 280,
         }}
       >
-        <img
-          src={img}
-          alt=""
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center 35%",
-          }}
-        />
+        {events.map((ev, i) => {
+          const src = resolveBannerSrc(ev, preferSquareLayout);
+          return (
+            <img
+              key={ev.slug}
+              src={src}
+              alt=""
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center 35%",
+                opacity: i === index ? 1 : 0,
+                transition: "opacity 0.9s ease-in-out",
+              }}
+            />
+          );
+        })}
         <div
           style={{
             position: "absolute",
@@ -105,7 +140,9 @@ export function HighlightedEventsHero() {
             position: "absolute",
             inset: 0,
             zIndex: 2,
-            padding: "44px 44px 20px 44px",
+            padding: preferSquareLayout
+              ? "20px 14px 14px 14px"
+              : "44px 44px 20px 44px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -160,23 +197,31 @@ export function HighlightedEventsHero() {
           <div
             style={{
               display: "flex",
-              justifyContent: "flex-end",
-              width: "50%",
-              marginLeft: "auto",
-              marginTop: 16,
+              justifyContent: preferSquareLayout ? "center" : "flex-end",
+              width: preferSquareLayout ? "100%" : "50%",
+              marginLeft: preferSquareLayout ? 0 : "auto",
+              marginTop: preferSquareLayout ? 10 : 16,
+              minWidth: 0,
             }}
           >
             <div
               style={{
-                display: "inline-flex",
-                flexWrap: "wrap",
-                gap: 18,
-                justifyContent: "flex-end",
-                padding: "12px 16px",
+                display: "flex",
+                flexWrap: preferSquareLayout ? "nowrap" : "wrap",
+                gap: preferSquareLayout ? 10 : 18,
+                justifyContent: preferSquareLayout ? "center" : "flex-end",
+                alignItems: "center",
+                padding: preferSquareLayout ? "8px 10px" : "12px 16px",
                 borderRadius: 12,
                 backgroundColor: "rgba(0,0,0,0.45)",
                 backdropFilter: "blur(6px)",
+                maxWidth: "100%",
+                overflowX: preferSquareLayout ? "auto" : undefined,
+                WebkitOverflowScrolling: preferSquareLayout ? "touch" : undefined,
+                scrollbarWidth: preferSquareLayout ? "none" : undefined,
+                msOverflowStyle: preferSquareLayout ? "none" : undefined,
               }}
+              className={preferSquareLayout ? "highlighted-events-hero-trust-scroll" : undefined}
             >
             {TRUST.map(({ Icon, title, color }) => (
               <div
@@ -184,14 +229,21 @@ export function HighlightedEventsHero() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 6,
-                  fontSize: 12.5,
+                  flexShrink: 0,
+                  gap: preferSquareLayout ? 4 : 6,
+                  fontSize: preferSquareLayout ? 10 : 12.5,
                   color: "rgba(255,255,255,0.95)",
                   fontWeight: 500,
+                  whiteSpace: "nowrap",
+                  letterSpacing: preferSquareLayout ? "-0.02em" : undefined,
                   ...S,
                 }}
               >
-                <Icon size={14} color={color} strokeWidth={2.2} />
+                <Icon
+                  size={preferSquareLayout ? 11 : 14}
+                  color={color}
+                  strokeWidth={2.2}
+                />
                 {title}
               </div>
             ))}

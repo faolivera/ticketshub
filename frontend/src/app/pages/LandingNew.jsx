@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { eventsService } from "@/api/services/events.service";
 import { formatDate } from "@/lib/format-date";
 import { V, VLIGHT, BLUE, BLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E } from "@/lib/design-tokens";
-import { LandingHeader, LandingFooter, HighlightedEventsHero, ShieldSVG, MapSVG } from "@/app/components/landing";
+import { HighlightedEventsHero, ShieldSVG, MapSVG } from "@/app/components/landing";
 import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar } from "lucide-react";
 
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
@@ -170,8 +170,6 @@ export default function TicketsHub() {
         @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
       `}</style>
 
-      <LandingHeader homeHref="#eventos" />
-
       {/* ══════ PAGE BODY ══════ */}
       <div style={{ maxWidth:1280, margin:"0 auto", padding:"24px 24px 0" }}>
 
@@ -312,8 +310,6 @@ export default function TicketsHub() {
           </>
         )}
       </div>
-
-      <LandingFooter />
     </div>
   );
 }

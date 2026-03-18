@@ -177,12 +177,10 @@ export function SupportTicketDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <BackButton to="/admin/support-tickets" labelKey="admin.supportTickets.backToList" className="mb-0" />
-        <div>
-          <h1 className="text-2xl font-bold">{t('admin.supportTickets.detailTitle')}</h1>
-          <p className="text-muted-foreground text-sm font-mono">{ticket.id}</p>
-        </div>
+      <BackButton to="/admin/support-tickets" labelKey="admin.supportTickets.backToList" />
+      <div>
+        <h1 className="text-2xl font-bold">{t('admin.supportTickets.detailTitle')}</h1>
+        <p className="text-muted-foreground text-sm font-mono">{ticket.id}</p>
       </div>
 
       <Card>

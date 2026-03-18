@@ -8,10 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card';
+import { BackButton } from '@/app/components/BackButton';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Textarea } from '@/app/components/ui/textarea';
-import { ArrowLeft, Loader2, Send } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import { supportService } from '@/api/services';
 import type { SupportTicketWithMessages, SupportMessage } from '@/api/types';
 import { SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY } from '@/api/types/support';
@@ -94,11 +95,9 @@ export function SupportCaseDetail() {
 
   if (!id) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         <p className="text-destructive">{t('support.errorLoad')}</p>
-        <Button asChild variant="outline" className="mt-4">
-          <Link to="/support">{t('support.backToList')}</Link>
-        </Button>
+        <BackButton to="/support" labelKey="support.backToList" />
       </div>
     );
   }
@@ -115,9 +114,7 @@ export function SupportCaseDetail() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         <p className="text-destructive">{error ?? t('support.errorLoad')}</p>
-        <Button asChild variant="outline">
-          <Link to="/support">{t('support.backToList')}</Link>
-        </Button>
+        <BackButton to="/support" labelKey="support.backToList" />
       </div>
     );
   }
@@ -129,16 +126,10 @@ export function SupportCaseDetail() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8 space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/support" className="shrink-0">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-        </Button>
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold truncate">{ticket.subject}</h1>
-          <p className="text-sm text-muted-foreground font-mono truncate">{ticket.id}</p>
-        </div>
+      <BackButton to="/support" labelKey="support.backToList" />
+      <div className="min-w-0">
+        <h1 className="text-xl sm:text-2xl font-bold truncate">{ticket.subject}</h1>
+        <p className="text-sm text-muted-foreground font-mono truncate">{ticket.id}</p>
       </div>
 
       <Card>

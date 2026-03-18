@@ -311,7 +311,7 @@ export function EventTickets() {
       />
       <JsonLd data={eventJsonLd} />
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <BackButton to="/" labelKey="eventTickets.backToEvents" className="mb-6" />
+        <BackButton to="/" labelKey="eventTickets.backToEvents" />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
           <div className="flex flex-col md:flex-row">

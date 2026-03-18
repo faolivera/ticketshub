@@ -623,7 +623,6 @@ export function MyTicket() {
           <BackButton
             to={isBuyer ? '/my-tickets' : '/seller-dashboard?tab=sold'}
             labelKey="myTicket.backToMyTickets"
-            className="mb-6"
           />
         )}
 

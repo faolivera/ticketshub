@@ -5,7 +5,21 @@ import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
 import { usersService } from '@/api/services/users.service';
 import type { MyBankAccount } from '@/api/types/users';
-import { Button } from '@/app/components/ui/button';
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const V      = '#6d28d9';
+const VLIGHT = '#f0ebff';
+const DARK   = '#0f0f1a';
+const MUTED  = '#6b7280';
+const HINT   = '#9ca3af';
+const BG     = '#f3f3f0';
+const CARD   = '#ffffff';
+const BORDER = '#e5e7eb';
+const BORD2  = '#d1d5db';
+const GREEN  = '#15803d';
+const GLIGHT = '#f0fdf4';
+const GBORD  = '#bbf7d0';
+const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 const CBU_CVU_LENGTH = 22;
 
@@ -13,23 +27,89 @@ export interface StepBankProps {
   onComplete: () => void;
 }
 
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, ...S }}>
+        {label}
+      </label>
+      {children}
+      {hint && <p style={{ fontSize: 12, color: HINT, marginTop: 5, lineHeight: 1.4, ...S }}>{hint}</p>}
+    </div>
+  );
+}
+
+function TextInput({ value, onChange, placeholder, inputMode, mono }: {
+  value: string; onChange: (v: string) => void;
+  placeholder?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  mono?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      type="text"
+      inputMode={inputMode}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      placeholder={placeholder}
+      maxLength={inputMode === 'numeric' ? CBU_CVU_LENGTH : undefined}
+      style={{
+        width: '100%', padding: '12px 14px',
+        border: `1.5px solid ${focused ? V : BORD2}`,
+        borderRadius: 11, fontSize: 14, color: DARK,
+        background: CARD, outline: 'none',
+        fontFamily: mono ? 'monospace' : "'Plus Jakarta Sans', sans-serif",
+        boxShadow: focused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
+        transition: 'border-color 0.14s, box-shadow 0.14s',
+        letterSpacing: mono ? '0.04em' : 'normal',
+      }}
+    />
+  );
+}
+
+function PrimaryBtn({ label, loading, disabled, type = 'submit' }: {
+  label: string; loading?: boolean; disabled?: boolean; type?: 'submit' | 'button';
+}) {
+  const [hovered, setHovered] = useState(false);
+  const isDisabled = disabled || loading;
+  return (
+    <button type={type} disabled={isDisabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: '100%', padding: '13px', borderRadius: 11, border: 'none',
+        background: isDisabled ? BORD2 : hovered ? '#5b21b6' : V,
+        color: 'white', fontSize: 14.5, fontWeight: 700,
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+        transition: 'all 0.15s',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
+      }}>
+      {loading && <Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} />}
+      {label}
+    </button>
+  );
+}
+
 export function StepBank({ onComplete }: StepBankProps) {
   const { t } = useTranslation();
   const { refreshUser } = useUser();
+
   const [bankAccount, setBankAccount] = useState<MyBankAccount | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [holderName, setHolderName] = useState('');
-  const [cbuOrCvu, setCbuOrCvu] = useState('');
-  const [alias, setAlias] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [loading,     setLoading]     = useState(true);
+  const [holderName,  setHolderName]  = useState('');
+  const [cbuOrCvu,    setCbuOrCvu]    = useState('');
+  const [alias,       setAlias]       = useState('');
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+  const [submitted,   setSubmitted]   = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    usersService
-      .getBankAccount()
-      .then((data) => {
+    usersService.getBankAccount()
+      .then(data => {
         if (!cancelled && data) {
           setBankAccount(data);
           setHolderName(data.holderName ?? '');
@@ -37,34 +117,20 @@ export function StepBank({ onComplete }: StepBankProps) {
           setAlias(data.alias ?? '');
         }
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const trimmedHolder = holderName.trim();
-    const trimmedCbu = cbuOrCvu.replace(/\D/g, '').slice(0, CBU_CVU_LENGTH);
-    if (!trimmedHolder) {
-      setError(t('bankAccount.holderNameRequired'));
-      return;
-    }
-    if (trimmedCbu.length !== CBU_CVU_LENGTH || !/^\d+$/.test(trimmedCbu)) {
-      setError(t('bankAccount.cbuOrCvuInvalid'));
-      return;
-    }
+    const trimmedCbu    = cbuOrCvu.replace(/\D/g, '').slice(0, CBU_CVU_LENGTH);
+    if (!trimmedHolder) { setError(t('bankAccount.holderNameRequired')); return; }
+    if (trimmedCbu.length !== CBU_CVU_LENGTH || !/^\d+$/.test(trimmedCbu)) { setError(t('bankAccount.cbuOrCvuInvalid')); return; }
     try {
       setSaving(true);
-      await usersService.updateBankAccount({
-        holderName: trimmedHolder,
-        cbuOrCvu: trimmedCbu,
-        alias: alias.trim() || undefined,
-      });
+      await usersService.updateBankAccount({ holderName: trimmedHolder, cbuOrCvu: trimmedCbu, alias: alias.trim() || undefined });
       await refreshUser();
       setSubmitted(true);
       onComplete();
@@ -75,116 +141,93 @@ export function StepBank({ onComplete }: StepBankProps) {
     }
   };
 
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex justify-center rounded-xl border border-gray-200 bg-white p-12 shadow-sm">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, padding: '40px', display: 'flex', justifyContent: 'center' }}>
+        <Loader2 size={28} style={{ color: V, animation: 'spin 0.7s linear infinite' }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
   }
 
+  // ── Already submitted / existing ─────────────────────────────────────────
   if (submitted || bankAccount != null) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-5 w-5 text-green-600" />
+      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+        <div style={{ background: GLIGHT, borderBottom: `1px solid ${GBORD}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: GLIGHT, border: `1.5px solid ${GBORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <CheckCircle size={22} style={{ color: GREEN }} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {t('becomeSeller.step4.successTitle')}
-            </h2>
-            <p className="text-sm text-gray-600">
-              {t('becomeSeller.step4.successMessage')}
-            </p>
+            <p style={{ fontSize: 16, fontWeight: 700, color: DARK, marginBottom: 3, ...S }}>{t('becomeSeller.step4.successTitle')}</p>
+            <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>{t('becomeSeller.step4.successMessage')}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button asChild className="w-full sm:w-auto">
-            <Link to="/sell-ticket">{t('becomeSeller.step4.goToSell')}</Link>
-          </Button>
+        <div style={{ padding: '16px 20px' }}>
+          <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
+            <PrimaryBtn label={t('becomeSeller.step4.goToSell')} type="button" />
+          </Link>
         </div>
       </div>
     );
   }
 
+  // ── Form ──────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-          <CreditCard className="h-5 w-5 text-blue-600" />
+    <>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ background: VLIGHT, borderBottom: '1px solid #ddd6fe', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <CreditCard size={20} color="white" />
+          </div>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: DARK, marginBottom: 3, ...S }}>{t('becomeSeller.step4.title')}</p>
+            <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>{t('becomeSeller.step4.subtitle')}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            {t('becomeSeller.step4.title')}
-          </h2>
-          <p className="text-sm text-gray-600">
-            {t('becomeSeller.step4.subtitle')}
-          </p>
+
+        <div style={{ padding: '20px' }}>
+          {error && (
+            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: '#fef2f2', border: '1px solid #fca5a5', fontSize: 13.5, color: '#dc2626', lineHeight: 1.5, ...S }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Field label={`${t('bankAccount.holderName')} *`}>
+              <TextInput
+                value={holderName}
+                onChange={setHolderName}
+                placeholder={t('bankAccount.holderNamePlaceholder')}
+              />
+            </Field>
+
+            <Field label={`${t('bankAccount.cbuOrCvu')} *`} hint={t('bankAccount.cbuOrCvuHint')}>
+              <TextInput
+                value={cbuOrCvu}
+                onChange={v => setCbuOrCvu(v.replace(/\D/g, '').slice(0, CBU_CVU_LENGTH))}
+                placeholder={t('bankAccount.cbuOrCvuPlaceholder')}
+                inputMode="numeric"
+                mono
+              />
+            </Field>
+
+            <Field label={t('bankAccount.alias')}>
+              <TextInput
+                value={alias}
+                onChange={setAlias}
+                placeholder={t('bankAccount.aliasPlaceholder')}
+              />
+            </Field>
+
+            <PrimaryBtn label={t('bankAccount.save')} loading={saving} />
+          </form>
         </div>
       </div>
-
-      {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            {t('bankAccount.holderName')} *
-          </label>
-          <input
-            type="text"
-            value={holderName}
-            onChange={(e) => setHolderName(e.target.value)}
-            placeholder={t('bankAccount.holderNamePlaceholder')}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            {t('bankAccount.cbuOrCvu')} *
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={cbuOrCvu}
-            onChange={(e) =>
-              setCbuOrCvu(e.target.value.replace(/\D/g, '').slice(0, CBU_CVU_LENGTH))
-            }
-            placeholder={t('bankAccount.cbuOrCvuPlaceholder')}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            maxLength={CBU_CVU_LENGTH}
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            {t('bankAccount.cbuOrCvuHint')}
-          </p>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            {t('bankAccount.alias')}
-          </label>
-          <input
-            type="text"
-            value={alias}
-            onChange={(e) => setAlias(e.target.value)}
-            placeholder={t('bankAccount.aliasPlaceholder')}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <Button type="submit" disabled={saving} className="w-full">
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('bankAccount.saving')}
-            </>
-          ) : (
-            t('bankAccount.save')
-          )}
-        </Button>
-      </form>
-    </div>
+    </>
   );
 }

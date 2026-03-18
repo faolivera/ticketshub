@@ -625,7 +625,6 @@ export function BuyTicketPage() {
         <BackButton
           to={isOwnListing ? '/seller-dashboard?tab=listed' : `/event/${listing.eventSlug}`}
           labelKey={isOwnListing ? 'buyTicket.backToMyListings' : 'buyTicket.backToEvent'}
-          className="mb-6"
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
