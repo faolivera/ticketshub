@@ -97,12 +97,26 @@ export function LandingHeader({ homeHref: _homeHref = "#eventos" }) {
                 </button>
                 {userOpen && (
                   <div style={{ position: "absolute", right: 0, top: "100%", marginTop: 6, minWidth: 200, background: "white", border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: "0 8px 28px rgba(0,0,0,0.12)", zIndex: 50, padding: 6 }}>
-                    <Link to="/my-tickets" onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: DARK, textDecoration: "none", fontSize: 13, fontWeight: 500, ...S }}><Ticket size={16} /> {t("header.myTickets")}</Link>
-                    {canSell?.() && <Link to="/seller-dashboard" onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: DARK, textDecoration: "none", fontSize: 13, fontWeight: 500, ...S }}><Ticket size={16} /> {t("header.mySales")}</Link>}
+                    <div
+                      className="landing-header-mob-only"
+                      style={{
+                        padding: "12px 12px 10px",
+                        margin: "-6px -6px 0",
+                        borderBottom: `1px solid ${BORDER}`,
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: DARK,
+                        letterSpacing: "-0.02em",
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "—"}
+                    </div>
+                    <Link to="/my-tickets" className="landing-desk-only" onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: DARK, textDecoration: "none", fontSize: 13, fontWeight: 500, ...S }}><Ticket size={16} /> {t("header.myTickets")}</Link>
+                    {canSell?.() && <Link to="/seller-dashboard" className="landing-desk-only" onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: DARK, textDecoration: "none", fontSize: 13, fontWeight: 500, ...S }}><Ticket size={16} /> {t("header.mySales")}</Link>}
                     <Link to="/support" onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: DARK, textDecoration: "none", fontSize: 13, fontWeight: 500, ...S }}><MessageCircle size={16} /> {t("header.support")}</Link>
-                    <Link to="/user-profile" onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: DARK, textDecoration: "none", fontSize: 13, fontWeight: 500, ...S }}><User size={16} /> {t("header.myProfile")}</Link>
+                    <Link to="/user-profile" className="landing-desk-only" onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: DARK, textDecoration: "none", fontSize: 13, fontWeight: 500, ...S }}><User size={16} /> {t("header.myProfile")}</Link>
                     <div className="landing-header-mob-only">
-                      <Link to="/sell-ticket" state={{ from: location.pathname }} onClick={() => setUserOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, color: V, textDecoration: "none", fontSize: 13, fontWeight: 600, ...S }}><Ticket size={16} /> {t("header.sellTickets")}</Link>
                       <div style={{ padding: "6px 12px 10px" }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: MUTED, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>{t("header.language")}</div>
                         <div

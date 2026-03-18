@@ -8,6 +8,7 @@ import { VerificationHelper } from '@/lib/verification';
 import { usersService } from '@/api/services';
 import { UserAvatar } from '@/app/components/UserAvatar';
 import AvatarCropModal from '@/app/components/Avatarcropmodal';
+import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { formatMonthYear } from '@/lib/format-date';
 
 // ─── TicketsHub design tokens ─────────────────────────────────────────────────
@@ -220,8 +221,7 @@ export function UserProfile() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px 80px' }}>
-
+      <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
         {/* Page title */}
         <h1 style={{
           fontFamily: "'DM Serif Display', serif",
@@ -449,7 +449,7 @@ export function UserProfile() {
             {t('userProfile.logout')}
           </button>
         </div>
-      </div>
+      </PageContentMaxWidth>
 
       {/* Avatar crop modal — untouched */}
       <AvatarCropModal

@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Award, Trophy } from 'lucide-react';
@@ -8,28 +8,49 @@ import { reviewsService } from '../../api/services/reviews.service';
 import type { UserReviewMetrics, UserBadge } from '../../api/types';
 import { TX, txFontSans } from '@/app/components/transaction/tokens';
 
+/** Badge chip styles per ticketshub-design-system (Trust + brand). */
+function getBadgeStyle(badge: UserBadge): CSSProperties {
+  if (badge === 'trusted') {
+    return {
+      background: TX.BLIGHT,
+      color: TX.BLUE,
+      border: `1px solid ${TX.BORDER}`,
+    };
+  }
+  if (badge === 'verified') {
+    return {
+      background: '#f0fdfa',
+      color: '#0f766e',
+      border: '1px solid #99f6e4',
+    };
+  }
+  if (badge === 'best_seller') {
+    return {
+      background: TX.VLIGHT,
+      color: TX.V,
+      border: `1.5px solid ${TX.V}`,
+    };
+  }
+  return {
+    background: TX.SURFACE,
+    color: TX.MUTED,
+    border: `1px solid ${TX.BORDER}`,
+  };
+}
+
 interface UserReviewsCardProps {
   userId: string;
   publicName: string;
   avatarUrl?: string;
   role: 'buyer' | 'seller';
   showProfileLink?: boolean;
-  /** Transaction sidebar: design tokens, single name row with metrics + profile */
-  tone?: 'default' | 'transaction';
 }
 
 function getBadgeIcon(badge: UserBadge) {
-  if (badge === 'trusted') return <ShieldCheck className="w-3 h-3" />;
-  if (badge === 'verified') return <Award className="w-3 h-3" />;
-  if (badge === 'best_seller') return <Trophy className="w-3 h-3" />;
+  if (badge === 'trusted') return <ShieldCheck className="h-3 w-3 shrink-0" style={{ color: 'inherit' }} />;
+  if (badge === 'verified') return <Award className="h-3 w-3 shrink-0" style={{ color: 'inherit' }} />;
+  if (badge === 'best_seller') return <Trophy className="h-3 w-3 shrink-0" style={{ color: 'inherit' }} />;
   return null;
-}
-
-function getBadgeColor(badge: UserBadge) {
-  if (badge === 'trusted') return 'bg-blue-100 text-blue-700';
-  if (badge === 'verified') return 'bg-green-100 text-green-700';
-  if (badge === 'best_seller') return 'bg-purple-100 text-purple-700';
-  return 'bg-gray-100 text-gray-700';
 }
 
 function getBadgeLabel(badge: UserBadge, t: (key: string) => string) {
@@ -39,15 +60,37 @@ function getBadgeLabel(badge: UserBadge, t: (key: string) => string) {
   return badge;
 }
 
+const rowStyle: CSSProperties = {
+  ...txFontSans,
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 18,
+};
+
+const nameStyle: CSSProperties = {
+  ...txFontSans,
+  fontSize: 14,
+  fontWeight: 700,
+  lineHeight: 1.25,
+  color: TX.DARK,
+  margin: 0,
+};
+
+const metaStyle: CSSProperties = {
+  ...txFontSans,
+  fontSize: 12.5,
+  fontWeight: 400,
+  lineHeight: 1.5,
+  color: TX.MUTED,
+};
+
 export const UserReviewsCard: FC<UserReviewsCardProps> = ({
   userId,
   publicName,
   avatarUrl,
   role,
   showProfileLink = false,
-  tone = 'default',
 }) => {
-  const tx = tone === 'transaction';
   const { t } = useTranslation();
   const [metrics, setMetrics] = useState<UserReviewMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +109,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
         setMetrics(data);
       } catch (err) {
         console.error('Failed to fetch user metrics:', err);
-        setError('Failed to load metrics');
+        setError('load');
       } finally {
         setIsLoading(false);
       }
@@ -77,12 +120,15 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-start gap-4" style={tx ? txFontSans : undefined}>
-        <Skeleton className="h-14 w-14 rounded-full" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-40" />
+      <div style={rowStyle}>
+        <Skeleton
+          className="h-14 w-14 shrink-0 rounded-full"
+          style={{ backgroundColor: TX.BORDER }}
+        />
+        <div className="min-w-0 flex-1 space-y-2" style={txFontSans}>
+          <Skeleton className="h-[18px] w-32 rounded-md" style={{ backgroundColor: TX.BORDER }} />
+          <Skeleton className="h-3.5 w-24 rounded-md" style={{ backgroundColor: TX.BORDER }} />
+          <Skeleton className="h-3.5 w-40 rounded-md" style={{ backgroundColor: TX.BORDER }} />
         </div>
       </div>
     );
@@ -90,15 +136,17 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
 
   if (error || !metrics) {
     return (
-      <div className="flex items-start gap-4" style={tx ? txFontSans : undefined}>
-        <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14" />
-        <div className="flex-1 min-w-0">
-          <h3
-            className="truncate font-semibold"
-            style={tx ? { color: TX.DARK } : undefined}
-          >
+      <div style={rowStyle}>
+        <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate" style={nameStyle}>
             {publicName}
           </h3>
+          {error && (
+            <p className="mt-1" style={{ ...metaStyle, color: TX.MUTED }}>
+              {t('userReviews.loadError')}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -118,22 +166,25 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
       : t('userReviews.noReviewsYet');
 
   const content = (
-    <div className="flex items-start gap-4" style={tx ? txFontSans : undefined}>
-      <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14" />
+    <div style={rowStyle}>
+      <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14 shrink-0" />
       <div className="min-w-0 flex-1">
-        <h3
-          className={`truncate font-semibold ${tx ? '' : 'text-gray-900'}`}
-          style={tx ? { color: TX.DARK } : undefined}
-        >
+        <h3 className="truncate" style={nameStyle}>
           {publicName}
         </h3>
 
         {role === 'seller' && metrics.badges.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {metrics.badges.map((badge) => (
               <span
                 key={badge}
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${getBadgeColor(badge)}`}
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
+                style={{
+                  ...txFontSans,
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  ...getBadgeStyle(badge),
+                }}
               >
                 {getBadgeIcon(badge)}
                 {getBadgeLabel(badge, t)}
@@ -143,11 +194,11 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
         )}
 
         <div
-          className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm ${tx ? '' : 'text-gray-600'}`}
-          style={tx ? { color: TX.MUTED } : undefined}
+          className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1"
+          style={metaStyle}
         >
           <span>{transactionText}</span>
-          <span className={tx ? '' : 'text-gray-300'} style={tx ? { color: TX.BORD2 } : undefined}>
+          <span style={{ color: TX.BORD2 }} aria-hidden>
             •
           </span>
           <span>{reviewText}</span>
@@ -158,24 +209,17 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
 
   if (showProfileLink && role === 'seller') {
     return (
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3" style={txFontSans}>
         {content}
         <Link
           to={`/seller/${userId}`}
-          className={`block w-full rounded-[10px] py-2.5 px-4 text-center text-sm font-bold transition-colors no-underline ${
-            tx
-              ? 'border-[1.5px] hover:bg-violet-50'
-              : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-          }`}
-          style={
-            tx
-              ? {
-                  ...txFontSans,
-                  borderColor: TX.BORD2,
-                  color: TX.V,
-                }
-              : undefined
-          }
+          className="block w-full rounded-[10px] border-[1.5px] py-2.5 px-4 text-center text-[13.5px] font-semibold no-underline transition-colors duration-[0.16s] ease-out hover:bg-[#f0ebff]"
+          style={{
+            ...txFontSans,
+            borderColor: TX.BORD2,
+            color: TX.V,
+            background: TX.CARD,
+          }}
         >
           {t('userReviews.viewProfile')}
         </Link>

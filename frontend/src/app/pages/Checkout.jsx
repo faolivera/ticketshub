@@ -110,6 +110,7 @@ export default function Checkout() {
         : quantity;
 
   const listingCurrency = listing?.pricePerTicket?.currency ?? "ARS";
+  const listingPricePerTicketUnits = (listing?.pricePerTicket?.amount ?? 0) / 100;
   const pricePerTicket = (acceptedOffer
     ? (acceptedOffer.offeredPrice?.amount ?? listing?.pricePerTicket?.amount ?? 0)
     : (listing?.pricePerTicket?.amount ?? 0)) / 100;
@@ -725,7 +726,27 @@ export default function Checkout() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <PriceLine
                   label={t("myTicket.ticketPriceTotal")}
-                  sub={selectedQuantity > 0 ? `${formatCurrencyFromUnits(pricePerTicket, listingCurrency)} × ${selectedQuantity}` : "—"}
+                  sub={
+                    selectedQuantity <= 0
+                      ? "—"
+                      : acceptedOffer
+                        ? (
+                            <>
+                              <div style={{ textDecoration: "line-through", color: MUTED, fontSize: 12.5 }}>
+                                {formatCurrencyFromUnits(listingPricePerTicketUnits, listingCurrency)} × {selectedQuantity}
+                              </div>
+                              <div style={{ marginTop: 6 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: DARK, display: "block", marginBottom: 2 }}>
+                                  {t("buyTicket.offeredPrice")}
+                                </span>
+                                <span style={{ fontSize: 11.5, color: HINT }}>
+                                  {formatCurrencyFromUnits((acceptedOffer.offeredPrice?.amount ?? 0) / 100, listingCurrency)} × {selectedQuantity}
+                                </span>
+                              </div>
+                            </>
+                          )
+                        : `${formatCurrencyFromUnits(pricePerTicket, listingCurrency)} × ${selectedQuantity}`
+                  }
                   value={selectedQuantity > 0 ? formatCurrencyFromUnits(subtotal, listingCurrency) : formatCurrencyFromUnits(0, listingCurrency)}
                 />
                 <PriceLine
@@ -838,7 +859,9 @@ function PriceLine({ label, sub, value }) {
     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
       <div>
         <p style={{ fontSize: 13.5, color: DARK, fontWeight: 500 }}>{label}</p>
-        {sub && <p style={{ fontSize: 11.5, color: HINT, marginTop: 1 }}>{sub}</p>}
+        {sub != null && sub !== "" && (
+          <div style={{ fontSize: 11.5, color: HINT, marginTop: 1 }}>{sub}</div>
+        )}
       </div>
       <span style={{ fontSize: 13.5, fontWeight: 600, color: DARK, whiteSpace: "nowrap" }}>{value}</span>
     </div>

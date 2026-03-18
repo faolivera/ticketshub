@@ -1552,7 +1552,8 @@
     "ticketsBought": "{{count}} entradas compradas",
     "positiveReviews": "{{percent}}% positivas ({{count}} reseñas)",
     "noReviewsYet": "Sin reseñas aún",
-    "viewProfile": "Ver Perfil"
+    "viewProfile": "Ver Perfil",
+    "loadError": "No se pudo cargar la reputación."
   },
   "reviews": {
     "leaveReview": "Dejar una Reseña",

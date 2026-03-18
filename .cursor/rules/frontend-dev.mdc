@@ -87,6 +87,13 @@ export const Profile: FC = () => {
 3. **Páginas**: `PascalCase.tsx` en `pages/`
 4. **Props**: Interface con sufijo `Props`
 
+## Ancho de contenido (desktop)
+
+Para páginas con header de landing (no admin): el contenido debe alinearse con **LandingNew** (hero, búsqueda, grid de eventos) — **mismo ancho que la fila del header** (logo … menú usuario).
+
+- Usa **`PageContentMaxWidth`** de `@/app/components/PageContentMaxWidth` como contenedor principal del contenido (1280px max, centrado, padding horizontal 24px).
+- No anches el contenido solo a la izquierda del viewport; el bloque va **centrado** con esos márgenes laterales iguales.
+
 ## Estilos con TailwindCSS
 
 ```tsx

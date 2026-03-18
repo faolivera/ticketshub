@@ -1553,7 +1553,8 @@
     "ticketsBought": "{{count}} tickets bought",
     "positiveReviews": "{{percent}}% positive ({{count}} reviews)",
     "noReviewsYet": "No reviews yet",
-    "viewProfile": "View Profile"
+    "viewProfile": "View Profile",
+    "loadError": "Could not load reputation data."
   },
   "reviews": {
     "leaveReview": "Leave a Review",

@@ -26,7 +26,6 @@ export function CounterpartCard({
         publicName={name}
         role={counterpartRole}
         showProfileLink={showProfileLink}
-        tone="transaction"
       />
       <button
         type="button"
