@@ -356,7 +356,16 @@ export class EventsService {
       sections: sectionsByEvent.get(event.id) ?? [],
     }));
 
-    return await this.attachImages(ctx, eventsWithDates);
+    const withImages = await this.attachImages(ctx, eventsWithDates);
+    const minByEvent =
+      await this.ticketsService.getMinActiveListingPriceByEventIds(
+        ctx,
+        withImages.map((e) => e.id),
+      );
+    return withImages.map((e) => {
+      const lp = minByEvent.get(e.id);
+      return lp ? { ...e, lowestListingPrice: lp } : e;
+    });
   }
 
   /**
@@ -897,6 +906,12 @@ export class EventsService {
         status: s.status,
         seatingType: s.seatingType,
       })),
+      ...(event.lowestListingPrice != null && {
+        lowestListingPrice: {
+          amount: event.lowestListingPrice.amount,
+          currency: event.lowestListingPrice.currency,
+        },
+      }),
     };
   }
 

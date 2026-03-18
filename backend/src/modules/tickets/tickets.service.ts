@@ -736,6 +736,20 @@ export class TicketsService {
   }
 
   /**
+   * Lowest listing price per event (active listings with ≥1 available unit).
+   * Amount is minor units (e.g. cents), same as listing API.
+   */
+  async getMinActiveListingPriceByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<Map<string, { amount: number; currency: string }>> {
+    return this.ticketsRepository.getMinActiveListingPriceByEventIds(
+      ctx,
+      eventIds,
+    );
+  }
+
+  /**
    * Update a listing
    * Uses pessimistic locking (FOR UPDATE) to prevent concurrent modifications,
    * combined with version check for additional safety

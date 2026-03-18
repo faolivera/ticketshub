@@ -7,6 +7,7 @@ import type {
   TicketUnit as PrismaTicketUnit,
 } from '@prisma/client';
 import {
+  Prisma,
   TicketType as PrismaTicketType,
   DeliveryMethod as PrismaDeliveryMethod,
   ListingStatus as PrismaListingStatus,
@@ -389,6 +390,43 @@ export class TicketsRepository
       listings: listings.map((l) => this.mapToListing(l)),
       total,
     };
+  }
+
+  async getMinActiveListingPriceByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<Map<string, { amount: number; currency: string }>> {
+    this.logger.debug(ctx, 'getMinActiveListingPriceByEventIds', {
+      count: eventIds.length,
+    });
+    if (eventIds.length === 0) {
+      return new Map();
+    }
+    const client = this.getClient(ctx);
+    const rows = await client.$queryRaw<
+      Array<{ eventId: string; minAmount: number; currency: string | null }>
+    >`
+      SELECT DISTINCT ON (l."eventId")
+        l."eventId" AS "eventId",
+        (l."pricePerTicket"->>'amount')::int AS "minAmount",
+        l."pricePerTicket"->>'currency' AS currency
+      FROM ticket_listings l
+      INNER JOIN ticket_units u ON u."listingId" = l.id AND u.status = 'available'
+      WHERE l.status = 'Active'
+        AND l."eventId" IN (${Prisma.join(eventIds)})
+      ORDER BY l."eventId", (l."pricePerTicket"->>'amount')::int ASC, l.id ASC
+    `;
+    const map = new Map<string, { amount: number; currency: string }>();
+    for (const row of rows) {
+      if (row.minAmount == null || Number.isNaN(row.minAmount)) {
+        continue;
+      }
+      map.set(row.eventId, {
+        amount: row.minAmount,
+        currency: row.currency?.trim() || 'ARS',
+      });
+    }
+    return map;
   }
 
   async getByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]> {

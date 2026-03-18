@@ -29,6 +29,8 @@ import { TermsService } from '../../../../src/modules/terms/terms.service';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import { ConversionService } from '../../../../src/modules/config/conversion.service';
+import { PromotionCodesService } from '../../../../src/modules/promotions/promotion-codes.service';
+import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
 import type { CurrencyCode } from '../../../../src/modules/shared/money.domain';
 import type { Ctx } from '../../../../src/common/types/context';
@@ -167,6 +169,9 @@ describe('TicketsService', () => {
       getAllByEventSectionId: jest.fn(),
       getAllByEventId: jest.fn(),
       getListingStatsByEventIds: jest.fn(),
+      getMinActiveListingPriceByEventIds: jest
+        .fn()
+        .mockResolvedValue(new Map()),
       findByIdForUpdate: jest.fn(),
       reserveUnitsWithLock: jest.fn(),
       restoreUnitsWithLock: jest.fn(),
@@ -262,6 +267,15 @@ describe('TicketsService', () => {
         .mockResolvedValue({ amount: 0, currency: 'USD' }),
     };
 
+    const mockPromotionCodesService = {
+      getActiveForUser: jest.fn().mockResolvedValue(null),
+      incrementUsedAndAddListingId: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const mockEventScoringService = {
+      requestScoring: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketsService,
@@ -270,10 +284,12 @@ describe('TicketsService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: TransactionManager, useValue: mockTxManager },
         { provide: PromotionsService, useValue: mockPromotionsService },
+        { provide: PromotionCodesService, useValue: mockPromotionCodesService },
         { provide: TermsService, useValue: mockTermsService },
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: ConversionService, useValue: mockConversionService },
         { provide: NestConfigService, useValue: mockNestConfig },
+        { provide: EventScoringService, useValue: mockEventScoringService },
       ],
     }).compile();
 
@@ -770,6 +786,27 @@ describe('TicketsService', () => {
       const result = await service.getListingById(mockCtx, 'tkt_123');
 
       expect(result.pendingReason).toBeUndefined();
+    });
+  });
+
+  describe('getMinActiveListingPriceByEventIds', () => {
+    it('should return map from repository', async () => {
+      const priceMap = new Map([
+        ['evt_123', { amount: 10_000, currency: 'ARS' }],
+      ]);
+      ticketsRepository.getMinActiveListingPriceByEventIds.mockResolvedValue(
+        priceMap,
+      );
+
+      const result = await service.getMinActiveListingPriceByEventIds(
+        mockCtx,
+        ['evt_123'],
+      );
+
+      expect(result).toBe(priceMap);
+      expect(
+        ticketsRepository.getMinActiveListingPriceByEventIds,
+      ).toHaveBeenCalledWith(mockCtx, ['evt_123']);
     });
   });
 

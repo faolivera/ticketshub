@@ -15,6 +15,7 @@ import { TransactionsService } from '../../../../src/modules/transactions/transa
 import { EventBannerStorageService } from '../../../../src/modules/events/event-banner-storage.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
+import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import {
   EventStatus,
   EventDateStatus,
@@ -115,6 +116,17 @@ describe('EventsService', () => {
       getListingsByDateId: jest.fn(),
       cancelListingsByDateId: jest.fn(),
       getListingsBySectionId: jest.fn(),
+      getMinActiveListingPriceByEventIds: jest
+        .fn()
+        .mockResolvedValue(new Map()),
+    };
+
+    const mockEventScoringService = {
+      requestScoring: jest.fn().mockResolvedValue(undefined),
+      requestScoringBatch: jest.fn(),
+      getConfig: jest.fn(),
+      updateConfig: jest.fn(),
+      runScoringJob: jest.fn(),
     };
 
     const mockTransactionsService = {
@@ -151,6 +163,7 @@ describe('EventsService', () => {
         { provide: EventBannerStorageService, useValue: mockBannerStorage },
         { provide: UsersService, useValue: mockUsersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: EventScoringService, useValue: mockEventScoringService },
       ],
     }).compile();
 
@@ -263,6 +276,36 @@ describe('EventsService', () => {
         mockCtx,
         ['evt_123'],
       );
+      expect(ticketsService.getMinActiveListingPriceByEventIds).toHaveBeenCalledWith(
+        mockCtx,
+        ['evt_123'],
+      );
+    });
+
+    it('should attach lowestListingPrice when tickets service returns a map entry', async () => {
+      eventsRepository.listEventsPaginated.mockResolvedValue({
+        events: [mockApprovedEvent],
+        total: 1,
+      });
+      eventsRepository.getDatesByEventIds.mockResolvedValue([
+        mockApprovedEventDate,
+      ]);
+      eventsRepository.getSectionsByEventIds.mockResolvedValue([
+        mockApprovedSection,
+      ]);
+      imagesRepository.findByIds.mockResolvedValue([]);
+      ticketsService.getMinActiveListingPriceByEventIds.mockResolvedValue(
+        new Map([
+          ['evt_123', { amount: 1_500_000, currency: 'ARS' }],
+        ]),
+      );
+
+      const result = await service.listEvents(mockCtx, {}, false);
+
+      expect(result[0].lowestListingPrice).toEqual({
+        amount: 1_500_000,
+        currency: 'ARS',
+      });
     });
 
     it('should include all statuses when includeAllStatuses is true', async () => {

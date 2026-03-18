@@ -59,6 +59,17 @@ function eventToCardShape(apiEvent) {
     apiEvent.bannerUrls?.square ||
     apiEvent.images?.[0]?.src ||
     DEFAULT_IMAGE;
+  const lp = apiEvent.lowestListingPrice;
+  const priceMinor = lp?.amount;
+  const priceDisplay =
+    priceMinor != null && !Number.isNaN(priceMinor)
+      ? (priceMinor / 100).toLocaleString("es-AR", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })
+      : null;
+  const priceCurrency = lp?.currency || "ARS";
+
   return {
     id: apiEvent.id,
     slug: apiEvent.slug,
@@ -67,7 +78,8 @@ function eventToCardShape(apiEvent) {
     city: apiEvent.location?.city || "",
     dates: datesFormatted,
     img,
-    price: null,
+    price: priceDisplay,
+    priceCurrency,
     available: null,
     badge: null,
     category: apiEvent.category,
@@ -590,15 +602,50 @@ function EventCard({ event, index, hovered, onHover }) {
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 10, color: MUTED, fontWeight: 500, marginBottom: 1, textTransform: "uppercase", letterSpacing: "0.04em" }}>Desde</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: V, lineHeight: 1, ...S2 }}>
-                {event.price != null ? `$${event.price}` : "Consultar"}
-                {event.price != null && <span style={{ fontSize: 10, fontWeight: 500, color: MUTED, marginLeft: 3 }}> ARS</span>}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: event.price != null ? "space-between" : "flex-end",
+            }}
+          >
+            {event.price != null && (
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: MUTED,
+                    fontWeight: 500,
+                    marginBottom: 1,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  Desde
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: V, lineHeight: 1, ...S2 }}>
+                  ${event.price}
+                  <span style={{ fontSize: 10, fontWeight: 500, color: MUTED, marginLeft: 3 }}>
+                    {" "}
+                    {event.priceCurrency || "ARS"}
+                  </span>
+                </div>
               </div>
-            </div>
-            <span className="th-card-btn" style={{ padding: "7px 12px", borderRadius: 8, background: "white", border: `1.5px solid ${BORD2}`, color: DARK, fontSize: 12, fontWeight: 600, transition: "all 0.16s", ...S2 }}>
+            )}
+            <span
+              className="th-card-btn"
+              style={{
+                padding: "7px 12px",
+                borderRadius: 8,
+                background: "white",
+                border: `1.5px solid ${BORD2}`,
+                color: DARK,
+                fontSize: 12,
+                fontWeight: 600,
+                transition: "all 0.16s",
+                ...S2,
+              }}
+            >
               Ver →
             </span>
           </div>

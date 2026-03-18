@@ -116,6 +116,15 @@ export interface ITicketsRepository {
   getPendingByEventIds(ctx: Ctx, eventIds: string[]): Promise<TicketListing[]>;
 
   /**
+   * Minimum pricePerTicket.amount (cents) per event among Active listings
+   * that have at least one available ticket unit.
+   */
+  getMinActiveListingPriceByEventIds(
+    ctx: Ctx,
+    eventIds: string[],
+  ): Promise<Map<string, { amount: number; currency: string }>>;
+
+  /**
    * Get pending listings by event date ID
    */
   getPendingByEventDateId(
