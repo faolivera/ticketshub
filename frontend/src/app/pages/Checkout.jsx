@@ -506,7 +506,7 @@ export default function Checkout() {
   const btnVariant = canBuy ? "primary" : !canProceed ? "disabled" : "warn";
 
   return (
-    <div style={{ ...S, background: BG, color: DARK, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ ...S, background: BG, color: DARK, minHeight: "100vh"}}>
       <PageMeta
         title={t("seo.buyTicket.title", { eventName: listing.eventName })}
         description={t("seo.buyTicket.description", { eventName: listing.eventName })}
@@ -514,8 +514,7 @@ export default function Checkout() {
       />
 
       <style>{`
-        .co-layout { display: grid; grid-template-columns: 1fr 400px; column-gap: 20px; row-gap: 8px; max-width: 1000px; margin: 0 auto; padding: 24px; }
-        .co-back { grid-column: 1 / -1; }
+        .co-layout { display: grid; grid-template-columns: 1fr 400px; column-gap: 20px; row-gap: 16px; max-width: 1000px; margin: 0 auto; padding: 0 24px 24px; }
         @media(max-width: 860px) { .co-layout { grid-template-columns: 1fr; } .co-sticky { position: static !important; } }
         .co-sticky { position: sticky; top: 24px; align-self: start; }
         .seat-btn { padding: 8px 16px; border-radius: 10px; border: 1.5px solid ${BORD2}; background: white; color: ${DARK}; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.14s; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -535,14 +534,15 @@ export default function Checkout() {
       `}</style>
 
 
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 20px" }}>
+      <BackButton
+          to={isOwnListing ? "/seller-dashboard" : `/event/${eventSlug}`}
+          labelKey={isOwnListing ? "buyTicket.backToMyListings" : "buyTicket.backToEvent"}
+          embedded
+        />  
+      </div>
+      
       <div className="co-layout" style={{ flex: 1 }}>
-        <div className="co-back">
-          <BackButton
-            to={isOwnListing ? "/seller-dashboard" : `/event/${eventSlug}`}
-            labelKey={isOwnListing ? "buyTicket.backToMyListings" : "buyTicket.backToEvent"}
-            embedded
-          />
-        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Own listing warning */}
           {isOwnListing && (

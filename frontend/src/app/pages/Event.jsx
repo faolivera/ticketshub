@@ -384,73 +384,6 @@ export default function EventDetail() {
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 64px" }}>
         <BackButton to="/" labelKey="eventTickets.backToEvents" />
 
-        {/* Hero: blurred event image as background only (no poster), overlay + content */}
-        {/* <div ref={heroRef} className="ev-hero-wrap" style={{ border: `1px solid ${BORDER}`, borderRadius: 20, marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-          <div className="ev-hero-bg" style={{ backgroundImage: `url(${EVENT.img})` }} aria-hidden />
-          <div className="ev-hero-overlay" aria-hidden />
-          <div className="ev-hero-inner">
-            <div className="ev-hero-content" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 0 }}>
-              <div style={{ marginBottom: 16 }}>
-                <CategoryBadge label={EVENT.category} hero />
-                <h1 style={{ ...E, fontSize: "clamp(24px,3vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.5px", color: WHITE, margin: "10px 0 4px", textShadow: "0 1px 3px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.4)" }}>
-                  {EVENT.name}
-                </h1>
-                {EVENT.subtitle && <p style={{ fontSize: 14.5, color: "rgba(255,255,255,0.88)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>{EVENT.subtitle}</p>}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "rgba(255,255,255,0.85)", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
-                  <MapPin size={14} style={{ color: BLIGHT, flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, color: WHITE }}>{EVENT.venue}</span>
-                  {EVENT.location && <><span>·</span><span>{EVENT.location}</span></>}
-                </div>
-              </div>
-              {EVENT.dates?.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700, color: "rgba(255,255,255,0.75)", marginBottom: 8, textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>Seleccioná una fecha</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                    {EVENT.dates.map((d, i) => (
-                      <button key={d.id} type="button" className={`date-pill${dateIdx === i ? " active" : ""}`} onClick={() => setDateIdx(i)}>
-                        {d.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div style={{ padding: "16px 18px", background: "rgba(255, 255, 255, 0.53)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.18)", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: V, marginBottom: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>Entradas desde</p>
-                    <p style={{ fontSize: 32, fontWeight: 800, color: VLIGHT, lineHeight: 1, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
-                      {fmt(minPrice)} <span style={{ fontSize: 12, fontWeight: 500, color: VLIGHT }}>ARS</span>
-                    </p>
-                    <p style={{ fontSize: 12.5, color: V, marginTop: 4, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
-                      <span style={{ fontWeight: 600, color: V }}>{sorted.reduce((acc, t) => acc + t.qty, 0)} entradas</span> disponibles
-                      {activeDate && ` · ${sellersCount} vendedor${sellersCount !== 1 ? "es" : ""}`}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={scrollToTickets}
-                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 10, background: V, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", ...S, boxShadow: SHADOW_V_SOFT, flexShrink: 0 }}
-                  >
-                    Ver entradas <ArrowRight size={15} />
-                  </button>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-                {[
-                  { icon: <Lock size={12} style={{ color: BLIGHT }} />, text: t("landing.trustSecurePayment") },
-                  { icon: <CheckCircle size={12} style={{ color: GREEN_LIGHT }} />, text: t("eventTickets.buyerProtection") },
-                  { icon: <RefreshCw size={12} style={{ color: ABORD }} />, text: t("landing.trustRefund") },
-                ].map(({ icon, text }) => (
-                  <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "rgba(255,255,255,0.85)", fontWeight: 500, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
-                    {icon} {text}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div> */}
 
 <div ref={heroRef} style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, boxShadow: SHADOW_HERO, position: "relative" }}>
 
@@ -749,21 +682,6 @@ function TicketListRow({ ticket, eventSlug }) {
         </Link>
       </div>
     </div>
-  );
-}
-
-function CategoryBadge({ label, hero }) {
-  if (hero) {
-    return (
-      <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 11px", borderRadius: 100, background: "rgba(0,0,0,0.4)", color: "rgba(255,255,255,0.95)", border: "1px solid rgba(255,255,255,0.25)", fontSize: 12, fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
-        {label}
-      </span>
-    );
-  }
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 11px", borderRadius: 100, background: BG, color: MUTED, border: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600 }}>
-      {label}
-    </span>
   );
 }
 
