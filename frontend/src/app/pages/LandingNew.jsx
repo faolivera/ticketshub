@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { eventsService } from "@/api/services/events.service";
 import { formatDate } from "@/lib/format-date";
 import { V, VLIGHT, BLUE, BLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E } from "@/lib/design-tokens";
-import { HighlightedEventsHero, ShieldSVG, MapSVG } from "@/app/components/landing";
+import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero";
+import { ShieldSVG, MapSVG } from "@/app/components/site/SiteBrandIcons";
 import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar } from "lucide-react";
 
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";

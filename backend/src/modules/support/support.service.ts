@@ -499,7 +499,7 @@ export class SupportService {
         }
         if (!VerificationHelper.hasV3(buyer)) {
           throw new ForbiddenException(
-            'Buyer must complete identity verification (KYC) before a refund can be processed. Ask the buyer to complete verification in Profile > Seller verification.',
+            'Buyer must complete identity verification (KYC) before a refund can be processed. Ask the buyer to complete verification via Become a seller (/become-seller) or profile flows as applicable.',
           );
         }
         if (resolution === DisputeResolution.BuyerWins) {

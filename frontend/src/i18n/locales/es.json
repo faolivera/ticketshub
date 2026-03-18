@@ -1149,6 +1149,9 @@
     "completed": {
       "title": "Verificación en curso",
       "message": "Tu verificación de vendedor está en curso. Te avisaremos cuando esté lista.",
+      "verifiedTitle": "Sos vendedor verificado",
+      "verifiedMessage": "Tu identidad y datos bancarios están aprobados. Podés publicar entradas y cobrar según las reglas de la plataforma.",
+      "pendingReviewLabel": "En espera de aprobación",
       "goToProfile": "Volver al perfil",
       "goToSell": "Vender entradas"
     },

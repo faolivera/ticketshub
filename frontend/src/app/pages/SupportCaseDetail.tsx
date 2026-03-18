@@ -187,7 +187,7 @@ export function SupportCaseDetail() {
                   {isSystemMessage ? (
                     <p className="text-sm">
                       {t('support.disputeVerifyIdentityMessage')}{' '}
-                      <Link to="/seller-verification" className="text-primary underline font-medium">
+                      <Link to="/become-seller" className="text-primary underline font-medium">
                         {t('support.disputeVerifyIdentityLink')}
                       </Link>
                     </p>

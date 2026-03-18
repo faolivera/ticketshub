@@ -5,7 +5,8 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider } from '@/app/contexts/UserContext';
 import { SocketProvider } from '@/app/contexts/SocketContext';
-import { LandingHeader, LandingFooter } from '@/app/components/landing';
+import { AppHeader } from '@/app/components/site/AppHeader';
+import { AppFooter } from '@/app/components/site/AppFooter';
 import { MobileNavWithRouting } from '@/app/components/MobileNav';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { AdminProtectedRoute } from '@/app/components/admin/AdminProtectedRoute';
@@ -17,6 +18,7 @@ import { SellerProfile } from '@/app/pages/SellerProfile';
 import Checkout from '@/app/pages/Checkout';
 import { SellerDashboardPage } from '@/app/pages/seller-dashboard/SellerDashboardPage';
 import { MyTicketsPage } from '@/app/pages/my-tickets/MyTicketsPage';
+import { SellerHistoryPage } from '@/app/pages/seller-dashboard/SellerHistoryPage';
 import { HowItWorks } from '@/app/pages/HowItWorks';
 import { Contact } from '@/app/pages/Contact';
 import { SupportListPage } from '@/app/pages/SupportListPage';
@@ -25,9 +27,7 @@ import { SellListingWizard } from '@/app/pages/SellListingWizard';
 import { CreateEvent } from '@/app/pages/CreateEvent';
 import { Login } from '@/app/pages/Login';
 import { Register } from '@/app/pages/Register';
-import { SellerVerification } from '@/app/pages/SellerVerification';
 import { BankAccountPage } from '@/app/pages/BankAccountPage';
-import { PhoneVerification } from '@/app/pages/PhoneVerification';
 import { BecomeSellerWizard } from '@/app/pages/BecomeSellerWizard';
 import { VerifyUserWizard } from '@/app/pages/VerifyUserWizard';
 import { MyTicket } from '@/app/pages/MyTicket';
@@ -72,7 +72,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen flex flex-col w-full min-w-0 overflow-x-hidden">
       <ScrollToTop />
-      {!isAdminRoute && <LandingHeader homeHref={landingHomeHref} />}
+      {!isAdminRoute && <AppHeader homeHref={landingHomeHref} />}
       <main
         className={
           'flex-1 pb-16 md:pb-0 w-full min-w-0' +
@@ -100,14 +100,11 @@ function AppLayout() {
               <Route path="/edit-listing/:listingId" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
               <Route path="/sell-ticket" element={<ProtectedRoute><SellListingWizard /></ProtectedRoute>} />
               <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-              {/* Wallet route hidden from UI (backend still has wallet); uncomment to re-enable */}
-              {/* <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} /> */}
-              <Route path="/phone-verification" element={<ProtectedRoute><PhoneVerification /></ProtectedRoute>} />
               <Route path="/verify-user" element={<ProtectedRoute><VerifyUserWizard /></ProtectedRoute>} />
               <Route path="/become-seller" element={<ProtectedRoute><BecomeSellerWizard /></ProtectedRoute>} />
-              <Route path="/seller-verification" element={<ProtectedRoute><SellerVerification /></ProtectedRoute>} />
               <Route path="/bank-account" element={<ProtectedRoute><BankAccountPage /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
+              <Route path="/seller-dashboard/historial" element={<ProtectedRoute><SellerHistoryPage /></ProtectedRoute>} />
               <Route path="/buy/:eventSlug/:listingId" element={<Checkout />} />
 
               {/* Admin routes — require Admin role */}
@@ -133,7 +130,7 @@ function AppLayout() {
               <Route path="*" element={<NotFound />} />
             </Routes>
       </main>
-      {!isAdminRoute && <LandingFooter />}
+      {!isAdminRoute && <AppFooter />}
       {!isAdminRoute && <MobileNavWithRouting />}
     </div>
   );

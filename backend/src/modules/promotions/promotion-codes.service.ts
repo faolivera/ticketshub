@@ -145,7 +145,7 @@ export class PromotionCodesService {
       case 'wrong_target':
         return 'This promotion code is not available for your role';
       case 'seller_verification_required':
-        return 'Only sellers with verified email and phone can claim this code';
+        return 'Only sellers with verified email and phone can claim this code. Complete onboarding at /become-seller if needed.';
       case 'verified_seller_required':
         return 'This promotion code requires a verified seller account (identity and bank verified)';
       case 'buyer_verification_required':

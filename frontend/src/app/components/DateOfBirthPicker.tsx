@@ -321,7 +321,7 @@ export function DateOfBirthPicker({
         {/* Day segment */}
         <button type="button" onClick={() => togglePanel('day')} disabled={disabled}
           style={{
-            flex: 1, padding: '12px 0', border: 'none', background: 'transparent',
+            flex: 1, padding: '12px 0', border: 'none',
             cursor: disabled ? 'not-allowed' : 'pointer',
             color: day ? DARK : HINT,
             fontSize: 16, fontWeight: day ? 700 : 400,

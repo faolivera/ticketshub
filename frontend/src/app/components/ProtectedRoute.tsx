@@ -42,10 +42,10 @@ export function ProtectedRoute({
     const hasSeller = VerificationHelper.canSell(user);
     const hasVerifiedIdentity = VerificationHelper.hasV3(user);
     if (requiredLevel === 'Seller' && !hasSeller) {
-      return <Navigate to="/seller-verification" replace />;
+      return <Navigate to="/become-seller" replace />;
     }
     if (requiredLevel === 'VerifiedSeller' && !hasVerifiedIdentity) {
-      return <Navigate to="/seller-verification" replace />;
+      return <Navigate to="/become-seller" replace />;
     }
   }
 

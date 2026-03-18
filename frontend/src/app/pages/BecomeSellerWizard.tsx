@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/app/contexts/UserContext';
+import { VerificationHelper } from '@/lib/verification';
 import { StepPhone } from '@/app/components/become-seller/StepPhone';
 import { StepTerms } from '@/app/components/become-seller/StepTerms';
 import { StepIdentity } from '@/app/components/become-seller/StepIdentity';
 import { StepBank } from '@/app/components/become-seller/StepBank';
-import { Check, Phone, FileText, CreditCard, Shield, ArrowRight } from 'lucide-react';
+import { Check, Phone, FileText, CreditCard, Shield, ArrowRight, Clock } from 'lucide-react';
+import type { User } from '@/api/types/users';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const V      = '#6d28d9';
@@ -21,10 +23,51 @@ const BORD2  = '#d1d5db';
 const GREEN  = '#15803d';
 const GLIGHT = '#f0fdf4';
 const GBORD  = '#bbf7d0';
+const AMBER  = '#b45309';
+const ALIGHT = '#fffbeb';
+const ABORD  = '#fde68a';
 const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
-// ─── Types (unchanged) ────────────────────────────────────────────────────────
 export type WizardStep = 1 | 2 | 3 | 4;
+type StepVisual = 'todo' | 'active' | 'verified' | 'pending_review';
+
+function stepVisualStates(user: User, currentStep: WizardStep): Record<WizardStep, StepVisual> {
+  const phoneVerified = user.phoneVerified === true;
+  const isSeller = user.acceptedSellerTermsAt != null;
+  const idStatus = user.identityVerificationStatus;
+  const bankStatus = user.bankAccountStatus;
+  const bankSubmitted = bankStatus === 'pending' || bankStatus === 'approved';
+  const identitySubmitted = idStatus === 'pending' || idStatus === 'approved' || idStatus === 'rejected';
+  const bankOk = user.bankDetailsVerified === true || bankStatus === 'approved';
+  const identityOk = user.identityVerified === true || idStatus === 'approved';
+  const bankPending = bankSubmitted && !bankOk;
+  const identityPending = identitySubmitted && idStatus === 'pending' && !identityOk;
+
+  const s = (step: WizardStep): StepVisual => {
+    if (step === 1) {
+      if (phoneVerified) return 'verified';
+      return currentStep === 1 ? 'active' : 'todo';
+    }
+    if (step === 2) {
+      if (!phoneVerified) return 'todo';
+      if (isSeller) return 'verified';
+      return currentStep === 2 ? 'active' : 'todo';
+    }
+    if (step === 3) {
+      if (!isSeller) return 'todo';
+      if (bankOk) return 'verified';
+      if (bankPending) return 'pending_review';
+      return currentStep === 3 ? 'active' : 'todo';
+    }
+    if (!bankSubmitted) return 'todo';
+    if (identityOk) return 'verified';
+    if (identityPending) return 'pending_review';
+    return currentStep === 4 ? 'active' : 'todo';
+  };
+
+  return { 1: s(1), 2: s(2), 3: s(3), 4: s(4) };
+}
+
 type WizardStatus = 'steps' | 'completed';
 
 // ─── Wizard state hook (logic unchanged) ─────────────────────────────────────
@@ -62,7 +105,7 @@ function useWizardState() {
 
 // ─── Step config ─────────────────────────────────────────────────────────────
 const STEP_META: Record<WizardStep, {
-  icon: React.ReactNode;
+  icon: ReactNode;
   labelKey: string;
 }> = {
   1: { icon: <Phone    size={14} />, labelKey: 'becomeSeller.progress.phone'    },
@@ -72,17 +115,45 @@ const STEP_META: Record<WizardStep, {
 };
 
 // ─── Horizontal step track ────────────────────────────────────────────────────
-function StepTrack({ currentStep, completedSteps }: { currentStep: WizardStep; completedSteps: Set<WizardStep> }) {
+function StepTrack({ currentStep, visualByStep }: { currentStep: WizardStep; visualByStep: Record<WizardStep, StepVisual> }) {
   const { t } = useTranslation();
   const steps = [1, 2, 3, 4] as WizardStep[];
+
+  const segmentColor = (_from: WizardStep, to: WizardStep): string => {
+    const next = visualByStep[to];
+    if (next === 'verified') return GREEN;
+    if (next === 'pending_review') return AMBER;
+    return BORDER;
+  };
 
   return (
     <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, padding: '18px 20px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {steps.map((step, i) => {
-          const done    = completedSteps.has(step);
-          const active  = step === currentStep;
-          const pending = !done && !active;
+          const vis = visualByStep[step];
+          const active = vis === 'active';
+          const isTodo = vis === 'todo';
+
+          let bg: string;
+          let fg: string;
+          let node: ReactNode;
+          if (vis === 'verified') {
+            bg = GREEN;
+            fg = 'white';
+            node = <Check size={14} />;
+          } else if (vis === 'pending_review') {
+            bg = AMBER;
+            fg = 'white';
+            node = <Clock size={14} />;
+          } else if (vis === 'active') {
+            bg = V;
+            fg = 'white';
+            node = STEP_META[step].icon;
+          } else {
+            bg = BORDER;
+            fg = MUTED;
+            node = STEP_META[step].icon;
+          }
 
           return (
             <div key={step} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 0 }}>
@@ -90,22 +161,22 @@ function StepTrack({ currentStep, completedSteps }: { currentStep: WizardStep; c
                 <div style={{
                   width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: done ? GREEN : active ? V : BORDER,
-                  color: (done || active) ? 'white' : MUTED,
+                  background: bg,
+                  color: fg,
                   outline: active ? `3px solid ${VLIGHT}` : 'none',
                   outlineOffset: 2, transition: 'all 0.2s',
                 }}>
-                  {done ? <Check size={14} /> : STEP_META[step].icon}
+                  {node}
                 </div>
                 <span style={{
                   fontSize: 11, fontWeight: active ? 700 : 500, whiteSpace: 'nowrap',
-                  color: active ? DARK : pending ? '#d1d5db' : MUTED, ...S,
+                  color: active ? DARK : vis === 'pending_review' ? AMBER : isTodo ? '#d1d5db' : MUTED, ...S,
                 }}>
                   {t(STEP_META[step].labelKey)}
                 </span>
               </div>
               {i < steps.length - 1 && (
-                <div style={{ flex: 1, height: 2, margin: '0 8px', marginBottom: 22, background: completedSteps.has(steps[i + 1]) || done ? GREEN : BORDER, transition: 'background 0.2s' }} />
+                <div style={{ flex: 1, height: 2, margin: '0 8px', marginBottom: 22, background: segmentColor(step, steps[i + 1]), transition: 'background 0.2s' }} />
               )}
             </div>
           );
@@ -134,34 +205,68 @@ export function BecomeSellerWizard() {
 
   // ── Completed ─────────────────────────────────────────────────────────────
   if (status === 'completed') {
+    const payoutReady = VerificationHelper.canReceivePayout(user);
+    const bankOk = user.bankDetailsVerified === true || user.bankAccountStatus === 'approved';
+    const identityOk = user.identityVerified === true || user.identityVerificationStatus === 'approved';
+
+    const row = (step: WizardStep) => {
+      let icon: ReactNode;
+      let wrapBg: string;
+      let wrapBorder: string;
+      if (step <= 2 || (step === 3 && bankOk) || (step === 4 && identityOk)) {
+        wrapBg = GLIGHT;
+        wrapBorder = GBORD;
+        icon = <Check size={13} style={{ color: GREEN }} />;
+      } else {
+        wrapBg = ALIGHT;
+        wrapBorder = ABORD;
+        icon = <Clock size={13} style={{ color: AMBER }} />;
+      }
+      const showPendingLabel = (step === 3 && !bankOk) || (step === 4 && !identityOk);
+      return (
+        <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: step < 4 ? `1px solid ${BORDER}` : 'none' }}>
+          <div style={{ width: 26, height: 26, borderRadius: '50%', background: wrapBg, border: `1.5px solid ${wrapBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {icon}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 600, color: DARK, ...S }}>{t(STEP_META[step].labelKey)}</span>
+            {showPendingLabel && !payoutReady && (
+              <p style={{ fontSize: 11.5, fontWeight: 600, color: AMBER, marginTop: 2, ...S }}>{t('becomeSeller.completed.pendingReviewLabel')}</p>
+            )}
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div style={{ minHeight: '100vh', background: BG, padding: '24px 16px 48px', ...S }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
           <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-            {/* Completed header */}
-            <div style={{ background: GLIGHT, borderBottom: `1px solid ${GBORD}`, padding: '24px 24px 20px', textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: GLIGHT, border: `2px solid ${GBORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                <Check size={26} style={{ color: GREEN }} />
+            <div style={{
+              background: payoutReady ? GLIGHT : ALIGHT,
+              borderBottom: `1px solid ${payoutReady ? GBORD : ABORD}`,
+              padding: '24px 24px 20px',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%',
+                background: payoutReady ? GLIGHT : ALIGHT,
+                border: `2px solid ${payoutReady ? GBORD : ABORD}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
+              }}>
+                {payoutReady ? <Check size={26} style={{ color: GREEN }} /> : <Clock size={26} style={{ color: AMBER }} />}
               </div>
               <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: DARK, letterSpacing: '-0.3px', marginBottom: 8 }}>
-                {t('becomeSeller.completed.title')}
+                {payoutReady ? t('becomeSeller.completed.verifiedTitle') : t('becomeSeller.completed.title')}
               </h1>
               <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.6, ...S }}>
-                {t('becomeSeller.completed.message')}
+                {payoutReady ? t('becomeSeller.completed.verifiedMessage') : t('becomeSeller.completed.message')}
               </p>
             </div>
 
-            {/* All steps confirmed */}
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}` }}>
-              {([1, 2, 3, 4] as WizardStep[]).map(step => (
-                <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: step < 4 ? `1px solid ${BORDER}` : 'none' }}>
-                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: GLIGHT, border: `1.5px solid ${GBORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Check size={13} style={{ color: GREEN }} />
-                  </div>
-                  <span style={{ fontSize: 13.5, fontWeight: 600, color: DARK, ...S }}>{t(STEP_META[step].labelKey)}</span>
-                </div>
-              ))}
+              {([1, 2, 3, 4] as WizardStep[]).map(s => row(s))}
             </div>
 
             <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -210,7 +315,7 @@ export function BecomeSellerWizard() {
           {t('becomeSeller.title')}
         </h1>
 
-        <StepTrack currentStep={currentStep} completedSteps={completedSteps} />
+        <StepTrack currentStep={currentStep} visualByStep={stepVisualStates(user, currentStep)} />
 
         {currentStep === 1 && <StepPhone    onComplete={async () => { await refreshUser(); }} hideBackToProfile />}
         {currentStep === 2 && <StepTerms    onComplete={async () => { await refreshUser(); }} />}

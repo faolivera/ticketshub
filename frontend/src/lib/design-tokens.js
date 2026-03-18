@@ -1,6 +1,6 @@
 /**
  * TicketsHub design system tokens.
- * Shared by LandingNew, Event page, and any component using the new visual language.
+ * Shared by home, event, checkout, and other public pages using this visual language.
  */
 
 export const V = "#6d28d9";

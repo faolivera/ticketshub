@@ -520,14 +520,14 @@ export class NotificationsSeeder implements OnModuleInit {
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
-      // IDENTITY_VERIFIED
+      // IDENTITY_VERIFIED (CTA: seller onboarding; replaces legacy /seller-verification)
       {
         eventType: NotificationEventType.IDENTITY_VERIFIED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: 'Identidad verificada',
         bodyTemplate: '¡Tu identidad ha sido verificada exitosamente!',
-        actionUrlTemplate: '/user-profile',
+        actionUrlTemplate: '/become-seller',
       },
       {
         eventType: NotificationEventType.IDENTITY_VERIFIED,
@@ -536,7 +536,7 @@ export class NotificationsSeeder implements OnModuleInit {
         titleTemplate: '¡Tu identidad ha sido verificada!',
         bodyTemplate:
           '¡Felicidades {{userName}}! Tu identidad ha sido verificada exitosamente. Ahora puedes acceder a todas las funcionalidades de vendedor verificado.',
-        actionUrlTemplate: '/user-profile',
+        actionUrlTemplate: '/become-seller',
       },
 
       // IDENTITY_REJECTED
@@ -546,7 +546,7 @@ export class NotificationsSeeder implements OnModuleInit {
         locale: 'es',
         titleTemplate: 'Verificación rechazada',
         bodyTemplate: 'Tu solicitud de verificación de identidad fue rechazada',
-        actionUrlTemplate: '/user-profile',
+        actionUrlTemplate: '/become-seller',
       },
       {
         eventType: NotificationEventType.IDENTITY_REJECTED,
@@ -555,7 +555,7 @@ export class NotificationsSeeder implements OnModuleInit {
         titleTemplate: 'Verificación de identidad rechazada',
         bodyTemplate:
           'Hola {{userName}}, lamentablemente tu solicitud de verificación de identidad fue rechazada. Motivo: {{rejectionReason}}. Puedes volver a intentarlo corrigiendo los datos.',
-        actionUrlTemplate: '/user-profile',
+        actionUrlTemplate: '/become-seller',
       },
 
       // IDENTITY_SUBMITTED (admin)

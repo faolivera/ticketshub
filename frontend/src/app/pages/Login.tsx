@@ -208,7 +208,7 @@ export function Login() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-        /* Below LandingHeader: avoid vertical center in full viewport — huge empty top on mobile */
+        /* Below AppHeader: avoid vertical center in full viewport — huge empty top on mobile */
         @media (max-width: 768px) {
           .login-page-shell {
             align-items: flex-start !important;

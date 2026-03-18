@@ -1150,6 +1150,9 @@
     "completed": {
       "title": "Verification in progress",
       "message": "Your seller verification is in progress. We'll notify you when it's ready.",
+      "verifiedTitle": "You're a verified seller",
+      "verifiedMessage": "Your identity and bank details are approved. You can list tickets and receive payouts according to platform rules.",
+      "pendingReviewLabel": "Awaiting approval",
       "goToProfile": "Back to profile",
       "goToSell": "Sell tickets"
     },

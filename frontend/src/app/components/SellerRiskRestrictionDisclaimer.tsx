@@ -10,7 +10,7 @@ interface SellerRiskRestrictionDisclaimerProps {
 
 /**
  * Reusable disclaimer shown when the seller cannot create/update a listing due to risk limits (unverified seller).
- * Used in sell wizard (price step + publish error) and in TicketDetailsStep.
+ * Used in sell wizard (price step + publish error).
  */
 export const SellerRiskRestrictionDisclaimer: FC<SellerRiskRestrictionDisclaimerProps> = ({
   className,

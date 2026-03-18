@@ -636,7 +636,7 @@ export function MyTicket() {
                       : t('myTicket.sellerUnverifiedDisclaimerDesc')}
                   </p>
                   <Link
-                    to="/seller-verification"
+                    to="/become-seller"
                     className="text-sm font-semibold text-amber-700 underline underline-offset-2"
                   >
                     {t('myTicket.sellerUnverifiedVerifyLink')}

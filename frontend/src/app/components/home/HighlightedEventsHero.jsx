@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { eventsService } from "@/api/services/events.service";
-import { V, VLIGHT, BORDER, S, E } from "@/lib/design-tokens";
+import { V, BORDER, S, E } from "@/lib/design-tokens";
 import { ArrowRight, Lock, CheckCircle, RefreshCw } from "lucide-react";
 
 const TRUST = [
@@ -14,8 +14,7 @@ const ROTATE_INTERVAL_MS = 6000;
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/1400/400";
 
 /**
- * Hero with same dimensions as the landing hero on desktop; square crop + square banner on mobile.
- * Rotates through featured events, "Ver Entradas" links to event page, trust messages bottom-right.
+ * Featured-events hero for the home page; admin preview reuses this component.
  */
 const MOBILE_MAX_WIDTH = "(max-width: 767px)";
 
@@ -41,9 +40,7 @@ export function HighlightedEventsHero() {
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [preferSquareLayout, setPreferSquareLayout] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia(MOBILE_MAX_WIDTH).matches
-      : false
+    typeof window !== "undefined" ? window.matchMedia(MOBILE_MAX_WIDTH).matches : false
   );
 
   useEffect(() => {
@@ -73,7 +70,9 @@ export function HighlightedEventsHero() {
       }
     }
     fetchFeatured();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -140,9 +139,7 @@ export function HighlightedEventsHero() {
             position: "absolute",
             inset: 0,
             zIndex: 2,
-            padding: preferSquareLayout
-              ? "20px 14px 14px 14px"
-              : "44px 44px 20px 44px",
+            padding: preferSquareLayout ? "20px 14px 14px 14px" : "44px 44px 20px 44px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -223,30 +220,26 @@ export function HighlightedEventsHero() {
               }}
               className={preferSquareLayout ? "highlighted-events-hero-trust-scroll" : undefined}
             >
-            {TRUST.map(({ Icon, title, color }) => (
-              <div
-                key={title}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  flexShrink: 0,
-                  gap: preferSquareLayout ? 4 : 6,
-                  fontSize: preferSquareLayout ? 10 : 12.5,
-                  color: "rgba(255,255,255,0.95)",
-                  fontWeight: 500,
-                  whiteSpace: "nowrap",
-                  letterSpacing: preferSquareLayout ? "-0.02em" : undefined,
-                  ...S,
-                }}
-              >
-                <Icon
-                  size={preferSquareLayout ? 11 : 14}
-                  color={color}
-                  strokeWidth={2.2}
-                />
-                {title}
-              </div>
-            ))}
+              {TRUST.map(({ Icon, title, color }) => (
+                <div
+                  key={title}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexShrink: 0,
+                    gap: preferSquareLayout ? 4 : 6,
+                    fontSize: preferSquareLayout ? 10 : 12.5,
+                    color: "rgba(255,255,255,0.95)",
+                    fontWeight: 500,
+                    whiteSpace: "nowrap",
+                    letterSpacing: preferSquareLayout ? "-0.02em" : undefined,
+                    ...S,
+                  }}
+                >
+                  <Icon size={preferSquareLayout ? 11 : 14} color={color} strokeWidth={2.2} />
+                  {title}
+                </div>
+              ))}
             </div>
           </div>
         </div>
