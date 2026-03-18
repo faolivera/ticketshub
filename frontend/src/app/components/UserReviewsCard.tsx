@@ -6,6 +6,7 @@ import { UserAvatar } from './UserAvatar';
 import { Skeleton } from './ui/skeleton';
 import { reviewsService } from '../../api/services/reviews.service';
 import type { UserReviewMetrics, UserBadge } from '../../api/types';
+import { TX, txFontSans } from '@/app/components/transaction/tokens';
 
 interface UserReviewsCardProps {
   userId: string;
@@ -13,6 +14,8 @@ interface UserReviewsCardProps {
   avatarUrl?: string;
   role: 'buyer' | 'seller';
   showProfileLink?: boolean;
+  /** Transaction sidebar: design tokens, single name row with metrics + profile */
+  tone?: 'default' | 'transaction';
 }
 
 function getBadgeIcon(badge: UserBadge) {
@@ -42,7 +45,9 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
   avatarUrl,
   role,
   showProfileLink = false,
+  tone = 'default',
 }) => {
+  const tx = tone === 'transaction';
   const { t } = useTranslation();
   const [metrics, setMetrics] = useState<UserReviewMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,8 +77,8 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-start gap-4">
-        <Skeleton className="w-14 h-14 rounded-full" />
+      <div className="flex items-start gap-4" style={tx ? txFontSans : undefined}>
+        <Skeleton className="h-14 w-14 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-24" />
@@ -85,10 +90,15 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
 
   if (error || !metrics) {
     return (
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4" style={tx ? txFontSans : undefined}>
         <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14" />
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-900">{publicName}</h3>
+        <div className="flex-1 min-w-0">
+          <h3
+            className="truncate font-semibold"
+            style={tx ? { color: TX.DARK } : undefined}
+          >
+            {publicName}
+          </h3>
         </div>
       </div>
     );
@@ -108,17 +118,22 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
       : t('userReviews.noReviewsYet');
 
   const content = (
-    <div className="flex items-start gap-4">
+    <div className="flex items-start gap-4" style={tx ? txFontSans : undefined}>
       <UserAvatar name={publicName} src={avatarUrl} className="h-14 w-14" />
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-gray-900 truncate">{publicName}</h3>
+      <div className="min-w-0 flex-1">
+        <h3
+          className={`truncate font-semibold ${tx ? '' : 'text-gray-900'}`}
+          style={tx ? { color: TX.DARK } : undefined}
+        >
+          {publicName}
+        </h3>
 
         {role === 'seller' && metrics.badges.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="mt-1 flex flex-wrap gap-1">
             {metrics.badges.map((badge) => (
               <span
                 key={badge}
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${getBadgeColor(badge)}`}
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${getBadgeColor(badge)}`}
               >
                 {getBadgeIcon(badge)}
                 {getBadgeLabel(badge, t)}
@@ -127,9 +142,14 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
           </div>
         )}
 
-        <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
+        <div
+          className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm ${tx ? '' : 'text-gray-600'}`}
+          style={tx ? { color: TX.MUTED } : undefined}
+        >
           <span>{transactionText}</span>
-          <span className="text-gray-300">•</span>
+          <span className={tx ? '' : 'text-gray-300'} style={tx ? { color: TX.BORD2 } : undefined}>
+            •
+          </span>
           <span>{reviewText}</span>
         </div>
       </div>
@@ -142,7 +162,20 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
         {content}
         <Link
           to={`/seller/${userId}`}
-          className="block w-full text-center bg-gray-100 text-gray-900 py-2 px-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-sm"
+          className={`block w-full rounded-[10px] py-2.5 px-4 text-center text-sm font-bold transition-colors no-underline ${
+            tx
+              ? 'border-[1.5px] hover:bg-violet-50'
+              : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+          }`}
+          style={
+            tx
+              ? {
+                  ...txFontSans,
+                  borderColor: TX.BORD2,
+                  color: TX.V,
+                }
+              : undefined
+          }
         >
           {t('userReviews.viewProfile')}
         </Link>

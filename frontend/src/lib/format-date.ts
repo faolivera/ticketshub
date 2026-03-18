@@ -24,15 +24,20 @@ function toDate(value: DateInput): Date {
 
 /**
  * Format a date for display (date only). Uses current UI language.
- * @example "March 31, 2026" / "31 de marzo de 2026"
+ * Spanish: day/month/year (e.g. 31/03/2026). English: long month name.
  */
 export function formatDate(
   value: DateInput,
-  options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' }
+  options?: Intl.DateTimeFormatOptions
 ): string {
   const date = toDate(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString(getDateLocale(), options);
+  const locale = getDateLocale();
+  const isEs = locale.startsWith('es');
+  const defaults: Intl.DateTimeFormatOptions = isEs
+    ? { day: '2-digit', month: '2-digit', year: 'numeric' }
+    : { month: 'long', day: 'numeric', year: 'numeric' };
+  return date.toLocaleDateString(locale, { ...defaults, ...options });
 }
 
 /**
@@ -51,12 +56,25 @@ export function formatTime(
 
 /**
  * Format date and time in one string. Uses current UI language, time in 24h.
- * @example "March 31, 2026, 22:00" / "31 de marzo de 2026, 22:00"
+ * Spanish: dd/mm/yyyy, HH:mm (e.g. 31/03/2026, 22:00).
  */
 export function formatDateTime(value: DateInput): string {
   const date = toDate(value);
   if (Number.isNaN(date.getTime())) return String(value);
   const locale = getDateLocale();
+  if (locale.startsWith('es')) {
+    const d = date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const tm = date.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    return `${d}, ${tm}`;
+  }
   return date.toLocaleString(locale, {
     year: 'numeric',
     month: 'long',
