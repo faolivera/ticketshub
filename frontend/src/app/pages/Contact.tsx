@@ -1,14 +1,42 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, User, FileText, MessageSquare } from 'lucide-react';
+import { Mail, User, FileText, MessageSquare, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
 import { supportService } from '@/api/services/support.service';
-import {
-  SupportCategory,
-  SupportTicketSource,
-} from '@/api/types/support';
+import { SupportCategory, SupportTicketSource } from '@/api/types/support';
 import { PageMeta } from '@/app/components/PageMeta';
+
+const V      = '#6d28d9';
+const VLIGHT = '#f0ebff';
+const VBORD  = '#ddd6fe';
+const DARK   = '#0f0f1a';
+const MUTED  = '#6b7280';
+const HINT   = '#9ca3af';
+const BG     = '#f3f3f0';
+const CARD   = '#ffffff';
+const BORDER = '#e5e7eb';
+const BORD2  = '#d1d5db';
+const GREEN  = '#15803d';
+const GLIGHT = '#f0fdf4';
+const GBORD  = '#bbf7d0';
+const S  = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const DS = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 };
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px',
+  border: `1.5px solid ${BORDER}`, borderRadius: 10,
+  fontSize: 14, color: DARK, background: CARD,
+  outline: 'none', transition: 'border-color 0.15s',
+  boxSizing: 'border-box',
+  ...S,
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 6,
+  fontSize: 13.5, fontWeight: 600, color: DARK,
+  marginBottom: 6, ...S,
+};
 
 export function Contact() {
   const { t } = useTranslation();
@@ -16,24 +44,19 @@ export function Contact() {
   const transactionId = searchParams.get('transactionId') ?? undefined;
   const { user, isAuthenticated, isLoading: userLoading } = useUser();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name,    setName]    = useState('');
+  const [email,   setEmail]   = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error,   setError]   = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const lockedNameEmail = isAuthenticated && user;
-  const showPurchaseId = Boolean(transactionId);
+  const lockedNameEmail = isAuthenticated && !!user;
 
   useEffect(() => {
     if (user) {
-      const displayName =
-        [user.firstName, user.lastName].filter(Boolean).join(' ') ||
-        user.publicName ||
-        user.email;
-      setName(displayName);
+      setName([user.firstName, user.lastName].filter(Boolean).join(' ') || user.publicName || user.email);
       setEmail(user.email);
     }
   }, [user]);
@@ -46,19 +69,15 @@ export function Contact() {
       if (isAuthenticated && user) {
         await supportService.createTicket({
           category: SupportCategory.Other,
-          source: transactionId
-            ? SupportTicketSource.ContactFromTransaction
-            : SupportTicketSource.ContactForm,
+          source: transactionId ? SupportTicketSource.ContactFromTransaction : SupportTicketSource.ContactForm,
           subject: subject.trim(),
           description: message.trim(),
           transactionId,
         });
       } else {
         await supportService.createContactTicket({
-          name: name.trim(),
-          email: email.trim(),
-          subject: subject.trim(),
-          description: message.trim(),
+          name: name.trim(), email: email.trim(),
+          subject: subject.trim(), description: message.trim(),
           transactionId,
         });
       }
@@ -66,11 +85,9 @@ export function Contact() {
       setSubject('');
       setMessage('');
     } catch (err) {
-      const msg =
-        err && typeof err === 'object' && 'message' in err
-          ? String((err as { message: string }).message)
-          : t('contact.error');
-      setError(msg);
+      setError(err && typeof err === 'object' && 'message' in err
+        ? String((err as { message: string }).message)
+        : t('contact.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -78,146 +95,156 @@ export function Contact() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BG }}>
         <PageMeta title={t('seo.contact.title')} description={t('seo.contact.description')} />
-        <div className="text-gray-500">{t('common.loading')}</div>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        <PageMeta title={t('seo.contact.title')} description={t('seo.contact.description')} />
-        <div className="bg-white rounded-xl shadow-md p-8 text-center">
-          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-7 h-7 text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {t('contact.successTitle')}
-          </h1>
-          <p className="text-gray-600 mb-6">{t('contact.successMessage')}</p>
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800"
-          >
-            {t('contact.backHome')}
-          </Link>
-        </div>
+        <p style={{ fontSize: 14, color: MUTED, ...S }}>{t('common.loading')}</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+    <div style={{ minHeight: '100vh', background: BG, padding: 'clamp(24px,5vw,48px) 16px' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        .th-input:focus{border-color:${V}!important;box-shadow:0 0 0 3px ${VLIGHT}}
+        .th-input:read-only{background:${BG}!important;color:${MUTED}!important;cursor:default}
+      `}</style>
       <PageMeta title={t('seo.contact.title')} description={t('seo.contact.description')} />
-      <div className="bg-white rounded-xl shadow-md p-6 sm:p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          {t('contact.title')}
-        </h1>
-        <p className="text-gray-600 mb-6">{t('contact.intro')}</p>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
+      <div style={{ maxWidth: 560, margin: '0 auto' }}>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <span className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                {t('contact.name')}
-              </span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              readOnly={lockedNameEmail}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-              placeholder={t('contact.namePlaceholder')}
-              autoComplete="name"
-            />
+        {/* Back link */}
+        <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13.5, fontWeight: 600, color: MUTED, textDecoration: 'none', marginBottom: 20, ...S }}>
+          <ArrowLeft size={14} /> {t('contact.backHome', { defaultValue: 'Inicio' })}
+        </Link>
+
+        <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+
+          {/* Header */}
+          <div style={{ padding: '24px 28px 20px', borderBottom: `1px solid ${BORDER}` }}>
+            <h1 style={{ ...DS, fontSize: 'clamp(22px,3vw,28px)', color: DARK, marginBottom: 6 }}>
+              {t('contact.title')}
+            </h1>
+            <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.55, ...S }}>
+              {t('contact.intro')}
+            </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <span className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                {t('contact.email')}
-              </span>
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              readOnly={lockedNameEmail}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-              placeholder={t('contact.emailPlaceholder')}
-              autoComplete="email"
-            />
+          <div style={{ padding: '24px 28px' }}>
+
+            {/* Success state — inline, not full page */}
+            {success && (
+              <div style={{ background: GLIGHT, border: `1px solid ${GBORD}`, borderRadius: 14, padding: '20px 22px', display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 24 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <CheckCircle size={20} style={{ color: GREEN }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: GREEN, marginBottom: 3, ...S }}>
+                    {t('contact.successTitle')}
+                  </p>
+                  <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.5, ...S }}>
+                    {t('contact.successMessage')}
+                  </p>
+                  {isAuthenticated && (
+                    <Link to="/support" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 10, fontSize: 13, fontWeight: 700, color: V, textDecoration: 'none', ...S }}>
+                      {t('contact.viewCases', { defaultValue: 'Ver mis consultas →' })}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
+                <p style={{ fontSize: 13.5, color: '#dc2626', ...S }}>{error}</p>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+              <div>
+                <label style={labelStyle}>
+                  <User size={14} style={{ color: MUTED }} />
+                  {t('contact.name')}
+                </label>
+                <input
+                  type="text" value={name} onChange={e => setName(e.target.value)}
+                  readOnly={lockedNameEmail} required
+                  className="th-input" style={inputStyle}
+                  placeholder={t('contact.namePlaceholder')} autoComplete="name"
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <Mail size={14} style={{ color: MUTED }} />
+                  {t('contact.email')}
+                </label>
+                <input
+                  type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  readOnly={lockedNameEmail} required
+                  className="th-input" style={inputStyle}
+                  placeholder={t('contact.emailPlaceholder')} autoComplete="email"
+                />
+              </div>
+
+              {transactionId && (
+                <div>
+                  <label style={{ ...labelStyle }}>{t('contact.purchaseId')}</label>
+                  <input
+                    type="text" value={transactionId} readOnly
+                    className="th-input" style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 13, background: BG, color: MUTED }}
+                  />
+                </div>
+              )}
+
+              <div>
+                <label style={labelStyle}>
+                  <FileText size={14} style={{ color: MUTED }} />
+                  {t('contact.subject')}
+                </label>
+                <input
+                  type="text" value={subject} onChange={e => setSubject(e.target.value)}
+                  required className="th-input" style={inputStyle}
+                  placeholder={t('contact.subjectPlaceholder')}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <MessageSquare size={14} style={{ color: MUTED }} />
+                  {t('contact.message')}
+                </label>
+                <textarea
+                  value={message} onChange={e => setMessage(e.target.value)}
+                  required rows={5}
+                  className="th-input"
+                  style={{ ...inputStyle, resize: 'vertical', minHeight: 120 }}
+                  placeholder={t('contact.messagePlaceholder')}
+                />
+              </div>
+
+              <button
+                type="submit" disabled={isSubmitting}
+                style={{
+                  width: '100%', padding: '13px 0', borderRadius: 12,
+                  background: isSubmitting ? VBORD : V,
+                  color: isSubmitting ? '#a78bfa' : 'white',
+                  border: 'none', fontSize: 14, fontWeight: 700,
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  boxShadow: isSubmitting ? 'none' : '0 2px 12px rgba(109,40,217,0.22)',
+                  transition: 'background 0.14s',
+                  ...S,
+                }}
+              >
+                {isSubmitting ? t('contact.submitting') : t('contact.submit')}
+              </button>
+
+            </form>
           </div>
-
-          {showPurchaseId && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('contact.purchaseId')}
-              </label>
-              <input
-                type="text"
-                value={transactionId}
-                readOnly
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600 font-mono text-sm"
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <span className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                {t('contact.subject')}
-              </span>
-            </label>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              placeholder={t('contact.subjectPlaceholder')}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <span className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
-                {t('contact.message')}
-              </span>
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              required
-              rows={5}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-y"
-              placeholder={t('contact.messagePlaceholder')}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmitting ? t('contact.submitting') : t('contact.submit')}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );

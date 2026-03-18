@@ -1,61 +1,46 @@
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Plus, X } from 'lucide-react';
+import { Calendar, Plus } from 'lucide-react';
 import { formatDateTime } from '@/lib/format-date';
 import type { PublicListEventItem, EventDate } from '@/api/types';
 import { EventDateStatus } from '@/api/types';
 import { cn } from '@/app/components/ui/utils';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, BG, S, stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepChooseDateProps {
   event: PublicListEventItem;
   selectedDateId: string;
+  /** On mobile: auto-advances when called. On desktop: just marks selection, footer handles advance. */
   onSelect: (date: EventDate) => void;
   onAddDate: () => void;
   isMobile: boolean;
 }
 
 export const StepChooseDate: FC<StepChooseDateProps> = ({
-  event,
-  selectedDateId,
-  onSelect,
-  onAddDate,
-  isMobile,
+  event, selectedDateId, onSelect, onAddDate, isMobile,
 }) => {
   const { t } = useTranslation();
 
   const approvedDates = event.dates.filter((d) => d.status === EventDateStatus.Approved);
-  const futureDates = approvedDates.filter((d) => new Date(d.date) >= new Date());
-  const pastDates = approvedDates.filter((d) => new Date(d.date) < new Date());
+  const futureDates   = approvedDates.filter((d) => new Date(d.date) >= new Date());
+  const pastDates     = approvedDates.filter((d) => new Date(d.date) < new Date());
 
   if (event.dates.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-foreground">
-            {t('sellListingWizard.selectDate')}
-          </h2>
-          <p className="text-muted-foreground mt-1">{t('sellListingWizard.noDates')}</p>
-        </div>
+      <div>
+        <h2 style={stepHeadingStyle}>{t('sellListingWizard.selectDate')}</h2>
+        <p style={stepDescStyle}>{t('sellListingWizard.noDates')}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" role="group" aria-label={t('sellListingWizard.selectDate')}>
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold text-foreground">
-          {t('sellListingWizard.selectDate')}
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          {t('sellListingWizard.selectDateDescription')}
-        </p>
-      </div>
+    <div role="group" aria-label={t('sellListingWizard.selectDate')}>
+      <h2 style={stepHeadingStyle}>{t('sellListingWizard.selectDate')}</h2>
+      <p style={stepDescStyle}>{t('sellListingWizard.selectDateDescription')}</p>
 
       <div
-        className={cn(
-          'grid gap-3',
-          isMobile ? 'grid-cols-1' : 'grid-cols-2'
-        )}
+        className={cn('grid gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-2')}
         role="radiogroup"
         aria-label={t('sellListingWizard.selectDate')}
       >
@@ -68,38 +53,50 @@ export const StepChooseDate: FC<StepChooseDateProps> = ({
               onClick={() => onSelect(eventDate)}
               role="radio"
               aria-checked={isSelected}
-              className={cn(
-                'flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-colors',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                isSelected
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/50 hover:bg-muted/50'
-              )}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '14px 16px', borderRadius: 14, textAlign: 'left',
+                border: `2px solid ${isSelected ? V : BORDER}`,
+                background: isSelected ? VLIGHT : CARD,
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Calendar className="h-5 w-5" />
+              <span style={{
+                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                background: isSelected ? V : BG,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Calendar size={18} color={isSelected ? 'white' : MUTED} />
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-foreground">
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{ fontWeight: 700, color: isSelected ? V : DARK, fontSize: 14, marginBottom: 2, ...S }}>
                   {formatDateTime(eventDate.date)}
                 </p>
-                <p className="text-sm text-muted-foreground">{event.venue}</p>
+                <p style={{ fontSize: 13, color: MUTED, ...S }}>{event.venue}</p>
               </div>
             </button>
           );
         })}
+
+        {/* Past dates — disabled */}
         {pastDates.length > 0 && (
-          <div className="col-span-full space-y-2">
+          <div className="col-span-full" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {pastDates.slice(0, 3).map((eventDate) => (
               <div
                 key={eventDate.id}
-                className="flex items-center gap-4 p-4 rounded-xl border border-border opacity-60 cursor-not-allowed"
                 aria-disabled="true"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '12px 16px', borderRadius: 12,
+                  border: `1px solid ${BORDER}`, background: BG,
+                  opacity: 0.55, cursor: 'not-allowed',
+                }}
               >
-                <Calendar className="h-10 w-10 shrink-0 text-muted-foreground" />
+                <Calendar size={20} color={MUTED} />
                 <div>
-                  <p className="font-medium text-muted-foreground">{formatDateTime(eventDate.date)}</p>
-                  <p className="text-xs text-muted-foreground">{t('sellListingWizard.pastDate')}</p>
+                  <p style={{ fontWeight: 600, color: MUTED, fontSize: 13.5, ...S }}>{formatDateTime(eventDate.date)}</p>
+                  <p style={{ fontSize: 12.5, color: HINT, ...S }}>{t('sellListingWizard.pastDate')}</p>
                 </div>
               </div>
             ))}
@@ -107,12 +104,22 @@ export const StepChooseDate: FC<StepChooseDateProps> = ({
         )}
       </div>
 
+      {/* Add date button */}
       <button
         type="button"
         onClick={onAddDate}
-        className="flex items-center gap-2 w-full py-3 px-4 rounded-lg border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors min-h-[44px]"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          width: '100%', marginTop: 12, padding: '12px 16px', borderRadius: 12,
+          border: `1.5px dashed ${HINT}`, background: 'transparent',
+          color: MUTED, cursor: 'pointer', fontSize: 14, fontWeight: 600,
+          transition: 'all 0.14s',
+          minHeight: 44,
+          ...S,
+        }}
+        className="hover:border-primary hover:text-primary hover:bg-primary/5"
       >
-        <Plus className="h-5 w-5 shrink-0" />
+        <Plus size={18} style={{ flexShrink: 0 }} />
         {t('sellListingWizard.addDate')}
       </button>
     </div>

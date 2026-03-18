@@ -9,6 +9,8 @@ import type {
   IPromotionsRepository,
   ListPromotionsFilters,
 } from './promotions.repository.interface';
+import { PROMOTION_CODES_REPOSITORY } from './promotion-codes.repository.interface';
+import type { IPromotionCodesRepository } from './promotion-codes.repository.interface';
 import { PlatformConfigService } from '../config/config.service';
 import { UsersService } from '../users/users.service';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -36,6 +38,8 @@ export class PromotionsService {
   constructor(
     @Inject(PROMOTIONS_REPOSITORY)
     private readonly repository: IPromotionsRepository,
+    @Inject(PROMOTION_CODES_REPOSITORY)
+    private readonly promotionCodesRepository: IPromotionCodesRepository,
     private readonly platformConfigService: PlatformConfigService,
     private readonly usersService: UsersService,
   ) {}
@@ -150,11 +154,22 @@ export class PromotionsService {
   ): Promise<ActivePromotionSummary | null> {
     const promotion = await this.getActiveForUser(ctx, userId, type);
     if (!promotion) return null;
+    let promoLabel = promotion.name;
+    if (promotion.promotionCodeId) {
+      const codeRow = await this.promotionCodesRepository.findById(
+        ctx,
+        promotion.promotionCodeId,
+      );
+      if (codeRow?.code) {
+        promoLabel = codeRow.code;
+      }
+    }
     return {
       id: promotion.id,
       name: promotion.name,
       type: promotion.type,
       config: promotion.config,
+      promoLabel,
     };
   }
 

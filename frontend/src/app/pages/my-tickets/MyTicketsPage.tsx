@@ -8,6 +8,7 @@ import { useUser }        from '@/app/contexts/UserContext';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert }     from '@/app/components/ErrorMessage';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
+import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import type { TransactionWithDetails, OfferWithListingSummary } from '@/api/types';
@@ -25,10 +26,14 @@ function fmt(amount: number, currency: string) {
 }
 
 // ─── Thumb (mirrors SellerDashboardPage) ──────────────────────────────────────
-function Thumb({ url, name, size }: { url?: string | null; name: string; size: number }) {
+function Thumb({ url, name, size, square }: { url?: string | null; name: string; size: number; square?: boolean }) {
   return (
     <div style={{
-      width: size, flexShrink: 0, alignSelf: 'stretch',
+      width: size,
+      height: square ? size : undefined,
+      flexShrink: 0,
+      alignSelf: square ? 'flex-start' : 'stretch',
+      minHeight: square ? undefined : size,
       background: VLIGHT, overflow: 'hidden', position: 'relative',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
@@ -55,10 +60,12 @@ function SubLabel({ icon, label, color = HINT }: {
 }
 
 // ─── ACCEPTED OFFER BANNER — most urgent, full CTA ───────────────────────────
-function AcceptedOfferBanner({ offer, highlighted, t }: {
+function AcceptedOfferBanner({ offer, highlighted, t, thumbSize, isMobile }: {
   offer: OfferWithListingSummary;
   highlighted: boolean;
   t: (k: string, o?: Record<string, string>) => string;
+  thumbSize: number;
+  isMobile: boolean;
 }) {
   const ref          = useRef<HTMLDivElement>(null);
   const summary      = offer.listingSummary;
@@ -77,38 +84,82 @@ function AcceptedOfferBanner({ offer, highlighted, t }: {
 
   const to = `/buy/${summary.eventSlug}/${offer.listingId}?offerId=${offer.id}`;
 
+  const bannerUrl = summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle;
+
+  const offerBody = (
+    <div style={{ flex: 1, padding: '11px 13px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5, alignSelf: 'stretch' }}>
+      <span style={{
+        alignSelf: 'flex-start', fontSize: 10.5, fontWeight: 700,
+        padding: '2px 8px', borderRadius: 100,
+        background: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', ...S,
+      }}>
+        ⏱ {t('boughtTickets.offerAcceptedUrgent', { defaultValue: 'Tiempo limitado para pagar' })}
+      </span>
+      <p style={{ fontSize: 14.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
+        {summary.eventName}
+      </p>
+      <p style={{ fontSize: 12.5, color: MUTED, ...S }}>
+        {ticketLabel} · {formatDate(new Date(summary.eventDate))}
+      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {listingPrice && (
+          <span style={{ fontSize: 12, color: BORD2, textDecoration: 'line-through', ...S }}>{listingPrice}</span>
+        )}
+        <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{offeredPrice}</span>
+        <span style={{ fontSize: 11, color: MUTED, ...S }}>
+          {t('boughtTickets.yourOffer', { defaultValue: 'tu oferta' })}
+        </span>
+      </div>
+    </div>
+  );
+
+  const rowAlign = isMobile ? ('stretch' as const) : ('flex-start' as const);
+
   return (
     <div ref={ref} style={{
       background: CARD, borderRadius: 16,
       border: `1.5px solid ${V}`, overflow: 'hidden',
       boxShadow: highlighted ? `0 0 0 3px ${VLIGHT}` : 'none',
     }}>
-      <div style={{ display: 'flex' }}>
-        <Thumb url={summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle} name={summary.eventName} size={88} />
-        <div style={{ flex: 1, padding: '11px 13px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <span style={{
-            alignSelf: 'flex-start', fontSize: 10.5, fontWeight: 700,
-            padding: '2px 8px', borderRadius: 100,
-            background: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', ...S,
-          }}>
-            ⏱ {t('boughtTickets.offerAcceptedUrgent', { defaultValue: 'Tiempo limitado para pagar' })}
-          </span>
-          <p style={{ fontSize: 14.5, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
-            {summary.eventName}
-          </p>
-          <p style={{ fontSize: 12.5, color: MUTED, ...S }}>
-            {ticketLabel} · {formatDate(new Date(summary.eventDate))}
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {listingPrice && (
-              <span style={{ fontSize: 12, color: BORD2, textDecoration: 'line-through', ...S }}>{listingPrice}</span>
-            )}
-            <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{offeredPrice}</span>
-            <span style={{ fontSize: 11, color: MUTED, ...S }}>
-              {t('boughtTickets.yourOffer', { defaultValue: 'tu oferta' })}
-            </span>
+      <div style={{ display: 'flex', alignItems: rowAlign }}>
+        {isMobile ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              flexShrink: 0,
+              alignSelf: 'stretch',
+              minHeight: 0,
+            }}
+          >
+            <div style={{ width: 3, alignSelf: 'stretch', background: V, flexShrink: 0 }} />
+            <div
+              style={{
+                width: 'clamp(72px, 26vw, 100px)',
+                flexShrink: 0,
+                alignSelf: 'stretch',
+                background: VLIGHT,
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              {bannerUrl ? (
+                <img
+                  src={bannerUrl}
+                  alt={summary.eventName}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', position: 'absolute', inset: 0 }}
+                />
+              ) : (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ticket size={28} style={{ color: V, opacity: 0.4 }} />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <Thumb url={bannerUrl} name={summary.eventName} size={thumbSize} square />
+        )}
+        {offerBody}
       </div>
       <Link to={to} style={{ textDecoration: 'none' }}>
         <div style={{
@@ -274,6 +325,8 @@ export function MyTicketsPage() {
   const { t }                     = useTranslation();
   const { user, isAuthenticated } = useUser();
   const [searchParams]            = useSearchParams();
+  const isMobile                  = useIsMobile();
+  const offerBannerThumbSize      = isMobile ? 88 : 156;
 
   const [bought,        setBought]        = useState<TransactionWithDetails[]>([]);
   const [myOffers,      setMyOffers]      = useState<OfferWithListingSummary[]>([]);
@@ -434,7 +487,7 @@ export function MyTicketsPage() {
                     />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {acceptedOffers.map(o => (
-                        <AcceptedOfferBanner key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} />
+                        <AcceptedOfferBanner key={o.id} offer={o} t={t} highlighted={o.id === offerIdFromUrl} thumbSize={offerBannerThumbSize} isMobile={isMobile} />
                       ))}
                     </div>
                   </div>

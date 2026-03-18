@@ -1,82 +1,61 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Button } from '@/app/components/ui/button';
-import { Badge } from '@/app/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/app/components/ui/select';
-import { Loader2, ChevronRight, HelpCircle } from 'lucide-react';
+import { Loader2, ChevronRight, HelpCircle, MessageCircle } from 'lucide-react';
 import { supportService } from '@/api/services';
 import type { SupportTicket, SupportTicketStatus } from '@/api/types';
 import { formatDateTimeShort } from '@/lib/format-date';
 
-const STATUS_OPTIONS: { value: '' | SupportTicketStatus; labelKey: string }[] = [
-  { value: '', labelKey: 'support.filterAllStatuses' },
-  { value: 'open', labelKey: 'support.statusOpen' },
-  { value: 'inProgress', labelKey: 'support.statusInProgress' },
-  { value: 'waitingForCustomer', labelKey: 'support.statusWaitingForCustomer' },
-  { value: 'resolved', labelKey: 'support.statusResolved' },
-  { value: 'closed', labelKey: 'support.statusClosed' },
-];
+const V      = '#6d28d9';
+const VLIGHT = '#f0ebff';
+const VBORD  = '#ddd6fe';
+const DARK   = '#0f0f1a';
+const MUTED  = '#6b7280';
+const HINT   = '#9ca3af';
+const BG     = '#f3f3f0';
+const CARD   = '#ffffff';
+const BORDER = '#e5e7eb';
+const BORD2  = '#d1d5db';
+const S  = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const DS = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 };
 
-function statusBadgeVariant(
-  status: SupportTicketStatus
-): 'default' | 'secondary' | 'destructive' | 'outline' {
-  switch (status) {
-    case 'waitingForCustomer':
-      return 'destructive';
-    case 'open':
-    case 'inProgress':
-      return 'default';
-    case 'resolved':
-    case 'closed':
-      return 'secondary';
-    default:
-      return 'outline';
-  }
-}
-
-const STATUS_LABEL_KEYS: Record<SupportTicketStatus, string> = {
-  open: 'support.statusOpen',
-  inProgress: 'support.statusInProgress',
-  waitingForCustomer: 'support.statusWaitingForCustomer',
-  resolved: 'support.statusResolved',
-  closed: 'support.statusClosed',
+// ─── Status display config ───────────────────────────────────────────────────
+const STATUS_CONFIG: Record<SupportTicketStatus, { bg: string; color: string; border: string; labelKey: string }> = {
+  open:                 { bg: VLIGHT,   color: V,        border: VBORD,    labelKey: 'support.statusOpen' },
+  inProgress:           { bg: '#fffbeb', color: '#92400e', border: '#fde68a', labelKey: 'support.statusInProgress' },
+  waitingForCustomer:   { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5', labelKey: 'support.waitingForYou' },
+  resolved:             { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', labelKey: 'support.statusResolved' },
+  closed:               { bg: BG,        color: MUTED,     border: BORD2,    labelKey: 'support.statusClosed' },
 };
+
+const STATUS_OPTIONS: { value: '' | SupportTicketStatus; labelKey: string }[] = [
+  { value: '',                   labelKey: 'support.filterAllStatuses' },
+  { value: 'open',               labelKey: 'support.statusOpen' },
+  { value: 'inProgress',         labelKey: 'support.statusInProgress' },
+  { value: 'waitingForCustomer', labelKey: 'support.statusWaitingForCustomer' },
+  { value: 'resolved',           labelKey: 'support.statusResolved' },
+  { value: 'closed',             labelKey: 'support.statusClosed' },
+];
 
 function sourceLabelKey(source?: string): string {
   switch (source) {
-    case 'Dispute':
-      return 'support.sourceDispute';
-    case 'ContactFromTransaction':
-      return 'support.sourceContactTransaction';
-    case 'ContactForm':
-      return 'support.sourceContactForm';
-    default:
-      return 'support.sourceContactForm';
+    case 'Dispute':                  return 'support.sourceDispute';
+    case 'ContactFromTransaction':   return 'support.sourceContactTransaction';
+    default:                         return 'support.sourceContactForm';
   }
 }
 
 export function SupportListPage() {
   const { t } = useTranslation();
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [tickets,      setTickets]      = useState<SupportTicket[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
 
   const fetchTickets = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const list = await supportService.listTickets({
-        status: statusFilter || undefined,
-      });
+      setLoading(true); setError(null);
+      const list = await supportService.listTickets({ status: statusFilter || undefined });
       setTickets(list);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('support.errorLoad'));
@@ -85,105 +64,140 @@ export function SupportListPage() {
     }
   }, [statusFilter, t]);
 
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+  useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BG }}>
+        <Loader2 size={32} style={{ color: V, animation: 'spin 0.7s linear infinite' }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('support.title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('support.description')}</p>
-      </div>
+    <div style={{ minHeight: '100vh', background: BG, padding: 'clamp(20px,4vw,40px) 16px' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .th-select{padding:9px 14px;border-radius:10px;border:1.5px solid ${BORDER};background:${CARD};font-size:13.5px;color:${DARK};outline:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;appearance:none;min-height:40px;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+        .th-select:focus{border-color:${V}}
+        .ticket-row:hover{border-color:${BORD2}!important;background:${BG}!important}
+      `}</style>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <Select
-          value={statusFilter || '__all__'}
-          onValueChange={(v) => setStatusFilter(v === '__all__' ? '' : v)}
-        >
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder={t('support.filterStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value || 'all'} value={opt.value || '__all__'}>
-                {t(opt.labelKey)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button asChild variant="outline" className="shrink-0">
-          <Link to="/contact">
-            <HelpCircle className="w-4 h-4 mr-2" />
-            {t('support.newCase')}
+      <div style={{ maxWidth: 680, margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ ...DS, fontSize: 'clamp(22px,3vw,28px)', color: DARK, marginBottom: 4 }}>
+              {t('support.title')}
+            </h1>
+            <p style={{ fontSize: 14, color: MUTED, ...S }}>{t('support.description')}</p>
+          </div>
+          <Link to="/contact" style={{ textDecoration: 'none' }}>
+            <button style={{
+              padding: '10px 18px', borderRadius: 12, border: 'none',
+              background: V, color: 'white', fontSize: 13.5, fontWeight: 700,
+              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7,
+              boxShadow: '0 2px 10px rgba(109,40,217,0.2)', flexShrink: 0,
+              ...S,
+            }}>
+              <HelpCircle size={15} />
+              {t('support.newCase')}
+            </button>
           </Link>
-        </Button>
-      </div>
-
-      {error && (
-        <div className="rounded-lg bg-destructive/10 text-destructive px-4 py-3 text-sm">
-          {error}
         </div>
-      )}
 
-      {!error && tickets.length === 0 && (
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="text-lg">{t('support.emptyTitle')}</CardTitle>
-            <CardDescription>{t('support.emptyDescription')}</CardDescription>
-            <Button asChild className="mt-4 w-fit">
-              <Link to="/contact">{t('support.newCase')}</Link>
-            </Button>
-          </CardHeader>
-        </Card>
-      )}
+        {/* Filter */}
+        <div style={{ marginBottom: 18 }}>
+          <select
+            className="th-select"
+            value={statusFilter || '__all__'}
+            onChange={e => setStatusFilter(e.target.value === '__all__' ? '' : e.target.value)}
+          >
+            {STATUS_OPTIONS.map(opt => (
+              <option key={opt.value || 'all'} value={opt.value || '__all__'}>
+                {t(opt.labelKey)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {!error && tickets.length > 0 && (
-        <ul className="space-y-3">
-          {tickets.map((ticket) => (
-            <li key={ticket.id}>
-              <Link
-                to={`/support/${ticket.id}`}
-                className="block rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-muted/50 transition-colors"
-              >
-                <Card className="border-0 shadow-none">
-                  <CardContent className="p-4 sm:p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h2 className="font-semibold text-base truncate">{ticket.subject}</h2>
-                          <Badge variant={statusBadgeVariant(ticket.status)}>
-                            {ticket.status === 'waitingForCustomer'
-                              ? t('support.waitingForYou')
-                              : t(STATUS_LABEL_KEYS[ticket.status])}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {t('support.lastUpdated')}: {formatDateTimeShort(ticket.updatedAt)}
+        {/* Error */}
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
+            <p style={{ fontSize: 13.5, color: '#dc2626', ...S }}>{error}</p>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!error && tickets.length === 0 && (
+          <div style={{ background: CARD, borderRadius: 18, border: `1.5px dashed ${BORD2}`, padding: '48px 24px', textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <MessageCircle size={22} style={{ color: BORD2 }} />
+            </div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: DARK, marginBottom: 6, ...S }}>{t('support.emptyTitle')}</p>
+            <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 18, lineHeight: 1.55, ...S }}>{t('support.emptyDescription')}</p>
+            <Link to="/contact" style={{ textDecoration: 'none' }}>
+              <button style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: V, color: 'white', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', ...S }}>
+                {t('support.newCase')}
+              </button>
+            </Link>
+          </div>
+        )}
+
+        {/* Ticket list */}
+        {!error && tickets.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {tickets.map(ticket => {
+              const cfg = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.open;
+              const isUrgent = ticket.status === 'waitingForCustomer';
+              return (
+                <Link key={ticket.id} to={`/support/${ticket.id}`} style={{ textDecoration: 'none' }}>
+                  <div
+                    className="ticket-row"
+                    style={{
+                      background: CARD,
+                      borderRadius: 14,
+                      border: `1px solid ${isUrgent ? '#fca5a5' : BORDER}`,
+                      padding: '14px 16px',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      transition: 'border-color 0.13s, background 0.13s',
+                    }}
+                  >
+                    {/* Urgent dot */}
+                    {isUrgent && (
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', flexShrink: 0 }} />
+                    )}
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <p style={{ fontWeight: 700, color: DARK, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
+                          {ticket.subject}
                         </p>
-                        {ticket.source && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {t(sourceLabelKey(ticket.source))}
-                          </p>
-                        )}
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0,
+                          background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, ...S,
+                        }}>
+                          {t(cfg.labelKey)}
+                        </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 shrink-0 text-muted-foreground" />
+                      <p style={{ fontSize: 12.5, color: MUTED, ...S }}>
+                        {t('support.lastUpdated')}: {formatDateTimeShort(ticket.updatedAt)}
+                        {ticket.source && (
+                          <span style={{ color: HINT }}> · {t(sourceLabelKey(ticket.source))}</span>
+                        )}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+
+                    <ChevronRight size={16} style={{ color: HINT, flexShrink: 0 }} />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

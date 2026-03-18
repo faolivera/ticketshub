@@ -10,6 +10,15 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { VerificationHelper, SellerTier } from '@/lib/verification';
 import type { User } from '@/app/contexts/UserContext';
+import {
+  V, VLIGHT, VBORD, DARK, MUTED, HINT, BORDER, BORD2, BG, CARD,
+  GREEN, GLIGHT, GBORD, S, stepHeadingStyle,
+} from '../wizardTokens';
+
+/** Strip trailing ,00 / .00 from formatted currency */
+function fmt(amount: number, currency: string) {
+  return formatCurrencyFromUnits(amount, currency).replace(/[,.]00$/, '');
+}
 
 interface StepReviewAndPublishProps {
   event: PublicListEventItem;
@@ -21,7 +30,6 @@ interface StepReviewAndPublishProps {
   effectiveFeePercent?: number;
   promotionName?: string;
   onEditStep: (stepIndex: number) => void;
-  /** Promotion code claimed in this step (seller check) */
   promoCodeInput: string;
   onPromoCodeChange: (value: string) => void;
   onClaimPromo: () => void;
@@ -32,22 +40,10 @@ interface StepReviewAndPublishProps {
 }
 
 export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
-  event,
-  selectedDate,
-  selectedSection,
-  form,
-  currency,
-  sellerPlatformFeePercent,
-  effectiveFeePercent,
-  promotionName,
-  onEditStep,
-  promoCodeInput,
-  onPromoCodeChange,
-  onClaimPromo,
-  checkedPromotion,
-  promotionCheckError,
-  isCheckingPromo,
-  user,
+  event, selectedDate, selectedSection, form, currency,
+  sellerPlatformFeePercent, effectiveFeePercent, promotionName,
+  onEditStep, promoCodeInput, onPromoCodeChange, onClaimPromo,
+  checkedPromotion, promotionCheckError, isCheckingPromo, user,
 }) => {
   const { t } = useTranslation();
 
@@ -55,6 +51,7 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
     form.seatingType === 'numbered'
       ? form.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim()).length
       : form.quantity;
+
   const totalCharged = form.pricePerTicket * (ticketCount || 0);
 
   const isPromotionApplicable =
@@ -63,44 +60,36 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
       (checkedPromotion.target === 'verified_seller' &&
         VerificationHelper.sellerTier(user) === SellerTier.VERIFIED_SELLER));
 
-  const feePercent = isPromotionApplicable
-    ? 0
-    : (effectiveFeePercent ?? sellerPlatformFeePercent);
+  const feePercent        = isPromotionApplicable ? 0 : (effectiveFeePercent ?? sellerPlatformFeePercent);
   const platformCommission = (totalCharged * feePercent) / 100;
-  const sellerReceives = totalCharged - platformCommission;
-  const validNumberedSeats = form.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim());
+  const sellerReceives     = totalCharged - platformCommission;
 
-  /** Show real commission crossed out + 0% line when user has a promotion (claimed here or already active). */
-  const hasPromotionDiscount =
-    feePercent === 0 && (isPromotionApplicable || !!promotionName);
+  const validNumberedSeats = form.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim());
+  const hasPromotionDiscount = feePercent === 0 && (isPromotionApplicable || !!promotionName);
   const promotionLabel = isPromotionApplicable
     ? `(${t('sellListingWizard.promotionCode')}) · ${checkedPromotion?.name}`
     : promotionName;
-
   const sectionName = selectedSection?.name ?? '';
   const showVerifiedSellerDisclaimer =
     checkedPromotion?.target === 'verified_seller' && !isPromotionApplicable;
 
   return (
-    <div className="space-y-6" role="group" aria-label={t('sellListingWizard.reviewTitle')}>
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold text-foreground">
-          {t('sellListingWizard.reviewTitle')}
-        </h2>
-        <p className="text-muted-foreground mt-1">{t('sellListingWizard.reviewDescription')}</p>
-      </div>
+    <div role="group" aria-label={t('sellListingWizard.reviewTitle')}>
+      <h2 style={stepHeadingStyle}>{t('sellListingWizard.reviewTitle')}</h2>
+      <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 20, ...S }}>
+        {t('sellListingWizard.reviewDescription')}
+      </p>
 
-      <div className="space-y-4">
+      {/* Review sections */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
         <ReviewSection
           title={t('sellListingWizard.event')}
           onEdit={() => onEditStep(0)}
           content={
             <>
-              <p className="font-medium text-foreground">{event.name}</p>
+              <p style={{ fontWeight: 700, color: DARK, fontSize: 14, ...S }}>{event.name}</p>
               {selectedDate && (
-                <p className="text-sm text-muted-foreground">
-                  {formatDateTime(selectedDate.date)}
-                </p>
+                <p style={{ fontSize: 13, color: MUTED, marginTop: 2, ...S }}>{formatDateTime(selectedDate.date)}</p>
               )}
             </>
           }
@@ -111,8 +100,8 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
           onEdit={() => onEditStep(2)}
           content={
             <>
-              <p className="font-medium text-foreground">{sectionName}</p>
-              <p className="text-sm text-muted-foreground">
+              <p style={{ fontWeight: 700, color: DARK, fontSize: 14, ...S }}>{sectionName}</p>
+              <p style={{ fontSize: 13, color: MUTED, marginTop: 2, ...S }}>
                 {form.seatingType === 'numbered'
                   ? t('sellListingWizard.numbered') +
                     (validNumberedSeats.length > 0
@@ -129,12 +118,11 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
           onEdit={() => onEditStep(3)}
           content={
             <>
-              <p className="font-medium text-foreground">
-                {formatCurrencyFromUnits(form.pricePerTicket, currency)}{' '}
-                {t('sellTicket.pricePerTicket').toLowerCase()}
+              <p style={{ fontWeight: 700, color: DARK, fontSize: 14, ...S }}>
+                {fmt(form.pricePerTicket, currency)} {t('sellTicket.pricePerTicket').toLowerCase()}
               </p>
               {form.bestOfferEnabled && (
-                <p className="text-sm text-muted-foreground">{t('sellListingWizard.openToOffers')}</p>
+                <p style={{ fontSize: 13, color: MUTED, marginTop: 2, ...S }}>{t('sellListingWizard.openToOffers')}</p>
               )}
             </>
           }
@@ -145,126 +133,119 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
           onEdit={() => onEditStep(4)}
           content={
             <>
-              <p className="font-medium text-foreground">
+              <p style={{ fontWeight: 700, color: DARK, fontSize: 14, ...S }}>
                 {form.deliveryMethod === 'digital'
                   ? t('sellListingWizard.digital')
                   : t('sellListingWizard.physical')}
               </p>
               {form.deliveryMethod === 'physical' && form.physicalDeliveryMethod === 'pickup' && (
-                <p className="text-sm text-muted-foreground">{form.pickupAddress}</p>
+                <p style={{ fontSize: 13, color: MUTED, marginTop: 2, ...S }}>{form.pickupAddress}</p>
               )}
             </>
           }
         />
-
-        {!promotionName && (
-          <div className="rounded-lg border p-4 space-y-3">
-            <label className="text-sm font-medium text-foreground block">
-              {t('sellListingWizard.promotionCode')}
-            </label>
-            <div className="flex flex-wrap gap-2 items-center">
-              <Input
-                type="text"
-                value={promoCodeInput}
-                onChange={(e) => onPromoCodeChange(e.target.value)}
-                placeholder={t('sellListingWizard.promotionCodePlaceholder')}
-                className="max-w-[200px] min-h-[40px]"
-                aria-label={t('sellListingWizard.promotionCode')}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                size="default"
-                disabled={!promoCodeInput.trim() || isCheckingPromo}
-                onClick={onClaimPromo}
-              >
-                {isCheckingPromo ? t('sellListingWizard.claiming') : t('sellListingWizard.claimPromo')}
-              </Button>
-            </div>
-            {promotionCheckError && (
-              <p className="text-sm text-destructive" role="alert">
-                {promotionCheckError}
-              </p>
-            )}
-            {showVerifiedSellerDisclaimer && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                  {t('sellListingWizard.promotionVerifiedSellerDisclaimer')}{' '}
-                  <Link
-                    to="/become-seller"
-                    className="font-medium underline hover:no-underline"
-                  >
-                    {t('sellListingWizard.becomeVerifiedSeller')}
-                  </Link>
-                </p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
-      <div className="rounded-xl border overflow-hidden">
-        <div className="bg-muted px-4 py-2.5">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t('sellListingWizard.summaryTitle')}
-          </h3>
+      {/* Promo code (only shown if no active promo already) */}
+      {!promotionName && (
+        <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
+          <label style={{ fontSize: 13.5, fontWeight: 600, color: DARK, display: 'block', marginBottom: 10, ...S }}>
+            {t('sellListingWizard.promotionCode')}
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <Input
+              type="text"
+              value={promoCodeInput}
+              onChange={(e) => onPromoCodeChange(e.target.value)}
+              placeholder={t('sellListingWizard.promotionCodePlaceholder')}
+              className="max-w-[200px] min-h-[40px]"
+              aria-label={t('sellListingWizard.promotionCode')}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="default"
+              disabled={!promoCodeInput.trim() || isCheckingPromo}
+              onClick={onClaimPromo}
+            >
+              {isCheckingPromo ? t('sellListingWizard.claiming') : t('sellListingWizard.claimPromo')}
+            </Button>
+          </div>
+          {promotionCheckError && (
+            <p style={{ fontSize: 12.5, color: '#dc2626', marginTop: 6, ...S }} role="alert">
+              {promotionCheckError}
+            </p>
+          )}
+          {showVerifiedSellerDisclaimer && (
+            <div style={{ marginTop: 10, padding: '10px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
+              <p style={{ fontSize: 13, color: '#92400e', ...S }}>
+                {t('sellListingWizard.promotionVerifiedSellerDisclaimer')}{' '}
+                <Link to="/become-seller" style={{ fontWeight: 700, color: '#92400e' }}>
+                  {t('sellListingWizard.becomeVerifiedSeller')}
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
-        <div className="p-4 space-y-2">
-          <div className="flex justify-between items-start gap-4 text-sm">
-            <div className="text-muted-foreground min-w-0">
-              <span className="font-medium text-foreground">{sectionName}</span>
-              <span className="text-muted-foreground">
-                {' · '}
-                {formatCurrencyFromUnits(form.pricePerTicket, currency)} × {ticketCount}{' '}
+      )}
+
+      {/* Summary card */}
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ background: BG, padding: '10px 16px', borderBottom: `1px solid ${BORDER}` }}>
+          <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, ...S }}>{t('sellListingWizard.summaryTitle')}</p>
+        </div>
+        <div style={{ padding: '14px 16px' }}>
+          {/* Gross amount */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+            <div style={{ minWidth: 0 }}>
+              <span style={{ fontWeight: 700, color: DARK, fontSize: 13.5, ...S }}>{sectionName}</span>
+              <span style={{ color: MUTED, fontSize: 13, ...S }}>
+                {' · '}{fmt(form.pricePerTicket, currency)} × {ticketCount}{' '}
                 {ticketCount === 1 ? t('sellTicket.ticket') : t('sellTicket.tickets')}
               </span>
               {form.seatingType === 'numbered' && validNumberedSeats.length > 0 && (
-                <p className="text-muted-foreground mt-0.5">
-                  {t('sellTicket.rowsAndSeats')}:{' '}
-                  {validNumberedSeats.map((s) => `${s.row}-${s.seatNumber}`).join(', ')}
+                <p style={{ fontSize: 12.5, color: MUTED, marginTop: 2, ...S }}>
+                  {t('sellTicket.rowsAndSeats')}: {validNumberedSeats.map((s) => `${s.row}-${s.seatNumber}`).join(', ')}
                 </p>
               )}
             </div>
-            <span className="font-medium text-foreground tabular-nums shrink-0">
-              {formatCurrencyFromUnits(totalCharged, currency)}
+            <span style={{ fontWeight: 600, color: DARK, fontSize: 13.5, flexShrink: 0, ...S }}>
+              {fmt(totalCharged, currency)}
             </span>
           </div>
+
+          {/* Fee line(s) */}
           {hasPromotionDiscount ? (
             <>
-              <div className="flex justify-between items-center text-sm text-muted-foreground pt-2 border-t line-through">
-                <span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${BORDER}`, marginBottom: 4 }}>
+                <span style={{ fontSize: 13, color: HINT, textDecoration: 'line-through', ...S }}>
                   {t('sellListingWizard.platformFee')} ({sellerPlatformFeePercent}%)
                 </span>
-                <span className="tabular-nums">
-                  −{formatCurrencyFromUnits((totalCharged * sellerPlatformFeePercent) / 100, currency)}
+                <span style={{ fontSize: 13, color: HINT, textDecoration: 'line-through', ...S }}>
+                  −{fmt((totalCharged * sellerPlatformFeePercent) / 100, currency)}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-sm text-muted-foreground">
-                <span>
-                  {t('sellListingWizard.platformFee')} (0%)
-                  {promotionLabel && ` · ${promotionLabel}`}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, color: MUTED, ...S }}>
+                  {t('sellListingWizard.platformFee')} (0%){promotionLabel ? ` · ${promotionLabel}` : ''}
                 </span>
-                <span className="tabular-nums">
-                  −{formatCurrencyFromUnits(0, currency)}
-                </span>
+                <span style={{ fontSize: 13, color: MUTED, ...S }}>−{fmt(0, currency)}</span>
               </div>
             </>
           ) : (
-            <div className="flex justify-between items-center text-sm text-muted-foreground pt-2 border-t">
-              <span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${BORDER}`, marginBottom: 8 }}>
+              <span style={{ fontSize: 13, color: MUTED, ...S }}>
                 {t('sellListingWizard.platformFee')} ({feePercent}%)
-                {promotionName && ` · ${promotionName}`}
+                {promotionName ? ` · ${promotionName}` : ''}
               </span>
-              <span className="tabular-nums">
-                −{formatCurrencyFromUnits(platformCommission, currency)}
-              </span>
+              <span style={{ fontSize: 13, color: MUTED, ...S }}>−{fmt(platformCommission, currency)}</span>
             </div>
           )}
-          <div className="flex justify-between items-center pt-3 border-t font-semibold text-foreground">
-            <span>{t('sellTicket.sellerReceives')}</span>
-            <span className="tabular-nums">
-              {formatCurrencyFromUnits(sellerReceives, currency)}
-            </span>
+
+          {/* Net total */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: `1px solid ${BORDER}` }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: DARK, ...S }}>{t('sellTicket.sellerReceives')}</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{fmt(sellerReceives, currency)}</span>
           </div>
         </div>
       </div>
@@ -272,23 +253,26 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
   );
 };
 
-function ReviewSection({
-  title,
-  onEdit,
-  content,
-}: {
-  title: string;
-  onEdit: () => void;
-  content: React.ReactNode;
+// ─── ReviewSection helper ─────────────────────────────────────────────────────
+function ReviewSection({ title, onEdit, content }: {
+  title: string; onEdit: () => void; content: React.ReactNode;
 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
-      <div className="min-w-0 flex-1">{content}</div>
+    <div style={{
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
+      background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px',
+    }}>
+      <div style={{ minWidth: 0, flex: 1 }}>{content}</div>
       <button
         type="button"
         onClick={onEdit}
-        className="shrink-0 text-sm font-medium text-primary hover:underline min-h-[44px] flex items-center"
+        style={{
+          flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: 13, fontWeight: 700, color: V, minHeight: 44,
+          display: 'flex', alignItems: 'center',
+          ...S,
+        }}
         aria-label={`${t('sellListingWizard.editSection')} ${title}`}
       >
         {t('sellListingWizard.editSection')}

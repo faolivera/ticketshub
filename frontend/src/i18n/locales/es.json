@@ -87,6 +87,7 @@
     "searchPlaceholder": "Buscar eventos, artistas o ubicaciones...",
     "searchResults": "Resultados de Búsqueda",
     "upcomingEvents": "Próximos Eventos",
+    "eventsSectionTitle": "Próximos eventos",
     "noEventsFound": "No se encontraron eventos que coincidan con tu búsqueda.",
     "errorLoadingEvents": "Error al cargar eventos. Inténtalo de nuevo.",
     "loadMore": "Cargar más",
@@ -1327,6 +1328,7 @@
     "noEventsFoundSearch": "No se encontraron eventos para tu búsqueda",
     "loadingEvents": "Cargando eventos...",
     "loadingMore": "Cargando más...",
+    "loadMore": "Cargar más",
     "backToEvents": "Volver a selección de evento",
     "backToTickets": "Volver a Mis Entradas",
     "eventName": "Nombre del Evento",
@@ -1525,7 +1527,9 @@
     "publishSuccess": "Entrada publicada",
     "publishSuccessHint": "Tu entrada ya está a la venta.",
     "viewListing": "Ver mi publicación",
-    "publishAnother": "Publicar otra entrada"
+    "publishAnother": "Publicar otra entrada",
+    "feeReminder": "Comisión del {{percent}}% solo si vendés. Sin costo por publicar.",
+    "feeReminderWithPromo": "Comisión del <strike>{{basePercent}}%</strike> <promoPct>{{promotedFeeText}}</promoPct> (Promo {{promoLabel}}) solo si vendés. Sin costo por publicar."
   },
   "common": {
     "at": "a las",

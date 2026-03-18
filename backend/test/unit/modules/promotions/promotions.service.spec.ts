@@ -3,12 +3,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PromotionsService } from '../../../../src/modules/promotions/promotions.service';
 import { PROMOTIONS_REPOSITORY } from '../../../../src/modules/promotions/promotions.repository.interface';
 import type { IPromotionsRepository } from '../../../../src/modules/promotions/promotions.repository.interface';
+import { PROMOTION_CODES_REPOSITORY } from '../../../../src/modules/promotions/promotion-codes.repository.interface';
+import type { IPromotionCodesRepository } from '../../../../src/modules/promotions/promotion-codes.repository.interface';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import {
   PromotionType,
   PromotionStatus,
   type Promotion,
+  type PromotionCode,
 } from '../../../../src/modules/promotions/promotions.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 
@@ -35,9 +38,18 @@ function createMockPromotion(overrides: Partial<Promotion> = {}): Promotion {
 describe('PromotionsService', () => {
   let service: PromotionsService;
   let repository: jest.Mocked<IPromotionsRepository>;
+  let promotionCodesRepository: jest.Mocked<IPromotionCodesRepository>;
   let usersService: jest.Mocked<UsersService>;
 
   beforeEach(async () => {
+    const mockPromotionCodesRepository = {
+      findById: jest.fn(),
+      create: jest.fn(),
+      list: jest.fn(),
+      update: jest.fn(),
+      incrementUsedCount: jest.fn(),
+    };
+
     const mockRepository = {
       create: jest.fn(),
       findById: jest.fn(),
@@ -75,6 +87,10 @@ describe('PromotionsService', () => {
       providers: [
         PromotionsService,
         { provide: PROMOTIONS_REPOSITORY, useValue: mockRepository },
+        {
+          provide: PROMOTION_CODES_REPOSITORY,
+          useValue: mockPromotionCodesRepository,
+        },
         { provide: PlatformConfigService, useValue: mockPlatformConfig },
         { provide: UsersService, useValue: mockUsersService },
       ],
@@ -82,6 +98,7 @@ describe('PromotionsService', () => {
 
     service = module.get<PromotionsService>(PromotionsService);
     repository = module.get(PROMOTIONS_REPOSITORY);
+    promotionCodesRepository = module.get(PROMOTION_CODES_REPOSITORY);
     void module.get(PlatformConfigService);
     usersService = module.get(UsersService);
   });
@@ -157,6 +174,46 @@ describe('PromotionsService', () => {
           'admin_1',
         ),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getActivePromotionSummary', () => {
+    it('should use promotion name as promoLabel when no code', async () => {
+      const promo = createMockPromotion({ promotionCodeId: undefined });
+      repository.findActiveByUserIdAndType.mockResolvedValue(promo);
+
+      const result = await service.getActivePromotionSummary(
+        mockCtx,
+        'user_1',
+        PromotionType.SELLER_DISCOUNTED_FEE,
+      );
+
+      expect(result?.promoLabel).toBe('Test promotion');
+      expect(promotionCodesRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it('should use claimed code as promoLabel when promotionCodeId set', async () => {
+      const promo = createMockPromotion({
+        promotionCodeId: 'pc_1',
+        name: 'Summer',
+      });
+      repository.findActiveByUserIdAndType.mockResolvedValue(promo);
+      promotionCodesRepository.findById.mockResolvedValue({
+        id: 'pc_1',
+        code: 'VIP2025',
+      } as PromotionCode);
+
+      const result = await service.getActivePromotionSummary(
+        mockCtx,
+        'user_1',
+        PromotionType.SELLER_DISCOUNTED_FEE,
+      );
+
+      expect(promotionCodesRepository.findById).toHaveBeenCalledWith(
+        mockCtx,
+        'pc_1',
+      );
+      expect(result?.promoLabel).toBe('VIP2025');
     });
   });
 

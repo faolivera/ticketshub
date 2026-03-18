@@ -107,6 +107,7 @@ export interface GetSellTicketConfigResponse {
     name: string;
     type: string;
     config: { feePercentage: number };
+    promoLabel: string;
   };
 }
 

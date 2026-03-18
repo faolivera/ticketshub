@@ -58,6 +58,8 @@ export interface ActivePromotionSummary {
   name: string;
   type: PromotionType;
   config: { feePercentage: number };
+  /** Code string if from a claimed promotion code; otherwise promotion name (for UI, e.g. disclaimer). */
+  promoLabel: string;
 }
 
 /**

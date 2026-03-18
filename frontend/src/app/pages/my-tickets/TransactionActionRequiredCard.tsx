@@ -3,6 +3,7 @@ import { AlertCircle, Ticket } from 'lucide-react';
 import { formatDate } from '@/lib/format-date';
 import { formatCurrency } from '@/lib/format-currency';
 import type { TransactionWithDetails } from '@/api/types';
+import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { V, CARD, DARK, MUTED, HINT, S } from './transactionUtils';
 
 function fmt(amount: number, currency: string) {
@@ -14,8 +15,9 @@ function Thumb({ url, name, size }: { url?: string | null; name: string; size: n
     <div
       style={{
         width: size,
+        height: size,
         flexShrink: 0,
-        alignSelf: 'stretch',
+        alignSelf: 'flex-start',
         background: '#f5f3ff',
         overflow: 'hidden',
         position: 'relative',
@@ -58,7 +60,10 @@ export interface TransactionActionRequiredCardProps {
  * Same layout: accent bar, thumb, detail rows, full-width CTA.
  */
 export function TransactionActionRequiredCard({ tx, variant, t, linkFrom }: TransactionActionRequiredCardProps) {
+  const isMobile = useIsMobile();
   const isBuyer = variant === 'buyer';
+  /** Desktop: left square; buyer (Mis entradas) wider. */
+  const thumbSize = isBuyer ? 156 : 112;
   const barColor = isBuyer ? V : '#f59e0b';
   const borderColor = isBuyer ? '#ddd6fe' : '#ddd6fe';
   const alertColor = isBuyer ? V : '#f59e0b';
@@ -90,57 +95,110 @@ export function TransactionActionRequiredCard({ tx, variant, t, linkFrom }: Tran
     : t('sellerDashboard.labelBuyer', { defaultValue: 'Buyer' });
   const counterpartyName = isBuyer ? tx.sellerName : tx.buyerName;
 
+  const bannerUrl = tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle;
+
+  const detailBlock = (
+    <div style={{ flex: 1, padding: '9px 12px', minWidth: 0, alignSelf: 'stretch' }}>
+      <p
+        style={{
+          fontSize: 13.5,
+          fontWeight: 800,
+          color: DARK,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          marginBottom: 6,
+          ...S,
+        }}
+      >
+        {tx.eventName}
+      </p>
+      <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
+        <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelEventDate', { defaultValue: 'Event date' })}</span>
+        {' · '}
+        {formatDate(new Date(tx.eventDate))}
+      </p>
+      <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
+        <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelSector', { defaultValue: 'Sector' })}</span>
+        {' · '}
+        {sector}
+      </p>
+      <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
+        <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelTicketValue', { defaultValue: 'Ticket price' })}</span>
+        {' · '}
+        <span style={{ fontWeight: 700, color: DARK }}>{perTicket}</span>
+        <span style={{ color: HINT }}>
+          {' '}
+          {t('sellerDashboard.perTicketAbbr', { defaultValue: '/ ticket' })}
+        </span>
+      </p>
+      <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 6, ...S }}>
+        <span style={{ fontWeight: 600, color: HINT }}>{counterpartyLabel}</span>
+        {' · '}
+        <span style={{ fontWeight: 700, color: DARK }}>{counterpartyName}</span>
+      </p>
+      <p style={{ fontSize: 12, color: MUTED, display: 'flex', alignItems: 'flex-start', gap: 5, ...S }}>
+        <AlertCircle size={12} style={{ color: alertColor, flexShrink: 0, marginTop: 1 }} />
+        {what}
+      </p>
+    </div>
+  );
+
+  /** Mobile: narrow left strip, full row height. Desktop: square thumb; flex-start avoids empty band above CTA. */
+  const rowAlign = isMobile ? ('stretch' as const) : ('flex-start' as const);
+
   return (
     <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${borderColor}`, overflow: 'hidden' }}>
-      <div style={{ display: 'flex' }}>
-        <div style={{ display: 'flex', flexShrink: 0 }}>
-          <div style={{ width: 3, alignSelf: 'stretch', background: barColor, flexShrink: 0 }} />
-          <Thumb url={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle} name={tx.eventName} size={64} />
-        </div>
-        <div style={{ flex: 1, padding: '9px 12px', minWidth: 0 }}>
-          <p
+      <div style={{ display: 'flex', alignItems: rowAlign }}>
+        {isMobile ? (
+          <div
             style={{
-              fontSize: 13.5,
-              fontWeight: 800,
-              color: DARK,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              marginBottom: 6,
-              ...S,
+              display: 'flex',
+              flexDirection: 'row',
+              flexShrink: 0,
+              alignSelf: 'stretch',
+              minHeight: 0,
             }}
           >
-            {tx.eventName}
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelEventDate', { defaultValue: 'Event date' })}</span>
-            {' · '}
-            {formatDate(new Date(tx.eventDate))}
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelSector', { defaultValue: 'Sector' })}</span>
-            {' · '}
-            {sector}
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{t('sellerDashboard.labelTicketValue', { defaultValue: 'Ticket price' })}</span>
-            {' · '}
-            <span style={{ fontWeight: 700, color: DARK }}>{perTicket}</span>
-            <span style={{ color: HINT }}>
-              {' '}
-              {t('sellerDashboard.perTicketAbbr', { defaultValue: '/ ticket' })}
-            </span>
-          </p>
-          <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 6, ...S }}>
-            <span style={{ fontWeight: 600, color: HINT }}>{counterpartyLabel}</span>
-            {' · '}
-            <span style={{ fontWeight: 700, color: DARK }}>{counterpartyName}</span>
-          </p>
-          <p style={{ fontSize: 12, color: MUTED, display: 'flex', alignItems: 'flex-start', gap: 5, ...S }}>
-            <AlertCircle size={12} style={{ color: alertColor, flexShrink: 0, marginTop: 1 }} />
-            {what}
-          </p>
-        </div>
+            <div style={{ width: 3, alignSelf: 'stretch', background: barColor, flexShrink: 0 }} />
+            <div
+              style={{
+                width: 'clamp(72px, 26vw, 100px)',
+                flexShrink: 0,
+                alignSelf: 'stretch',
+                background: '#f5f3ff',
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              {bannerUrl ? (
+                <img
+                  src={bannerUrl}
+                  alt={tx.eventName}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', position: 'absolute', inset: 0 }}
+                />
+              ) : (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ticket size={28} style={{ color: V, opacity: 0.4 }} />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexShrink: 0 }}>
+            <div style={{ width: 3, alignSelf: 'stretch', background: barColor, flexShrink: 0 }} />
+            <Thumb url={bannerUrl} name={tx.eventName} size={thumbSize} />
+          </div>
+        )}
+        {detailBlock}
       </div>
       <Link to={`/transaction/${tx.id}`} state={{ from: linkFrom }} style={{ textDecoration: 'none' }}>
         <div

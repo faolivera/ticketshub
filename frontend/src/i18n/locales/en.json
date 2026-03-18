@@ -87,6 +87,7 @@
     "searchPlaceholder": "Search for events, artists, or locations...",
     "searchResults": "Search Results",
     "upcomingEvents": "Upcoming Events",
+    "eventsSectionTitle": "Upcoming events",
     "noEventsFound": "No events found matching your search.",
     "errorLoadingEvents": "Failed to load events. Please try again.",
     "loadMore": "Load more",
@@ -1328,6 +1329,7 @@
     "noEventsFoundSearch": "No events found for your search",
     "loadingEvents": "Loading events...",
     "loadingMore": "Loading more...",
+    "loadMore": "Load more",
     "backToEvents": "Back to event selection",
     "backToTickets": "Back to My Tickets",
     "eventName": "Event Name",
@@ -1526,7 +1528,9 @@
     "publishSuccess": "Listing published",
     "publishSuccessHint": "Your ticket is now for sale.",
     "viewListing": "View my listing",
-    "publishAnother": "Publish another"
+    "publishAnother": "Publish another",
+    "feeReminder": "{{percent}}% commission only when you sell. No fee to list.",
+    "feeReminderWithPromo": "Platform fee <strike>{{basePercent}}%</strike> <promoPct>{{promotedFeeText}}</promoPct> (Promo {{promoLabel}}) only when you sell. No fee to list."
   },
   "common": {
     "at": "at",

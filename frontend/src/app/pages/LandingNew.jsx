@@ -134,48 +134,115 @@ export default function TicketsHub() {
   const [isLoading,      setIsLoading]     = useState(true);
   const [isLoadingMore,  setIsLoadingMore] = useState(false);
   const [error,          setError]         = useState(null);
-  const [offset,         setOffset]        = useState(0);
-  const [hasMore,        setHasMore]       = useState(true);
+  /** Next page already fetched; shown on "load more". Empty = no more or not yet loaded after click. */
+  const [prefetchedPage, setPrefetchedPage]  = useState([]);
+  const [hasMore,        setHasMore]       = useState(false);
   const cityRefDesktop = useRef(null);
   const cityRefMobile = useRef(null);
+  /** If user loads page 2 via "load more" before the background page-2 fetch finishes, drop that stale response. */
+  const ignoreInitialPage2PrefetchRef = useRef(false);
 
   const PAGE_SIZE = 12;
 
   useEffect(() => {
     let cancelled = false;
-    async function fetchEvents() {
+    ignoreInitialPage2PrefetchRef.current = false;
+
+    (async function fetchInitialTwoPages() {
       setIsLoading(true);
       setError(null);
+      let page1 = [];
       try {
-        const data = await eventsService.listEvents({ limit: PAGE_SIZE, offset: 0 });
-        const list = Array.isArray(data) ? data : [];
-        if (!cancelled) {
-          setEvents(list);
-          setOffset(list.length);
-          setHasMore(list.length === PAGE_SIZE);
-        }
+        const data = await eventsService.listEvents({
+          limit: PAGE_SIZE,
+          offset: 0,
+        });
+        page1 = Array.isArray(data) ? data : [];
+        if (cancelled) return;
+        setEvents(page1);
+        setPrefetchedPage([]);
+        setHasMore(page1.length === PAGE_SIZE);
       } catch (err) {
         if (!cancelled) setError(t("landing.errorLoadingEvents"));
         console.error("Failed to fetch events:", err);
+        return;
       } finally {
         if (!cancelled) setIsLoading(false);
       }
-    }
-    fetchEvents();
-    return () => { cancelled = true; };
+
+      if (cancelled || page1.length < PAGE_SIZE) return;
+
+      void eventsService
+        .listEvents({ limit: PAGE_SIZE, offset: PAGE_SIZE })
+        .then((data) => {
+          if (cancelled || ignoreInitialPage2PrefetchRef.current) return;
+          const page2 = Array.isArray(data) ? data : [];
+          setPrefetchedPage(page2);
+          setHasMore(page2.length > 0);
+        })
+        .catch((err) => {
+          if (cancelled || ignoreInitialPage2PrefetchRef.current) return;
+          console.error("Failed to prefetch second page:", err);
+        });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [t]);
 
   async function handleLoadMore() {
     if (isLoadingMore || !hasMore) return;
+
+    const prevLen = events.length;
+    const batch =
+      prefetchedPage.length > 0
+        ? prefetchedPage
+        : null;
+
+    if (!batch) {
+      ignoreInitialPage2PrefetchRef.current = true;
+    }
+
     setIsLoadingMore(true);
     try {
-      const data = await eventsService.listEvents({ limit: PAGE_SIZE, offset });
-      const newBatch = Array.isArray(data) ? data : [];
-      setEvents((prev) => [...prev, ...newBatch]);
-      setOffset((prev) => prev + newBatch.length);
-      setHasMore(newBatch.length === PAGE_SIZE);
+      let shownBatch;
+      let offsetAfterAppend;
+
+      if (batch) {
+        shownBatch = batch;
+        offsetAfterAppend = prevLen + shownBatch.length;
+        setEvents((prev) => [...prev, ...shownBatch]);
+      } else {
+        const data = await eventsService.listEvents({
+          limit: PAGE_SIZE,
+          offset: prevLen,
+        });
+        shownBatch = Array.isArray(data) ? data : [];
+        offsetAfterAppend = prevLen + shownBatch.length;
+        if (shownBatch.length === 0) {
+          setHasMore(false);
+          setPrefetchedPage([]);
+          return;
+        }
+        setEvents((prev) => [...prev, ...shownBatch]);
+      }
+
+      const nextData = await eventsService.listEvents({
+        limit: PAGE_SIZE,
+        offset: offsetAfterAppend,
+      });
+      const nextPage = Array.isArray(nextData) ? nextData : [];
+      setPrefetchedPage(nextPage);
+      setHasMore(nextPage.length > 0);
     } catch (err) {
       console.error("Failed to load more events:", err);
+      if (batch) {
+        setEvents((prev) => prev.slice(0, prevLen));
+        setPrefetchedPage(batch);
+      } else {
+        setHasMore(true);
+      }
     } finally {
       setIsLoadingMore(false);
     }
@@ -459,7 +526,7 @@ export default function TicketsHub() {
       {/* ══════ EVENTS GRID ══════ */}
       <div id="eventos" style={{ maxWidth:1280, margin:"0 auto", padding:"0 24px 56px" }}>
         <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:10 }}>
-          <h2 style={{ ...E, fontSize:24, color:DARK, letterSpacing:"-0.3px" }}>Entradas disponibles</h2>
+          <h2 style={{ ...E, fontSize:24, color:DARK, letterSpacing:"-0.3px" }}>{t("landing.eventsSectionTitle")}</h2>
           {!isLoading && !error && <span style={{ color:MUTED, fontSize:13 }}>{filtered.length} evento{filtered.length !== 1 ? "s" : ""}</span>}
         </div>
 

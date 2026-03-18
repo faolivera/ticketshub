@@ -1,8 +1,7 @@
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
-import { cn } from '@/app/components/ui/utils';
+import { Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { V, VLIGHT, VBORD, DARK, MUTED, BORDER, CARD, BG, S } from './wizardTokens';
 
 interface WizardFooterProps {
   onBack: () => void;
@@ -10,9 +9,7 @@ interface WizardFooterProps {
   showPublish: boolean;
   canGoNext: boolean;
   isPublishing: boolean;
-  /** When true, Next button shows spinner and is disabled (e.g. validating price step) */
   isNextLoading?: boolean;
-  /** Mobile: sticky bottom with safe area; desktop: inline */
   isMobile: boolean;
   backLabel?: string;
   nextLabel?: string;
@@ -31,80 +28,120 @@ export const WizardFooter: FC<WizardFooterProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  const isNextDisabled = !canGoNext || isPublishing || isNextLoading;
+  const isBusy = isPublishing || isNextLoading;
+
   const content = (
-    <div
-      className={cn(
-        'flex gap-3 w-full',
-        isMobile ? 'flex-row' : 'flex-row'
-      )}
-    >
-      <Button
+    <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+
+      {/* Back — ghost pill */}
+      <button
         type="button"
-        variant="outline"
         onClick={onBack}
-        className={cn(
-          'min-h-[44px] md:min-h-[40px] text-base md:text-sm',
-          isMobile ? 'flex-[0_1_40%]' : 'min-w-[100px]'
-        )}
+        style={{
+          flexShrink: 0,
+          padding: '11px 22px',
+          borderRadius: 100,
+          background: 'transparent',
+          border: `1.5px solid ${BORDER}`,
+          color: MUTED,
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: 'pointer',
+          minHeight: 44,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          transition: 'border-color 0.14s, color 0.14s',
+          ...S,
+        }}
         aria-label={backLabel ?? t('sellListingWizard.back')}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = MUTED;
+          (e.currentTarget as HTMLButtonElement).style.color = DARK;
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER;
+          (e.currentTarget as HTMLButtonElement).style.color = MUTED;
+        }}
       >
+        <ArrowLeft size={15} />
         {backLabel ?? t('sellListingWizard.back')}
-      </Button>
-      {showPublish ? (
-        <Button
-          type="button"
-          onClick={onNext}
-          disabled={!canGoNext || isPublishing}
-          className={cn(
-            'min-h-[44px] md:min-h-[40px] text-base md:text-sm flex-1'
-          )}
-          aria-busy={isPublishing}
-          aria-label={t('sellListingWizard.publish')}
-        >
-          {isPublishing ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              {t('sellListingWizard.publishing')}
-            </>
-          ) : (
-            t('sellListingWizard.publish')
-          )}
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          onClick={onNext}
-          disabled={!canGoNext || isNextLoading}
-          className={cn(
-            'min-h-[44px] md:min-h-[40px] text-base md:text-sm flex-1 md:flex-initial md:min-w-[120px]'
-          )}
-          aria-busy={isNextLoading}
-          aria-label={nextLabel ?? t('sellListingWizard.next')}
-        >
-          {isNextLoading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              {t('sellListingWizard.next')}
-            </>
-          ) : (
-            nextLabel ?? t('sellListingWizard.next')
-          )}
-        </Button>
-      )}
+      </button>
+
+      {/* Next / Publish — violet pill, fills remaining space */}
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={isNextDisabled}
+        aria-busy={isBusy}
+        aria-label={showPublish ? t('sellListingWizard.publish') : (nextLabel ?? t('sellListingWizard.next'))}
+        style={{
+          flex: 1,
+          padding: '11px 24px',
+          borderRadius: 100,
+          background: isNextDisabled ? VBORD : V,
+          border: 'none',
+          color: isNextDisabled ? '#a78bfa' : 'white',
+          fontSize: 14,
+          fontWeight: 700,
+          cursor: isNextDisabled ? 'not-allowed' : 'pointer',
+          minHeight: 44,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 7,
+          boxShadow: isNextDisabled ? 'none' : '0 2px 12px rgba(109,40,217,0.22)',
+          transition: 'background 0.14s, box-shadow 0.14s',
+          ...S,
+        }}
+      >
+        {isBusy ? (
+          <>
+            <Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} />
+            {showPublish ? t('sellListingWizard.publishing') : t('sellListingWizard.next')}
+          </>
+        ) : showPublish ? (
+          t('sellListingWizard.publish')
+        ) : (
+          <>
+            {nextLabel ?? t('sellListingWizard.next')}
+            <ArrowRight size={15} />
+          </>
+        )}
+      </button>
+
     </div>
   );
 
+  // ── Mobile: sticky bottom bar ─────────────────────────────────────────────
   if (isMobile) {
     return (
       <div
-        className="sticky bottom-0 left-0 right-0 z-10 bg-background border-t px-4 py-4 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] pb-[max(1rem,env(safe-area-inset-bottom))]"
         role="group"
-        aria-label={t('sellListingWizard.progressStep', { current: 1, total: 6 })}
+        aria-label={t('sellListingWizard.navigation', { defaultValue: 'Navegación del wizard' })}
+        style={{
+          position: 'sticky',
+          bottom: 0, left: 0, right: 0,
+          zIndex: 10,
+          background: 'rgba(255,255,255,0.97)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderTop: `1px solid ${BORDER}`,
+          padding: '12px 16px',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+          boxShadow: '0 -2px 12px rgba(0,0,0,0.06)',
+        }}
       >
         {content}
       </div>
     );
   }
 
-  return <div className="flex gap-3 pt-6">{content}</div>;
+  // ── Desktop: inline ───────────────────────────────────────────────────────
+  return (
+    <div style={{ display: 'flex', gap: 10, paddingTop: 24 }}>
+      {content}
+    </div>
+  );
 };

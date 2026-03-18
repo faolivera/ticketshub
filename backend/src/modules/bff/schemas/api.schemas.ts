@@ -94,6 +94,7 @@ const ActivePromotionSummarySchema = z.object({
   name: z.string(),
   type: z.string(),
   config: z.object({ feePercentage: z.number() }),
+  promoLabel: z.string(),
 });
 
 export const GetSellTicketConfigResponseSchema = z.object({

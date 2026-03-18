@@ -4,8 +4,9 @@ import { Loader2, Ticket, Check, X } from 'lucide-react';
 import type { OfferWithReceivedContext } from '@/api/types';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
+import { useIsMobile } from '@/app/components/ui/use-mobile';
 import {
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
+  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, S,
   getOfferStatusInfo,
 } from '@/app/pages/my-tickets/transactionUtils';
 
@@ -16,11 +17,14 @@ export interface ReceivedOfferCardProps {
   isProcessing: boolean;
 }
 
-function Thumb({ ctx, size }: { ctx: OfferWithReceivedContext['receivedContext']; size: number }) {
+function DesktopThumb({ ctx, size }: { ctx: OfferWithReceivedContext['receivedContext']; size: number }) {
   const url = ctx.bannerUrls?.square || ctx.bannerUrls?.rectangle;
   return (
     <div style={{
-      width: size, minHeight: size, flexShrink: 0,
+      width: size,
+      height: size,
+      flexShrink: 0,
+      alignSelf: 'flex-start',
       background: url ? 'transparent' : VLIGHT,
       overflow: 'hidden', position: 'relative',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -37,10 +41,14 @@ function Thumb({ ctx, size }: { ctx: OfferWithReceivedContext['receivedContext']
 
 export function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing }: ReceivedOfferCardProps) {
   const { t }         = useTranslation();
+  const isMobile      = useIsMobile();
+  const thumbSize     = 112;
   const [hov, setHov] = useState(false);
   const ctx           = offer.receivedContext;
   const statusInfo    = getOfferStatusInfo(offer.status, t);
   const isPending     = offer.status === 'pending';
+  const bannerUrl     = ctx.bannerUrls?.square || ctx.bannerUrls?.rectangle;
+  const barColor      = isPending ? V : BORD2;
 
   const ticketLabel = offer.tickets.type === 'numbered'
     ? `${offer.tickets.seats.length} ${offer.tickets.seats.length === 1 ? t('boughtTickets.seat') : t('boughtTickets.seats')}`
@@ -66,9 +74,48 @@ export function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing }: R
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
-      {/* Header row */}
-      <div style={{ display: 'flex' }}>
-        <Thumb ctx={ctx} size={80} />
+      {/* Header: same pattern as TransactionActionRequiredCard / Mis entradas offers */}
+      <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'flex-start' }}>
+        {isMobile ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              flexShrink: 0,
+              alignSelf: 'stretch',
+              minHeight: 0,
+            }}
+          >
+            <div style={{ width: 3, alignSelf: 'stretch', background: barColor, flexShrink: 0 }} />
+            <div
+              style={{
+                width: 'clamp(72px, 26vw, 100px)',
+                flexShrink: 0,
+                alignSelf: 'stretch',
+                background: VLIGHT,
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              {bannerUrl ? (
+                <img
+                  src={bannerUrl}
+                  alt={ctx.eventName}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', position: 'absolute', inset: 0 }}
+                />
+              ) : (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ticket size={28} style={{ color: V, opacity: 0.4 }} />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ width: 3, alignSelf: 'stretch', background: barColor, flexShrink: 0 }} />
+            <DesktopThumb ctx={ctx} size={thumbSize} />
+          </>
+        )}
         <div style={{ flex: 1, padding: '11px 14px', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
             <p style={{ fontSize: 14, fontWeight: 800, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>

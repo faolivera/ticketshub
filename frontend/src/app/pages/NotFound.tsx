@@ -1,48 +1,65 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { SearchX, Ticket } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
+import { Ticket } from 'lucide-react';
 import { PageMeta } from '@/app/components/PageMeta';
+
+const V      = '#6d28d9';
+const VLIGHT = '#f0ebff';
+const DARK   = '#0f0f1a';
+const MUTED  = '#6b7280';
+const HINT   = '#9ca3af';
+const BG     = '#f3f3f0';
+const BORDER = '#e5e7eb';
+const S = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const DS = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 };
 
 export function NotFound() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-12 sm:py-16">
+    <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', background: BG }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');`}</style>
       <PageMeta title={t('seo.notFound.title')} description={t('seo.notFound.description')} />
-      <div className="max-w-md w-full text-center">
-        {/* Decorative 404 with subtle animation */}
-        <div className="relative mb-6">
-          <span
-            className="text-7xl sm:text-8xl font-bold tracking-tighter text-muted-foreground/20 select-none"
-            aria-hidden
-          >
+
+      <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+
+        {/* Icon */}
+        <div style={{ position: 'relative', marginBottom: 28, display: 'inline-block' }}>
+          <span style={{ fontSize: 'clamp(80px,15vw,120px)', fontWeight: 800, color: BORDER, letterSpacing: '-4px', lineHeight: 1, userSelect: 'none', display: 'block' }} aria-hidden>
             404
           </span>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/5 border border-border flex items-center justify-center">
-              <SearchX className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" aria-hidden />
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{ width: 64, height: 64, borderRadius: 18, background: VLIGHT, border: `1px solid #ddd6fe`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Ticket size={28} style={{ color: V }} />
             </div>
           </div>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2">
+        <h1 style={{ ...DS, fontSize: 'clamp(22px,4vw,30px)', color: DARK, marginBottom: 10, lineHeight: 1.2 }}>
           {t('notFound.title')}
         </h1>
-        <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+        <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.6, marginBottom: 28, maxWidth: 320, margin: '0 auto 28px', ...S }}>
           {t('notFound.description')}
         </p>
 
-        <div className="flex justify-center">
-          <Button asChild size="lg" className="min-w-[180px]">
-            <Link to="/">
-              <Ticket className="w-4 h-4 mr-2" aria-hidden />
-              {t('notFound.browseEvents')}
-            </Link>
-          </Button>
-        </div>
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <button style={{
+            padding: '12px 28px', borderRadius: 12,
+            background: V, color: 'white', border: 'none',
+            fontSize: 14, fontWeight: 700, cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 2px 12px rgba(109,40,217,0.22)',
+            ...S,
+          }}>
+            <Ticket size={16} />
+            {t('notFound.browseEvents')}
+          </button>
+        </Link>
 
-        <p className="mt-8 text-sm text-muted-foreground">
+        <p style={{ marginTop: 20, fontSize: 13, color: HINT, ...S }}>
           {t('notFound.hint')}
         </p>
       </div>

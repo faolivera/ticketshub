@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { Ticket, Loader2, Calendar, X, Clock, MapPin, Tag } from 'lucide-react';
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/contexts/UserContext';
 import { VerificationHelper, SellerTier } from '@/lib/verification';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
@@ -64,16 +64,7 @@ function fmt(amount: number, currency: string) {
 
 // ─── Context sidebar ──────────────────────────────────────────────────────────
 function ContextPanel({
-  currentStep,
-  event,
-  selectedDate,
-  selectedSection,
-  form,
-  currency,
-  feePercent,
-  baseSellerPlatformFeePercent,
-  zeroFeePromoLabel,
-  promotedFeeText,
+  currentStep, event, selectedDate, selectedSection, form, currency, feePercent,
 }: {
   currentStep: WizardStepIndex;
   event: PublicListEventItem | null;
@@ -82,10 +73,6 @@ function ContextPanel({
   form: WizardFormState;
   currency: string;
   feePercent: number;
-  baseSellerPlatformFeePercent: number;
-  zeroFeePromoLabel: string | null;
-  /** Effective seller fee % from promotion (e.g. "0%"), shown in bold in disclaimer */
-  promotedFeeText: string | null;
 }) {
   const { t } = useTranslation();
   if (!event && currentStep === 0) return null;
@@ -163,22 +150,7 @@ function ContextPanel({
         <div style={{ background: GLIGHT, borderRadius: 12, border: `1px solid ${GBORD}`, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <Tag size={13} style={{ color: GREEN, flexShrink: 0, marginTop: 1 }} />
           <p style={{ fontSize: 12.5, color: GREEN, lineHeight: 1.5, ...S }}>
-            {zeroFeePromoLabel && baseSellerPlatformFeePercent > 0 && promotedFeeText ? (
-              <Trans
-                i18nKey="sellListingWizard.feeReminderWithPromo"
-                values={{
-                  basePercent: baseSellerPlatformFeePercent,
-                  promoLabel: zeroFeePromoLabel,
-                  promotedFeeText,
-                }}
-                components={{ strike: <s />, promoPct: <strong /> }}
-              />
-            ) : (
-              t('sellListingWizard.feeReminder', {
-                defaultValue: 'Comisión del {{percent}}% solo si vendés. Sin costo por publicar.',
-                percent: feePercent,
-              })
-            )}
+            {t('sellListingWizard.feeReminder', { defaultValue: `Comisión del ${feePercent}% solo si vendés. Sin costo por publicar.`, percent: feePercent })}
           </p>
         </div>
       )}
@@ -222,11 +194,7 @@ export function SellListingWizard() {
 
   const [sellerPlatformFeePercentage, setSellerPlatformFeePercentage] = useState<number>(5);
   const [activePromotion, setActivePromotion] = useState<{
-    id: string;
-    name: string;
-    type: string;
-    config: { feePercentage: number };
-    promoLabel: string;
+    id: string; name: string; type: string; config: { feePercentage: number };
   } | null>(null);
   const [promoCodeInput,       setPromoCodeInput]       = useState('');
   const [checkedPromotion,     setCheckedPromotion]     = useState<import('@/api/types/promotions').CheckSellerPromotionCodeResponse | null>(null);
@@ -237,16 +205,6 @@ export function SellListingWizard() {
   const sellerCurrency = user?.currency ?? 'ARS';
   const effectiveFeePercent = activePromotion?.config.feePercentage ?? sellerPlatformFeePercentage;
   const feeForDisplay = activePromotion ? effectiveFeePercent : sellerPlatformFeePercentage;
-  const zeroFeePromoLabel =
-    activePromotion &&
-    activePromotion.config.feePercentage === 0 &&
-    sellerPlatformFeePercentage > 0
-      ? activePromotion.promoLabel || activePromotion.name
-      : null;
-  const promotedFeeText =
-    zeroFeePromoLabel && activePromotion
-      ? `${activePromotion.config.feePercentage}%`
-      : null;
 
   // ── On mount: load config + check for draft ───────────────────────────────
   useEffect(() => {
@@ -561,14 +519,8 @@ export function SellListingWizard() {
       )}
 
       {/* Page layout — single column mobile, two columns desktop */}
-      <div style={{
-          maxWidth: 1040, margin: '0 auto',
-          padding: 'clamp(16px,3vw,32px)',
-          display: isMobile ? 'block' : 'grid',
-          gridTemplateColumns: '1fr 300px',
-          gap: 20,
-          alignItems: 'start',
-        }}>
+      <div style={{ maxWidth: 1040, margin: '0 auto', padding: 'clamp(16px,3vw,32px)', display: 'grid', gridTemplateColumns: '1fr', gap: 20 }}
+        className="lg:grid lg:grid-cols-[1fr_300px] lg:items-start">
 
         {/* ── Wizard card ───────────────────────────────────────────────── */}
         <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
@@ -654,23 +606,18 @@ export function SellListingWizard() {
           </div>
         </div>
 
-        {/* ── Context sidebar — only rendered on desktop ───────────────── */}
-        {!isMobile && (
-          <div>
-            <ContextPanel
-              currentStep={currentStep}
-              event={event}
-              selectedDate={selectedDate}
-              selectedSection={selectedSection}
-              form={form}
-              currency={sellerCurrency}
-              feePercent={feeForDisplay}
-              baseSellerPlatformFeePercent={sellerPlatformFeePercentage}
-              zeroFeePromoLabel={zeroFeePromoLabel}
-              promotedFeeText={promotedFeeText}
-            />
-          </div>
-        )}
+        {/* ── Context sidebar — hidden on mobile via CSS class ──────────── */}
+        <div className="hidden lg:block">
+          <ContextPanel
+            currentStep={currentStep}
+            event={event}
+            selectedDate={selectedDate}
+            selectedSection={selectedSection}
+            form={form}
+            currency={sellerCurrency}
+            feePercent={feeForDisplay}
+          />
+        </div>
       </div>
 
       {/* ── Create date modal ──────────────────────────────────────────── */}

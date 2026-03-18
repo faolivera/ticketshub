@@ -8,22 +8,21 @@ import { Badge } from '@/app/components/ui/badge';
 import type { EventSelectItem } from '@/api/types';
 import { EventCategory } from '@/api/types';
 import { cn } from '@/app/components/ui/utils';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S, stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
-/** i18n keys for event category labels (shared with landing) */
 const EVENT_CATEGORY_I18N: Record<EventCategory, string> = {
-  [EventCategory.Concert]: 'landing.categoryConcert',
-  [EventCategory.Sports]: 'landing.categorySports',
-  [EventCategory.Theater]: 'landing.categoryTheater',
-  [EventCategory.Festival]: 'landing.categoryFestival',
+  [EventCategory.Concert]:    'landing.categoryConcert',
+  [EventCategory.Sports]:     'landing.categorySports',
+  [EventCategory.Theater]:    'landing.categoryTheater',
+  [EventCategory.Festival]:   'landing.categoryFestival',
   [EventCategory.Conference]: 'landing.categoryConference',
-  [EventCategory.Comedy]: 'landing.categoryComedy',
-  [EventCategory.Other]: 'landing.categoryOther',
+  [EventCategory.Comedy]:     'landing.categoryComedy',
+  [EventCategory.Other]:      'landing.categoryOther',
 };
 
 interface StepChooseEventProps {
   onSelect: (eventId: string) => void;
   isMobile: boolean;
-  /** Pre-fill the search box (e.g. from URL ?eventName=...) */
   initialSearchTerm?: string;
 }
 
@@ -32,89 +31,69 @@ interface EventCardProps {
   onClick: () => void;
 }
 
-const EventCard = forwardRef<HTMLButtonElement, EventCardProps>(
-  ({ event, onClick }, ref) => {
-    const { t } = useTranslation();
-    const categoryLabel = t(EVENT_CATEGORY_I18N[event.category]);
-
-    return (
-      <button
-        ref={ref}
-        type="button"
-        onClick={onClick}
-        role="radio"
-        aria-checked={false}
-        aria-label={t('sellListingWizard.eventCardA11y', {
-          name: event.name,
-          venue: event.venue,
-          category: categoryLabel,
-        })}
-        className={cn(
-          'group flex min-h-[44px] w-full flex-col rounded-xl border border-border bg-card text-left shadow-md transition-all duration-200',
-          'hover:shadow-lg hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-        )}
-      >
-        <div className="relative aspect-video w-full shrink-0 overflow-hidden">
-          <EventBanner
-            variant="rectangle"
-            squareUrl={event.squareBannerUrl}
-            rectangleUrl={event.rectangleBannerUrl}
-            alt={event.name}
-            className="transition-transform duration-200 group-hover:scale-105"
-          />
+const EventCard = forwardRef<HTMLButtonElement, EventCardProps>(({ event, onClick }, ref) => {
+  const { t } = useTranslation();
+  const categoryLabel = t(EVENT_CATEGORY_I18N[event.category]);
+  return (
+    <button
+      ref={ref}
+      type="button"
+      onClick={onClick}
+      role="radio"
+      aria-checked={false}
+      aria-label={t('sellListingWizard.eventCardA11y', {
+        name: event.name, venue: event.venue, category: categoryLabel,
+      })}
+      className={cn(
+        'group flex min-h-[44px] w-full flex-col rounded-xl border border-border bg-card text-left shadow-md transition-all duration-200',
+        'hover:shadow-lg hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+      )}
+    >
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden">
+        <EventBanner
+          variant="rectangle"
+          squareUrl={event.squareBannerUrl}
+          rectangleUrl={event.rectangleBannerUrl}
+          alt={event.name}
+          className="transition-transform duration-200 group-hover:scale-105"
+        />
+      </div>
+      <div className="flex flex-1 flex-col gap-1.5 p-3 md:p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="text-xs font-medium text-muted-foreground">
+            {categoryLabel}
+          </Badge>
         </div>
-        <div className="flex flex-1 flex-col gap-1.5 p-3 md:p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="text-xs font-medium text-muted-foreground"
-            >
-              {categoryLabel}
-            </Badge>
-          </div>
-          <h3 className="line-clamp-2 text-sm font-semibold text-foreground md:text-base">
-            {event.name}
-          </h3>
-          <p className="line-clamp-1 text-xs text-muted-foreground md:text-sm">
-            {event.venue}
-          </p>
-        </div>
-      </button>
-    );
-  }
-);
+        <h3 className="line-clamp-2 text-sm font-semibold text-foreground md:text-base">
+          {event.name}
+        </h3>
+        <p className="line-clamp-1 text-xs text-muted-foreground md:text-sm">
+          {event.venue}
+        </p>
+      </div>
+    </button>
+  );
+});
 EventCard.displayName = 'EventCard';
 
 export function StepChooseEvent({ onSelect, isMobile, initialSearchTerm = '' }: StepChooseEventProps) {
   const { t } = useTranslation();
-  const {
-    events,
-    isLoading,
-    isLoadingMore,
-    hasMore,
-    searchTerm,
-    setSearchTerm,
-    loadMore,
-    error,
-  } = useEventSelection(initialSearchTerm);
+  const { events, isLoading, isLoadingMore, hasMore, searchTerm, setSearchTerm, loadMore, error } =
+    useEventSelection(initialSearchTerm);
 
-  const showEmpty = !isLoading && events.length === 0;
+  const showEmpty           = !isLoading && events.length === 0;
   const showNoSearchResults = searchTerm.trim() !== '' && events.length === 0 && !isLoading;
 
   return (
-    <div className="space-y-6" role="group" aria-label={t('sellListingWizard.selectEvent')}>
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold text-foreground">
-          {t('sellListingWizard.selectEvent')}
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          {t('sellListingWizard.selectEventDescription')}
-        </p>
-      </div>
+    <div role="group" aria-label={t('sellListingWizard.selectEvent')}>
+      <h2 style={stepHeadingStyle}>{t('sellListingWizard.selectEvent')}</h2>
+      <p style={stepDescStyle}>{t('sellListingWizard.selectEventDescription')}</p>
 
-      <div className="relative">
+      {/* Search */}
+      <div style={{ position: 'relative', marginBottom: 20 }}>
         <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
+          size={18}
+          style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: MUTED }}
           aria-hidden
         />
         <input
@@ -122,78 +101,101 @@ export function StepChooseEvent({ onSelect, isMobile, initialSearchTerm = '' }: 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder={t('sellListingWizard.searchEvents')}
-          className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          style={{
+            width: '100%', paddingLeft: 44, paddingRight: 16, paddingTop: 12, paddingBottom: 12,
+            borderRadius: 12, border: `1.5px solid ${BORDER}`, background: CARD,
+            fontSize: 14, color: DARK, outline: 'none',
+            ...S,
+          }}
+          className="focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={t('sellListingWizard.searchEvents')}
         />
       </div>
 
       {error && (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+        <p style={{ fontSize: 13, color: '#dc2626', marginBottom: 12, ...S }} role="alert">{error}</p>
       )}
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">{t('sellTicket.loadingEvents')}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', gap: 12 }}>
+          <Loader2 size={32} style={{ color: V, animation: 'spin 0.7s linear infinite' }} />
+          <p style={{ fontSize: 14, color: MUTED, ...S }}>{t('sellTicket.loadingEvents')}</p>
         </div>
       ) : showEmpty && !searchTerm ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-2">{t('sellListingWizard.noEvents')}</p>
-          <p className="text-sm text-muted-foreground mb-4">{t('sellListingWizard.noEventsHint')}</p>
+        <div style={{ textAlign: 'center', padding: '48px 0' }}>
+          <p style={{ fontSize: 14, color: MUTED, marginBottom: 6, ...S }}>{t('sellListingWizard.noEvents')}</p>
+          <p style={{ fontSize: 13, color: HINT, marginBottom: 20, ...S }}>{t('sellListingWizard.noEventsHint')}</p>
           <Link
             to="/create-event"
             state={{ fromSellTicket: true }}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:opacity-90 transition-opacity min-h-[44px]"
+            style={{ textDecoration: 'none' }}
           >
-            <Plus className="h-5 w-5" />
-            {t('sellListingWizard.createNewEvent')}
+            <button style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '11px 22px', borderRadius: 11, border: 'none',
+              background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44, ...S,
+            }}>
+              <Plus size={18} />
+              {t('sellListingWizard.createNewEvent')}
+            </button>
           </Link>
         </div>
       ) : showNoSearchResults ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">{t('sellListingWizard.noSearchResults')}</p>
-          <Link
-            to="/create-event"
-            state={{ fromSellTicket: true }}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:opacity-90 min-h-[44px]"
-          >
-            <Plus className="h-5 w-5" />
-            {t('sellListingWizard.createNewEvent')}
+        <div style={{ textAlign: 'center', padding: '48px 0' }}>
+          <p style={{ fontSize: 14, color: MUTED, marginBottom: 20, ...S }}>{t('sellListingWizard.noSearchResults')}</p>
+          <Link to="/create-event" state={{ fromSellTicket: true }} style={{ textDecoration: 'none' }}>
+            <button style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '11px 22px', borderRadius: 11, border: 'none',
+              background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44, ...S,
+            }}>
+              <Plus size={18} />
+              {t('sellListingWizard.createNewEvent')}
+            </button>
           </Link>
         </div>
       ) : (
         <>
           <div
-            className={cn(
-              'grid gap-4',
-              isMobile ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'
-            )}
+            className={cn('grid gap-4', isMobile ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3')}
             role="radiogroup"
             aria-label={t('sellListingWizard.selectEvent')}
           >
             {events.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onClick={() => onSelect(event.id)}
-              />
+              <EventCard key={event.id} event={event} onClick={() => onSelect(event.id)} />
             ))}
           </div>
-          {isLoadingMore && (
-            <div className="flex justify-center py-4 gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              <span className="text-muted-foreground text-sm">{t('sellTicket.loadingMore')}</span>
-            </div>
-          )}
-          {hasMore && !isLoadingMore && (
+          {hasMore && (
             <button
               type="button"
-              onClick={() => loadMore()}
-              className="w-full py-2 text-sm text-primary font-medium hover:underline"
+              disabled={isLoadingMore}
+              aria-busy={isLoadingMore}
+              onClick={() => void loadMore()}
+              style={{
+                width: '100%',
+                marginTop: 8,
+                padding: '12px 16px',
+                fontSize: 14,
+                fontWeight: 700,
+                color: V,
+                background: `${VLIGHT}33`,
+                border: `1.5px solid ${BORDER}`,
+                borderRadius: 12,
+                cursor: isLoadingMore ? 'wait' : 'pointer',
+                minHeight: 44,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                opacity: isLoadingMore ? 0.85 : 1,
+                ...S,
+              }}
+              className="hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
             >
-              {t('sellTicket.loadingMore')}
+              {isLoadingMore && (
+                <Loader2 size={18} className="shrink-0 animate-spin" style={{ color: V }} aria-hidden />
+              )}
+              {t('sellTicket.loadMore')}
             </button>
           )}
         </>
