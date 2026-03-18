@@ -1118,6 +1118,7 @@
     "legalLastName": "Apellido Legal",
     "legalName": "Nombre Legal Completo",
     "dateOfBirth": "Fecha de Nacimiento",
+    "dateOfBirthPrivacyHint": "Tu fecha de nacimiento no se muestra públicamente.",
     "governmentId": "Número de Documento",
     "governmentIdPlaceholder": "DNI, Pasaporte o Cédula",
     "governmentIdHint": "Ingresa el número de documento tal como aparece en tu identificación",

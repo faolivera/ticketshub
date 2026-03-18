@@ -1119,6 +1119,7 @@
     "legalLastName": "Legal Last Name",
     "legalName": "Legal Name",
     "dateOfBirth": "Date of Birth",
+    "dateOfBirthPrivacyHint": "Your date of birth is not shown publicly.",
     "governmentId": "Government ID Number",
     "governmentIdPlaceholder": "DNI, Passport, or National ID",
     "governmentIdHint": "Enter the ID number as it appears on your document",

@@ -8,6 +8,18 @@ import { identityVerificationService } from '@/api/services';
 import type { IdentityVerificationPublic } from '@/api/types/identity-verification';
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { TicketsHubCalendar } from '@/app/components/TicketsHubCalendar';
+import { DateOfBirthPicker, type DateOfBirthValue } from '@/app/components/DateOfBirthPicker';
+
+function parseIsoToDob(iso: string): DateOfBirthValue | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const dt = new Date(year, month - 1, day);
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return null;
+  return { year, month, day };
+}
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const V      = '#6d28d9';
@@ -195,7 +207,8 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
   const [error,      setError]      = useState<string | null>(null);
   const [validationIssues, setValidationIssues] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [dobOpen, setDobOpen] = useState(false);
+  const [dob, setDob] = useState<{ day: number; month: number; year: number } | null>(null);
+
   const [existingVerification, setExistingVerification] = useState<IdentityVerificationPublic | null>(null);
 
   const [identityData, setIdentityData] = useState({
@@ -402,60 +415,21 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
               </Field>
             </div>
 
-            {/* Date of birth — TicketsHub calendar (not native picker) */}
-            <Field label={t('verification.dateOfBirth')} icon={<CalendarIcon size={13} />}>
-              <Popover open={dobOpen} onOpenChange={setDobOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      border: `1.5px solid ${dobOpen ? V : BORD2}`,
-                      borderRadius: 11,
-                      fontSize: 14,
-                      color: dobValid ? DARK : HINT,
-                      background: CARD,
-                      outline: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 8,
-                      boxShadow: dobOpen ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
-                      transition: 'border-color 0.14s, box-shadow 0.14s',
-                      ...S,
-                    }}
-                  >
-                    <span>
-                      {dobValid
-                        ? format(dobDate!, 'PPP', { locale: dfLocale })
-                        : t('verification.selectDate')}
-                    </span>
-                    <ChevronDown size={18} style={{ color: MUTED, flexShrink: 0 }} />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-auto border-[#e5e7eb] p-0 shadow-lg"
-                  align="start"
-                  sideOffset={6}
-                >
-                  <TicketsHubCalendar
-                    mode="single"
-                    locale={dfLocale}
-                    selected={dobValid ? dobDate : undefined}
-                    defaultMonth={dobValid ? dobDate : new Date(2000, 0)}
-                    onSelect={d => {
-                      if (d) {
-                        setIdentityData(p => ({ ...p, dateOfBirth: format(d, 'yyyy-MM-dd') }));
-                        setDobOpen(false);
-                      }
-                    }}
-                    disabled={date => date > new Date() || date < new Date(1900, 0, 1)}
-                  />
-                </PopoverContent>
-              </Popover>
-            </Field>
+
+            <DateOfBirthPicker
+              label={t('verification.dateOfBirth')}
+              value={parseIsoToDob(identityData.dateOfBirth)}
+              onChange={v => {
+                const iso = `${v.year}-${String(v.month).padStart(2, '0')}-${String(v.day).padStart(2, '0')}`;
+                setIdentityData(p => ({ ...p, dateOfBirth: iso }));
+              }}
+              error={
+                validationIssues.includes(t('verification.errorMissingDateOfBirth'))
+                  ? t('verification.errorMissingDateOfBirth')
+                  : undefined
+              }
+              hint={t('verification.dateOfBirthPrivacyHint')}
+            />
 
             {/* DNI number */}
             <Field label={t('verification.governmentId')} icon={<Shield size={13} />}>
