@@ -16,6 +16,7 @@ import type {
   AdminEventListingsResponse,
   AdminTransactionsQuery,
   AdminTransactionsResponse,
+  AdminTransactionAuditLogsResponse,
   AdminTransactionDetailResponse,
   AdminUpdateTransactionRequest,
   AdminTransactionsPendingSummaryResponse,
@@ -306,6 +307,20 @@ export const adminService = {
   },
 
   /**
+   * Get audit logs for a transaction (admin).
+   */
+  async getTransactionAuditLogs(
+    transactionId: string,
+    order: 'asc' | 'desc' = 'desc',
+  ): Promise<AdminTransactionAuditLogsResponse> {
+    const response = await apiClient.get<AdminTransactionAuditLogsResponse>(
+      `/admin/transactions/${transactionId}/audit-logs`,
+      { params: { order } },
+    );
+    return response.data;
+  },
+
+  /**
    * Update transaction by ID (admin). All body fields optional.
    */
   async updateTransaction(
@@ -497,7 +512,7 @@ export const adminService = {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response.data.data;
   },
 
   /**

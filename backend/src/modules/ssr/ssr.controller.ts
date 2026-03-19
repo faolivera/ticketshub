@@ -62,6 +62,28 @@ export class SsrController {
     return `${base}${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
   }
 
+  private formatSeoPrice(amountMinor: number, currency: string): string {
+    const amountMajor = amountMinor / 100;
+    try {
+      return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: currency || 'ARS',
+        maximumFractionDigits: 0,
+      }).format(amountMajor);
+    } catch {
+      return `$${Math.round(amountMajor).toLocaleString('es-AR')}`;
+    }
+  }
+
+  private formatSeoDate(value: Date | string): string {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
   @Get()
   @Header('Content-Type', 'text/html; charset=utf-8')
   async index(@Res() res: Response): Promise<void> {
@@ -218,7 +240,24 @@ export class SsrController {
       const description = SSR_STATIC_META.buyTicket.description.replace(
         '{{eventName}}',
         listing.eventName,
-      );
+      )
+        .replace(
+          '{{sectionName}}',
+          listing.sectionName?.trim() || 'General',
+        )
+        .replace(
+          '{{price}}',
+          this.formatSeoPrice(
+            listing.pricePerTicket?.amount ?? 0,
+            listing.pricePerTicket?.currency ?? 'ARS',
+          ),
+        )
+        .replace('{{date}}', this.formatSeoDate(listing.eventDate))
+        .replace('{{venue}}', listing.venue || '')
+        .replace(
+          '{{cityPart}}',
+          listing.city?.trim() ? `, ${listing.city.trim()}` : '',
+        );
       const imagePath =
         listing.bannerUrls?.og_image ??
         listing.bannerUrls?.rectangle ??

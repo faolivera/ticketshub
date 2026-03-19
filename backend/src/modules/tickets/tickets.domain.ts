@@ -139,6 +139,7 @@ export interface TicketListingWithEvent extends TicketListing {
   eventSlug: string;
   eventDate: Date;
   venue: string;
+  city?: string;
   sectionName: string;
   pendingReason?: string[];
   bannerUrls?: BannerUrls;

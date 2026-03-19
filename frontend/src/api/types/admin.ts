@@ -370,6 +370,23 @@ export interface AdminTransactionsResponse {
   totalPages: number;
 }
 
+export type AdminTransactionAuditLogAction = 'created' | 'updated';
+
+export interface AdminTransactionAuditLogEntry {
+  id: string;
+  transactionId: string;
+  action: AdminTransactionAuditLogAction;
+  changedAt: string;
+  changedBy: string;
+  payload: unknown;
+}
+
+export interface AdminTransactionAuditLogsResponse {
+  transactionId: string;
+  total: number;
+  items: AdminTransactionAuditLogEntry[];
+}
+
 /**
  * Request body for PATCH /api/admin/transactions/:id
  * All fields optional; only provided fields are updated. Date fields as ISO strings.

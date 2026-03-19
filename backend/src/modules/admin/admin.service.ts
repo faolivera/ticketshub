@@ -41,6 +41,7 @@ import type {
   AdminTransactionsResponse,
   AdminTransactionListItem,
   AdminTransactionsPendingSummaryResponse,
+  AdminTransactionAuditLogsResponse,
   AdminTransactionDetailResponse,
   AdminUpdateTransactionRequest,
   AdminTransactionUserRef,
@@ -890,6 +891,19 @@ export class AdminService {
       pendingConfirmationTransactionIds,
       pendingTransactionIds,
     };
+  }
+
+  async getTransactionAuditLogs(
+    ctx: Ctx,
+    transactionId: string,
+    order?: string,
+  ): Promise<AdminTransactionAuditLogsResponse> {
+    const sortOrder: 'asc' | 'desc' = order === 'asc' ? 'asc' : 'desc';
+    return this.transactionsService.getTransactionAuditLogs(
+      ctx,
+      transactionId,
+      sortOrder,
+    );
   }
 
   /**

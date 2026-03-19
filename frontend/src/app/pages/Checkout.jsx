@@ -479,6 +479,16 @@ export default function Checkout() {
   }
 
   const eventDateFormatted = listing.eventDate ? formatDateTime(listing.eventDate) : "";
+  const seoDate = listing.eventDate
+    ? new Date(listing.eventDate).toLocaleDateString("es-AR")
+    : "";
+  const seoPrice = formatCurrencyFromUnits(
+    (listing.pricePerTicket?.amount ?? 0) / 100,
+    listing.pricePerTicket?.currency ?? "ARS"
+  );
+  const seoCity = listing.city ?? "";
+  const seoCityPart = seoCity ? `, ${seoCity}` : "";
+  const seoSectionName = listing.sectionName || "General";
   const sectorName = listing.sectionName || (listing.type === "Physical" ? "Physical Ticket" : "Digital Ticket");
   const seatsMax = isNumberedListing ? availableCount : 0;
   const sortedNumberedUnits = [...numberedUnits].sort((a, b) => {
@@ -509,7 +519,14 @@ export default function Checkout() {
     <div style={{ ...S, background: BG, color: DARK, minHeight: "100vh"}}>
       <PageMeta
         title={t("seo.buyTicket.title", { eventName: listing.eventName })}
-        description={t("seo.buyTicket.description", { eventName: listing.eventName })}
+        description={t("seo.buyTicket.description", {
+          eventName: listing.eventName,
+          sectionName: seoSectionName,
+          price: seoPrice,
+          date: seoDate,
+          venue: listing.venue ?? "",
+          cityPart: seoCityPart,
+        })}
         image={listing.bannerUrls?.rectangle ?? listing.bannerUrls?.square}
       />
 

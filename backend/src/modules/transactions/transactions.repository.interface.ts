@@ -170,6 +170,22 @@ export interface ITransactionsRepository {
     ctx: Ctx,
     eventIds: string[],
   ): Promise<Map<string, number>>;
+
+  getAuditLogsByTransactionId(
+    ctx: Ctx,
+    transactionId: string,
+    order: 'asc' | 'desc',
+  ): Promise<{
+    items: Array<{
+      id: string;
+      transactionId: string;
+      action: 'created' | 'updated';
+      changedAt: Date;
+      changedBy: string;
+      payload: unknown;
+    }>;
+    total: number;
+  }>;
 }
 
 /**

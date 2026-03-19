@@ -63,6 +63,6 @@ export const SSR_STATIC_META: Record<
   buyTicket: {
     title: 'Comprar – {{eventName}} | TicketsHub',
     description:
-      'Completá tu compra de entradas para {{eventName}}. Checkout seguro con protección.',
+      'Comprá entradas para {{eventName}} | {{sectionName}} desde {{price}} | {{date}} {{venue}}{{cityPart}}',
   },
 };

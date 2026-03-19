@@ -32,7 +32,7 @@
     },
     "buyTicket": {
       "title": "Buy – {{eventName}} | TicketsHub",
-      "description": "Complete your purchase for {{eventName}} tickets. Secure checkout with buyer protection."
+      "description": "Buy tickets for {{eventName}} | {{sectionName}} from {{price}} | {{date}} {{venue}}{{cityPart}}"
     },
     "notFound": {
       "title": "Page Not Found | TicketsHub",
@@ -186,6 +186,7 @@
     "fromSellersCount_one": "from {{count}} seller",
     "fromSellersCount_other": "from {{count}} sellers",
     "allDates": "All dates",
+    "selectSeats": "Select seats",
     "buyerGuarantee": "Buyer Protection Guarantee"
   },
   "buyTicket": {
@@ -2373,6 +2374,14 @@
       "copy": "Copy",
       "copied": "Copied!",
       "edit": "Edit",
+      "logs": "Logs",
+      "auditLogsTitle": "Audit logs",
+      "auditLogsEmpty": "No audit logs for this transaction",
+      "auditActionCreated": "Created",
+      "auditActionUpdated": "Updated",
+      "auditBy": "Changed by",
+      "auditViewPayload": "View full payload (JSON)",
+      "auditPayloadNoDetails": "No payload details",
       "editTransaction": "Edit Transaction",
       "actions": "Actions",
       "save": "Save",

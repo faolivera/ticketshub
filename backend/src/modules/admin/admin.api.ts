@@ -428,6 +428,23 @@ export interface AdminTransactionsPendingSummaryResponse {
   pendingTransactionIds: string[];
 }
 
+export type AdminTransactionAuditLogAction = 'created' | 'updated';
+
+export interface AdminTransactionAuditLogEntry {
+  id: string;
+  transactionId: string;
+  action: AdminTransactionAuditLogAction;
+  changedAt: Date;
+  changedBy: string;
+  payload: unknown;
+}
+
+export interface AdminTransactionAuditLogsResponse {
+  transactionId: string;
+  total: number;
+  items: AdminTransactionAuditLogEntry[];
+}
+
 /**
  * Request body for PATCH /api/admin/transactions/:id
  * All fields optional; only provided fields are updated.

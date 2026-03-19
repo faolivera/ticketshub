@@ -135,6 +135,7 @@ export const ListingWithSellerSchema = z.object({
   eventSlug: z.string(),
   eventDate: z.coerce.date(),
   venue: z.string(),
+  city: z.string().optional(),
   sectionName: z.string(),
   bannerUrls: BannerUrlsSchema.optional(),
   sellerPublicName: z.string(),

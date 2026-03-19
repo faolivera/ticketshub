@@ -113,6 +113,7 @@ describe('AdminService', () => {
       getPaginated: jest.fn(),
       countByStatuses: jest.fn(),
       getIdsByStatuses: jest.fn(),
+      getTransactionAuditLogs: jest.fn(),
     };
 
     const mockEventsService = {
@@ -1173,6 +1174,47 @@ describe('AdminService', () => {
       expect(result.pendingTransactionsCount).toBe(0);
       expect(result.pendingConfirmationTransactionIds).toEqual([]);
       expect(result.pendingTransactionIds).toEqual([]);
+    });
+  });
+
+  describe('getTransactionAuditLogs', () => {
+    it('should call transactions service and return response', async () => {
+      const response = {
+        transactionId: 'txn_123',
+        total: 2,
+        items: [
+          {
+            id: 'log_1',
+            transactionId: 'txn_123',
+            action: 'created' as const,
+            changedAt: new Date('2025-01-01T10:00:00.000Z'),
+            changedBy: 'system',
+            payload: { field: 'initial' },
+          },
+          {
+            id: 'log_2',
+            transactionId: 'txn_123',
+            action: 'updated' as const,
+            changedAt: new Date('2025-01-01T12:00:00.000Z'),
+            changedBy: 'admin_1',
+            payload: { field: 'status' },
+          },
+        ],
+      };
+      transactionsService.getTransactionAuditLogs.mockResolvedValue(response);
+
+      const result = await service.getTransactionAuditLogs(
+        mockCtx,
+        'txn_123',
+        'asc',
+      );
+
+      expect(transactionsService.getTransactionAuditLogs).toHaveBeenCalledWith(
+        mockCtx,
+        'txn_123',
+        'asc',
+      );
+      expect(result).toEqual(response);
     });
   });
 

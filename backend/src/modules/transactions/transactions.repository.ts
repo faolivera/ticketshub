@@ -667,6 +667,49 @@ export class TransactionsRepository
     return map;
   }
 
+  async getAuditLogsByTransactionId(
+    ctx: Ctx,
+    transactionId: string,
+    order: 'asc' | 'desc',
+  ): Promise<{
+    items: Array<{
+      id: string;
+      transactionId: string;
+      action: 'created' | 'updated';
+      changedAt: Date;
+      changedBy: string;
+      payload: unknown;
+    }>;
+    total: number;
+  }> {
+    this.logger.debug(ctx, 'getAuditLogsByTransactionId', {
+      transactionId,
+      order,
+    });
+    const client = this.getClient(ctx);
+    const [items, total] = await Promise.all([
+      client.transactionAuditLog.findMany({
+        where: { transactionId },
+        orderBy: { changedAt: order },
+      }),
+      client.transactionAuditLog.count({
+        where: { transactionId },
+      }),
+    ]);
+
+    return {
+      items: items.map((item) => ({
+        id: item.id,
+        transactionId: item.transactionId,
+        action: item.action as 'created' | 'updated',
+        changedAt: item.changedAt,
+        changedBy: item.changedBy,
+        payload: item.payload as unknown,
+      })),
+      total,
+    };
+  }
+
   async findByIdForUpdate(
     ctx: Ctx,
     id: string,

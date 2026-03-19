@@ -19,6 +19,7 @@ import { OffersService } from '../../../../src/modules/offers/offers.service';
 import { TransactionManager } from '../../../../src/common/database';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
 import { TermsService } from '../../../../src/modules/terms/terms.service';
+import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import { PRIVATE_STORAGE_PROVIDER } from '../../../../src/common/storage/file-storage-provider.interface';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import {
@@ -86,6 +87,7 @@ describe('TransactionsService', () => {
       findExpiredPendingPayments: jest.fn(),
       findExpiredAdminReviews: jest.fn(),
       getPaginated: jest.fn(),
+      getAuditLogsByTransactionId: jest.fn(),
       countByStatuses: jest.fn(),
       getIdsByStatuses: jest.fn(),
       findByIds: jest.fn(),
@@ -192,6 +194,10 @@ describe('TransactionsService', () => {
       exists: jest.fn(),
     };
 
+    const mockEventScoringService = {
+      requestScoring: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -212,6 +218,7 @@ describe('TransactionsService', () => {
         { provide: TermsService, useValue: mockTermsService },
         { provide: TransactionManager, useValue: mockTxManager },
         { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage },
+        { provide: EventScoringService, useValue: mockEventScoringService },
       ],
     }).compile();
 
@@ -681,6 +688,80 @@ describe('TransactionsService', () => {
       const result = await service.findById(mockCtx, 'invalid_id');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('getTransactionAuditLogs', () => {
+    it('should return audit logs response when transaction exists', async () => {
+      const transaction = createMockTransaction({ id: 'txn_123' });
+      const auditDateOld = new Date('2025-01-01T10:00:00.000Z');
+      const auditDateNew = new Date('2025-01-01T12:00:00.000Z');
+      transactionsRepository.findById.mockResolvedValue(transaction);
+      transactionsRepository.getAuditLogsByTransactionId.mockResolvedValue({
+        total: 2,
+        items: [
+          {
+            id: 'log_1',
+            transactionId: 'txn_123',
+            action: 'updated',
+            changedAt: auditDateNew,
+            changedBy: 'admin_1',
+            payload: { field: 'status' },
+          },
+          {
+            id: 'log_2',
+            transactionId: 'txn_123',
+            action: 'created',
+            changedAt: auditDateOld,
+            changedBy: 'system',
+            payload: { field: 'initial' },
+          },
+        ],
+      });
+
+      const result = await service.getTransactionAuditLogs(
+        mockCtx,
+        'txn_123',
+        'desc',
+      );
+
+      expect(transactionsRepository.getAuditLogsByTransactionId).toHaveBeenCalledWith(
+        mockCtx,
+        'txn_123',
+        'desc',
+      );
+      expect(result).toEqual({
+        transactionId: 'txn_123',
+        total: 2,
+        items: [
+          expect.objectContaining({
+            id: 'log_1',
+            transactionId: 'txn_123',
+            action: 'updated',
+            changedAt: auditDateNew,
+          }),
+          expect.objectContaining({
+            id: 'log_2',
+            transactionId: 'txn_123',
+            action: 'created',
+            changedAt: auditDateOld,
+          }),
+        ],
+      });
+      expect(result.items[0].changedAt.getTime()).toBeGreaterThan(
+        result.items[1].changedAt.getTime(),
+      );
+    });
+
+    it('should throw NotFoundException when transaction does not exist', async () => {
+      transactionsRepository.findById.mockResolvedValue(undefined);
+
+      await expect(
+        service.getTransactionAuditLogs(mockCtx, 'missing_txn', 'asc'),
+      ).rejects.toThrow(NotFoundException);
+      expect(
+        transactionsRepository.getAuditLogsByTransactionId,
+      ).not.toHaveBeenCalled();
     });
   });
 

@@ -128,6 +128,9 @@ function buildEventAndTickets(apiEvent, listings, currentUserId) {
       seller: listing.sellerPublicName || "Vendedor",
       sellerId: listing.sellerId,
       sellerAvatarUrl: listing.sellerPic?.src ?? null,
+      sellerTotalSales: listing.sellerReputation?.totalSales ?? 0,
+      sellerTotalReviews: listing.sellerReputation?.totalReviews ?? 0,
+      sellerPositivePercent: listing.sellerReputation?.positivePercent ?? null,
       verified,
       newSeller: badges.some((b) => String(b).toLowerCase().includes("new")),
       badge: null,
@@ -531,8 +534,27 @@ export default function EventDetail() {
 
 function TicketCard({ ticket, eventSlug }) {
   const { t } = useTranslation();
-  const { sector, seated, acceptsOffers, qty, price, seller, sellerId, sellerAvatarUrl, verified, newSeller, urgency, listingId } = ticket;
+  const {
+    sector,
+    seated,
+    acceptsOffers,
+    qty,
+    price,
+    seller,
+    sellerId,
+    sellerAvatarUrl,
+    sellerTotalSales,
+    sellerTotalReviews,
+    sellerPositivePercent,
+    verified,
+    newSeller,
+    urgency,
+    listingId,
+  } = ticket;
   const ctaLabel = seated ? (t("eventTickets.selectSeats") || "Elegir asientos") : "Comprar";
+  const hasSellerReviews =
+    sellerPositivePercent !== null && Number.isFinite(sellerPositivePercent) && sellerTotalReviews > 0;
+  const sellerPositivePercentRounded = hasSellerReviews ? Math.round(sellerPositivePercent) : null;
 
   return (
     <div className="tk-card">
@@ -580,6 +602,19 @@ function TicketCard({ ticket, eventSlug }) {
               ) : (
                 <span style={{ fontSize: 10.5, color: HINT }}>No verificado</span>
               )}
+            </div>
+            <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 1 }}>
+              <span style={{ fontSize: 10.5, color: HINT, lineHeight: 1.3 }}>
+                {t("eventTickets.ticketsSold", { count: sellerTotalSales })}
+              </span>
+              <span style={{ fontSize: 10.5, color: HINT, lineHeight: 1.3 }}>
+                {hasSellerReviews
+                  ? t("eventTickets.positiveReviews", {
+                      percent: sellerPositivePercentRounded,
+                      total: sellerTotalReviews,
+                    })
+                  : t("eventTickets.noReviewsYet")}
+              </span>
             </div>
           </div>
         </Link>

@@ -350,6 +350,26 @@ export const AdminTransactionsPendingSummaryResponseSchema = z.object({
   pendingTransactionIds: z.array(z.string()),
 });
 
+export const AdminTransactionAuditLogActionSchema = z.enum([
+  'created',
+  'updated',
+]);
+
+export const AdminTransactionAuditLogEntrySchema = z.object({
+  id: z.string(),
+  transactionId: z.string(),
+  action: AdminTransactionAuditLogActionSchema,
+  changedAt: z.coerce.date(),
+  changedBy: z.string(),
+  payload: z.any(),
+});
+
+export const AdminTransactionAuditLogsResponseSchema = z.object({
+  transactionId: z.string(),
+  total: z.number(),
+  items: z.array(AdminTransactionAuditLogEntrySchema),
+});
+
 const AdminSellerPayoutTicketLineSchema = z.object({
   sectionName: z.string(),
   quantity: z.number(),

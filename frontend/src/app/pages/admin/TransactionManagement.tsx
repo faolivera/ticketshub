@@ -57,6 +57,7 @@ import { adminService, paymentConfirmationsService } from '../../../api/services
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDateTimeMedium } from '@/lib/format-date';
 import type {
+  AdminTransactionAuditLogEntry,
   AdminTransactionDetailResponse,
   AdminTransactionListItem,
   AdminTransactionPaymentConfirmation,
@@ -143,6 +144,11 @@ export default function TransactionManagement() {
   const [editForm, setEditForm] = useState<AdminUpdateTransactionRequest | null>(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [auditLogsDialogOpen, setAuditLogsDialogOpen] = useState(false);
+  const [auditLogsTransactionId, setAuditLogsTransactionId] = useState<string | null>(null);
+  const [auditLogsLoading, setAuditLogsLoading] = useState(false);
+  const [auditLogsError, setAuditLogsError] = useState<string | null>(null);
+  const [auditLogsItems, setAuditLogsItems] = useState<AdminTransactionAuditLogEntry[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -420,6 +426,51 @@ export default function TransactionManagement() {
     setReceiptProofDialogTxId(null);
     if (receiptProofBlobUrl) URL.revokeObjectURL(receiptProofBlobUrl);
     setReceiptProofBlobUrl(null);
+  };
+
+  const openAuditLogsDialog = async (transactionId: string): Promise<void> => {
+    setAuditLogsDialogOpen(true);
+    setAuditLogsTransactionId(transactionId);
+    setAuditLogsLoading(true);
+    setAuditLogsError(null);
+    setAuditLogsItems([]);
+    try {
+      const response = await adminService.getTransactionAuditLogs(transactionId, 'desc');
+      setAuditLogsItems(Array.isArray(response.items) ? response.items : []);
+    } catch (err) {
+      setAuditLogsError(err instanceof Error ? err.message : t('common.errorLoading'));
+    } finally {
+      setAuditLogsLoading(false);
+    }
+  };
+
+  const closeAuditLogsDialog = (): void => {
+    setAuditLogsDialogOpen(false);
+    setAuditLogsTransactionId(null);
+    setAuditLogsLoading(false);
+    setAuditLogsError(null);
+    setAuditLogsItems([]);
+  };
+
+  const getAuditActionLabel = (action: string): string =>
+    action === 'created'
+      ? t('admin.transactions.auditActionCreated')
+      : action === 'updated'
+        ? t('admin.transactions.auditActionUpdated')
+        : action;
+
+  const getAuditPayloadPreview = (payload: unknown): string => {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return t('admin.transactions.auditPayloadNoDetails');
+    }
+    const entries = Object.entries(payload as Record<string, unknown>);
+    if (entries.length === 0) {
+      return t('admin.transactions.auditPayloadNoDetails');
+    }
+    return entries
+      .slice(0, 4)
+      .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`)
+      .join(' • ');
   };
 
   const getStatusLabel = (status: string): string => {
@@ -997,7 +1048,7 @@ export default function TransactionManagement() {
                     <TableHead>{t('admin.transactions.status')}</TableHead>
                     <TableHead className="text-right">{t('admin.transactions.amount')}</TableHead>
                     <TableHead>{t('admin.transactions.createdAt')}</TableHead>
-                    <TableHead className="w-[80px]">{t('admin.transactions.actions')}</TableHead>
+                    <TableHead className="w-[180px]">{t('admin.transactions.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1037,18 +1088,28 @@ export default function TransactionManagement() {
                             {formatDate(transaction.createdAt)}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                setEditModalTransactionId(transaction.id);
-                                setEditError(null);
-                                await loadDetail(transaction.id);
-                              }}
-                            >
-                              <Pencil className="w-4 h-4 mr-1" />
-                              {t('admin.transactions.edit')}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  setEditModalTransactionId(transaction.id);
+                                  setEditError(null);
+                                  await loadDetail(transaction.id);
+                                }}
+                              >
+                                <Pencil className="w-4 h-4 mr-1" />
+                                {t('admin.transactions.edit')}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => void openAuditLogsDialog(transaction.id)}
+                              >
+                                <FileText className="w-4 h-4 mr-1" />
+                                {t('admin.transactions.logs')}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
 
@@ -1627,6 +1688,68 @@ export default function TransactionManagement() {
               {jsonCopied ? t('admin.transactions.copied') : t('admin.transactions.copy')}
             </Button>
             <Button variant="outline" onClick={() => setJsonDialogOpen(false)}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={auditLogsDialogOpen} onOpenChange={(open) => !open && closeAuditLogsDialog()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('admin.transactions.auditLogsTitle')}</DialogTitle>
+            <DialogDescription>
+              {auditLogsTransactionId ? (
+                <span className="font-mono text-xs">{auditLogsTransactionId}</span>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto min-h-[300px] pr-1">
+            {auditLogsLoading ? (
+              <div className="flex items-center justify-center h-[280px]">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : auditLogsError ? (
+              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded">
+                {auditLogsError}
+              </div>
+            ) : !Array.isArray(auditLogsItems) || auditLogsItems.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-8 text-center">
+                {t('admin.transactions.auditLogsEmpty')}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {auditLogsItems.map((log) => (
+                  <div key={log.id} className="rounded-lg border p-3 bg-background">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{getAuditActionLabel(log.action)}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {t('admin.transactions.auditBy')}: <span className="font-mono">{log.changedBy}</span>
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(log.changedAt)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2 break-all">
+                      {getAuditPayloadPreview(log.payload)}
+                    </p>
+                    <details className="rounded border bg-muted/20 p-2">
+                      <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                        {t('admin.transactions.auditViewPayload')}
+                      </summary>
+                      <pre className="text-xs whitespace-pre-wrap break-all font-mono mt-2">
+                        {JSON.stringify(log.payload, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeAuditLogsDialog}>
               {t('common.close')}
             </Button>
           </DialogFooter>

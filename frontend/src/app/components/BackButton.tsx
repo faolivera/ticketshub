@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import type { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { useCanGoBack } from '@/app/hooks/useCanGoBack';
@@ -74,8 +75,22 @@ export function BackButton({
   }
 
   if (to != null) {
+    const handleLinkBack = (event: MouseEvent<HTMLAnchorElement>) => {
+      // Keep normal browser behavior for modified clicks (new tab, etc.).
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+        return;
+      }
+
+      if (!canGoBack) {
+        return;
+      }
+
+      event.preventDefault();
+      navigate(-1);
+    };
+
     return (
-      <Link to={to} style={linkStyle(embedded)}>
+      <Link to={to} style={linkStyle(embedded)} onClick={handleLinkBack}>
         <ArrowLeft size={15} aria-hidden />
         {label}
       </Link>
@@ -87,7 +102,11 @@ export function BackButton({
   }
 
   return (
-    <button type="button" onClick={() => navigate(-1)} style={buttonStyle(embedded)}>
+    <button
+      type="button"
+      onClick={() => navigate(-1)}
+      style={buttonStyle(embedded)}
+    >
       <ArrowLeft size={15} aria-hidden />
       {label}
     </button>

@@ -1,6 +1,5 @@
 import '@/i18n/config';
 import i18n from '@/i18n/config';
-import { useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider } from '@/app/contexts/UserContext';
@@ -49,17 +48,9 @@ import SupportTicketDetail from '@/app/pages/admin/SupportTicketDetail';
 import { NotFound } from '@/app/pages/NotFound';
 import { getGoogleClientId } from '@/config/env';
 import { BG } from '@/lib/design-tokens';
+import { ScrollRestorationManager } from '@/app/components/ScrollRestorationManager';
 
 const googleClientId = getGoogleClientId();
-
-/** Reset window scroll on every navigation (including browser back/forward). */
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useLayoutEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-  return null;
-}
 
 function AppLayout() {
   const location = useLocation();
@@ -71,7 +62,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col w-full min-w-0 overflow-x-hidden">
-      <ScrollToTop />
+      <ScrollRestorationManager />
       {!isAdminRoute && <AppHeader homeHref={landingHomeHref} />}
       <main
         className="flex-1 pb-16 md:pb-0 w-full min-w-0"

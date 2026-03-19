@@ -47,6 +47,7 @@ import type {
   AdminEventListingsResponse,
   AdminTransactionsResponse,
   AdminTransactionsPendingSummaryResponse,
+  AdminTransactionAuditLogsResponse,
   AdminTransactionDetailResponse,
   AdminUpdateTransactionRequest,
   AdminUserSearchResponse,
@@ -88,6 +89,7 @@ import {
   AdminEventListingsResponseSchema,
   AdminTransactionsResponseSchema,
   AdminTransactionsPendingSummaryResponseSchema,
+  AdminTransactionAuditLogsResponseSchema,
   AdminTransactionDetailResponseSchema,
   AdminUserSearchResponseSchema,
   AdminSellerPayoutsResponseSchema,
@@ -261,6 +263,17 @@ export class AdminController {
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<AdminTransactionsPendingSummaryResponse>> {
     const data = await this.adminService.getTransactionsPendingSummary(ctx);
+    return { success: true, data };
+  }
+
+  @Get('transactions/:id/audit-logs')
+  @ValidateResponse(AdminTransactionAuditLogsResponseSchema)
+  async getTransactionAuditLogs(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+    @Query('order') order?: string,
+  ): Promise<ApiResponse<AdminTransactionAuditLogsResponse>> {
+    const data = await this.adminService.getTransactionAuditLogs(ctx, id, order);
     return { success: true, data };
   }
 

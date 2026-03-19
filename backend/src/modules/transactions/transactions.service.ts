@@ -35,6 +35,7 @@ import type {
   GetPendingPaymentsResponse,
   TransactionWithPaymentInfo,
 } from './transactions.api';
+import type { AdminTransactionAuditLogsResponse } from '../admin/admin.api';
 import { PaymentMethodsService } from '../payments/payment-methods.service';
 import type { PricingSnapshot } from '../payments/pricing/pricing.domain';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -1282,6 +1283,39 @@ export class TransactionsService {
   async findByIds(ctx: Ctx, ids: string[]): Promise<Transaction[]> {
     if (ids.length === 0) return [];
     return this.transactionsRepository.findByIds(ctx, ids);
+  }
+
+  async getTransactionAuditLogs(
+    ctx: Ctx,
+    transactionId: string,
+    order: 'asc' | 'desc' = 'desc',
+  ): Promise<AdminTransactionAuditLogsResponse> {
+    const transaction = await this.transactionsRepository.findById(
+      ctx,
+      transactionId,
+    );
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const result = await this.transactionsRepository.getAuditLogsByTransactionId(
+      ctx,
+      transactionId,
+      order,
+    );
+
+    return {
+      transactionId,
+      total: result.total,
+      items: result.items.map((item) => ({
+        id: item.id,
+        transactionId: item.transactionId,
+        action: item.action,
+        changedAt: new Date(item.changedAt),
+        changedBy: item.changedBy,
+        payload: item.payload,
+      })),
+    };
   }
 
   /**
