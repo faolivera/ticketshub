@@ -1047,6 +1047,8 @@
       "sellerReleasingSubtitle": "Se está procesando tu cobro.",
       "sellerFundsReleasedTitle": "Fondos liberados",
       "sellerFundsReleasedSubtitle": "Deberías recibir {{amount}} en 24 horas hábiles.",
+      "sellerCompletedTitle": "Gracias por vender en TicketsHub",
+      "sellerCompletedSubtitle": "La transacción se completó exitosamente.",
       "sellerCancelledTitle": "Transacción cancelada",
       "sellerCancelledSubtitle": "Esta venta no continuará.",
       "sentAsLabel": "Enviaste como:"

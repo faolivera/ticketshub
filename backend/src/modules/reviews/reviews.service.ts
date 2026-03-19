@@ -78,7 +78,10 @@ export class ReviewsService {
       throw new NotFoundException('Transaction not found');
     }
 
-    if (transaction.status !== TransactionStatus.Completed) {
+    if (
+      transaction.status !== TransactionStatus.Completed &&
+      transaction.status !== TransactionStatus.TransferringFund
+    ) {
       throw new BadRequestException('Can only review completed transactions');
     }
 

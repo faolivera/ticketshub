@@ -1048,6 +1048,8 @@
       "sellerReleasingSubtitle": "Your payout is being processed.",
       "sellerFundsReleasedTitle": "Funds released",
       "sellerFundsReleasedSubtitle": "You should receive {{amount}} within 24 business hours.",
+      "sellerCompletedTitle": "Thank you for selling on TicketsHub",
+      "sellerCompletedSubtitle": "The transaction has been completed successfully.",
       "sellerCancelledTitle": "Transaction cancelled",
       "sellerCancelledSubtitle": "This sale will not continue.",
       "sentAsLabel": "You sent as:"

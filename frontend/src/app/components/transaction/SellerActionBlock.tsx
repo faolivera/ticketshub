@@ -258,15 +258,6 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
 
       {effectiveStatus === TransactionStatus.TransferringFund && (
         <ActionHero
-          variant="violet"
-          icon={<Clock className="h-5 w-5" />}
-          title={t('transaction.hero.sellerReleasingTitle')}
-          subtitle={t('transaction.hero.sellerReleasingSubtitle')}
-        />
-      )}
-
-      {effectiveStatus === TransactionStatus.Completed && (
-        <ActionHero
           variant="green"
           icon={<CheckCircle className="h-5 w-5" />}
           title={t('transaction.hero.sellerFundsReleasedTitle')}
@@ -290,6 +281,15 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
             </div>
           </div>
         </ActionHero>
+      )}
+
+      {effectiveStatus === TransactionStatus.Completed && (
+        <ActionHero
+          variant="green"
+          icon={<CheckCircle className="h-5 w-5" />}
+          title={t('transaction.hero.sellerCompletedTitle')}
+          subtitle={t('transaction.hero.sellerCompletedSubtitle')}
+        />
       )}
 
       {(effectiveStatus === TransactionStatus.Completed || effectiveStatus === TransactionStatus.TransferringFund) &&
