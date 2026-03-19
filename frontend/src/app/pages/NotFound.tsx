@@ -2,16 +2,9 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Ticket } from 'lucide-react';
 import { PageMeta } from '@/app/components/PageMeta';
+import { V, VLIGHT, VL_BORDER, DARK, MUTED, HINT, BG, BORDER, S, E } from '@/lib/design-tokens';
 
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const BORDER = '#e5e7eb';
-const S = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const DS = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 };
+const DS = { ...E, fontWeight: 400 };
 
 export function NotFound() {
   const { t } = useTranslation();
@@ -32,7 +25,7 @@ export function NotFound() {
             position: 'absolute', inset: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <div style={{ width: 64, height: 64, borderRadius: 18, background: VLIGHT, border: `1px solid #ddd6fe`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 18, background: VLIGHT, border: `1px solid ${VL_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Ticket size={28} style={{ color: V }} />
             </div>
           </div>

@@ -5,7 +5,7 @@ import {
   WIZARD_TOTAL_STEPS,
   type WizardStepIndex,
 } from './types';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, S } from './wizardTokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, S } from '@/lib/design-tokens';
 
 const STEP_KEYS = [
   'sellListingWizard.stepEvent',

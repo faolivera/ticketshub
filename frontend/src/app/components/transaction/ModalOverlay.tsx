@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { TX, txFontDisplay, txFontSans } from './tokens';
+import { CARD, DARK, MUTED, E, S } from '@/lib/design-tokens';
 import type { ModalOverlayProps } from './types';
 
 export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
@@ -13,13 +13,13 @@ export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
     >
       <div
         className="max-h-[90vh] w-full max-w-[460px] overflow-y-auto rounded-[20px] p-6 sm:p-7"
-        style={{ background: TX.CARD, ...txFontSans }}
+        style={{ background: CARD, ...S }}
       >
         <div className="mb-5 flex items-center justify-between gap-3">
           <h2
             id="tx-modal-title"
             className="text-xl font-normal leading-tight"
-            style={{ ...txFontDisplay, color: TX.DARK }}
+            style={{ ...E, color: DARK }}
           >
             {title}
           </h2>
@@ -27,7 +27,7 @@ export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 transition-colors hover:bg-gray-100"
-            style={{ color: TX.MUTED }}
+            style={{ color: MUTED }}
             aria-label="Close"
           >
             <X className="h-5 w-5" />

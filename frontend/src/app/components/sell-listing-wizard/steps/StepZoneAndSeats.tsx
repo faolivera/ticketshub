@@ -7,7 +7,8 @@ import type { PublicListEventItem, EventSection } from '@/api/types';
 import { EventSectionStatus, SeatingType } from '@/api/types';
 import type { WizardFormState, NumberedSeatInput } from '../types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, VBORD, DARK, MUTED, HINT, BORDER, BG, CARD, S, stepHeadingStyle, stepDescStyle } from '../wizardTokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S } from '@/lib/design-tokens';
+import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepZoneAndSeatsProps {
   event: PublicListEventItem;

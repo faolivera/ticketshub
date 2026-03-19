@@ -13,8 +13,22 @@ import type { ActivityHistoryItem } from '@/api/types/bff';
 import {
   getTransactionStatusInfo,
   getOfferStatusInfo,
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
 } from '@/app/pages/my-tickets/transactionUtils';
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+} from '@/lib/design-tokens';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(amount: number, currency: string) {

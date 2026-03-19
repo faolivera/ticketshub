@@ -55,7 +55,7 @@ describe('TicketsService', () => {
       {
         id: 'edt_123',
         eventId: 'evt_123',
-        date: new Date(),
+        date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         status: EventDateStatus.Approved,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -64,7 +64,7 @@ describe('TicketsService', () => {
       {
         id: 'edt_456',
         eventId: 'evt_123',
-        date: new Date(),
+        date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         status: EventDateStatus.Pending,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -102,7 +102,7 @@ describe('TicketsService', () => {
       {
         id: 'edt_789',
         eventId: 'evt_pending',
-        date: new Date(),
+        date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         status: EventDateStatus.Pending,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -387,6 +387,24 @@ describe('TicketsService', () => {
       eventsService.getEventById.mockResolvedValue(
         eventWithRejectedDate as any,
       );
+
+      await expect(
+        service.createListing(mockCtx, 'seller_123', baseCreateRequest),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when event date is in the past', async () => {
+      const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const eventWithPastDate = {
+        ...mockApprovedEvent,
+        dates: [
+          {
+            ...mockApprovedEvent.dates[0],
+            date: pastDate,
+          },
+        ],
+      };
+      eventsService.getEventById.mockResolvedValue(eventWithPastDate as any);
 
       await expect(
         service.createListing(mockCtx, 'seller_123', baseCreateRequest),

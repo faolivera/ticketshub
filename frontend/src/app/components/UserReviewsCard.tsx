@@ -6,35 +6,50 @@ import { UserAvatar } from './UserAvatar';
 import { Skeleton } from './ui/skeleton';
 import { reviewsService } from '../../api/services/reviews.service';
 import type { UserReviewMetrics, UserBadge } from '../../api/types';
-import { TX, txFontSans } from '@/app/components/transaction/tokens';
+import {
+  TRUST_VERIFIED,
+  TRUST_VERIFIED_BG,
+  TRUST_VERIFIED_BORDER,
+  BLIGHT,
+  BLUE,
+  BORDER,
+  VLIGHT,
+  V,
+  SURFACE,
+  MUTED,
+  BORD2,
+  DARK,
+  CARD,
+  S,
+} from '@/lib/design-tokens';
 
 /** Badge chip styles per ticketshub-design-system (Trust + brand). */
 function getBadgeStyle(badge: UserBadge): CSSProperties {
   if (badge === 'trusted') {
     return {
-      background: TX.BLIGHT,
-      color: TX.BLUE,
-      border: `1px solid ${TX.BORDER}`,
+      background: BLIGHT,
+      color: BLUE,
+      border: `1px solid ${BORDER}`,
     };
   }
   if (badge === 'verified') {
     return {
-      background: '#f0fdfa',
-      color: '#0f766e',
-      border: '1px solid #99f6e4',
+      background: TRUST_VERIFIED_BG,
+      color: TRUST_VERIFIED,
+      border: `1px solid ${TRUST_VERIFIED_BORDER}`,
     };
   }
   if (badge === 'best_seller') {
     return {
-      background: TX.VLIGHT,
-      color: TX.V,
-      border: `1.5px solid ${TX.V}`,
+      background: VLIGHT,
+      color: V,
+      border: `1.5px solid ${V}`,
     };
   }
   return {
-    background: TX.SURFACE,
-    color: TX.MUTED,
-    border: `1px solid ${TX.BORDER}`,
+    background: SURFACE,
+    color: MUTED,
+    border: `1px solid ${BORDER}`,
   };
 }
 
@@ -61,27 +76,27 @@ function getBadgeLabel(badge: UserBadge, t: (key: string) => string) {
 }
 
 const rowStyle: CSSProperties = {
-  ...txFontSans,
+  ...S,
   display: 'flex',
   alignItems: 'flex-start',
   gap: 18,
 };
 
 const nameStyle: CSSProperties = {
-  ...txFontSans,
+  ...S,
   fontSize: 14,
   fontWeight: 700,
   lineHeight: 1.25,
-  color: TX.DARK,
+  color: DARK,
   margin: 0,
 };
 
 const metaStyle: CSSProperties = {
-  ...txFontSans,
+  ...S,
   fontSize: 12.5,
   fontWeight: 400,
   lineHeight: 1.5,
-  color: TX.MUTED,
+  color: MUTED,
 };
 
 export const UserReviewsCard: FC<UserReviewsCardProps> = ({
@@ -123,12 +138,12 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
       <div style={rowStyle}>
         <Skeleton
           className="h-14 w-14 shrink-0 rounded-full"
-          style={{ backgroundColor: TX.BORDER }}
+          style={{ backgroundColor: BORDER }}
         />
-        <div className="min-w-0 flex-1 space-y-2" style={txFontSans}>
-          <Skeleton className="h-[18px] w-32 rounded-md" style={{ backgroundColor: TX.BORDER }} />
-          <Skeleton className="h-3.5 w-24 rounded-md" style={{ backgroundColor: TX.BORDER }} />
-          <Skeleton className="h-3.5 w-40 rounded-md" style={{ backgroundColor: TX.BORDER }} />
+        <div className="min-w-0 flex-1 space-y-2" style={S}>
+          <Skeleton className="h-[18px] w-32 rounded-md" style={{ backgroundColor: BORDER }} />
+          <Skeleton className="h-3.5 w-24 rounded-md" style={{ backgroundColor: BORDER }} />
+          <Skeleton className="h-3.5 w-40 rounded-md" style={{ backgroundColor: BORDER }} />
         </div>
       </div>
     );
@@ -143,7 +158,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
             {publicName}
           </h3>
           {error && (
-            <p className="mt-1" style={{ ...metaStyle, color: TX.MUTED }}>
+            <p className="mt-1" style={{ ...metaStyle, color: MUTED }}>
               {t('userReviews.loadError')}
             </p>
           )}
@@ -180,7 +195,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
                 key={badge}
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
                 style={{
-                  ...txFontSans,
+                  ...S,
                   fontSize: 11.5,
                   fontWeight: 600,
                   ...getBadgeStyle(badge),
@@ -198,7 +213,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
           style={metaStyle}
         >
           <span>{transactionText}</span>
-          <span style={{ color: TX.BORD2 }} aria-hidden>
+          <span style={{ color: BORD2 }} aria-hidden>
             •
           </span>
           <span>{reviewText}</span>
@@ -209,16 +224,16 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
 
   if (showProfileLink && role === 'seller') {
     return (
-      <div className="flex flex-col gap-3" style={txFontSans}>
+      <div className="flex flex-col gap-3" style={S}>
         {content}
         <Link
           to={`/seller/${userId}`}
           className="block w-full rounded-[10px] border-[1.5px] py-2.5 px-4 text-center text-[13.5px] font-semibold no-underline transition-colors duration-[0.16s] ease-out hover:bg-[#f0ebff]"
           style={{
-            ...txFontSans,
-            borderColor: TX.BORD2,
-            color: TX.V,
-            background: TX.CARD,
+            ...S,
+            borderColor: BORD2,
+            color: V,
+            background: CARD,
           }}
         >
           {t('userReviews.viewProfile')}

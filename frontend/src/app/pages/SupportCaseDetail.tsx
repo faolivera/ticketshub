@@ -7,26 +7,38 @@ import type { SupportTicketWithMessages, SupportMessage } from '@/api/types';
 import { SUPPORT_MESSAGE_KEY_DISPUTE_VERIFY_IDENTITY } from '@/api/types/support';
 import { formatDateTimeMedium } from '@/lib/format-date';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
+import {
+  V,
+  VLIGHT,
+  VL_BORDER,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  ABG,
+  AMBER,
+  ABORD,
+  BADGE_DEMAND_BG,
+  BADGE_DEMAND_BORDER,
+  DESTRUCTIVE,
+  GLIGHT,
+  GREEN,
+  GBORD,
+  S,
+  E,
+} from '@/lib/design-tokens';
 
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const VBORD  = '#ddd6fe';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const S  = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const DS = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 };
+const DS = { ...E, fontWeight: 400 };
 
 const STATUS_CONFIG: Record<string, { bg: string; color: string; border: string; labelKey: string }> = {
-  open:                 { bg: VLIGHT,   color: V,        border: VBORD,    labelKey: 'support.statusOpen' },
-  inProgress:           { bg: '#fffbeb', color: '#92400e', border: '#fde68a', labelKey: 'support.statusInProgress' },
-  waitingForCustomer:   { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5', labelKey: 'support.waitingForYou' },
-  resolved:             { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', labelKey: 'support.statusResolved' },
-  closed:               { bg: BG,        color: MUTED,     border: BORD2,    labelKey: 'support.statusClosed' },
+  open:                 { bg: VLIGHT,          color: V,           border: VL_BORDER,           labelKey: 'support.statusOpen' },
+  inProgress:           { bg: ABG,             color: AMBER,       border: ABORD,               labelKey: 'support.statusInProgress' },
+  waitingForCustomer:   { bg: BADGE_DEMAND_BG, color: DESTRUCTIVE, border: BADGE_DEMAND_BORDER, labelKey: 'support.waitingForYou' },
+  resolved:             { bg: GLIGHT,          color: GREEN,       border: GBORD,               labelKey: 'support.statusResolved' },
+  closed:               { bg: BG,              color: MUTED,       border: BORD2,               labelKey: 'support.statusClosed' },
 };
 
 export function SupportCaseDetail() {
@@ -197,7 +209,7 @@ export function SupportCaseDetail() {
                     borderBottomLeftRadius: fromSupport ? 4 : 14,
                     borderBottomRightRadius: fromSupport ? 14 : 4,
                     background: fromSupport ? VLIGHT : BG,
-                    border: `1px solid ${fromSupport ? VBORD : BORDER}`,
+                    border: `1px solid ${fromSupport ? VL_BORDER : BORDER}`,
                   }}>
                     {isSystem ? (
                       <p style={{ fontSize: 13.5, color: DARK, lineHeight: 1.55, ...S }}>
@@ -238,7 +250,7 @@ export function SupportCaseDetail() {
                   disabled={!replyText.trim() || sendingReply}
                   style={{
                     padding: '10px 20px', borderRadius: 12, border: 'none',
-                    background: !replyText.trim() || sendingReply ? VBORD : V,
+                    background: !replyText.trim() || sendingReply ? VL_BORDER : V,
                     color: !replyText.trim() || sendingReply ? '#a78bfa' : 'white',
                     fontSize: 13.5, fontWeight: 700,
                     cursor: !replyText.trim() || sendingReply ? 'not-allowed' : 'pointer',

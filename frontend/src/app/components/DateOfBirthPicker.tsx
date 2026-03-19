@@ -1,17 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, S } from '@/lib/design-tokens';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MONTHS_ES = [
@@ -402,8 +391,8 @@ export function DateOfBirthPicker({
         /* Custom scrollbar for year panel */
         div::-webkit-scrollbar { width: 4px; }
         div::-webkit-scrollbar-track { background: transparent; }
-        div::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
-        div::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+        div::-webkit-scrollbar-thumb { background: ${BORDER}; border-radius: 2px; }
+        div::-webkit-scrollbar-thumb:hover { background: ${BORD2}; }
       `}</style>
     </div>
   );

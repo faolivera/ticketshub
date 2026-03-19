@@ -2,22 +2,24 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, ArrowRight } from 'lucide-react';
 import { PageMeta } from '@/app/components/PageMeta';
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+  E,
+} from '@/lib/design-tokens';
 
-// ─── Design tokens (TicketsHub system) ───────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const GREEN  = '#15803d';
-const GLIGHT = '#f0fdf4';
-const GBORD  = '#bbf7d0';
-const DS = { fontFamily: "'DM Serif Display', serif" };
-const S  = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const DS = { ...E, fontWeight: 400 };
 
 // ─── Step data ────────────────────────────────────────────────────────────────
 const BUYER_STEPS = [
@@ -482,7 +484,7 @@ export function HowItWorks() {
         <div style={{ background: DARK, padding: 'clamp(40px,6vw,64px) 24px' }}>
           <div style={{ maxWidth: 960, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6d28d9', marginBottom: 8, ...S }}>
+              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: V, marginBottom: 8, ...S }}>
                 Garantías del sistema
               </p>
               <h2 style={{ ...DS, fontSize: 'clamp(22px,3vw,30px)', fontWeight: 400, color: 'white', marginBottom: 0 }}>

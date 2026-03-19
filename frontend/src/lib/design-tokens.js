@@ -45,6 +45,8 @@ export const TRUST_ESCROW = "#4f46e5";
 export const TRUST_ESCROW_BG = "#eef2ff";
 export const TRUST_VERIFIED = "#0f766e";
 export const TRUST_VERIFIED_BG = "#f0fdfa";
+/** Teal accent border for verified trust chips */
+export const TRUST_VERIFIED_BORDER = "#99f6e4";
 
 export const ERROR = "#b91c1c";
 export const ERROR_DARK = "#991b1b";

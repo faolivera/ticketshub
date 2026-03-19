@@ -7,9 +7,24 @@ import type { TransactionWithDetails } from '@/api/types';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate } from '@/lib/format-date';
 import {
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, S,
-  getTransactionStatusInfo, getWaitingForLabel, TERMINAL_STATUSES,
+  getTransactionStatusInfo,
+  getWaitingForLabel,
+  TERMINAL_STATUSES,
 } from './transactionUtils';
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  S,
+} from '@/lib/design-tokens';
 
 export type TransactionCardVariant = 'action' | 'waiting' | 'completed';
 

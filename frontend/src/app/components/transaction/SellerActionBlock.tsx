@@ -12,7 +12,21 @@ import { formatDate, formatDateTime } from '@/lib/format-date';
 import { TransactionStatus } from '@/api/types';
 import { ActionHero } from './ActionHero';
 import { EscrowTimeline } from './EscrowTimeline';
-import { TX, txFontSans } from './tokens';
+import {
+  ABORD,
+  ABG,
+  AMBER,
+  V,
+  MUTED,
+  BORDER,
+  SURFACE,
+  GBORD,
+  GLIGHT,
+  GREEN,
+  DESTRUCTIVE,
+  DARK,
+  S,
+} from '@/lib/design-tokens';
 import type { SellerActionBlockProps } from './types';
 
 export function SellerActionBlock(props: SellerActionBlockProps) {
@@ -76,7 +90,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
   }
 
   return (
-    <div className="space-y-4" style={txFontSans}>
+    <div className="space-y-4" style={S}>
       {effectiveStatus === TransactionStatus.PendingPayment && (
         <ActionHero
           variant="amber"
@@ -106,14 +120,14 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
         >
           <div
             className="mb-4 space-y-1 rounded-xl border p-3 text-sm"
-            style={{ borderColor: TX.ABORD, background: TX.ABG }}
+            style={{ borderColor: ABORD, background: ABG }}
           >
-            <p className="font-semibold" style={{ color: TX.AMBER }}>
+            <p className="font-semibold" style={{ color: AMBER }}>
               {t('myTicket.buyerDisclaimerTitle')}
             </p>
-            <p style={{ color: TX.DARK }}>{t('myTicket.buyerDisclaimerName', { name: transaction.buyerName })}</p>
+            <p style={{ color: DARK }}>{t('myTicket.buyerDisclaimerName', { name: transaction.buyerName })}</p>
             {counterpartyEmail && (
-              <p style={{ color: TX.DARK }}>
+              <p style={{ color: DARK }}>
                 {t('myTicket.buyerDisclaimerEmail', { email: counterpartyEmail })}
               </p>
             )}
@@ -122,7 +136,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
             type="button"
             onClick={onOpenTransferModal}
             className="w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
-            style={{ background: TX.V }}
+            style={{ background: V }}
           >
             {t('myTicket.confirmTicketTransferred')}
           </button>
@@ -131,7 +145,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               type="button"
               onClick={onOpenDispute}
               className="mt-3 w-full text-center text-xs font-semibold underline"
-              style={{ color: TX.MUTED }}
+              style={{ color: MUTED }}
             >
               {t('myTicket.reportProblem')}
             </button>
@@ -162,14 +176,14 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           {payloadLabel && (
             <p
               className="mt-4 rounded-lg border p-3 text-sm"
-              style={{ borderColor: TX.BORDER, background: TX.SURFACE }}
+              style={{ borderColor: BORDER, background: SURFACE }}
             >
               <span className="font-semibold">{t('transaction.hero.sentAsLabel')} </span>
               {payloadLabel}
             </p>
           )}
           {effectiveStatus === TransactionStatus.TicketTransferred && (
-            <div className="mt-4 rounded-xl border p-4" style={{ borderColor: TX.BORDER }}>
+            <div className="mt-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
               <label className="mb-2 block text-sm font-medium">{t('myTicket.attachTransferProofAfterTransfer')}</label>
               <input
                 ref={fileInputTransferRef}
@@ -179,7 +193,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
                 className="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-4 file:py-2 file:text-violet-700"
               />
               {transferProofFile && (
-                <p className="mt-1 text-xs" style={{ color: TX.MUTED }}>
+                <p className="mt-1 text-xs" style={{ color: MUTED }}>
                   {transferProofFile.name}
                 </p>
               )}
@@ -194,7 +208,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
                   disabled={isUploadingTransferProof}
                   onClick={onUploadTransferProof}
                   className="mt-2 w-full rounded-[10px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                  style={{ background: TX.V }}
+                  style={{ background: V }}
                 >
                   {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
                 </button>
@@ -206,7 +220,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               type="button"
               onClick={onOpenDispute}
               className="mt-4 text-sm font-semibold underline"
-              style={{ color: TX.V }}
+              style={{ color: V }}
             >
               {t('myTicket.reportProblem')}
             </button>
@@ -232,24 +246,24 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
         >
           <div
             className="mt-4 space-y-2 rounded-xl border p-4 text-sm"
-            style={{ borderColor: TX.GBORD, background: TX.GLIGHT }}
+            style={{ borderColor: GBORD, background: GLIGHT }}
           >
             <div className="flex justify-between">
-              <span style={{ color: TX.MUTED }}>{t('myTicket.ticketPriceTotal')}</span>
+              <span style={{ color: MUTED }}>{t('myTicket.ticketPriceTotal')}</span>
               <span className="font-medium">{priceFormatted}</span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: TX.MUTED }}>{t('myTicket.sellerPlatformFee')}</span>
+              <span style={{ color: MUTED }}>{t('myTicket.sellerPlatformFee')}</span>
               <span className="font-medium text-red-600">-{commissionFormatted}</span>
             </div>
-            <div className="flex justify-between border-t pt-2 font-bold" style={{ borderColor: TX.GBORD }}>
+            <div className="flex justify-between border-t pt-2 font-bold" style={{ borderColor: GBORD }}>
               <span>{t('myTicket.youReceive')}</span>
-              <span style={{ color: TX.GREEN }}>{netFormatted}</span>
+              <span style={{ color: GREEN }}>{netFormatted}</span>
             </div>
           </div>
           {reviewData?.canReview && !reviewData.sellerReview && (
-            <div className="mt-4 space-y-3 rounded-xl border p-4" style={{ borderColor: TX.BORDER }}>
-              <p className="text-sm" style={{ color: TX.MUTED }}>
+            <div className="mt-4 space-y-3 rounded-xl border p-4" style={{ borderColor: BORDER }}>
+              <p className="text-sm" style={{ color: MUTED }}>
                 {t('reviews.leaveReviewDesc')}
               </p>
               <div className="flex gap-2">
@@ -271,7 +285,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
                 placeholder={t('reviews.commentPlaceholder')}
                 className="w-full rounded-lg border p-2 text-sm"
                 rows={2}
-                style={{ borderColor: TX.BORDER }}
+                style={{ borderColor: BORDER }}
               />
               {reviewError && <p className="text-xs text-red-600">{reviewError}</p>}
               <button
@@ -279,7 +293,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
                 onClick={onSubmitReview}
                 disabled={!selectedRating || isSubmittingReview}
                 className="w-full rounded-[10px] py-3 text-sm font-bold text-white disabled:opacity-50"
-                style={{ background: TX.V }}
+                style={{ background: V }}
               >
                 {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
               </button>
@@ -298,7 +312,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           <Link
             to={`/support/${disputeId}`}
             className="mt-3 inline-block text-sm font-bold underline"
-            style={{ color: TX.RED }}
+            style={{ color: DESTRUCTIVE }}
           >
             {t('myTicket.viewSupportCase')}
           </Link>

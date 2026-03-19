@@ -5,7 +5,8 @@ import { formatDateTime } from '@/lib/format-date';
 import type { PublicListEventItem, EventDate } from '@/api/types';
 import { EventDateStatus } from '@/api/types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, BG, S, stepHeadingStyle, stepDescStyle } from '../wizardTokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, BG, S } from '@/lib/design-tokens';
+import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepChooseDateProps {
   event: PublicListEventItem;

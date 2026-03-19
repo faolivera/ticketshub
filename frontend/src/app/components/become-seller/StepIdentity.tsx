@@ -9,6 +9,24 @@ import type { IdentityVerificationPublic } from '@/api/types/identity-verificati
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { TicketsHubCalendar } from '@/app/components/TicketsHubCalendar';
 import { DateOfBirthPicker, type DateOfBirthValue } from '@/app/components/DateOfBirthPicker';
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  AMBER,
+  ABG,
+  ABORD,
+  S,
+} from '@/lib/design-tokens';
 
 function parseIsoToDob(iso: string): DateOfBirthValue | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
@@ -20,24 +38,6 @@ function parseIsoToDob(iso: string): DateOfBirthValue | null {
   if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return null;
   return { year, month, day };
 }
-
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const GREEN  = '#15803d';
-const GLIGHT = '#f0fdf4';
-const GBORD  = '#bbf7d0';
-const AMBER  = '#92400e';
-const ABG    = '#fffbeb';
-const ABORD  = '#fde68a';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 export interface StepIdentityProps {
   onComplete: () => void;

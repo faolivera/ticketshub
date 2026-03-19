@@ -11,22 +11,25 @@ import { formatDateTime } from '@/lib/format-date';
 import { useIsMobile } from '../components/ui/use-mobile';
 import { Switch } from '@/app/components/ui/switch';
 import { Label } from '@/app/components/ui/label';
+import {
+  V,
+  VLIGHT,
+  VL_BORDER,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+  E,
+} from '@/lib/design-tokens';
 
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const VBORD  = '#ddd6fe';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const GREEN  = '#15803d';
-const GLIGHT = '#f0fdf4';
-const GBORD  = '#bbf7d0';
-const S  = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const DS = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 };
+const DS = { ...E, fontWeight: 400 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(amount: number, currency: string) {
@@ -152,7 +155,7 @@ export function EditListing() {
         )}
 
         {/* Disclaimer */}
-        <div style={{ background: VLIGHT, border: `1px solid ${VBORD}`, borderRadius: 12, padding: '12px 16px', marginBottom: 22, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ background: VLIGHT, border: `1px solid ${VL_BORDER}`, borderRadius: 12, padding: '12px 16px', marginBottom: 22, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ width: 20, height: 20, borderRadius: '50%', background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'white' }}>i</span>
           </div>
@@ -182,7 +185,7 @@ export function EditListing() {
                 />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ticket size={48} style={{ color: VBORD }} />
+                  <Ticket size={48} style={{ color: VL_BORDER }} />
                 </div>
               )}
               {/* Status pill over image */}
@@ -357,7 +360,7 @@ export function EditListing() {
                     disabled={!canSave}
                     style={{
                       width: '100%', padding: '12px 0', borderRadius: 12,
-                      background: canSave ? V : VBORD,
+                      background: canSave ? V : VL_BORDER,
                       color: canSave ? 'white' : '#a78bfa',
                       border: 'none', fontSize: 14, fontWeight: 700,
                       cursor: canSave ? 'pointer' : 'not-allowed',

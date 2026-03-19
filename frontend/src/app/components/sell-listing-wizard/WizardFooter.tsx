@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
-import { V, VLIGHT, VBORD, DARK, MUTED, BORDER, CARD, BG, S } from './wizardTokens';
+import { V, VLIGHT, VL_BORDER, DARK, MUTED, BORDER, CARD, BG, S } from '@/lib/design-tokens';
 
 interface WizardFooterProps {
   onBack: () => void;
@@ -80,7 +80,7 @@ export const WizardFooter: FC<WizardFooterProps> = ({
           flex: 1,
           padding: '11px 24px',
           borderRadius: 100,
-          background: isNextDisabled ? VBORD : V,
+          background: isNextDisabled ? VL_BORDER : V,
           border: 'none',
           color: isNextDisabled ? '#a78bfa' : 'white',
           fontSize: 14,

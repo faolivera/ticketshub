@@ -14,10 +14,26 @@ import { formatDate }     from '@/lib/format-date';
 import type { TransactionWithDetails, OfferWithListingSummary } from '@/api/types';
 import type { ActivityHistoryItem } from '@/api/types/bff';
 import {
-  isUserRequiredActor, TERMINAL_STATUSES,
-  getTransactionStatusInfo, getWaitingForLabel,
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
+  isUserRequiredActor,
+  TERMINAL_STATUSES,
+  getTransactionStatusInfo,
+  getWaitingForLabel,
 } from './transactionUtils';
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+} from '@/lib/design-tokens';
 import { TransactionActionRequiredCard } from './TransactionActionRequiredCard';
 import { PageHeader } from '../../components/PageHeader';
 

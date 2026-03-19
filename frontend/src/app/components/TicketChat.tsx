@@ -6,6 +6,7 @@ import { formatTime } from '@/lib/format-date';
 import { transactionsService } from '@/api/services';
 import type { TransactionChatMessage } from '@/api/types';
 import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
+import { useIsMobile } from '@/app/components/ui/use-mobile';
 
 export interface TicketChatProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export function TicketChat({
 }: TicketChatProps) {
   const { t } = useTranslation();
   const { socket, isConnected } = useSocket();
+  const isMobile = useIsMobile();
   const [messages, setMessages] = useState<TransactionChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -186,13 +188,18 @@ export function TicketChat({
 
   if (!isOpen) return null;
 
+  // Mobile: true full screen — replaces the entire viewport while open.
+  // Desktop: floating panel bottom-right.
   const containerClass =
-    'fixed z-50 overflow-hidden bg-white flex flex-col ' +
-    'inset-x-0 top-0 left-0 right-0 bottom-16 sm:inset-0 md:inset-auto md:bottom-4 md:right-4 md:w-[380px] md:max-h-[90vh] md:rounded-lg md:shadow-2xl';
+    'fixed overflow-hidden flex flex-col bg-white ' +
+    'inset-0 md:inset-auto md:bottom-4 md:right-4 md:w-[380px] md:max-h-[90vh] md:rounded-2xl md:shadow-2xl ' +
+    'z-[9999]';
+  const containerStyle: React.CSSProperties = {};
 
   return (
     <div
       className={containerClass}
+      style={containerStyle}
       role="dialog"
       aria-label="Chat"
       onClick={handleChatInteraction}
@@ -200,8 +207,9 @@ export function TicketChat({
     >
       {/* Header */}
       <div
-        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 flex items-center justify-between cursor-pointer shrink-0"
-        onClick={() => setIsMinimized(!isMinimized)}
+        className="text-white p-3 flex items-center justify-between shrink-0"
+        style={{ background: '#6d28d9', cursor: isMobile ? 'default' : 'pointer' }}
+        onClick={() => { if (!isMobile) setIsMinimized(!isMinimized); }}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div className="relative flex-shrink-0">
@@ -238,22 +246,25 @@ export function TicketChat({
               e.stopPropagation();
               onClose();
             }}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
+            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded transition-colors flex items-center gap-1.5"
           >
-            <X className="w-4 h-4" />
+            {isMobile
+              ? <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span className="text-sm font-semibold">Cerrar</span></>
+              : <X className="w-4 h-4" />
+            }
           </button>
         </div>
       </div>
 
       {!isMinimized && (
         <>
-          <div className="bg-blue-50 border-b border-blue-200 p-2 shrink-0">
-            <p className="text-xs text-gray-700 truncate">
-              <span className="font-semibold">{t('chat.regarding')}</span> {ticketTitle}
+          <div className="border-b shrink-0 px-3 py-2" style={{ background: '#f3f3f0', borderColor: '#e5e7eb' }}>
+            <p className="text-xs truncate" style={{ color: '#6b7280' }}>
+              {ticketTitle}
             </p>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3 bg-gray-50">
+          <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ background: '#f3f3f0' }}>
             {loading && messages.length === 0 ? (
               <div className="flex items-center justify-center py-8 text-gray-500">
                 {t('common.loading')}
@@ -289,13 +300,20 @@ export function TicketChat({
                       )}
                       <div>
                         <div
-                          className={`rounded-2xl px-3 py-2 ${
+                          className={`rounded-xl px-3 py-2 ${
                             isDelivery
-                              ? 'bg-green-50 text-green-800 border border-green-200 text-center'
+                              ? 'text-center border'
                               : isCurrentUser
-                                ? 'bg-blue-600 text-white rounded-br-sm'
-                                : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
+                                ? 'rounded-br-sm'
+                                : 'border rounded-bl-sm'
                           }`}
+                          style={
+                            isDelivery
+                              ? { background: '#f0fdf4', borderColor: '#bbf7d0', color: '#15803d' }
+                              : isCurrentUser
+                                ? { background: '#6d28d9', color: 'white' }
+                                : { background: 'white', borderColor: '#e5e7eb', color: '#0f0f1a' }
+                          }
                         >
                           {isDelivery ? (
                             <p className="text-sm font-medium">{deliveryLabel}</p>
@@ -341,17 +359,23 @@ export function TicketChat({
                   }}
                   placeholder={t('chat.typePlaceholder')}
                   disabled={atLimit}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                  className="flex-1 px-3 py-2 text-sm border focus:outline-none focus:ring-2 disabled:opacity-50"
+                  style={{
+                    borderRadius: 10,
+                    borderColor: '#e5e7eb',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => void handleSendMessage()}
                   disabled={inputMessage.trim() === '' || sending || atLimit}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
-                    inputMessage.trim() === '' || sending || atLimit
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+                  style={{
+                    background: inputMessage.trim() === '' || sending || atLimit ? '#d1d5db' : '#6d28d9',
+                    color: inputMessage.trim() === '' || sending || atLimit ? '#6b7280' : 'white',
+                    cursor: inputMessage.trim() === '' || sending || atLimit ? 'not-allowed' : 'pointer',
+                  }}
                 >
                   <Send className="w-4 h-4" />
                 </button>

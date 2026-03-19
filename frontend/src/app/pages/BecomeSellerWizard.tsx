@@ -9,24 +9,24 @@ import { StepIdentity } from '@/app/components/become-seller/StepIdentity';
 import { StepBank } from '@/app/components/become-seller/StepBank';
 import { Check, Phone, FileText, CreditCard, Shield, ArrowRight, Clock } from 'lucide-react';
 import type { User } from '@/api/types/users';
-
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const GREEN  = '#15803d';
-const GLIGHT = '#f0fdf4';
-const GBORD  = '#bbf7d0';
-const AMBER  = '#b45309';
-const ALIGHT = '#fffbeb';
-const ABORD  = '#fde68a';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  AMBER_c1,
+  ABG,
+  ABORD,
+  S,
+} from '@/lib/design-tokens';
 
 export type WizardStep = 1 | 2 | 3 | 4;
 type StepVisual = 'todo' | 'active' | 'verified' | 'pending_review';
@@ -122,7 +122,7 @@ function StepTrack({ currentStep, visualByStep }: { currentStep: WizardStep; vis
   const segmentColor = (_from: WizardStep, to: WizardStep): string => {
     const next = visualByStep[to];
     if (next === 'verified') return GREEN;
-    if (next === 'pending_review') return AMBER;
+    if (next === 'pending_review') return AMBER_c1;
     return BORDER;
   };
 
@@ -142,7 +142,7 @@ function StepTrack({ currentStep, visualByStep }: { currentStep: WizardStep; vis
             fg = 'white';
             node = <Check size={14} />;
           } else if (vis === 'pending_review') {
-            bg = AMBER;
+            bg = AMBER_c1;
             fg = 'white';
             node = <Clock size={14} />;
           } else if (vis === 'active') {
@@ -170,7 +170,7 @@ function StepTrack({ currentStep, visualByStep }: { currentStep: WizardStep; vis
                 </div>
                 <span style={{
                   fontSize: 11, fontWeight: active ? 700 : 500, whiteSpace: 'nowrap',
-                  color: active ? DARK : vis === 'pending_review' ? AMBER : isTodo ? '#d1d5db' : MUTED, ...S,
+                  color: active ? DARK : vis === 'pending_review' ? AMBER_c1 : isTodo ? '#d1d5db' : MUTED, ...S,
                 }}>
                   {t(STEP_META[step].labelKey)}
                 </span>
@@ -218,9 +218,9 @@ export function BecomeSellerWizard() {
         wrapBorder = GBORD;
         icon = <Check size={13} style={{ color: GREEN }} />;
       } else {
-        wrapBg = ALIGHT;
+        wrapBg = ABG;
         wrapBorder = ABORD;
-        icon = <Clock size={13} style={{ color: AMBER }} />;
+        icon = <Clock size={13} style={{ color: AMBER_c1 }} />;
       }
       const showPendingLabel = (step === 3 && !bankOk) || (step === 4 && !identityOk);
       return (
@@ -231,7 +231,7 @@ export function BecomeSellerWizard() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{ fontSize: 13.5, fontWeight: 600, color: DARK, ...S }}>{t(STEP_META[step].labelKey)}</span>
             {showPendingLabel && !payoutReady && (
-              <p style={{ fontSize: 11.5, fontWeight: 600, color: AMBER, marginTop: 2, ...S }}>{t('becomeSeller.completed.pendingReviewLabel')}</p>
+              <p style={{ fontSize: 11.5, fontWeight: 600, color: AMBER_c1, marginTop: 2, ...S }}>{t('becomeSeller.completed.pendingReviewLabel')}</p>
             )}
           </div>
         </div>
@@ -244,18 +244,18 @@ export function BecomeSellerWizard() {
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
           <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             <div style={{
-              background: payoutReady ? GLIGHT : ALIGHT,
+              background: payoutReady ? GLIGHT : ABG,
               borderBottom: `1px solid ${payoutReady ? GBORD : ABORD}`,
               padding: '24px 24px 20px',
               textAlign: 'center',
             }}>
               <div style={{
                 width: 56, height: 56, borderRadius: '50%',
-                background: payoutReady ? GLIGHT : ALIGHT,
+                background: payoutReady ? GLIGHT : ABG,
                 border: `2px solid ${payoutReady ? GBORD : ABORD}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
               }}>
-                {payoutReady ? <Check size={26} style={{ color: GREEN }} /> : <Clock size={26} style={{ color: AMBER }} />}
+                {payoutReady ? <Check size={26} style={{ color: GREEN }} /> : <Clock size={26} style={{ color: AMBER_c1 }} />}
               </div>
               <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: DARK, letterSpacing: '-0.3px', marginBottom: 8 }}>
                 {payoutReady ? t('becomeSeller.completed.verifiedTitle') : t('becomeSeller.completed.title')}

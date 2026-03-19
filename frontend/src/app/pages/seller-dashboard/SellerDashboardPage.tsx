@@ -21,10 +21,26 @@ import type { ActivityHistoryItem } from '@/api/types/bff';
 import { CompletedSaleRow, ClosedOfferRow } from '@/app/pages/seller-dashboard/SellerHistoryPage';
 import { TicketUnitStatus } from '@/api/types';
 import {
-  isUserRequiredActor, TERMINAL_STATUSES,
-  getTransactionStatusInfo, getWaitingForLabel,
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, GLIGHT, GBORD, S,
+  isUserRequiredActor,
+  TERMINAL_STATUSES,
+  getTransactionStatusInfo,
+  getWaitingForLabel,
 } from '@/app/pages/my-tickets/transactionUtils';
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+} from '@/lib/design-tokens';
 import { TransactionActionRequiredCard } from '@/app/pages/my-tickets/TransactionActionRequiredCard';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { PageHeader } from '../../components/PageHeader';
@@ -523,7 +539,7 @@ export function SellerDashboardPage() {
         {/* Sub-section: action required */}
         {actionRequired.length > 0 && (
           <div>
-            <SubLabel icon={<AlertCircle size={11} />} label={t('boughtTickets.pendingAwaitingMyAction')} />
+            <SubLabel icon={<AlertCircle size={11} />} label={t('boughtTickets.pendingAwaitingMyAction')} color={V} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {actionRequired.map(tx => (
                 <TransactionActionRequiredCard key={tx.id} tx={tx} variant="seller" t={t} linkFrom="/seller-dashboard" />

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { TX, txFontSans } from './tokens';
+import { BG, DARK, S } from '@/lib/design-tokens';
 
 export interface TransactionLayoutProps {
   backButton: ReactNode;
@@ -17,7 +17,7 @@ export function TransactionLayout({
   return (
     <div
       className="min-h-screen"
-      style={{ ...txFontSans, background: TX.BG, color: TX.DARK }}
+      style={{ ...S, background: BG, color: DARK }}
     >
       <div className="mx-auto max-w-[1000px] px-4 pb-12 pt-4 sm:px-6">
         {backButton}

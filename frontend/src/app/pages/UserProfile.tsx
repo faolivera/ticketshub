@@ -11,21 +11,28 @@ import AvatarCropModal from '@/app/components/Avatarcropmodal';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { formatMonthYear } from '@/lib/format-date';
 import { PageHeader } from '../components/PageHeader';
-
-// ─── TicketsHub design tokens ─────────────────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const BLUE   = '#1e3a5f';
-const BLIGHT = '#e4edf7';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const GREEN  = '#15803d';
-const GLIGHT = '#f0fdf4';
-const GBORD  = '#bbf7d0';
+import {
+  V,
+  VLIGHT,
+  BLUE,
+  BLIGHT,
+  DARK,
+  MUTED,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  ABG,
+  AMBER,
+  ABORD,
+  BADGE_DEMAND_BG,
+  BADGE_DEMAND_BORDER,
+  DESTRUCTIVE,
+  SURFACE,
+} from '@/lib/design-tokens';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type VerifStatus = 'verified' | 'pending' | 'rejected' | 'none';
@@ -50,17 +57,17 @@ function StatusBadge({ status }: { status: VerifStatus }) {
       text: 'Verificado',
     },
     pending: {
-      bg: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
+      bg: ABG, color: AMBER, border: `1px solid ${ABORD}`,
       icon: <Clock size={11} />,
       text: 'Verificando',
     },
     rejected: {
-      bg: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5',
+      bg: BADGE_DEMAND_BG, color: DESTRUCTIVE, border: `1px solid ${BADGE_DEMAND_BORDER}`,
       icon: <AlertCircle size={11} />,
       text: 'Rechazado',
     },
     none: {
-      bg: '#f9fafb', color: MUTED, border: `1px solid ${BORD2}`,
+      bg: SURFACE, color: MUTED, border: `1px solid ${BORD2}`,
       icon: <AlertCircle size={11} />,
       text: 'Sin verificar',
     },

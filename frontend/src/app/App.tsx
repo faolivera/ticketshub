@@ -48,6 +48,7 @@ import SupportTicketsManagement from '@/app/pages/admin/SupportTicketsManagement
 import SupportTicketDetail from '@/app/pages/admin/SupportTicketDetail';
 import { NotFound } from '@/app/pages/NotFound';
 import { getGoogleClientId } from '@/config/env';
+import { BG } from '@/lib/design-tokens';
 
 const googleClientId = getGoogleClientId();
 
@@ -73,10 +74,8 @@ function AppLayout() {
       <ScrollToTop />
       {!isAdminRoute && <AppHeader homeHref={landingHomeHref} />}
       <main
-        className={
-          'flex-1 pb-16 md:pb-0 w-full min-w-0' +
-          (authShellBg ? ' bg-[#f3f3f0]' : '')
-        }
+        className="flex-1 pb-16 md:pb-0 w-full min-w-0"
+        style={authShellBg ? { backgroundColor: BG } : undefined}
       >
         <Routes>
               {/* Public routes */}

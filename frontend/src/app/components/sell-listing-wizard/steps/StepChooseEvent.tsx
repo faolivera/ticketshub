@@ -8,7 +8,8 @@ import { Badge } from '@/app/components/ui/badge';
 import type { EventSelectItem } from '@/api/types';
 import { EventCategory } from '@/api/types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S, stepHeadingStyle, stepDescStyle } from '../wizardTokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S } from '@/lib/design-tokens';
+import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 const EVENT_CATEGORY_I18N: Record<EventCategory, string> = {
   [EventCategory.Concert]:    'landing.categoryConcert',

@@ -10,21 +10,21 @@ import { OTPType } from '@/api/types';
 import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
 import { ClientTnC } from '@/app/components/ClientTnC';
 import { PageMeta } from '@/app/components/PageMeta';
-
-// ─── TicketsHub design tokens ─────────────────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const GREEN  = '#15803d';
-const GLIGHT = '#f0fdf4';
-const GBORD  = '#bbf7d0';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+} from '@/lib/design-tokens';
 
 // ─── Back button ─────────────────────────────────────────────────────────────
 function BackBtn({ onAction, label }: { onAction: () => void; label: string }) {

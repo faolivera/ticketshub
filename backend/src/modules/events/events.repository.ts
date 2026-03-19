@@ -159,6 +159,12 @@ export class EventsRepository implements IEventsRepository {
     const where: Record<string, unknown> = {};
     if (opts.approvedOnly) {
       where.status = 'approved';
+      where.dates = {
+        some: {
+          status: 'approved',
+          date: { gte: new Date() },
+        },
+      };
     }
     if (opts.status !== undefined) {
       where.status = this.mapEventStatusToDb(opts.status);
@@ -400,6 +406,12 @@ export class EventsRepository implements IEventsRepository {
     this.logger.debug(_ctx, 'getApprovedEventsForSelection', { limit: options.limit, offset: options.offset });
     const where = {
       status: 'approved' as const,
+      dates: {
+        some: {
+          status: 'approved',
+          date: { gte: new Date() },
+        },
+      },
       ...(options.search
         ? {
             OR: [

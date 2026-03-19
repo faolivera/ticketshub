@@ -389,6 +389,10 @@ export class TicketsService {
       );
     }
 
+    if (eventDate.date < new Date()) {
+      throw new BadRequestException('Cannot create listing for a past event date');
+    }
+
     // Validate event section exists
     const eventSection = event.sections.find(
       (s) => s.id === data.eventSectionId,

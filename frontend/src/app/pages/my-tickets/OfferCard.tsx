@@ -5,10 +5,20 @@ import { Ticket } from 'lucide-react';
 import type { OfferWithListingSummary } from '@/api/types';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
+import { getOfferStatusInfo } from './transactionUtils';
 import {
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, GREEN, S,
-  getOfferStatusInfo,
-} from './transactionUtils';
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  S,
+} from '@/lib/design-tokens';
 
 export interface OfferCardProps {
   offer: OfferWithListingSummary;

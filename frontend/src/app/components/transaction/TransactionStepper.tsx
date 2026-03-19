@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { Check, Clock } from 'lucide-react';
-import { TX, txFontSans } from './tokens';
+import { V, VLIGHT, GREEN, BORDER, BORD2, MUTED, DARK, S } from '@/lib/design-tokens';
 import type { TransactionStepperProps } from './types';
 import { transactionCurrentStep } from './types';
 
@@ -14,14 +14,14 @@ export function TransactionStepper({
   const current = transactionCurrentStep(effectiveStatus);
 
   return (
-    <div className="mb-6 w-full" style={txFontSans}>
+    <div className="mb-6 w-full" style={S}>
       <div className="flex w-full items-start">
         {labels.map((label, i) => (
           <Fragment key={label}>
             {i > 0 && (
               <div
                 className="mt-4 h-0.5 min-w-[8px] flex-1 self-start"
-                style={{ background: current >= i ? TX.GREEN : TX.BORDER }}
+                style={{ background: current >= i ? GREEN : BORDER }}
                 aria-hidden
               />
             )}
@@ -29,9 +29,9 @@ export function TransactionStepper({
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
                 style={{
-                  background: i < current ? TX.GREEN : i === current ? TX.V : TX.BORD2,
-                  color: i <= current ? '#fff' : TX.MUTED,
-                  boxShadow: i === current ? `0 0 0 4px ${TX.VLIGHT}` : undefined,
+                  background: i < current ? GREEN : i === current ? V : BORD2,
+                  color: i <= current ? '#fff' : MUTED,
+                  boxShadow: i === current ? `0 0 0 4px ${VLIGHT}` : undefined,
                 }}
               >
                 {i < current ? (
@@ -42,7 +42,7 @@ export function TransactionStepper({
               </div>
               <span
                 className="mt-2 text-center text-[10px] font-semibold leading-tight sm:text-xs"
-                style={{ color: i > current ? TX.MUTED : TX.DARK }}
+                style={{ color: i > current ? MUTED : DARK }}
               >
                 {label}
               </span>

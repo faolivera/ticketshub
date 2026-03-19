@@ -21,13 +21,9 @@
 
 import { Link } from 'react-router-dom';
 import { BackButton } from '@/app/components/BackButton';
+import { V, VLIGHT, DARK, MUTED, S, E } from '@/lib/design-tokens';
 
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const DS     = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 } as const;
+const DS = { ...E, fontWeight: 400 } as const;
 
 interface PageHeaderAction {
   label: string;

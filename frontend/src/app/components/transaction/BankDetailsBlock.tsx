@@ -1,5 +1,5 @@
 import { Check, Copy } from 'lucide-react';
-import { TX, txFontSans } from './tokens';
+import { CARD, BORDER, DARK, MUTED, GLIGHT, VLIGHT, GREEN, V, S } from '@/lib/design-tokens';
 import type { BankDetailsBlockProps } from './types';
 
 export function BankDetailsBlock({
@@ -14,12 +14,12 @@ export function BankDetailsBlock({
   return (
     <div
       className="mt-4 space-y-2.5 rounded-xl border p-4 text-sm"
-      style={{ ...txFontSans, background: TX.CARD, borderColor: TX.BORDER }}
+      style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <Row label={labels.bank} value={bankName} />
       <Row label={labels.cbu}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="break-all font-mono font-medium" style={{ color: TX.DARK }}>
+          <span className="break-all font-mono font-medium" style={{ color: DARK }}>
             {cbu}
           </span>
           <button
@@ -27,8 +27,8 @@ export function BankDetailsBlock({
             onClick={() => onCopyCbu(cbu)}
             className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold"
             style={{
-              background: copiedCbu ? TX.GLIGHT : TX.VLIGHT,
-              color: copiedCbu ? TX.GREEN : TX.V,
+              background: copiedCbu ? GLIGHT : VLIGHT,
+              color: copiedCbu ? GREEN : V,
             }}
           >
             {copiedCbu ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -52,10 +52,13 @@ function Row({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-0.5 border-b border-[#e5e7eb]/80 pb-2 last:border-0 last:pb-0 sm:flex-row sm:justify-between sm:gap-4">
-      <span style={{ color: TX.MUTED }}>{label}</span>
+    <div
+      className="flex flex-col gap-0.5 border-b pb-2 last:border-0 last:pb-0 sm:flex-row sm:justify-between sm:gap-4"
+      style={{ borderBottomColor: `${BORDER}CC` }}
+    >
+      <span style={{ color: MUTED }}>{label}</span>
       {children ?? (
-        <span className="font-medium sm:text-right" style={{ color: TX.DARK }}>
+        <span className="font-medium sm:text-right" style={{ color: DARK }}>
           {value}
         </span>
       )}

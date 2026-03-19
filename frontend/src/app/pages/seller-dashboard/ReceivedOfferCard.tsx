@@ -5,10 +5,19 @@ import type { OfferWithReceivedContext } from '@/api/types';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
+import { getOfferStatusInfo } from '@/app/pages/my-tickets/transactionUtils';
 import {
-  V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, S,
-  getOfferStatusInfo,
-} from '@/app/pages/my-tickets/transactionUtils';
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  S,
+} from '@/lib/design-tokens';
 
 export interface ReceivedOfferCardProps {
   offer:        OfferWithReceivedContext;

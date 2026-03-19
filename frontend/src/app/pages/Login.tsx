@@ -6,17 +6,7 @@ import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 import { useUser } from '@/app/contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
 import { getGoogleClientId } from '@/config/env';
-
-// ─── TicketsHub design tokens ─────────────────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+import { V, VLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S } from '@/lib/design-tokens';
 
 const googleClientId = getGoogleClientId();
 

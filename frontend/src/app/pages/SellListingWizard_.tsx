@@ -30,9 +30,25 @@ import type { CurrencyCode } from '@/api/types';
 import { TicketType, DeliveryMethod } from '@/api/types';
 import type { ApiError } from '@/api/client';
 import {
-  V, VLIGHT, VBORD, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2,
-  GREEN, GLIGHT, GBORD, AMBER, ABG, ABORD, S, DS,
-} from '@/app/components/sell-listing-wizard/wizardTokens';
+  V,
+  VLIGHT,
+  VL_BORDER,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  AMBER,
+  ABG,
+  ABORD,
+  S,
+} from '@/lib/design-tokens';
+import { DS } from '@/app/components/sell-listing-wizard/wizardTokens';
 
 // ─── Session draft persistence ────────────────────────────────────────────────
 const DRAFT_KEY = 'th_sell_wizard_draft';
@@ -503,7 +519,7 @@ export function SellListingWizard() {
 
       {/* Draft restore banner */}
       {showDraftBanner && pendingDraft && (
-        <div style={{ background: VLIGHT, borderBottom: `1px solid ${VBORD}`, padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13.5, fontWeight: 600, color: DARK, ...S }}>
             {t('sellListingWizard.draftBannerText', { defaultValue: 'Tenés una publicación sin terminar. ¿Querés continuar desde donde dejaste?' })}
           </span>

@@ -4,11 +4,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/app/components/ui/dialog';
-import { Button } from '@/app/components/ui/button';
 
 export const SELLER_UNVERIFIED_MODAL_DISMISSED_KEY = 'sellerUnverifiedModalDismissed';
 
@@ -112,43 +109,96 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent
-        className="fixed left-1/2 top-1/2 flex w-[min(90vw,22rem)] min-h-[22rem] max-w-[22rem] -translate-x-1/2 -translate-y-1/2 flex-col gap-6 rounded-lg border-2 border-blue-500 bg-blue-50/95 p-8 shadow-xl backdrop-blur-sm [&>button]:right-4 [&>button]:top-4 [&>button]:text-blue-700 [&>button]:hover:bg-blue-100 [&>button]:hover:text-blue-900"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(90vw,22rem)] max-w-[22rem] rounded-2xl p-0 overflow-hidden border shadow-xl [&>button]:right-4 [&>button]:top-4"
+        style={{ background: '#ffffff', borderColor: '#ddd6fe' }}
         onPointerDownOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader className="min-h-0 flex-1 flex flex-col gap-4 overflow-hidden pt-8 pb-2 text-center sm:text-left">
-          <DialogTitle className="text-blue-900 text-xl font-semibold leading-tight sm:text-2xl">
+        {/* Violet accent strip */}
+        <div style={{ height: 4, background: '#6d28d9', width: '100%' }} />
+
+        <div style={{ padding: '24px 24px 20px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
+          {/* Icon */}
+          <div style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: '#f0ebff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 16,
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d28d9" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+
+          <DialogTitle style={{ fontSize: 18, fontWeight: 800, color: '#0f0f1a', marginBottom: 10, lineHeight: 1.3 }}>
             {t('sellerUnverifiedModal.title')}
           </DialogTitle>
-          <DialogDescription className="text-blue-800/90 min-h-0 flex-1 overflow-y-auto text-sm leading-relaxed sm:text-base space-y-3">
-            <p>{t('sellerUnverifiedModal.message')}</p>
-            {hasStatus && (needsDni || needsBank) && (
-              <ul className="list-disc list-inside space-y-1">
-                {needsDni && <li>{t('sellerUnverifiedModal.itemDni')}</li>}
-                {needsBank && <li>{t('sellerUnverifiedModal.itemBank')}</li>}
-              </ul>
-            )}
-            <p>
-              {t('sellerUnverifiedModal.goToProfile')}{' '}
-              <button
-                type="button"
-                onClick={handleGoToProfile}
-                className="font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
-              >
-                {t('sellerUnverifiedModal.linkProfile')}
-              </button>
-              {t('sellerUnverifiedModal.goToProfileSuffix')}
-            </p>
+
+          <DialogDescription asChild>
+            <div style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p>{t('sellerUnverifiedModal.message')}</p>
+
+              {hasStatus && (needsDni || needsBank) && (
+                <div style={{ background: '#f3f3f0', borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {needsDni && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0f0f1a', fontWeight: 600 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6d28d9', flexShrink: 0 }} />
+                      {t('sellerUnverifiedModal.itemDni')}
+                    </div>
+                  )}
+                  {needsBank && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0f0f1a', fontWeight: 600 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6d28d9', flexShrink: 0 }} />
+                      {t('sellerUnverifiedModal.itemBank')}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <p>
+                {t('sellerUnverifiedModal.goToProfile')}{' '}
+                <button
+                  type="button"
+                  onClick={handleGoToProfile}
+                  style={{ color: '#6d28d9', fontWeight: 700, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', padding: 0 }}
+                >
+                  {t('sellerUnverifiedModal.linkProfile')}
+                </button>{' '}
+                {t('sellerUnverifiedModal.goToProfileSuffix')}
+              </p>
+            </div>
           </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex shrink-0 justify-center pt-4 pb-2">
-          <Button
+
+          {/* CTA */}
+          <button
             type="button"
-            className="bg-blue-600 text-white hover:bg-blue-700 font-semibold px-6"
             onClick={handleGoToProfile}
+            style={{
+              width: '100%', marginTop: 20, padding: '12px 0',
+              borderRadius: 12, border: 'none',
+              background: '#6d28d9', color: 'white',
+              fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              boxShadow: '0 2px 12px rgba(109,40,217,0.22)',
+            }}
           >
             {t('sellerUnverifiedModal.verifyAccount')}
-          </Button>
-        </DialogFooter>
+          </button>
+
+          {/* Dismiss link */}
+          <button
+            type="button"
+            onClick={handleClose}
+            style={{
+              width: '100%', marginTop: 10, padding: '8px 0',
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 13, color: '#9ca3af',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
+          >
+            {t('sellerUnverifiedModal.dismiss', { defaultValue: 'Ahora no' })}
+          </button>
+
+        </div>
       </DialogContent>
     </Dialog>
   );

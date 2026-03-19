@@ -9,20 +9,21 @@ import { PageMeta } from '@/app/components/PageMeta';
 import { PageHeader } from '@/app/components/PageHeader';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
-
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const VBORD  = '#ddd6fe';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const GREEN  = '#15803d';
-const GLIGHT = '#f0fdf4';
-const GBORD  = '#bbf7d0';
-const S  = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
+import {
+  V,
+  VLIGHT,
+  VL_BORDER,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+} from '@/lib/design-tokens';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
@@ -330,7 +331,7 @@ export function Contact() {
                     type="submit" disabled={isSubmitting}
                     style={{
                       padding: '11px 28px', borderRadius: 12,
-                      background: isSubmitting ? VBORD : V,
+                      background: isSubmitting ? VL_BORDER : V,
                       color: isSubmitting ? '#a78bfa' : 'white',
                       border: 'none', fontSize: 14, fontWeight: 700,
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',

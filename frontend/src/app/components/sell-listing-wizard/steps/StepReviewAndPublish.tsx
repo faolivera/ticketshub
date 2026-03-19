@@ -11,9 +11,21 @@ import { Input } from '@/app/components/ui/input';
 import { VerificationHelper, SellerTier } from '@/lib/verification';
 import type { User } from '@/app/contexts/UserContext';
 import {
-  V, VLIGHT, VBORD, DARK, MUTED, HINT, BORDER, BORD2, BG, CARD,
-  GREEN, GLIGHT, GBORD, S, stepHeadingStyle,
-} from '../wizardTokens';
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BORDER,
+  BORD2,
+  BG,
+  CARD,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+} from '@/lib/design-tokens';
+import { stepHeadingStyle } from '../wizardTokens';
 
 /** Strip trailing ,00 / .00 from formatted currency */
 function fmt(amount: number, currency: string) {

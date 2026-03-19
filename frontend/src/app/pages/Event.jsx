@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   MapPin, Shield, CheckCircle, ChevronDown, ArrowLeft, ArrowRight,
-  Lock, RefreshCw, Star, Zap, TrendingUp, MessageCircle
+  Lock, RefreshCw, Zap, TrendingUp, MessageCircle
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
@@ -50,7 +50,7 @@ import {
   WHITE,
 } from "@/lib/design-tokens";
 
-const SORTS = ["Mejor opción", "Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
+const SORTS = ["Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
 
 function getInitials(name) {
@@ -138,20 +138,6 @@ function buildEventAndTickets(apiEvent, listings, currentUserId) {
   return { event, tickets };
 }
 
-function computeBestPriceBadges(tickets) {
-  const bySector = {};
-  tickets.forEach((t) => {
-    if (!bySector[t.sector]) bySector[t.sector] = [];
-    bySector[t.sector].push(t);
-  });
-  const bestIds = new Set();
-  Object.values(bySector).forEach((group) => {
-    if (group.length <= 1) return;
-    const cheapest = group.reduce((min, t) => (t.priceNum < min.priceNum ? t : min), group[0]);
-    bestIds.add(cheapest.id);
-  });
-  return bestIds;
-}
 
 export default function EventDetail() {
   const { t } = useTranslation();
@@ -160,7 +146,6 @@ export default function EventDetail() {
   const [dateIdx, setDateIdx] = useState(0);
   const [sector, setSector] = useState("Todos");
   const [sortIdx, setSortIdx] = useState(0);
-  const [gridView, setGridView] = useState(true);
   const [dateOpen, setDateOpen] = useState(false);
   const [sticky, setSticky] = useState(false);
   const [apiEvent, setApiEvent] = useState(null);
@@ -229,36 +214,21 @@ export default function EventDetail() {
     return allTickets.filter((t) => t.eventDateId === selectedDateId);
   }, [allTickets, selectedDateId]);
 
-  const bestPriceIds = useMemo(() => computeBestPriceBadges(ticketsForDate), [ticketsForDate]);
-
-  const ticketsWithBadges = useMemo(
-    () =>
-      ticketsForDate.map((t) => ({
-        ...t,
-        badge: bestPriceIds.has(t.id) ? "best" : t.badge,
-      })),
-    [ticketsForDate, bestPriceIds]
-  );
-
   const sectorsList = useMemo(() => {
     const sectors = [...new Set(ticketsForDate.map((t) => t.sector))].filter(Boolean).sort();
     return ["Todos", ...sectors];
   }, [ticketsForDate]);
 
   const filteredBySector = useMemo(() => {
-    if (sector === "Todos") return ticketsWithBadges;
-    return ticketsWithBadges.filter((t) => t.sector === sector);
-  }, [ticketsWithBadges, sector]);
+    if (sector === "Todos") return ticketsForDate;
+    return ticketsForDate.filter((t) => t.sector === sector);
+  }, [ticketsForDate, sector]);
 
   const sorted = useMemo(() => {
     return [...filteredBySector].sort((a, b) => {
-      if (sortIdx === 0) {
-        if (a.verified !== b.verified) return b.verified ? 1 : -1;
-        return a.priceNum - b.priceNum;
-      }
-      if (sortIdx === 1) return a.priceNum - b.priceNum;
-      if (sortIdx === 2) return b.priceNum - a.priceNum;
-      if (sortIdx === 3) return (b.verified ? 1 : 0) - (a.verified ? 1 : 0);
+      if (sortIdx === 0) return a.priceNum - b.priceNum;
+      if (sortIdx === 1) return b.priceNum - a.priceNum;
+      if (sortIdx === 2) return (b.verified ? 1 : 0) - (a.verified ? 1 : 0);
       return 0;
     });
   }, [filteredBySector, sortIdx]);
@@ -321,7 +291,6 @@ export default function EventDetail() {
         /* Ticket card */
         .tk-card { background: white; border: 1px solid ${BORDER}; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.18s, transform 0.18s; cursor: pointer; }
         .tk-card:hover { box-shadow: ${SHADOW_TICKET_HOVER}; transform: translateY(-2px); }
-        .tk-card.best-opt { border: 2px solid ${V}; }
 
         /* Sort select */
         .sort-sel { border: 1.5px solid ${BORD2}; border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family:'Plus Jakarta Sans',sans-serif; color: ${DARK}; background: white; cursor: pointer; outline: none; }
@@ -329,6 +298,7 @@ export default function EventDetail() {
         /* Sticky bar */
         .sticky-bar { position:fixed; top:0; left:0; right:0; z-index:200; background:${SURFACE_STICKY}; backdrop-filter:blur(14px); border-bottom:1px solid ${BORDER}; transform:translateY(-100%); transition:transform 0.22s ease; }
         .sticky-bar.visible { transform:translateY(0); }
+        @media(max-width:600px){ .sticky-price-cta { display:none!important; } }
 
         /* CTA buy button */
         .btn-buy { background:${V}; color:white; border:none; border-radius:10px; width:100%; padding:11px 14px; font-size:13.5px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:background 0.15s; display:flex; align-items:center; justify-content:center; gap:8px; }
@@ -352,7 +322,7 @@ export default function EventDetail() {
               <button
                 type="button"
                 onClick={() => setDateOpen(!dateOpen)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 7, background: VLIGHT, border: `1px solid ${VL_BORDER}`, color: V, fontSize: 12.5, fontWeight: 600, cursor: "pointer", ...S, whiteSpace: "nowrap" }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 7, background: "white", border: `1px solid ${BORD2}`, color: DARK, fontSize: 12.5, fontWeight: 600, cursor: "pointer", ...S, whiteSpace: "nowrap" }}
               >
                 {activeDate?.label}
                 <ChevronDown size={12} style={{ transform: dateOpen ? "rotate(180deg)" : "none", transition: "transform 0.14s" }} />
@@ -371,7 +341,7 @@ export default function EventDetail() {
               )}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+          <div className="sticky-price-cta" style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
             <span style={{ fontSize: 13, color: MUTED }}>Desde</span>
             <span style={{ fontSize: 17, fontWeight: 800, color: V }}>{fmt(minPrice)}</span>
             <button type="button" onClick={scrollToTickets} style={{ padding: "7px 16px", borderRadius: 8, background: V, border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, ...S }}>
@@ -522,12 +492,6 @@ export default function EventDetail() {
               <select className="sort-sel" value={sortIdx} onChange={(e) => setSortIdx(Number(e.target.value))}>
                 {SORTS.map((s, i) => <option key={i} value={i}>{s}</option>)}
               </select>
-              <button type="button" className={`view-btn${gridView ? " active" : ""}`} onClick={() => setGridView(true)} title="Grilla">
-                <GridIcon active={gridView} />
-              </button>
-              <button type="button" className={`view-btn${!gridView ? " active" : ""}`} onClick={() => setGridView(false)} title="Lista">
-                <ListIcon active={!gridView} />
-              </button>
             </div>
           </div>
 
@@ -552,16 +516,10 @@ export default function EventDetail() {
               <p style={{ fontSize: 15 }}>{t("eventTickets.noTicketsAvailable")}</p>
               <Link to="/sell-ticket" style={{ display: "inline-block", marginTop: 12, color: V, fontWeight: 600 }}>{t("boughtTickets.startSelling")}</Link>
             </div>
-          ) : gridView ? (
+          ) : (
             <div className="tk-grid">
               {sorted.map((t) => (
                 <TicketCard key={t.id} ticket={t} eventSlug={eventSlug} />
-              ))}
-            </div>
-          ) : (
-            <div className="tk-list">
-              {sorted.map((t) => (
-                <TicketListRow key={t.id} ticket={t} eventSlug={eventSlug} />
               ))}
             </div>
           )}
@@ -573,18 +531,11 @@ export default function EventDetail() {
 
 function TicketCard({ ticket, eventSlug }) {
   const { t } = useTranslation();
-  const { sector, seated, acceptsOffers, qty, price, seller, sellerId, sellerAvatarUrl, verified, newSeller, badge, urgency, listingId } = ticket;
-  const isBest = badge === "best";
+  const { sector, seated, acceptsOffers, qty, price, seller, sellerId, sellerAvatarUrl, verified, newSeller, urgency, listingId } = ticket;
   const ctaLabel = seated ? (t("eventTickets.selectSeats") || "Elegir asientos") : "Comprar";
 
   return (
-    <div className={`tk-card${isBest ? " best-opt" : ""}`}>
-      {isBest && (
-        <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: "7px 14px", display: "flex", alignItems: "center", gap: 7 }}>
-          <Star size={12} style={{ color: V, fill: V }} />
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: V }}>Mejor opción · Precio más bajo</span>
-        </div>
-      )}
+    <div className="tk-card">
       <div style={{ padding: "15px 16px 0", flex: 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
           <div>
@@ -649,57 +600,3 @@ function TicketCard({ ticket, eventSlug }) {
   );
 }
 
-function TicketListRow({ ticket, eventSlug }) {
-  const { t } = useTranslation();
-  const { sector, qty, price, seller, sellerId, sellerAvatarUrl, verified, badge, acceptsOffers, listingId } = ticket;
-  return (
-    <div className={`tk-list-row${badge === "best" ? " best-opt" : ""}`}>
-      <div style={{ flex: "1 1 140px", minWidth: 0 }}>
-        <p style={{ fontSize: 15, fontWeight: 700, color: DARK }}>{sector}</p>
-        <p style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{qty} entrada{qty > 1 ? "s" : ""} · comprá 1{qty > 1 ? " o más" : ""}</p>
-      </div>
-      <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
-        {badge === "best" && (
-          <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 9px", borderRadius: 100, background: VLIGHT, color: V, border: `1px solid ${VL_BORDER}`, fontSize: 11, fontWeight: 700 }}>Mejor precio</span>
-        )}
-        {acceptsOffers && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 100, background: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}`, fontSize: 11, fontWeight: 600 }}>
-            <MessageCircle size={10} /> {t("eventTickets.acceptsOffers")}
-          </span>
-        )}
-      </div>
-      <Link to={`/seller/${sellerId}`} style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 140px", minWidth: 0, textDecoration: "none" }}>
-        <UserAvatar name={seller} src={sellerAvatarUrl ?? undefined} className="size-10" />
-        <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: DARK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{seller}</p>
-          {verified ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: GREEN }}><CheckCircle size={10} /> Verificado</span> : <span style={{ fontSize: 10.5, color: HINT }}>Vendedor nuevo</span>}
-        </div>
-      </Link>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0, marginLeft: "auto" }}>
-        <p style={{ fontSize: 19, fontWeight: 800, color: V, whiteSpace: "nowrap" }}>${price}</p>
-        <Link to={`/buy/${eventSlug}/${listingId}`} className="btn-buy" style={{ width: "auto", padding: "9px 20px", fontSize: 13 }}>
-          Comprar
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function GridIcon({ active }) {
-  const c = active ? V : MUTED;
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.5">
-      <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  );
-}
-
-function ListIcon({ active }) {
-  const c = active ? V : MUTED;
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.5" strokeLinecap="round">
-      <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-  );
-}

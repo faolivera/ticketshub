@@ -6,7 +6,8 @@ import { Input } from '@/app/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group';
 import type { WizardFormState } from '../types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, BG, S, stepHeadingStyle, stepDescStyle } from '../wizardTokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, BG, S } from '@/lib/design-tokens';
+import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepDeliveryMethodProps {
   form: WizardFormState;

@@ -1,6 +1,6 @@
 import { MessageCircle } from 'lucide-react';
 import { UserReviewsCard } from '@/app/components/UserReviewsCard';
-import { TX, txFontDisplay, txFontSans } from './tokens';
+import { CARD, BORDER, DARK, V, E, S } from '@/lib/design-tokens';
 import type { CounterpartCardProps } from './types';
 
 export function CounterpartCard({
@@ -16,9 +16,9 @@ export function CounterpartCard({
   return (
     <div
       className="rounded-[14px] border p-5"
-      style={{ ...txFontSans, background: TX.CARD, borderColor: TX.BORDER }}
+      style={{ ...S, background: CARD, borderColor: BORDER }}
     >
-      <h2 className="mb-4 text-base font-normal" style={{ ...txFontDisplay, color: TX.DARK }}>
+      <h2 className="mb-4 text-base font-normal" style={{ ...E, color: DARK }}>
         {roleLabel}
       </h2>
       <UserReviewsCard
@@ -32,7 +32,7 @@ export function CounterpartCard({
         onClick={onContact}
         disabled={contactDisabled}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-bold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-        style={{ background: TX.V, ...txFontSans }}
+        style={{ background: V, ...S }}
       >
         <MessageCircle className="h-4 w-4" />
         {contactLabel}

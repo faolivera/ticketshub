@@ -8,16 +8,7 @@ import { StepPhone } from '@/app/components/become-seller/StepPhone';
 import { StepIdentity } from '@/app/components/become-seller/StepIdentity';
 import { StepBank } from '@/app/components/become-seller/StepBank';
 import { ArrowLeft, Check } from 'lucide-react';
-
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const BG     = '#f3f3f0';
-const BORDER = '#e5e7eb';
-const GREEN  = '#15803d';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+import { V, VLIGHT, DARK, MUTED, BG, BORDER, GREEN, S } from '@/lib/design-tokens';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type VerifyUserStepType = 'phone' | 'identity' | 'bankAccount';

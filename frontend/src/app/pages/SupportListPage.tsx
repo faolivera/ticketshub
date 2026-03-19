@@ -7,27 +7,39 @@ import type { SupportTicket, SupportTicketStatus } from '@/api/types';
 import { formatDateTimeShort } from '@/lib/format-date';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { PageHeader } from '../components/PageHeader';
+import {
+  V,
+  VLIGHT,
+  VL_BORDER,
+  DARK,
+  MUTED,
+  HINT,
+  BG,
+  CARD,
+  BORDER,
+  BORD2,
+  ABG,
+  AMBER,
+  ABORD,
+  BADGE_DEMAND_BG,
+  BADGE_DEMAND_BORDER,
+  DESTRUCTIVE,
+  GLIGHT,
+  GREEN,
+  GBORD,
+  S,
+  E,
+} from '@/lib/design-tokens';
 
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const VBORD  = '#ddd6fe';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const BG     = '#f3f3f0';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const S  = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const DS = { fontFamily: "'DM Serif Display', serif", fontWeight: 400 };
+const DS = { ...E, fontWeight: 400 };
 
 // ─── Status display config ───────────────────────────────────────────────────
 const STATUS_CONFIG: Record<SupportTicketStatus, { bg: string; color: string; border: string; labelKey: string }> = {
-  open:                 { bg: VLIGHT,   color: V,        border: VBORD,    labelKey: 'support.statusOpen' },
-  inProgress:           { bg: '#fffbeb', color: '#92400e', border: '#fde68a', labelKey: 'support.statusInProgress' },
-  waitingForCustomer:   { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5', labelKey: 'support.waitingForYou' },
-  resolved:             { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0', labelKey: 'support.statusResolved' },
-  closed:               { bg: BG,        color: MUTED,     border: BORD2,    labelKey: 'support.statusClosed' },
+  open:                 { bg: VLIGHT,          color: V,           border: VL_BORDER,           labelKey: 'support.statusOpen' },
+  inProgress:           { bg: ABG,             color: AMBER,       border: ABORD,               labelKey: 'support.statusInProgress' },
+  waitingForCustomer:   { bg: BADGE_DEMAND_BG, color: DESTRUCTIVE, border: BADGE_DEMAND_BORDER, labelKey: 'support.waitingForYou' },
+  resolved:             { bg: GLIGHT,          color: GREEN,       border: GBORD,               labelKey: 'support.statusResolved' },
+  closed:               { bg: BG,              color: MUTED,       border: BORD2,               labelKey: 'support.statusClosed' },
 };
 
 const STATUS_OPTIONS: { value: '' | SupportTicketStatus; labelKey: string }[] = [

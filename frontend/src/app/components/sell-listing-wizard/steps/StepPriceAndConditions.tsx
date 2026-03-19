@@ -6,9 +6,20 @@ import { CurrencyAmountInput } from '@/app/components/ui/CurrencyAmountInput';
 import { formatCurrencyFromUnits } from '@/lib/format-currency';
 import type { WizardFormState } from '../types';
 import {
-  V, VLIGHT, VBORD, DARK, MUTED, HINT, BORDER, CARD, BG,
-  GREEN, GLIGHT, GBORD, S, stepHeadingStyle, stepDescStyle,
-} from '../wizardTokens';
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  BORDER,
+  CARD,
+  BG,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  S,
+} from '@/lib/design-tokens';
+import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepPriceAndConditionsProps {
   form: WizardFormState;

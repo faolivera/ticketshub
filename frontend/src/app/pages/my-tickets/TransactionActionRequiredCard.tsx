@@ -18,19 +18,19 @@ import { formatCurrency } from '@/lib/format-currency';
 import { getTransactionStatusInfo } from './transactionUtils';
 import type { TransactionWithDetails } from '@/api/types';
 import { Ticket } from 'lucide-react';
-
-// ─── Design tokens (mirrors transactionUtils) ─────────────────────────────────
-const V      = '#6d28d9';
-const VLIGHT = '#f0ebff';
-const DARK   = '#0f0f1a';
-const MUTED  = '#6b7280';
-const HINT   = '#9ca3af';
-const CARD   = '#ffffff';
-const BORDER = '#e5e7eb';
-const BORD2  = '#d1d5db';
-const AMBER  = '#f59e0b';
-const ABG    = '#fffbeb';
-const S      = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
+import {
+  V,
+  VLIGHT,
+  DARK,
+  MUTED,
+  HINT,
+  CARD,
+  BORDER,
+  BORD2,
+  WARN_SOLID,
+  ABG,
+  S,
+} from '@/lib/design-tokens';
 
 function fmt(amount: number, currency: string) {
   return formatCurrency(amount, currency).replace(/[,.]00$/, '');
@@ -69,7 +69,7 @@ export function TransactionActionRequiredCard({
   const sectionName: string | null =
     (tx as any).sectionName ?? (tx as any).ticketSectionName ?? null;
 
-  const accentColor = isSeller ? AMBER : V;
+  const accentColor = isSeller ? WARN_SOLID : V;
 
   const bannerUrl = tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle;
 
@@ -167,7 +167,7 @@ export function TransactionActionRequiredCard({
             {/* Action label */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />
-              <span style={{ fontSize: 12, color: isSeller ? AMBER : V, fontWeight: 600, lineHeight: 1.4, ...S }}>
+              <span style={{ fontSize: 12, color: isSeller ? WARN_SOLID : V, fontWeight: 600, lineHeight: 1.4, ...S }}>
                 {statusInfo.label}
               </span>
             </div>
@@ -182,7 +182,7 @@ export function TransactionActionRequiredCard({
           borderTop: `1px solid ${BORDER}`,
           background: isSeller ? ABG : VLIGHT,
           fontSize: 13, fontWeight: 700,
-          color: isSeller ? AMBER : V,
+          color: isSeller ? WARN_SOLID : V,
           cursor: 'pointer',
           ...S,
         }}>

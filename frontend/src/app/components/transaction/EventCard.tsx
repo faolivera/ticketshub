@@ -1,6 +1,6 @@
 import { Calendar, MapPin } from 'lucide-react';
 import { EventBanner } from '@/app/components/EventBanner';
-import { TX, txFontDisplay, txFontSans } from './tokens';
+import { CARD, BORDER, E, S } from '@/lib/design-tokens';
 import type { EventCardProps } from './types';
 
 export function EventCard({
@@ -16,7 +16,7 @@ export function EventCard({
   return (
     <div
       className="overflow-hidden rounded-[16px] border shadow-sm"
-      style={{ ...txFontSans, background: TX.CARD, borderColor: TX.BORDER }}
+      style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <div className="relative">
         <EventBanner
@@ -31,7 +31,7 @@ export function EventCard({
           <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
             <h1
               className="max-w-[90%] text-xl font-normal leading-tight drop-shadow-md sm:text-2xl"
-              style={txFontDisplay}
+              style={E}
             >
               {eventName}
             </h1>

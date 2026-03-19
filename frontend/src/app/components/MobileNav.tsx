@@ -1,13 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/app/contexts/UserContext";
-
-// ─── TOKENS ──────────────────────────────────────────────────────────────────
-const V      = "#6d28d9";
-const DARK   = "#0f0f1a";
-const MUTED  = "#6b7280";
-const BORDER = "#e5e7eb";
-const S = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+import { V, DARK, MUTED, BORDER, S } from "@/lib/design-tokens";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 

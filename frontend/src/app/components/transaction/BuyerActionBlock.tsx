@@ -26,7 +26,15 @@ import { TransactionStatus } from '@/api/types';
 import { ActionHero } from './ActionHero';
 import { BankDetailsBlock } from './BankDetailsBlock';
 import { EscrowTimeline } from './EscrowTimeline';
-import { TX, txFontSans } from './tokens';
+import {
+  BORDER,
+  SURFACE,
+  V,
+  MUTED,
+  AMBER,
+  DESTRUCTIVE,
+  S,
+} from '@/lib/design-tokens';
 import type { BuyerActionBlockProps } from './types';
 
 export function BuyerActionBlock(props: BuyerActionBlockProps) {
@@ -104,7 +112,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
   const b2Rejected = paymentConfirmation?.status === 'Rejected';
 
   return (
-    <div className="space-y-4" style={txFontSans}>
+    <div className="space-y-4" style={S}>
       {isBankTransferPendingUpload && bankTransferConfig && (
         <ActionHero
           variant="blue"
@@ -121,7 +129,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             onCopyCbu={onCopyCbu}
             labels={bankLabels}
           />
-          <div className="mt-4 rounded-xl border p-3" style={{ borderColor: TX.BORDER, background: TX.SURFACE }}>
+          <div className="mt-4 rounded-xl border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
             <PaymentCountdown
               expiresAt={transaction.paymentExpiresAt!}
               onExpired={onPaymentExpired}
@@ -140,7 +148,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             onClick={onTriggerUpload}
             disabled={isUploading}
             className="mt-4 w-full rounded-[10px] py-3.5 text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: TX.V }}
+            style={{ background: V }}
           >
             {isUploading ? (
               <span className="flex items-center justify-center gap-2">
@@ -155,7 +163,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           <div className="mt-3 text-center">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button type="button" className="text-xs font-semibold underline" style={{ color: TX.MUTED }}>
+                <button type="button" className="text-xs font-semibold underline" style={{ color: MUTED }}>
                   {t('transaction.cancelButton')}
                 </button>
               </AlertDialogTrigger>
@@ -191,7 +199,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             subtitle={t('transaction.hero.buyerGatewaySubtitle')}
           >
             {transaction.paymentExpiresAt && (
-              <div className="mt-4 rounded-xl border p-3" style={{ borderColor: TX.BORDER }}>
+              <div className="mt-4 rounded-xl border p-3" style={{ borderColor: BORDER }}>
                 <PaymentCountdown
                   expiresAt={transaction.paymentExpiresAt}
                   onExpired={onPaymentExpired}
@@ -210,14 +218,14 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           subtitle={t('transaction.hero.buyerVerifyingSubtitle')}
           badge={t('transaction.hero.badgeWaiting')}
         >
-          <p className="mt-2 text-sm" style={{ color: TX.AMBER }}>
+          <p className="mt-2 text-sm" style={{ color: AMBER }}>
             {t('transaction.hero.proofSentStatus')}
           </p>
           <button
             type="button"
             onClick={onOpenPreview}
             className="mt-3 text-sm font-semibold underline"
-            style={{ color: TX.V }}
+            style={{ color: V }}
           >
             <span className="inline-flex items-center gap-1">
               <Eye className="h-4 w-4" />
@@ -225,14 +233,14 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             </span>
           </button>
           {paymentConfirmation?.originalFilename && (
-            <p className="mt-1 text-xs" style={{ color: TX.MUTED }}>
+            <p className="mt-1 text-xs" style={{ color: MUTED }}>
               {paymentConfirmation.originalFilename}
             </p>
           )}
           <div className="mt-4 text-center">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button type="button" className="text-xs font-semibold underline" style={{ color: TX.RED }}>
+                <button type="button" className="text-xs font-semibold underline" style={{ color: DESTRUCTIVE }}>
                   {t('transaction.cancelButton')}
                 </button>
               </AlertDialogTrigger>
@@ -279,7 +287,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
               type="button"
               onClick={onOpenDispute}
               className="mt-4 w-full text-center text-xs font-semibold underline"
-              style={{ color: TX.MUTED }}
+              style={{ color: MUTED }}
             >
               {t('myTicket.reportProblem')}
             </button>
@@ -297,7 +305,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           })}
         >
           {payloadLabel && (
-            <p className="mb-4 rounded-lg border p-3 text-sm" style={{ borderColor: TX.BORDER, background: TX.SURFACE }}>
+            <p className="mb-4 rounded-lg border p-3 text-sm" style={{ borderColor: BORDER, background: SURFACE }}>
               <span className="font-semibold">{t('myTicket.sentAs')}: </span>
               {payloadLabel}
             </p>
@@ -306,7 +314,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             type="button"
             onClick={onOpenConfirmReceipt}
             className="w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
-            style={{ background: TX.V }}
+            style={{ background: V }}
           >
             {t('myTicket.confirmTicketReceived')}
           </button>
@@ -315,7 +323,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
               type="button"
               onClick={onOpenDispute}
               className="mt-3 w-full text-center text-xs font-semibold underline"
-              style={{ color: TX.MUTED }}
+              style={{ color: MUTED }}
             >
               {t('myTicket.reportProblem')}
             </button>
@@ -337,7 +345,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
               type="button"
               onClick={onOpenDispute}
               className="mt-4 text-sm font-semibold underline"
-              style={{ color: TX.V }}
+              style={{ color: V }}
             >
               {t('myTicket.reportProblem')}
             </button>
@@ -362,8 +370,8 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           subtitle={t('transaction.hero.buyerCompletedSubtitle')}
         >
           {reviewData?.canReview && !reviewData.buyerReview && (
-            <div className="mt-4 space-y-3 rounded-xl border p-4" style={{ borderColor: TX.BORDER }}>
-              <p className="text-sm" style={{ color: TX.MUTED }}>
+            <div className="mt-4 space-y-3 rounded-xl border p-4" style={{ borderColor: BORDER }}>
+              <p className="text-sm" style={{ color: MUTED }}>
                 {t('reviews.leaveReviewDesc')}
               </p>
               <div className="flex gap-2">
@@ -385,7 +393,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
                 placeholder={t('reviews.commentPlaceholder')}
                 className="w-full rounded-lg border p-2 text-sm"
                 rows={2}
-                style={{ borderColor: TX.BORDER }}
+                style={{ borderColor: BORDER }}
               />
               {reviewError && <p className="text-xs text-red-600">{reviewError}</p>}
               <button
@@ -393,7 +401,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
                 onClick={onSubmitReview}
                 disabled={!selectedRating || isSubmittingReview}
                 className="w-full rounded-[10px] py-3 text-sm font-bold text-white disabled:opacity-50"
-                style={{ background: TX.V }}
+                style={{ background: V }}
               >
                 {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
               </button>
@@ -412,7 +420,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           <Link
             to={`/support/${disputeId}`}
             className="mt-3 inline-block text-sm font-bold underline"
-            style={{ color: TX.RED }}
+            style={{ color: DESTRUCTIVE }}
           >
             {t('myTicket.viewSupportCase')}
           </Link>

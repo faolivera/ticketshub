@@ -38,6 +38,7 @@ import { isSellerUnverified } from '../components/SellerUnverifiedModal';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
+import { DARK } from '@/lib/design-tokens';
 
 export function MyTicket() {
   const { t } = useTranslation();
@@ -615,7 +616,7 @@ export function MyTicket() {
               quantity={transaction.quantity}
             />
             <div className="rounded-[16px] border border-gray-200 bg-white p-5 sm:p-6">
-              <h2 className="mb-4 font-[family-name:var(--font-serif)] text-lg text-[#0f0f1a] sm:text-xl" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              <h2 className="mb-4 font-[family-name:var(--font-serif)] text-lg sm:text-xl" style={{ fontFamily: "'DM Serif Display', serif", color: DARK }}>
                 {t('myTicket.ticketStatus')}
               </h2>
               <TransactionStepper
