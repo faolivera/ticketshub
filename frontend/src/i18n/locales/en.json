@@ -913,6 +913,7 @@
     "close": "Close",
     "claimTooEarly": "Claims can only be opened at least {{minHours}} hour(s) after the {{referenceDate}}. Please try again later.",
     "claimTooLate": "Claims must be opened within {{maxHours}} hours of the {{referenceDate}}. The deadline has passed.",
+    "claimInvalidStatus": "\"Ticket not received\" can only be reported once payment has been received or the ticket has been transferred.",
     "claimTicketNotTransferred": "You can only open a \"ticket not received\" claim after the ticket has been transferred.",
     "claimConfirmReceiptFirst": "You must confirm receipt of the ticket before opening a \"ticket did not work\" claim.",
     "referenceDateTransfer": "ticket transfer date",

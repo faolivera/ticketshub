@@ -16,6 +16,7 @@ import { ContextLogger } from '../../common/logger/context-logger';
 import { ClaimTooEarlyException } from '../../common/exceptions/claim-too-early.exception';
 import { ClaimTooLateException } from '../../common/exceptions/claim-too-late.exception';
 import { ClaimConfirmReceiptFirstException } from '../../common/exceptions/claim-confirm-receipt-first.exception';
+import { ClaimInvalidStatusException } from '../../common/exceptions/claim-invalid-status.exception';
 import type { ClaimRefDateType } from '../../common/exceptions/claim-too-early.exception';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -150,9 +151,7 @@ export class SupportService {
           TransactionStatus.TicketTransferred,
         ];
         if (!allowedStatuses.includes(transaction.status)) {
-          throw new BadRequestException(
-            '"Ticket not received" can only be reported when the transaction is PaymentReceived or TicketTransferred.',
-          );
+          throw new ClaimInvalidStatusException();
         }
         if (!transaction.paymentReceivedAt) {
           throw new BadRequestException(

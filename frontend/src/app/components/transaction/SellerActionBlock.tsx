@@ -4,6 +4,8 @@ import {
   CheckCircle,
   Clock,
   Lock,
+  Upload,
+  X,
   Zap,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -18,8 +20,12 @@ import {
   ABG,
   AMBER,
   V,
+  VLIGHT,
   MUTED,
   BORDER,
+  BORD2,
+  BG,
+  HINT,
   SURFACE,
   GBORD,
   GLIGHT,
@@ -51,9 +57,11 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
     getRatingIcon,
     getRatingColor,
     transferProofFile,
+    transferProofPreview,
     isUploadingTransferProof,
     transferProofError,
     onTransferProofSelect,
+    onTransferProofRemove,
     fileInputTransferRef,
     onUploadTransferProof,
     disputeId,
@@ -177,20 +185,51 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
             deliveryMethod={payloadLabel || undefined}
           />
           <div className="mt-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
-            <label className="mb-2 block text-sm font-medium">{t('myTicket.attachTransferProofAfterTransfer')}</label>
-            <input
-              ref={fileInputTransferRef}
-              type="file"
-              accept="image/*,application/pdf"
-              onChange={onTransferProofSelect}
-              className="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-4 file:py-2 file:text-violet-700"
-            />
-            {transferProofFile && (
-              <p className="mt-1 text-xs" style={{ color: MUTED }}>
-                {transferProofFile.name}
-              </p>
+            <p style={{ fontSize: 11.5, fontWeight: 700, color: HINT, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+              {t('myTicket.attachTransferProofAfterTransfer')}
+            </p>
+            {transferProofFile ? (
+              <div style={{ position: 'relative', marginBottom: 8 }}>
+                {transferProofPreview ? (
+                  <img
+                    src={transferProofPreview}
+                    alt=""
+                    style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
+                  />
+                ) : (
+                  <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Upload size={20} style={{ color: HINT }} />
+                    <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transferProofFile.name}</p>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={onTransferProofRemove}
+                  style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: '#dc2626', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <X size={13} color="white" />
+                </button>
+              </div>
+            ) : (
+              <label
+                className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all"
+                style={{ borderColor: BORD2, background: BG }}
+                onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
+              >
+                <Upload size={20} style={{ color: HINT, marginBottom: 7 }} />
+                <p style={{ fontSize: 13.5, fontWeight: 600, color: DARK, marginBottom: 2 }}>{t('myTicket.uploadFile')}</p>
+                <p style={{ fontSize: 11.5, color: HINT }}>JPG, PNG, PDF</p>
+                <input
+                  ref={fileInputTransferRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={onTransferProofSelect}
+                />
+              </label>
             )}
-            {transferProofError && <p className="mt-1 text-xs text-red-600">{transferProofError}</p>}
+            {transferProofError && <p className="mb-2 text-xs text-red-600">{transferProofError}</p>}
             {transaction.transferProofStorageKey && (
               <p className="mt-2 text-sm text-green-700">{t('myTicket.transferProofUploaded')}</p>
             )}

@@ -912,6 +912,7 @@
     "close": "Cerrar",
     "claimTooEarly": "Los reclamos solo pueden abrirse al menos {{minHours}} hora(s) después de la {{referenceDate}}. Por favor, intentá más tarde.",
     "claimTooLate": "Los reclamos deben abrirse dentro de las {{maxHours}} horas desde la {{referenceDate}}. El plazo venció.",
+    "claimInvalidStatus": "\"No recibí la entrada\" solo puede reportarse una vez que el pago fue recibido o el ticket fue transferido.",
     "claimTicketNotTransferred": "Solo podés abrir un reclamo de \"no recibí la entrada\" después de que el ticket haya sido transferido.",
     "claimConfirmReceiptFirst": "Debés confirmar la recepción de la entrada antes de abrir un reclamo de \"el ticket no funcionó\".",
     "referenceDateTransfer": "fecha de transferencia del ticket",

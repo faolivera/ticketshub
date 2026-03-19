@@ -74,6 +74,7 @@ export function MyTicket() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputSellerTransferRef = useRef<HTMLInputElement>(null);
+  const transferProofModalInputRef = useRef<HTMLInputElement>(null);
   const receiptProofInputRef = useRef<HTMLInputElement>(null);
   const [receiptProofPreview, setReceiptProofPreview] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -96,6 +97,7 @@ export function MyTicket() {
   const [confirmTransferPayloadTypeOtherText, setConfirmTransferPayloadTypeOtherText] = useState('');
   const [isConfirmingTransfer, setIsConfirmingTransfer] = useState(false);
   const [transferProofFile, setTransferProofFile] = useState<File | null>(null);
+  const [transferProofPreview, setTransferProofPreview] = useState<string | null>(null);
   const [transferProofError, setTransferProofError] = useState<string | null>(null);
   const [isUploadingTransferProof, setIsUploadingTransferProof] = useState(false);
   const [counterpartyEmail, setCounterpartyEmail] = useState<string | null>(null);
@@ -176,6 +178,8 @@ export function MyTicket() {
       setTransferProofError(null);
       await transactionsService.uploadTransferProof(transaction.id, transferProofFile);
       setTransferProofFile(null);
+      if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+      setTransferProofPreview(null);
       const data = await bffService.getTransactionDetails(transactionId);
       setTransaction(data.transaction);
     } catch (err) {
@@ -443,6 +447,8 @@ export function MyTicket() {
           maxHours: apiErr.details.maxHours,
           referenceDate: t(refDateKey),
         });
+      } else if (apiErr?.code === 'CLAIM_INVALID_STATUS') {
+        msg = t('myTicket.claimInvalidStatus');
       } else if (apiErr?.code === 'CLAIM_TICKET_NOT_TRANSFERRED') {
         msg = t('myTicket.claimTicketNotTransferred');
       } else if (apiErr?.code === 'CLAIM_CONFIRM_RECEIPT_FIRST') {
@@ -719,12 +725,27 @@ export function MyTicket() {
                   getRatingIcon={getRatingIcon}
                   getRatingColor={getRatingColor}
                   transferProofFile={transferProofFile}
+                  transferProofPreview={transferProofPreview}
                   isUploadingTransferProof={isUploadingTransferProof}
                   transferProofError={transferProofError}
                   onTransferProofSelect={(e) => {
-                    const f = e.target.files?.[0];
-                    setTransferProofFile(f ?? null);
+                    const f = e.target.files?.[0] ?? null;
+                    setTransferProofFile(f);
                     setTransferProofError(null);
+                    if (f?.type.startsWith('image/')) {
+                      if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                      setTransferProofPreview(URL.createObjectURL(f));
+                    } else {
+                      if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                      setTransferProofPreview(null);
+                    }
+                  }}
+                  onTransferProofRemove={() => {
+                    if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                    setTransferProofFile(null);
+                    setTransferProofPreview(null);
+                    setTransferProofError(null);
+                    if (fileInputSellerTransferRef.current) fileInputSellerTransferRef.current.value = '';
                   }}
                   fileInputTransferRef={fileInputSellerTransferRef}
                   onUploadTransferProof={handleSellerTransferProofUpload}
@@ -865,8 +886,11 @@ export function MyTicket() {
             setShowConfirmTransferModal(false);
             setConfirmTransferModalStep(1);
             setTransferProofFile(null);
+            if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+            setTransferProofPreview(null);
             setTransferProofError(null);
             setConfirmTransferPayloadTypeOtherText('');
+            if (transferProofModalInputRef.current) transferProofModalInputRef.current.value = '';
           }}
         >
           {confirmTransferModalStep === 1 ? (
@@ -943,17 +967,67 @@ export function MyTicket() {
             </>
           ) : (
             <>
-              <p className="mb-4 text-sm text-gray-600">{t('myTicket.attachTransferProofAfterTransfer')}</p>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={(e) => {
-                  setTransferProofFile(e.target.files?.[0] ?? null);
-                  setTransferProofError(null);
-                }}
-                className="mb-2 w-full text-sm"
-              />
-              {transferProofFile && <p className="text-xs text-gray-500">{transferProofFile.name}</p>}
+              <p style={{ fontSize: 11.5, fontWeight: 700, color: HINT, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                {t('myTicket.attachTransferProofAfterTransfer')}
+              </p>
+              {transferProofFile ? (
+                <div style={{ position: 'relative', marginBottom: 8 }}>
+                  {transferProofPreview ? (
+                    <img
+                      src={transferProofPreview}
+                      alt=""
+                      style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
+                    />
+                  ) : (
+                    <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <Upload size={20} style={{ color: HINT }} />
+                      <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transferProofFile.name}</p>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                      setTransferProofFile(null);
+                      setTransferProofPreview(null);
+                      setTransferProofError(null);
+                      if (transferProofModalInputRef.current) transferProofModalInputRef.current.value = '';
+                    }}
+                    style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: '#dc2626', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <X size={13} color="white" />
+                  </button>
+                </div>
+              ) : (
+                <label
+                  className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all"
+                  style={{ borderColor: BORD2, background: BG }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
+                >
+                  <Upload size={20} style={{ color: HINT, marginBottom: 7 }} />
+                  <p style={{ fontSize: 13.5, fontWeight: 600, color: DARK, marginBottom: 2 }}>{t('myTicket.uploadFile')}</p>
+                  <p style={{ fontSize: 11.5, color: HINT }}>JPG, PNG, PDF</p>
+                  <input
+                    ref={transferProofModalInputRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setTransferProofFile(f);
+                      setTransferProofError(null);
+                      if (f?.type.startsWith('image/')) {
+                        if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                        setTransferProofPreview(URL.createObjectURL(f));
+                      } else {
+                        if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                        setTransferProofPreview(null);
+                      }
+                    }}
+                  />
+                </label>
+              )}
               {transferProofError && (
                 <p className="mb-2 flex items-center gap-1 text-sm text-red-600">
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -967,6 +1041,9 @@ export function MyTicket() {
                     setShowConfirmTransferModal(false);
                     setConfirmTransferModalStep(1);
                     setTransferProofFile(null);
+                    if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                    setTransferProofPreview(null);
+                    if (transferProofModalInputRef.current) transferProofModalInputRef.current.value = '';
                   }}
                   className="flex-1 rounded-[10px] border py-2.5 text-sm font-semibold"
                 >
@@ -985,6 +1062,8 @@ export function MyTicket() {
                       setShowConfirmTransferModal(false);
                       setConfirmTransferModalStep(1);
                       setTransferProofFile(null);
+                      if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
+                      setTransferProofPreview(null);
                     } catch (err) {
                       setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
                     } finally {

@@ -258,9 +258,11 @@ export interface SellerActionBlockProps {
   getRatingIcon: (r: ReviewRating) => ReactNode;
   getRatingColor: (r: ReviewRating, sel: boolean) => string;
   transferProofFile: File | null;
+  transferProofPreview: string | null;
   isUploadingTransferProof: boolean;
   transferProofError: string | null;
   onTransferProofSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onTransferProofRemove: () => void;
   fileInputTransferRef: React.RefObject<HTMLInputElement | null>;
   onUploadTransferProof: () => void;
   disputeId: string | null | undefined;
