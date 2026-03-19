@@ -531,12 +531,20 @@ export function MyTicket() {
     ? CancellationReason.PaymentTimeout
     : transaction.cancellationReason;
 
-  const stepLabels: [string, string, string, string] = [
-    t('transaction.stepPayment'),
-    t('transaction.stepTransfer'),
-    t('transaction.stepReceived'),
-    t('transaction.stepReleased'),
-  ];
+  const stepLabels: string[] = isBuyer
+    ? [
+        t('transaction.stepPayment'),
+        t('transaction.stepTransfer'),
+        t('transaction.stepProtected'),
+        t('transaction.stepCompleted'),
+      ]
+    : [
+        t('transaction.stepPayment'),
+        t('transaction.stepTransfer'),
+        t('transaction.stepProtected'),
+        t('transaction.stepTransferringFunds'),
+        t('transaction.stepCompleted'),
+      ];
   const showEscrowCard = ![
     TransactionStatus.Completed,
     TransactionStatus.Cancelled,
@@ -622,6 +630,7 @@ export function MyTicket() {
               <TransactionStepper
                 effectiveStatus={effectiveStatus}
                 disputed={effectiveStatus === TransactionStatus.Disputed}
+                role={isBuyer ? 'buyer' : 'seller'}
                 labels={stepLabels}
               />
               {sellerUnverifiedGate && (

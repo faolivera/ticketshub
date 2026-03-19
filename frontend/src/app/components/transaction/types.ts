@@ -15,7 +15,12 @@ export type TxRole = 'buyer' | 'seller';
 export interface TransactionStepperProps {
   effectiveStatus: TransactionStatus;
   disputed: boolean;
-  labels: [string, string, string, string];
+  role: TxRole;
+  labels: string[];
+}
+
+export interface TransferTimelineProps {
+  sellerSent: boolean;
 }
 
 export interface EscrowTimelineProps {
@@ -261,16 +266,40 @@ export interface TransactionLayoutProps {
   sidebar: ReactNode;
 }
 
-export function transactionCurrentStep(status: TransactionStatus): number {
+/** Returns true when the current user must take action in the current step. */
+export function transactionStepNeedsAction(status: TransactionStatus, role: TxRole): boolean {
+  if (role === 'buyer') return status === 'TicketTransferred';
+  return status === 'PaymentReceived';
+}
+
+export function transactionCurrentStep(status: TransactionStatus, role: TxRole): number {
+  if (role === 'buyer') {
+    // Buyer: 4 steps (0=Pago, 1=Transferencia, 2=Fondos Protegidos, 3=Completado)
+    const map: Partial<Record<TransactionStatus, number>> = {
+      PendingPayment: 0,
+      PaymentPendingVerification: 0,
+      PaymentReceived: 1,
+      TicketTransferred: 1,
+      DepositHold: 2,
+      TransferringFund: 3,
+      Completed: 3,
+      Disputed: 1,
+      Refunded: 0,
+      Cancelled: 0,
+    };
+    return map[status] ?? 0;
+  }
+
+  // Seller: 5 steps (0=Pago, 1=Transferencia, 2=Fondos Protegidos, 3=Transfiriendo Fondos, 4=Completado)
   const map: Partial<Record<TransactionStatus, number>> = {
     PendingPayment: 0,
     PaymentPendingVerification: 0,
     PaymentReceived: 1,
-    TicketTransferred: 2,
+    TicketTransferred: 1,
     DepositHold: 2,
     TransferringFund: 3,
-    Completed: 3,
-    Disputed: 2,
+    Completed: 4,
+    Disputed: 1,
     Refunded: 0,
     Cancelled: 0,
   };

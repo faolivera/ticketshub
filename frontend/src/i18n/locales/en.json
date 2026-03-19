@@ -974,6 +974,13 @@
     "stepTransfer": "Transfer",
     "stepReceived": "Receipt",
     "stepReleased": "Released",
+    "stepProtected": "Funds Protected",
+    "stepTransferringFunds": "Transferring Funds",
+    "stepCompleted": "Completed",
+    "transferTimeline": {
+      "sent": "Ticket sent",
+      "received": "Ticket received"
+    },
     "escrowCardTitle": "Protected purchase",
     "escrowBuyerWaiting": "Your money is safe. It is not released to the seller until you confirm you received the ticket and the event has passed.",
     "escrowBuyerReleased": "This transaction completed successfully.",
@@ -1005,6 +1012,8 @@
       "buyerPaymentReceivedSubtitle": "Waiting for the seller to transfer your ticket.",
       "buyerTicketArrivedTitle": "Your ticket arrived",
       "buyerTicketArrivedSubtitle": "{{name}} transferred your ticket. Confirm receipt when you have it.",
+      "buyerConfirmReceiptTitle": "Confirm you received the ticket",
+      "buyerConfirmReceiptSubtitle": "{{name}} already sent it. Review and confirm receipt to release the payment.",
       "buyerEscrowTitle": "Receipt confirmed — protected funds",
       "buyerEscrowSubtitle": "Funds are released to the seller after the event. You can still report a problem if needed.",
       "buyerReleasingTitle": "Releasing funds",

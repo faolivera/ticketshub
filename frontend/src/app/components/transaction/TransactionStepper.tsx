@@ -1,17 +1,19 @@
 import { Fragment } from 'react';
-import { Check, Clock } from 'lucide-react';
-import { V, VLIGHT, GREEN, BORDER, BORD2, MUTED, DARK, S } from '@/lib/design-tokens';
+import { AlertCircle, Check, Clock } from 'lucide-react';
+import { V, VLIGHT, GREEN, BORDER, BORD2, MUTED, DARK, WARN_SOLID, AMBER_BG_LIGHT, S } from '@/lib/design-tokens';
 import type { TransactionStepperProps } from './types';
-import { transactionCurrentStep } from './types';
+import { transactionCurrentStep, transactionStepNeedsAction } from './types';
 
 export function TransactionStepper({
   effectiveStatus,
   disputed,
+  role,
   labels,
 }: TransactionStepperProps) {
   if (disputed) return null;
 
-  const current = transactionCurrentStep(effectiveStatus);
+  const current = transactionCurrentStep(effectiveStatus, role);
+  const needsAction = transactionStepNeedsAction(effectiveStatus, role);
 
   return (
     <div className="mb-6 w-full" style={S}>
@@ -29,13 +31,17 @@ export function TransactionStepper({
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
                 style={{
-                  background: i < current ? GREEN : i === current ? V : BORD2,
+                  background: i < current ? GREEN : i === current ? (needsAction ? WARN_SOLID : V) : BORD2,
                   color: i <= current ? '#fff' : MUTED,
-                  boxShadow: i === current ? `0 0 0 4px ${VLIGHT}` : undefined,
+                  boxShadow: i === current
+                    ? `0 0 0 4px ${needsAction ? AMBER_BG_LIGHT : VLIGHT}`
+                    : undefined,
                 }}
               >
                 {i < current ? (
                   <Check className="h-4 w-4" strokeWidth={3} />
+                ) : i === current && needsAction ? (
+                  <AlertCircle className="h-3.5 w-3.5" />
                 ) : (
                   <Clock className="h-3.5 w-3.5" />
                 )}

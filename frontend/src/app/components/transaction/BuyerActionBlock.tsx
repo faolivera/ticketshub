@@ -6,6 +6,7 @@ import {
   CreditCard,
   Eye,
   Lock,
+  SendHorizontal,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
@@ -26,6 +27,7 @@ import { TransactionStatus } from '@/api/types';
 import { ActionHero } from './ActionHero';
 import { BankDetailsBlock } from './BankDetailsBlock';
 import { EscrowTimeline } from './EscrowTimeline';
+import { TransferTimeline } from './TransferTimeline';
 import {
   BORDER,
   SURFACE,
@@ -278,10 +280,11 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
       {effectiveStatus === TransactionStatus.PaymentReceived && (
         <ActionHero
           variant="blue"
-          icon={<Clock className="h-5 w-5" />}
+          icon={<SendHorizontal className="h-5 w-5" />}
           title={t('transaction.hero.buyerPaymentReceivedTitle')}
           subtitle={t('transaction.hero.buyerPaymentReceivedSubtitle')}
         >
+          <TransferTimeline sellerSent={false} />
           {canOpenDispute && (
             <button
               type="button"
@@ -297,15 +300,16 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
 
       {effectiveStatus === TransactionStatus.TicketTransferred && (
         <ActionHero
-          variant="green"
-          icon={<CheckCircle className="h-5 w-5" />}
-          title={t('transaction.hero.buyerTicketArrivedTitle')}
-          subtitle={t('transaction.hero.buyerTicketArrivedSubtitle', {
+          variant="amber"
+          icon={<AlertCircle className="h-5 w-5" />}
+          title={t('transaction.hero.buyerConfirmReceiptTitle')}
+          subtitle={t('transaction.hero.buyerConfirmReceiptSubtitle', {
             name: transaction.sellerName,
           })}
         >
+          <TransferTimeline sellerSent={true} />
           {payloadLabel && (
-            <p className="mb-4 rounded-lg border p-3 text-sm" style={{ borderColor: BORDER, background: SURFACE }}>
+            <p className="mt-4 rounded-lg border p-3 text-sm" style={{ borderColor: BORDER, background: SURFACE }}>
               <span className="font-semibold">{t('myTicket.sentAs')}: </span>
               {payloadLabel}
             </p>
@@ -313,7 +317,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           <button
             type="button"
             onClick={onOpenConfirmReceipt}
-            className="w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
+            className="mt-4 w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
             style={{ background: V }}
           >
             {t('myTicket.confirmTicketReceived')}

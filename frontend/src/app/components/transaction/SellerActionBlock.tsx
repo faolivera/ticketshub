@@ -12,6 +12,7 @@ import { formatDate, formatDateTime } from '@/lib/format-date';
 import { TransactionStatus } from '@/api/types';
 import { ActionHero } from './ActionHero';
 import { EscrowTimeline } from './EscrowTimeline';
+import { TransferTimeline } from './TransferTimeline';
 import {
   ABORD,
   ABG,
@@ -132,10 +133,11 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               </p>
             )}
           </div>
+          <TransferTimeline sellerSent={false} />
           <button
             type="button"
             onClick={onOpenTransferModal}
-            className="w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
+            className="mt-4 w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
             style={{ background: V }}
           >
             {t('myTicket.confirmTicketTransferred')}
@@ -153,20 +155,78 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
         </ActionHero>
       )}
 
-      {(effectiveStatus === TransactionStatus.TicketTransferred ||
-        effectiveStatus === TransactionStatus.DepositHold) && (
+      {effectiveStatus === TransactionStatus.TicketTransferred && (
         <ActionHero
           variant="violet"
-          icon={<Lock className="h-5 w-5" />}
-          title={
-            effectiveStatus === TransactionStatus.DepositHold
-              ? t('transaction.hero.sellerEscrowHoldTitle')
-              : t('transaction.hero.sellerAwaitConfirmTitle')
-          }
+          icon={<Clock className="h-5 w-5" />}
+          title={t('transaction.hero.sellerAwaitConfirmTitle')}
           subtitle={t('transaction.hero.sellerAwaitConfirmSubtitle', {
             name: transaction.buyerName,
           })}
           badge={t('transaction.hero.badgeWaiting')}
+        >
+          <TransferTimeline sellerSent={true} />
+          {payloadLabel && (
+            <p
+              className="mt-4 rounded-lg border p-3 text-sm"
+              style={{ borderColor: BORDER, background: SURFACE }}
+            >
+              <span className="font-semibold">{t('transaction.hero.sentAsLabel')} </span>
+              {payloadLabel}
+            </p>
+          )}
+          <div className="mt-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
+            <label className="mb-2 block text-sm font-medium">{t('myTicket.attachTransferProofAfterTransfer')}</label>
+            <input
+              ref={fileInputTransferRef}
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={onTransferProofSelect}
+              className="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-4 file:py-2 file:text-violet-700"
+            />
+            {transferProofFile && (
+              <p className="mt-1 text-xs" style={{ color: MUTED }}>
+                {transferProofFile.name}
+              </p>
+            )}
+            {transferProofError && <p className="mt-1 text-xs text-red-600">{transferProofError}</p>}
+            {transaction.transferProofStorageKey && (
+              <p className="mt-2 text-sm text-green-700">{t('myTicket.transferProofUploaded')}</p>
+            )}
+            {transferProofFile && (
+              <button
+                type="button"
+                disabled={isUploadingTransferProof}
+                onClick={onUploadTransferProof}
+                className="mt-2 w-full rounded-[10px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                style={{ background: V }}
+              >
+                {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
+              </button>
+            )}
+          </div>
+          {canOpenDispute && (
+            <button
+              type="button"
+              onClick={onOpenDispute}
+              className="mt-4 text-sm font-semibold underline"
+              style={{ color: V }}
+            >
+              {t('myTicket.reportProblem')}
+            </button>
+          )}
+        </ActionHero>
+      )}
+
+      {effectiveStatus === TransactionStatus.DepositHold && (
+        <ActionHero
+          variant="violet"
+          icon={<Lock className="h-5 w-5" />}
+          title={t('transaction.hero.sellerEscrowHoldTitle')}
+          subtitle={t('transaction.hero.sellerAwaitConfirmSubtitle', {
+            name: transaction.buyerName,
+          })}
+          badge={t('transaction.hero.badgeProtected')}
         >
           <EscrowTimeline
             role="seller"
@@ -181,39 +241,6 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               <span className="font-semibold">{t('transaction.hero.sentAsLabel')} </span>
               {payloadLabel}
             </p>
-          )}
-          {effectiveStatus === TransactionStatus.TicketTransferred && (
-            <div className="mt-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
-              <label className="mb-2 block text-sm font-medium">{t('myTicket.attachTransferProofAfterTransfer')}</label>
-              <input
-                ref={fileInputTransferRef}
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={onTransferProofSelect}
-                className="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-4 file:py-2 file:text-violet-700"
-              />
-              {transferProofFile && (
-                <p className="mt-1 text-xs" style={{ color: MUTED }}>
-                  {transferProofFile.name}
-                </p>
-              )}
-              {transferProofError && <p className="mt-1 text-xs text-red-600">{transferProofError}</p>}
-              {transaction.transferProofStorageKey && (
-                <p className="mt-2 text-sm text-green-700">{t('myTicket.transferProofUploaded')}</p>
-              )}
-              {/* Upload triggered from parent via hidden ref + button - parent owns upload handler */}
-              {transferProofFile && (
-                <button
-                  type="button"
-                  disabled={isUploadingTransferProof}
-                  onClick={onUploadTransferProof}
-                  className="mt-2 w-full rounded-[10px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                  style={{ background: V }}
-                >
-                  {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
-                </button>
-              )}
-            </div>
           )}
           {canOpenDispute && (
             <button

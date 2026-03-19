@@ -973,6 +973,13 @@
     "stepTransfer": "Transferencia",
     "stepReceived": "Recepción",
     "stepReleased": "Liberado",
+    "stepProtected": "Fondos Protegidos",
+    "stepTransferringFunds": "Transfiriendo Fondos",
+    "stepCompleted": "Completado",
+    "transferTimeline": {
+      "sent": "Entrada enviada",
+      "received": "Entrada recibida"
+    },
     "escrowCardTitle": "Compra protegida",
     "escrowBuyerWaiting": "Tu dinero está seguro. No se libera al vendedor hasta que confirmes recibir la entrada y pase el evento.",
     "escrowBuyerReleased": "La transacción se completó correctamente.",
@@ -1004,6 +1011,8 @@
       "buyerPaymentReceivedSubtitle": "Esperando que el vendedor transfiera tu entrada.",
       "buyerTicketArrivedTitle": "Tu entrada llegó",
       "buyerTicketArrivedSubtitle": "{{name}} te transfirió la entrada. Confirmá cuando la tengas.",
+      "buyerConfirmReceiptTitle": "Confirmá que recibiste la entrada",
+      "buyerConfirmReceiptSubtitle": "{{name}} ya la transfirió. Revisá y confirmá la recepción para liberar el pago.",
       "buyerEscrowTitle": "Recepción confirmada — fondos protegidos",
       "buyerEscrowSubtitle": "Los fondos se liberan al vendedor después del evento. Podés reportar un problema si hace falta.",
       "buyerReleasingTitle": "Liberando fondos",
