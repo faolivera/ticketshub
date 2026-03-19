@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, MessageCircle, AlertCircle, X, ThumbsUp, ThumbsDown, Minus, Star } from 'lucide-react';
+import { CheckCircle, MessageCircle, AlertCircle, X, ThumbsUp, ThumbsDown, Minus, Star, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
 import { BackButton } from '@/app/components/BackButton';
@@ -38,7 +38,7 @@ import { isSellerUnverified } from '../components/SellerUnverifiedModal';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
-import { DARK } from '@/lib/design-tokens';
+import { DARK, V, VLIGHT, BORD2, BG, HINT, BORDER } from '@/lib/design-tokens';
 
 export function MyTicket() {
   const { t } = useTranslation();
@@ -74,6 +74,8 @@ export function MyTicket() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputSellerTransferRef = useRef<HTMLInputElement>(null);
+  const receiptProofInputRef = useRef<HTMLInputElement>(null);
+  const [receiptProofPreview, setReceiptProofPreview] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isPaymentExpiredLocally, setIsPaymentExpiredLocally] = useState(false);
 
@@ -331,6 +333,8 @@ export function MyTicket() {
       setTransaction(prev => prev ? { ...prev, ...updated } : null);
       setShowConfirmModal(false);
       setReceiptProofFile(null);
+      if (receiptProofPreview) URL.revokeObjectURL(receiptProofPreview);
+      setReceiptProofPreview(null);
 
       const updatedReviews = await reviewsService.getTransactionReviews(transactionId);
       setReviewData(updatedReviews);
@@ -1002,7 +1006,7 @@ export function MyTicket() {
           {disputeModalStep === 'choice' ? (
             <>
               <p className="mb-6 text-gray-700">{t('myTicket.disputeTryChatFirst')}</p>
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-col gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -1010,7 +1014,7 @@ export function MyTicket() {
                     setChatWasAutoOpened(false);
                     setIsChatOpen(true);
                   }}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-[10px] bg-violet-600 py-3 font-semibold text-white"
+                  className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-violet-600 py-3 font-semibold text-white"
                 >
                   <MessageCircle className="h-5 w-5" />
                   {isBuyer ? t('myTicket.contactSeller') : t('myTicket.contactBuyer')}
@@ -1018,7 +1022,7 @@ export function MyTicket() {
                 <button
                   type="button"
                   onClick={() => setDisputeModalStep('form')}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-[10px] border-2 border-red-300 py-3 font-semibold text-red-700"
+                  className="flex w-full items-center justify-center gap-2 rounded-[10px] border-2 border-red-300 py-3 font-semibold text-red-700"
                 >
                   <AlertCircle className="h-5 w-5" />
                   {t('myTicket.reportProblem')}
@@ -1148,7 +1152,10 @@ export function MyTicket() {
           onClose={() => {
             setShowConfirmModal(false);
             setReceiptProofFile(null);
+            if (receiptProofPreview) URL.revokeObjectURL(receiptProofPreview);
+            setReceiptProofPreview(null);
             setReceiptProofError(null);
+            if (receiptProofInputRef.current) receiptProofInputRef.current.value = '';
           }}
         >
           <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -1161,17 +1168,65 @@ export function MyTicket() {
               })}
             </p>
           )}
-          <p className="mb-4 text-sm text-gray-600">{t('myTicket.confirmReceiptMessage')}</p>
-          <label className="mb-1 block text-sm font-medium">{t('myTicket.attachReceiptProof')}</label>
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            onChange={(e) => {
-              setReceiptProofFile(e.target.files?.[0] ?? null);
-              setReceiptProofError(null);
-            }}
-            className="mb-2 w-full text-sm"
-          />
+          <p style={{ fontSize: 11.5, fontWeight: 700, color: HINT, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            {t('myTicket.attachReceiptProof')}
+          </p>
+          {receiptProofFile ? (
+            <div style={{ position: 'relative', marginBottom: 8 }}>
+              {receiptProofPreview ? (
+                <img
+                  src={receiptProofPreview}
+                  alt=""
+                  style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
+                />
+              ) : (
+                <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Upload size={20} style={{ color: HINT }} />
+                  <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{receiptProofFile.name}</p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (receiptProofPreview) URL.revokeObjectURL(receiptProofPreview);
+                  setReceiptProofFile(null);
+                  setReceiptProofPreview(null);
+                  setReceiptProofError(null);
+                  if (receiptProofInputRef.current) receiptProofInputRef.current.value = '';
+                }}
+                style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: '#dc2626', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={13} color="white" />
+              </button>
+            </div>
+          ) : (
+            <label
+              className="group mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all hover:border-violet-600 hover:bg-violet-50"
+              style={{ borderColor: BORD2, background: BG }}
+              onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
+            >
+              <Upload size={20} style={{ color: HINT, marginBottom: 7 }} />
+              <p style={{ fontSize: 13.5, fontWeight: 600, color: DARK, marginBottom: 2 }}>{t('myTicket.uploadFile')}</p>
+              <p style={{ fontSize: 11.5, color: HINT }}>JPG, PNG, PDF</p>
+              <input
+                ref={receiptProofInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setReceiptProofFile(file);
+                  setReceiptProofError(null);
+                  if (file?.type.startsWith('image/')) {
+                    setReceiptProofPreview(URL.createObjectURL(file));
+                  } else {
+                    setReceiptProofPreview(null);
+                  }
+                }}
+              />
+            </label>
+          )}
           {receiptProofError && <p className="mb-2 text-sm text-red-600">{receiptProofError}</p>}
           <div className="mt-4 flex gap-3">
             <button

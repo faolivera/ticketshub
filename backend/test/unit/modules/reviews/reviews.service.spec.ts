@@ -82,6 +82,7 @@ describe('ReviewsService', () => {
       findById: jest.fn(),
       getSellerCompletedSalesTotal: jest.fn(),
       getCompletedSalesTotalBatch: jest.fn(),
+      getBuyerCompletedPurchasesTotal: jest.fn(),
     };
 
     const mockUsersService = {
@@ -404,13 +405,14 @@ describe('ReviewsService', () => {
   });
 
   describe('getBuyerMetrics', () => {
-    it('should return correct metrics for buyer', async () => {
+    it('should return correct metrics for buyer with completed purchases', async () => {
       const reviews: Review[] = [
         { ...mockReview, id: 'rev_1', rating: 'positive' },
         { ...mockReview, id: 'rev_2', rating: 'negative' },
       ];
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
+      transactionsService.getBuyerCompletedPurchasesTotal.mockResolvedValue(3);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
         identityVerification: {
@@ -429,7 +431,7 @@ describe('ReviewsService', () => {
       expect(result).toEqual({
         userId: 'buyer_123',
         role: 'buyer',
-        totalTransactions: 0,
+        totalTransactions: 3,
         totalReviews: 2,
         positiveReviews: 1,
         negativeReviews: 1,
@@ -437,6 +439,20 @@ describe('ReviewsService', () => {
         positivePercent: 50,
         badges: ['verified'],
       });
+      expect(
+        transactionsService.getBuyerCompletedPurchasesTotal,
+      ).toHaveBeenCalledWith(mockCtx, 'buyer_123');
+    });
+
+    it('should return totalTransactions: 0 when buyer has no completed purchases', async () => {
+      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
+      transactionsService.getBuyerCompletedPurchasesTotal.mockResolvedValue(0);
+      usersService.findById.mockResolvedValue(null);
+
+      const result = await service.getBuyerMetrics(mockCtx, 'buyer_123');
+
+      expect(result.totalTransactions).toBe(0);
+      expect(result.badges).toContain('new_seller');
     });
 
     it('should not include best_seller badge for buyer role even with high metrics', async () => {
@@ -450,6 +466,9 @@ describe('ReviewsService', () => {
 
       reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(
         positiveReviews,
+      );
+      transactionsService.getBuyerCompletedPurchasesTotal.mockResolvedValue(
+        100,
       );
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -469,6 +488,7 @@ describe('ReviewsService', () => {
       expect(result.badges).not.toContain('best_seller');
       expect(result.badges).toContain('trusted');
       expect(result.badges).toContain('verified');
+      expect(result.totalTransactions).toBe(100);
     });
   });
 

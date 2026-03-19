@@ -1441,6 +1441,27 @@ export class TransactionsService {
   }
 
   /**
+   * Get total completed purchases (ticket units bought) for a buyer.
+   */
+  async getBuyerCompletedPurchasesTotal(
+    ctx: Ctx,
+    buyerId: string,
+  ): Promise<number> {
+    const transactions = await this.transactionsRepository.getByBuyerId(
+      ctx,
+      buyerId,
+    );
+    return transactions
+      .filter(
+        (transaction) => transaction.status === TransactionStatus.Completed,
+      )
+      .reduce(
+        (total, transaction) => total + transaction.ticketUnitIds.length,
+        0,
+      );
+  }
+
+  /**
    * Get total completed sales (ticket units sold) for multiple sellers (batch).
    * Mirrors getSellerCompletedSalesTotal but for many sellers in a single query.
    */

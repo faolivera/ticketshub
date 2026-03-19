@@ -1344,6 +1344,69 @@ describe('TransactionsService', () => {
     });
   });
 
+  describe('getBuyerCompletedPurchasesTotal', () => {
+    it('should count ticket units from completed transactions for a buyer', async () => {
+      const completed1 = createMockTransaction({
+        status: TransactionStatus.Completed,
+        ticketUnitIds: ['unit_1', 'unit_2'],
+      });
+      const completed2 = createMockTransaction({
+        id: 'txn_456',
+        status: TransactionStatus.Completed,
+        ticketUnitIds: ['unit_3'],
+      });
+      const pending = createMockTransaction({
+        id: 'txn_789',
+        status: TransactionStatus.PendingPayment,
+        ticketUnitIds: ['unit_4', 'unit_5'],
+      });
+      transactionsRepository.getByBuyerId.mockResolvedValue([
+        completed1,
+        completed2,
+        pending,
+      ]);
+
+      const result = await service.getBuyerCompletedPurchasesTotal(
+        mockCtx,
+        'buyer_123',
+      );
+
+      expect(result).toBe(3);
+      expect(transactionsRepository.getByBuyerId).toHaveBeenCalledWith(
+        mockCtx,
+        'buyer_123',
+      );
+    });
+
+    it('should return 0 when buyer has no completed transactions', async () => {
+      transactionsRepository.getByBuyerId.mockResolvedValue([
+        createMockTransaction({ status: TransactionStatus.PendingPayment }),
+        createMockTransaction({
+          id: 'txn_2',
+          status: TransactionStatus.Cancelled,
+        }),
+      ]);
+
+      const result = await service.getBuyerCompletedPurchasesTotal(
+        mockCtx,
+        'buyer_123',
+      );
+
+      expect(result).toBe(0);
+    });
+
+    it('should return 0 when buyer has no transactions at all', async () => {
+      transactionsRepository.getByBuyerId.mockResolvedValue([]);
+
+      const result = await service.getBuyerCompletedPurchasesTotal(
+        mockCtx,
+        'buyer_123',
+      );
+
+      expect(result).toBe(0);
+    });
+  });
+
   describe('atomic transaction flows', () => {
     it('confirmReceipt transitions to DepositHold without releasing funds', async () => {
       const transaction = createMockTransaction({

@@ -854,6 +854,7 @@
     "transferProofUploaded": "Comprobante subido",
     "skipTransferProofStep": "Omitir",
     "attachReceiptProof": "Adjuntar comprobante (opcional)",
+    "uploadFile": "Subir archivo",
     "fileTooLarge": "El archivo es muy grande. El tamaño máximo es {{maxMb}} MB.",
     "invalidFileType": "Subí una imagen o PDF.",
     "proofUploadFailed": "Error al subir el comprobante. Intentá de nuevo.",

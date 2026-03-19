@@ -855,6 +855,7 @@
     "transferProofUploaded": "Proof uploaded",
     "skipTransferProofStep": "Skip",
     "attachReceiptProof": "Attach proof (optional)",
+    "uploadFile": "Upload file",
     "fileTooLarge": "File is too large. Maximum size is {{maxMb}} MB.",
     "invalidFileType": "Please upload an image or PDF.",
     "proofUploadFailed": "Failed to upload proof. Please try again.",

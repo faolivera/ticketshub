@@ -436,19 +436,25 @@ export class ReviewsService {
         ? Math.round((positiveReviews / nonNeutralReviews) * 100)
         : null;
 
+    const totalTransactions =
+      await this.transactionsService.getBuyerCompletedPurchasesTotal(
+        ctx,
+        userId,
+      );
+
     const badges = await this.calculateBadges(
       ctx,
       userId,
       'buyer',
       positiveReviews,
       totalReviews,
-      0,
+      totalTransactions,
     );
 
     return {
       userId,
       role: 'buyer',
-      totalTransactions: 0,
+      totalTransactions,
       totalReviews,
       positiveReviews,
       negativeReviews,
