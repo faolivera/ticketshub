@@ -358,6 +358,42 @@ export class AdminController {
   }
 
   /**
+   * Stream the seller's transfer proof file for admin preview.
+   */
+  @Get('transactions/:id/transfer-proof/file')
+  async getTransferProofFile(
+    @Context() ctx: Ctx,
+    @Param('id') transactionId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.adminService.getTransferProofFileContent(ctx, transactionId);
+    if (!result) {
+      throw new NotFoundException('Transfer proof file not found');
+    }
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${result.filename}"`);
+    res.send(result.buffer);
+  }
+
+  /**
+   * Stream the buyer's receipt proof file for admin preview.
+   */
+  @Get('transactions/:id/receipt-proof/file')
+  async getReceiptProofFile(
+    @Context() ctx: Ctx,
+    @Param('id') transactionId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.adminService.getReceiptProofFileContent(ctx, transactionId);
+    if (!result) {
+      throw new NotFoundException('Receipt proof file not found');
+    }
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${result.filename}"`);
+    res.send(result.buffer);
+  }
+
+  /**
    * Stream a payout receipt file for admin preview/download.
    * Route must be registered before /:id to avoid shadowing — not an issue here since
    * we use a nested path under /:id/payout-receipts.

@@ -46,16 +46,6 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
     onOpenDispute,
     onOpenTransferModal,
     isSellerUnverifiedGate,
-    reviewData,
-    selectedRating,
-    onRatingSelect,
-    reviewComment,
-    onReviewCommentChange,
-    onSubmitReview,
-    isSubmittingReview,
-    reviewError,
-    getRatingIcon,
-    getRatingColor,
     transferProofFile,
     transferProofPreview,
     isUploadingTransferProof,
@@ -188,61 +178,64 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
             <p style={{ fontSize: 11.5, fontWeight: 700, color: HINT, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
               {t('myTicket.attachTransferProofAfterTransfer')}
             </p>
-            {transferProofFile ? (
-              <div style={{ position: 'relative', marginBottom: 8 }}>
-                {transferProofPreview ? (
-                  <img
-                    src={transferProofPreview}
-                    alt=""
-                    style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
-                  />
-                ) : (
-                  <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <Upload size={20} style={{ color: HINT }} />
-                    <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transferProofFile.name}</p>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={onTransferProofRemove}
-                  style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: '#dc2626', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <X size={13} color="white" />
-                </button>
-              </div>
-            ) : (
-              <label
-                className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all"
-                style={{ borderColor: BORD2, background: BG }}
-                onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
-              >
-                <Upload size={20} style={{ color: HINT, marginBottom: 7 }} />
-                <p style={{ fontSize: 13.5, fontWeight: 600, color: DARK, marginBottom: 2 }}>{t('myTicket.uploadFile')}</p>
-                <p style={{ fontSize: 11.5, color: HINT }}>JPG, PNG, PDF</p>
-                <input
-                  ref={fileInputTransferRef}
-                  type="file"
-                  accept="image/*,application/pdf"
-                  className="hidden"
-                  onChange={onTransferProofSelect}
-                />
-              </label>
-            )}
-            {transferProofError && <p className="mb-2 text-xs text-red-600">{transferProofError}</p>}
-            {transaction.transferProofStorageKey && (
+            {transaction.transferProofStorageKey ? (
               <p className="mt-2 text-sm text-green-700">{t('myTicket.transferProofUploaded')}</p>
-            )}
-            {transferProofFile && (
-              <button
-                type="button"
-                disabled={isUploadingTransferProof}
-                onClick={onUploadTransferProof}
-                className="mt-2 w-full rounded-[10px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                style={{ background: V }}
-              >
-                {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
-              </button>
+            ) : (
+              <>
+                {transferProofFile ? (
+                  <div style={{ position: 'relative', marginBottom: 8 }}>
+                    {transferProofPreview ? (
+                      <img
+                        src={transferProofPreview}
+                        alt=""
+                        style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
+                      />
+                    ) : (
+                      <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <Upload size={20} style={{ color: HINT }} />
+                        <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transferProofFile.name}</p>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={onTransferProofRemove}
+                      style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: '#dc2626', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <X size={13} color="white" />
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all"
+                    style={{ borderColor: BORD2, background: BG }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
+                  >
+                    <Upload size={20} style={{ color: HINT, marginBottom: 7 }} />
+                    <p style={{ fontSize: 13.5, fontWeight: 600, color: DARK, marginBottom: 2 }}>{t('myTicket.uploadFile')}</p>
+                    <p style={{ fontSize: 11.5, color: HINT }}>JPG, PNG, PDF</p>
+                    <input
+                      ref={fileInputTransferRef}
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      onChange={onTransferProofSelect}
+                    />
+                  </label>
+                )}
+                {transferProofError && <p className="mb-2 text-xs text-red-600">{transferProofError}</p>}
+                {transferProofFile && (
+                  <button
+                    type="button"
+                    disabled={isUploadingTransferProof}
+                    onClick={onUploadTransferProof}
+                    className="mt-2 w-full rounded-[10px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                    style={{ background: V }}
+                  >
+                    {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
+                  </button>
+                )}
+              </>
             )}
           </div>
           {canOpenDispute && (
@@ -329,62 +322,6 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           title={t('transaction.hero.sellerCompletedTitle')}
           subtitle={t('transaction.hero.sellerCompletedSubtitle')}
         />
-      )}
-
-      {(effectiveStatus === TransactionStatus.Completed || effectiveStatus === TransactionStatus.TransferringFund) &&
-        reviewData?.canReview && !reviewData.sellerReview && (
-        <div className="space-y-3 rounded-[14px] border p-5" style={{ borderColor: BORDER, background: SURFACE, ...S }}>
-          <p className="text-sm font-semibold text-gray-800">
-            {t('reviews.sellerExperiencePrompt', { name: transaction.buyerName })}
-          </p>
-          <div className="flex gap-2">
-            {(['positive', 'neutral', 'negative'] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => onRatingSelect(r)}
-                className={`flex flex-1 flex-col items-center gap-1 rounded-lg border-2 p-2 text-xs ${getRatingColor(r, selectedRating === r)}`}
-              >
-                {getRatingIcon(r)}
-                {t(`reviews.${r}`)}
-              </button>
-            ))}
-          </div>
-          <textarea
-            value={reviewComment}
-            onChange={(e) => onReviewCommentChange(e.target.value)}
-            placeholder={t('reviews.commentPlaceholder')}
-            className="w-full rounded-lg border p-2 text-sm"
-            rows={2}
-            style={{ borderColor: BORDER }}
-          />
-          {reviewError && <p className="text-xs text-red-600">{reviewError}</p>}
-          <button
-            type="button"
-            onClick={onSubmitReview}
-            disabled={!selectedRating || isSubmittingReview}
-            className="w-full rounded-[10px] py-3 text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: V }}
-          >
-            {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
-          </button>
-        </div>
-      )}
-
-      {(effectiveStatus === TransactionStatus.Completed || effectiveStatus === TransactionStatus.TransferringFund) &&
-        reviewData?.sellerReview && reviewData.buyerReview && (
-        <div className="rounded-[14px] border p-5" style={{ borderColor: BORDER, background: SURFACE, ...S }}>
-          <p className="mb-3 text-sm font-semibold text-gray-800">
-            {t('reviews.otherPartyReview')}
-          </p>
-          <div className="flex items-center gap-2">
-            {getRatingIcon(reviewData.buyerReview.rating)}
-            <span className="text-sm font-semibold">{t(`reviews.${reviewData.buyerReview.rating}`)}</span>
-          </div>
-          {reviewData.buyerReview.comment && (
-            <p className="mt-2 text-sm" style={{ color: MUTED }}>{reviewData.buyerReview.comment}</p>
-          )}
-        </div>
       )}
 
       {effectiveStatus === TransactionStatus.Disputed && disputeId && (

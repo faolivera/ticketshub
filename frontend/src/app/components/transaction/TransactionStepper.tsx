@@ -27,7 +27,7 @@ export function TransactionStepper({
                 aria-hidden
               />
             )}
-            <div className="flex w-[68px] shrink-0 flex-col items-center sm:w-[80px]">
+            <div className={`flex shrink-0 flex-col items-center ${labels.length >= 5 ? 'w-[54px] sm:w-[80px]' : 'w-[68px] sm:w-[80px]'}`}>
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
                 style={{

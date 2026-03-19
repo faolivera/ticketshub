@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, MessageCircle, AlertCircle, X, ThumbsUp, ThumbsDown, Minus, Star, Upload } from 'lucide-react';
+import { CheckCircle, MessageCircle, AlertCircle, X, ThumbsUp, ThumbsDown, Minus, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
 import { BackButton } from '@/app/components/BackButton';
@@ -38,7 +38,7 @@ import { isSellerUnverified } from '../components/SellerUnverifiedModal';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
-import { DARK, V, VLIGHT, BORD2, BG, HINT, BORDER } from '@/lib/design-tokens';
+import { DARK, V, VLIGHT, BORD2, BG, HINT, BORDER, SURFACE, MUTED } from '@/lib/design-tokens';
 
 export function MyTicket() {
   const { t } = useTranslation();
@@ -686,16 +686,6 @@ export function MyTicket() {
                   onOpenConfirmReceipt={() => setShowConfirmModal(true)}
                   copiedCbu={copiedCbu}
                   onCopyCbu={handleCopyCbu}
-                  reviewData={reviewData}
-                  selectedRating={selectedRating}
-                  onRatingSelect={setSelectedRating}
-                  reviewComment={reviewComment}
-                  onReviewCommentChange={setReviewComment}
-                  onSubmitReview={handleSubmitReview}
-                  isSubmittingReview={isSubmittingReview}
-                  reviewError={reviewError}
-                  getRatingIcon={getRatingIcon}
-                  getRatingColor={getRatingColor}
                   disputeId={transaction.disputeId}
                   onPaymentExpired={() => setIsPaymentExpiredLocally(true)}
                 />
@@ -714,16 +704,6 @@ export function MyTicket() {
                     setTransferProofError(null);
                   }}
                   isSellerUnverifiedGate={sellerUnverifiedGate}
-                  reviewData={reviewData}
-                  selectedRating={selectedRating}
-                  onRatingSelect={setSelectedRating}
-                  reviewComment={reviewComment}
-                  onReviewCommentChange={setReviewComment}
-                  onSubmitReview={handleSubmitReview}
-                  isSubmittingReview={isSubmittingReview}
-                  reviewError={reviewError}
-                  getRatingIcon={getRatingIcon}
-                  getRatingColor={getRatingColor}
                   transferProofFile={transferProofFile}
                   transferProofPreview={transferProofPreview}
                   isUploadingTransferProof={isUploadingTransferProof}
@@ -770,21 +750,84 @@ export function MyTicket() {
                   </button>
                 )}
             </div>
-            {(transaction.status === TransactionStatus.Completed || transaction.status === TransactionStatus.TransferringFund) && reviewData && !reviewData.canReview && (
-              <div className="rounded-[16px] border border-gray-200 bg-white p-6">
-                <div className="mb-4 flex items-center gap-2">
-                  <Star className="h-5 w-5 text-violet-600" />
-                  <h2 className="text-lg font-bold text-gray-900">{t('reviews.leaveReview')}</h2>
-                </div>
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                  <div className="flex gap-3">
-                    <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
-                    <div>
-                      <p className="font-semibold text-green-900">{t('reviews.reviewSubmitted')}</p>
-                      <p className="text-sm text-green-800">{t('reviews.reviewSubmittedDesc')}</p>
+            {(transaction.status === TransactionStatus.Completed || transaction.status === TransactionStatus.TransferringFund) && reviewData && (
+              <div className="rounded-[16px] border bg-white p-5 sm:p-6" style={{ borderColor: BORDER }}>
+                <h2 className="mb-4 text-lg sm:text-xl" style={{ fontFamily: "'DM Serif Display', serif", color: DARK }}>
+                  {t('reviews.leaveReview')}
+                </h2>
+                {(() => {
+                  const myReview = isBuyer ? reviewData.buyerReview : reviewData.sellerReview;
+                  const counterpartReview = isBuyer ? reviewData.sellerReview : reviewData.buyerReview;
+                  const counterpartName = isBuyer ? transaction.sellerName : transaction.buyerName;
+                  const experiencePromptKey = isBuyer ? 'reviews.buyerExperiencePrompt' : 'reviews.sellerExperiencePrompt';
+                  return (
+                    <div className="space-y-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                      {counterpartReview && (
+                        <div className="rounded-[10px] border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
+                          <p style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                            {t('reviews.otherPartyReview')}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {getRatingIcon(counterpartReview.rating)}
+                            <span style={{ fontSize: 13.5, fontWeight: 600, color: DARK }}>{t(`reviews.${counterpartReview.rating}`)}</span>
+                          </div>
+                          {counterpartReview.comment && (
+                            <p className="mt-1" style={{ fontSize: 13, color: MUTED }}>{counterpartReview.comment}</p>
+                          )}
+                        </div>
+                      )}
+                      {!myReview ? (
+                        <>
+                          <p style={{ fontSize: 13.5, fontWeight: 600, color: DARK }}>
+                            {t(experiencePromptKey, { name: counterpartName })}
+                          </p>
+                          <div className="flex gap-2">
+                            {(['positive', 'neutral', 'negative'] as const).map((r) => (
+                              <button
+                                key={r}
+                                type="button"
+                                onClick={() => setSelectedRating(r)}
+                                className={`flex flex-1 flex-col items-center gap-1 rounded-[10px] border-2 p-2 ${getRatingColor(r, selectedRating === r)}`}
+                                style={{ fontSize: 12, fontWeight: 600 }}
+                              >
+                                {getRatingIcon(r)}
+                                {t(`reviews.${r}`)}
+                              </button>
+                            ))}
+                          </div>
+                          <textarea
+                            value={reviewComment}
+                            onChange={(e) => setReviewComment(e.target.value)}
+                            placeholder={t('reviews.commentPlaceholder')}
+                            className="w-full rounded-[10px] border p-3 outline-none"
+                            rows={2}
+                            style={{ fontSize: 13.5, color: DARK, borderColor: BORDER, background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                          />
+                          {reviewError && <p style={{ fontSize: 12, color: '#dc2626' }}>{reviewError}</p>}
+                          <button
+                            type="button"
+                            onClick={handleSubmitReview}
+                            disabled={!selectedRating || isSubmittingReview}
+                            className="w-full rounded-[10px] py-3 text-white disabled:opacity-50"
+                            style={{ background: V, fontSize: 14, fontWeight: 700 }}
+                          >
+                            {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
+                          </button>
+                        </>
+                      ) : (
+                        <div className="rounded-[10px] border border-green-200 bg-green-50 p-4">
+                          <div className="flex gap-3">
+                            <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+                            <div>
+                              <p style={{ fontSize: 13.5, fontWeight: 600, color: '#14532d' }}>{t('reviews.reviewSubmitted')}</p>
+                              <p className="mt-0.5" style={{ fontSize: 13, color: '#166534' }}>{t('reviews.reviewSubmittedDesc')}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             )}
           </>

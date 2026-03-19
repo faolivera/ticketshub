@@ -2,9 +2,7 @@ import type { ReactNode } from 'react';
 import type {
   TransactionWithDetails,
   PaymentConfirmation,
-  TransactionReviewsData,
   BankTransferConfig,
-  ReviewRating,
 } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import type { TransactionStatus, CancellationReason } from '@/api/types';
@@ -225,16 +223,6 @@ export interface BuyerActionBlockProps {
   onOpenConfirmReceipt: () => void;
   copiedCbu: boolean;
   onCopyCbu: (cbu: string) => void;
-  reviewData: TransactionReviewsData | null;
-  selectedRating: ReviewRating | null;
-  onRatingSelect: (r: ReviewRating) => void;
-  reviewComment: string;
-  onReviewCommentChange: (s: string) => void;
-  onSubmitReview: () => void;
-  isSubmittingReview: boolean;
-  reviewError: string | null;
-  getRatingIcon: (r: ReviewRating) => ReactNode;
-  getRatingColor: (r: ReviewRating, sel: boolean) => string;
   disputeId: string | null | undefined;
   onPaymentExpired: () => void;
 }
@@ -247,16 +235,6 @@ export interface SellerActionBlockProps {
   onOpenDispute: () => void;
   onOpenTransferModal: () => void;
   isSellerUnverifiedGate: boolean;
-  reviewData: TransactionReviewsData | null;
-  selectedRating: ReviewRating | null;
-  onRatingSelect: (r: ReviewRating) => void;
-  reviewComment: string;
-  onReviewCommentChange: (s: string) => void;
-  onSubmitReview: () => void;
-  isSubmittingReview: boolean;
-  reviewError: string | null;
-  getRatingIcon: (r: ReviewRating) => ReactNode;
-  getRatingColor: (r: ReviewRating, sel: boolean) => string;
   transferProofFile: File | null;
   transferProofPreview: string | null;
   isUploadingTransferProof: boolean;

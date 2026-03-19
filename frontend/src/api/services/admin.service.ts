@@ -340,6 +340,30 @@ export const adminService = {
   },
 
   /**
+   * Fetch the seller's transfer proof file as a blob URL for admin preview.
+   * The caller is responsible for revoking the URL when no longer needed.
+   */
+  async getTransferProofBlobUrl(transactionId: string): Promise<string> {
+    const response = await apiClient.get<Blob>(
+      `/admin/transactions/${transactionId}/transfer-proof/file`,
+      { responseType: 'blob' },
+    );
+    return URL.createObjectURL(response.data);
+  },
+
+  /**
+   * Fetch the buyer's receipt proof file as a blob URL for admin preview.
+   * The caller is responsible for revoking the URL when no longer needed.
+   */
+  async getReceiptProofBlobUrl(transactionId: string): Promise<string> {
+    const response = await apiClient.get<Blob>(
+      `/admin/transactions/${transactionId}/receipt-proof/file`,
+      { responseType: 'blob' },
+    );
+    return URL.createObjectURL(response.data);
+  },
+
+  /**
    * Fetch a payout receipt file as a blob URL for admin preview.
    * The caller is responsible for revoking the URL when no longer needed.
    */

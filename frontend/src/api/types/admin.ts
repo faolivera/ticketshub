@@ -525,6 +525,10 @@ export interface AdminTransactionDetailResponse {
   appliedPromotion?: AdminTransactionDetail['appliedPromotion'];
   paymentConfirmations: AdminTransactionPaymentConfirmation[];
   payoutReceiptFiles: AdminTransactionPayoutReceiptFile[];
+  transferProofStorageKey?: string;
+  transferProofOriginalFilename?: string;
+  receiptProofStorageKey?: string;
+  receiptProofOriginalFilename?: string;
   bankTransferDestination?: {
     holderName: string;
     cbuOrCvu: string;

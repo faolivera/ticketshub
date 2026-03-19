@@ -125,6 +125,16 @@ export default function TransactionManagement() {
   const [payoutPreviewFile, setPayoutPreviewFile] = useState<AdminTransactionPayoutReceiptFile | null>(null);
   const [payoutPreviewBlobUrl, setPayoutPreviewBlobUrl] = useState<string | null>(null);
 
+  const [transferProofDialogOpen, setTransferProofDialogOpen] = useState(false);
+  const [transferProofDialogTxId, setTransferProofDialogTxId] = useState<string | null>(null);
+  const [transferProofLoading, setTransferProofLoading] = useState(false);
+  const [transferProofBlobUrl, setTransferProofBlobUrl] = useState<string | null>(null);
+
+  const [receiptProofDialogOpen, setReceiptProofDialogOpen] = useState(false);
+  const [receiptProofDialogTxId, setReceiptProofDialogTxId] = useState<string | null>(null);
+  const [receiptProofLoading, setReceiptProofLoading] = useState(false);
+  const [receiptProofBlobUrl, setReceiptProofBlobUrl] = useState<string | null>(null);
+
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonDialogTransactionId, setJsonDialogTransactionId] = useState<string | null>(null);
   const [jsonCopied, setJsonCopied] = useState(false);
@@ -366,6 +376,50 @@ export default function TransactionManagement() {
       URL.revokeObjectURL(payoutPreviewBlobUrl);
     }
     setPayoutPreviewBlobUrl(null);
+  };
+
+  const openTransferProofPreview = async (transactionId: string): Promise<void> => {
+    try {
+      setTransferProofDialogOpen(true);
+      setTransferProofLoading(true);
+      setTransferProofDialogTxId(transactionId);
+      setTransferProofBlobUrl(null);
+      const blobUrl = await adminService.getTransferProofBlobUrl(transactionId);
+      setTransferProofBlobUrl(blobUrl);
+    } catch {
+      setTransferProofBlobUrl(null);
+    } finally {
+      setTransferProofLoading(false);
+    }
+  };
+
+  const closeTransferProofPreview = (): void => {
+    setTransferProofDialogOpen(false);
+    setTransferProofDialogTxId(null);
+    if (transferProofBlobUrl) URL.revokeObjectURL(transferProofBlobUrl);
+    setTransferProofBlobUrl(null);
+  };
+
+  const openReceiptProofPreview = async (transactionId: string): Promise<void> => {
+    try {
+      setReceiptProofDialogOpen(true);
+      setReceiptProofLoading(true);
+      setReceiptProofDialogTxId(transactionId);
+      setReceiptProofBlobUrl(null);
+      const blobUrl = await adminService.getReceiptProofBlobUrl(transactionId);
+      setReceiptProofBlobUrl(blobUrl);
+    } catch {
+      setReceiptProofBlobUrl(null);
+    } finally {
+      setReceiptProofLoading(false);
+    }
+  };
+
+  const closeReceiptProofPreview = (): void => {
+    setReceiptProofDialogOpen(false);
+    setReceiptProofDialogTxId(null);
+    if (receiptProofBlobUrl) URL.revokeObjectURL(receiptProofBlobUrl);
+    setReceiptProofBlobUrl(null);
   };
 
   const getStatusLabel = (status: string): string => {
@@ -777,6 +831,54 @@ export default function TransactionManagement() {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          <div>
+            <h4 className="text-sm font-semibold mb-2">
+              {t('admin.transactions.transferProof')}
+            </h4>
+            {detail.transferProofStorageKey ? (
+              <div className="flex items-center justify-between rounded-lg border p-3 bg-background">
+                <div className="flex items-center gap-3">
+                  {detail.transferProofOriginalFilename && getFileIcon(detail.transferProofOriginalFilename.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg')}
+                  <span className="text-sm">{detail.transferProofOriginalFilename ?? t('admin.transactions.transferProof')}</span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void openTransferProofPreview(transactionId)}
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  {t('admin.transactions.view')}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('admin.transactions.noTransferProof')}</p>
+            )}
+          </div>
+
+          <div>
+            <h4 className="text-sm font-semibold mb-2">
+              {t('admin.transactions.receiptProof')}
+            </h4>
+            {detail.receiptProofStorageKey ? (
+              <div className="flex items-center justify-between rounded-lg border p-3 bg-background">
+                <div className="flex items-center gap-3">
+                  {detail.receiptProofOriginalFilename && getFileIcon(detail.receiptProofOriginalFilename.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg')}
+                  <span className="text-sm">{detail.receiptProofOriginalFilename ?? t('admin.transactions.receiptProof')}</span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void openReceiptProofPreview(transactionId)}
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  {t('admin.transactions.view')}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('admin.transactions.noReceiptProof')}</p>
             )}
           </div>
         </div>
@@ -1417,6 +1519,68 @@ export default function TransactionManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closePayoutReceiptPreview}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={transferProofDialogOpen} onOpenChange={(open) => !open && closeTransferProofPreview()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('admin.transactions.transferProof')}</DialogTitle>
+            <DialogDescription>{transferProofDialogTxId}</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto min-h-[400px]">
+            {transferProofLoading ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : transferProofBlobUrl ? (
+              <iframe
+                src={transferProofBlobUrl}
+                className="w-full h-[500px] border rounded"
+                title={t('admin.transactions.transferProof')}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[400px] text-muted-foreground">
+                {t('common.errorLoading')}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeTransferProofPreview}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={receiptProofDialogOpen} onOpenChange={(open) => !open && closeReceiptProofPreview()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t('admin.transactions.receiptProof')}</DialogTitle>
+            <DialogDescription>{receiptProofDialogTxId}</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto min-h-[400px]">
+            {receiptProofLoading ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : receiptProofBlobUrl ? (
+              <iframe
+                src={receiptProofBlobUrl}
+                className="w-full h-[500px] border rounded"
+                title={t('admin.transactions.receiptProof')}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[400px] text-muted-foreground">
+                {t('common.errorLoading')}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeReceiptProofPreview}>
               {t('common.close')}
             </Button>
           </DialogFooter>

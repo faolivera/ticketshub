@@ -524,6 +524,14 @@ export interface AdminTransactionDetailResponse {
   >;
   /** Payout receipt files uploaded by admin when completing the seller payout */
   payoutReceiptFiles: AdminTransactionPayoutReceiptFile[];
+  /** Transfer proof uploaded by the seller (storage key present if uploaded) */
+  transferProofStorageKey?: string;
+  /** Original filename of the transfer proof for display */
+  transferProofOriginalFilename?: string;
+  /** Receipt proof uploaded by the buyer (storage key present if uploaded) */
+  receiptProofStorageKey?: string;
+  /** Original filename of the receipt proof for display */
+  receiptProofOriginalFilename?: string;
   /** Bank transfer destination for proof validation (from payment method or seller bankAccount) */
   bankTransferDestination?: {
     holderName: string;

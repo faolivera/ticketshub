@@ -1044,6 +1044,10 @@ export class AdminService {
       disputeId: transaction.disputeId,
       paymentConfirmations,
       payoutReceiptFiles,
+      transferProofStorageKey: transaction.transferProofStorageKey,
+      transferProofOriginalFilename: transaction.transferProofOriginalFilename,
+      receiptProofStorageKey: transaction.receiptProofStorageKey,
+      receiptProofOriginalFilename: transaction.receiptProofOriginalFilename,
       bankTransferDestination,
     };
   }
@@ -1116,6 +1120,63 @@ export class AdminService {
 
     await this.transactionsService.updateForAdmin(ctx, transactionId, updates);
     return this.getTransactionById(ctx, transactionId);
+  }
+
+  /**
+   * Retrieve the transfer proof file (uploaded by seller) for admin preview.
+   * Returns null if the transaction has no transfer proof or the object is missing in storage.
+   */
+  async getTransferProofFileContent(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
+    const transaction = await this.transactionsService.findById(ctx, transactionId);
+    if (!transaction?.transferProofStorageKey) {
+      return null;
+    }
+    const buffer = await this.privateStorage.retrieve(transaction.transferProofStorageKey);
+    if (!buffer) {
+      this.logger.warn(ctx, `Transfer proof not found in storage: ${transaction.transferProofStorageKey}`);
+      return null;
+    }
+    return {
+      buffer,
+      contentType: this.mimeTypeFromKey(transaction.transferProofStorageKey),
+      filename: transaction.transferProofOriginalFilename ?? 'transfer-proof',
+    };
+  }
+
+  /**
+   * Retrieve the receipt proof file (uploaded by buyer) for admin preview.
+   * Returns null if the transaction has no receipt proof or the object is missing in storage.
+   */
+  async getReceiptProofFileContent(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
+    const transaction = await this.transactionsService.findById(ctx, transactionId);
+    if (!transaction?.receiptProofStorageKey) {
+      return null;
+    }
+    const buffer = await this.privateStorage.retrieve(transaction.receiptProofStorageKey);
+    if (!buffer) {
+      this.logger.warn(ctx, `Receipt proof not found in storage: ${transaction.receiptProofStorageKey}`);
+      return null;
+    }
+    return {
+      buffer,
+      contentType: this.mimeTypeFromKey(transaction.receiptProofStorageKey),
+      filename: transaction.receiptProofOriginalFilename ?? 'receipt-proof',
+    };
+  }
+
+  /** Infer a MIME type from a storage key extension (best-effort). */
+  private mimeTypeFromKey(key: string): string {
+    const ext = key.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return 'application/pdf';
+    if (ext === 'png') return 'image/png';
+    if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+    return 'application/octet-stream';
   }
 
   /**
