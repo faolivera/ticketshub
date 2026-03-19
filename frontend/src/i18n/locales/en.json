@@ -979,7 +979,18 @@
     "stepCompleted": "Completed",
     "transferTimeline": {
       "sent": "Ticket sent",
-      "received": "Ticket received"
+      "received": "Ticket received",
+      "confirmReceipt": "Confirm receipt",
+      "confirmReceiptSub": "Verify that you received the ticket correctly",
+      "sentSub": {
+        "sellerNotYet": "You haven't sent the ticket yet",
+        "sellerDone": "Sent via: {{method}}",
+        "buyerWaiting": "Waiting for the seller to send the ticket",
+        "buyerDone": "The seller has already sent the ticket"
+      },
+      "receivedSub": {
+        "waiting": "Waiting for {{name}} to confirm"
+      }
     },
     "escrowCardTitle": "Protected purchase",
     "escrowBuyerWaiting": "Your money is safe. It is not released to the seller until you confirm you received the ticket and the event has passed.",
@@ -993,8 +1004,9 @@
       "buyer4": "Funds released to seller",
       "seller1": "Payment received",
       "seller2": "Ticket transferred",
-      "seller3": "Buyer confirms / Event: {{date}}",
+      "seller3": "Event: {{date}}",
       "seller4": "Funds released",
+      "seller4Sub": "Approx. {{date}}",
       "seller4WithDate": "Funds released (approx. {{date}})"
     },
     "hero": {

@@ -978,7 +978,18 @@
     "stepCompleted": "Completado",
     "transferTimeline": {
       "sent": "Entrada enviada",
-      "received": "Entrada recibida"
+      "received": "Entrada recibida",
+      "confirmReceipt": "Confirmar recepción",
+      "confirmReceiptSub": "Verificá que recibiste la entrada correctamente",
+      "sentSub": {
+        "sellerNotYet": "Todavía no enviaste la entrada",
+        "sellerDone": "Enviaste como: {{method}}",
+        "buyerWaiting": "Esperando que el vendedor envíe la entrada",
+        "buyerDone": "El vendedor ya envió la entrada"
+      },
+      "receivedSub": {
+        "waiting": "Esperando que {{name}} confirme"
+      }
     },
     "escrowCardTitle": "Compra protegida",
     "escrowBuyerWaiting": "Tu dinero está seguro. No se libera al vendedor hasta que confirmes recibir la entrada y pase el evento.",
@@ -992,8 +1003,9 @@
       "buyer4": "Fondos liberados al vendedor",
       "seller1": "Pago recibido",
       "seller2": "Entrada transferida",
-      "seller3": "Comprador confirma / Evento: {{date}}",
+      "seller3": "Evento: {{date}}",
       "seller4": "Fondos liberados",
+      "seller4Sub": "Aprox. {{date}}",
       "seller4WithDate": "Fondos liberados (aprox. {{date}})"
     },
     "hero": {

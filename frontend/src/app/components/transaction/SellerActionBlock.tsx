@@ -133,7 +133,12 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               </p>
             )}
           </div>
-          <TransferTimeline sellerSent={false} />
+          <TransferTimeline
+            role="seller"
+            effectiveStatus={effectiveStatus}
+            buyerName={transaction.buyerName}
+            deliveryMethod={payloadLabel || undefined}
+          />
           <button
             type="button"
             onClick={onOpenTransferModal}
@@ -165,16 +170,12 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           })}
           badge={t('transaction.hero.badgeWaiting')}
         >
-          <TransferTimeline sellerSent={true} />
-          {payloadLabel && (
-            <p
-              className="mt-4 rounded-lg border p-3 text-sm"
-              style={{ borderColor: BORDER, background: SURFACE }}
-            >
-              <span className="font-semibold">{t('transaction.hero.sentAsLabel')} </span>
-              {payloadLabel}
-            </p>
-          )}
+          <TransferTimeline
+            role="seller"
+            effectiveStatus={effectiveStatus}
+            buyerName={transaction.buyerName}
+            deliveryMethod={payloadLabel || undefined}
+          />
           <div className="mt-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
             <label className="mb-2 block text-sm font-medium">{t('myTicket.attachTransferProofAfterTransfer')}</label>
             <input

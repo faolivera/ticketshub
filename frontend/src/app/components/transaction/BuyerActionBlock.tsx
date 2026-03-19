@@ -284,7 +284,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           title={t('transaction.hero.buyerPaymentReceivedTitle')}
           subtitle={t('transaction.hero.buyerPaymentReceivedSubtitle')}
         >
-          <TransferTimeline sellerSent={false} />
+          <TransferTimeline role="buyer" effectiveStatus={effectiveStatus} />
           {canOpenDispute && (
             <button
               type="button"
@@ -307,7 +307,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             name: transaction.sellerName,
           })}
         >
-          <TransferTimeline sellerSent={true} />
+          <TransferTimeline role="buyer" effectiveStatus={effectiveStatus} />
           {payloadLabel && (
             <p className="mt-4 rounded-lg border p-3 text-sm" style={{ borderColor: BORDER, background: SURFACE }}>
               <span className="font-semibold">{t('myTicket.sentAs')}: </span>

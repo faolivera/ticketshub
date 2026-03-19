@@ -1,18 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { V, VLIGHT, BORD2, BORDER, GREEN, MUTED, S } from '@/lib/design-tokens';
 import type { EscrowTimelineProps } from './types';
-
-function Dot({ done, active }: { done: boolean; active: boolean }) {
-  return (
-    <span
-      className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
-      style={{
-        background: done || active ? V : BORD2,
-        boxShadow: active ? `0 0 0 3px ${VLIGHT}` : undefined,
-      }}
-    />
-  );
-}
+import { TimelineItem } from './TimelineItem';
 
 export function EscrowTimeline({
   role,
@@ -20,48 +8,34 @@ export function EscrowTimeline({
   depositReleaseAtLabel,
 }: EscrowTimelineProps) {
   const { t } = useTranslation();
-  const lines =
-    role === 'buyer'
-      ? [
-          { done: true, active: false, label: t('transaction.escrowTimeline.buyer1') },
-          { done: true, active: false, label: t('transaction.escrowTimeline.buyer2') },
-          {
-            done: false,
-            active: true,
-            label: t('transaction.escrowTimeline.buyer3', { date: eventDateLabel }),
-          },
-          { done: false, active: false, label: t('transaction.escrowTimeline.buyer4') },
-        ]
-      : [
-          { done: true, active: false, label: t('transaction.escrowTimeline.seller1') },
-          { done: true, active: false, label: t('transaction.escrowTimeline.seller2') },
-          {
-            done: false,
-            active: true,
-            label: t('transaction.escrowTimeline.seller3', { date: eventDateLabel }),
-          },
-          {
-            done: false,
-            active: false,
-            label: depositReleaseAtLabel
-              ? t('transaction.escrowTimeline.seller4WithDate', { date: depositReleaseAtLabel })
-              : t('transaction.escrowTimeline.seller4'),
-          },
-        ];
+
+  if (role === 'buyer') {
+    return (
+      <div style={{ marginTop: 16 }}>
+        <TimelineItem state="done"    label={t('transaction.escrowTimeline.buyer1')} />
+        <TimelineItem state="done"    label={t('transaction.escrowTimeline.buyer2')} />
+        <TimelineItem state="waiting" label={t('transaction.escrowTimeline.buyer3', { date: eventDateLabel })} />
+        <TimelineItem state="pending" label={t('transaction.escrowTimeline.buyer4')} isLast />
+      </div>
+    );
+  }
 
   return (
-    <ul className="mt-4 space-y-0 border-l-2 pl-4" style={{ borderColor: BORDER, ...S }}>
-      {lines.map((line, i) => (
-        <li key={i} className="relative -ml-[21px] flex gap-3 pb-4 last:pb-0">
-          <Dot done={line.done} active={line.active} />
-          <p
-            className="text-sm font-semibold leading-snug"
-            style={{ color: line.active ? V : line.done ? GREEN : MUTED }}
-          >
-            {line.label}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <div style={{ marginTop: 16 }}>
+      <TimelineItem state="done"    label={t('transaction.escrowTimeline.seller1')} />
+      <TimelineItem state="done"    label={t('transaction.escrowTimeline.seller2')} />
+      <TimelineItem
+        state="waiting"
+        label={t('transaction.escrowTimeline.seller3', { date: eventDateLabel })}
+      />
+      <TimelineItem
+        state="pending"
+        label={t('transaction.escrowTimeline.seller4')}
+        sub={depositReleaseAtLabel
+          ? t('transaction.escrowTimeline.seller4Sub', { date: depositReleaseAtLabel })
+          : undefined}
+        isLast
+      />
+    </div>
   );
 }

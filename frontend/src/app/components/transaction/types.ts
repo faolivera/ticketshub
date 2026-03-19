@@ -19,8 +19,15 @@ export interface TransactionStepperProps {
   labels: string[];
 }
 
+export type TimelineItemState = 'done' | 'current' | 'waiting' | 'pending';
+
 export interface TransferTimelineProps {
-  sellerSent: boolean;
+  role: TxRole;
+  effectiveStatus: TransactionStatus;
+  /** Seller view: used in "Waiting for {name} to confirm" sub-text */
+  buyerName?: string;
+  /** Seller view: "Sent via: {method}" sub-text after transfer */
+  deliveryMethod?: string;
 }
 
 export interface EscrowTimelineProps {

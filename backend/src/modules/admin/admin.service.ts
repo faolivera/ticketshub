@@ -1659,10 +1659,17 @@ export class AdminService {
 
     const deduped = this.dedupeImportEventsBySource(payload.events);
     const existingKeys = await this.eventsService.getExistingImportSourceKeys(ctx);
-    const toImport = deduped.filter((item) => {
-      const key = `${item.sourceCode}:${item.sourceId}`;
-      return !existingKeys.has(key);
-    });
+    const now = new Date();
+    const toImport = deduped
+      .filter((item) => {
+        const key = `${item.sourceCode}:${item.sourceId}`;
+        return !existingKeys.has(key);
+      })
+      .map((item) => ({
+        ...item,
+        dates: item.dates.filter((d) => new Date(d) > now),
+      }))
+      .filter((item) => item.dates.length > 0);
 
     const events: ImportEventsPreviewItem[] = toImport.map((item, index) => {
       const previewId = `preview-${index}`;

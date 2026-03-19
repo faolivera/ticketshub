@@ -1,48 +1,81 @@
 import { useTranslation } from 'react-i18next';
-import { V, VLIGHT, BORD2, BORDER, GREEN, MUTED, S } from '@/lib/design-tokens';
-import type { TransferTimelineProps } from './types';
+import { TransactionStatus } from '@/api/types';
+import type { TransferTimelineProps, TimelineItemState } from './types';
+import { TimelineItem } from './TimelineItem';
 
-function Dot({ done, active }: { done: boolean; active: boolean }) {
-  return (
-    <span
-      className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
-      style={{
-        background: done || active ? V : BORD2,
-        boxShadow: active ? `0 0 0 3px ${VLIGHT}` : undefined,
-      }}
-    />
-  );
-}
+// ─── State derivation ───────────────────────────────────────────────────────
 
-export function TransferTimeline({ sellerSent }: TransferTimelineProps) {
+const SELLER_HAS_TRANSFERRED: TransactionStatus[] = [
+  TransactionStatus.TicketTransferred,
+  TransactionStatus.DepositHold,
+  TransactionStatus.TransferringFund,
+  TransactionStatus.Completed,
+];
+
+const BUYER_HAS_CONFIRMED: TransactionStatus[] = [
+  TransactionStatus.DepositHold,
+  TransactionStatus.TransferringFund,
+  TransactionStatus.Completed,
+];
+
+// ─── Main component ─────────────────────────────────────────────────────────
+
+export function TransferTimeline({ role, effectiveStatus, buyerName, deliveryMethod }: TransferTimelineProps) {
   const { t } = useTranslation();
 
-  const lines = [
-    {
-      done: sellerSent,
-      active: false,
-      label: t('transaction.transferTimeline.sent'),
-    },
-    {
-      done: false,
-      active: false,
-      label: t('transaction.transferTimeline.received'),
-    },
-  ];
+  const sellerHasTransferred = SELLER_HAS_TRANSFERRED.includes(effectiveStatus);
+  const buyerHasConfirmed    = BUYER_HAS_CONFIRMED.includes(effectiveStatus);
+
+  if (role === 'seller') {
+    const sentState: TimelineItemState = sellerHasTransferred ? 'done' : 'current';
+    const receivedState: TimelineItemState = buyerHasConfirmed
+      ? 'done'
+      : sellerHasTransferred
+        ? 'waiting'
+        : 'pending';
+
+    const sentSub = sellerHasTransferred
+      ? (deliveryMethod
+          ? t('transaction.transferTimeline.sentSub.sellerDone', { method: deliveryMethod })
+          : undefined)
+      : t('transaction.transferTimeline.sentSub.sellerNotYet');
+
+    const receivedSub = (sellerHasTransferred && !buyerHasConfirmed && buyerName)
+      ? t('transaction.transferTimeline.receivedSub.waiting', { name: buyerName })
+      : undefined;
+
+    return (
+      <div style={{ marginTop: 16 }}>
+        <TimelineItem state={sentState}     label={t('transaction.transferTimeline.sent')}     sub={sentSub} />
+        <TimelineItem state={receivedState} label={t('transaction.transferTimeline.received')} sub={receivedSub} isLast />
+      </div>
+    );
+  }
+
+  // Buyer view
+  const sentState: TimelineItemState = sellerHasTransferred ? 'done' : 'waiting';
+  const receiptState: TimelineItemState = buyerHasConfirmed
+    ? 'done'
+    : sellerHasTransferred
+      ? 'current'
+      : 'pending';
+
+  const sentSub = sellerHasTransferred
+    ? t('transaction.transferTimeline.sentSub.buyerDone')
+    : t('transaction.transferTimeline.sentSub.buyerWaiting');
+
+  const receiptLabel = (sellerHasTransferred && !buyerHasConfirmed)
+    ? t('transaction.transferTimeline.confirmReceipt')
+    : t('transaction.transferTimeline.received');
+
+  const receiptSub = (sellerHasTransferred && !buyerHasConfirmed)
+    ? t('transaction.transferTimeline.confirmReceiptSub')
+    : undefined;
 
   return (
-    <ul className="mt-4 space-y-0 border-l-2 pl-4" style={{ borderColor: BORDER, ...S }}>
-      {lines.map((line, i) => (
-        <li key={i} className="relative -ml-[21px] flex gap-3 pb-4 last:pb-0">
-          <Dot done={line.done} active={line.active} />
-          <p
-            className="text-sm font-semibold leading-snug"
-            style={{ color: line.active ? V : line.done ? GREEN : MUTED }}
-          >
-            {line.label}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <div style={{ marginTop: 16 }}>
+      <TimelineItem state={sentState}    label={t('transaction.transferTimeline.sent')} sub={sentSub} />
+      <TimelineItem state={receiptState} label={receiptLabel}                            sub={receiptSub} isLast />
+    </div>
   );
 }
