@@ -10,6 +10,7 @@ import { UserAvatar } from '@/app/components/UserAvatar';
 import AvatarCropModal from '@/app/components/Avatarcropmodal';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { formatMonthYear } from '@/lib/format-date';
+import { PageHeader } from '../components/PageHeader';
 
 // ─── TicketsHub design tokens ─────────────────────────────────────────────────
 const V      = '#6d28d9';
@@ -223,14 +224,7 @@ export function UserProfile() {
     <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
         {/* Page title */}
-        <h1 style={{
-          fontFamily: "'DM Serif Display', serif",
-          fontSize: 'clamp(22px, 3vw, 28px)',
-          fontWeight: 400, color: DARK,
-          letterSpacing: '-0.4px', marginBottom: 20,
-        }}>
-          {t('userProfile.title')}
-        </h1>
+        <PageHeader title={t('userProfile.title')} backTo={{ labelKey: 'common.back' }} />
 
         {/* ── PROFILE CARD ── */}
         <div style={{

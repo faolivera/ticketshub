@@ -27,6 +27,7 @@ import {
 } from '@/app/pages/my-tickets/transactionUtils';
 import { TransactionActionRequiredCard } from '@/app/pages/my-tickets/TransactionActionRequiredCard';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
+import { PageHeader } from '../../components/PageHeader';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(amount: number, currency: string) {
@@ -746,22 +747,16 @@ export function SellerDashboardPage() {
       `}</style>
 
       <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 56 }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px' }}>
-            {t('sellerDashboard.title')}
-          </h1>
-          <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
-            <button style={{
-              padding: '9px 18px', borderRadius: 10, border: 'none',
-              background: V, color: CARD, fontSize: 13.5, fontWeight: 700,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, ...S,
-            }}>
-              <Plus size={14} />
-              {t('sellerDashboard.newListing', { defaultValue: 'Publicar entrada' })}
-            </button>
-          </Link>
-        </div>
+
+        <PageHeader
+          title={t('sellerDashboard.title')}
+          backTo={{ labelKey: 'common.back' }}
+          action={{
+            label: `${t('boughtTickets.startSelling')}`,
+            to: '/sell-ticket',
+            icon: <Plus size={14} />,
+          }}
+        />
 
         {isLoading && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
         {error     && <ErrorAlert message={error} className="mb-6" />}

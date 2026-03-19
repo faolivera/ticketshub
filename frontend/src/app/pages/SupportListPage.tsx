@@ -6,6 +6,7 @@ import { supportService } from '@/api/services';
 import type { SupportTicket, SupportTicketStatus } from '@/api/types';
 import { formatDateTimeShort } from '@/lib/format-date';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
+import { PageHeader } from '../components/PageHeader';
 
 const V      = '#6d28d9';
 const VLIGHT = '#f0ebff';
@@ -86,29 +87,19 @@ export function SupportListPage() {
       `}</style>
 
       <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
-      <div style={{ maxWidth: 680, margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ ...DS, fontSize: 'clamp(22px,3vw,28px)', color: DARK, marginBottom: 4 }}>
-              {t('support.title')}
-            </h1>
-            <p style={{ fontSize: 14, color: MUTED, ...S }}>{t('support.description')}</p>
-          </div>
-          <Link to="/contact" style={{ textDecoration: 'none' }}>
-            <button style={{
-              padding: '10px 18px', borderRadius: 12, border: 'none',
-              background: V, color: 'white', fontSize: 13.5, fontWeight: 700,
-              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7,
-              boxShadow: '0 2px 10px rgba(109,40,217,0.2)', flexShrink: 0,
-              ...S,
-            }}>
-              <HelpCircle size={15} />
-              {t('support.newCase')}
-            </button>
-          </Link>
-        </div>
+
+        <PageHeader
+          title={t('support.title')}
+          subtitle={t('support.description')}
+          backTo={{ labelKey: 'common.back' }}
+          action={{
+            label: `${t('support.newCase')}`,
+            to: '/contact',
+            icon: <HelpCircle size={15} />
+          }}
+        />
 
         {/* Filter */}
         <div style={{ marginBottom: 18 }}>
@@ -199,7 +190,6 @@ export function SupportListPage() {
             })}
           </div>
         )}
-      </div>
       </PageContentMaxWidth>
     </div>
   );
