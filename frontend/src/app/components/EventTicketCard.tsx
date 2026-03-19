@@ -1,5 +1,6 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Shield, CheckCircle, ArrowRight, Zap, MessageCircle } from "lucide-react";
+import { MapPin, Shield, CheckCircle, Zap, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { UserAvatar } from "@/app/components/UserAvatar";
 import {
@@ -19,13 +20,13 @@ import {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getBuyPill(qty) {
+function getBuyPill(qty: number): string | null {
   if (qty <= 1) return null;
   if (qty === 2) return "Comprá 1 o 2";
   return `Comprá 1 a ${qty}`;
 }
 
-function fmtWithFee(priceNum) {
+function fmtWithFee(priceNum: number | undefined): string | null {
   if (!priceNum) return null;
   const total = Math.round(priceNum * 1.1);
   return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(total);
@@ -41,8 +42,16 @@ function SellerMeta({
   hasSellerReviews,
   sellerPositivePercentRounded,
   t,
+}: {
+  verified: boolean;
+  newSeller: boolean;
+  sellerTotalSales: number;
+  sellerTotalReviews: number;
+  hasSellerReviews: boolean;
+  sellerPositivePercentRounded: number | null;
+  t: (key: string, opts?: object) => string;
 }) {
-  const metaStyle = { fontSize: 12, color: HINT, lineHeight: 1.4 };
+  const metaStyle: CSSProperties = { fontSize: 12, color: HINT, lineHeight: 1.4 };
 
   const reputationLine = (() => {
     if (sellerTotalSales === 0 && sellerTotalReviews === 0)
@@ -81,7 +90,7 @@ function SellerMeta({
 // Add `display: flex; flex-direction: column;` to `.tk-card` in your global CSS
 // so Zone 2 (seller) grows and Zone 3 (CTA) stays anchored to the bottom.
 
-export function EventTicketCard({ ticket, eventSlug }) {
+export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug: string }) {
   const { t } = useTranslation();
   const {
     sector,
@@ -224,34 +233,40 @@ export function EventTicketCard({ ticket, eventSlug }) {
         </Link>
       </div>
 
-      {/* ── Zone 3: CTA + trust bar ── */}
+      {/* ── Zone 3: CTA button ── */}
       <div style={{ padding: "0 16px 14px" }}>
-        <Link
-          to={`/buy/${eventSlug}/${listingId}`}
-          style={{
+        <Link to={`/buy/${eventSlug}/${listingId}`} style={{ display: "block", textDecoration: "none" }}>
+          <span style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             width: "100%",
-            background: V,
-            color: "#fff",
+            background: "#6d28d9",
+            color: "#ffffff",
             borderRadius: 10,
             padding: "13px 16px",
             fontSize: 14,
             fontWeight: 700,
-            textDecoration: "none",
             letterSpacing: ".01em",
             boxShadow: "0 4px 18px rgba(109,40,217,0.32)",
-          }}
-        >
-          {seated ? <MapPin size={14} /> : <ArrowRight size={14} />}
-          {ctaLabel}
-        </Link>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 9 }}>
-          <span style={{ fontSize: 11, color: HINT }}>+ 10% cargo por servicio</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: GREEN, fontWeight: 600 }}>
-            <Shield size={10} style={{ color: GREEN }} /> Protegido
+            cursor: "pointer",
+            userSelect: "none",
+          }}>
+            {seated && <MapPin size={14} color="#ffffff" />}
+            {ctaLabel}
+            {" →"}
           </span>
-        </div>
+        </Link>
+      </div>
+
+      {/* ── Zone 4: trust bar — separated by border-top ── */}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        borderTop: `1px solid ${BORDER}`,
+        padding: "9px 16px",
+      }}>
+        <span style={{ fontSize: 11, color: HINT }}>+ 10% cargo por servicio</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: GREEN, fontWeight: 600 }}>
+          <Shield size={10} style={{ color: GREEN }} /> Protegido
+        </span>
       </div>
 
     </div>
