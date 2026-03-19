@@ -1169,3 +1169,17 @@ export interface ImportEventsResultResponse {
   failed: number;
   results: ImportEventResultItem[];
 }
+
+// === Admin Featured Events (PATCH /admin/featured-events/:eventId) ===
+
+/** Request body for PATCH /api/admin/featured-events/:eventId */
+export interface AdminSetFeaturedEventRequest {
+  /** Whether the event should appear in the landing hero. */
+  highlighted: boolean;
+}
+
+/** Response for PATCH /api/admin/featured-events/:eventId */
+export interface AdminSetFeaturedEventResponse {
+  eventId: string;
+  highlighted: boolean;
+}

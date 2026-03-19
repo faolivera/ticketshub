@@ -282,14 +282,15 @@ export function transactionStepNeedsAction(status: TransactionStatus, role: TxRo
 export function transactionCurrentStep(status: TransactionStatus, role: TxRole): number {
   if (role === 'buyer') {
     // Buyer: 4 steps (0=Pago, 1=Transferencia, 2=Fondos Protegidos, 3=Completado)
+    // Returning 4 (past the last index) makes all steps render as done (green checkmark).
     const map: Partial<Record<TransactionStatus, number>> = {
       PendingPayment: 0,
       PaymentPendingVerification: 0,
       PaymentReceived: 1,
       TicketTransferred: 1,
       DepositHold: 2,
-      TransferringFund: 3,
-      Completed: 3,
+      TransferringFund: 4,
+      Completed: 4,
       Disputed: 1,
       Refunded: 0,
       Cancelled: 0,

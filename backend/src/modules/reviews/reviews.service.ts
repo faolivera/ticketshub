@@ -183,7 +183,9 @@ export class ReviewsService {
 
     const userReview = reviews.find((r) => r.reviewerId === userId);
     const canReview =
-      transaction.status === TransactionStatus.Completed && !userReview;
+      (transaction.status === TransactionStatus.Completed ||
+        transaction.status === TransactionStatus.TransferringFund) &&
+      !userReview;
 
     return {
       buyerReview,

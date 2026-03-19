@@ -1079,3 +1079,21 @@ export interface AdminPostEventsRankingQueueRequest {
 export interface AdminPostEventsRankingQueueResponse {
   enqueued: number;
 }
+
+// ==================== Admin Featured Events ====================
+
+/**
+ * Request body for PATCH /api/admin/featured-events/:eventId
+ */
+export interface AdminSetFeaturedEventRequest {
+  /** Whether the event should appear in the landing hero (GET /api/events/highlights). */
+  highlighted: boolean;
+}
+
+/**
+ * Response for PATCH /api/admin/featured-events/:eventId
+ */
+export interface AdminSetFeaturedEventResponse {
+  eventId: string;
+  highlighted: boolean;
+}

@@ -850,3 +850,14 @@ export const AdminPostEventsRankingQueueRequestSchema = z.object({
 export const AdminPostEventsRankingQueueResponseSchema = z.object({
   enqueued: z.number(),
 });
+
+// ----- Featured events -----
+
+export const AdminSetFeaturedEventRequestSchema = z.object({
+  highlighted: z.boolean(),
+});
+
+export const AdminSetFeaturedEventResponseSchema = z.object({
+  eventId: z.string(),
+  highlighted: z.boolean(),
+});

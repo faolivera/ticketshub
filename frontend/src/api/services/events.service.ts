@@ -31,6 +31,15 @@ export const eventsService = {
   },
 
   /**
+   * Get highlighted/featured events for the landing hero.
+   * Backed by GET /events/highlights (server-side 24 h cache).
+   */
+  async getHighlightedEvents(): Promise<ListEventsPublicResponse> {
+    const response = await apiClient.get<ListEventsPublicResponse>('/events/highlights');
+    return response.data;
+  },
+
+  /**
    * Get event by ID
    */
   async getEvent(id: string): Promise<GetEventResponse> {

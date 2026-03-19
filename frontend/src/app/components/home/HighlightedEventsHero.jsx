@@ -67,10 +67,7 @@ export function HighlightedEventsHero() {
     let cancelled = false;
     async function fetchFeatured() {
       try {
-        const data = await eventsService.listEvents({
-          highlighted: true,
-          limit: 20,
-        });
+        const data = await eventsService.getHighlightedEvents();
         if (!cancelled && Array.isArray(data)) {
           setEvents(data.filter((e) => e.slug && (e.bannerUrls?.rectangle || e.bannerUrls?.square || e.images?.[0]?.src)));
           setIndex(0);

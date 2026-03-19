@@ -163,6 +163,9 @@ export const ALLOWED_BANNER_MIME_TYPES: EventBannerMimeType[] = [
   'image/webp',
 ];
 
+/** Cache key for the highlighted/featured events list (TTL: 24 h). */
+export const HIGHLIGHTS_CACHE_KEY = 'events:highlights';
+
 /**
  * Banner constraints
  */

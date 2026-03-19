@@ -289,45 +289,63 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               <span style={{ color: GREEN }}>{netFormatted}</span>
             </div>
           </div>
-          {reviewData?.canReview && !reviewData.sellerReview && (
-            <div className="mt-4 space-y-3 rounded-xl border p-4" style={{ borderColor: BORDER }}>
-              <p className="text-sm" style={{ color: MUTED }}>
-                {t('reviews.leaveReviewDesc')}
-              </p>
-              <div className="flex gap-2">
-                {(['positive', 'neutral', 'negative'] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => onRatingSelect(r)}
-                    className={`flex flex-1 flex-col items-center gap-1 rounded-lg border-2 p-2 text-xs ${getRatingColor(r, selectedRating === r)}`}
-                  >
-                    {getRatingIcon(r)}
-                    {t(`reviews.${r}`)}
-                  </button>
-                ))}
-              </div>
-              <textarea
-                value={reviewComment}
-                onChange={(e) => onReviewCommentChange(e.target.value)}
-                placeholder={t('reviews.commentPlaceholder')}
-                className="w-full rounded-lg border p-2 text-sm"
-                rows={2}
-                style={{ borderColor: BORDER }}
-              />
-              {reviewError && <p className="text-xs text-red-600">{reviewError}</p>}
-              <button
-                type="button"
-                onClick={onSubmitReview}
-                disabled={!selectedRating || isSubmittingReview}
-                className="w-full rounded-[10px] py-3 text-sm font-bold text-white disabled:opacity-50"
-                style={{ background: V }}
-              >
-                {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
-              </button>
-            </div>
-          )}
         </ActionHero>
+      )}
+
+      {(effectiveStatus === TransactionStatus.Completed || effectiveStatus === TransactionStatus.TransferringFund) &&
+        reviewData?.canReview && !reviewData.sellerReview && (
+        <div className="space-y-3 rounded-[14px] border p-5" style={{ borderColor: BORDER, background: SURFACE, ...S }}>
+          <p className="text-sm font-semibold text-gray-800">
+            {t('reviews.sellerExperiencePrompt', { name: transaction.buyerName })}
+          </p>
+          <div className="flex gap-2">
+            {(['positive', 'neutral', 'negative'] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => onRatingSelect(r)}
+                className={`flex flex-1 flex-col items-center gap-1 rounded-lg border-2 p-2 text-xs ${getRatingColor(r, selectedRating === r)}`}
+              >
+                {getRatingIcon(r)}
+                {t(`reviews.${r}`)}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={reviewComment}
+            onChange={(e) => onReviewCommentChange(e.target.value)}
+            placeholder={t('reviews.commentPlaceholder')}
+            className="w-full rounded-lg border p-2 text-sm"
+            rows={2}
+            style={{ borderColor: BORDER }}
+          />
+          {reviewError && <p className="text-xs text-red-600">{reviewError}</p>}
+          <button
+            type="button"
+            onClick={onSubmitReview}
+            disabled={!selectedRating || isSubmittingReview}
+            className="w-full rounded-[10px] py-3 text-sm font-bold text-white disabled:opacity-50"
+            style={{ background: V }}
+          >
+            {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
+          </button>
+        </div>
+      )}
+
+      {(effectiveStatus === TransactionStatus.Completed || effectiveStatus === TransactionStatus.TransferringFund) &&
+        reviewData?.sellerReview && reviewData.buyerReview && (
+        <div className="rounded-[14px] border p-5" style={{ borderColor: BORDER, background: SURFACE, ...S }}>
+          <p className="mb-3 text-sm font-semibold text-gray-800">
+            {t('reviews.otherPartyReview')}
+          </p>
+          <div className="flex items-center gap-2">
+            {getRatingIcon(reviewData.buyerReview.rating)}
+            <span className="text-sm font-semibold">{t(`reviews.${reviewData.buyerReview.rating}`)}</span>
+          </div>
+          {reviewData.buyerReview.comment && (
+            <p className="mt-2 text-sm" style={{ color: MUTED }}>{reviewData.buyerReview.comment}</p>
+          )}
+        </div>
       )}
 
       {effectiveStatus === TransactionStatus.Disputed && disputeId && (

@@ -745,7 +745,7 @@ export function MyTicket() {
                   </button>
                 )}
             </div>
-            {transaction.status === TransactionStatus.Completed && reviewData && !reviewData.canReview && (
+            {(transaction.status === TransactionStatus.Completed || transaction.status === TransactionStatus.TransferringFund) && reviewData && !reviewData.canReview && (
               <div className="rounded-[16px] border border-gray-200 bg-white p-6">
                 <div className="mb-4 flex items-center gap-2">
                   <Star className="h-5 w-5 text-violet-600" />

@@ -430,7 +430,7 @@ export class BffService {
           COALESCE(t."completedAt", t."cancelledAt", t."refundedAt", t."updatedAt") AS sort_at
         FROM transactions t
         WHERE t."buyerId" = ${userId}
-          AND t.status::text IN ('Completed','Cancelled','Refunded'))
+          AND t.status::text IN ('Completed','TransferringFund','Cancelled','Refunded'))
         UNION ALL
         (SELECT o.id, 'offer',
           COALESCE(o."rejectedAt", o."cancelledAt", o."acceptedAt", o."updatedAt") AS sort_at
@@ -449,7 +449,7 @@ export class BffService {
           COALESCE(t."completedAt", t."cancelledAt", t."refundedAt", t."updatedAt") AS sort_at
         FROM transactions t
         WHERE t."sellerId" = ${userId}
-          AND t.status::text IN ('Completed','Cancelled','Refunded'))
+          AND t.status::text IN ('Completed','TransferringFund','Cancelled','Refunded'))
         UNION ALL
         (SELECT o.id, 'offer',
           COALESCE(o."rejectedAt", o."cancelledAt", o."acceptedAt", o."updatedAt") AS sort_at
@@ -569,7 +569,10 @@ export class BffService {
     }
 
     let reviews: TransactionReviewsData | null = null;
-    if (transaction.status === TransactionStatus.Completed) {
+    if (
+      transaction.status === TransactionStatus.Completed ||
+      transaction.status === TransactionStatus.TransferringFund
+    ) {
       try {
         reviews = await this.reviewsService.getTransactionReviews(
           ctx,

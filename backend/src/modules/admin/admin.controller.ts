@@ -73,6 +73,8 @@ import type {
   AdminPatchEventsRankingConfigRequest,
   AdminPostEventsRankingQueueRequest,
   AdminPostEventsRankingQueueResponse,
+  AdminSetFeaturedEventRequest,
+  AdminSetFeaturedEventResponse,
 } from './admin.api';
 import type { EventWithDatesResponse } from '../events/events.api';
 import {
@@ -106,7 +108,11 @@ import {
   AdminPatchEventsRankingConfigRequestSchema,
   AdminPostEventsRankingQueueRequestSchema,
   AdminPostEventsRankingQueueResponseSchema,
+  AdminSetFeaturedEventRequestSchema,
+  AdminSetFeaturedEventResponseSchema,
 } from './schemas/api.schemas';
+import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
+import { HIGHLIGHTS_CACHE_KEY } from '../events/events.domain';
 import { EventsService } from '../events/events.service';
 import { EventScoringService } from '../event-scoring/event-scoring.service';
 import { SeatingType } from '../tickets/tickets.domain';
@@ -132,6 +138,8 @@ export class AdminController {
     private readonly eventsService: EventsService,
     @Inject(EventScoringService)
     private readonly eventScoringService: EventScoringService,
+    @Inject(CACHE_SERVICE)
+    private readonly cache: ICacheService,
   ) {}
 
   /**
@@ -749,6 +757,40 @@ export class AdminController {
       body,
     );
     return { success: true, data };
+  }
+
+  // ==================== Featured Events (Admin) ====================
+
+  /**
+   * Toggle the featured/highlighted status of an event.
+   * Invalidates the GET /api/events/highlights cache so the landing hero reflects the change immediately.
+   */
+  @Patch('featured-events/:eventId')
+  @ValidateResponse(AdminSetFeaturedEventResponseSchema)
+  async setFeaturedEvent(
+    @Context() ctx: Ctx,
+    @Param('eventId') eventId: string,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Body() body: AdminSetFeaturedEventRequest,
+  ): Promise<ApiResponse<AdminSetFeaturedEventResponse>> {
+    const parsed = AdminSetFeaturedEventRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException('highlighted must be a boolean');
+    }
+
+    await this.adminService.updateEventWithDates(
+      ctx,
+      eventId,
+      { highlight: parsed.data.highlighted },
+      user.id,
+    );
+
+    this.cache.invalidate(HIGHLIGHTS_CACHE_KEY);
+
+    return {
+      success: true,
+      data: { eventId, highlighted: parsed.data.highlighted },
+    };
   }
 
   // ==================== Event Banners (Admin) ====================

@@ -408,7 +408,7 @@ export class EventsRepository implements IEventsRepository {
       status: 'approved' as const,
       dates: {
         some: {
-          status: 'approved',
+          status: 'approved' as const,
           date: { gte: new Date() },
         },
       },

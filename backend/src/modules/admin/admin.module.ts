@@ -11,6 +11,7 @@ import { IdentityVerificationModule } from '../identity-verification/identity-ve
 import { SupportModule } from '../support/support.module';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 import { EventScoringModule } from '../event-scoring/event-scoring.module';
+import { CacheModule } from '../../common/cache';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EventScoringModule } from '../event-scoring/event-scoring.module';
     EventsModule,
     IdentityVerificationModule,
     SupportModule,
+    CacheModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

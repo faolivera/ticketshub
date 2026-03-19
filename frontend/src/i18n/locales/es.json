@@ -1619,6 +1619,8 @@
   "reviews": {
     "leaveReview": "Dejar una Reseña",
     "leaveReviewDesc": "Comparte tu experiencia con esta transacción",
+    "buyerExperiencePrompt": "¿Cómo fue tu experiencia comprando a {{name}}?",
+    "sellerExperiencePrompt": "¿Cómo fue tu experiencia vendiendo a {{name}}?",
     "positive": "Positiva",
     "neutral": "Neutral",
     "negative": "Negativa",

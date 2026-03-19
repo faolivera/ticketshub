@@ -53,6 +53,8 @@ import type {
   AdminGetEventsRankingConfigResponse,
   AdminPatchEventsRankingConfigRequest,
   AdminPostEventsRankingQueueResponse,
+  AdminSetFeaturedEventRequest,
+  AdminSetFeaturedEventResponse,
 } from '../types/admin';
 
 /**
@@ -135,6 +137,21 @@ export const adminService = {
   ): Promise<AdminUpdateEventResponse> {
     const response = await apiClient.patch<AdminUpdateEventResponse>(
       `/admin/events/${eventId}`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Toggle the featured/highlighted status of an event.
+   * Invalidates the GET /api/events/highlights cache on the server.
+   */
+  async setFeaturedEvent(
+    eventId: string,
+    data: AdminSetFeaturedEventRequest
+  ): Promise<AdminSetFeaturedEventResponse> {
+    const response = await apiClient.patch<AdminSetFeaturedEventResponse>(
+      `/admin/featured-events/${eventId}`,
       data
     );
     return response.data;

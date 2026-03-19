@@ -169,8 +169,8 @@ function CompletedCard({ transaction: tx, role, fromUrl }: Omit<TransactionCardP
           {url ? (
             <img src={url} alt={tx.eventName}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-                filter: tx.status !== 'Completed' ? 'grayscale(0.4)' : 'none',
-                opacity: tx.status !== 'Completed' ? 0.75 : 1,
+                filter: (tx.status === 'Completed' || (tx.status === 'TransferringFund' && role === 'buyer')) ? 'none' : 'grayscale(0.4)',
+                opacity: (tx.status === 'Completed' || (tx.status === 'TransferringFund' && role === 'buyer')) ? 1 : 0.75,
               }} />
           ) : (
             <Ticket size={28} style={{ color: V, opacity: 0.4 }} />

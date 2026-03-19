@@ -13,6 +13,7 @@ import {
   Inject,
   BadRequestException,
 } from '@nestjs/common';
+import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import type { Multer } from 'multer';
@@ -51,16 +52,21 @@ import {
   EventCategory,
   BANNER_CONSTRAINTS,
   ALLOWED_BANNER_MIME_TYPES,
+  HIGHLIGHTS_CACHE_KEY,
   type EventBannerType,
   type EventBannerMimeType,
 } from './events.domain';
 import type { EventSection } from './events.domain';
+
+const HIGHLIGHTS_TTL_SECONDS = 24 * 60 * 60;
 
 @Controller('api/events')
 export class EventsController {
   constructor(
     @Inject(EventsService)
     private readonly eventsService: EventsService,
+    @Inject(CACHE_SERVICE)
+    private readonly cache: ICacheService,
   ) {}
 
   /**
@@ -80,6 +86,32 @@ export class EventsController {
       body,
     );
     return { success: true, data: event };
+  }
+
+  /**
+   * Get highlighted/featured events for the landing hero.
+   * Equivalent to GET /events?highlighted=true&limit=20 but cached for 24 hours.
+   * Cache is invalidated when an admin updates featured events via PATCH /admin/featured-events/:eventId.
+   */
+  @Get('highlights')
+  async getHighlightedEvents(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<ListEventsPublicResponse>> {
+    const data = await this.cache.getOrCalculate(
+      HIGHLIGHTS_CACHE_KEY,
+      HIGHLIGHTS_TTL_SECONDS,
+      async () => {
+        const events = await this.eventsService.listEvents(
+          ctx,
+          { status: 'approved', highlighted: true, limit: 20 },
+          false,
+        );
+        return events.map((e) =>
+          this.eventsService.toPublicEventItem(e, { includeStatus: false }),
+        );
+      },
+    );
+    return { success: true, data };
   }
 
   /**

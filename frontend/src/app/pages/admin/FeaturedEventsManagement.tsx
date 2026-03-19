@@ -76,7 +76,7 @@ export function FeaturedEventsManagement() {
   const handleSetHighlight = async (eventId: string, value: boolean) => {
     try {
       setActionLoading(eventId);
-      await adminService.updateEvent(eventId, { highlight: value });
+      await adminService.setFeaturedEvent(eventId, { highlighted: value });
       setEvents((prev) =>
         prev.map((e) => (e.id === eventId ? { ...e, highlight: value } : e))
       );

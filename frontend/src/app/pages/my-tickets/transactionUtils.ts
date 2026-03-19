@@ -29,8 +29,11 @@ import {
 } from '@/lib/design-tokens';
 
 // ─── Terminal statuses ────────────────────────────────────────────────────────
+// TransferringFund is considered terminal from the user's perspective:
+// the buyer has received their tickets and the platform is settling the payout.
 export const TERMINAL_STATUSES: TransactionStatus[] = [
   TransactionStatus.Completed,
+  TransactionStatus.TransferringFund,
   TransactionStatus.Cancelled,
   TransactionStatus.Refunded,
 ];
@@ -53,7 +56,7 @@ export function getTransactionStatusInfo(
     case 'DepositHold':
       return { label: t('boughtTickets.depositHold', { defaultValue: 'Fondos protegidos' }), color: VLIGHT, textColor: V, border: VL_BORDER };
     case 'TransferringFund':
-      return { label: t('boughtTickets.transferringFund', { defaultValue: 'Liberando fondos' }), color: VLIGHT, textColor: V, border: VL_BORDER };
+      return { label: t('boughtTickets.completed'), color: GLIGHT, textColor: GREEN, border: GBORD };
     case 'Completed':
       return { label: t('boughtTickets.completed'), color: GLIGHT, textColor: GREEN, border: GBORD };
     case 'Disputed':
