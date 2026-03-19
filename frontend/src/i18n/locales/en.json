@@ -149,6 +149,8 @@
     "buyTicket": "Buy Ticket",
     "errorLoading": "Failed to load event details. Please try again.",
     "noTicketsAvailable": "No tickets available for this event",
+    "sectorRowCount_one": "{{count}} option",
+    "sectorRowCount_other": "{{count}} options",
     "checkBackLater": "Check back later or create a listing if you have tickets to sell",
     "noReviewsYet": "No reviews yet",
     "newSeller": "New seller",

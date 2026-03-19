@@ -149,6 +149,8 @@
     "buyTicket": "Comprar Entrada",
     "errorLoading": "Error al cargar los detalles del evento. Inténtalo de nuevo.",
     "noTicketsAvailable": "No hay entradas disponibles para este evento",
+    "sectorRowCount_one": "{{count}} opción",
+    "sectorRowCount_other": "{{count}} opciones",
     "checkBackLater": "Vuelve más tarde o crea un anuncio si tienes entradas para vender",
     "noReviewsYet": "Aún no hay reseñas",
     "newSeller": "Vendedor nuevo",

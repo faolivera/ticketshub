@@ -240,6 +240,20 @@ export default function EventDetail() {
     return Math.min(...list.map((t) => t.priceNum));
   };
 
+  const ticketsGroupedBySector = useMemo(() => {
+    const sectorOrder =
+      sector === "Todos" ? sectorsList.filter((s) => s !== "Todos") : [sector];
+    const map = new Map();
+    for (const t of sorted) {
+      const key = t.sector || "Entrada";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(t);
+    }
+    return sectorOrder
+      .filter((s) => map.has(s) && map.get(s).length)
+      .map((s) => ({ sectorKey: s, tickets: map.get(s) }));
+  }, [sorted, sector, sectorsList]);
+
   const scrollToTickets = () => {
     ticketsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -271,10 +285,30 @@ export default function EventDetail() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Ticket grid */
-        .tk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-        @media(max-width:960px){ .tk-grid{ grid-template-columns:repeat(2,1fr)!important; } }
-        @media(max-width:580px){ .tk-grid{ grid-template-columns:1fr!important; } }
+        /* Ticket grid (desktop / tablet only) */
+        .tk-tickets-desktop { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        @media(max-width:960px){ .tk-tickets-desktop { grid-template-columns: repeat(2,1fr)!important; } }
+        @media(max-width:580px){ .tk-tickets-desktop { display: none !important; } }
+
+        /* Mobile: one horizontal scroller per sector */
+        .tk-tickets-mobile { display: none; }
+        @media(max-width:580px){
+          .tk-tickets-mobile { display: flex; flex-direction: column; gap: 22px; }
+        }
+        .tk-sector-mobile-title { font-family:'Plus Jakarta Sans',sans-serif; font-size: 15px; font-weight: 700; color: ${DARK}; letter-spacing: -0.02em; margin-bottom: 11px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; }
+        .tk-sector-mobile-count { font-size: 12px; font-weight: 600; color: ${MUTED}; }
+        .tk-hscroll {
+          display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px;
+          margin-left: -24px; margin-right: -24px; padding-left: 24px; padding-right: 24px;
+          scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+        .tk-hscroll::-webkit-scrollbar { height: 4px; }
+        .tk-hscroll-item {
+          flex: 0 0 min(292px, calc(100vw - 52px));
+          scroll-snap-align: start;
+          min-width: 0;
+        }
 
         /* Sector pills */
         .sec-pill { padding: 6px 14px; border-radius: 100px; border: 1.5px solid ${BORD2}; font-size: 12.5px; font-weight: 600; cursor: pointer; background: transparent; color: ${MUTED}; transition: all 0.14s; white-space: nowrap; font-family:'Plus Jakarta Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; }
@@ -515,11 +549,32 @@ export default function EventDetail() {
               <Link to="/sell-ticket" style={{ display: "inline-block", marginTop: 12, color: V, fontWeight: 600 }}>{t("boughtTickets.startSelling")}</Link>
             </div>
           ) : (
-            <div className="tk-grid">
-              {sorted.map((t) => (
-                <EventTicketCard key={t.id} ticket={t} eventSlug={eventSlug} />
-              ))}
-            </div>
+            <>
+              <div className="tk-tickets-desktop">
+                {sorted.map((t) => (
+                  <EventTicketCard key={t.id} ticket={t} eventSlug={eventSlug} />
+                ))}
+              </div>
+              <div className="tk-tickets-mobile">
+                {ticketsGroupedBySector.map(({ sectorKey, tickets }) => (
+                  <section key={sectorKey} aria-label={sectorKey}>
+                    <div className="tk-sector-mobile-title">
+                      <span>{sectorKey}</span>
+                      <span className="tk-sector-mobile-count">
+                        {t("eventTickets.sectorRowCount", { count: tickets.length })}
+                      </span>
+                    </div>
+                    <div className="tk-hscroll" role="list">
+                      {tickets.map((tkt) => (
+                        <div key={tkt.id} className="tk-hscroll-item" role="listitem">
+                          <EventTicketCard ticket={tkt} eventSlug={eventSlug} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
