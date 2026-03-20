@@ -188,6 +188,13 @@ export class EventsService {
   }
 
   /**
+   * Get event date by ID
+   */
+  async findEventDateById(ctx: Ctx, id: string): Promise<EventDate | undefined> {
+    return this.eventsRepository.findEventDateById(ctx, id);
+  }
+
+  /**
    * Get event by slug with dates and sections (for public event page URL)
    */
   async getEventBySlug(
