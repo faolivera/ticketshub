@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Switch } from '@/app/components/ui/switch';
 import { Label } from '@/app/components/ui/label';
 import { CurrencyAmountInput } from '@/app/components/ui/CurrencyAmountInput';
-import { formatCurrencyFromUnits } from '@/lib/format-currency';
+import { formatCurrencyFromUnitsDisplay } from '@/lib/format-currency';
 import type { WizardFormState } from '../types';
 import {
   V,
@@ -28,11 +28,6 @@ interface StepPriceAndConditionsProps {
   sellerPlatformFeePercent: number;
   effectiveFeePercent?: number;
   promotionName?: string;
-}
-
-/** Strip trailing ,00 or .00 from formatted currency */
-function fmtUnits(amount: number, currency: string) {
-  return formatCurrencyFromUnits(amount, currency).replace(/[,.]00$/, '');
 }
 
 export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
@@ -100,10 +95,10 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginBottom: 4 }}>
             <span style={{ color: MUTED, ...S }}>
               {ticketCount > 1
-                ? `${fmtUnits(form.pricePerTicket, currency)} × ${ticketCount} entradas`
+                ? `${formatCurrencyFromUnitsDisplay(form.pricePerTicket, currency)} × ${ticketCount} entradas`
                 : t('sellListingWizard.pricePerTicket')}
             </span>
-            <span style={{ fontWeight: 600, color: DARK, ...S }}>{fmtUnits(totalGross, currency)}</span>
+            <span style={{ fontWeight: 600, color: DARK, ...S }}>{formatCurrencyFromUnitsDisplay(totalGross, currency)}</span>
           </div>
 
           {/* Platform fee — crossed out if promo applied */}
@@ -114,14 +109,14 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
                   {t('sellListingWizard.platformFee')} ({sellerPlatformFeePercent}%)
                 </span>
                 <span style={{ color: HINT, textDecoration: 'line-through', ...S }}>
-                  −{fmtUnits(Math.round((totalGross * sellerPlatformFeePercent) / 100), currency)}
+                  −{formatCurrencyFromUnitsDisplay(Math.round((totalGross * sellerPlatformFeePercent) / 100), currency)}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginBottom: 8 }}>
                 <span style={{ color: GREEN, ...S }}>
                   {t('sellListingWizard.platformFee')} (0%){promotionName ? ` · ${promotionName}` : ''}
                 </span>
-                <span style={{ color: GREEN, ...S }}>−{fmtUnits(0, currency)}</span>
+                <span style={{ color: GREEN, ...S }}>−{formatCurrencyFromUnitsDisplay(0, currency)}</span>
               </div>
             </>
           ) : (
@@ -129,7 +124,7 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
               <span style={{ color: MUTED, ...S }}>
                 {t('sellListingWizard.platformFee')} ({feePercent}%)
               </span>
-              <span style={{ color: MUTED, ...S }}>−{fmtUnits(feeAmount, currency)}</span>
+              <span style={{ color: MUTED, ...S }}>−{formatCurrencyFromUnitsDisplay(feeAmount, currency)}</span>
             </div>
           )}
 
@@ -139,7 +134,7 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
               {t('sellTicket.sellerReceives')}
             </span>
             <span style={{ fontSize: 16, fontWeight: 800, color: hasPromo ? GREEN : V, ...S }}>
-              {fmtUnits(netAmount, currency)}
+              {formatCurrencyFromUnitsDisplay(netAmount, currency)}
             </span>
           </div>
         </div>

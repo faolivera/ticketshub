@@ -12,7 +12,7 @@ import { ticketsService } from '@/api/services/tickets.service';
 import { bffService } from '@/api/services/bff.service';
 import { promotionsService } from '@/api/services/promotions.service';
 import { formatDateTime } from '@/lib/format-date';
-import { formatCurrencyFromUnits } from '@/lib/format-currency';
+import { formatCurrencyFromUnitsDisplay } from '@/lib/format-currency';
 import {
   WizardProgress, WizardFooter,
   StepChooseEvent, StepChooseDate, StepZoneAndSeats,
@@ -72,10 +72,6 @@ function loadDraft(): { form: WizardFormState; step: WizardStepIndex; eventId: s
 
 function clearDraft() {
   try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
-}
-
-function fmt(amount: number, currency: string) {
-  return formatCurrencyFromUnits(amount, currency).replace(/[,.]00$/, '');
 }
 
 // ─── Context sidebar ──────────────────────────────────────────────────────────
@@ -162,11 +158,11 @@ function ContextPanel({
               <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 8, marginTop: 2 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: MUTED, marginBottom: 4, ...S }}>
                   <span>{t('sellListingWizard.platformFee')} ({feePercent}%)</span>
-                  <span>−{fmt(form.pricePerTicket * ticketCount * (feePercent / 100), currency)}</span>
+                  <span>−{formatCurrencyFromUnitsDisplay(form.pricePerTicket * ticketCount * (feePercent / 100), currency)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: DARK, ...S }}>
                   <span>{t('sellTicket.sellerReceives')}</span>
-                  <span style={{ color: V }}>{fmt(net, currency)}</span>
+                  <span style={{ color: V }}>{formatCurrencyFromUnitsDisplay(net, currency)}</span>
                 </div>
               </div>
             )}

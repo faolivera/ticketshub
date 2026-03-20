@@ -8,6 +8,7 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import type { TicketListingWithEvent } from '../../api/types';
 import { TicketUnitStatus } from '../../api/types';
 import { formatDateTime } from '@/lib/format-date';
+import { formatCurrencyFromUnitsDisplay } from '@/lib/format-currency';
 import { useIsMobile } from '../components/ui/use-mobile';
 import { Switch } from '@/app/components/ui/switch';
 import { Label } from '@/app/components/ui/label';
@@ -30,11 +31,6 @@ import {
 } from '@/lib/design-tokens';
 
 const DS = { ...E, fontWeight: 400 };
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function fmt(amount: number, currency: string) {
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
-}
 
 export function EditListing() {
   const { t } = useTranslation();

@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Clock } from 'lucide-react';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { formatDate } from '@/lib/format-date';
-import { formatCurrency } from '@/lib/format-currency';
+import { formatCurrencyDisplay } from '@/lib/format-currency';
 import { getTransactionStatusInfo } from './transactionUtils';
 import type { TransactionWithDetails } from '@/api/types';
 import { Ticket } from 'lucide-react';
@@ -32,10 +32,6 @@ import {
   S,
 } from '@/lib/design-tokens';
 
-function fmt(amount: number, currency: string) {
-  return formatCurrency(amount, currency).replace(/[,.]00$/, '');
-}
-
 interface TransactionActionRequiredCardProps {
   tx: TransactionWithDetails;
   variant: 'buyer' | 'seller';
@@ -51,7 +47,7 @@ export function TransactionActionRequiredCard({
   const statusInfo = getTransactionStatusInfo(tx.status, t, isSeller);
 
   const price = tx.pricePerTicket
-    ? fmt(tx.pricePerTicket.amount, tx.pricePerTicket.currency)
+    ? formatCurrencyDisplay(tx.pricePerTicket.amount, tx.pricePerTicket.currency)
     : null;
 
   // Counterparty name — field names depend on your TransactionWithDetails type.

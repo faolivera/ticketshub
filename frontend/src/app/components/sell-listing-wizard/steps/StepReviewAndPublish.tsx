@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/lib/format-date';
-import { formatCurrencyFromUnits } from '@/lib/format-currency';
+import { formatCurrencyFromUnitsDisplay } from '@/lib/format-currency';
 import type { PublicListEventItem, EventDate, EventSection } from '@/api/types';
 import type { CheckSellerPromotionCodeResponse } from '@/api/types/promotions';
 import type { WizardFormState } from '../types';
@@ -26,11 +26,6 @@ import {
   S,
 } from '@/lib/design-tokens';
 import { stepHeadingStyle } from '../wizardTokens';
-
-/** Strip trailing ,00 / .00 from formatted currency */
-function fmt(amount: number, currency: string) {
-  return formatCurrencyFromUnits(amount, currency).replace(/[,.]00$/, '');
-}
 
 interface StepReviewAndPublishProps {
   event: PublicListEventItem;
@@ -131,7 +126,7 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
           content={
             <>
               <p style={{ fontWeight: 700, color: DARK, fontSize: 14, ...S }}>
-                {fmt(form.pricePerTicket, currency)} {t('sellTicket.pricePerTicket').toLowerCase()}
+                {formatCurrencyFromUnitsDisplay(form.pricePerTicket, currency)} {t('sellTicket.pricePerTicket').toLowerCase()}
               </p>
               {form.bestOfferEnabled && (
                 <p style={{ fontSize: 13, color: MUTED, marginTop: 2, ...S }}>{t('sellListingWizard.openToOffers')}</p>
@@ -212,7 +207,7 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
             <div style={{ minWidth: 0 }}>
               <span style={{ fontWeight: 700, color: DARK, fontSize: 13.5, ...S }}>{sectionName}</span>
               <span style={{ color: MUTED, fontSize: 13, ...S }}>
-                {' · '}{fmt(form.pricePerTicket, currency)} × {ticketCount}{' '}
+                {' · '}{formatCurrencyFromUnitsDisplay(form.pricePerTicket, currency)} × {ticketCount}{' '}
                 {ticketCount === 1 ? t('sellTicket.ticket') : t('sellTicket.tickets')}
               </span>
               {form.seatingType === 'numbered' && validNumberedSeats.length > 0 && (
@@ -222,7 +217,7 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
               )}
             </div>
             <span style={{ fontWeight: 600, color: DARK, fontSize: 13.5, flexShrink: 0, ...S }}>
-              {fmt(totalCharged, currency)}
+              {formatCurrencyFromUnitsDisplay(totalCharged, currency)}
             </span>
           </div>
 
@@ -234,14 +229,14 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
                   {t('sellListingWizard.platformFee')} ({sellerPlatformFeePercent}%)
                 </span>
                 <span style={{ fontSize: 13, color: HINT, textDecoration: 'line-through', ...S }}>
-                  −{fmt((totalCharged * sellerPlatformFeePercent) / 100, currency)}
+                  −{formatCurrencyFromUnitsDisplay((totalCharged * sellerPlatformFeePercent) / 100, currency)}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 13, color: MUTED, ...S }}>
                   {t('sellListingWizard.platformFee')} (0%){promotionLabel ? ` · ${promotionLabel}` : ''}
                 </span>
-                <span style={{ fontSize: 13, color: MUTED, ...S }}>−{fmt(0, currency)}</span>
+                <span style={{ fontSize: 13, color: MUTED, ...S }}>−{formatCurrencyFromUnitsDisplay(0, currency)}</span>
               </div>
             </>
           ) : (
@@ -250,14 +245,14 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
                 {t('sellListingWizard.platformFee')} ({feePercent}%)
                 {promotionName ? ` · ${promotionName}` : ''}
               </span>
-              <span style={{ fontSize: 13, color: MUTED, ...S }}>−{fmt(platformCommission, currency)}</span>
+              <span style={{ fontSize: 13, color: MUTED, ...S }}>−{formatCurrencyFromUnitsDisplay(platformCommission, currency)}</span>
             </div>
           )}
 
           {/* Net total */}
           <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: `1px solid ${BORDER}` }}>
             <span style={{ fontSize: 15, fontWeight: 700, color: DARK, ...S }}>{t('sellTicket.sellerReceives')}</span>
-            <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{fmt(sellerReceives, currency)}</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: V, ...S }}>{formatCurrencyFromUnitsDisplay(sellerReceives, currency)}</span>
           </div>
         </div>
       </div>

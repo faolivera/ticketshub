@@ -6,7 +6,7 @@ import { ticketsService } from '@/api/services/tickets.service';
 import { useUser }        from '@/app/contexts/UserContext';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert }     from '@/app/components/ErrorMessage';
-import { formatCurrency } from '@/lib/format-currency';
+import { formatCurrencyDisplay } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import type { TransactionWithDetails, OfferWithReceivedContext } from '@/api/types';
 import type { ActivityHistoryItem } from '@/api/types/bff';
@@ -30,11 +30,6 @@ import {
   S,
 } from '@/lib/design-tokens';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function fmt(amount: number, currency: string) {
-  return formatCurrency(amount, currency).replace(/[,.]00$/, '');
-}
-
 function Thumb({ url, name, size }: { url?: string | null; name: string; size: number }) {
   return (
     <div style={{
@@ -57,7 +52,7 @@ export function CompletedSaleRow({ tx, t }: {
 }) {
   const [hov, setHov]   = useState(false);
   const status          = getTransactionStatusInfo(tx.status, t, true);
-  const price           = tx.pricePerTicket ? fmt(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
+  const price           = tx.pricePerTicket ? formatCurrencyDisplay(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
   const isCompleted     = tx.status === 'Completed';
 
   return (
@@ -103,8 +98,8 @@ export function ClosedOfferRow({ offer, t }: {
   const [hov, setHov] = useState(false);
   const ctx           = offer.receivedContext;
   const statusInfo    = getOfferStatusInfo(offer.status, t);
-  const offered       = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
-  const listing       = fmt(ctx.listingPrice.amount, ctx.listingPrice.currency);
+  const offered       = formatCurrencyDisplay(offer.offeredPrice.amount, offer.offeredPrice.currency);
+  const listing       = formatCurrencyDisplay(ctx.listingPrice.amount, ctx.listingPrice.currency);
   const isAccepted    = offer.status === 'accepted' || offer.status === 'converted';
 
   const ticketLabel = offer.tickets.type === 'numbered'

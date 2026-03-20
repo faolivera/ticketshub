@@ -35,6 +35,22 @@ export function formatCurrencyFromUnits(amount: number, currency: string): strin
 }
 
 /**
+ * Like formatCurrency but strips trailing ".00" or ",00" for cleaner display.
+ * Use for amounts stored in cents (e.g. from the API).
+ */
+export function formatCurrencyDisplay(amountInCents: number, currency: string): string {
+  return formatCurrency(amountInCents, currency).replace(/[,.]00$/, '');
+}
+
+/**
+ * Like formatCurrencyFromUnits but strips trailing ".00" or ",00" for cleaner display.
+ * Use for amounts already in decimal units (e.g. price * quantity).
+ */
+export function formatCurrencyFromUnitsDisplay(amount: number, currency: string): string {
+  return formatCurrencyFromUnits(amount, currency).replace(/[,.]00$/, '');
+}
+
+/**
  * Locale for number formatting: Spanish uses "." thousands and "," decimal.
  */
 function getNumberLocale(): string {

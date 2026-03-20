@@ -12,7 +12,7 @@ import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert }     from '@/app/components/ErrorMessage';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { SellerUnverifiedModalTrigger } from '@/app/components/SellerUnverifiedModalTrigger';
-import { formatCurrency } from '@/lib/format-currency';
+import { formatCurrencyDisplay } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import type {
   TransactionWithDetails, TicketListingWithEvent, OfferWithReceivedContext,
@@ -44,11 +44,6 @@ import {
 import { TransactionActionRequiredCard } from '@/app/pages/my-tickets/TransactionActionRequiredCard';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { PageHeader } from '../../components/PageHeader';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function fmt(amount: number, currency: string) {
-  return formatCurrency(amount, currency).replace(/[,.]00$/, '');
-}
 
 // ─── SubLabel — section title inside a panel ──────────────────────────────────
 function SubLabel({ icon, label, color = HINT, count }: {
@@ -133,8 +128,8 @@ function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing, t }: {
 }) {
   const isMobile = useIsMobile();
   const ctx      = offer.receivedContext;
-  const offered  = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
-  const listing  = fmt(ctx.listingPrice.amount, ctx.listingPrice.currency);
+  const offered  = formatCurrencyDisplay(offer.offeredPrice.amount, offer.offeredPrice.currency);
+  const listing  = formatCurrencyDisplay(ctx.listingPrice.amount, ctx.listingPrice.currency);
   const discount = ctx.listingPrice.amount > 0
     ? Math.round((1 - offer.offeredPrice.amount / ctx.listingPrice.amount) * 100)
     : 0;
@@ -252,7 +247,7 @@ function SaleWaitingRow({ tx, t }: {
   const [hov, setHov] = useState(false);
   const waiting = getWaitingForLabel(tx.requiredActor, t);
   const status  = getTransactionStatusInfo(tx.status, t, true);
-  const price   = tx.pricePerTicket ? fmt(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
+  const price   = tx.pricePerTicket ? formatCurrencyDisplay(tx.pricePerTicket.amount, tx.pricePerTicket.currency) : null;
 
   return (
     <Link to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
@@ -293,7 +288,7 @@ function ListingRow({ listing, copiedListingId, onCopyLink, pendingOfferCount = 
 }) {
   const [hov, setHov] = useState(false);
   const isCopied  = copiedListingId === listing.id;
-  const price     = fmt(listing.pricePerTicket.amount, listing.pricePerTicket.currency);
+  const price     = formatCurrencyDisplay(listing.pricePerTicket.amount, listing.pricePerTicket.currency);
   const available = listing.ticketUnits.filter(u => u.status === TicketUnitStatus.Available).length;
   const sector    = listing.sectionName || listing.type || t('boughtTickets.generalAdmission', { defaultValue: 'General' });
 
@@ -726,7 +721,7 @@ export function SellerDashboardPage() {
                 {pastListings.map(l => {
                   const url    = l.bannerUrls?.rectangle ?? l.bannerUrls?.square;
                   const sector = l.sectionName || l.type || 'General';
-                  const price  = fmt(l.pricePerTicket.amount, l.pricePerTicket.currency);
+                  const price  = formatCurrencyDisplay(l.pricePerTicket.amount, l.pricePerTicket.currency);
                   return (
                     <div key={l.id} style={{ background: BG, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                       <div style={{ height: 64, background: VLIGHT, position: 'relative', overflow: 'hidden' }}>

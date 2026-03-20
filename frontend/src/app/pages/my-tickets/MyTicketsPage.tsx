@@ -9,7 +9,7 @@ import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 import { ErrorAlert }     from '@/app/components/ErrorMessage';
 import { PageContentMaxWidth } from '@/app/components/PageContentMaxWidth';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
-import { formatCurrency } from '@/lib/format-currency';
+import { formatCurrencyDisplay } from '@/lib/format-currency';
 import { formatDate }     from '@/lib/format-date';
 import type { TransactionWithDetails, OfferWithListingSummary } from '@/api/types';
 import type { ActivityHistoryItem } from '@/api/types/bff';
@@ -36,11 +36,6 @@ import {
 } from '@/lib/design-tokens';
 import { TransactionActionRequiredCard } from './TransactionActionRequiredCard';
 import { PageHeader } from '../../components/PageHeader';
-
-// ─── Helpers (mirrors SellerDashboardPage) ────────────────────────────────────
-function fmt(amount: number, currency: string) {
-  return formatCurrency(amount, currency).replace(/[,.]00$/, '');
-}
 
 // ─── Thumb (mirrors SellerDashboardPage) ──────────────────────────────────────
 function Thumb({ url, name, size, square }: { url?: string | null; name: string; size: number; square?: boolean }) {
@@ -86,9 +81,9 @@ function AcceptedOfferBanner({ offer, highlighted, t, thumbSize, isMobile }: {
 }) {
   const ref          = useRef<HTMLDivElement>(null);
   const summary      = offer.listingSummary;
-  const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
+  const offeredPrice = formatCurrencyDisplay(offer.offeredPrice.amount, offer.offeredPrice.currency);
   const listingPrice = (summary as any).listingPrice
-    ? fmt((summary as any).listingPrice.amount, (summary as any).listingPrice.currency)
+    ? formatCurrencyDisplay((summary as any).listingPrice.amount, (summary as any).listingPrice.currency)
     : null;
 
   const ticketLabel = offer.tickets.type === 'numbered'
@@ -233,7 +228,7 @@ function PendingOfferRow({ offer, highlighted, t }: {
 }) {
   const divRef       = useRef<HTMLDivElement>(null);
   const summary      = offer.listingSummary;
-  const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
+  const offeredPrice = formatCurrencyDisplay(offer.offeredPrice.amount, offer.offeredPrice.currency);
 
   useEffect(() => {
     if (highlighted) divRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -306,7 +301,7 @@ function HistoryTxRow({ tx, t }: { tx: TransactionWithDetails; t: (k: string, o?
 
 function HistoryOfferRow({ offer, t }: { offer: OfferWithListingSummary; t: (k: string, o?: Record<string, string>) => string }) {
   const summary      = offer.listingSummary;
-  const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
+  const offeredPrice = formatCurrencyDisplay(offer.offeredPrice.amount, offer.offeredPrice.currency);
   const isConverted  = offer.status === 'converted';
   const isExpired    = offer.status === 'expired';
   const badgeBg     = isConverted ? GLIGHT : isExpired ? '#fffbeb' : BG;
