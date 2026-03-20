@@ -12,7 +12,7 @@ interface StepChooseDateProps {
   event: PublicListEventItem;
   selectedDateId: string;
   /** On mobile: auto-advances when called. On desktop: just marks selection, footer handles advance. */
-  onSelect: (date: EventDate) => void;
+  onSelect: (date: EventDate) => void | Promise<void>;
   onAddDate: () => void;
   isMobile: boolean;
 }

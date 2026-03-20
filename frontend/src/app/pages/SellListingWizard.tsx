@@ -485,7 +485,11 @@ export function SellListingWizard() {
           quantity,
           pricePerTicket: { amount: Math.round(form.pricePerTicket * 100), currency: sellerCurrency },
         });
-        if (result.status === 'listing_limits_restriction' || result.status === 'date_proximity_restriction') {
+        if (result.status === 'date_proximity_restriction') {
+          setShowProximityRestriction(true);
+          return;
+        }
+        if (result.status === 'listing_limits_restriction') {
           setShowSellerRiskRestriction(true);
           return;
         }
@@ -504,6 +508,8 @@ export function SellListingWizard() {
   const handleEditStep = (stepIndex: number) => {
     setCurrentStep(stepIndex as WizardStepIndex);
     setReturnToReview(true);
+    setShowProximityRestriction(false);
+    setShowSellerRiskRestriction(false);
   };
 
   const handleClaimPromo = async () => {
@@ -711,7 +717,7 @@ export function SellListingWizard() {
             {showProximityRestriction && (
               <SellerRiskRestrictionDisclaimer variant="proximity" className="mt-4" />
             )}
-            {publishError && !showSellerRiskRestriction && (
+            {publishError && !showSellerRiskRestriction && !showProximityRestriction && (
               <p style={{ marginTop: 14, fontSize: 13, color: '#dc2626', ...S }} role="alert">{publishError}</p>
             )}
 
