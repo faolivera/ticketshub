@@ -90,8 +90,15 @@ export class BffController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: ValidateSellListingRequest,
   ): Promise<ApiResponse<ValidateSellListingResponse>> {
-    if (body.quantity < 1 || body.pricePerTicket?.amount < 0) {
-      throw new BadRequestException('quantity and pricePerTicket.amount are required and must be valid');
+    if (
+      !Array.isArray(body.validations) ||
+      body.validations.length === 0 ||
+      body.quantity < 1 ||
+      body.pricePerTicket?.amount < 0
+    ) {
+      throw new BadRequestException(
+        'validations (non-empty array), quantity, and pricePerTicket.amount are required and must be valid',
+      );
     }
     const data = await this.bffService.validateSellListing(ctx, user.id, body);
     return { success: true, data };
