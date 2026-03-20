@@ -231,6 +231,7 @@ export function SellListingWizard() {
   const [isPublishing,           setIsPublishing]           = useState(false);
   const [publishError,           setPublishError]           = useState<string | null>(null);
   const [showSellerRiskRestriction, setShowSellerRiskRestriction] = useState(false);
+  const [showProximityRestriction, setShowProximityRestriction] = useState(false);
   const [isValidatingStep,       setIsValidatingStep]       = useState(false);
   const [showDraftBanner,        setShowDraftBanner]        = useState(false);
   const [draftEventId,           setDraftEventId]           = useState<string | null>(null);
@@ -343,9 +344,13 @@ export function SellListingWizard() {
    * - Mobile: auto-advance (immediate feedback for touch)
    * - Desktop: just mark the selection; "Siguiente" button handles advancement
    */
-  const handleDateSelect = (eventDate: EventDate) => {
+  const handleDateSelect = async (eventDate: EventDate) => {
+    setShowProximityRestriction(false);
     setForm((prev) => ({ ...prev, eventDateId: eventDate.id }));
-    if (isMobile) setCurrentStep(2);
+    if (isMobile) {
+      const ok = await validateProximity(eventDate.id);
+      if (ok) setCurrentStep(2);
+    }
   };
 
   const handleAddDate    = () => setShowCreateDateModal(true);
@@ -427,14 +432,46 @@ export function SellListingWizard() {
   const handleBack = () => {
     setPublishError(null);
     setShowSellerRiskRestriction(false);
+    setShowProximityRestriction(false);
     if (currentStep === 0) return;
     if (returnToReview && currentStep === 5) setReturnToReview(false);
     setCurrentStep((s) => (s - 1) as WizardStepIndex);
   };
 
+  const validateProximity = async (eventDateId?: string): Promise<boolean> => {
+    const id = eventDateId ?? form.eventDateId;
+    if (!id) return true;
+    setIsValidatingStep(true);
+    try {
+      const result = await bffService.validateSellListing({
+        eventDateId: id,
+        validations: ['proximity'],
+        quantity: 1,
+        pricePerTicket: { amount: 0, currency: sellerCurrency },
+      });
+      if (result.status === 'date_proximity_restriction') {
+        setShowProximityRestriction(true);
+        return false;
+      }
+      return true;
+    } catch {
+      return true; // non-blocking on network error
+    } finally {
+      setIsValidatingStep(false);
+    }
+  };
+
   const handleNext = async () => {
     setPublishError(null);
     setShowSellerRiskRestriction(false);
+    setShowProximityRestriction(false);
+    if (currentStep === 1) {
+      const ok = await validateProximity();
+      if (!ok) return;
+      setCurrentStep(2);
+      if (returnToReview) setReturnToReview(false);
+      return;
+    }
     if (currentStep === 3) {
       const quantity = form.seatingType === 'numbered'
         ? form.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim()).length
@@ -443,10 +480,15 @@ export function SellListingWizard() {
       setIsValidatingStep(true);
       try {
         const result = await bffService.validateSellListing({
+          eventDateId: form.eventDateId || undefined,
+          validations: ['limits'],
           quantity,
           pricePerTicket: { amount: Math.round(form.pricePerTicket * 100), currency: sellerCurrency },
         });
-        if (result.status === 'seller_risk_restriction') { setShowSellerRiskRestriction(true); return; }
+        if (result.status === 'listing_limits_restriction' || result.status === 'date_proximity_restriction') {
+          setShowSellerRiskRestriction(true);
+          return;
+        }
         setCurrentStep(4);
         if (returnToReview) setReturnToReview(false);
       } finally { setIsValidatingStep(false); }
@@ -666,6 +708,9 @@ export function SellListingWizard() {
             )}
 
             {showSellerRiskRestriction && <SellerRiskRestrictionDisclaimer className="mt-4" />}
+            {showProximityRestriction && (
+              <SellerRiskRestrictionDisclaimer variant="proximity" className="mt-4" />
+            )}
             {publishError && !showSellerRiskRestriction && (
               <p style={{ marginTop: 14, fontSize: 13, color: '#dc2626', ...S }} role="alert">{publishError}</p>
             )}
