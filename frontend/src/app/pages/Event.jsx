@@ -243,7 +243,7 @@ export default function EventDetail() {
           }
         `}</style>
 
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 64px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px 64px" }}>
 
           {/* Back button skeleton */}
           <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 16 }}>
@@ -315,7 +315,7 @@ export default function EventDetail() {
   if (error || !EVENT) {
     return (
       <div style={{ ...S, backgroundColor: BG, minHeight: "100vh", padding: 24 }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center", padding: "48px 24px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", textAlign: "center", padding: "48px 24px" }}>
           <p style={{ color: "#b91c1c", fontSize: 16 }}>{error || t("eventTickets.eventNotFound")}</p>
           <Link to="/" style={{ display: "inline-block", marginTop: 12, color: V, fontWeight: 600, ...S }}>
             ← Volver
@@ -386,7 +386,7 @@ export default function EventDetail() {
 
       {/* ── Sticky bar ── */}
       <div className={`sticky-bar${sticky ? " visible" : ""}`}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: "4px 0", display: "flex", alignItems: "center", gap: 6, flexShrink: 0, ...S, fontSize: 13 }}>
               <ArrowLeft size={15} />
@@ -426,7 +426,7 @@ export default function EventDetail() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 64px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px 64px" }}>
 
         <BackButton to="/" />
 
