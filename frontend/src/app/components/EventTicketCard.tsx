@@ -4,15 +4,9 @@ import { Shield, CheckCircle, MessageCircle, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { V, VLIGHT, DARK, MUTED, BG, S } from "@/lib/design-tokens";
 import { UserAvatar } from "@/app/components/UserAvatar";
+import { getInitials } from "@/lib/string-utils";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-  if (!name?.trim()) return "?";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
 
 function getBuyPill(qty: number): string | null {
   if (qty <= 1) return null;

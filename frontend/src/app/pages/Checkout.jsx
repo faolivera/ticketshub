@@ -12,6 +12,7 @@ import { termsService } from "@/api/services/terms.service";
 import { offersService } from "@/api/services/offers.service";
 import { TermsUserType, AcceptanceMethod } from "@/api/types/terms";
 import { formatMonthYear } from "@/lib/format-date";
+import { getInitials } from "@/lib/string-utils";
 import { formatCurrencyFromUnits } from "@/lib/format-currency";
 import { useUser } from "@/app/contexts/UserContext";
 import {
@@ -34,14 +35,6 @@ import { UserAvatar } from "@/app/components/UserAvatar";
 import { SeatingType, TicketUnitStatus } from "@/api/types";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
-
-function getInitials(name) {
-  if (!name?.trim()) return "??";
-  const parts = name.trim().split(/\s+/);
-  return parts.length >= 2
-    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    : name.slice(0, 2).toUpperCase();
-}
 
 function isPricingSnapshotExpiredError(err) {
   const code = err?.code;

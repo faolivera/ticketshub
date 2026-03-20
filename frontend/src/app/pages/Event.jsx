@@ -2,12 +2,13 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   MapPin, CheckCircle, ChevronDown, ArrowLeft, ArrowRight,
-  Lock, RefreshCw, Users, Gift, Plus, Zap,
+  Lock, RefreshCw, Users, Plus, Zap,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { ticketsService } from "@/api/services/tickets.service";
 import { formatDate, formatTime } from "@/lib/format-date";
+import { getInitials } from "@/lib/string-utils";
 import { EventTicketCard } from "@/app/components/EventTicketCard";
 import { BackButton } from "@/app/components/BackButton";
 import {
@@ -17,13 +18,6 @@ import {
 
 const SORTS = ["Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
-
-function getInitials(name) {
-  if (!name || !name.trim()) return "??";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
 
 function formatPrice(amountCents) {
   const n = Math.round(amountCents / 100);
@@ -218,7 +212,10 @@ export default function EventDetail() {
   };
 
   function handleAlert() {
-    if (!alertPhone.trim()) { setAlertError(true); return; }
+    const val = alertPhone.trim();
+    const isPhone = /^\+549\d{10}$/.test(val.replace(/\s/g, ""));
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    if (!val || (!isPhone && !isEmail)) { setAlertError(true); return; }
     setAlertError(false);
     setAlertSent(true);
     // TODO: llamar al endpoint de waiting list con alertPhone y eventSlug
@@ -370,6 +367,14 @@ export default function EventDetail() {
         }
         .sticky-bar.visible { transform: translateY(0); }
         @media(max-width: 600px) { .sticky-price-cta { display: none !important; } }
+
+        /* Empty state — full-width card matching hero */
+        .empty-state-wrap { padding: 48px 0; }
+        .empty-state-card { border-radius: 20px; }
+        @media(max-width: 600px) {
+          .empty-state-wrap { padding: 24px 0; }
+          .empty-state-card { border-radius: 0; border-left: none; border-right: none; }
+        }
 
         .pills-row::-webkit-scrollbar { height: 0; }
 
@@ -571,18 +576,11 @@ export default function EventDetail() {
 
         {/* ── Ticket grid / empty state ── */}
         {sorted.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 24px" }}>
-            <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: "40px 32px", maxWidth: 520, margin: "0 auto", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-              <div style={{ width: 48, height: 48, background: VLIGHT, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                <Gift size={22} style={{ color: V }} />
-              </div>
-              {waitingCount >= 1 ? (
+          <div className="empty-state-wrap" style={{ textAlign: "center" }}>
+            <div className="empty-state-card" style={{ background: "white", border: "1px solid #e5e7eb", padding: "40px 32px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+              {waitingCount >= 1 && (
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", borderRadius: 100, fontSize: 11.5, fontWeight: 600, padding: "3px 10px", marginBottom: 16 }}>
                   <Users size={10} /> {waitingCount} personas esperando entradas
-                </div>
-              ) : (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: VLIGHT, color: V, border: "1.5px solid #c4b5fd", borderRadius: 100, fontSize: 11.5, fontWeight: 600, padding: "3px 10px", marginBottom: 16 }}>
-                  <Zap size={10} /> Sé el primero en publicar para este evento
                 </div>
               )}
               <p style={{ ...E, fontSize: 17, color: DARK, marginBottom: 6, letterSpacing: "-0.2px" }}>
@@ -596,15 +594,15 @@ export default function EventDetail() {
                   <CheckCircle size={16} style={{ color: "#16a34a", flexShrink: 0, marginTop: 1 }} />
                   <div>
                     <p style={{ ...S, fontSize: 13, fontWeight: 700, color: "#166534", marginBottom: 2 }}>¡Alerta activada!</p>
-                    <p style={{ ...S, fontSize: 12, color: "#15803d", lineHeight: 1.5 }}>Te avisamos por WhatsApp cuando haya entradas disponibles.</p>
+                    <p style={{ ...S, fontSize: 12, color: "#15803d", lineHeight: 1.5 }}>Te avisamos cuando haya entradas disponibles.</p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div style={{ display: "flex", gap: 8, maxWidth: 380, margin: "0 auto 10px" }}>
+                  <div style={{ display: "flex", gap: 8, maxWidth: 380, margin: "0 auto 6px" }}>
                     <input
-                      type="tel"
-                      placeholder="Tu WhatsApp"
+                      type="text"
+                      placeholder="Tu WhatsApp o email"
                       value={alertPhone}
                       onChange={(e) => { setAlertPhone(e.target.value); setAlertError(false); }}
                       style={{ flex: 1, ...S, fontSize: 13.5, fontWeight: 500, padding: "10px 14px", border: `1.5px solid ${alertError ? "#e11d48" : "#d1d5db"}`, borderRadius: 10, color: DARK, background: BG, outline: "none" }}
@@ -613,6 +611,11 @@ export default function EventDetail() {
                       Avisarme →
                     </button>
                   </div>
+                  {alertError && (
+                    <p style={{ ...S, fontSize: 11.5, color: "#e11d48", marginBottom: 4, textAlign: "center" }}>
+                      Ingresá un email válido o teléfono con formato +549...
+                    </p>
+                  )}
                   <p style={{ ...S, fontSize: 11.5, color: "#9ca3af", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                     <Lock size={10} /> Sin spam. Solo te escribimos si hay entradas.
                   </p>
@@ -623,17 +626,24 @@ export default function EventDetail() {
                 <span style={{ ...S, fontSize: 12 }}>o si tenés entradas</span>
                 <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
               </div>
-              <Link
-                to="/sell-ticket"
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, ...S, fontSize: 13, fontWeight: 700, color: V, border: "1.5px solid #6d28d9", borderRadius: 10, padding: "10px 20px", textDecoration: "none", background: "transparent" }}
-                onMouseEnter={(e) => e.currentTarget.style.background = VLIGHT}
-                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-              >
-                <Plus size={13} /> Publicar mi entrada
-              </Link>
-              <p style={{ ...S, fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
-                {waitingCount >= 1 ? `Llegá a las ${waitingCount} personas que están esperando` : "Llegá a los primeros compradores del evento"}
-              </p>
+              {waitingCount === 0 && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: VLIGHT, color: V, border: "1.5px solid #c4b5fd", borderRadius: 100, fontSize: 11.5, fontWeight: 600, padding: "3px 10px", marginBottom: 12 }}>
+                  <Zap size={10} /> Sé el primero en publicar para este evento
+                </div>
+              )}
+              <div>
+                <Link
+                  to="/sell-ticket"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, ...S, fontSize: 13, fontWeight: 700, color: V, border: "1.5px solid #6d28d9", borderRadius: 10, padding: "10px 20px", textDecoration: "none", background: "transparent" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = VLIGHT}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <Plus size={13} /> Publicar mi entrada
+                </Link>
+                <p style={{ ...S, fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
+                  {waitingCount >= 1 ? `Llegá a las ${waitingCount} personas que están esperando` : "Llegá a los primeros compradores del evento"}
+                </p>
+              </div>
             </div>
           </div>
         ) : (

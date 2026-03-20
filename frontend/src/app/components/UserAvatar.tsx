@@ -1,6 +1,7 @@
 import { FC, type CSSProperties } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { cn } from './ui/utils';
+import { getInitials } from '@/lib/string-utils';
 
 interface UserAvatarProps {
   name: string;
@@ -8,15 +9,6 @@ interface UserAvatarProps {
   className?: string;
   alt?: string;
   style?: CSSProperties;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
 }
 
 export const UserAvatar: FC<UserAvatarProps> = ({
