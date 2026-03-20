@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useAsync } from '@/app/hooks';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -76,35 +77,28 @@ function priorityColor(priority: string): string {
 
 export function SupportTicketsManagement() {
   const { t } = useTranslation();
-  const [data, setData] = useState<AdminSupportTicketsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [sourceFilter, setSourceFilter] = useState<string>('');
 
-  const fetchTickets = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await adminService.getSupportTickets({
+  const fetchTickets = useCallback(
+    () =>
+      adminService.getSupportTickets({
         page,
         limit: ITEMS_PER_PAGE,
         status: statusFilter || undefined,
         category: categoryFilter || undefined,
         source: sourceFilter || undefined,
-      });
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('admin.supportTickets.errorLoading'));
-    } finally {
-      setLoading(false);
-    }
-  }, [page, statusFilter, categoryFilter, sourceFilter, t]);
+      }),
+    [page, statusFilter, categoryFilter, sourceFilter],
+  );
+
+  const { data, isLoading: loading, error, execute } = useAsync(fetchTickets);
 
   useEffect(() => {
-    fetchTickets();
+    execute();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchTickets]);
 
   return (

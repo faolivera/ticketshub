@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useAsync } from '@/app/hooks';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -53,11 +54,27 @@ const MIN_SEARCH_LENGTH = 2;
 
 export function PromotionsManagement() {
   const { t } = useTranslation();
-  const [promotions, setPromotions] = useState<AdminPromotionListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+
+  const fetchPromotionsFn = useMemo(
+    () => () => {
+      const params: { status?: string; type?: string } = {};
+      if (statusFilter !== 'all') params.status = statusFilter;
+      if (typeFilter !== 'all') params.type = typeFilter;
+      return adminService.getPromotions(params);
+    },
+    [statusFilter, typeFilter]
+  );
+
+  const {
+    data: promotionsData,
+    isLoading: loading,
+    error,
+    execute: fetchPromotions,
+  } = useAsync(fetchPromotionsFn);
+
+  const promotions = promotionsData ?? [];
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<AdminCreatePromotionRequest>({
@@ -79,9 +96,15 @@ export function PromotionsManagement() {
 
   // Promotion codes tab state
   const [activeTab, setActiveTab] = useState<'promotions' | 'promotion-codes'>('promotions');
-  const [promotionCodes, setPromotionCodes] = useState<AdminPromotionCodeListItem[]>([]);
-  const [codesLoading, setCodesLoading] = useState(false);
-  const [codesError, setCodesError] = useState<string | null>(null);
+
+  const {
+    data: promotionCodesData,
+    isLoading: codesLoading,
+    error: codesError,
+    execute: fetchPromotionCodes,
+  } = useAsync(adminService.getPromotionCodes.bind(adminService));
+
+  const promotionCodes = promotionCodesData ?? [];
   const [createCodeOpen, setCreateCodeOpen] = useState(false);
   const [createCodeForm, setCreateCodeForm] = useState<AdminCreatePromotionCodeRequest>({
     code: '',
@@ -99,41 +122,15 @@ export function PromotionsManagement() {
   const [createCodeError, setCreateCodeError] = useState<string | null>(null);
   const [editingCodeId, setEditingCodeId] = useState<string | null>(null);
 
-  const fetchPromotions = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const params: { status?: string; type?: string } = {};
-      if (statusFilter !== 'all') params.status = statusFilter;
-      if (typeFilter !== 'all') params.type = typeFilter;
-      const data = await adminService.getPromotions(params);
-      setPromotions(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch promotions');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchPromotions();
-  }, [statusFilter, typeFilter]);
-
-  const fetchPromotionCodes = async () => {
-    try {
-      setCodesLoading(true);
-      setCodesError(null);
-      const data = await adminService.getPromotionCodes();
-      setPromotionCodes(data);
-    } catch (err) {
-      setCodesError(err instanceof Error ? err.message : 'Failed to fetch promotion codes');
-    } finally {
-      setCodesLoading(false);
-    }
-  };
+  // fetchPromotions is stable per statusFilter/typeFilter change via useMemo
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchPromotions]);
 
   useEffect(() => {
     if (activeTab === 'promotion-codes') fetchPromotionCodes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   useEffect(() => {

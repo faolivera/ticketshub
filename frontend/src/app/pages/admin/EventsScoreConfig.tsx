@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAsync } from '@/app/hooks';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -26,11 +27,18 @@ const EVENTS_PAGE_SIZE = 10;
 
 export function EventsScoreConfig() {
   const { t } = useTranslation();
-  const [config, setConfig] = useState<AdminGetEventsRankingConfigResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const fetchConfigFn = useCallback(() => adminService.getEventsRankingConfig(), []);
+  const {
+    data: config,
+    isLoading: loading,
+    error,
+    execute: executeConfig,
+    setData: setConfig,
+  } = useAsync<AdminGetEventsRankingConfigResponse>(fetchConfigFn);
 
   const [weightActiveListings, setWeightActiveListings] = useState('');
   const [weightTransactions, setWeightTransactions] = useState('');
@@ -49,23 +57,16 @@ export function EventsScoreConfig() {
   const [queueSuccess, setQueueSuccess] = useState<string | null>(null);
   const [queueError, setQueueError] = useState<string | null>(null);
 
-  const fetchConfig = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await adminService.getEventsRankingConfig();
-      setConfig(data);
-      setWeightActiveListings(String(data.weightActiveListings));
-      setWeightTransactions(String(data.weightTransactions));
-      setWeightProximity(String(data.weightProximity));
-      setWeightPopular(String(data.weightPopular));
-      setJobIntervalMinutes(String(data.jobIntervalMinutes));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load config');
-    } finally {
-      setLoading(false);
+  // Populate form fields whenever config data loads
+  useEffect(() => {
+    if (config) {
+      setWeightActiveListings(String(config.weightActiveListings));
+      setWeightTransactions(String(config.weightTransactions));
+      setWeightProximity(String(config.weightProximity));
+      setWeightPopular(String(config.weightPopular));
+      setJobIntervalMinutes(String(config.jobIntervalMinutes));
     }
-  };
+  }, [config]);
 
   const fetchEvents = async (page: number, search: string) => {
     try {
@@ -92,10 +93,12 @@ export function EventsScoreConfig() {
     fetchEvents(1, searchQuery);
   };
 
+  // Fetch config on mount
   useEffect(() => {
-    fetchConfig();
-  }, []);
+    executeConfig();
+  }, [executeConfig]);
 
+  // Fetch events once config finishes loading
   useEffect(() => {
     if (!loading) fetchEvents(1, '');
   }, [loading]);
@@ -123,18 +126,18 @@ export function EventsScoreConfig() {
       payload.jobIntervalMinutes = jobInt;
     }
     if (Object.keys(payload).length === 0) {
-      setError(t('admin.eventsScore.validationRequired'));
+      setSaveError(t('admin.eventsScore.validationRequired'));
       return;
     }
     try {
       setSaving(true);
-      setError(null);
+      setSaveError(null);
       setSuccess(null);
       const data = await adminService.patchEventsRankingConfig(payload);
       setConfig(data);
       setSuccess(t('admin.eventsScore.saveSuccess'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save config');
+      setSaveError(e instanceof Error ? e.message : 'Failed to save config');
     } finally {
       setSaving(false);
     }
@@ -189,9 +192,9 @@ export function EventsScoreConfig() {
         <p className="text-muted-foreground">{t('admin.eventsScore.description')}</p>
       </div>
 
-      {error && (
+      {(error || saveError) && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {error}
+          {error ?? saveError}
         </div>
       )}
       {success && (

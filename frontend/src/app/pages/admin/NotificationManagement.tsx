@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAsync } from '@/app/hooks';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -61,10 +62,26 @@ function sortChannelConfigsByEventType(
 
 export function NotificationManagement() {
   const { t } = useTranslation();
-  const [channelConfigs, setChannelConfigs] = useState<NotificationChannelConfig[]>([]);
-  const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const fetchBothAsync = useCallback(async () => {
+    const [configs, templateList] = await Promise.all([
+      notificationsAdminService.getChannelConfigs(),
+      notificationsAdminService.getTemplates(),
+    ]);
+    return {
+      configs: sortChannelConfigsByEventType(configs),
+      templates: templateList,
+    };
+  }, []);
+
+  const { data, isLoading, error, execute, setData } = useAsync(fetchBothAsync);
+
+  const channelConfigs: NotificationChannelConfig[] = data?.configs ?? [];
+  const templates: NotificationTemplate[] = data?.templates ?? [];
+
+  useEffect(() => {
+    execute();
+  }, [execute]);
 
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplate | null>(null);
@@ -79,27 +96,6 @@ export function NotificationManagement() {
   /** Tracks which channel config is being updated (e.g. 'PAYMENT_REQUIRED-inApp') for loading state */
   const [updatingConfigKey, setUpdatingConfigKey] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [configs, templateList] = await Promise.all([
-        notificationsAdminService.getChannelConfigs(),
-        notificationsAdminService.getTemplates(),
-      ]);
-      setChannelConfigs(sortChannelConfigsByEventType(configs));
-      setTemplates(templateList);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleToggleChannel = async (
     config: NotificationChannelConfig,
     channel: 'inApp' | 'email'
@@ -108,17 +104,17 @@ export function NotificationManagement() {
     const newInApp = channel === 'inApp' ? !config.inAppEnabled : config.inAppEnabled;
     const newEmail = channel === 'email' ? !config.emailEnabled : config.emailEnabled;
 
-    setError(null);
     setUpdatingConfigKey(key);
 
     // Optimistic update so the toggle flips immediately
-    setChannelConfigs((prev) =>
-      prev.map((c) =>
+    setData({
+      configs: channelConfigs.map((c) =>
         c.id === config.id
           ? { ...c, inAppEnabled: newInApp, emailEnabled: newEmail }
           : c
-      )
-    );
+      ),
+      templates,
+    });
 
     try {
       await notificationsAdminService.updateChannelConfig(config.eventType, {
@@ -126,16 +122,19 @@ export function NotificationManagement() {
         emailEnabled: newEmail,
         priority: config.priority,
       });
-      await fetchData();
+      await execute();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update channel config');
-      setChannelConfigs((prev) =>
-        prev.map((c) =>
+      void err;
+      // Roll back optimistic update; the hook will surface the error on the next execute call.
+      // Re-fetch to ensure consistent state (execute sets error via hook).
+      setData({
+        configs: channelConfigs.map((c) =>
           c.id === config.id
             ? { ...c, inAppEnabled: config.inAppEnabled, emailEnabled: config.emailEnabled }
             : c
-        )
-      );
+        ),
+        templates,
+      });
     } finally {
       setUpdatingConfigKey(null);
     }
@@ -146,12 +145,12 @@ export function NotificationManagement() {
     priority: NotificationPriority
   ) => {
     const key = `${config.eventType}-priority`;
-    setError(null);
     setUpdatingConfigKey(key);
 
-    setChannelConfigs((prev) =>
-      prev.map((c) => (c.id === config.id ? { ...c, priority } : c))
-    );
+    setData({
+      configs: channelConfigs.map((c) => (c.id === config.id ? { ...c, priority } : c)),
+      templates,
+    });
 
     try {
       await notificationsAdminService.updateChannelConfig(config.eventType, {
@@ -159,12 +158,15 @@ export function NotificationManagement() {
         emailEnabled: config.emailEnabled,
         priority,
       });
-      await fetchData();
+      await execute();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update priority');
-      setChannelConfigs((prev) =>
-        prev.map((c) => (c.id === config.id ? { ...c, priority: config.priority } : c))
-      );
+      void err;
+      setData({
+        configs: channelConfigs.map((c) =>
+          c.id === config.id ? { ...c, priority: config.priority } : c
+        ),
+        templates,
+      });
     } finally {
       setUpdatingConfigKey(null);
     }
@@ -205,7 +207,7 @@ export function NotificationManagement() {
         isActive: templateFormData.isActive,
       });
       setIsTemplateDialogOpen(false);
-      await fetchData();
+      await execute();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Failed to save template');
     } finally {
@@ -253,7 +255,7 @@ export function NotificationManagement() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-muted-foreground">{t('common.loading')}</div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAsync } from '@/app/hooks';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -86,11 +87,15 @@ const initialFormData: FormData = {
 
 export function PaymentMethodsManagement() {
   const { t } = useTranslation();
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>(
-    []
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: paymentMethodsData,
+    isLoading,
+    error: fetchError,
+    execute,
+  } = useAsync<PaymentMethodOption[]>(() => adminService.getPaymentMethods());
+  const paymentMethods = paymentMethodsData ?? [];
+  const [mutationError, setMutationError] = useState<string | null>(null);
+  const error = fetchError ?? mutationError;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -102,24 +107,9 @@ export function PaymentMethodsManagement() {
     useState<PaymentMethodOption | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchPaymentMethods = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await adminService.getPaymentMethods();
-      setPaymentMethods(data || []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to fetch payment methods'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchPaymentMethods();
-  }, []);
+    execute();
+  }, [execute]);
 
   const handleOpenCreate = () => {
     setFormMode('create');
@@ -150,9 +140,9 @@ export function PaymentMethodsManagement() {
     try {
       const newStatus = method.status === 'enabled' ? 'disabled' : 'enabled';
       await adminService.togglePaymentMethodStatus(method.id, newStatus);
-      await fetchPaymentMethods();
+      await execute();
     } catch (err) {
-      setError(
+      setMutationError(
         err instanceof Error ? err.message : 'Failed to toggle status'
       );
     }
@@ -161,9 +151,9 @@ export function PaymentMethodsManagement() {
   const handleToggleVisible = async (method: PaymentMethodOption) => {
     try {
       await adminService.updatePaymentMethod(method.id, { visible: !method.visible });
-      await fetchPaymentMethods();
+      await execute();
     } catch (err) {
-      setError(
+      setMutationError(
         err instanceof Error ? err.message : 'Failed to toggle visibility'
       );
     }
@@ -181,9 +171,9 @@ export function PaymentMethodsManagement() {
       await adminService.deletePaymentMethod(deletingMethod.id);
       setIsDeleteDialogOpen(false);
       setDeletingMethod(null);
-      await fetchPaymentMethods();
+      await execute();
     } catch (err) {
-      setError(
+      setMutationError(
         err instanceof Error ? err.message : 'Failed to delete payment method'
       );
     } finally {
@@ -262,7 +252,7 @@ export function PaymentMethodsManagement() {
       }
 
       setIsDialogOpen(false);
-      await fetchPaymentMethods();
+      await execute();
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : 'Failed to save payment method'
@@ -295,7 +285,7 @@ export function PaymentMethodsManagement() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-muted-foreground">
