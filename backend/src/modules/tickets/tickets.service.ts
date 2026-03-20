@@ -313,13 +313,13 @@ export class TicketsService {
     }
 
     if (data.validations.includes('proximity') && data.eventStartsAt) {
-      const withinLimits = await this.checkUnverifiedSellerListingLimits(
-        ctx,
-        sellerId,
-        { amount: 0, currency: data.pricePerTicket.currency },
-        { eventStartsAt: data.eventStartsAt },
-      );
-      if (!withinLimits) {
+      const config = await this.configService.getPlatformConfig(ctx);
+      const proximityHours =
+        config?.riskEngine?.buyer?.phoneRequiredEventHours ??
+        this.nestConfigService.get<number>('platform.riskEngine.buyer.phoneRequiredEventHours')!;
+      const hoursUntilEvent =
+        (data.eventStartsAt.getTime() - Date.now()) / (1000 * 60 * 60);
+      if (hoursUntilEvent >= 0 && hoursUntilEvent <= proximityHours) {
         return { status: 'date_proximity_restriction' };
       }
     }

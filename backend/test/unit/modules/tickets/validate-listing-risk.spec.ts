@@ -159,6 +159,7 @@ describe('TicketsService.validateListingRisk', () => {
       });
 
       expect(result).toEqual({ status: 'can_create' });
+      expect(conversionService.sumInCurrency).not.toHaveBeenCalled();
     });
 
     it('skips proximity check when validations only includes limits', async () => {
@@ -224,28 +225,15 @@ describe('TicketsService.validateListingRisk', () => {
       expect(result).toEqual({ status: 'can_create' });
     });
 
-    it('skips limits check when validations only includes proximity', async () => {
-      // Active listings will fill up the count cap (5 existing), which would fail limits if checked.
-      const activeListings = Array.from({ length: 5 }, (_, i) => ({
-        id: `listing_${i}`,
-        status: ListingStatus.Active,
-        pricePerTicket: { amount: 100, currency: 'USD' },
-        ticketUnits: [{ id: `unit_${i}` }],
-      }));
-      ticketsRepository.getBySellerId.mockResolvedValue(activeListings);
-
-      // validations only includes 'proximity' but eventStartsAt is omitted => proximity is silently skipped
-      // limits is NOT in validations => limits check is also skipped
+    it('skips limits check when validations only includes proximity (event outside window)', async () => {
+      const farFuture = new Date(Date.now() + 200 * 60 * 60 * 1000); // 200h, outside 72h window
       const result = await service.validateListingRisk(mockCtx, unverifiedSeller.id, {
-        quantity: 1,
-        pricePerTicket,
+        quantity: 10,
+        pricePerTicket: { amount: 999999, currency: 'ARS' },
         validations: ['proximity'],
-        // eventStartsAt intentionally omitted
+        eventStartsAt: farFuture,
       });
-
-      // Neither check ran (proximity skipped due to no eventStartsAt, limits not in validations)
       expect(result).toEqual({ status: 'can_create' });
-      // Verify no monetary conversion was attempted
       expect(conversionService.sumInCurrency).not.toHaveBeenCalled();
     });
   });
