@@ -634,8 +634,8 @@ model Offer {
   rejectedAt              DateTime?
   convertedTransactionId  String?
   cancelledAt             DateTime?
-  expiredAt               DateTime?  // set by scheduler when offer times out
-  expiredReason           OfferExpiredReason?  // seller_no_response | buyer_no_purchase
+  expiredAt               DateTime?           @map("expired_at")    // set by scheduler when offer times out
+  expiredReason           OfferExpiredReason? @map("expired_reason") // seller_no_response | buyer_no_purchase
   createdAt               DateTime   @default(now())
   updatedAt               DateTime   @updatedAt
 

@@ -30,6 +30,7 @@ import { ErrorMessage, ErrorAlert } from "@/app/components/ErrorMessage";
 import { ClientTnC } from "@/app/components/ClientTnC";
 import { PageMeta } from "@/app/components/PageMeta";
 import { BackButton } from "@/app/components/BackButton";
+import { UserAvatar } from "@/app/components/UserAvatar";
 import { SeatingType, TicketUnitStatus } from "@/api/types";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -1038,15 +1039,7 @@ export default function Checkout() {
                   to={`/seller/${seller.id}`}
                   style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 12 }}
                 >
-                  <div style={{
-                    width: 42, height: 42, borderRadius: "50%",
-                    background: isVerifiedSeller ? "#d1fae5" : VLIGHT,
-                    color: isVerifiedSeller ? "#065f46" : V,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 14, fontWeight: 700, flexShrink: 0,
-                  }}>
-                    {getInitials(seller.publicName)}
-                  </div>
+                  <UserAvatar name={seller.publicName} src={seller.pic?.src ?? undefined} className="h-[42px] w-[42px] shrink-0" />
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
                       <p style={{ fontSize: 14.5, fontWeight: 700, color: DARK }}>{seller.publicName}</p>

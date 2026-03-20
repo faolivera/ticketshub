@@ -176,6 +176,8 @@ export interface TransactionWithDetails extends Transaction {
   sectionName?: string;
   buyerName: string;
   sellerName: string;
+  buyerPic: string | null;
+  sellerPic: string | null;
   bannerUrls?: BannerUrls;
 }
 

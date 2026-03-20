@@ -128,20 +128,10 @@ function VerifRow({ icon, label, value, status, verifyLabel, verifyTo, verifySta
         <div style={{ color: hovered ? V : MUTED, flexShrink: 0, display: 'flex', transition: 'color 0.14s' }}>{icon}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</p>
-          <p style={{ fontSize: 13.5, fontWeight: 500, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <p style={{ fontSize: 13.5, fontWeight: 500, color: DARK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{value}</p>
           <StatusBadge status={status} />
-          <span style={{
-            fontSize: 12.5, fontWeight: 700, color: V,
-            display: 'flex', alignItems: 'center', gap: 3,
-            padding: '4px 10px', borderRadius: 8,
-            background: hovered ? 'rgba(109,40,217,0.1)' : 'transparent',
-            transition: 'background 0.14s', whiteSpace: 'nowrap',
-          }}>
-            {verifyLabel} <ChevronRight size={13} />
-          </span>
         </div>
+        <ChevronRight size={16} color={hovered ? V : MUTED} style={{ flexShrink: 0, transition: 'color 0.14s' }} />
       </div>
     </Link>
   );

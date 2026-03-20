@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Shield, CheckCircle, MessageCircle, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { V, VLIGHT, DARK, MUTED, BG, S } from "@/lib/design-tokens";
+import { UserAvatar } from "@/app/components/UserAvatar";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
     priceNum,
     seller,
     sellerId,
+    sellerAvatarUrl,
     sellerTotalSales,
     sellerTotalReviews,
     sellerPositivePercent,
@@ -141,15 +143,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
         to={`/seller/${sellerId}`}
         style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, textDecoration: "none" }}
       >
-        <div style={{
-          width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 12, fontWeight: 800,
-          background: verified ? "#f0ebff" : "#f3f4f6",
-          color: verified ? V : MUTED,
-        }}>
-          {getInitials(seller)}
-        </div>
+        <UserAvatar name={seller} src={sellerAvatarUrl ?? undefined} className="h-9 w-9 shrink-0" />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>

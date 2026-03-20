@@ -1349,6 +1349,8 @@ export class TransactionsService {
       sectionName,
       buyerName: buyerInfo?.publicName ?? 'Unknown',
       sellerName: sellerInfo?.publicName ?? 'Unknown',
+      buyerPic: buyerInfo?.pic?.src ?? null,
+      sellerPic: sellerInfo?.pic?.src ?? null,
       bannerUrls: listing.bannerUrls,
     };
   }
@@ -1392,6 +1394,8 @@ export class TransactionsService {
         sectionName,
         buyerName: buyerInfo?.publicName ?? 'Unknown',
         sellerName: sellerInfo?.publicName ?? 'Unknown',
+        buyerPic: buyerInfo?.pic?.src ?? null,
+        sellerPic: sellerInfo?.pic?.src ?? null,
         bannerUrls: listing?.bannerUrls,
       };
     });
@@ -1704,6 +1708,8 @@ export class TransactionsService {
         sectionName,
         buyerName: buyerInfo?.publicName ?? 'Unknown',
         sellerName: sellerInfo?.publicName ?? 'Unknown',
+        buyerPic: buyerInfo?.pic?.src ?? null,
+        sellerPic: sellerInfo?.pic?.src ?? null,
         bannerUrls: listing?.bannerUrls,
         paymentMethodId: t.paymentMethodId ?? undefined,
         paymentMethodName: paymentMethod?.name ?? 'Unknown',

@@ -203,6 +203,8 @@ const BffTransactionWithDetailsSchema = z.object({
   venue: z.string(),
   buyerName: z.string(),
   sellerName: z.string(),
+  buyerPic: z.string().nullable(),
+  sellerPic: z.string().nullable(),
   sectionName: z.string(),
   bannerUrls: BannerUrlsSchema.optional(),
 });

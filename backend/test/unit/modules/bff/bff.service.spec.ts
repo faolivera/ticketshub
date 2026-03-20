@@ -87,6 +87,8 @@ describe('BffService', () => {
     sectionName: 'GA',
     buyerName: 'John Buyer',
     sellerName: 'Jane Seller',
+    buyerPic: null,
+    sellerPic: null,
     version: 1,
   };
 

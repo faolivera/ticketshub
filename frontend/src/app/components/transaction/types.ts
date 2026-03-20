@@ -87,6 +87,7 @@ export interface BankDetailsBlockProps {
 export interface CounterpartCardProps {
   userId: string;
   name: string;
+  avatarUrl?: string | null;
   roleLabel: string;
   contactLabel: string;
   onContact: () => void;

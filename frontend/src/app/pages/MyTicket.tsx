@@ -4,7 +4,7 @@ import { CheckCircle, MessageCircle, AlertCircle, X, ThumbsUp, ThumbsDown, Minus
 import { useTranslation } from 'react-i18next';
 import { TicketChat } from '@/app/components/TicketChat';
 import { BackButton } from '@/app/components/BackButton';
-import { LoadingSpinner } from '@/app/components/LoadingSpinner';
+import { TransactionSkeleton } from '@/app/components/transaction/TransactionSkeleton';
 import { ErrorAlert } from '@/app/components/ErrorMessage';
 import { TransactionLayout } from '@/app/components/transaction/TransactionLayout';
 import { EventCard } from '@/app/components/transaction/EventCard';
@@ -516,11 +516,7 @@ export function MyTicket() {
   const isManualPayment = bankTransferConfig !== null;
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text={t('common.loading')} />
-      </div>
-    );
+    return <TransactionSkeleton />;
   }
 
   if (error || !transaction) {
@@ -837,6 +833,7 @@ export function MyTicket() {
             <CounterpartCard
               userId={isBuyer ? transaction.sellerId : transaction.buyerId}
               name={isBuyer ? transaction.sellerName : transaction.buyerName}
+              avatarUrl={isBuyer ? transaction.sellerPic : transaction.buyerPic}
               roleLabel={isBuyer ? t('myTicket.sellerInfo') : t('myTicket.buyerInfo')}
               contactLabel={
                 chatConfig?.chatMode === 'only_read'

@@ -5,6 +5,7 @@ import type { CounterpartCardProps } from './types';
 
 export function CounterpartCard({
   name,
+  avatarUrl,
   roleLabel,
   contactLabel,
   onContact,
@@ -24,6 +25,7 @@ export function CounterpartCard({
       <UserReviewsCard
         userId={userId}
         publicName={name}
+        avatarUrl={avatarUrl ?? undefined}
         role={counterpartRole}
         showProfileLink={showProfileLink}
       />
