@@ -369,11 +369,10 @@ export default function EventDetail() {
         @media(max-width: 600px) { .sticky-price-cta { display: none !important; } }
 
         /* Empty state — full-width card matching hero */
-        .empty-state-wrap { padding: 48px 0; }
+        .empty-state-wrap { padding: 18px 0 48px; }
         .empty-state-card { border-radius: 20px; }
         @media(max-width: 600px) {
           .empty-state-wrap { padding: 24px 0; }
-          .empty-state-card { border-radius: 0; border-left: none; border-right: none; }
         }
 
         .pills-row::-webkit-scrollbar { height: 0; }

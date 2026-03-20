@@ -980,7 +980,8 @@
     "hideTransferDetails": "Hide details"
   },
   "transaction": {
-    "timeRemaining": "Time remaining: {{time}}",
+    "timeRemaining": "{{time}}",
+    "paymentTimeLabel": "Time to complete purchase",
     "paymentExpired": "Payment time expired",
     "cancelButton": "Cancel Transaction",
     "cancelConfirm": "Are you sure you want to cancel this transaction? This action cannot be undone.",

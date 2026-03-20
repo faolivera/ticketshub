@@ -132,7 +132,6 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             <PaymentCountdown
               expiresAt={transaction.paymentExpiresAt!}
               onExpired={onPaymentExpired}
-              className="text-sm font-semibold text-blue-900"
             />
           </div>
           <input
@@ -202,7 +201,6 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
                 <PaymentCountdown
                   expiresAt={transaction.paymentExpiresAt}
                   onExpired={onPaymentExpired}
-                  className="text-sm font-semibold"
                 />
               </div>
             )}

@@ -237,7 +237,7 @@ export function Contact() {
           flexDirection: 'column',
           gridTemplateColumns: '1fr 300px',
           gap: 20,
-          alignItems: 'start',
+          alignItems: isMobile ? 'stretch' : 'start',
         }}>
 
           {/* ── Form card ─────────────────────────────────────────────── */}

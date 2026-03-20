@@ -64,7 +64,7 @@ function getExpiredReason(offer) {
 
 // ─── Countdown ───────────────────────────────────────────────────────────────
 
-function Countdown({ targetDate }) {
+function Countdown({ targetDate, onSecondsChange }) {
   const [display, setDisplay] = useState("");
   useEffect(() => {
     if (!targetDate) return;
@@ -78,6 +78,7 @@ function Countdown({ targetDate }) {
           ? `${h}h ${String(m).padStart(2, "0")}m`
           : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
       );
+      onSecondsChange?.(secs);
     };
     update();
     const id = setInterval(update, 1000);
@@ -108,6 +109,7 @@ export default function Checkout() {
 
   // ── offer ──
   const [acceptedOffer, setAcceptedOffer] = useState(null);
+  const [acceptedOfferSecsLeft, setAcceptedOfferSecsLeft] = useState(Infinity);
   const [pendingOffer, setPendingOffer] = useState(null);
   const [expiredOffer, setExpiredOffer] = useState(null);
   const [offerOpen, setOfferOpen] = useState(false);
@@ -1272,15 +1274,23 @@ export default function Checkout() {
                         </strong>
                         Confirmá el pago antes de que expire el tiempo.
                         {acceptedOffer.acceptedExpiresAt && (
-                          <div style={{ marginTop: 5 }}>
+                          <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 11.5, color: "#166534" }}>
+                              Tiempo para completar la compra
+                            </span>
                             <span style={{
                               display: "inline-flex", alignItems: "center", gap: 5,
-                              fontSize: 12.5, fontWeight: 700, color: ERROR_DARK,
-                              background: BADGE_DEMAND_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`,
+                              fontSize: 12.5, fontWeight: 700,
+                              color: acceptedOfferSecsLeft < 3600 ? ERROR_DARK : AMBER_TEXT_DARK,
+                              background: acceptedOfferSecsLeft < 3600 ? BADGE_DEMAND_BG : AMBER_BG_LIGHT,
+                              border: `1px solid ${acceptedOfferSecsLeft < 3600 ? BADGE_DEMAND_BORDER : ABORD}`,
                               padding: "3px 10px", borderRadius: 20,
                             }}>
                               <Clock size={11} />
-                              <Countdown targetDate={acceptedOffer.acceptedExpiresAt} />
+                              <Countdown
+                                targetDate={acceptedOffer.acceptedExpiresAt}
+                                onSecondsChange={setAcceptedOfferSecsLeft}
+                              />
                             </span>
                           </div>
                         )}

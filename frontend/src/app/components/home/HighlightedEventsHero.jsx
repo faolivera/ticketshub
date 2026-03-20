@@ -277,7 +277,7 @@ export function HighlightedEventsHero({ onLoad }) {
               </Link>
 
               <Link
-                to="/como-funciona"
+                to="/how-it-works"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",

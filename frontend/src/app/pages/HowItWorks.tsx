@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { PageMeta } from '@/app/components/PageMeta';
 import {
   V,
@@ -344,13 +344,6 @@ export function HowItWorks() {
           textAlign: 'center',
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: 16, background: VLIGHT,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-            }}>
-              <Shield size={28} style={{ color: V }} />
-            </div>
             <h1 style={{
               ...DS, fontSize: 'clamp(28px,5vw,48px)', fontWeight: 400,
               letterSpacing: '-0.5px', lineHeight: 1.15,
@@ -366,12 +359,6 @@ export function HowItWorks() {
               TicketsHub actúa como intermediario entre compradores y vendedores.
               El pago queda retenido hasta que ambas partes cumplan su parte — sin entrada confirmada, no hay cobro.
             </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 100, background: 'rgba(109,40,217,0.25)', border: '1px solid rgba(196,181,253,0.3)' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#86efac', ...S }}>
-                Pago retenido hasta confirmar entrega · Reembolso garantizado
-              </span>
-            </div>
           </div>
         </div>
 
@@ -392,7 +379,7 @@ export function HowItWorks() {
                   fontSize: 14, fontWeight: 700, cursor: 'pointer',
                   transition: 'all 0.18s', ...S,
                 }}>
-                  {v === 'buyer' ? '🎟 Soy comprador' : '💰 Soy vendedor'}
+                  {v === 'buyer' ? 'Quiero Comprar' : 'Quiero Vender'}
                 </button>
               ))}
             </div>

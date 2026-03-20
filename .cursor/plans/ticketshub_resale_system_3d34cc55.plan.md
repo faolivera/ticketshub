@@ -250,7 +250,7 @@ interface TicketListing {
   
   // Physical tickets only
   deliveryMethod?: DeliveryMethod
-  pickupAddress?: Address
+  pickup?: Address
   
   description?: string
   section?: string
