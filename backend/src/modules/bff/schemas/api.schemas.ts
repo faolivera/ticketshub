@@ -332,7 +332,8 @@ export const GetTransactionDetailsResponseSchema = z.object({
 
 export const ValidateSellListingResponseSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('can_create') }),
-  z.object({ status: z.literal('seller_risk_restriction') }),
+  z.object({ status: z.literal('date_proximity_restriction') }),
+  z.object({ status: z.literal('listing_limits_restriction') }),
 ]);
 
 export const GetActivityHistoryResponseSchema = z.object({

@@ -112,20 +112,26 @@ export interface GetSellTicketConfigResponse {
 }
 
 /**
- * Request for POST /api/sell/validate (listing snapshot for risk validation only).
- * quantity is the number of tickets (unnumbered count or numbered seats length).
+ * Request for POST /api/sell/validate.
+ * validations: which checks to run. 'proximity' requires eventDateId.
+ * quantity and pricePerTicket are always required (use amount:0 when only checking proximity).
  */
 export interface ValidateSellListingRequest {
+  eventDateId?: string;
+  validations: ('proximity' | 'limits')[];
   quantity: number;
   pricePerTicket: { amount: number; currency: CurrencyCode };
 }
 
 /**
- * Result of sell listing validation (same risk checks as createListing for Tier 0 sellers).
+ * Discriminated result of sell listing validation.
+ * date_proximity_restriction: event is too close in time for unverified sellers.
+ * listing_limits_restriction: listing would exceed unverified seller monetary/count caps.
  */
 export type ValidateSellListingResponse =
   | { status: 'can_create' }
-  | { status: 'seller_risk_restriction' };
+  | { status: 'date_proximity_restriction' }
+  | { status: 'listing_limits_restriction' };
 
 /**
  * Chat config when the user is a participant and chat is visible (enabled or only_read).
