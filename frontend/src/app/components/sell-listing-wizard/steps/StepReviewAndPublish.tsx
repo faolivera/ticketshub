@@ -146,8 +146,10 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
                   : t('sellListingWizard.physical')}
               </p>
               {form.deliveryMethod === 'physical' && form.physicalDeliveryMethod === 'pickup' && (
-                <p style={{ fontSize: 13, color: MUTED, marginTop: 2, ...S }}>{form.pickupCity}</p>
-                <p style={{ fontSize: 13, color: MUTED, ...S }}>{form.pickupStreet}</p>
+                <>
+                  <p style={{ fontSize: 13, color: MUTED, marginTop: 2, ...S }}>{form.pickupCity}</p>
+                  <p style={{ fontSize: 13, color: MUTED, ...S }}>{form.pickupStreet}</p>
+                </>
               )}
             </>
           }
