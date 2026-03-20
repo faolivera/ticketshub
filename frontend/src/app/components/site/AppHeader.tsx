@@ -21,29 +21,32 @@ import {
 } from "@/lib/design-tokens";
 import { ChevronDown, Languages, LogOut, MessageCircle, Shield, Ticket, User } from "lucide-react";
 
+interface AppHeaderProps {
+  homeHref?: string;
+}
+
 /**
  * Global app header (max-width column aligned with home page content).
- * @param {object} props
- * @param {string} [props.homeHref] Home link anchor when already on `/` (e.g. #eventos).
+ * @param homeHref Home link anchor when already on `/` (e.g. #eventos).
  */
-export function AppHeader({ homeHref: _homeHref = "#eventos" }) {
+export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const { user, isAuthenticated, logout, canSell } = useUser();
-  const [userOpen, setUserOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
-  const userRef = useRef(null);
-  const langRef = useRef(null);
+  const [userOpen, setUserOpen] = useState<boolean>(false);
+  const [langOpen, setLangOpen] = useState<boolean>(false);
+  const userRef = useRef<HTMLDivElement>(null);
+  const langRef = useRef<HTMLDivElement>(null);
 
-  const changeLanguage = (lng) => {
+  const changeLanguage = (lng: string): void => {
     i18n.changeLanguage(lng);
     setLangOpen(false);
   };
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false);
-      if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false);
+    const handleClickOutside = (e: MouseEvent): void => {
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setUserOpen(false);
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);

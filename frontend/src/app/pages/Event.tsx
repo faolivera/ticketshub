@@ -15,18 +15,70 @@ import {
   V, VLIGHT, DARK, MUTED, BORDER, BORD2, S, E,
   SURFACE_STICKY, SHADOW_DROP, BG,
 } from "@/lib/design-tokens";
+import type { PublicListEventItem } from "@/api/types/events";
+import type { ListingWithSeller } from "@/api/types/tickets";
 
-const SORTS = ["Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
+const SORTS: string[] = ["Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
 
-function formatPrice(amountCents) {
+function formatPrice(amountCents: number): string {
   const n = Math.round(amountCents / 100);
   return n.toLocaleString("es-AR");
 }
 
-const fmt = (n) => "$" + Number(n).toLocaleString("es-AR");
+const fmt = (n: number): string => "$" + Number(n).toLocaleString("es-AR");
 
-function buildEventAndTickets(apiEvent, listings, currentUserId) {
+interface EventDate {
+  id: string;
+  label: string;
+  full: string;
+  count: number;
+}
+
+interface EventDisplay {
+  name: string;
+  subtitle: string;
+  category: string;
+  venue: string;
+  location: string;
+  img: string;
+  dates: EventDate[];
+}
+
+interface TicketDisplay {
+  id: string;
+  listingId: string;
+  eventSlug: string;
+  eventDateId: string;
+  sector: string;
+  seated: boolean;
+  acceptsOffers: boolean;
+  qty: number;
+  price: string;
+  priceNum: number;
+  currency: string;
+  seller: string;
+  sellerId: string;
+  sellerAvatarUrl: string | null;
+  sellerTotalSales: number;
+  sellerTotalReviews: number;
+  sellerPositivePercent: number | null;
+  verified: boolean;
+  newSeller: boolean;
+  badge: null;
+  urgency: string | null;
+}
+
+interface BuildResult {
+  event: EventDisplay | null;
+  tickets: TicketDisplay[];
+}
+
+function buildEventAndTickets(
+  apiEvent: PublicListEventItem | null,
+  listings: ListingWithSeller[],
+  currentUserId: string | undefined,
+): BuildResult {
   if (!apiEvent) return { event: null, tickets: [] };
   const approvedDates = (apiEvent.dates || []).filter((d) => d.status === "approved");
   const filteredListings = (listings || []).filter((l) => l.sellerId !== currentUserId);
@@ -38,12 +90,12 @@ function buildEventAndTickets(apiEvent, listings, currentUserId) {
     DEFAULT_IMAGE;
   const locationStr = [apiEvent.location?.city, apiEvent.location?.countryCode].filter(Boolean).join(", ");
 
-  const dateCounts = {};
+  const dateCounts: Record<string, number> = {};
   filteredListings.forEach((l) => {
     dateCounts[l.eventDateId] = (dateCounts[l.eventDateId] || 0) + 1;
   });
 
-  const event = {
+  const event: EventDisplay = {
     name: apiEvent.name || "",
     subtitle: apiEvent.description || "",
     category: apiEvent.category || "Other",
@@ -62,7 +114,7 @@ function buildEventAndTickets(apiEvent, listings, currentUserId) {
     }),
   };
 
-  const tickets = filteredListings.map((listing) => {
+  const tickets: TicketDisplay[] = filteredListings.map((listing) => {
     const available = listing.ticketUnits?.filter((u) => u.status === "available").length ?? 0;
     const priceCents = listing.pricePerTicket?.amount ?? 0;
     const priceNum = priceCents / 100;
@@ -103,24 +155,24 @@ function buildEventAndTickets(apiEvent, listings, currentUserId) {
 
 export default function EventDetail() {
   const { t } = useTranslation();
-  const { eventSlug } = useParams();
+  const { eventSlug } = useParams<{ eventSlug: string }>();
   const { user } = useUser();
-  const [dateIdx, setDateIdx] = useState(0);
-  const [sector, setSector] = useState("Todos");
-  const [sortIdx, setSortIdx] = useState(0);
-  const [dateOpen, setDateOpen] = useState(false);
-  const [sticky, setSticky] = useState(false);
-  const [apiEvent, setApiEvent] = useState(null);
-  const [listings, setListings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [alertPhone, setAlertPhone] = useState("");
-  const [alertSent, setAlertSent] = useState(false);
-  const [alertError, setAlertError] = useState(false);
+  const [dateIdx, setDateIdx] = useState<number>(0);
+  const [sector, setSector] = useState<string>("Todos");
+  const [sortIdx, setSortIdx] = useState<number>(0);
+  const [dateOpen, setDateOpen] = useState<boolean>(false);
+  const [sticky, setSticky] = useState<boolean>(false);
+  const [apiEvent, setApiEvent] = useState<PublicListEventItem | null>(null);
+  const [listings, setListings] = useState<ListingWithSeller[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [alertPhone, setAlertPhone] = useState<string>("");
+  const [alertSent, setAlertSent] = useState<boolean>(false);
+  const [alertError, setAlertError] = useState<boolean>(false);
   const waitingCount = 0; // TODO: proveer desde el backend
-  const heroRef = useRef(null);
-  const ticketsRef = useRef(null);
-  const dateRef = useRef(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const ticketsRef = useRef<HTMLDivElement>(null);
+  const dateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const l = document.createElement("link");
@@ -137,7 +189,7 @@ export default function EventDetail() {
       setIsLoading(true);
       setError(null);
       try {
-        const { event: eventData, listings: listingsData } = await ticketsService.getEventPage(eventSlug);
+        const { event: eventData, listings: listingsData } = await ticketsService.getEventPage(eventSlug!);
         if (!cancelled) {
           setApiEvent(eventData);
           setListings(listingsData || []);
@@ -162,7 +214,7 @@ export default function EventDetail() {
   }, []);
 
   useEffect(() => {
-    const h = (e) => { if (dateRef.current && !dateRef.current.contains(e.target)) setDateOpen(false); };
+    const h = (e: MouseEvent) => { if (dateRef.current && !dateRef.current.contains(e.target as Node)) setDateOpen(false); };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
@@ -201,17 +253,17 @@ export default function EventDetail() {
 
   const minPrice = useMemo(() => (sorted.length ? Math.min(...sorted.map((t) => t.priceNum)) : 0), [sorted]);
 
-  const sectorMin = (s) => {
+  const sectorMin = (s: string): number | null => {
     const list = s === "Todos" ? sorted : sorted.filter((t) => t.sector === s);
     if (!list.length) return null;
     return Math.min(...list.map((t) => t.priceNum));
   };
 
-  const scrollToTickets = () => {
+  const scrollToTickets = (): void => {
     ticketsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  function handleAlert() {
+  function handleAlert(): void {
     const val = alertPhone.trim();
     const isPhone = /^\+549\d{10}$/.test(val.replace(/\s/g, ""));
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
@@ -551,7 +603,7 @@ export default function EventDetail() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 13, color: MUTED, fontWeight: 500, whiteSpace: "nowrap" }}>Ordenar</span>
-            <select className="sort-sel" value={sortIdx} onChange={(e) => setSortIdx(Number(e.target.value))}>
+            <select className="sort-sel" value={sortIdx} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortIdx(Number(e.target.value))}>
               {SORTS.map((s, i) => <option key={i} value={i}>{s}</option>)}
             </select>
           </div>
@@ -604,7 +656,7 @@ export default function EventDetail() {
                       type="text"
                       placeholder="Tu WhatsApp o email"
                       value={alertPhone}
-                      onChange={(e) => { setAlertPhone(e.target.value); setAlertError(false); }}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setAlertPhone(e.target.value); setAlertError(false); }}
                       style={{ flex: 1, ...S, fontSize: 13.5, fontWeight: 500, padding: "10px 14px", border: `1.5px solid ${alertError ? "#e11d48" : "#d1d5db"}`, borderRadius: 10, color: DARK, background: BG, outline: "none" }}
                     />
                     <button onClick={handleAlert} style={{ ...S, fontSize: 13, fontWeight: 700, background: V, color: "white", border: "none", borderRadius: 10, padding: "10px 18px", cursor: "pointer", boxShadow: "0 4px 14px rgba(109,40,217,0.28)", whiteSpace: "nowrap" }}>
@@ -635,8 +687,8 @@ export default function EventDetail() {
                 <Link
                   to="/sell-ticket"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, ...S, fontSize: 13, fontWeight: 700, color: V, border: "1.5px solid #6d28d9", borderRadius: 10, padding: "10px 20px", textDecoration: "none", background: "transparent" }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = VLIGHT}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                  onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.background = VLIGHT}
+                  onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.background = "transparent"}
                 >
                   <Plus size={13} /> Publicar mi entrada
                 </Link>
@@ -653,7 +705,7 @@ export default function EventDetail() {
                 key={tkt.id}
                 style={{ animation: "fadeUp 0.35s ease both", animationDelay: `${idx * 40}ms`, height: "100%" }}
               >
-                <EventTicketCard ticket={tkt} eventSlug={eventSlug} />
+                <EventTicketCard ticket={tkt} eventSlug={eventSlug ?? ""} />
               </div>
             ))}
           </div>
@@ -691,8 +743,8 @@ export default function EventDetail() {
               whiteSpace: "nowrap",
               transition: "background 0.15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#f0ebff")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.background = "#f0ebff")}
+            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.background = "transparent")}
           >
             Publicar mi entrada →
           </Link>

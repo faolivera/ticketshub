@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { eventsService } from "@/api/services/events.service";
+import type { PublicListEventItem } from "@/api/types/events";
 import { formatDate } from "@/lib/format-date";
 import {
   V,
@@ -42,13 +43,29 @@ import {
 import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero";
 import { ShieldSVG, MapSVG } from "@/app/components/site/SiteBrandIcons";
 import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar, SlidersHorizontal } from "lucide-react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
+
+interface CardShape {
+  id: string;
+  slug: string;
+  name: string;
+  venue: string;
+  city: string;
+  dates: string[];
+  img: string;
+  price: string | null;
+  priceCurrency: string;
+  available: number | null;
+  badge: string | null;
+  category: string | undefined;
+}
 
 /**
  * Transform API event to card shape. Dates are approved only, formatted as "DD Mon · HH:mm".
  */
-function eventToCardShape(apiEvent) {
+function eventToCardShape(apiEvent: PublicListEventItem): CardShape {
   const approvedDates = (apiEvent.dates || []).filter((d) => d.status === "approved");
   const datesFormatted = approvedDates.map((d) => {
     const dateStr = typeof d.date === "string" ? d.date : d.date;
@@ -88,7 +105,7 @@ function eventToCardShape(apiEvent) {
 
 const CATS   = ["Todos","Recital","Festival","Teatro","Deportes","Electrónica"];
 /** Maps landing pill label to API EventCategory */
-const CAT_TO_API = {
+const CAT_TO_API: Record<string, string> = {
   Recital: "Concert",
   Festival: "Festival",
   Teatro: "Theater",
@@ -123,25 +140,25 @@ const TRUST = [
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function TicketsHub() {
   const { t } = useTranslation();
-  const [activeCat,   setActiveCat]  = useState("Todos");
-  const [activeCity,  setActiveCity] = useState("Todas las ciudades");
-  const [cityOpen,    setCityOpen]   = useState(false);
-  const [citySearch,  setCitySearch] = useState("");
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [query,       setQuery]      = useState("");
-  const [hoveredCard,    setHovered]       = useState(null);
-  const [heroLoaded,     setHeroLoaded]    = useState(false);
-  const [events,         setEvents]        = useState([]);
-  const [isLoading,      setIsLoading]     = useState(true);
-  const [isLoadingMore,  setIsLoadingMore] = useState(false);
-  const [error,          setError]         = useState(null);
+  const [activeCat,   setActiveCat]  = useState<string>("Todos");
+  const [activeCity,  setActiveCity] = useState<string>("Todas las ciudades");
+  const [cityOpen,    setCityOpen]   = useState<boolean>(false);
+  const [citySearch,  setCitySearch] = useState<string>("");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
+  const [query,       setQuery]      = useState<string>("");
+  const [hoveredCard,    setHovered]       = useState<string | null>(null);
+  const [heroLoaded,     setHeroLoaded]    = useState<boolean>(false);
+  const [events,         setEvents]        = useState<PublicListEventItem[]>([]);
+  const [isLoading,      setIsLoading]     = useState<boolean>(true);
+  const [isLoadingMore,  setIsLoadingMore] = useState<boolean>(false);
+  const [error,          setError]         = useState<string | null>(null);
   /** Next page already fetched; shown on "load more". Empty = no more or not yet loaded after click. */
-  const [prefetchedPage, setPrefetchedPage]  = useState([]);
-  const [hasMore,        setHasMore]       = useState(false);
-  const cityRefDesktop = useRef(null);
-  const cityRefMobile = useRef(null);
+  const [prefetchedPage, setPrefetchedPage]  = useState<PublicListEventItem[]>([]);
+  const [hasMore,        setHasMore]       = useState<boolean>(false);
+  const cityRefDesktop = useRef<HTMLDivElement>(null);
+  const cityRefMobile = useRef<HTMLDivElement>(null);
   /** If user loads page 2 via "load more" before the background page-2 fetch finishes, drop that stale response. */
-  const ignoreInitialPage2PrefetchRef = useRef(false);
+  const ignoreInitialPage2PrefetchRef = useRef<boolean>(false);
 
   const PAGE_SIZE = 12;
 
@@ -152,7 +169,7 @@ export default function TicketsHub() {
     (async function fetchInitialTwoPages() {
       setIsLoading(true);
       setError(null);
-      let page1 = [];
+      let page1: PublicListEventItem[] = [];
       try {
         const data = await eventsService.listEvents({
           limit: PAGE_SIZE,
@@ -181,7 +198,7 @@ export default function TicketsHub() {
           setPrefetchedPage(page2);
           setHasMore(page2.length > 0);
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           if (cancelled || ignoreInitialPage2PrefetchRef.current) return;
           console.error("Failed to prefetch second page:", err);
         });
@@ -192,11 +209,11 @@ export default function TicketsHub() {
     };
   }, [t]);
 
-  async function handleLoadMore() {
+  async function handleLoadMore(): Promise<void> {
     if (isLoadingMore || !hasMore) return;
 
     const prevLen = events.length;
-    const batch =
+    const batch: PublicListEventItem[] | null =
       prefetchedPage.length > 0
         ? prefetchedPage
         : null;
@@ -207,8 +224,8 @@ export default function TicketsHub() {
 
     setIsLoadingMore(true);
     try {
-      let shownBatch;
-      let offsetAfterAppend;
+      let shownBatch: PublicListEventItem[];
+      let offsetAfterAppend: number;
 
       if (batch) {
         shownBatch = batch;
@@ -258,9 +275,9 @@ export default function TicketsHub() {
   }, []);
 
   useEffect(() => {
-    const h = (e) => {
-      const inDesk = cityRefDesktop.current?.contains(e.target);
-      const inMob = cityRefMobile.current?.contains(e.target);
+    const h = (e: MouseEvent) => {
+      const inDesk = cityRefDesktop.current?.contains(e.target as Node);
+      const inMob = cityRefMobile.current?.contains(e.target as Node);
       if (inDesk || inMob) return;
       setCityOpen(false);
       setCitySearch("");
@@ -269,7 +286,7 @@ export default function TicketsHub() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const filteredCities = CITIES.filter(c => c.toLowerCase().includes(citySearch.toLowerCase()));
+  const filteredCities = CITIES.filter((c: string) => c.toLowerCase().includes(citySearch.toLowerCase()));
 
   const filtered = useMemo(() => {
     const searchLower = (query || "").trim().toLowerCase();
@@ -293,7 +310,7 @@ export default function TicketsHub() {
       .map(eventToCardShape);
   }, [events, query, activeCity, activeCat]);
 
-  const catPill = (active) => ({
+  const catPill = (active: boolean): CSSProperties => ({
     display:"inline-flex", alignItems:"center",
     padding:"5px 13px", borderRadius:100, fontSize:12.5,
     fontWeight:600, cursor:"pointer",
@@ -572,8 +589,8 @@ export default function TicketsHub() {
                     fontSize:14, fontWeight:600, cursor: isLoadingMore ? "default" : "pointer",
                     transition:"all 0.16s", ...S,
                   }}
-                  onMouseEnter={e => { if (!isLoadingMore) { e.currentTarget.style.borderColor = V; e.currentTarget.style.color = V; e.currentTarget.style.background = VLIGHT; } }}
-                  onMouseLeave={e => { if (!isLoadingMore) { e.currentTarget.style.borderColor = BORD2; e.currentTarget.style.color = DARK; e.currentTarget.style.background = "white"; } }}
+                  onMouseEnter={(e: ReactMouseEvent<HTMLButtonElement>) => { if (!isLoadingMore) { e.currentTarget.style.borderColor = V; e.currentTarget.style.color = V; e.currentTarget.style.background = VLIGHT; } }}
+                  onMouseLeave={(e: ReactMouseEvent<HTMLButtonElement>) => { if (!isLoadingMore) { e.currentTarget.style.borderColor = BORD2; e.currentTarget.style.color = DARK; e.currentTarget.style.background = "white"; } }}
                 >
                   {isLoadingMore ? (
                     <>
@@ -646,13 +663,20 @@ function SkeletonCard() {
 }
 
 // ─── EVENT CARD ───────────────────────────────────────────────────────────────
-function EventCard({ event, index, hovered, onHover }) {
+interface EventCardProps {
+  event: CardShape;
+  index: number;
+  hovered: boolean;
+  onHover: (id: string | null) => void;
+}
+
+function EventCard({ event, index, hovered, onHover }: EventCardProps) {
   const dates = event.dates || [];
   const multi = dates.length > 1;
-  const S2 = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+  const S2: CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
   const datesLabel = dates.length === 0 ? "" : dates.join(", ");
 
-  const urgBadge = (type) => {
+  const urgBadge = (type: string): { bg?: string; color?: string; border?: string } => {
     if (type === "últimas")
       return { bg: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}` };
     if (type === "demanda")
@@ -785,7 +809,11 @@ function EventCard({ event, index, hovered, onHover }) {
 }
 
 // ─── HERO-ONLY SVG ICONS ─────────────────────────────────────────────────────
-function CheckSVG({ size = 13 }) {
+interface SVGIconProps {
+  size?: number;
+}
+
+function CheckSVG({ size = 13 }: SVGIconProps) {
   return (
     <svg
       width={size}
@@ -801,7 +829,7 @@ function CheckSVG({ size = 13 }) {
     </svg>
   );
 }
-function UsersSVG({ size = 13 }) {
+function UsersSVG({ size = 13 }: SVGIconProps) {
   return (
     <svg
       width={size}

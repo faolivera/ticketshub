@@ -14,9 +14,16 @@ import {
   OVERLAY_DARK_45,
   V_SOFT,
 } from "@/lib/design-tokens";
-import { Lock, CheckCircle, RefreshCw } from "lucide-react";
+import { Lock, CheckCircle, RefreshCw, LucideIcon } from "lucide-react";
+import { PublicListEventItem } from "@/api/types/events";
 
-const TRUST = [
+interface TrustItem {
+  Icon: LucideIcon;
+  title: string;
+  color: string;
+}
+
+const TRUST: TrustItem[] = [
   { Icon: Lock, title: "Fondos protegidos", color: TRUST_ESCROW },
   { Icon: CheckCircle, title: "Vendedores verificados", color: TRUST_VERIFIED },
   { Icon: RefreshCw, title: "Garantía total", color: AMBER_c1 },
@@ -39,7 +46,12 @@ const DEFAULT_IMAGE = "https://picsum.photos/seed/event/1400/400";
  */
 const MOBILE_MAX_WIDTH = "(max-width: 767px)";
 
-function resolveBannerSrc(ev, preferSquare) {
+// Extend PublicListEventItem with the availableCount field that is not yet in the API
+interface HeroEvent extends PublicListEventItem {
+  availableCount?: number;
+}
+
+function resolveBannerSrc(ev: HeroEvent, preferSquare: boolean): string {
   if (preferSquare) {
     return (
       ev.bannerUrls?.square ||
@@ -56,17 +68,21 @@ function resolveBannerSrc(ev, preferSquare) {
   );
 }
 
-export function HighlightedEventsHero({ onLoad }) {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [index, setIndex] = useState(0);
-  const [preferSquareLayout, setPreferSquareLayout] = useState(() =>
+interface HighlightedEventsHeroProps {
+  onLoad?: () => void;
+}
+
+export function HighlightedEventsHero({ onLoad }: HighlightedEventsHeroProps): JSX.Element | null {
+  const [events, setEvents] = useState<HeroEvent[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [index, setIndex] = useState<number>(0);
+  const [preferSquareLayout, setPreferSquareLayout] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.matchMedia(MOBILE_MAX_WIDTH).matches : false
   );
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_MAX_WIDTH);
-    const onChange = () => setPreferSquareLayout(mq.matches);
+    const onChange = (): void => setPreferSquareLayout(mq.matches);
     onChange();
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
@@ -74,7 +90,7 @@ export function HighlightedEventsHero({ onLoad }) {
 
   useEffect(() => {
     let cancelled = false;
-    async function fetchFeatured() {
+    async function fetchFeatured(): Promise<void> {
       try {
         const data = await eventsService.getHighlightedEvents();
         if (!cancelled && Array.isArray(data)) {

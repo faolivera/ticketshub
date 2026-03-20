@@ -1,6 +1,10 @@
 import { BLUE } from "@/lib/design-tokens";
 
-export function HubSVG({ size = 16 }) {
+interface HubSVGProps {
+  size?: number;
+}
+
+export function HubSVG({ size = 16 }: HubSVGProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
       <circle cx="9" cy="9" r="2.6" fill="white" />
@@ -14,7 +18,12 @@ export function HubSVG({ size = 16 }) {
   );
 }
 
-export function ShieldSVG({ size = 14, color = BLUE }) {
+interface ShieldSVGProps {
+  size?: number;
+  color?: string;
+}
+
+export function ShieldSVG({ size = 14, color = BLUE }: ShieldSVGProps) {
   return (
     <svg
       width={size}
@@ -31,7 +40,12 @@ export function ShieldSVG({ size = 14, color = BLUE }) {
   );
 }
 
-export function MapSVG({ size = 14, color }) {
+interface MapSVGProps {
+  size?: number;
+  color?: string;
+}
+
+export function MapSVG({ size = 14, color }: MapSVGProps) {
   return (
     <svg
       width={size}

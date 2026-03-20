@@ -33,10 +33,17 @@ import { PageMeta } from "@/app/components/PageMeta";
 import { BackButton } from "@/app/components/BackButton";
 import { UserAvatar } from "@/app/components/UserAvatar";
 import { SeatingType, TicketUnitStatus } from "@/api/types";
+import type {
+  BuyPageData,
+  BuyPagePaymentMethodOption,
+  CheckoutRisk,
+  GetTermsStatusResponse,
+} from "@/api/types";
+import type { Offer } from "@/api/types/offers";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-function isPricingSnapshotExpiredError(err) {
+function isPricingSnapshotExpiredError(err: any): boolean {
   const code = err?.code;
   const message = err?.message;
   return (
@@ -45,7 +52,7 @@ function isPricingSnapshotExpiredError(err) {
   );
 }
 
-function isListingUnavailableError(err) {
+function isListingUnavailableError(err: any): boolean {
   const code = String(err?.code ?? "");
   const msg = (err?.message ?? "").toLowerCase();
   return (
@@ -55,7 +62,7 @@ function isListingUnavailableError(err) {
 }
 
 // Infer expiry reason from offer data if backend doesn't supply it directly
-function getExpiredReason(offer) {
+function getExpiredReason(offer: Offer | null): string | null {
   if (!offer) return null;
   if (offer.expiredReason) return offer.expiredReason;
   // If the offer was ever accepted but buyer didn't confirm → buyer_no_purchase
@@ -64,12 +71,17 @@ function getExpiredReason(offer) {
 
 // ─── Countdown ───────────────────────────────────────────────────────────────
 
-function Countdown({ targetDate, onSecondsChange }) {
+interface CountdownProps {
+  targetDate: string;
+  onSecondsChange?: (secs: number) => void;
+}
+
+function Countdown({ targetDate, onSecondsChange }: CountdownProps) {
   const [display, setDisplay] = useState("");
   useEffect(() => {
     if (!targetDate) return;
     const update = () => {
-      const secs = Math.max(0, Math.floor((new Date(targetDate) - Date.now()) / 1000));
+      const secs = Math.max(0, Math.floor((new Date(targetDate).getTime() - Date.now()) / 1000));
       const h = Math.floor(secs / 3600);
       const m = Math.floor((secs % 3600) / 60);
       const s = secs % 60;
@@ -91,42 +103,42 @@ function Countdown({ targetDate, onSecondsChange }) {
 
 export default function Checkout() {
   const { t } = useTranslation();
-  const { eventSlug, listingId } = useParams();
+  const { eventSlug, listingId } = useParams<{ eventSlug: string; listingId: string }>();
   const [searchParams] = useSearchParams();
   const offerIdFromUrl = searchParams.get("offerId");
   const navigate = useNavigate();
   const { isAuthenticated, user } = useUser();
 
   // ── data ──
-  const [buyPageData, setBuyPageData] = useState(null);
+  const [buyPageData, setBuyPageData] = useState<BuyPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // ── selection ──
   const [quantity, setQuantity] = useState(1);
-  const [selectedUnitIds, setSelectedUnitIds] = useState([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<BuyPagePaymentMethodOption | null>(null);
 
   // ── offer ──
-  const [acceptedOffer, setAcceptedOffer] = useState(null);
+  const [acceptedOffer, setAcceptedOffer] = useState<Offer | null>(null);
   const [acceptedOfferSecsLeft, setAcceptedOfferSecsLeft] = useState(Infinity);
-  const [pendingOffer, setPendingOffer] = useState(null);
-  const [expiredOffer, setExpiredOffer] = useState(null);
+  const [pendingOffer, setPendingOffer] = useState<Offer | null>(null);
+  const [expiredOffer, setExpiredOffer] = useState<Offer | null>(null);
   const [offerOpen, setOfferOpen] = useState(false);
   const [offerPriceCents, setOfferPriceCents] = useState(0);
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
-  const [offerError, setOfferError] = useState(null);
+  const [offerError, setOfferError] = useState<string | null>(null);
 
   // ── purchase ──
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const [purchaseError, setPurchaseError] = useState(null);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [isUnavailable, setIsUnavailable] = useState(false);
-  const [localCheckoutRisk, setLocalCheckoutRisk] = useState(null);
+  const [localCheckoutRisk, setLocalCheckoutRisk] = useState<CheckoutRisk | null>(null);
 
   // ── terms ──
-  const [termsStatus, setTermsStatus] = useState(null);
+  const [termsStatus, setTermsStatus] = useState<GetTermsStatusResponse | null>(null);
   const [termsStatusLoading, setTermsStatusLoading] = useState(false);
-  const [buyTermsVersionId, setBuyTermsVersionId] = useState(null);
+  const [buyTermsVersionId, setBuyTermsVersionId] = useState<string | null>(null);
   const [buyTermsLoading, setBuyTermsLoading] = useState(false);
   const [buyTermsAccepted, setBuyTermsAccepted] = useState(false);
 
@@ -299,7 +311,7 @@ export default function Checkout() {
             .filter((o) => o.status === "expired")
             .sort(
               (a, b) =>
-                new Date(b.updatedAt ?? b.createdAt) - new Date(a.updatedAt ?? a.createdAt)
+                new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime()
             )[0] ?? null;
         if (!cancelled) {
           setAcceptedOffer(accepted ?? null);
@@ -330,7 +342,7 @@ export default function Checkout() {
             (u) => u.seat?.row === seat.row && u.seat?.seatNumber === seat.seatNumber
           )?.id
         )
-        .filter(Boolean);
+        .filter((id): id is string => id != null);
       setSelectedUnitIds(ids);
     }
   }, [acceptedOffer?.id, listing?.id]);
@@ -385,7 +397,7 @@ export default function Checkout() {
 
   // ── handlers ──
 
-  const toggleSeatSelection = (unitId) => {
+  const toggleSeatSelection = (unitId: string) => {
     if (listing?.sellTogether || acceptedOffer) return;
     setSelectedUnitIds((prev) =>
       prev.includes(unitId) ? prev.filter((id) => id !== unitId) : [...prev, unitId]
@@ -439,7 +451,7 @@ export default function Checkout() {
         const response = await transactionsService.initiatePurchase({
           listingId,
           paymentMethodId: selectedPaymentMethod?.id ?? "payway",
-          offerId: acceptedOffer.id,
+          offerId: acceptedOffer!.id,
         });
         navigate(`/transaction/${response.transaction.id}`, { state: { from: "/my-tickets" } });
         return;
@@ -458,10 +470,10 @@ export default function Checkout() {
         listingId,
         ticketUnitIds: unitsToPurchase,
         paymentMethodId: selectedPaymentMethod?.id ?? "payway",
-        pricingSnapshotId: pricingSnapshot.id,
+        pricingSnapshotId: pricingSnapshot!.id,
       });
       navigate(`/transaction/${response.transaction.id}`, { state: { from: "/my-tickets" } });
-    } catch (err) {
+    } catch (err: any) {
       if (isPricingSnapshotExpiredError(err)) {
         setPurchaseError(t("buyTicket.pricesChanged"));
         await refreshBuyPageData();
@@ -498,12 +510,12 @@ export default function Checkout() {
     }
     const ticketsPayload = isNumberedListing
       ? {
-          type: "numbered",
+          type: "numbered" as const,
           seats: selectedUnitIds
             .map((id) => availableUnits.find((u) => u.id === id)?.seat)
-            .filter((s) => s != null),
+            .filter((s): s is NonNullable<typeof s> => s != null),
         }
-      : { type: "unnumbered", count: quantity };
+      : { type: "unnumbered" as const, count: quantity };
     if (ticketsPayload.type === "numbered" && ticketsPayload.seats.length === 0) {
       setOfferError(t("buyTicket.selectAtLeastOneSeat"));
       return;
@@ -522,7 +534,7 @@ export default function Checkout() {
       });
       setPendingOffer(created);
       setOfferOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       setOfferError(err?.message ?? t("buyTicket.offerSubmitFailed"));
     } finally {
       setIsSubmittingOffer(false);
@@ -533,7 +545,7 @@ export default function Checkout() {
     if (!pendingOffer) return;
     try {
       // Use optional chaining — method name may vary by API implementation
-      await (offersService.cancel ?? offersService.cancelOffer ?? (() => Promise.resolve()))(pendingOffer.id);
+      await ((offersService as any).cancel ?? (offersService as any).cancelOffer ?? (() => Promise.resolve()))(pendingOffer.id);
     } catch {
       // Optimistically update regardless
     }
@@ -663,7 +675,7 @@ export default function Checkout() {
             ? "Comprar directo"
             : "Comprar con garantía";
 
-  const primaryBtnVariant = canBuy ? "primary" : !canProceed || isOwnListing ? "disabled" : "warn";
+  const primaryBtnVariant: "primary" | "warn" | "disabled" = canBuy ? "primary" : !canProceed || isOwnListing ? "disabled" : "warn";
 
   const formattedTotal =
     selectedQuantity > 0 && grandTotal > 0
@@ -671,14 +683,14 @@ export default function Checkout() {
       : null;
 
   // Reusable style fragments
-  const card = {
+  const card: React.CSSProperties = {
     background: CARD,
     border: `1px solid ${BORDER}`,
     borderRadius: 16,
     overflow: "hidden",
     boxShadow: SHADOW_CARD_SM,
   };
-  const lbl = {
+  const lbl: React.CSSProperties = {
     fontSize: 10.5,
     fontWeight: 700,
     color: MUTED,
@@ -686,7 +698,7 @@ export default function Checkout() {
     letterSpacing: "0.06em",
     marginBottom: 10,
   };
-  const hr = { border: "none", borderTop: `1px solid ${BORDER}`, margin: "14px 0" };
+  const hr: React.CSSProperties = { border: "none", borderTop: `1px solid ${BORDER}`, margin: "14px 0" };
 
   return (
     <div style={{ ...S, background: BG, color: DARK, minHeight: "100dvh" }}>
@@ -1063,7 +1075,7 @@ export default function Checkout() {
                     {seller.totalSales > 0 && (
                       <p style={{ fontSize: 12, color: MUTED, marginTop: 1 }}>
                         {t("buyTicket.sellerTotalSales", { count: seller.totalSales })}
-                        {seller.totalReviews > 0 && ` · ${Math.round(seller.percentPositiveReviews)}% positivas`}
+                        {seller.totalReviews > 0 && ` · ${Math.round(seller.percentPositiveReviews!)}% positivas`}
                       </p>
                     )}
                   </div>
@@ -1565,7 +1577,7 @@ export default function Checkout() {
                                   className={`offer-input${offerError ? " error" : ""}`}
                                   placeholder="Tu oferta en ARS..."
                                   value={offerPriceCents ? Math.floor(offerPriceCents / 100) : ""}
-                                  onChange={(e) => {
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     setOfferPriceCents(Math.max(0, Number(e.target.value) * 100));
                                     setOfferError(null);
                                   }}
@@ -1681,7 +1693,14 @@ export default function Checkout() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function PriceLine({ label, sub, value, isDiscount }) {
+interface PriceLineProps {
+  label: string;
+  sub: string | null | undefined;
+  value: string;
+  isDiscount?: boolean;
+}
+
+function PriceLine({ label, sub, value, isDiscount }: PriceLineProps) {
   return (
     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
       <div>
@@ -1701,8 +1720,17 @@ function PriceLine({ label, sub, value, isDiscount }) {
   );
 }
 
-function BuyButton({ label, variant, onClick, total, disabled, isLoading }) {
-  const styles = {
+interface BuyButtonProps {
+  label: string;
+  variant: "primary" | "warn" | "disabled";
+  onClick: (() => void) | undefined;
+  total: string | null;
+  disabled: boolean;
+  isLoading: boolean;
+}
+
+function BuyButton({ label, variant, onClick, total, disabled, isLoading }: BuyButtonProps) {
+  const styles: Record<string, React.CSSProperties> = {
     primary: { background: V, color: "white", cursor: "pointer", opacity: 1 },
     warn: { background: WARN_SOLID, color: "white", cursor: "not-allowed", opacity: 1 },
     disabled: { background: BORD2, color: MUTED, cursor: "not-allowed", opacity: 0.8 },

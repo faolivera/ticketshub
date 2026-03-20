@@ -15,7 +15,7 @@ import {
 } from "@/lib/design-tokens";
 
 /** Global site footer (non-admin routes). */
-export function AppFooter() {
+export function AppFooter(): JSX.Element {
   return (
     <footer style={{ background: DARK, color: FOOTER_MUTED, padding: "40px 24px 26px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
