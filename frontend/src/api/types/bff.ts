@@ -36,19 +36,23 @@ export interface GetSellTicketConfigResponse {
 }
 
 /**
- * Request for POST /api/sell/validate (listing snapshot for risk validation).
+ * Request for POST /api/sell/validate.
+ * validations: which checks to run. 'proximity' requires eventDateId.
  */
 export interface ValidateSellListingRequest {
+  eventDateId?: string;
+  validations: ('proximity' | 'limits')[];
   quantity: number;
   pricePerTicket: { amount: number; currency: string };
 }
 
 /**
- * Result of sell listing validation (same risk checks as createListing for Tier 0 sellers).
+ * Discriminated result of sell listing validation.
  */
 export type ValidateSellListingResponse =
   | { status: 'can_create' }
-  | { status: 'seller_risk_restriction' };
+  | { status: 'date_proximity_restriction' }
+  | { status: 'listing_limits_restriction' };
 
 /** GET /api/activity-history */
 export type ActivityHistoryItem =
