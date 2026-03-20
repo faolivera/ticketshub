@@ -87,6 +87,8 @@ export interface BuyPagePaymentMethodOption {
   name: string;
   /** Combined service fee percentage (platform + payment method); used for one "Precio por servicio" line */
   serviceFeePercent: number;
+  /** Whether this method is currently available for selection (maps to status === 'enabled' on the payment method) */
+  available: boolean;
 }
 
 /** Checkout risk: which verifications are required and which are missing for the current user. */

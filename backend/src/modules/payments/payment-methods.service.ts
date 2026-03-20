@@ -61,13 +61,14 @@ export class PaymentMethodsService {
   async getPublicPaymentMethods(
     ctx: Ctx,
   ): Promise<PublicPaymentMethodOption[]> {
-    const enabled = await this.repository.findEnabled(ctx);
-    return enabled.map((pm) => ({
+    const visible = await this.repository.findVisible(ctx);
+    return visible.map((pm) => ({
       id: pm.id,
       name: pm.publicName,
       type: pm.type,
       buyerCommissionPercent: pm.buyerCommissionPercent,
       bankTransferConfig: pm.bankTransferConfig,
+      available: pm.status === 'enabled',
     }));
   }
 
@@ -83,6 +84,7 @@ export class PaymentMethodsService {
       publicName: data.publicName,
       type: data.type,
       status: 'enabled',
+      visible: true,
       buyerCommissionPercent: data.buyerCommissionPercent,
       gatewayProvider: data.gatewayProvider,
       gatewayConfigEnvPrefix: data.gatewayConfigEnvPrefix,
@@ -110,6 +112,8 @@ export class PaymentMethodsService {
       const merged = {
         type: existing.type,
         gatewayProvider: data.gatewayProvider ?? existing.gatewayProvider,
+        gatewayConfigEnvPrefix:
+          data.gatewayConfigEnvPrefix ?? existing.gatewayConfigEnvPrefix,
         bankTransferConfig:
           data.bankTransferConfig ?? existing.bankTransferConfig,
       };

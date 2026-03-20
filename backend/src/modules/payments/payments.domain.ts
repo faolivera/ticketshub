@@ -29,6 +29,8 @@ export interface PaymentMethodOption {
   publicName: string;
   type: PaymentMethodType;
   status: PaymentMethodStatus;
+  /** Whether the method is shown to buyers in checkout. Does not affect backend acceptance (status controls that). */
+  visible: boolean;
   buyerCommissionPercent: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;
@@ -44,6 +46,7 @@ export interface PublicPaymentMethodOption {
   type: PaymentMethodType;
   buyerCommissionPercent: number | null;
   bankTransferConfig?: BankTransferConfig;
+  available: boolean;
 }
 
 /**

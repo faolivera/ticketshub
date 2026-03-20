@@ -76,6 +76,7 @@ export interface UpdatePaymentMethodRequest {
   name?: string;
   publicName?: string;
   status?: 'enabled' | 'disabled';
+  visible?: boolean;
   buyerCommissionPercent?: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;

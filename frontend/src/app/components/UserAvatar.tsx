@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, type CSSProperties } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { cn } from './ui/utils';
 
@@ -7,6 +7,7 @@ interface UserAvatarProps {
   src?: string;
   className?: string;
   alt?: string;
+  style?: CSSProperties;
 }
 
 function getInitials(name: string): string {
@@ -23,9 +24,10 @@ export const UserAvatar: FC<UserAvatarProps> = ({
   src,
   className,
   alt,
+  style,
 }) => {
   return (
-    <Avatar className={cn('flex-shrink-0', className)}>
+    <Avatar className={cn('flex-shrink-0', className)} style={style}>
       <AvatarImage src={src} alt={alt ?? name} />
       <AvatarFallback
         className="bg-muted text-muted-foreground font-semibold"

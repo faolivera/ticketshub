@@ -25,6 +25,7 @@ describe('PricingService', () => {
       publicName: 'Payway',
       type: 'payment_gateway',
       status: 'enabled',
+      visible: true,
       buyerCommissionPercent: 12,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -35,6 +36,7 @@ describe('PricingService', () => {
       publicName: 'Bank Transfer',
       type: 'manual_approval',
       status: 'enabled',
+      visible: true,
       buyerCommissionPercent: 0,
       bankTransferConfig: {
         cbu: '123456789',

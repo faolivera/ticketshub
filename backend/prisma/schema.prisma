@@ -672,6 +672,7 @@ model PaymentMethod {
   name                String
   type                String
   status              String   @default("enabled")
+  visible             Boolean  @default(true)
   commissionPercent   Float
   commissionFixed     Int      @default(0)
   instructions        Json?

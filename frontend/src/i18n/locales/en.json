@@ -89,6 +89,7 @@
     "upcomingEvents": "Upcoming Events",
     "eventsSectionTitle": "Upcoming events",
     "noEventsFound": "No events found matching your search.",
+    "loadingEvents": "Loading events...",
     "errorLoadingEvents": "Failed to load events. Please try again.",
     "loadMore": "Load more",
     "loadingMore": "Loading...",
@@ -595,7 +596,13 @@
     "customerReviews": "Customer Reviews",
     "noReviewsYet": "No reviews yet",
     "noReviewsDescription": "This seller has not received any reviews yet.",
-    "ticket": "Ticket"
+    "ticket": "Ticket",
+    "satisfaction": "Buyer satisfaction",
+    "verifiedSeller": "Verified seller",
+    "tickets": "Tickets sold",
+    "fromBuyers": "From buyers",
+    "reviewBreakdown": "Review breakdown",
+    "noDataYet": "No data yet"
   },
   "howItWorks": {
     "title": "How It Works",
@@ -2424,6 +2431,7 @@
         "provider": "Provider / Bank",
         "buyerCommission": "Buyer Fee",
         "status": "Status",
+        "visible": "Visible",
         "actions": "Actions"
       },
       "types": {

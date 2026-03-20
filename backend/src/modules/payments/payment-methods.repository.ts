@@ -53,6 +53,15 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
     return methods.map((m) => this.mapToDomain(m));
   }
 
+  async findVisible(ctx: Ctx): Promise<PaymentMethodOption[]> {
+    this.logger.debug(ctx, 'findVisible');
+    const methods = await this.prisma.paymentMethod.findMany({
+      where: { visible: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return methods.map((m) => this.mapToDomain(m));
+  }
+
   async create(
     _ctx: Ctx,
     paymentMethod: PaymentMethodOption,
@@ -66,6 +75,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
         name: paymentMethod.name,
         type: paymentMethod.type,
         status: paymentMethod.status,
+        visible: paymentMethod.visible,
         commissionPercent: paymentMethod.buyerCommissionPercent ?? 0,
         commissionFixed: 0,
         instructions: instructions as object,
@@ -113,6 +123,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
         ...(updates.name !== undefined && { name: updates.name }),
         ...(updates.type !== undefined && { type: updates.type }),
         ...(updates.status !== undefined && { status: updates.status }),
+        ...(updates.visible !== undefined && { visible: updates.visible }),
         ...(updates.buyerCommissionPercent !== undefined && {
           commissionPercent: updates.buyerCommissionPercent ?? 0,
         }),
@@ -157,6 +168,7 @@ export class PaymentMethodsRepository implements IPaymentMethodsRepository {
       publicName: instructions.publicName ?? prismaMethod.name,
       type: prismaMethod.type as PaymentMethodType,
       status: prismaMethod.status as PaymentMethodStatus,
+      visible: prismaMethod.visible,
       buyerCommissionPercent: prismaMethod.commissionPercent,
       gatewayProvider: instructions.gatewayProvider,
       gatewayConfigEnvPrefix: instructions.gatewayConfigEnvPrefix,

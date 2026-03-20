@@ -158,6 +158,17 @@ export function PaymentMethodsManagement() {
     }
   };
 
+  const handleToggleVisible = async (method: PaymentMethodOption) => {
+    try {
+      await adminService.updatePaymentMethod(method.id, { visible: !method.visible });
+      await fetchPaymentMethods();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to toggle visibility'
+      );
+    }
+  };
+
   const handleOpenDelete = (method: PaymentMethodOption) => {
     setDeletingMethod(method);
     setIsDeleteDialogOpen(true);
@@ -345,6 +356,9 @@ export function PaymentMethodsManagement() {
                   <TableHead>
                     {t('admin.paymentMethods.table.status')}
                   </TableHead>
+                  <TableHead>
+                    {t('admin.paymentMethods.table.visible')}
+                  </TableHead>
                   <TableHead className="text-right">
                     {t('admin.paymentMethods.table.actions')}
                   </TableHead>
@@ -390,6 +404,12 @@ export function PaymentMethodsManagement() {
                           {t(`admin.paymentMethods.status.${method.status}`)}
                         </Badge>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={method.visible}
+                        onCheckedChange={() => handleToggleVisible(method)}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

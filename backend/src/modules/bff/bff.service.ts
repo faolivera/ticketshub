@@ -284,6 +284,7 @@ export class BffService {
         serviceFeePercent:
           snapshot.buyerPlatformFeePercentage +
           (pm.buyerCommissionPercent ?? 0),
+        available: pm.available,
       }));
 
     let checkoutRisk: BuyPageData['checkoutRisk'];

@@ -56,6 +56,11 @@ export const BADGE_DEMAND_BORDER = "#fca5a5";
 
 export const WARN_SOLID = "#f59e0b";
 
+// Neutral gray — expired-offer "no-response" state, secondary surfaces
+export const GRAY_BG = "#f5f4ef";
+export const GRAY_BORDER = "#d5d3ca";
+export const GRAY_TEXT = "#5c5c58";
+
 export const WHITE = "#ffffff";
 
 // Overlays & sticky surfaces

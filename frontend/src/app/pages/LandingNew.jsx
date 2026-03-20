@@ -130,6 +130,7 @@ export default function TicketsHub() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [query,       setQuery]      = useState("");
   const [hoveredCard,    setHovered]       = useState(null);
+  const [heroLoaded,     setHeroLoaded]    = useState(false);
   const [events,         setEvents]        = useState([]);
   const [isLoading,      setIsLoading]     = useState(true);
   const [isLoadingMore,  setIsLoadingMore] = useState(false);
@@ -308,6 +309,11 @@ export default function TicketsHub() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+        @keyframes shimmer {
+          0%   { background-position: -200% 0; }
+          100% { background-position:  200% 0; }
+        }
+        .sk { background: linear-gradient(90deg, #ece9e6 25%, #f5f4f1 50%, #ece9e6 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; border-radius: 6px; }
         .th-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
         @media(max-width:1100px){ .th-grid{ grid-template-columns:repeat(3,1fr)!important; } }
         @media(max-width:680px) { .th-grid{ grid-template-columns:1fr!important; } }
@@ -329,10 +335,10 @@ export default function TicketsHub() {
       <div style={{ maxWidth:1280, margin:"0 auto", padding:"24px 24px 0" }}>
 
         {/* ── HERO BOX ── */}
-        <HighlightedEventsHero />
+        <HighlightedEventsHero onLoad={() => setHeroLoaded(true)} />
 
         {/* ── SEARCH + FILTERS BOX ── */}
-        <div style={{
+        {(isLoading && !heroLoaded) ? <SkeletonSearchBar /> : <div style={{
           background:CARD, borderRadius:16,
           border:`1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD_MD,
@@ -519,7 +525,7 @@ export default function TicketsHub() {
               </div>
             )}
           </div>
-        </div>
+        </div>}
 
       </div>{/* end maxWidth wrapper */}
 
@@ -535,8 +541,8 @@ export default function TicketsHub() {
             <p style={{ fontSize:14 }}>{error}</p>
           </div>
         ) : isLoading ? (
-          <div style={{ textAlign:"center", padding:"56px 24px", color:MUTED }}>
-            <p style={{ fontSize:14 }}>{t("landing.loadingEvents") || "Cargando eventos..."}</p>
+          <div className="th-grid">
+            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign:"center", padding:"56px 0", color:MUTED }}>
@@ -585,6 +591,55 @@ export default function TicketsHub() {
             )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SKELETON SEARCH BAR ──────────────────────────────────────────────────────
+function SkeletonSearchBar() {
+  const pillWidths = [52, 44, 60, 72, 68];
+  return (
+    <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_MD, padding: "14px 18px", marginBottom: 28 }}>
+      {/* Desktop skeleton (hidden on mobile via inline media — same class as real bar) */}
+      <div className="th-desk-only" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {/* Search input */}
+        <div className="sk" style={{ flex: "1 1 220px", height: 38, borderRadius: 10 }} />
+        <div style={{ width: 1, height: 28, background: BORD2, flexShrink: 0 }} />
+        {/* City picker */}
+        <div className="sk" style={{ width: 140, height: 38, borderRadius: 9, flexShrink: 0 }} />
+        <div style={{ width: 1, height: 28, background: BORD2, flexShrink: 0 }} />
+        {/* Category pills */}
+        <div style={{ display: "flex", gap: 6 }}>
+          {pillWidths.map((w, i) => (
+            <div key={i} className="sk" style={{ width: w, height: 30, borderRadius: 100 }} />
+          ))}
+        </div>
+      </div>
+      {/* Mobile skeleton */}
+      <div className="th-mob-only" style={{ display: "flex", gap: 10 }}>
+        <div className="sk" style={{ flex: 1, height: 44, borderRadius: 10 }} />
+        <div className="sk" style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0 }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── SKELETON CARD ────────────────────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <div style={{ background: CARD, borderRadius: 14, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_SM }}>
+      {/* Image placeholder */}
+      <div className="sk" style={{ width: "100%", aspectRatio: "4/3" }} />
+      {/* Content */}
+      <div style={{ padding: "12px 13px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="sk" style={{ height: 14, width: "72%", borderRadius: 5 }} />
+        <div className="sk" style={{ height: 12, width: "48%", borderRadius: 5 }} />
+        <div className="sk" style={{ height: 12, width: "38%", borderRadius: 5, marginTop: 2 }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+          <div className="sk" style={{ height: 12, width: "32%", borderRadius: 5 }} />
+          <div className="sk" style={{ height: 28, width: "38%", borderRadius: 8 }} />
+        </div>
       </div>
     </div>
   );

@@ -57,16 +57,13 @@ function AppLayout() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const landingHomeHref = location.pathname === '/' ? '#eventos' : '/';
   /** Same shell bg as Login/Register — avoids white flex-1 gap above footer on mobile */
-  const authShellBg =
-    location.pathname === '/login' || location.pathname === '/register';
-
   return (
     <div className="min-h-screen flex flex-col w-full min-w-0 overflow-x-hidden">
       <ScrollRestorationManager />
       {!isAdminRoute && <AppHeader homeHref={landingHomeHref} />}
       <main
         className="flex-1 pb-16 md:pb-0 w-full min-w-0"
-        style={authShellBg ? { backgroundColor: BG } : undefined}
+        style={!isAdminRoute ? { backgroundColor: BG } : undefined}
       >
         <Routes>
               {/* Public routes */}

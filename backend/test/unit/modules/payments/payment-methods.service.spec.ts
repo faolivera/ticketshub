@@ -20,6 +20,7 @@ describe('PaymentMethodsService', () => {
     publicName: 'Credit/Debit Card',
     type: 'payment_gateway',
     status: 'enabled',
+    visible: true,
     buyerCommissionPercent: 12,
     gatewayProvider: 'mercadopago',
     gatewayConfigEnvPrefix: 'MERCADOPAGO_MAIN',
@@ -33,6 +34,7 @@ describe('PaymentMethodsService', () => {
     publicName: 'Bank Transfer',
     type: 'manual_approval',
     status: 'enabled',
+    visible: true,
     buyerCommissionPercent: 5,
     bankTransferConfig: {
       cbu: '0110012345678901234567',
@@ -49,6 +51,7 @@ describe('PaymentMethodsService', () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       findEnabled: jest.fn(),
+      findVisible: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -117,7 +120,7 @@ describe('PaymentMethodsService', () => {
 
   describe('getPublicPaymentMethods', () => {
     it('should return public payment methods with safe fields only', async () => {
-      repository.findEnabled.mockResolvedValue([
+      repository.findVisible.mockResolvedValue([
         mockPaymentMethod,
         mockBankTransferMethod,
       ]);
@@ -131,10 +134,11 @@ describe('PaymentMethodsService', () => {
         type: 'payment_gateway',
         buyerCommissionPercent: 12,
         bankTransferConfig: undefined,
+        available: true,
       });
       expect(result[1].bankTransferConfig).toBeDefined();
       expect(
-        (result[0] as PaymentMethodOption).gatewayConfigEnvPrefix,
+        (result[0] as unknown as PaymentMethodOption).gatewayConfigEnvPrefix,
       ).toBeUndefined();
     });
   });

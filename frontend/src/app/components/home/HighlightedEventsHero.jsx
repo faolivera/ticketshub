@@ -56,7 +56,7 @@ function resolveBannerSrc(ev, preferSquare) {
   );
 }
 
-export function HighlightedEventsHero() {
+export function HighlightedEventsHero({ onLoad }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
@@ -84,7 +84,10 @@ export function HighlightedEventsHero() {
       } catch {
         if (!cancelled) setEvents([]);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          onLoad?.();
+        }
       }
     }
     fetchFeatured();
@@ -101,7 +104,30 @@ export function HighlightedEventsHero() {
     return () => clearInterval(t);
   }, [events.length]);
 
-  if (loading || events.length === 0) return null;
+  if (loading) return (
+    <div style={{ background: "white", borderRadius: 20, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD, marginBottom: 14 }}>
+      <style>{`
+        @keyframes hh-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .hh-sk { background: linear-gradient(90deg, #e8e5e2 25%, #f2efec 50%, #e8e5e2 75%); background-size: 200% 100%; animation: hh-shimmer 1.4s ease-in-out infinite; }
+      `}</style>
+      <div style={{ position: "relative", aspectRatio: preferSquareLayout ? "1 / 1" : "1400 / 400", minHeight: preferSquareLayout ? undefined : 280, overflow: "hidden" }}>
+        {/* Full-area shimmer */}
+        <div className="hh-sk" style={{ position: "absolute", inset: 0 }} />
+        {/* Copy area placeholders — bottom left */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, padding: "clamp(20px,3vw,44px)", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="hh-sk" style={{ height: 14, width: 72, borderRadius: 100, opacity: 0.55 }} />
+          <div className="hh-sk" style={{ height: 30, width: 240, borderRadius: 7, opacity: 0.55 }} />
+          <div className="hh-sk" style={{ height: 13, width: 160, borderRadius: 5, opacity: 0.55 }} />
+          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+            <div className="hh-sk" style={{ height: 48, width: 152, borderRadius: 10, opacity: 0.55 }} />
+            <div className="hh-sk" style={{ height: 48, width: 112, borderRadius: 10, opacity: 0.55 }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (events.length === 0) return null;
 
   const event = events[index];
 

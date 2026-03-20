@@ -9,6 +9,7 @@ import { useUser } from "@/app/contexts/UserContext";
 import { ticketsService } from "@/api/services/tickets.service";
 import { formatDate, formatTime } from "@/lib/format-date";
 import { EventTicketCard } from "@/app/components/EventTicketCard";
+import { BackButton } from "@/app/components/BackButton";
 import {
   V, VLIGHT, DARK, MUTED, BORDER, BORD2, S, E,
   SURFACE_STICKY, SHADOW_DROP, BG,
@@ -225,9 +226,90 @@ export default function EventDetail() {
 
   if (isLoading) {
     return (
-      <div style={{ ...S, backgroundColor: BG, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <p style={{ color: MUTED }}>{t("common.loading") || "Cargando..."}</p>
+      <div style={{ ...S, backgroundColor: BG, color: DARK, minHeight: "100vh" }}>
+        <style>{`
+          @keyframes evSkShimmer {
+            from { background-position: -600px 0; }
+            to   { background-position:  600px 0; }
+          }
+          .ev-sk {
+            background: linear-gradient(90deg, #e8e8e5 25%, #f0f0ed 50%, #e8e8e5 75%);
+            background-size: 600px 100%;
+            animation: evSkShimmer 1.4s ease-in-out infinite;
+            border-radius: 6px;
+          }
+          .ev-sk-dark {
+            background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.08) 75%);
+            background-size: 600px 100%;
+            animation: evSkShimmer 1.4s ease-in-out infinite;
+            border-radius: 6px;
+          }
+        `}</style>
+
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 64px" }}>
+
+          {/* Back button skeleton */}
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 16 }}>
+            <div className="ev-sk" style={{ height: 13, width: 13, borderRadius: 3 }} />
+            <div className="ev-sk" style={{ height: 13, width: 48 }} />
+          </div>
+
+          {/* Hero skeleton */}
+          <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 14, background: "#2a2a3a", minHeight: 320, padding: "clamp(28px,4vw,44px)" }}>
+            {/* Category badge */}
+            <div className="ev-sk-dark" style={{ height: 20, width: 72, borderRadius: 100, marginBottom: 16 }} />
+            {/* Title */}
+            <div className="ev-sk-dark" style={{ height: 36, width: "72%", marginBottom: 10 }} />
+            <div className="ev-sk-dark" style={{ height: 36, width: "48%", marginBottom: 18 }} />
+            {/* Venue */}
+            <div className="ev-sk-dark" style={{ height: 13, width: "55%", marginBottom: 24 }} />
+            {/* Date pills */}
+            <div style={{ marginBottom: 18 }}>
+              <div className="ev-sk-dark" style={{ height: 10, width: 110, marginBottom: 10 }} />
+              <div style={{ display: "flex", gap: 7 }}>
+                <div className="ev-sk-dark" style={{ height: 28, width: 80, borderRadius: 100 }} />
+                <div className="ev-sk-dark" style={{ height: 28, width: 95, borderRadius: 100 }} />
+              </div>
+            </div>
+            {/* Stock line */}
+            <div className="ev-sk-dark" style={{ height: 12, width: "42%", marginBottom: 22 }} />
+            {/* Trust row */}
+            <div style={{ display: "flex", gap: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+              <div className="ev-sk-dark" style={{ height: 11, width: 90 }} />
+              <div className="ev-sk-dark" style={{ height: 11, width: 106 }} />
+              <div className="ev-sk-dark" style={{ height: 11, width: 84 }} />
+            </div>
+          </div>
+
+          {/* Section header skeleton */}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
+            <div>
+              <div className="ev-sk" style={{ height: 22, width: 160, marginBottom: 6 }} />
+              <div className="ev-sk" style={{ height: 11, width: 110 }} />
+            </div>
+            <div className="ev-sk" style={{ height: 34, width: 96, borderRadius: 10 }} />
+          </div>
+
+          {/* Filter pills skeleton */}
+          <div style={{ display: "flex", gap: 7, marginBottom: 14 }}>
+            {[52, 68, 60].map((w, i) => (
+              <div key={i} className="ev-sk" style={{ height: 28, width: w, borderRadius: 100 }} />
+            ))}
+          </div>
+
+          {/* Ticket grid skeleton */}
+          <div className="tk-grid">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} style={{ background: "white", borderRadius: 14, padding: 16, border: `1px solid ${BORDER}` }}>
+                <div className="ev-sk" style={{ height: 11, width: "55%", marginBottom: 8 }} />
+                <div className="ev-sk" style={{ height: 22, width: "40%", marginBottom: 10 }} />
+                <div className="ev-sk" style={{ height: 10, width: "75%", marginBottom: 6 }} />
+                <div className="ev-sk" style={{ height: 10, width: "60%", marginBottom: 14 }} />
+                <div className="ev-sk" style={{ height: 36, width: "100%", borderRadius: 9 }} />
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
     );
@@ -342,16 +424,7 @@ export default function EventDetail() {
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 64px" }}>
 
-        {/* ── Breadcrumb ── */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 16, flexWrap: "wrap", ...S }}>
-          <Link to="/" style={{ color: MUTED, textDecoration: "none" }}>Inicio</Link>
-          <span style={{ color: BORD2 }}>›</span>
-          <Link to="/recitales" style={{ color: MUTED, textDecoration: "none" }}>Recitales</Link>
-          <span style={{ color: BORD2 }}>›</span>
-          <Link to={`/recitales/${EVENT.location}`} style={{ color: MUTED, textDecoration: "none" }}>{EVENT.location}</Link>
-          <span style={{ color: BORD2 }}>›</span>
-          <span style={{ color: DARK, fontWeight: 600 }}>{EVENT.name}</span>
-        </nav>
+        <BackButton to="/" />
 
         {/* ── Hero Box — dark interior floats over warm bg ── */}
         <div
@@ -368,14 +441,14 @@ export default function EventDetail() {
             position: "absolute", inset: 0, zIndex: 0,
             backgroundImage: `url(${EVENT.img})`,
             backgroundSize: "cover", backgroundPosition: "center",
-            filter: "blur(22px) brightness(0.5) saturate(1.2)",
+            filter: "blur(12px) brightness(0.6) saturate(1.2)",
             transform: "scale(1.1)",
           }} />
 
           {/* Dark overlay — left-heavy per spec */}
           <div style={{
             position: "absolute", inset: 0, zIndex: 1,
-            background: "linear-gradient(to right, rgba(15,15,26,0.94) 0%, rgba(15,15,26,0.72) 45%, rgba(15,15,26,0.10) 100%)",
+            background: "linear-gradient(to right, rgba(15,15,26,0.65) 0%, rgba(15,15,26,0.38) 45%, rgba(15,15,26,0.05) 100%)",
           }} />
 
           {/* Hero content */}

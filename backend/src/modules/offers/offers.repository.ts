@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Offer as PrismaOffer } from '@prisma/client';
-import { OfferStatus as PrismaOfferStatus, OfferExpiredReason as PrismaOfferExpiredReason } from '@prisma/client';
+import { OfferStatus as PrismaOfferStatus } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Offer, OfferStatus, OfferExpiredReason, OfferTickets } from './offers.domain';
@@ -15,6 +15,11 @@ export class OffersRepository
   implements IOffersRepository
 {
   private readonly logger = new ContextLogger(OffersRepository.name);
+  private readonly expiredStatus = 'expired' as unknown as PrismaOfferStatus;
+
+  private readonly expiredReasonBySeller = 'seller_no_response';
+
+  private readonly expiredReasonByBuyer = 'buyer_no_purchase';
 
   constructor(prisma: PrismaService) {
     super(prisma);
@@ -28,7 +33,7 @@ export class OffersRepository
     return status as OfferStatus;
   }
 
-  private mapExpiredReasonFromDb(reason: PrismaOfferExpiredReason | null): OfferExpiredReason | undefined {
+  private mapExpiredReasonFromDb(reason: string | null): OfferExpiredReason | undefined {
     return reason ? (reason as OfferExpiredReason) : undefined;
   }
 
@@ -45,6 +50,11 @@ export class OffersRepository
   }
 
   private mapToDomain(record: PrismaOffer): Offer {
+    const recordWithExpiration = record as PrismaOffer & {
+      expiredAt?: Date | null;
+      expiredReason?: string | null;
+    };
+
     return {
       id: record.id,
       listingId: record.listingId,
@@ -58,8 +68,10 @@ export class OffersRepository
       rejectedAt: record.rejectedAt ?? undefined,
       convertedTransactionId: record.convertedTransactionId ?? undefined,
       cancelledAt: record.cancelledAt ?? undefined,
-      expiredAt: record.expiredAt ?? undefined,
-      expiredReason: this.mapExpiredReasonFromDb(record.expiredReason),
+      expiredAt: recordWithExpiration.expiredAt ?? undefined,
+      expiredReason: this.mapExpiredReasonFromDb(
+        recordWithExpiration.expiredReason ?? null,
+      ),
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
@@ -167,6 +179,8 @@ export class OffersRepository
         | 'rejectedAt'
         | 'convertedTransactionId'
         | 'cancelledAt'
+        | 'expiredAt'
+        | 'expiredReason'
       >
     >,
   ): Promise<Offer | undefined> {
@@ -185,7 +199,7 @@ export class OffersRepository
       data.cancelledAt = updates.cancelledAt;
     if (updates.expiredAt !== undefined) data.expiredAt = updates.expiredAt;
     if (updates.expiredReason !== undefined)
-      data.expiredReason = updates.expiredReason as PrismaOfferExpiredReason;
+      data.expiredReason = updates.expiredReason;
     data.updatedAt = new Date();
 
     const updated = await client.offer.update({
@@ -203,14 +217,15 @@ export class OffersRepository
     this.logger.debug(ctx, 'expirePendingByIds', { count: ids.length });
     if (ids.length === 0) return 0;
     const client = this.getClient(ctx);
+    const expirationData: Record<string, unknown> = {
+      status: this.expiredStatus,
+      expiredAt,
+      expiredReason: this.expiredReasonBySeller,
+      updatedAt: new Date(),
+    };
     const result = await client.offer.updateMany({
       where: { id: { in: ids }, status: PrismaOfferStatus.pending },
-      data: {
-        status: PrismaOfferStatus.expired,
-        expiredAt,
-        expiredReason: PrismaOfferExpiredReason.seller_no_response,
-        updatedAt: new Date(),
-      },
+      data: expirationData as Parameters<typeof client.offer.updateMany>[0]['data'],
     });
     return result.count;
   }
@@ -223,14 +238,15 @@ export class OffersRepository
     this.logger.debug(ctx, 'expireAcceptedByIds', { count: ids.length });
     if (ids.length === 0) return 0;
     const client = this.getClient(ctx);
+    const expirationData: Record<string, unknown> = {
+      status: this.expiredStatus,
+      expiredAt,
+      expiredReason: this.expiredReasonByBuyer,
+      updatedAt: new Date(),
+    };
     const result = await client.offer.updateMany({
       where: { id: { in: ids }, status: PrismaOfferStatus.accepted },
-      data: {
-        status: PrismaOfferStatus.expired,
-        expiredAt,
-        expiredReason: PrismaOfferExpiredReason.buyer_no_purchase,
-        updatedAt: new Date(),
-      },
+      data: expirationData as Parameters<typeof client.offer.updateMany>[0]['data'],
     });
     return result.count;
   }

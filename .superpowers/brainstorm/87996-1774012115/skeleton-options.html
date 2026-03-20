@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Skeleton — Opciones</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f3f3f0; padding: 24px; color: #0f0f1a; }
+
+  h1 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #6b7280; margin-bottom: 28px; }
+
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #6b7280; margin-bottom: 8px; }
+
+  /* ─── OPTION CARDS ─── */
+  .options-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+  @media(max-width: 900px) { .options-row { grid-template-columns: 1fr; } }
+
+  .opt-card {
+    background: white; border-radius: 16px; overflow: hidden;
+    border: 2px solid #e5e7eb; cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .opt-card:hover { border-color: #a78bfa; box-shadow: 0 4px 16px rgba(109,40,217,0.12); }
+  .opt-card.selected { border-color: #6d28d9; box-shadow: 0 4px 20px rgba(109,40,217,0.18); }
+
+  .opt-label {
+    padding: 10px 14px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .opt-letter {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #f0ebff; color: #6d28d9;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opt-check { width: 20px; height: 20px; border-radius: 50%; background: #6d28d9; display: none; align-items: center; justify-content: center; }
+  .opt-check svg { width: 12px; height: 12px; }
+  .opt-card.selected .opt-check { display: flex; }
+
+  .opt-title { font-size: 14px; font-weight: 700; padding: 8px 14px 2px; }
+  .opt-desc { font-size: 12px; color: #6b7280; padding: 0 14px 12px; }
+
+  /* ─── SKELETON ATOMS ─── */
+  @keyframes shimmer {
+    from { background-position: -400px 0; }
+    to   { background-position:  400px 0; }
+  }
+  .sk {
+    background: linear-gradient(90deg, #e8e8e5 25%, #f0f0ed 50%, #e8e8e5 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+  }
+  .sk-dark {
+    background: linear-gradient(90deg, rgba(255,255,255,0.10) 25%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.10) 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+  }
+
+  /* ─── OPTION A: Full layout preview ─── */
+  .prev {
+    background: #f3f3f0;
+    padding: 10px;
+    min-height: 420px;
+  }
+
+  /* Hero */
+  .prev-hero {
+    border-radius: 14px; overflow: hidden;
+    background: #3b3b4f;
+    padding: 20px 18px;
+    margin-bottom: 10px;
+    position: relative;
+    min-height: 160px;
+  }
+  .prev-hero-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #3b3b4f 0%, #1e1e2e 100%);
+  }
+  .prev-hero-content { position: relative; z-index: 1; }
+
+  /* Breadcrumb */
+  .prev-bread { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+
+  /* Section header */
+  .prev-sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+  /* Pills row */
+  .prev-pills { display: flex; gap: 6px; margin-bottom: 8px; }
+
+  /* Grid */
+  .prev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .prev-card {
+    background: white; border-radius: 10px; padding: 10px; border: 1px solid #e5e7eb;
+  }
+
+  /* ─── OPTION B: Minimal pulse ─── */
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+  }
+  .sk-pulse {
+    border-radius: 6px;
+    background: #e5e5e2;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .sk-pulse-dark {
+    border-radius: 6px;
+    background: rgba(255,255,255,0.15);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* ─── SELECTED INDICATOR ─── */
+  .indicator {
+    position: fixed; bottom: 20px; right: 20px;
+    background: #6d28d9; color: white;
+    padding: 10px 18px; border-radius: 100px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 14px rgba(109,40,217,0.35);
+    display: none;
+  }
+  .indicator.show { display: block; }
+</style>
+</head>
+<body>
+
+<h1>¿Cómo mostramos el skeleton de la página de evento?</h1>
+<p class="subtitle">Las tres opciones replican el layout real: breadcrumb → hero → filtros → grilla de cards. Hacé click para seleccionar.</p>
+
+<div class="options-row">
+
+  <!-- ── OPCIÓN A ── -->
+  <div class="opt-card" data-choice="a" onclick="select(this)">
+    <div class="opt-label">
+      <div class="opt-letter">A</div>
+      <div class="opt-check"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="opt-title">Shimmer (igual que Checkout)</div>
+    <div class="opt-desc">Gradiente animado que recorre cada bloque. Muy fiel al layout real.</div>
+
+    <!-- Preview -->
+    <div class="prev">
+      <!-- Breadcrumb -->
+      <div class="prev-bread" style="margin-bottom:8px">
+        <div class="sk" style="height:9px;width:28px"></div>
+        <div style="color:#d1d5db;font-size:10px">›</div>
+        <div class="sk" style="height:9px;width:44px"></div>
+        <div style="color:#d1d5db;font-size:10px">›</div>
+        <div class="sk" style="height:9px;width:60px"></div>
+      </div>
+
+      <!-- Hero -->
+      <div class="prev-hero" style="margin-bottom:10px">
+        <div class="prev-hero-bg"></div>
+        <div class="prev-hero-content">
+          <!-- Badge -->
+          <div class="sk-dark" style="height:16px;width:55px;border-radius:100px;margin-bottom:10px"></div>
+          <!-- Title -->
+          <div class="sk-dark" style="height:22px;width:85%;margin-bottom:6px"></div>
+          <div class="sk-dark" style="height:22px;width:60%;margin-bottom:14px"></div>
+          <!-- Venue -->
+          <div class="sk-dark" style="height:11px;width:70%;margin-bottom:14px"></div>
+          <!-- Date pills -->
+          <div style="display:flex;gap:6px;margin-bottom:12px">
+            <div class="sk-dark" style="height:24px;width:70px;border-radius:100px"></div>
+            <div class="sk-dark" style="height:24px;width:80px;border-radius:100px"></div>
+          </div>
+          <!-- Stock line -->
+          <div class="sk-dark" style="height:10px;width:55%;margin-bottom:14px"></div>
+          <!-- Trust row -->
+          <div style="display:flex;gap:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.12)">
+            <div class="sk-dark" style="height:10px;width:80px"></div>
+            <div class="sk-dark" style="height:10px;width:90px"></div>
+            <div class="sk-dark" style="height:10px;width:75px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section header -->
+      <div class="prev-sec-header">
+        <div>
+          <div class="sk" style="height:16px;width:120px;margin-bottom:4px"></div>
+          <div class="sk" style="height:9px;width:90px"></div>
+        </div>
+        <div class="sk" style="height:28px;width:80px;border-radius:8px"></div>
+      </div>
+
+      <!-- Pills -->
+      <div class="prev-pills" style="margin-top:8px">
+        <div class="sk" style="height:26px;width:50px;border-radius:100px"></div>
+        <div class="sk" style="height:26px;width:64px;border-radius:100px"></div>
+        <div class="sk" style="height:26px;width:58px;border-radius:100px"></div>
+      </div>
+
+      <!-- Grid -->
+      <div class="prev-grid" style="margin-top:8px">
+        <div class="prev-card">
+          <div class="sk" style="height:10px;width:60%;margin-bottom:6px"></div>
+          <div class="sk" style="height:18px;width:45%;margin-bottom:8px"></div>
+          <div class="sk" style="height:9px;width:80%;margin-bottom:6px"></div>
+          <div class="sk" style="height:30px;width:100%;border-radius:8px;margin-top:8px"></div>
+        </div>
+        <div class="prev-card">
+          <div class="sk" style="height:10px;width:55%;margin-bottom:6px"></div>
+          <div class="sk" style="height:18px;width:40%;margin-bottom:8px"></div>
+          <div class="sk" style="height:9px;width:75%;margin-bottom:6px"></div>
+          <div class="sk" style="height:30px;width:100%;border-radius:8px;margin-top:8px"></div>
+        </div>
+        <div class="prev-card">
+          <div class="sk" style="height:10px;width:65%;margin-bottom:6px"></div>
+          <div class="sk" style="height:18px;width:50%;margin-bottom:8px"></div>
+          <div class="sk" style="height:9px;width:70%;margin-bottom:6px"></div>
+          <div class="sk" style="height:30px;width:100%;border-radius:8px;margin-top:8px"></div>
+        </div>
+        <div class="prev-card">
+          <div class="sk" style="height:10px;width:50%;margin-bottom:6px"></div>
+          <div class="sk" style="height:18px;width:42%;margin-bottom:8px"></div>
+          <div class="sk" style="height:9px;width:78%;margin-bottom:6px"></div>
+          <div class="sk" style="height:30px;width:100%;border-radius:8px;margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OPCIÓN B ── -->
+  <div class="opt-card" data-choice="b" onclick="select(this)">
+    <div class="opt-label">
+      <div class="opt-letter">B</div>
+      <div class="opt-check"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="opt-title">Pulse suave</div>
+    <div class="opt-desc">Bloques sólidos que hacen fade-in/out. Más simple, igual de informativo.</div>
+
+    <!-- Preview -->
+    <div class="prev">
+      <!-- Breadcrumb -->
+      <div class="prev-bread" style="margin-bottom:8px">
+        <div class="sk-pulse" style="height:9px;width:28px"></div>
+        <div style="color:#d1d5db;font-size:10px">›</div>
+        <div class="sk-pulse" style="height:9px;width:44px;animation-delay:0.1s"></div>
+        <div style="color:#d1d5db;font-size:10px">›</div>
+        <div class="sk-pulse" style="height:9px;width:60px;animation-delay:0.2s"></div>
+      </div>
+
+      <!-- Hero -->
+      <div class="prev-hero" style="margin-bottom:10px">
+        <div class="prev-hero-bg"></div>
+        <div class="prev-hero-content">
+          <div class="sk-pulse-dark" style="height:16px;width:55px;border-radius:100px;margin-bottom:10px"></div>
+          <div class="sk-pulse-dark" style="height:22px;width:85%;margin-bottom:6px;animation-delay:0.1s"></div>
+          <div class="sk-pulse-dark" style="height:22px;width:60%;margin-bottom:14px;animation-delay:0.15s"></div>
+          <div class="sk-pulse-dark" style="height:11px;width:70%;margin-bottom:14px;animation-delay:0.2s"></div>
+          <div style="display:flex;gap:6px;margin-bottom:12px">
+            <div class="sk-pulse-dark" style="height:24px;width:70px;border-radius:100px;animation-delay:0.25s"></div>
+            <div class="sk-pulse-dark" style="height:24px;width:80px;border-radius:100px;animation-delay:0.3s"></div>
+          </div>
+          <div class="sk-pulse-dark" style="height:10px;width:55%;margin-bottom:14px;animation-delay:0.35s"></div>
+          <div style="display:flex;gap:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.12)">
+            <div class="sk-pulse-dark" style="height:10px;width:80px;animation-delay:0.4s"></div>
+            <div class="sk-pulse-dark" style="height:10px;width:90px;animation-delay:0.45s"></div>
+            <div class="sk-pulse-dark" style="height:10px;width:75px;animation-delay:0.5s"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section header -->
+      <div class="prev-sec-header">
+        <div>
+          <div class="sk-pulse" style="height:16px;width:120px;margin-bottom:4px"></div>
+          <div class="sk-pulse" style="height:9px;width:90px;animation-delay:0.1s"></div>
+        </div>
+        <div class="sk-pulse" style="height:28px;width:80px;border-radius:8px;animation-delay:0.15s"></div>
+      </div>
+
+      <!-- Pills -->
+      <div class="prev-pills" style="margin-top:8px">
+        <div class="sk-pulse" style="height:26px;width:50px;border-radius:100px"></div>
+        <div class="sk-pulse" style="height:26px;width:64px;border-radius:100px;animation-delay:0.1s"></div>
+        <div class="sk-pulse" style="height:26px;width:58px;border-radius:100px;animation-delay:0.2s"></div>
+      </div>
+
+      <!-- Grid -->
+      <div class="prev-grid" style="margin-top:8px">
+        <div class="prev-card">
+          <div class="sk-pulse" style="height:10px;width:60%;margin-bottom:6px"></div>
+          <div class="sk-pulse" style="height:18px;width:45%;margin-bottom:8px;animation-delay:0.1s"></div>
+          <div class="sk-pulse" style="height:9px;width:80%;margin-bottom:6px;animation-delay:0.15s"></div>
+          <div class="sk-pulse" style="height:30px;width:100%;border-radius:8px;margin-top:8px;animation-delay:0.2s"></div>
+        </div>
+        <div class="prev-card">
+          <div class="sk-pulse" style="height:10px;width:55%;margin-bottom:6px;animation-delay:0.05s"></div>
+          <div class="sk-pulse" style="height:18px;width:40%;margin-bottom:8px;animation-delay:0.12s"></div>
+          <div class="sk-pulse" style="height:9px;width:75%;margin-bottom:6px;animation-delay:0.18s"></div>
+          <div class="sk-pulse" style="height:30px;width:100%;border-radius:8px;margin-top:8px;animation-delay:0.22s"></div>
+        </div>
+        <div class="prev-card">
+          <div class="sk-pulse" style="height:10px;width:65%;margin-bottom:6px;animation-delay:0.08s"></div>
+          <div class="sk-pulse" style="height:18px;width:50%;margin-bottom:8px;animation-delay:0.14s"></div>
+          <div class="sk-pulse" style="height:9px;width:70%;margin-bottom:6px;animation-delay:0.2s"></div>
+          <div class="sk-pulse" style="height:30px;width:100%;border-radius:8px;margin-top:8px;animation-delay:0.25s"></div>
+        </div>
+        <div class="prev-card">
+          <div class="sk-pulse" style="height:10px;width:50%;margin-bottom:6px;animation-delay:0.1s"></div>
+          <div class="sk-pulse" style="height:18px;width:42%;margin-bottom:8px;animation-delay:0.16s"></div>
+          <div class="sk-pulse" style="height:9px;width:78%;margin-bottom:6px;animation-delay:0.22s"></div>
+          <div class="sk-pulse" style="height:30px;width:100%;border-radius:8px;margin-top:8px;animation-delay:0.28s"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OPCIÓN C ── -->
+  <div class="opt-card" data-choice="c" onclick="select(this)">
+    <div class="opt-label">
+      <div class="opt-letter">C</div>
+      <div class="opt-check"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="opt-title">Hero compacto + cards grandes</div>
+    <div class="opt-desc">El hero se muestra como un bloque sólido único, más énfasis en las cards de tickets.</div>
+
+    <!-- Preview -->
+    <div class="prev">
+      <!-- Breadcrumb -->
+      <div class="prev-bread" style="margin-bottom:8px">
+        <div class="sk" style="height:9px;width:28px"></div>
+        <div style="color:#d1d5db;font-size:10px">›</div>
+        <div class="sk" style="height:9px;width:44px"></div>
+        <div style="color:#d1d5db;font-size:10px">›</div>
+        <div class="sk" style="height:9px;width:60px"></div>
+      </div>
+
+      <!-- Hero como bloque compacto -->
+      <div style="border-radius:14px;background:linear-gradient(135deg,#3b3b4f,#1e1e2e);padding:18px;margin-bottom:10px;display:flex;gap:14px;align-items:center">
+        <!-- Thumb -->
+        <div class="sk-dark" style="width:72px;height:72px;border-radius:10px;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div class="sk-dark" style="height:10px;width:50px;border-radius:100px;margin-bottom:8px"></div>
+          <div class="sk-dark" style="height:18px;width:90%;margin-bottom:6px"></div>
+          <div class="sk-dark" style="height:18px;width:65%;margin-bottom:10px"></div>
+          <div class="sk-dark" style="height:10px;width:70%"></div>
+        </div>
+      </div>
+
+      <!-- Date pills inline -->
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <div class="sk" style="height:28px;width:72px;border-radius:100px"></div>
+        <div class="sk" style="height:28px;width:82px;border-radius:100px"></div>
+        <div class="sk" style="height:28px;width:68px;border-radius:100px"></div>
+      </div>
+
+      <!-- Section header -->
+      <div class="prev-sec-header" style="margin-bottom:8px">
+        <div class="sk" style="height:16px;width:130px"></div>
+        <div class="sk" style="height:28px;width:80px;border-radius:8px"></div>
+      </div>
+
+      <!-- Cards más altas -->
+      <div class="prev-grid">
+        <div class="prev-card" style="padding:12px">
+          <!-- Avatar + badge -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div class="sk" style="width:24px;height:24px;border-radius:50%"></div>
+            <div class="sk" style="height:9px;width:55%;"></div>
+          </div>
+          <div class="sk" style="height:20px;width:50%;margin-bottom:6px"></div>
+          <div class="sk" style="height:9px;width:80%;margin-bottom:4px"></div>
+          <div class="sk" style="height:9px;width:65%;margin-bottom:10px"></div>
+          <div class="sk" style="height:32px;width:100%;border-radius:8px"></div>
+        </div>
+        <div class="prev-card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div class="sk" style="width:24px;height:24px;border-radius:50%"></div>
+            <div class="sk" style="height:9px;width:50%;"></div>
+          </div>
+          <div class="sk" style="height:20px;width:45%;margin-bottom:6px"></div>
+          <div class="sk" style="height:9px;width:75%;margin-bottom:4px"></div>
+          <div class="sk" style="height:9px;width:60%;margin-bottom:10px"></div>
+          <div class="sk" style="height:32px;width:100%;border-radius:8px"></div>
+        </div>
+        <div class="prev-card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div class="sk" style="width:24px;height:24px;border-radius:50%"></div>
+            <div class="sk" style="height:9px;width:58%;"></div>
+          </div>
+          <div class="sk" style="height:20px;width:48%;margin-bottom:6px"></div>
+          <div class="sk" style="height:9px;width:70%;margin-bottom:4px"></div>
+          <div class="sk" style="height:9px;width:62%;margin-bottom:10px"></div>
+          <div class="sk" style="height:32px;width:100%;border-radius:8px"></div>
+        </div>
+        <div class="prev-card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div class="sk" style="width:24px;height:24px;border-radius:50%"></div>
+            <div class="sk" style="height:9px;width:52%;"></div>
+          </div>
+          <div class="sk" style="height:20px;width:44%;margin-bottom:6px"></div>
+          <div class="sk" style="height:9px;width:78%;margin-bottom:4px"></div>
+          <div class="sk" style="height:9px;width:68%;margin-bottom:10px"></div>
+          <div class="sk" style="height:32px;width:100%;border-radius:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="font-size:12px;color:#9ca3af;text-align:center">Hacé click en una opción para seleccionarla, después respondé en la terminal</p>
+
+<div class="indicator" id="indicator"></div>
+
+<script>
+let selected = null;
+function select(el) {
+  if (selected) selected.classList.remove('selected');
+  el.classList.add('selected');
+  selected = el;
+  const choice = el.dataset.choice;
+  const label = el.querySelector('.opt-title').textContent;
+  const ind = document.getElementById('indicator');
+  ind.textContent = '✓ ' + choice.toUpperCase() + ' — ' + label;
+  ind.classList.add('show');
+  // record event
+  try {
+    fetch('/__event', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ type:'click', choice, text: label, timestamp: Date.now() }) });
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

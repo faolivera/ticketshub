@@ -760,6 +760,16 @@ export function SellerDashboardPage() {
         @media (min-width: 768px) {
           .sd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
         }
+        @keyframes sdSkShimmer {
+          from { background-position: -500px 0; }
+          to   { background-position:  500px 0; }
+        }
+        .sd-sk {
+          background: linear-gradient(90deg, #e8e8e5 25%, #f0f0ed 50%, #e8e8e5 75%);
+          background-size: 500px 100%;
+          animation: sdSkShimmer 1.4s ease-in-out infinite;
+          border-radius: 6px;
+        }
       `}</style>
 
       <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 56 }}>
@@ -774,7 +784,85 @@ export function SellerDashboardPage() {
           }}
         />
 
-        {isLoading && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
+        {isLoading && (
+          <div className="sd-grid">
+            {/* Left panel — Actividad */}
+            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="sd-sk" style={{ width: 8, height: 8, borderRadius: '50%' }} />
+                <div className="sd-sk" style={{ height: 13, width: 80 }} />
+              </div>
+              <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Received offer card skeleton */}
+                <div style={{ background: CARD, borderRadius: 14, border: `1px solid #ddd6fe`, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex' }}>
+                    <div style={{ width: 3, flexShrink: 0, background: '#ddd6fe', alignSelf: 'stretch' }} />
+                    <div className="sd-sk" style={{ width: 90, flexShrink: 0, alignSelf: 'stretch', minHeight: 90, borderRadius: 0 }} />
+                    <div style={{ flex: 1, padding: '11px 13px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      <div className="sd-sk" style={{ height: 13, width: '85%' }} />
+                      <div className="sd-sk" style={{ height: 10, width: '65%' }} />
+                      <div className="sd-sk" style={{ height: 10, width: '50%' }} />
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <div className="sd-sk" style={{ height: 10, width: 40 }} />
+                        <div className="sd-sk" style={{ height: 18, width: 60 }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, padding: '9px 11px', borderTop: '1px solid #f0ebff' }}>
+                    <div className="sd-sk" style={{ flex: 1, height: 34, borderRadius: 10 }} />
+                    <div className="sd-sk" style={{ flex: 1, height: 34, borderRadius: 10 }} />
+                  </div>
+                </div>
+                {/* 2 sale-in-progress row skeletons */}
+                {[75, 85].map((w, i) => (
+                  <div key={i} style={{ display: 'flex', background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                    <div className="sd-sk" style={{ width: 52, flexShrink: 0, alignSelf: 'stretch', minHeight: 52, borderRadius: 0 }} />
+                    <div style={{ flex: 1, padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div className="sd-sk" style={{ height: 12, width: `${w}%`, marginBottom: 6 }} />
+                        <div className="sd-sk" style={{ height: 10, width: '55%' }} />
+                      </div>
+                      <div className="sd-sk" style={{ height: 18, width: 72, borderRadius: 100, flexShrink: 0 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right panel — Mis publicaciones */}
+            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="sd-sk" style={{ width: 8, height: 8, borderRadius: '50%' }} />
+                <div className="sd-sk" style={{ height: 13, width: 120 }} />
+              </div>
+              <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {/* 2 listing card skeletons */}
+                {[70, 80].map((w, i) => (
+                  <div key={i} style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex' }}>
+                      <div className="sd-sk" style={{ width: 72, flexShrink: 0, alignSelf: 'stretch', minHeight: 72, borderRadius: 0 }} />
+                      <div style={{ flex: 1, padding: '10px 13px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+                          <div className="sd-sk" style={{ height: 13, width: `${w}%` }} />
+                        </div>
+                        <div className="sd-sk" style={{ height: 10, width: '80%', marginBottom: 8 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <div className="sd-sk" style={{ height: 14, width: 55 }} />
+                          <div className="sd-sk" style={{ height: 18, width: 56, borderRadius: 100, marginLeft: 'auto' }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ borderTop: `1px solid ${BORDER}`, padding: '8px 12px', display: 'flex', gap: 6 }}>
+                      <div className="sd-sk" style={{ flex: 1, height: 32, borderRadius: 8 }} />
+                      <div className="sd-sk" style={{ width: 34, height: 32, borderRadius: 8 }} />
+                      <div className="sd-sk" style={{ width: 34, height: 32, borderRadius: 8 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         {error     && <ErrorAlert message={error} className="mb-6" />}
 
         {!isLoading && !error && (

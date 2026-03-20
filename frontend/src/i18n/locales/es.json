@@ -89,6 +89,7 @@
     "upcomingEvents": "Próximos Eventos",
     "eventsSectionTitle": "Próximos eventos",
     "noEventsFound": "No se encontraron eventos que coincidan con tu búsqueda.",
+    "loadingEvents": "Cargando eventos...",
     "errorLoadingEvents": "Error al cargar eventos. Inténtalo de nuevo.",
     "loadMore": "Cargar más",
     "loadingMore": "Cargando...",
@@ -594,7 +595,13 @@
     "customerReviews": "Reseñas de clientes",
     "noReviewsYet": "Aún no hay reseñas",
     "noReviewsDescription": "Este vendedor aún no ha recibido reseñas.",
-    "ticket": "Entrada"
+    "ticket": "Entrada",
+    "satisfaction": "Satisfacción de compradores",
+    "verifiedSeller": "Vendedor verificado",
+    "tickets": "Entradas vendidas",
+    "fromBuyers": "De compradores",
+    "reviewBreakdown": "Desglose de reseñas",
+    "noDataYet": "Sin datos aún"
   },
   "howItWorks": {
     "title": "Cómo Funciona",
@@ -2423,6 +2430,7 @@
         "provider": "Proveedor / Banco",
         "buyerCommission": "Comisión Comprador",
         "status": "Estado",
+        "visible": "Visible",
         "actions": "Acciones"
       },
       "types": {

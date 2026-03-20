@@ -454,6 +454,16 @@ export function MyTicketsPage() {
           .mt-buyer-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); gap: 24px; align-items: start; }
           .mt-history-scroll { max-height: min(55vh, 440px) !important; }
         }
+        @keyframes mtSkShimmer {
+          from { background-position: -500px 0; }
+          to   { background-position:  500px 0; }
+        }
+        .mt-sk {
+          background: linear-gradient(90deg, #e8e8e5 25%, #f0f0ed 50%, #e8e8e5 75%);
+          background-size: 500px 100%;
+          animation: mtSkShimmer 1.4s ease-in-out infinite;
+          border-radius: 6px;
+        }
       `}</style>
       <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 48 }}>
 
@@ -462,7 +472,54 @@ export function MyTicketsPage() {
           backTo={{ labelKey: 'common.back' }}
         />
 
-        {isLoading && <LoadingSpinner size="lg" text={t('common.loading')} className="py-12" />}
+        {isLoading && (
+          <div className="mt-buyer-grid">
+            {/* Left panel — Mis compras */}
+            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="mt-sk" style={{ width: 8, height: 8, borderRadius: '50%' }} />
+                <div className="mt-sk" style={{ height: 13, width: 100 }} />
+              </div>
+              <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* 3 transaction row skeletons */}
+                {[72, 88, 72].map((w, i) => (
+                  <div key={i} style={{ display: 'flex', background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                    <div className="mt-sk" style={{ width: 52, flexShrink: 0, alignSelf: 'stretch', minHeight: 52, borderRadius: 0 }} />
+                    <div style={{ flex: 1, padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div className="mt-sk" style={{ height: 12, width: `${w}%`, marginBottom: 6 }} />
+                        <div className="mt-sk" style={{ height: 10, width: '55%' }} />
+                      </div>
+                      <div className="mt-sk" style={{ height: 20, width: 68, borderRadius: 100, flexShrink: 0 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right panel — Historial */}
+            <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #f0f0ee', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="mt-sk" style={{ width: 14, height: 14, borderRadius: 4 }} />
+                <div className="mt-sk" style={{ height: 13, width: 70 }} />
+              </div>
+              <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[80, 65, 75, 70].map((w, i) => (
+                  <div key={i} style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                    <div className="mt-sk" style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', minHeight: 44, borderRadius: 0 }} />
+                    <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div className="mt-sk" style={{ height: 11, width: `${w}%`, marginBottom: 5 }} />
+                        <div className="mt-sk" style={{ height: 10, width: '50%' }} />
+                      </div>
+                      <div className="mt-sk" style={{ height: 18, width: 56, borderRadius: 100, flexShrink: 0 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         {error     && <ErrorAlert message={error} className="mb-6" />}
 
         {/* Empty state */}

@@ -139,6 +139,7 @@ describe('PaymentConfirmationsService', () => {
         name: 'Payway',
         publicName: 'Payway',
         status: 'enabled',
+        visible: true,
         buyerCommissionPercent: 2,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -169,6 +170,7 @@ describe('PaymentConfirmationsService', () => {
         name: 'Bank Transfer Galicia',
         publicName: 'Bank Transfer',
         status: 'enabled',
+        visible: true,
         buyerCommissionPercent: 0,
         bankTransferConfig: {
           cbu: '123',

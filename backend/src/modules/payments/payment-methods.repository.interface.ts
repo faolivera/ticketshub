@@ -21,6 +21,11 @@ export interface IPaymentMethodsRepository {
   findEnabled(ctx: Ctx): Promise<PaymentMethodOption[]>;
 
   /**
+   * Find all visible payment methods (shown to buyers in checkout)
+   */
+  findVisible(ctx: Ctx): Promise<PaymentMethodOption[]>;
+
+  /**
    * Create a new payment method
    */
   create(

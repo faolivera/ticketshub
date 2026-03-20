@@ -1,24 +1,45 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown, Minus, Calendar, Ticket, MessageSquare, Shield, TrendingUp } from 'lucide-react';
+import {
+  ThumbsUp,
+  ThumbsDown,
+  Minus,
+  Calendar,
+  Ticket,
+  MessageSquare,
+  Shield,
+} from 'lucide-react';
 import { sellersService } from '../../api/services/sellers.service';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import type { SellerProfile as SellerProfileData } from '../../api/types';
 import { formatMonthYear } from '@/lib/format-date';
 import { PageMeta } from '@/app/components/PageMeta';
+import {
+  V,
+  VLIGHT,
+  VL_BORDER,
+  DARK,
+  MUTED,
+  CARD,
+  BORDER,
+  GREEN,
+  GLIGHT,
+  GBORD,
+  AMBER,
+  ABG,
+  ABORD,
+  DESTRUCTIVE,
+  BADGE_DEMAND_BG,
+  BADGE_DEMAND_BORDER,
+  SHADOW_CARD_SM,
+  BG,
+} from '@/lib/design-tokens';
 
 export function SellerProfile() {
   const { t } = useTranslation();
@@ -56,11 +77,7 @@ export function SellerProfile() {
     return (
       <>
         <PageMeta title={t('seo.defaultTitle')} description={t('seo.defaultDescription')} />
-        <LoadingSpinner
-          size="lg"
-          text={t('sellerProfile.loading')}
-          fullScreen
-        />
+        <LoadingSpinner size="lg" text={t('sellerProfile.loading')} fullScreen />
       </>
     );
   }
@@ -78,173 +95,492 @@ export function SellerProfile() {
     );
   }
 
-  const getReviewIcon = (type: 'positive' | 'neutral' | 'negative') => {
-    switch (type) {
-      case 'positive':
-        return <ThumbsUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
-      case 'neutral':
-        return <Minus className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
-      case 'negative':
-        return <ThumbsDown className="w-5 h-5 text-destructive" />;
-    }
-  };
-
-  const getReviewBadgeColor = (type: 'positive' | 'neutral' | 'negative') => {
-    switch (type) {
-      case 'positive':
-        return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
-      case 'neutral':
-        return 'bg-muted text-muted-foreground border-border';
-      case 'negative':
-        return 'bg-destructive/10 text-destructive border-destructive/30';
-    }
-  };
-
-  const totalReviews = seller.reviewStats.positive + seller.reviewStats.neutral + seller.reviewStats.negative;
-  const positivePercentage = totalReviews > 0 ? Math.round((seller.reviewStats.positive / totalReviews) * 100) : 0;
+  const totalReviews =
+    seller.reviewStats.positive + seller.reviewStats.neutral + seller.reviewStats.negative;
+  const positivePercentage =
+    totalReviews > 0 ? Math.round((seller.reviewStats.positive / totalReviews) * 100) : null;
   const memberSinceDate = new Date(seller.memberSince);
   const memberSinceLabel = Number.isNaN(memberSinceDate.getTime())
     ? seller.memberSince
     : formatMonthYear(seller.memberSince);
 
+  const positiveBarWidth =
+    totalReviews > 0 ? `${(seller.reviewStats.positive / totalReviews) * 100}%` : '0%';
+  const neutralBarWidth =
+    totalReviews > 0 ? `${(seller.reviewStats.neutral / totalReviews) * 100}%` : '0%';
+  const negativeBarWidth =
+    totalReviews > 0 ? `${(seller.reviewStats.negative / totalReviews) * 100}%` : '0%';
+
+  const reviewPillStyles: Record<'positive' | 'neutral' | 'negative', React.CSSProperties> = {
+    positive: { background: GLIGHT, color: GREEN, border: `1px solid ${GBORD}` },
+    neutral: { background: ABG, color: AMBER, border: `1px solid ${ABORD}` },
+    negative: {
+      background: BADGE_DEMAND_BG,
+      color: DESTRUCTIVE,
+      border: `1px solid ${BADGE_DEMAND_BORDER}`,
+    },
+  };
+
+  const reviewPillIcon = {
+    positive: <ThumbsUp style={{ width: 12, height: 12 }} />,
+    neutral: <Minus style={{ width: 12, height: 12 }} />,
+    negative: <ThumbsDown style={{ width: 12, height: 12 }} />,
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div style={{ minHeight: '100vh', background: BG }}>
       <PageMeta
         title={t('seo.sellerProfile.title', { sellerName: seller.publicName })}
         description={t('seo.sellerProfile.description', { sellerName: seller.publicName })}
       />
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 lg:py-16">
+
+      <div
+        style={{
+          maxWidth: 680,
+          margin: '0 auto',
+          padding: 'clamp(22px, 4vw, 40px) 16px 40px',
+        }}
+      >
         <BackButton />
 
-        {/* Seller identity & trust block */}
-        <Card className="mb-10 overflow-hidden border-border">
-          <div className="p-6 sm:p-8 space-y-8">
-            {/* Identity: compact row on mobile, larger/centered on desktop */}
-            <div className="flex flex-row items-center gap-4 sm:gap-6 sm:items-start">
-              <UserAvatar
-                name={seller.publicName}
-                src={seller.pic?.src}
-                className="h-16 w-16 sm:h-28 sm:w-28 lg:h-32 lg:w-32 rounded-full ring-2 ring-border shrink-0"
-              />
-              <div className="text-left sm:text-left flex-1 min-w-0">
-                <CardHeader className="p-0">
-                  <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight break-words leading-tight">
-                    {seller.publicName}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2 mt-1.5 sm:mt-2 text-sm text-muted-foreground flex-wrap">
-                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <span>{t('sellerProfile.memberSince')} {memberSinceLabel}</span>
-                  </CardDescription>
-                </CardHeader>
+        {/* ── Hero card ── */}
+        <div
+          style={{
+            background: CARD,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 16,
+            padding: '28px',
+            marginBottom: 12,
+            boxShadow: SHADOW_CARD_SM,
+          }}
+        >
+          {/* Identity row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+            <UserAvatar
+              name={seller.publicName}
+              src={seller.pic?.src}
+              className="!size-16 sm:!size-28 lg:!size-32 rounded-full shrink-0"
+              style={{
+                border: `1px solid ${VL_BORDER}`,
+                background: VLIGHT,
+              }}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 26,
+                  color: DARK,
+                  margin: '0 0 4px',
+                  lineHeight: 1.2,
+                }}
+              >
+                {seller.publicName}
+              </h1>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  fontSize: 12,
+                  color: MUTED,
+                  marginBottom: 10,
+                }}
+              >
+                <Calendar style={{ width: 12, height: 12, flexShrink: 0 }} />
+                {t('sellerProfile.memberSince')} {memberSinceLabel}
               </div>
-            </div>
-
-            {/* Trust signals: full-width grid below identity to avoid overlap */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                  <Shield className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {t('sellerProfile.totalSales')}
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">{seller.totalSales}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {t('sellerProfile.reviewsTitle')}
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">{positivePercentage}%</p>
-                  <p className="text-xs text-muted-foreground">{t('sellerProfile.positive')}</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 p-4 rounded-lg bg-muted/50 border border-border sm:col-span-2 lg:col-span-1">
-                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <ThumbsUp className="w-4 h-4" />
-                  <span className="font-semibold tabular-nums">{seller.reviewStats.positive}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                  <Minus className="w-4 h-4" />
-                  <span className="font-semibold tabular-nums">{seller.reviewStats.neutral}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-destructive">
-                  <ThumbsDown className="w-4 h-4" />
-                  <span className="font-semibold tabular-nums">{seller.reviewStats.negative}</span>
-                </div>
-                <p className="text-xs text-muted-foreground w-full">
-                  {t('sellerProfile.totalReviewsLabel', { count: totalReviews })}
-                </p>
-              </div>
+              {/* Verified badge */}
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: '0.02em',
+                  padding: '4px 10px',
+                  borderRadius: 20,
+                  background: VLIGHT,
+                  color: '#5b21b6',
+                  border: `1px solid ${VL_BORDER}`,
+                }}
+              >
+                <Shield style={{ width: 11, height: 11 }} />
+                {t('sellerProfile.verifiedSeller')}
+              </span>
             </div>
           </div>
-        </Card>
 
-        {/* Customer reviews */}
-        <Card className="border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold text-foreground">
-              {t('sellerProfile.customerReviews')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {seller.reviews.length === 0 ? (
-              <EmptyState
-                icon={MessageSquare}
-                title={t('sellerProfile.noReviewsYet')}
-                description={t('sellerProfile.noReviewsDescription')}
-              />
-            ) : (
-              <ul className="space-y-6">
-                {seller.reviews.map((review) => (
-                  <li key={review.id}>
-                    <article
-                      className="rounded-lg border border-border bg-card p-5 sm:p-6 transition-colors hover:bg-muted/30"
-                      aria-label={`${t(`sellerProfile.${review.type}`)} review by ${review.buyerName}`}
+          <Separator style={{ marginBottom: 20 }} />
+
+          {/* Metrics row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+            {/* Satisfaction */}
+            <div style={{ paddingRight: 20 }}>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  color: MUTED,
+                  margin: '0 0 6px',
+                }}
+              >
+                {t('sellerProfile.satisfaction')}
+              </p>
+              <p
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 30,
+                  color: positivePercentage !== null ? DARK : MUTED,
+                  lineHeight: 1,
+                  margin: 0,
+                }}
+              >
+                {positivePercentage !== null ? `${positivePercentage}%` : '—'}
+              </p>
+              <p style={{ fontSize: 11, color: MUTED, margin: '3px 0 0' }}>
+                {positivePercentage !== null
+                  ? t('sellerProfile.positive')
+                  : t('sellerProfile.noDataYet')}
+              </p>
+            </div>
+
+            {/* Total sales */}
+            <div
+              style={{
+                paddingLeft: 20,
+                paddingRight: 20,
+                borderLeft: `1px solid ${BORDER}`,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  color: MUTED,
+                  margin: '0 0 6px',
+                }}
+              >
+                {t('sellerProfile.totalSales')}
+              </p>
+              <p
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 30,
+                  color: DARK,
+                  lineHeight: 1,
+                  margin: 0,
+                }}
+              >
+                {seller.totalSales}
+              </p>
+              <p style={{ fontSize: 11, color: MUTED, margin: '3px 0 0' }}>
+                {t('sellerProfile.tickets')}
+              </p>
+            </div>
+
+            {/* Total reviews */}
+            <div style={{ paddingLeft: 20, borderLeft: `1px solid ${BORDER}` }}>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  color: MUTED,
+                  margin: '0 0 6px',
+                }}
+              >
+                {t('sellerProfile.reviewsTitle')}
+              </p>
+              <p
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 30,
+                  color: DARK,
+                  lineHeight: 1,
+                  margin: 0,
+                }}
+              >
+                {totalReviews}
+              </p>
+              <p style={{ fontSize: 11, color: MUTED, margin: '3px 0 0' }}>
+                {t('sellerProfile.fromBuyers')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Review breakdown (only when there are reviews) ── */}
+        {totalReviews > 0 && (
+          <div
+            style={{
+              background: CARD,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 12,
+              padding: '16px 18px',
+              marginBottom: 24,
+              boxShadow: SHADOW_CARD_SM,
+            }}
+          >
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.07em',
+                color: MUTED,
+                margin: '0 0 12px',
+              }}
+            >
+              {t('sellerProfile.reviewBreakdown')}
+            </p>
+
+            {(
+              [
+                {
+                  key: 'positive',
+                  label: t('sellerProfile.positive'),
+                  count: seller.reviewStats.positive,
+                  barColor: GREEN,
+                  barWidth: positiveBarWidth,
+                  iconColor: GREEN,
+                  icon: <ThumbsUp style={{ width: 13, height: 13, flexShrink: 0 }} />,
+                },
+                {
+                  key: 'neutral',
+                  label: t('sellerProfile.neutral'),
+                  count: seller.reviewStats.neutral,
+                  barColor: '#d97706',
+                  barWidth: neutralBarWidth,
+                  iconColor: '#d97706',
+                  icon: <Minus style={{ width: 13, height: 13, flexShrink: 0 }} />,
+                },
+                {
+                  key: 'negative',
+                  label: t('sellerProfile.negative'),
+                  count: seller.reviewStats.negative,
+                  barColor: DESTRUCTIVE,
+                  barWidth: negativeBarWidth,
+                  iconColor: DESTRUCTIVE,
+                  icon: <ThumbsDown style={{ width: 13, height: 13, flexShrink: 0 }} />,
+                },
+              ] as const
+            ).map((row, i) => (
+              <div
+                key={row.key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  marginBottom: i < 2 ? 8 : 0,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    minWidth: 80,
+                    color: row.iconColor,
+                  }}
+                >
+                  {row.icon}
+                  {row.label}
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    height: 5,
+                    background: '#e5e7eb',
+                    borderRadius: 3,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: row.barWidth,
+                      height: 5,
+                      background: row.barColor,
+                      borderRadius: 3,
+                    }}
+                  />
+                </div>
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: row.count > 0 ? row.iconColor : MUTED,
+                    minWidth: 20,
+                    textAlign: 'right',
+                  }}
+                >
+                  {row.count}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Customer reviews ── */}
+        <h2
+          style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 20,
+            color: DARK,
+            margin: '0 0 14px',
+          }}
+        >
+          {t('sellerProfile.customerReviews')}
+        </h2>
+
+        {seller.reviews.length === 0 ? (
+          <div
+            style={{
+              background: CARD,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 12,
+              boxShadow: SHADOW_CARD_SM,
+            }}
+          >
+            <EmptyState
+              icon={MessageSquare}
+              title={t('sellerProfile.noReviewsYet')}
+              description={t('sellerProfile.noReviewsDescription')}
+            />
+          </div>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {seller.reviews.map((review) => (
+              <li key={review.id} style={{ marginBottom: 10 }}>
+                <article
+                  style={{
+                    background: CARD,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 12,
+                    padding: '18px',
+                    boxShadow: SHADOW_CARD_SM,
+                  }}
+                  aria-label={`${t(`sellerProfile.${review.type}`)} review by ${review.buyerName}`}
+                >
+                  {/* Review header */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div>
+                      <p
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: DARK,
+                          margin: '0 0 2px',
+                        }}
+                      >
+                        {review.buyerName}
+                      </p>
+                      <span style={{ fontSize: 11, color: MUTED }}>{review.reviewDate}</span>
+                    </div>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                        padding: '5px 10px',
+                        borderRadius: 20,
+                        flexShrink: 0,
+                        ...reviewPillStyles[review.type],
+                      }}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                        <div>
-                          <p className="font-semibold text-foreground">{review.buyerName}</p>
-                          <p className="text-sm text-muted-foreground mt-0.5">{review.reviewDate}</p>
-                        </div>
-                        <div
-                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm font-medium w-fit shrink-0 ${getReviewBadgeColor(review.type)}`}
-                        >
-                          {getReviewIcon(review.type)}
-                          <span>{t(`sellerProfile.${review.type}`)}</span>
-                        </div>
-                      </div>
+                      {reviewPillIcon[review.type]}
+                      {t(`sellerProfile.${review.type}`)}
+                    </span>
+                  </div>
 
-                      <p className="text-foreground text-[15px] leading-relaxed mb-4">{review.comment}</p>
+                  {/* Comment */}
+                  <p
+                    style={{
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      color: DARK,
+                      margin: '0 0 14px',
+                    }}
+                  >
+                    {review.comment}
+                  </p>
 
-                      <Separator className="my-4 bg-border" />
-
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-2">
-                          <Ticket className="w-4 h-4 shrink-0" />
-                          {review.eventName}
-                        </span>
-                        <span>
-                          <span className="font-medium text-foreground">{t('sellerProfile.ticket')}:</span>{' '}
-                          {review.ticketType}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 shrink-0" />
-                          {review.eventDate}
-                        </span>
-                      </div>
-                    </article>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                  {/* Event metadata chips */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: MUTED,
+                        background: '#f3f3f0',
+                        borderRadius: 6,
+                        padding: '4px 8px',
+                      }}
+                    >
+                      <Ticket style={{ width: 11, height: 11, flexShrink: 0 }} />
+                      {review.eventName}
+                    </span>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: MUTED,
+                        background: '#f3f3f0',
+                        borderRadius: 6,
+                        padding: '4px 8px',
+                      }}
+                    >
+                      <strong style={{ color: DARK, fontWeight: 600 }}>
+                        {t('sellerProfile.ticket')}:
+                      </strong>{' '}
+                      {review.ticketType}
+                    </span>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: MUTED,
+                        background: '#f3f3f0',
+                        borderRadius: 6,
+                        padding: '4px 8px',
+                      }}
+                    >
+                      <Calendar style={{ width: 11, height: 11, flexShrink: 0 }} />
+                      {review.eventDate}
+                    </span>
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

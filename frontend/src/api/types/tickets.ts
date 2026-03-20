@@ -244,6 +244,8 @@ export interface PaymentMethodOption {
   publicName: string;
   type: PaymentMethodType;
   status: PaymentMethodStatus;
+  /** Whether the method is shown to buyers in checkout. Does not affect backend acceptance (status controls that). */
+  visible: boolean;
   buyerCommissionPercent: number | null;
   gatewayProvider?: PaymentGatewayProvider;
   gatewayConfigEnvPrefix?: string;
@@ -285,6 +287,8 @@ export interface BuyPagePaymentMethodOption {
   id: string;
   name: string;
   serviceFeePercent: number;
+  /** Whether this method is currently available for selection */
+  available: boolean;
 }
 
 /** Checkout risk: which verifications are required and which are missing for the current user (from BFF). */

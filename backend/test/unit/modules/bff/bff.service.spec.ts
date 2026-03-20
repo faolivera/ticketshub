@@ -562,12 +562,14 @@ describe('BffService', () => {
         name: 'Credit Card',
         type: 'payment_gateway',
         buyerCommissionPercent: 3,
+        available: true,
       },
       {
         id: 'pm_2',
         name: 'Bank Transfer',
         type: 'manual_approval',
         buyerCommissionPercent: null,
+        available: true,
       },
     ];
 
@@ -706,12 +708,14 @@ describe('BffService', () => {
         name: 'Card',
         type: 'payment_gateway',
         buyerCommissionPercent: 3,
+        available: true,
       },
       {
         id: 'pm_2',
         name: 'Transfer',
         type: 'manual_approval',
         buyerCommissionPercent: 0,
+        available: true,
       },
     ];
 
@@ -786,6 +790,7 @@ describe('BffService', () => {
           name: 'Manual',
           type: 'manual_approval',
           buyerCommissionPercent: null,
+          available: true,
         },
       ]);
       reviewsService.getSellerMetricsBatch.mockResolvedValue(
@@ -877,12 +882,14 @@ describe('BffService', () => {
         name: 'Card',
         type: 'payment_gateway',
         buyerCommissionPercent: 3,
+        available: true,
       },
       {
         id: 'pm_2',
         name: 'Transfer',
         type: 'manual_approval',
         buyerCommissionPercent: 0,
+        available: true,
       },
     ];
 

@@ -7,9 +7,10 @@ import { OFFERS_REPOSITORY } from './offers.repository.interface';
 import { TicketsModule } from '../tickets/tickets.module';
 import { ConfigModule as PlatformConfigModule } from '../config/config.module';
 import { UsersModule } from '../users/users.module';
+import { MetricsModule } from '../../common/metrics/metrics.module';
 
 @Module({
-  imports: [forwardRef(() => TicketsModule), PlatformConfigModule, UsersModule],
+  imports: [forwardRef(() => TicketsModule), PlatformConfigModule, UsersModule, MetricsModule],
   controllers: [OffersController],
   providers: [
     OffersService,
