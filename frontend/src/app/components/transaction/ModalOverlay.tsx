@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { CARD, DARK, MUTED, E, S } from '@/lib/design-tokens';
+import { CARD, DARK, MUTED, S } from '@/lib/design-tokens';
 import type { ModalOverlayProps } from './types';
 
 export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
@@ -18,8 +18,8 @@ export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
         <div className="mb-5 flex items-center justify-between gap-3">
           <h2
             id="tx-modal-title"
-            className="text-xl font-normal leading-tight"
-            style={{ ...E, color: DARK }}
+            className="text-base leading-tight"
+            style={{ ...S, fontWeight: 700, color: DARK }}
           >
             {title}
           </h2>

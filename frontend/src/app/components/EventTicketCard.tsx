@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Shield, CheckCircle, MessageCircle, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { V, VLIGHT, DARK, MUTED, BG, S } from "@/lib/design-tokens";
+import { V, VLIGHT, DARK, MUTED, BG, S, SUCCESS } from "@/lib/design-tokens";
 import { UserAvatar } from "@/app/components/UserAvatar";
 import { getInitials } from "@/lib/string-utils";
 
@@ -110,7 +110,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
           Total a pagar
         </p>
         <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-          <span style={{ fontSize: 26, fontWeight: 800, color: V, letterSpacing: "-0.6px", lineHeight: 1 }}>
+          <span style={{ fontSize: 26, fontWeight: 800, color: DARK, letterSpacing: "-0.6px", lineHeight: 1 }}>
             ${totalWithFee}
           </span>
           <span style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>ARS</span>
@@ -144,7 +144,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
               {seller}
             </p>
             {verified && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#0f766e", flexShrink: 0 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: SUCCESS, flexShrink: 0 }}>
                 <CheckCircle size={10} /> Verificado
               </span>
             )}

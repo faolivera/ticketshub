@@ -17,6 +17,9 @@ import {
   BORDER,
   BORD2,
   GREEN,
+  PENDING,
+  SUCCESS,
+  DESTRUCTIVE,
   S,
 } from '@/lib/design-tokens';
 
@@ -131,7 +134,7 @@ export function OfferCard({ offer }: OfferCardProps) {
               </p>
             </div>
             <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: HINT, ...S }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: PENDING }} />
               <span style={{ whiteSpace: 'nowrap' }}>{t('boughtTickets.offerStatusPending')}</span>
             </div>
           </div>
@@ -142,9 +145,9 @@ export function OfferCard({ offer }: OfferCardProps) {
 
   // ── TERMINAL (rejected / converted / cancelled) — muted history row ──────
   const terminalColor =
-    offer.status === 'rejected'  ? '#dc2626' :
-    offer.status === 'converted' ? '#15803d' :
-    offer.status === 'expired'   ? '#b45309' : HINT;
+    offer.status === 'rejected'  ? DESTRUCTIVE :
+    offer.status === 'converted' ? SUCCESS :
+    offer.status === 'expired'   ? PENDING : HINT;
 
   return (
     <Link to={to} state={{ from: '/my-tickets?tab=offers' }} style={{ textDecoration: 'none' }}>

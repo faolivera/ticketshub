@@ -27,6 +27,7 @@ import {
   GLIGHT,
   GREEN,
   GBORD,
+  SUCCESS,
   S,
   E,
 } from '@/lib/design-tokens';
@@ -109,7 +110,7 @@ export function SupportCaseDetail() {
 
   if (error || !ticket) {
     return (
-      <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div style={{ minHeight: '100vh', background: BG, ...S }}>
         <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
           <div style={{ maxWidth: 680, margin: '0 auto' }}>
             <p style={{ fontSize: 13.5, color: '#dc2626', marginBottom: 12, ...S }}>{error ?? t('support.errorLoad')}</p>
@@ -125,7 +126,7 @@ export function SupportCaseDetail() {
   const statusCfg = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.open;
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: BG, ...S }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
         .th-textarea{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid ${BORDER};background:${CARD};font-size:14px;color:${DARK};outline:none;resize:vertical;min-height:88px;font-family:'Plus Jakarta Sans',sans-serif;box-sizing:border-box;transition:border-color 0.15s;line-height:1.55}
@@ -295,7 +296,7 @@ export function SupportCaseDetail() {
           {/* Closed state */}
           {isClosed && (
             <div style={{ padding: '14px 20px', borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <CheckCircle size={15} style={{ color: '#15803d', flexShrink: 0 }} />
+              <CheckCircle size={15} style={{ color: SUCCESS, flexShrink: 0 }} />
               <p style={{ fontSize: 13.5, color: MUTED, ...S }}>{t('support.caseClosed')}</p>
             </div>
           )}

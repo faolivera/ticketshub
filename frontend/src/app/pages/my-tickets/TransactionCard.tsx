@@ -23,6 +23,7 @@ import {
   BORD2,
   GREEN,
   GLIGHT,
+  PENDING,
   S,
 } from '@/lib/design-tokens';
 
@@ -140,7 +141,7 @@ function WaitingCard({ transaction: tx, userId, role, fromUrl }: Omit<Transactio
             </p>
           </div>
           <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: HINT, ...S }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b', flexShrink: 0 }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: PENDING, flexShrink: 0 }} />
             <span style={{ whiteSpace: 'nowrap' }}>{waiting || status.label}</span>
           </div>
         </div>

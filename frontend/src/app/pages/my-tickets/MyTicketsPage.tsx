@@ -32,6 +32,10 @@ import {
   GREEN,
   GLIGHT,
   GBORD,
+  PENDING,
+  URGENT,
+  URGENT_LIGHT,
+  URGENT_BORDER,
   S,
 } from '@/lib/design-tokens';
 import { TransactionActionRequiredCard } from './TransactionActionRequiredCard';
@@ -103,7 +107,7 @@ function AcceptedOfferBanner({ offer, highlighted, t, thumbSize, isMobile }: {
       <span style={{
         alignSelf: 'flex-start', fontSize: 10.5, fontWeight: 700,
         padding: '2px 8px', borderRadius: 100,
-        background: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', ...S,
+        background: URGENT_LIGHT, color: URGENT, border: `1px solid ${URGENT_BORDER}`, ...S,
       }}>
         ⏱ {t('boughtTickets.offerAcceptedUrgent', { defaultValue: 'Tiempo limitado para pagar' })}
       </span>
@@ -211,7 +215,7 @@ function BuyerWaitingRow({ tx, t }: {
             <p style={{ fontSize: 12, color: MUTED, ...S }}>{formatDate(new Date(tx.eventDate))}</p>
           </div>
           <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: HINT, ...S }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: PENDING }} />
             <span style={{ whiteSpace: 'nowrap' }}>{waiting || status.label}</span>
           </div>
         </div>
@@ -391,7 +395,7 @@ export function MyTicketsPage() {
 
   const attentionCount = acceptedOffers.length + actionRequired.length;
   const hasActive      = attentionCount > 0 || waitingTx.length > 0 || pendingOffers.length > 0;
-  const dotColor       = attentionCount > 0 ? V : hasActive ? '#f59e0b' : GREEN;
+  const dotColor       = attentionCount > 0 ? V : hasActive ? PENDING : GREEN;
   const hasAnything    = bought.length + myOffers.length > 0;
 
   const loadHistoryPage = useCallback(async (append: boolean) => {

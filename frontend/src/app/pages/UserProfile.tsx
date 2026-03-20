@@ -22,16 +22,17 @@ import {
   CARD,
   BORDER,
   BORD2,
-  GREEN,
-  GLIGHT,
-  GBORD,
-  ABG,
-  AMBER,
-  ABORD,
+  SUCCESS,
+  SUCCESS_LIGHT,
+  SUCCESS_BORDER,
+  PENDING,
+  PENDING_LIGHT,
+  PENDING_BORDER,
   BADGE_DEMAND_BG,
   BADGE_DEMAND_BORDER,
   DESTRUCTIVE,
   SURFACE,
+  S,
 } from '@/lib/design-tokens';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -52,12 +53,12 @@ interface VerifRowProps {
 function StatusBadge({ status }: { status: VerifStatus }) {
   const cfg: Record<VerifStatus, { bg: string; color: string; border: string; icon: React.ReactNode; text: string }> = {
     verified: {
-      bg: GLIGHT, color: GREEN, border: `1px solid ${GBORD}`,
+      bg: SUCCESS_LIGHT, color: SUCCESS, border: `1px solid ${SUCCESS_BORDER}`,
       icon: <CheckCircle size={11} />,
       text: 'Verificado',
     },
     pending: {
-      bg: ABG, color: AMBER, border: `1px solid ${ABORD}`,
+      bg: PENDING_LIGHT, color: PENDING, border: `1px solid ${PENDING_BORDER}`,
       icon: <Clock size={11} />,
       text: 'Verificando',
     },
@@ -160,9 +161,9 @@ function ProfileCompletion({ steps }: { steps: Array<{ label: string; done: bool
           <span key={s.label} style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
             fontSize: 11.5, fontWeight: 600, padding: '2px 8px', borderRadius: 100,
-            background: s.done ? GLIGHT : 'rgba(255,255,255,0.7)',
-            color: s.done ? GREEN : MUTED,
-            border: s.done ? `1px solid ${GBORD}` : '1px solid #ddd6fe',
+            background: s.done ? SUCCESS_LIGHT : 'rgba(255,255,255,0.7)',
+            color: s.done ? SUCCESS : MUTED,
+            border: s.done ? `1px solid ${SUCCESS_BORDER}` : '1px solid #ddd6fe',
           }}>
             {s.done ? <CheckCircle size={10} /> : <div style={{ width: 10, height: 10, borderRadius: '50%', border: `1.5px solid ${MUTED}` }} />}
             {s.label}
@@ -218,7 +219,7 @@ export function UserProfile() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: BG, ...S }}>
       <PageContentMaxWidth style={{ paddingTop: 24, paddingBottom: 80 }}>
         {/* Page title */}
         <PageHeader title={t('userProfile.title')} backTo={{ labelKey: 'common.back' }} />
@@ -275,7 +276,7 @@ export function UserProfile() {
               {/* Name + meta */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 4 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: DARK, letterSpacing: '-0.3px' }}>
+                  <h2 style={{ ...S, fontSize: 18, fontWeight: 800, color: DARK, letterSpacing: '-0.3px' }}>
                     {user.firstName} {user.lastName}
                   </h2>
                   {isSeller && <SellerBadge user={user} />}
@@ -407,7 +408,7 @@ export function UserProfile() {
                       width: '100%', padding: '13px', borderRadius: 11,
                       background: V, border: 'none', color: 'white',
                       fontSize: 14, fontWeight: 700,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      ...S,
                       cursor: 'pointer', display: 'flex',
                       alignItems: 'center', justifyContent: 'center', gap: 8,
                       boxShadow: '0 4px 18px rgba(109,40,217,0.28)',
@@ -433,7 +434,7 @@ export function UserProfile() {
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 13, color: MUTED,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              ...S,
               textDecoration: 'underline', padding: '8px',
             }}
           >

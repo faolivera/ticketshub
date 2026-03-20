@@ -8,7 +8,7 @@ import { StepPhone } from '@/app/components/become-seller/StepPhone';
 import { StepIdentity } from '@/app/components/become-seller/StepIdentity';
 import { StepBank } from '@/app/components/become-seller/StepBank';
 import { ArrowLeft, Check } from 'lucide-react';
-import { V, VLIGHT, DARK, MUTED, BG, BORDER, GREEN, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, BG, BORDER, GREEN, S, E } from '@/lib/design-tokens';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type VerifyUserStepType = 'phone' | 'identity' | 'bankAccount';
@@ -142,7 +142,7 @@ export function VerifyUserWizard() {
           <ArrowLeft size={15} /> {t('register.back')}
         </button>
 
-        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
+        <h1 style={{ ...E, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
           {t('verifyUser.title')}
         </h1>
 

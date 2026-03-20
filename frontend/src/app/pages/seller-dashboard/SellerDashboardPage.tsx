@@ -39,6 +39,7 @@ import {
   GREEN,
   GLIGHT,
   GBORD,
+  PENDING,
   S,
 } from '@/lib/design-tokens';
 import { TransactionActionRequiredCard } from '@/app/pages/my-tickets/TransactionActionRequiredCard';
@@ -269,7 +270,7 @@ function SaleWaitingRow({ tx, t }: {
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: HINT, flexShrink: 0, ...S }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: PENDING }} />
             <span style={{ whiteSpace: 'nowrap' }}>{waiting || status.label}</span>
           </div>
         </div>

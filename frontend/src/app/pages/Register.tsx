@@ -24,6 +24,7 @@ import {
   GLIGHT,
   GBORD,
   S,
+  E,
 } from '@/lib/design-tokens';
 
 // ─── Back button ─────────────────────────────────────────────────────────────
@@ -371,7 +372,7 @@ export function Register() {
               <Mail size={24} style={{ color: V }} />
             </div>
             <h1 style={{
-              fontFamily: "'DM Serif Display', serif",
+              ...E,
               fontSize: 24, fontWeight: 400, color: DARK,
               letterSpacing: '-0.3px', marginBottom: 8,
             }}>
@@ -459,7 +460,7 @@ export function Register() {
       {/* Brand header */}
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <h1 style={{
-          fontFamily: "'DM Serif Display', serif",
+          ...E,
           fontSize: 'clamp(24px, 3vw, 30px)',
           fontWeight: 400, color: DARK,
           letterSpacing: '-0.4px', marginBottom: 6,

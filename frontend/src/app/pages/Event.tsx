@@ -14,6 +14,7 @@ import { BackButton } from "@/app/components/BackButton";
 import {
   V, VLIGHT, DARK, MUTED, BORDER, BORD2, S, E,
   SURFACE_STICKY, SHADOW_DROP, BG,
+  SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER,
 } from "@/lib/design-tokens";
 import type { PublicListEventItem } from "@/api/types/events";
 import type { ListingWithSeller } from "@/api/types/tickets";
@@ -642,11 +643,11 @@ export default function EventDetail() {
                 Avisanos y te notificamos en cuanto aparezca una entrada para este evento.
               </p>
               {alertSent ? (
-                <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 10, padding: "14px 18px", maxWidth: 380, margin: "0 auto 24px", display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left" }}>
-                  <CheckCircle size={16} style={{ color: "#16a34a", flexShrink: 0, marginTop: 1 }} />
+                <div style={{ background: SUCCESS_LIGHT, border: `1.5px solid ${SUCCESS_BORDER}`, borderRadius: 10, padding: "14px 18px", maxWidth: 380, margin: "0 auto 24px", display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left" }}>
+                  <CheckCircle size={16} style={{ color: SUCCESS, flexShrink: 0, marginTop: 1 }} />
                   <div>
-                    <p style={{ ...S, fontSize: 13, fontWeight: 700, color: "#166534", marginBottom: 2 }}>¡Alerta activada!</p>
-                    <p style={{ ...S, fontSize: 12, color: "#15803d", lineHeight: 1.5 }}>Te avisamos cuando haya entradas disponibles.</p>
+                    <p style={{ ...S, fontSize: 13, fontWeight: 700, color: SUCCESS, marginBottom: 2 }}>¡Alerta activada!</p>
+                    <p style={{ ...S, fontSize: 12, color: SUCCESS, lineHeight: 1.5 }}>Te avisamos cuando haya entradas disponibles.</p>
                   </div>
                 </div>
               ) : (

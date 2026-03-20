@@ -9,7 +9,6 @@ import {
   BLIGHT,
   BLUE,
   DESTRUCTIVE,
-  E,
   S,
 } from '@/lib/design-tokens';
 import type { PaymentInfoBuyerProps, PaymentInfoSellerProps } from './types';
@@ -22,7 +21,7 @@ export function PaymentInfoBuyerCard(p: PaymentInfoBuyerProps) {
     >
       <div className="mb-4 flex items-center gap-2">
         <CreditCard className="h-5 w-5" style={{ color: V }} />
-        <h2 className="text-base font-normal" style={{ ...E, color: DARK }}>
+        <h2 className="text-base" style={{ ...S, fontWeight: 700, color: DARK }}>
           {p.title ?? 'Payment'}
         </h2>
       </div>
@@ -81,7 +80,7 @@ export function PaymentInfoSellerCard(p: PaymentInfoSellerProps) {
     >
       <div className="mb-4 flex items-center gap-2">
         <CreditCard className="h-5 w-5" style={{ color: V }} />
-        <h2 className="text-base font-normal" style={{ ...E, color: DARK }}>
+        <h2 className="text-base" style={{ ...S, fontWeight: 700, color: DARK }}>
           {p.title ?? 'Payout'}
         </h2>
       </div>

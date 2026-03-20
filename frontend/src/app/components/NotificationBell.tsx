@@ -6,7 +6,7 @@ import { notificationsService, type NotificationItem } from '@/api/services/noti
 import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 import { formatDateShort } from '@/lib/format-date';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
-import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, S } from '@/lib/design-tokens';
 import {
   Drawer,
   DrawerContent,
@@ -14,8 +14,6 @@ import {
   DrawerTitle,
   DrawerClose,
 } from '@/app/components/ui/drawer';
-
-const S = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 const POLL_INTERVAL_MS = 30000; // Poll every 30 seconds (fallback when socket disconnected)
 

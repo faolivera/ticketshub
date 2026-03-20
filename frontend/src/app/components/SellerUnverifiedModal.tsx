@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { S } from '@/lib/design-tokens';
 import {
   Dialog,
   DialogContent,
@@ -116,7 +117,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
         {/* Violet accent strip */}
         <div style={{ height: 4, background: '#6d28d9', width: '100%' }} />
 
-        <div style={{ padding: '24px 24px 20px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ padding: '24px 24px 20px', ...S }}>
 
           {/* Icon */}
           <div style={{
@@ -177,7 +178,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
               borderRadius: 12, border: 'none',
               background: '#6d28d9', color: 'white',
               fontSize: 14, fontWeight: 700, cursor: 'pointer',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              ...S,
               boxShadow: '0 2px 12px rgba(109,40,217,0.22)',
             }}
           >
@@ -192,7 +193,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
               width: '100%', marginTop: 10, padding: '8px 0',
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 13, color: '#9ca3af',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              ...S,
             }}
           >
             {t('sellerUnverifiedModal.dismiss', { defaultValue: 'Ahora no' })}

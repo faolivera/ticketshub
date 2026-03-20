@@ -28,6 +28,7 @@ import {
   GLIGHT,
   GBORD,
   S,
+  E,
 } from '@/lib/design-tokens';
 
 function Thumb({ url, name, size }: { url?: string | null; name: string; size: number }) {
@@ -183,7 +184,7 @@ export function SellerHistoryPage() {
           <ArrowLeft size={14} /> {t('sellerDashboard.title')}
         </Link>
 
-        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 24 }}>
+        <h1 style={{ ...E, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 24 }}>
           {t('sellerDashboard.history', { defaultValue: 'Historial' })}
         </h1>
 

@@ -18,7 +18,6 @@ import {
   BADGE_DEMAND_BG,
   DESTRUCTIVE,
   CARD,
-  E,
   S,
 } from '@/lib/design-tokens';
 import type { ActionHeroProps, ActionHeroVariant } from './types';
@@ -107,8 +106,8 @@ export function ActionHero({
             </span>
           )}
           <h3
-            className="text-lg font-normal leading-tight sm:text-xl"
-            style={{ ...E, color: s.titleColor }}
+            className="text-base leading-tight"
+            style={{ ...S, fontWeight: 700, color: s.titleColor }}
           >
             {title}
           </h3>

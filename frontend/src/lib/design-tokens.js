@@ -96,5 +96,23 @@ export const SHADOW_HERO_CTA = "0 4px 18px rgba(109,40,217,0.4)";
 export const SHADOW_LANG_PILL = "0 1px 3px rgba(109,40,217,0.35)";
 export const V_FOCUS_RING = "0 0 0 3px rgba(109,40,217,0.1)";
 
+// Semantic state tokens (design system v2)
+// These are the ONLY allowed green / amber / pink values in the app.
+export const SUCCESS = "#16a34a";
+export const SUCCESS_LIGHT = "#dcfce7";
+export const SUCCESS_BORDER = "#bbf7d0";
+
+export const PENDING = "#d97706";
+export const PENDING_LIGHT = "#fef3c7";
+export const PENDING_BORDER = "#fde68a";
+
+export const URGENT = "#be185d";
+export const URGENT_LIGHT = "#fce7f3";
+export const URGENT_BORDER = "#fbcfe8";
+
+export const INFO = "#2563eb";
+export const INFO_LIGHT = "#eff6ff";
+export const INFO_BORDER = "#bfdbfe";
+
 export const S = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 export const E = { fontFamily: "'DM Serif Display', serif" };

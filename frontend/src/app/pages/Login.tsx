@@ -6,7 +6,7 @@ import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 import { useUser } from '@/app/contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
 import { getGoogleClientId } from '@/config/env';
-import { V, VLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E } from '@/lib/design-tokens';
 
 const googleClientId = getGoogleClientId();
 
@@ -215,7 +215,7 @@ export function Login() {
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
 
           <h1 style={{
-            fontFamily: "'DM Serif Display', serif",
+            ...E,
             fontSize: 'clamp(24px, 3vw, 30px)',
             fontWeight: 400, color: DARK,
             letterSpacing: '-0.4px', marginBottom: 6,

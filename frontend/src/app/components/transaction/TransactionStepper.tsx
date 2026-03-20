@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { AlertCircle, Check, Clock } from 'lucide-react';
-import { V, VLIGHT, GREEN, BORDER, BORD2, MUTED, DARK, WARN_SOLID, AMBER_BG_LIGHT, S } from '@/lib/design-tokens';
+import { V, VLIGHT, SUCCESS, BORDER, BORD2, MUTED, DARK, WARN_SOLID, AMBER_BG_LIGHT, S } from '@/lib/design-tokens';
 import type { TransactionStepperProps } from './types';
 import { transactionCurrentStep, transactionStepNeedsAction } from './types';
 
@@ -23,7 +23,7 @@ export function TransactionStepper({
             {i > 0 && (
               <div
                 className="mt-4 h-0.5 min-w-[8px] flex-1 self-start"
-                style={{ background: current >= i ? GREEN : BORDER }}
+                style={{ background: current >= i ? SUCCESS : BORDER }}
                 aria-hidden
               />
             )}
@@ -31,7 +31,7 @@ export function TransactionStepper({
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
                 style={{
-                  background: i < current ? GREEN : i === current ? (needsAction ? WARN_SOLID : V) : BORD2,
+                  background: i < current ? SUCCESS : i === current ? (needsAction ? WARN_SOLID : V) : BORD2,
                   color: i <= current ? '#fff' : MUTED,
                   boxShadow: i === current
                     ? `0 0 0 4px ${needsAction ? AMBER_BG_LIGHT : VLIGHT}`

@@ -30,6 +30,7 @@ import {
   GBORD,
   GLIGHT,
   GREEN,
+  SUCCESS,
   DESTRUCTIVE,
   DARK,
   S,
@@ -179,7 +180,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               {t('myTicket.attachTransferProofAfterTransfer')}
             </p>
             {transaction.transferProofStorageKey ? (
-              <p className="mt-2 text-sm text-green-700">{t('myTicket.transferProofUploaded')}</p>
+              <p style={{ marginTop: 8, fontSize: 14, color: SUCCESS }}>{t('myTicket.transferProofUploaded')}</p>
             ) : (
               <>
                 {transferProofFile ? (

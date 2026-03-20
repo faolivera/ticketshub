@@ -38,7 +38,7 @@ import { isSellerUnverified } from '../components/SellerUnverifiedModal';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
-import { DARK, V, VLIGHT, BORD2, BG, HINT, BORDER, SURFACE, MUTED } from '@/lib/design-tokens';
+import { DARK, V, VLIGHT, BORD2, BG, HINT, BORDER, SURFACE, MUTED, SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER, S } from '@/lib/design-tokens';
 
 export function MyTicket() {
   const { t } = useTranslation();
@@ -594,14 +594,18 @@ export function MyTicket() {
         topBanner={
           reportSuccessTicketId && !showDisputeModal ? (
             <div
-              className="mb-4 flex items-center justify-between gap-4 rounded-xl border border-green-200 bg-green-50 p-4"
+              style={{
+                marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 16, borderRadius: 12, border: `1px solid ${SUCCESS_BORDER}`,
+                background: SUCCESS_LIGHT, padding: 16,
+              }}
             >
-              <p className="flex items-center gap-2 text-sm text-green-800">
-                <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
+              <p style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: SUCCESS }}>
+                <CheckCircle style={{ width: 20, height: 20, flexShrink: 0, color: SUCCESS }} />
                 {t('myTicket.reportProblemSuccess')}{' '}
                 <Link
                   to={`/support/${reportSuccessTicketId}`}
-                  className="font-semibold text-green-700 underline hover:no-underline"
+                  style={{ fontWeight: 600, color: SUCCESS, textDecoration: 'underline' }}
                 >
                   {t('myTicket.reportProblemSuccessLink')}
                 </Link>
@@ -609,10 +613,10 @@ export function MyTicket() {
               <button
                 type="button"
                 onClick={() => setReportSuccessTicketId(null)}
-                className="rounded p-1 text-green-700 hover:bg-green-100"
+                style={{ borderRadius: 6, padding: 4, color: SUCCESS, background: 'none', border: 'none', cursor: 'pointer' }}
                 aria-label={t('myTicket.cancel')}
               >
-                <X className="h-5 w-5" />
+                <X style={{ width: 20, height: 20 }} />
               </button>
             </div>
           ) : undefined
@@ -630,7 +634,7 @@ export function MyTicket() {
               quantity={transaction.quantity}
             />
             <div className="rounded-[16px] border border-gray-200 bg-white p-5 sm:p-6">
-              <h2 className="mb-4 font-[family-name:var(--font-serif)] text-lg sm:text-xl" style={{ fontFamily: "'DM Serif Display', serif", color: DARK }}>
+              <h2 className="mb-4" style={{ ...S, fontSize: 16, fontWeight: 700, color: DARK }}>
                 {t('myTicket.ticketStatus')}
               </h2>
               <TransactionStepper
@@ -748,7 +752,7 @@ export function MyTicket() {
             </div>
             {(transaction.status === TransactionStatus.Completed || transaction.status === TransactionStatus.TransferringFund) && reviewData && (
               <div className="rounded-[16px] border bg-white p-5 sm:p-6" style={{ borderColor: BORDER }}>
-                <h2 className="mb-4 text-lg sm:text-xl" style={{ fontFamily: "'DM Serif Display', serif", color: DARK }}>
+                <h2 className="mb-4" style={{ ...S, fontSize: 16, fontWeight: 700, color: DARK }}>
                   {t('reviews.leaveReview')}
                 </h2>
                 {(() => {
@@ -757,7 +761,7 @@ export function MyTicket() {
                   const counterpartName = isBuyer ? transaction.sellerName : transaction.buyerName;
                   const experiencePromptKey = isBuyer ? 'reviews.buyerExperiencePrompt' : 'reviews.sellerExperiencePrompt';
                   return (
-                    <div className="space-y-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    <div className="space-y-3" style={{ ...S }}>
                       {counterpartReview && (
                         <div className="rounded-[10px] border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
                           <p style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
@@ -797,7 +801,7 @@ export function MyTicket() {
                             placeholder={t('reviews.commentPlaceholder')}
                             className="w-full rounded-[10px] border p-3 outline-none"
                             rows={2}
-                            style={{ fontSize: 13.5, color: DARK, borderColor: BORDER, background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                            style={{ fontSize: 13.5, color: DARK, borderColor: BORDER, background: BG, ...S }}
                           />
                           {reviewError && <p style={{ fontSize: 12, color: '#dc2626' }}>{reviewError}</p>}
                           <button
@@ -811,12 +815,12 @@ export function MyTicket() {
                           </button>
                         </>
                       ) : (
-                        <div className="rounded-[10px] border border-green-200 bg-green-50 p-4">
-                          <div className="flex gap-3">
-                            <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+                        <div style={{ borderRadius: 10, border: `1px solid ${SUCCESS_BORDER}`, background: SUCCESS_LIGHT, padding: 16 }}>
+                          <div style={{ display: 'flex', gap: 12 }}>
+                            <CheckCircle style={{ marginTop: 2, width: 20, height: 20, flexShrink: 0, color: SUCCESS }} />
                             <div>
-                              <p style={{ fontSize: 13.5, fontWeight: 600, color: '#14532d' }}>{t('reviews.reviewSubmitted')}</p>
-                              <p className="mt-0.5" style={{ fontSize: 13, color: '#166534' }}>{t('reviews.reviewSubmittedDesc')}</p>
+                              <p style={{ fontSize: 13.5, fontWeight: 600, color: SUCCESS }}>{t('reviews.reviewSubmitted')}</p>
+                              <p style={{ marginTop: 2, fontSize: 13, color: SUCCESS }}>{t('reviews.reviewSubmittedDesc')}</p>
                             </div>
                           </div>
                         </div>
@@ -1150,7 +1154,7 @@ export function MyTicket() {
             </>
           ) : disputeModalStep === 'report_sent' ? (
             <div className="flex flex-col items-center py-4 text-center">
-              <CheckCircle className="mb-4 h-12 w-12 text-green-600" />
+              <CheckCircle style={{ marginBottom: 16, width: 48, height: 48, color: SUCCESS }} />
               <h3 className="mb-6 text-lg font-bold">{t('myTicket.reportProblemSuccess')}</h3>
               <div className="flex w-full flex-col gap-3 sm:flex-row">
                 <Link

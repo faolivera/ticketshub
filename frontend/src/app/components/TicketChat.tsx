@@ -7,6 +7,7 @@ import { transactionsService } from '@/api/services';
 import type { TransactionChatMessage } from '@/api/types';
 import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
+import { SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER } from '@/lib/design-tokens';
 
 export interface TicketChatProps {
   isOpen: boolean;
@@ -309,7 +310,7 @@ export function TicketChat({
                           }`}
                           style={
                             isDelivery
-                              ? { background: '#f0fdf4', borderColor: '#bbf7d0', color: '#15803d' }
+                              ? { background: SUCCESS_LIGHT, borderColor: SUCCESS_BORDER, color: SUCCESS }
                               : isCurrentUser
                                 ? { background: '#6d28d9', color: 'white' }
                                 : { background: 'white', borderColor: '#e5e7eb', color: '#0f0f1a' }
@@ -363,7 +364,7 @@ export function TicketChat({
                   style={{
                     borderRadius: 10,
                     borderColor: '#e5e7eb',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    ...S,
                   }}
                 />
                 <button

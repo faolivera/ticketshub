@@ -26,6 +26,7 @@ import {
   ABG,
   ABORD,
   S,
+  E,
 } from '@/lib/design-tokens';
 
 export type WizardStep = 1 | 2 | 3 | 4;
@@ -257,7 +258,7 @@ export function BecomeSellerWizard() {
               }}>
                 {payoutReady ? <Check size={26} style={{ color: GREEN }} /> : <Clock size={26} style={{ color: AMBER_c1 }} />}
               </div>
-              <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: DARK, letterSpacing: '-0.3px', marginBottom: 8 }}>
+              <h1 style={{ ...E, fontSize: 24, fontWeight: 400, color: DARK, letterSpacing: '-0.3px', marginBottom: 8 }}>
                 {payoutReady ? t('becomeSeller.completed.verifiedTitle') : t('becomeSeller.completed.title')}
               </h1>
               <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.6, ...S }}>
@@ -307,7 +308,7 @@ export function BecomeSellerWizard() {
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
 
         <h1 style={{
-          fontFamily: "'DM Serif Display', serif",
+          ...E,
           fontSize: 'clamp(22px,3vw,28px)',
           fontWeight: 400, color: DARK,
           letterSpacing: '-0.4px', marginBottom: 20,

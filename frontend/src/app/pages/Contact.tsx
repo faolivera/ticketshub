@@ -22,6 +22,9 @@ import {
   GREEN,
   GLIGHT,
   GBORD,
+  SUCCESS,
+  SUCCESS_LIGHT,
+  SUCCESS_BORDER,
   S,
 } from '@/lib/design-tokens';
 
@@ -48,15 +51,15 @@ function RightPanel({ success, isAuthenticated, t }: {
   if (success) {
     return (
       <div style={{
-        background: GLIGHT, border: `1px solid ${GBORD}`,
+        background: SUCCESS_LIGHT, border: `1px solid ${SUCCESS_BORDER}`,
         borderRadius: 20, padding: '28px 24px',
         display: 'flex', flexDirection: 'column', gap: 16,
       }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <CheckCircle size={24} style={{ color: GREEN }} />
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: SUCCESS_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CheckCircle size={24} style={{ color: SUCCESS }} />
         </div>
         <div>
-          <p style={{ fontSize: 17, fontWeight: 800, color: GREEN, marginBottom: 6, ...S }}>
+          <p style={{ fontSize: 17, fontWeight: 800, color: SUCCESS, marginBottom: 6, ...S }}>
             {t('contact.successTitle')}
           </p>
           <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.6, ...S }}>
@@ -68,8 +71,8 @@ function RightPanel({ success, isAuthenticated, t }: {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 7,
               padding: '10px 16px', borderRadius: 12,
-              background: CARD, border: `1px solid ${GBORD}`,
-              fontSize: 13.5, fontWeight: 700, color: GREEN, cursor: 'pointer', ...S,
+              background: CARD, border: `1px solid ${SUCCESS_BORDER}`,
+              fontSize: 13.5, fontWeight: 700, color: SUCCESS, cursor: 'pointer', ...S,
             }}>
               {t('contact.viewCases', { defaultValue: 'Ver mis consultas' })}
               <ArrowRight size={14} />
@@ -131,12 +134,12 @@ function SuccessBannerMobile({ isAuthenticated, t }: {
   t: (k: string, o?: Record<string, string>) => string;
 }) {
   return (
-    <div style={{ background: GLIGHT, border: `1px solid ${GBORD}`, borderRadius: 14, padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
-      <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <CheckCircle size={18} style={{ color: GREEN }} />
+    <div style={{ background: SUCCESS_LIGHT, border: `1px solid ${SUCCESS_BORDER}`, borderRadius: 14, padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
+      <div style={{ width: 38, height: 38, borderRadius: '50%', background: SUCCESS_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <CheckCircle size={18} style={{ color: SUCCESS }} />
       </div>
       <div>
-        <p style={{ fontSize: 14, fontWeight: 700, color: GREEN, marginBottom: 3, ...S }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: SUCCESS, marginBottom: 3, ...S }}>
           {t('contact.successTitle')}
         </p>
         <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.5, ...S }}>

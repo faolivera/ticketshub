@@ -39,6 +39,8 @@ import {
   BADGE_DEMAND_BORDER,
   SHADOW_CARD_SM,
   BG,
+  E,
+  S,
 } from '@/lib/design-tokens';
 
 export function SellerProfile() {
@@ -168,8 +170,9 @@ export function SellerProfile() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <h1
                 style={{
-                  fontFamily: "'DM Serif Display', serif",
+                  ...E,
                   fontSize: 26,
+                  fontWeight: 400,
                   color: DARK,
                   margin: '0 0 4px',
                   lineHeight: 1.2,
@@ -232,7 +235,8 @@ export function SellerProfile() {
               </p>
               <p
                 style={{
-                  fontFamily: "'DM Serif Display', serif",
+                  ...E,
+                  fontWeight: 400,
                   fontSize: 30,
                   color: positivePercentage !== null ? DARK : MUTED,
                   lineHeight: 1,
@@ -270,7 +274,8 @@ export function SellerProfile() {
               </p>
               <p
                 style={{
-                  fontFamily: "'DM Serif Display', serif",
+                  ...E,
+                  fontWeight: 400,
                   fontSize: 30,
                   color: DARK,
                   lineHeight: 1,
@@ -300,7 +305,8 @@ export function SellerProfile() {
               </p>
               <p
                 style={{
-                  fontFamily: "'DM Serif Display', serif",
+                  ...E,
+                  fontWeight: 400,
                   fontSize: 30,
                   color: DARK,
                   lineHeight: 1,
@@ -431,7 +437,8 @@ export function SellerProfile() {
         {/* ── Customer reviews ── */}
         <h2
           style={{
-            fontFamily: "'DM Serif Display', serif",
+            ...E,
+            fontWeight: 400,
             fontSize: 20,
             color: DARK,
             margin: '0 0 14px',

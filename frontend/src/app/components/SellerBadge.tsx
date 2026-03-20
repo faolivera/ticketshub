@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import { SellerTier, VerificationHelper } from '@/lib/verification';
 import type { User } from '@/api/types/users';
+import { SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER, PENDING, PENDING_LIGHT, PENDING_BORDER, BLIGHT, BLUE, BLUE_BORDER_LIGHT, S } from '@/lib/design-tokens';
 
 interface SellerBadgeProps {
   /** User to derive seller tier and verification status from (V-flags) */
@@ -40,7 +41,8 @@ export function SellerBadge({ user, size = 'md' }: SellerBadgeProps) {
   if (tier === SellerTier.UNVERIFIED_SELLER) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} bg-amber-100 text-amber-800 font-semibold rounded-full`}
+        className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} font-semibold rounded-full`}
+        style={{ ...S, background: PENDING_LIGHT, color: PENDING, border: `1px solid ${PENDING_BORDER}` }}
       >
         <AlertCircle className={iconSizes[size]} />
         {t('badges.newSeller')}
@@ -52,7 +54,8 @@ export function SellerBadge({ user, size = 'md' }: SellerBadgeProps) {
   if (tier === SellerTier.VERIFIED_SELLER && verificationStatus === 'verified') {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} bg-green-100 text-green-800 font-semibold rounded-full`}
+        className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} font-semibold rounded-full`}
+        style={{ ...S, background: SUCCESS_LIGHT, color: SUCCESS, border: `1px solid ${SUCCESS_BORDER}` }}
       >
         <CheckCircle className={iconSizes[size]} />
         {t('badges.verifiedSeller')}
@@ -63,7 +66,8 @@ export function SellerBadge({ user, size = 'md' }: SellerBadgeProps) {
   if (tier === SellerTier.VERIFIED_SELLER && verificationStatus === 'pending') {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} bg-blue-100 text-blue-800 font-semibold rounded-full`}
+        className={`inline-flex items-center gap-1.5 ${sizeClasses[size]} font-semibold rounded-full`}
+        style={{ ...S, background: BLIGHT, color: BLUE, border: `1px solid ${BLUE_BORDER_LIGHT}` }}
       >
         <AlertCircle className={iconSizes[size]} />
         {t('badges.verificationPending')}

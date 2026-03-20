@@ -21,6 +21,8 @@ import {
   GREEN, GLIGHT, GBORD,
   AMBER, ABG, ABORD, AMBER_BG_LIGHT, AMBER_TEXT_DARK,
   ERROR, ERROR_DARK, BADGE_DEMAND_BG, BADGE_DEMAND_BORDER,
+  INFO, INFO_LIGHT, INFO_BORDER,
+  SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER,
   S, E, V_FOCUS_RING,
   SHADOW_CARD, SHADOW_CARD_SM,
   WARN_SOLID,
@@ -1084,19 +1086,19 @@ export default function Checkout() {
                 {/* Disclaimer for sellers with 0 sales */}
                 {isNewSeller && (
                   <div style={{
-                    marginTop: 14, background: GLIGHT,
-                    border: `1px solid ${GBORD}`,
+                    marginTop: 14, background: INFO_LIGHT,
+                    border: `1px solid ${INFO_BORDER}`,
                     borderRadius: 10, padding: "11px 13px",
                     display: "flex", gap: 9, alignItems: "flex-start",
                   }}>
                     <div style={{
-                      width: 28, height: 28, borderRadius: "50%", background: "#bbf7d0",
+                      width: 28, height: 28, borderRadius: "50%", background: INFO_LIGHT,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0, marginTop: 1,
                     }}>
-                      <Shield size={14} color="#15803d" />
+                      <Shield size={14} color={INFO} />
                     </div>
-                    <div style={{ fontSize: 12, color: "#166534", lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 12, color: INFO, lineHeight: 1.5 }}>
                       <strong style={{ display: "block", marginBottom: 2 }}>
                         Vendedor nuevo. Igual, tu compra está protegida.
                       </strong>
@@ -1271,23 +1273,23 @@ export default function Checkout() {
                 {acceptedOffer && (
                   <div style={{
                     margin: "18px 18px 0", padding: "12px 14px",
-                    background: GLIGHT, border: `1px solid ${GBORD}`, borderRadius: 12,
+                    background: SUCCESS_LIGHT, border: `1px solid ${SUCCESS_BORDER}`, borderRadius: 12,
                   }}>
                     <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
                       <div style={{
                         width: 22, height: 22, borderRadius: "50%",
-                        background: "#bbf7d0", display: "flex", alignItems: "center",
+                        background: SUCCESS_BORDER, display: "flex", alignItems: "center",
                         justifyContent: "center", flexShrink: 0, marginTop: 1,
-                        fontSize: 10, color: "#14532d",
+                        fontSize: 10, color: SUCCESS,
                       }}>✓</div>
-                      <div style={{ fontSize: 12, color: "#166534", lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 12, color: SUCCESS, lineHeight: 1.5 }}>
                         <strong style={{ display: "block", marginBottom: 3, fontSize: 13 }}>
                           El vendedor aceptó tu oferta
                         </strong>
                         Confirmá el pago antes de que expire el tiempo.
                         {acceptedOffer.acceptedExpiresAt && (
                           <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                            <span style={{ fontSize: 11.5, color: "#166534" }}>
+                            <span style={{ fontSize: 11.5, color: SUCCESS }}>
                               Tiempo para completar la compra
                             </span>
                             <span style={{

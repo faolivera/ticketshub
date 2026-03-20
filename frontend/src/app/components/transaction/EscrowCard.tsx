@@ -1,16 +1,16 @@
 import { Shield } from 'lucide-react';
-import { BLIGHT, BLUE, DARK, E, S } from '@/lib/design-tokens';
+import { INFO, INFO_LIGHT, INFO_BORDER, DARK, S } from '@/lib/design-tokens';
 import type { EscrowCardProps } from './types';
 
 export function EscrowCard({ message, title }: EscrowCardProps) {
   return (
     <div
       className="rounded-[14px] border p-5"
-      style={{ ...S, background: BLIGHT, borderColor: BLUE + '40' }}
+      style={{ ...S, background: INFO_LIGHT, borderColor: INFO_BORDER }}
     >
       <div className="mb-2 flex items-center gap-2">
-        <Shield className="h-5 w-5 shrink-0" style={{ color: BLUE }} />
-        <h2 className="text-base font-normal" style={{ ...E, color: BLUE }}>
+        <Shield className="h-5 w-5 shrink-0" style={{ color: INFO }} />
+        <h2 className="text-base" style={{ ...S, fontWeight: 700, color: INFO }}>
           {title}
         </h2>
       </div>
