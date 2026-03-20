@@ -120,7 +120,7 @@ export class TicketsService {
    * Callers only invoke this when seller is not VERIFIED_SELLER. Runs proximity validation when eventStartsAt is provided (event within configured hours window => not allowed).
    * @param options.excludeListingId When updating an existing listing, pass its id so it is excluded from current totals and re-counted with newListingValue.
    * @param options.eventStartsAt When provided, runs proximity check; if event is within window, returns false.
-   * @returns true if within limits and proximity ok, false otherwise (caller should throw SellerRiskRestrictionException or return seller_risk_restriction).
+   * @returns true if within limits and proximity ok, false otherwise (caller should throw SellerRiskRestrictionException or return date_proximity_restriction / listing_limits_restriction).
    */
   private async checkUnverifiedSellerListingLimits(
     ctx: Ctx,

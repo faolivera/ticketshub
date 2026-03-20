@@ -543,7 +543,7 @@ export function SellListingWizard() {
       deliveryMethod = form.physicalDeliveryMethod === 'pickup' ? DeliveryMethod.Pickup : DeliveryMethod.ArrangeWithSeller;
     }
     const validSeats = form.numberedSeats.filter((s) => s.row.trim() && s.seatNumber.trim());
-    setIsPublishing(true); setPublishError(null); setShowSellerRiskRestriction(false);
+    setIsPublishing(true); setPublishError(null); setShowSellerRiskRestriction(false); setShowProximityRestriction(false);
     try {
       const listing = await ticketsService.createListing({
         eventId: form.eventId, eventDateId: form.eventDateId, type: ticketType,

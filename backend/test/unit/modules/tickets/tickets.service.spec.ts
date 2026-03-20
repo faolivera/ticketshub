@@ -516,7 +516,7 @@ describe('TicketsService', () => {
       ).rejects.toThrow(SellerRiskRestrictionException);
     });
 
-    it('should throw ForbiddenException when seller has no V3 and event is within proximity window (72h)', async () => {
+    it('should throw SellerRiskRestrictionException when seller has no V3 and event is within proximity window (72h)', async () => {
       const eventWithin72h = {
         ...mockApprovedEvent,
         dates: [
@@ -540,10 +540,7 @@ describe('TicketsService', () => {
       const err = await service
         .createListing(mockCtx, 'seller_123', baseCreateRequest)
         .catch((e: unknown) => e);
-      expect(err).toBeInstanceOf(ForbiddenException);
-      expect((err as ForbiddenException).message).toMatch(
-        /Identity verification.*hours/,
-      );
+      expect(err).toBeInstanceOf(SellerRiskRestrictionException);
     });
 
     it('should allow listing when seller has no V3 but event is beyond proximity window', async () => {
