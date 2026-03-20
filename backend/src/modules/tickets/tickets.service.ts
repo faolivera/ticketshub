@@ -289,13 +289,19 @@ export class TicketsService {
 
   /**
    * Validate whether the seller can create a listing from a risk perspective (Tier 0 limits).
-   * Does not validate event, terms, or other createListing rules. Used by the sell wizard before advancing from the price step.
+   * @param data.validations Which checks to run: 'proximity' checks event date nearness, 'limits' checks monetary/count caps.
+   * @param data.eventStartsAt Required when 'proximity' is in validations. Silent skip if absent.
    */
   async validateListingRisk(
     ctx: Ctx,
     sellerId: string,
-    data: { quantity: number; pricePerTicket: ConfigMoney },
-  ): Promise<{ status: 'can_create' | 'seller_risk_restriction' }> {
+    data: {
+      quantity: number;
+      pricePerTicket: ConfigMoney;
+      validations: ('proximity' | 'limits')[];
+      eventStartsAt?: Date;
+    },
+  ): Promise<{ status: 'can_create' | 'date_proximity_restriction' | 'listing_limits_restriction' }> {
     const user = await this.usersService.findById(ctx, sellerId);
     if (!user || !VerificationHelper.canSell(user)) {
       throw new ForbiddenException(
@@ -305,16 +311,35 @@ export class TicketsService {
     if (VerificationHelper.sellerTier(user) === SellerTier.VERIFIED_SELLER) {
       return { status: 'can_create' };
     }
-    const newListingValue: ConfigMoney = {
-      amount: data.pricePerTicket.amount * data.quantity,
-      currency: data.pricePerTicket.currency,
-    };
-    const withinLimits = await this.checkUnverifiedSellerListingLimits(
-      ctx,
-      sellerId,
-      newListingValue,
-    );
-    return withinLimits ? { status: 'can_create' } : { status: 'seller_risk_restriction' };
+
+    if (data.validations.includes('proximity') && data.eventStartsAt) {
+      const withinLimits = await this.checkUnverifiedSellerListingLimits(
+        ctx,
+        sellerId,
+        { amount: 0, currency: data.pricePerTicket.currency },
+        { eventStartsAt: data.eventStartsAt },
+      );
+      if (!withinLimits) {
+        return { status: 'date_proximity_restriction' };
+      }
+    }
+
+    if (data.validations.includes('limits')) {
+      const newListingValue: ConfigMoney = {
+        amount: data.pricePerTicket.amount * data.quantity,
+        currency: data.pricePerTicket.currency,
+      };
+      const withinLimits = await this.checkUnverifiedSellerListingLimits(
+        ctx,
+        sellerId,
+        newListingValue,
+      );
+      if (!withinLimits) {
+        return { status: 'listing_limits_restriction' };
+      }
+    }
+
+    return { status: 'can_create' };
   }
 
   /**
