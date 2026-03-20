@@ -476,7 +476,7 @@ export function SellerDashboardPage() {
   [sold]);
 
   const closedOffers = useMemo(() =>
-    receivedOffers.filter(o => ['accepted', 'rejected', 'cancelled'].includes(o.status)),
+    receivedOffers.filter(o => ['accepted', 'rejected', 'cancelled', 'expired'].includes(o.status)),
   [receivedOffers]);
 
   const hasAnything = activeListings.length + salesInProgress.length + actionRequired.length + pendingOffers.length > 0;

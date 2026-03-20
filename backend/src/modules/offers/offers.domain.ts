@@ -1,15 +1,24 @@
 import type { Money } from '../tickets/tickets.domain';
 
 /**
- * Offer status lifecycle: pending -> accepted | rejected | cancelled | expired
- * accepted -> converted | cancelled | expired
+ * Offer status lifecycle:
+ *   pending -> accepted | rejected | cancelled | expired(seller_no_response)
+ *   accepted -> converted | cancelled | expired(buyer_no_purchase)
  */
 export type OfferStatus =
   | 'pending'
   | 'accepted'
   | 'rejected'
   | 'converted'
-  | 'cancelled';
+  | 'cancelled'
+  | 'expired';
+
+/**
+ * Why an offer expired:
+ * - seller_no_response: offer was pending when expiresAt passed
+ * - buyer_no_purchase:  offer was accepted when acceptedExpiresAt passed
+ */
+export type OfferExpiredReason = 'seller_no_response' | 'buyer_no_purchase';
 
 /** Seat identifier for numbered tickets (aligns with TicketUnit / TicketSeat). */
 export interface OfferSeat {
@@ -35,6 +44,8 @@ export interface Offer {
   rejectedAt?: Date;
   convertedTransactionId?: string;
   cancelledAt?: Date;
+  expiredAt?: Date;
+  expiredReason?: OfferExpiredReason;
   createdAt: Date;
   updatedAt: Date;
 }

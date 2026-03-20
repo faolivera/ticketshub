@@ -5,7 +5,11 @@ export type OfferStatus =
   | 'accepted'
   | 'rejected'
   | 'converted'
-  | 'cancelled';
+  | 'cancelled'
+  | 'expired';
+
+/** Why an offer expired (only present when status === 'expired'). */
+export type OfferExpiredReason = 'seller_no_response' | 'buyer_no_purchase';
 
 export interface OfferSeat {
   row: string;
@@ -29,6 +33,8 @@ export interface Offer {
   rejectedAt?: string;
   convertedTransactionId?: string;
   cancelledAt?: string;
+  expiredAt?: string;
+  expiredReason?: OfferExpiredReason;
   createdAt: string;
   updatedAt: string;
 }

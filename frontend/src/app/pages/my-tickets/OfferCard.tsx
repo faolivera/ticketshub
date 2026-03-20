@@ -143,7 +143,8 @@ export function OfferCard({ offer }: OfferCardProps) {
   // ── TERMINAL (rejected / converted / cancelled) — muted history row ──────
   const terminalColor =
     offer.status === 'rejected'  ? '#dc2626' :
-    offer.status === 'converted' ? '#15803d' : HINT;
+    offer.status === 'converted' ? '#15803d' :
+    offer.status === 'expired'   ? '#b45309' : HINT;
 
   return (
     <Link to={to} state={{ from: '/my-tickets?tab=offers' }} style={{ textDecoration: 'none' }}>

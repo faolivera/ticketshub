@@ -81,8 +81,9 @@ export function getOfferStatusInfo(
     case 'pending':   return { label: t('boughtTickets.offerStatusPending'),   color: ABG, textColor: AMBER, border: ABORD };
     case 'rejected':  return { label: t('boughtTickets.offerStatusRejected'),  color: BADGE_DEMAND_BG, textColor: DESTRUCTIVE, border: BADGE_DEMAND_BORDER };
     case 'converted': return { label: t('boughtTickets.offerStatusConverted'), color: GLIGHT, textColor: GREEN, border: GBORD };
-    case 'cancelled': return { label: t('boughtTickets.offerStatusCancelled'), color: SURFACE, textColor: MUTED, border: BORDER };
-    default:          return { label: status,                                  color: SURFACE, textColor: MUTED, border: BORDER };
+    case 'cancelled': return { label: t('boughtTickets.offerStatusCancelled'), color: SURFACE, textColor: MUTED,  border: BORDER };
+    case 'expired':   return { label: t('boughtTickets.offerStatusExpired'),   color: ABG,     textColor: AMBER,  border: ABORD  };
+    default:          return { label: status,                                  color: SURFACE, textColor: MUTED,  border: BORDER };
   }
 }
 

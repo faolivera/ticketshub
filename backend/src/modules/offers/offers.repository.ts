@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import type { Offer as PrismaOffer } from '@prisma/client';
-import { OfferStatus as PrismaOfferStatus } from '@prisma/client';
+import { OfferStatus as PrismaOfferStatus, OfferExpiredReason as PrismaOfferExpiredReason } from '@prisma/client';
 import type { Ctx } from '../../common/types/context';
 import { ContextLogger } from '../../common/logger/context-logger';
-import type { Offer, OfferStatus, OfferTickets } from './offers.domain';
+import type { Offer, OfferStatus, OfferExpiredReason, OfferTickets } from './offers.domain';
 import type { Money } from '../tickets/tickets.domain';
 import type { IOffersRepository } from './offers.repository.interface';
 
@@ -26,6 +26,10 @@ export class OffersRepository
 
   private mapStatusFromDb(status: PrismaOfferStatus): OfferStatus {
     return status as OfferStatus;
+  }
+
+  private mapExpiredReasonFromDb(reason: PrismaOfferExpiredReason | null): OfferExpiredReason | undefined {
+    return reason ? (reason as OfferExpiredReason) : undefined;
   }
 
   private serializeMoney(money: Money): object {
@@ -54,6 +58,8 @@ export class OffersRepository
       rejectedAt: record.rejectedAt ?? undefined,
       convertedTransactionId: record.convertedTransactionId ?? undefined,
       cancelledAt: record.cancelledAt ?? undefined,
+      expiredAt: record.expiredAt ?? undefined,
+      expiredReason: this.mapExpiredReasonFromDb(record.expiredReason),
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
@@ -177,6 +183,9 @@ export class OffersRepository
       data.convertedTransactionId = updates.convertedTransactionId;
     if (updates.cancelledAt !== undefined)
       data.cancelledAt = updates.cancelledAt;
+    if (updates.expiredAt !== undefined) data.expiredAt = updates.expiredAt;
+    if (updates.expiredReason !== undefined)
+      data.expiredReason = updates.expiredReason as PrismaOfferExpiredReason;
     data.updatedAt = new Date();
 
     const updated = await client.offer.update({
@@ -186,28 +195,77 @@ export class OffersRepository
     return this.mapToDomain(updated);
   }
 
-  async cancelExpiredPendingByIds(
+  async expirePendingByIds(
     ctx: Ctx,
     ids: string[],
-    cancelledAt: Date,
+    expiredAt: Date,
   ): Promise<number> {
-    this.logger.debug(ctx, 'cancelExpiredPendingByIds', {
-      count: ids.length,
-    });
+    this.logger.debug(ctx, 'expirePendingByIds', { count: ids.length });
     if (ids.length === 0) return 0;
     const client = this.getClient(ctx);
     const result = await client.offer.updateMany({
-      where: {
-        id: { in: ids },
-        status: PrismaOfferStatus.pending,
-      },
+      where: { id: { in: ids }, status: PrismaOfferStatus.pending },
       data: {
-        status: PrismaOfferStatus.cancelled,
-        cancelledAt,
+        status: PrismaOfferStatus.expired,
+        expiredAt,
+        expiredReason: PrismaOfferExpiredReason.seller_no_response,
         updatedAt: new Date(),
       },
     });
     return result.count;
+  }
+
+  async expireAcceptedByIds(
+    ctx: Ctx,
+    ids: string[],
+    expiredAt: Date,
+  ): Promise<number> {
+    this.logger.debug(ctx, 'expireAcceptedByIds', { count: ids.length });
+    if (ids.length === 0) return 0;
+    const client = this.getClient(ctx);
+    const result = await client.offer.updateMany({
+      where: { id: { in: ids }, status: PrismaOfferStatus.accepted },
+      data: {
+        status: PrismaOfferStatus.expired,
+        expiredAt,
+        expiredReason: PrismaOfferExpiredReason.buyer_no_purchase,
+        updatedAt: new Date(),
+      },
+    });
+    return result.count;
+  }
+
+  async findExpirablePending(
+    ctx: Ctx,
+    before: Date,
+    limit: number,
+  ): Promise<Offer[]> {
+    this.logger.debug(ctx, 'findExpirablePending', { before, limit });
+    const client = this.getClient(ctx);
+    const rows = await client.offer.findMany({
+      where: { status: PrismaOfferStatus.pending, expiresAt: { lt: before } },
+      take: limit,
+      orderBy: { expiresAt: 'asc' },
+    });
+    return rows.map((r) => this.mapToDomain(r));
+  }
+
+  async findExpirableAccepted(
+    ctx: Ctx,
+    before: Date,
+    limit: number,
+  ): Promise<Offer[]> {
+    this.logger.debug(ctx, 'findExpirableAccepted', { before, limit });
+    const client = this.getClient(ctx);
+    const rows = await client.offer.findMany({
+      where: {
+        status: PrismaOfferStatus.accepted,
+        acceptedExpiresAt: { lt: before },
+      },
+      take: limit,
+      orderBy: { acceptedExpiresAt: 'asc' },
+    });
+    return rows.map((r) => this.mapToDomain(r));
   }
 
   async findPendingOrAcceptedByListingId(

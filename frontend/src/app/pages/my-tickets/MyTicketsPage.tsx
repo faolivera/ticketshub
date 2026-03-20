@@ -308,10 +308,17 @@ function HistoryOfferRow({ offer, t }: { offer: OfferWithListingSummary; t: (k: 
   const summary      = offer.listingSummary;
   const offeredPrice = fmt(offer.offeredPrice.amount, offer.offeredPrice.currency);
   const isConverted  = offer.status === 'converted';
-  const badgeBg = isConverted ? GLIGHT : BG;
-  const badgeColor = isConverted ? GREEN : MUTED;
-  const badgeBorder = isConverted ? GBORD : BORD2;
-  const label = isConverted ? t('boughtTickets.offerStatusConverted') : offer.status === 'rejected' ? t('boughtTickets.offerStatusRejected') : t('boughtTickets.offerStatusCancelled');
+  const isExpired    = offer.status === 'expired';
+  const badgeBg     = isConverted ? GLIGHT : isExpired ? '#fffbeb' : BG;
+  const badgeColor  = isConverted ? GREEN  : isExpired ? '#b45309' : MUTED;
+  const badgeBorder = isConverted ? GBORD  : isExpired ? '#fde68a' : BORD2;
+  const label = isConverted
+    ? t('boughtTickets.offerStatusConverted')
+    : offer.status === 'rejected'
+      ? t('boughtTickets.offerStatusRejected')
+      : isExpired
+        ? t('boughtTickets.offerStatusExpired')
+        : t('boughtTickets.offerStatusCancelled');
 
   return (
     <div style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden', opacity: 0.75 }}>

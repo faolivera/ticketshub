@@ -286,31 +286,80 @@ export class OffersService {
     });
   }
 
-  /** Mark expired pending offers as cancelled (lazy). Uses batch update to avoid N+1. */
+  /**
+   * Mark expired offers as expired (lazy, on read). Handles both:
+   * - pending offers past expiresAt         → expired / seller_no_response
+   * - accepted offers past acceptedExpiresAt → expired / buyer_no_purchase
+   */
   private async applyLazyExpiration(
     ctx: Ctx,
     offers: Offer[],
   ): Promise<Offer[]> {
     const now = new Date();
-    const expired = offers.filter(
+
+    const expiredPending = offers.filter(
       (o) => o.status === 'pending' && o.expiresAt < now,
     );
-    const expiredIds = expired.map((o) => o.id);
-
-    if (expiredIds.length > 0) {
-      await this.offersRepository.cancelExpiredPendingByIds(
-        ctx,
-        expiredIds,
-        now,
-      );
-    }
-
-    const expiredIdSet = new Set(expiredIds);
-    return offers.map((offer) =>
-      expiredIdSet.has(offer.id)
-        ? { ...offer, status: 'cancelled' as const, cancelledAt: now }
-        : offer,
+    const expiredAccepted = offers.filter(
+      (o) =>
+        o.status === 'accepted' &&
+        o.acceptedExpiresAt !== undefined &&
+        o.acceptedExpiresAt < now,
     );
+
+    const [pendingIds, acceptedIds] = [
+      expiredPending.map((o) => o.id),
+      expiredAccepted.map((o) => o.id),
+    ];
+
+    await Promise.all([
+      pendingIds.length > 0
+        ? this.offersRepository.expirePendingByIds(ctx, pendingIds, now)
+        : Promise.resolve(0),
+      acceptedIds.length > 0
+        ? this.offersRepository.expireAcceptedByIds(ctx, acceptedIds, now)
+        : Promise.resolve(0),
+    ]);
+
+    const expiredIdSet = new Set([...pendingIds, ...acceptedIds]);
+    return offers.map((offer) => {
+      if (!expiredIdSet.has(offer.id)) return offer;
+      const reason =
+        pendingIds.includes(offer.id)
+          ? ('seller_no_response' as const)
+          : ('buyer_no_purchase' as const);
+      return { ...offer, status: 'expired' as const, expiredAt: now, expiredReason: reason };
+    });
+  }
+
+  /**
+   * Called by the scheduler: proactively expire pending and accepted offers
+   * whose deadlines have passed. Returns counts for logging.
+   */
+  async expireStaleOffers(
+    ctx: Ctx,
+    batchLimit: number,
+  ): Promise<{ expiredPending: number; expiredAccepted: number }> {
+    const now = new Date();
+    const [pendingOffers, acceptedOffers] = await Promise.all([
+      this.offersRepository.findExpirablePending(ctx, now, batchLimit),
+      this.offersRepository.findExpirableAccepted(ctx, now, batchLimit),
+    ]);
+
+    const [expiredPending, expiredAccepted] = await Promise.all([
+      this.offersRepository.expirePendingByIds(
+        ctx,
+        pendingOffers.map((o) => o.id),
+        now,
+      ),
+      this.offersRepository.expireAcceptedByIds(
+        ctx,
+        acceptedOffers.map((o) => o.id),
+        now,
+      ),
+    ]);
+
+    return { expiredPending, expiredAccepted };
   }
 
   async acceptOffer(

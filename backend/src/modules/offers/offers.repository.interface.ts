@@ -1,5 +1,5 @@
 import type { Ctx } from '../../common/types/context';
-import type { Offer } from './offers.domain';
+import type { Offer, OfferExpiredReason } from './offers.domain';
 
 export const OFFERS_REPOSITORY = Symbol('OFFERS_REPOSITORY');
 
@@ -27,18 +27,33 @@ export interface IOffersRepository {
         | 'rejectedAt'
         | 'convertedTransactionId'
         | 'cancelledAt'
+        | 'expiredAt'
+        | 'expiredReason'
       >
     >,
   ): Promise<Offer | undefined>;
 
   /**
-   * Mark pending offers as cancelled by IDs (batch). Only affects offers with status pending.
+   * Batch-expire pending offers whose expiresAt has passed (reason: seller_no_response).
+   * Returns count of updated rows.
    */
-  cancelExpiredPendingByIds(
-    ctx: Ctx,
-    ids: string[],
-    cancelledAt: Date,
-  ): Promise<number>;
+  expirePendingByIds(ctx: Ctx, ids: string[], expiredAt: Date): Promise<number>;
+
+  /**
+   * Batch-expire accepted offers whose acceptedExpiresAt has passed (reason: buyer_no_purchase).
+   * Returns count of updated rows.
+   */
+  expireAcceptedByIds(ctx: Ctx, ids: string[], expiredAt: Date): Promise<number>;
+
+  /**
+   * Find pending offers whose expiresAt is before `before`, up to `limit`.
+   */
+  findExpirablePending(ctx: Ctx, before: Date, limit: number): Promise<Offer[]>;
+
+  /**
+   * Find accepted offers whose acceptedExpiresAt is before `before`, up to `limit`.
+   */
+  findExpirableAccepted(ctx: Ctx, before: Date, limit: number): Promise<Offer[]>;
 
   findPendingOrAcceptedByListingId(
     ctx: Ctx,

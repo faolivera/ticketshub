@@ -29,6 +29,10 @@ describe('OffersService', () => {
       findByUserId: jest.fn(),
       findActiveByUserAndListing: jest.fn(),
       update: jest.fn(),
+      expirePendingByIds: jest.fn().mockResolvedValue(0),
+      expireAcceptedByIds: jest.fn().mockResolvedValue(0),
+      findExpirablePending: jest.fn().mockResolvedValue([]),
+      findExpirableAccepted: jest.fn().mockResolvedValue([]),
       findPendingOrAcceptedByListingId: jest.fn(),
     };
 
