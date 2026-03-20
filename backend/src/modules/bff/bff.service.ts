@@ -220,9 +220,16 @@ export class BffService {
     userId: string,
     body: ValidateSellListingRequest,
   ): Promise<ValidateSellListingResponse> {
+    let eventStartsAt: Date | undefined;
+    if (body.validations.includes('proximity') && body.eventDateId) {
+      const eventDate = await this.eventsService.findEventDateById(ctx, body.eventDateId);
+      eventStartsAt = eventDate?.date;
+    }
     return this.ticketsService.validateListingRisk(ctx, userId, {
       quantity: body.quantity,
       pricePerTicket: body.pricePerTicket,
+      validations: body.validations,
+      eventStartsAt,
     });
   }
 
