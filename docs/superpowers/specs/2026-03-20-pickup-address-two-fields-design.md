@@ -22,68 +22,104 @@ The goal is to replace that single field with two explicit fields — **Ciudad**
 
 ### 1. Wizard Form State (`types.ts`)
 
-Replace `pickupAddress: string` with two flat fields:
+In `WizardFormState`, replace `pickupAddress: string` with:
 
 ```typescript
-pickupCity: string;    // replaces the city portion
-pickupStreet: string;  // replaces line1 / the old pickupAddress string
+pickupCity: string;    // maps to Address.city
+pickupStreet: string;  // maps to Address.line1
 ```
 
-Default values: `pickupCity: ''`, `pickupStreet: ''`.
+Also update `defaultWizardFormState` (the exported default object in the same file) — replace `pickupAddress: ''` with:
+
+```typescript
+pickupCity: '',
+pickupStreet: '',
+```
 
 ### 2. Step 4 UI (`StepDeliveryMethod.tsx`)
 
-Replace the single address input with two inputs rendered in this order:
+**Visible input block:** Replace the single address input with two inputs in this order:
 
-1. Label: `"Ciudad"` — bound to `form.pickupCity`
-2. Label: `"Calle y número"` — bound to `form.pickupStreet`
+1. Label: `"Ciudad"` — bound to `form.pickupCity`, i18n key `sellListingWizard.pickupCity`
+2. Label: `"Calle y número"` — bound to `form.pickupStreet`, i18n key `sellListingWizard.pickupStreet`
+
+**`onValueChange` callbacks:** There are two places in this file where `pickupAddress` is cleared when the user switches away from pickup:
+
+- When toggling back to `digital` delivery — replace `pickupAddress: ''` with `pickupCity: '', pickupStreet: ''`
+- When switching to `arrange` — replace `pickupAddress: ''` with `pickupCity: '', pickupStreet: ''`
+
+Both must be updated to avoid TypeScript errors after the field is removed from the type.
+
+**Error hint:** The existing `enterPickupAddress` i18n key (used as a validation hint below the input) will be repurposed as a single hint that appears when either field is empty. No new per-field keys are needed — one hint is sufficient.
 
 ### 3. Proceed Validation (`SellListingWizard.tsx`)
 
-Update `canProceedStep4`:
+Replace the current `canProceedStep4` expression with the full three-branch version:
 
 ```typescript
-return form.physicalDeliveryMethod === 'pickup'
-  && form.pickupCity.trim().length > 0
-  && form.pickupStreet.trim().length > 0;
+const canProceedStep4 = (() => {
+  if (form.deliveryMethod === 'digital') return true;
+  if (form.physicalDeliveryMethod === 'arrange') return true;
+  return (
+    form.physicalDeliveryMethod === 'pickup' &&
+    form.pickupCity.trim().length > 0 &&
+    form.pickupStreet.trim().length > 0
+  );
+})();
 ```
 
 ### 4. Address Construction on Submit (`SellListingWizard.tsx`)
 
+Inside `handlePublish`, replace the existing inline `pickupAddress` construction:
+
 ```typescript
+// Before:
+pickupAddress: form.physicalDeliveryMethod === 'pickup' && form.pickupAddress.trim()
+  ? { line1: form.pickupAddress.trim(), city: '', countryCode: 'AR' }
+  : undefined,
+
+// After:
 pickupAddress: form.physicalDeliveryMethod === 'pickup'
-  ? {
-      line1: form.pickupStreet.trim(),
-      city: form.pickupCity.trim(),
-      countryCode: 'AR',
-    }
-  : undefined
+  ? { line1: form.pickupStreet.trim(), city: form.pickupCity.trim(), countryCode: 'AR' }
+  : undefined,
 ```
 
 ### 5. Review Step (`StepReviewAndPublish.tsx`)
 
-Display the pickup address using both fields where the old single string was shown.
+Replace the current single `<p>` element that renders `form.pickupAddress` with two lines:
+
+```tsx
+<p>{form.pickupCity}</p>
+<p>{form.pickupStreet}</p>
+```
 
 ### 6. i18n (`es.json`)
 
-Add or update keys under `sellListingWizard`:
+Add under `sellListingWizard`:
 - `pickupCity`: `"Ciudad"`
 - `pickupStreet`: `"Calle y número"`
 
-Remove or repurpose the old placeholder `"Calle, número, ciudad, CP"` for `pickupAddressPlaceholder`.
+Remove:
+- `pickupAddressPlaceholder` (old placeholder `"Calle, número, ciudad, CP"`)
+- `pickupAddress` label key (currently `"Dirección de entrega"` — used as the label above the single input, becomes unused after the split)
+
+Keep `enterPickupAddress` as-is — it remains the single validation hint shown when either pickup field is empty.
+
+**`aria-describedby`:** The current single `<Input>` has `aria-describedby={!form.pickupAddress.trim() ? 'pickup-error' : undefined}`. After the split, both new inputs should carry `aria-describedby="pickup-error"` when either field is empty (i.e. `!form.pickupCity.trim() || !form.pickupStreet.trim()`).
 
 ## Files to Change
 
 | File | Change |
 |------|--------|
-| `frontend/src/app/components/sell-listing-wizard/types.ts` | Replace `pickupAddress: string` with `pickupCity` + `pickupStreet` |
-| `frontend/src/app/components/sell-listing-wizard/steps/StepDeliveryMethod.tsx` | Replace single input with two inputs |
-| `frontend/src/app/pages/SellListingWizard.tsx` | Update validation + address construction + reset state |
-| `frontend/src/app/components/sell-listing-wizard/steps/StepReviewAndPublish.tsx` | Display two fields in review |
-| `frontend/src/i18n/locales/es.json` | Add `pickupCity`, `pickupStreet` keys |
+| `frontend/src/app/components/sell-listing-wizard/types.ts` | Replace `pickupAddress: string` with `pickupCity` + `pickupStreet` in both the interface and `defaultWizardFormState` |
+| `frontend/src/app/components/sell-listing-wizard/steps/StepDeliveryMethod.tsx` | Replace single input with two inputs; update both `onValueChange` callbacks that clear `pickupAddress` |
+| `frontend/src/app/pages/SellListingWizard.tsx` | Update `canProceedStep4` (full expression) and `handlePublish` address construction |
+| `frontend/src/app/components/sell-listing-wizard/steps/StepReviewAndPublish.tsx` | Display `pickupCity` and `pickupStreet` as two `<p>` elements |
+| `frontend/src/i18n/locales/es.json` | Add `pickupCity`, `pickupStreet`; remove `pickupAddressPlaceholder` |
 
 ## Out of Scope
 
 - No backend changes needed — `Address` already supports `line1`, `city`, `countryCode`.
-- No migration needed — `pickupAddress` is stored as JSON, existing listings with the old format are unaffected.
+- No migration needed — `pickupAddress` is stored as JSON; existing listings with the old format are unaffected at read time.
 - No postal code, state, or line2 fields are collected.
+- Session-storage drafts: the draft TTL is 2 hours; a user returning with a stale draft will see empty pickup fields (no crash, fields default to `''`). This is accepted as a minor edge case.
