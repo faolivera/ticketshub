@@ -10,11 +10,11 @@ import {
   TRUST_VERIFIED,
   AMBER_c1,
   SHADOW_CARD,
-  GRADIENT_HERO_OVERLAY,
   SHADOW_HERO_CTA,
   OVERLAY_DARK_45,
+  V_SOFT,
 } from "@/lib/design-tokens";
-import { ArrowRight, Lock, CheckCircle, RefreshCw } from "lucide-react";
+import { Lock, CheckCircle, RefreshCw } from "lucide-react";
 
 const TRUST = [
   { Icon: Lock, title: "Fondos protegidos", color: TRUST_ESCROW },
@@ -22,11 +22,20 @@ const TRUST = [
   { Icon: RefreshCw, title: "Garantía total", color: AMBER_c1 },
 ];
 
+
+// Left-to-right scrim: protects the copy column regardless of the artist photo
+const SCRIM_HERO =
+  "linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.72) 40%, rgba(0,0,0,0.30) 65%, rgba(0,0,0,0) 100%)";
+
 const ROTATE_INTERVAL_MS = 6000;
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/1400/400";
 
 /**
  * Featured-events hero for the home page; admin preview reuses this component.
+ *
+ * Expected event fields (in addition to existing ones):
+ *   - lowestListingPrice?: { amount: number; currency: string }  — cheapest active listing (in cents)
+ *   - availableCount?: number  — total tickets in stock (not yet in API response; drives CTA label)
  */
 const MOBILE_MAX_WIDTH = "(max-width: 767px)";
 
@@ -96,6 +105,10 @@ export function HighlightedEventsHero() {
 
   const event = events[index];
 
+  // availableCount: not yet present in API — when added, drives CTA label
+  const availableCount = event.availableCount;
+  const isLowStock = typeof availableCount === "number" && availableCount <= 5;
+
   return (
     <div
       style={{
@@ -135,14 +148,16 @@ export function HighlightedEventsHero() {
             />
           );
         })}
+
+        {/* Bottom-to-top gradient: photo visible at top, copy lives on dark base */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background:
-              GRADIENT_HERO_OVERLAY,
+            background: SCRIM_HERO,
           }}
         />
+
         <div
           style={{
             position: "absolute",
@@ -151,9 +166,10 @@ export function HighlightedEventsHero() {
             padding: preferSquareLayout ? "20px 14px 14px 14px" : "44px 44px 20px 44px",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
           }}
         >
+          {/* Primary content: all copy lives at the bottom on the dark gradient */}
           <div style={{ flex: "0 0 auto", maxWidth: 520 }}>
             <h2
               style={{
@@ -172,34 +188,93 @@ export function HighlightedEventsHero() {
                 fontSize: 14.5,
                 color: "rgba(255,255,255,0.75)",
                 lineHeight: 1.5,
-                marginBottom: 20,
+                marginBottom: 4,
               }}
             >
               {event.venue}
               {event.location?.city ? ` · ${event.location.city}` : ""}
             </p>
-            <Link
-              to={`/event/${event.slug}`}
+
+            {/* Value proposition — static, not event-specific */}
+            <p
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "11px 22px",
-                borderRadius: 10,
-                background: V,
-                border: "none",
-                color: "white",
                 fontSize: 14,
-                fontWeight: 700,
-                cursor: "pointer",
-                textDecoration: "none",
+                color: "rgba(255,255,255,0.72)",
+                lineHeight: 1.5,
+                marginBottom: 16,
                 ...S,
-                boxShadow: SHADOW_HERO_CTA,
               }}
             >
-              Ver Entradas <ArrowRight size={14} />
-            </Link>
+              Entradas para shows agotados, de{" "}
+              <span style={{ color: V_SOFT, fontWeight: 600 }}>
+                vendedores verificados
+              </span>
+              .
+            </p>
+
+            {/* CTAs */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <Link
+                to={`/event/${event.slug}`}
+                style={{
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "10px 20px",
+                  minHeight: 48,
+                  minWidth: 160,
+                  borderRadius: 10,
+                  background: V,
+                  color: "white",
+                  lineHeight: 1.3,
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  ...S,
+                  boxShadow: SHADOW_HERO_CTA,
+                }}
+              >
+                {isLowStock ? (
+                  <span style={{ fontSize: 15, fontWeight: 600 }}>
+                    Ver las {availableCount} entradas →
+                  </span>
+                ) : (
+                  <>
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>Ver entradas →</span>
+                    {event.lowestListingPrice && (
+                      <span style={{ fontSize: 11, opacity: 0.8 }}>
+                        desde ${Math.round(event.lowestListingPrice.amount / 100).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+                      </span>
+                    )}
+                  </>
+                )}
+              </Link>
+
+              <Link
+                to="/como-funciona"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 20px",
+                  height: 48,
+                  borderRadius: 10,
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  color: "rgba(255,255,255,0.8)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  ...S,
+                }}
+              >
+                ¿Cómo funciona?
+              </Link>
+            </div>
           </div>
+
+          {/* Secondary trust row — existing, kept as-is */}
           <div
             style={{
               display: "flex",

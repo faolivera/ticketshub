@@ -1,24 +1,17 @@
-import type { CSSProperties } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Shield, CheckCircle, Zap, MessageCircle } from "lucide-react";
+import { Shield, CheckCircle, MessageCircle, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { UserAvatar } from "@/app/components/UserAvatar";
-import {
-  V,
-  BLUE,
-  BLIGHT,
-  DARK,
-  MUTED,
-  HINT,
-  BORDER,
-  GREEN,
-  ABORD,
-  AMBER_BG_LIGHT,
-  AMBER,
-  BLUE_BORDER_LIGHT,
-} from "@/lib/design-tokens";
+import { V, VLIGHT, DARK, MUTED, BG, S } from "@/lib/design-tokens";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getInitials(name: string): string {
+  if (!name?.trim()) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
 
 function getBuyPill(qty: number): string | null {
   if (qty <= 1) return null;
@@ -32,63 +25,15 @@ function fmtWithFee(priceNum: number | undefined): string | null {
   return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(total);
 }
 
-// ─── Seller meta — four reputation cases ─────────────────────────────────────
+// ─── Shared style constants ────────────────────────────────────────────────────
 
-function SellerMeta({
-  verified,
-  newSeller,
-  sellerTotalSales,
-  sellerTotalReviews,
-  hasSellerReviews,
-  sellerPositivePercentRounded,
-  t,
-}: {
-  verified: boolean;
-  newSeller: boolean;
-  sellerTotalSales: number;
-  sellerTotalReviews: number;
-  hasSellerReviews: boolean;
-  sellerPositivePercentRounded: number | null;
-  t: (key: string, opts?: object) => string;
-}) {
-  const metaStyle: CSSProperties = { fontSize: 12, color: HINT, lineHeight: 1.4 };
-
-  const reputationLine = (() => {
-    if (sellerTotalSales === 0 && sellerTotalReviews === 0)
-      return <span style={metaStyle}>Vendedor nuevo</span>;
-    if (sellerTotalSales > 0 && sellerTotalReviews === 0)
-      return <span style={metaStyle}>{t("eventTickets.ticketsSold", { count: sellerTotalSales })}</span>;
-    if (sellerTotalSales > 0 && hasSellerReviews)
-      return (
-        <span style={metaStyle}>
-          {t("eventTickets.ticketsSold", { count: sellerTotalSales })}
-          {" · "}
-          {t("eventTickets.positiveReviews", { percent: sellerPositivePercentRounded, total: sellerTotalReviews })}
-        </span>
-      );
-    return null;
-  })();
-
-  return (
-    <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
-      {/* Verified badge — never removed, always first */}
-      {verified ? (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11.5, fontWeight: 700, color: GREEN }}>
-          <CheckCircle size={11} /> Verificado
-        </span>
-      ) : newSeller ? (
-        <span style={{ fontSize: 11.5, color: HINT }}>Vendedor nuevo</span>
-      ) : (
-        <span style={{ fontSize: 11.5, color: HINT }}>No verificado</span>
-      )}
-      {reputationLine}
-    </div>
-  );
-}
+const PILL: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center",
+  padding: "2px 10px", borderRadius: 100,
+  fontSize: 11.5, fontWeight: 600, whiteSpace: "nowrap",
+};
 
 // ─── Main component ───────────────────────────────────────────────────────────
-// Add `display: flex; flex-direction: column;` to `.tk-card` in your global CSS
-// so Zone 2 (seller) grows and Zone 3 (CTA) stays anchored to the bottom.
 
 export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug: string }) {
   const { t } = useTranslation();
@@ -101,7 +46,6 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
     priceNum,
     seller,
     sellerId,
-    sellerAvatarUrl,
     sellerTotalSales,
     sellerTotalReviews,
     sellerPositivePercent,
@@ -111,164 +55,154 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
     listingId,
   } = ticket;
 
-  const ctaLabel = seated ? t("eventTickets.selectSeats") || "Elegir asientos" : "Comprar";
+  const [hovered, setHovered] = useState(false);
 
-  const hasSellerReviews =
+  const ctaLabel = seated ? (t("eventTickets.selectSeats") || "Elegir asientos") : "Comprar";
+  const hasReviews =
+    sellerTotalReviews > 0 &&
     sellerPositivePercent !== null &&
-    Number.isFinite(sellerPositivePercent) &&
-    sellerTotalReviews > 0;
-
-  const sellerPositivePercentRounded = hasSellerReviews ? Math.round(sellerPositivePercent) : null;
+    Number.isFinite(sellerPositivePercent);
+  const sellerPositivePercentRounded = hasReviews ? Math.round(sellerPositivePercent) : null;
   const buyPillText = getBuyPill(qty);
   const totalWithFee = fmtWithFee(priceNum);
 
   return (
-    <div className="tk-card">
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        ...S,
+        background: "#ffffff",
+        border: "1px solid #e5e7eb",
+        borderRadius: 14,
+        padding: "20px 20px 16px",
+        boxShadow: hovered
+          ? "0 10px 28px rgba(109,40,217,0.12), 0 2px 6px rgba(0,0,0,0.06)"
+          : "0 2px 8px rgba(0,0,0,0.08)",
+        display: "flex", flexDirection: "column",
+        height: "100%",
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        transition: "all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+      }}
+    >
 
-      {/* ── Zone 1: left violet stripe + section / price / pills ── */}
-      <div style={{ borderLeft: `4px solid ${V}`, padding: "16px 16px 14px" }}>
-
-        {/* Section name + price */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
-          <p style={{ fontSize: 16, fontWeight: 800, color: DARK, letterSpacing: "-.01em", lineHeight: 1.2 }}>
-            {sector}
-          </p>
-          <div style={{ textAlign: "right", flexShrink: 0 }}>
-            <p style={{ fontSize: 10, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: 2 }}>
-              Precio por entrada
-            </p>
-            <p style={{ fontSize: 20, fontWeight: 800, color: V, lineHeight: 1, letterSpacing: "-.02em" }}>
-              ${price}
-            </p>
-            {totalWithFee && (
-              <p style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>
-                Total con cargo:{" "}
-                <strong style={{ color: DARK, fontWeight: 600 }}>${totalWithFee}</strong>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Pills — minHeight reserves space for 2 rows so all cards in a row align */}
-        <div style={{ display: "flex", gap: 6, alignItems: "flex-start", flexWrap: "wrap", minHeight: 60 }}>
-          <span style={{
-            fontSize: 12, fontWeight: 600, padding: "4px 11px", borderRadius: 100,
-            background: "#f3f3f0", color: MUTED, border: "1.5px solid #d1d5db", whiteSpace: "nowrap",
-          }}>
+      {/* A) Top row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+          {sector}
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <span style={{ ...PILL, background: BG, color: MUTED, border: "1.5px solid #d1d5db" }}>
             {qty} entrada{qty !== 1 ? "s" : ""}
           </span>
-
           {buyPillText && (
-            <span style={{
-              fontSize: 12, fontWeight: 600, padding: "4px 11px", borderRadius: 100,
-              background: "#f0ebff", color: V, border: `1.5px solid ${V}`, whiteSpace: "nowrap",
-            }}>
+            <span style={{ ...PILL, background: VLIGHT, color: V, border: "1.5px solid #c4b5fd" }}>
               {buyPillText}
             </span>
           )}
-
-          {seated && (
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 4,
-              padding: "4px 11px", borderRadius: 100,
-              background: BLIGHT, color: BLUE, border: `1px solid ${BLUE_BORDER_LIGHT}`,
-              fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
-            }}>
-              Numerada
-            </span>
-          )}
-
           {urgency === "últimas" && (
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 4,
-              padding: "4px 11px", borderRadius: 100,
-              background: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}`,
-              fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
-            }}>
-              <Zap size={10} /> Última{qty > 1 ? "s" : ""}
-            </span>
-          )}
-
-          {acceptsOffers && (
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 4,
-              padding: "4px 11px", borderRadius: 100,
-              background: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}`,
-              fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
-            }}>
-              <MessageCircle size={10} /> {t("eventTickets.acceptsOffers")}
+            <span style={{ ...PILL, fontSize: 11, fontWeight: 700, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
+              Última{qty > 1 ? "s" : ""}
             </span>
           )}
         </div>
       </div>
 
-      {/* ── Divider ── */}
-      <div style={{ height: 1, background: BORDER }} />
+      {/* B) Price block */}
+      <div style={{ marginBottom: 4 }}>
+        <p style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>
+          Total a pagar
+        </p>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+          <span style={{ fontSize: 26, fontWeight: 800, color: V, letterSpacing: "-0.6px", lineHeight: 1 }}>
+            ${totalWithFee}
+          </span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>ARS</span>
+        </div>
+        <p style={{ fontSize: 11.5, color: MUTED, marginTop: 6 }}>
+          Precio base ${price} · +10% comisión incluida
+        </p>
+      </div>
 
-      {/* ── Zone 2: seller — bare row, no background box ── */}
-      {/* flex:1 absorbs remaining height so the CTA stays at the bottom */}
-      <div style={{ padding: "14px 16px", flex: 1 }}>
-        <Link
-          to={`/seller/${sellerId}`}
-          style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}
-        >
-          <UserAvatar name={seller} src={sellerAvatarUrl ?? undefined} className="size-10" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{
-              fontSize: 14, fontWeight: 700, color: DARK,
-              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-            }}>
+      {/* C) Acepta ofertas — solo si aplica */}
+      {acceptsOffers && (
+        <span style={{ ...PILL, marginTop: 10, alignSelf: "flex-start", background: VLIGHT, color: V, border: "1.5px solid #c4b5fd", gap: 6 }}>
+          <MessageCircle size={10} />
+          {t("eventTickets.acceptsOffers") || "Acepta ofertas"}
+        </span>
+      )}
+
+      {/* D+E) Divider + seller — flex: 1 absorbs available space */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <div style={{ borderTop: "1px solid #e5e7eb", margin: "14px 0" }} />
+
+      {/* E) Seller row */}
+      <Link
+        to={`/seller/${sellerId}`}
+        style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, textDecoration: "none" }}
+      >
+        <div style={{
+          width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 12, fontWeight: 800,
+          background: verified ? "#f0ebff" : "#f3f4f6",
+          color: verified ? V : MUTED,
+        }}>
+          {getInitials(seller)}
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: DARK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
               {seller}
             </p>
-            <SellerMeta
-              verified={verified}
-              newSeller={newSeller}
-              sellerTotalSales={sellerTotalSales}
-              sellerTotalReviews={sellerTotalReviews}
-              hasSellerReviews={hasSellerReviews}
-              sellerPositivePercentRounded={sellerPositivePercentRounded}
-              t={t}
-            />
+            {verified && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#0f766e", flexShrink: 0 }}>
+                <CheckCircle size={10} /> Verificado
+              </span>
+            )}
           </div>
-        </Link>
+          {/* Reputación: ventas · reseñas · o "Vendedor nuevo" si no hay historial */}
+          {sellerTotalSales === 0 && !hasReviews ? (
+            <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>Vendedor nuevo</p>
+          ) : sellerTotalSales > 0 && !hasReviews ? (
+            <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{sellerTotalSales} ventas</p>
+          ) : hasReviews ? (
+            <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>
+              {sellerTotalSales} ventas · {sellerPositivePercentRounded}% positivas
+            </p>
+          ) : null}
+        </div>
+      </Link>
       </div>
 
-      {/* ── Zone 3: CTA button ── */}
-      <div style={{ padding: "0 16px 14px" }}>
-        <Link to={`/buy/${eventSlug}/${listingId}`} style={{ display: "block", textDecoration: "none" }}>
-          <span style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            width: "100%",
-            background: "#6d28d9",
-            color: "#ffffff",
-            borderRadius: 10,
-            padding: "13px 16px",
-            fontSize: 14,
-            fontWeight: 700,
-            letterSpacing: ".01em",
-            boxShadow: "0 4px 18px rgba(109,40,217,0.32)",
-            cursor: "pointer",
-            userSelect: "none",
-          }}>
-            {seated && <MapPin size={14} color="#ffffff" />}
-            {ctaLabel}
-            {" →"}
-          </span>
-        </Link>
-      </div>
-
-      {/* ── Zone 4: trust bar — separated by border-top ── */}
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        borderTop: `1px solid ${BORDER}`,
-        padding: "9px 16px",
-      }}>
-        <span style={{ fontSize: 11, color: HINT }}>+ 10% cargo por servicio</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: GREEN, fontWeight: 600 }}>
-          <Shield size={10} style={{ color: GREEN }} /> Protegido
+      {/* F) CTA + footer anchored to bottom */}
+      <div>
+      <Link
+        to={`/buy/${eventSlug}/${listingId}`}
+        style={{ display: "block", textDecoration: "none", marginBottom: 12 }}
+      >
+        <span style={{
+          ...S,
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          width: "100%", padding: "13px 20px", borderRadius: 10,
+          fontSize: 14, fontWeight: 700,
+          background: V, color: "#ffffff",
+          boxShadow: "0 4px 18px rgba(109,40,217,0.28)",
+          cursor: "pointer",
+        }}>
+          {seated && <MapPin size={14} color="#ffffff" />}
+          {ctaLabel} →
         </span>
-      </div>
+      </Link>
 
+      {/* G) Footer */}
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: MUTED }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Shield size={10} /> Compra protegida
+        </span>
+        <span>Comisión incluida</span>
+      </div>
+      </div>
     </div>
   );
 }

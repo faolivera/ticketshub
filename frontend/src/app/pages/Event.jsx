@@ -2,47 +2,16 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   MapPin, CheckCircle, ChevronDown, ArrowLeft, ArrowRight,
-  Lock, RefreshCw, TrendingUp
+  Lock, RefreshCw,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { ticketsService } from "@/api/services/tickets.service";
 import { formatDate, formatTime } from "@/lib/format-date";
-import { BackButton } from "@/app/components/BackButton";
 import { EventTicketCard } from "@/app/components/EventTicketCard";
 import {
-  V,
-  VLIGHT,
-  BLUE,
-  DARK,
-  MUTED,
-  HINT,
-  BG,
-  CARD,
-  BORDER,
-  BORD2,
-  GREEN,
-  S,
-  E,
-  ERROR,
-  V_HOVER,
-  BLUE_HOVER,
-  VL_BORDER,
-  SHADOW_DROP,
-  SHADOW_CARD,
-  SHADOW_CARD_MD,
-  SURFACE_STICKY,
-  SHADOW_TICKET_HOVER,
-  GREEN_LIGHT,
-  ABORD,
-  V_SOFT,
-  V_MUTED_LIGHT,
-  SHADOW_V_SOFT,
-  SHADOW_V_STRONG,
-  OVERLAY_DARK_45,
-  OVERLAY_V_70,
-  SHADOW_HERO,
-  WHITE,
+  V, VLIGHT, DARK, MUTED, BORDER, BORD2, S, E,
+  SURFACE_STICKY, SHADOW_DROP, BG,
 } from "@/lib/design-tokens";
 
 const SORTS = ["Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
@@ -231,7 +200,6 @@ export default function EventDetail() {
     });
   }, [filteredBySector, sortIdx]);
 
-  const sellersCount = useMemo(() => new Set(sorted.map((t) => t.seller)).size, [sorted]);
   const minPrice = useMemo(() => (sorted.length ? Math.min(...sorted.map((t) => t.priceNum)) : 0), [sorted]);
 
   const sectorMin = (s) => {
@@ -240,27 +208,13 @@ export default function EventDetail() {
     return Math.min(...list.map((t) => t.priceNum));
   };
 
-  const ticketsGroupedBySector = useMemo(() => {
-    const sectorOrder =
-      sector === "Todos" ? sectorsList.filter((s) => s !== "Todos") : [sector];
-    const map = new Map();
-    for (const t of sorted) {
-      const key = t.sector || "Entrada";
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(t);
-    }
-    return sectorOrder
-      .filter((s) => map.has(s) && map.get(s).length)
-      .map((s) => ({ sectorKey: s, tickets: map.get(s) }));
-  }, [sorted, sector, sectorsList]);
-
   const scrollToTickets = () => {
     ticketsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   if (isLoading) {
     return (
-      <div style={{ ...S, background: BG, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <div style={{ ...S, backgroundColor: BG, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <p style={{ color: MUTED }}>{t("common.loading") || "Cargando..."}</p>
         </div>
@@ -270,78 +224,70 @@ export default function EventDetail() {
 
   if (error || !EVENT) {
     return (
-      <div style={{ ...S, background: BG, minHeight: "100vh", padding: 24 }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", textAlign: "center", padding: "48px 24px" }}>
-          <p style={{ color: ERROR, fontSize: 16 }}>{error || t("eventTickets.eventNotFound")}</p>
-          <BackButton to="/" labelKey="eventTickets.backToEvents" />
+      <div style={{ ...S, backgroundColor: BG, minHeight: "100vh", padding: 24 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center", padding: "48px 24px" }}>
+          <p style={{ color: "#b91c1c", fontSize: 16 }}>{error || t("eventTickets.eventNotFound")}</p>
+          <Link to="/" style={{ display: "inline-block", marginTop: 12, color: V, fontWeight: 600, ...S }}>
+            ← Volver
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ ...S, background: BG, color: DARK, minHeight: "100vh" }}>
+    <div style={{ ...S, backgroundColor: BG, color: DARK, minHeight: "100vh" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Ticket grid (desktop / tablet only) */
-        .tk-tickets-desktop { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-        @media(max-width:960px){ .tk-tickets-desktop { grid-template-columns: repeat(2,1fr)!important; } }
-        @media(max-width:580px){ .tk-tickets-desktop { display: none !important; } }
+        /* Unified ticket grid — 2 cols desktop, 1 col mobile */
+        .tk-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        @media(max-width: 768px) { .tk-grid { grid-template-columns: 1fr; } }
 
-        /* Mobile: one horizontal scroller per sector */
-        .tk-tickets-mobile { display: none; }
-        @media(max-width:580px){
-          .tk-tickets-mobile { display: flex; flex-direction: column; gap: 22px; }
+        /* Sector filter pills */
+        .sec-pill {
+          padding: 6px 14px; border-radius: 100px;
+          border: 1.5px solid #d1d5db;
+          font-size: 12.5px; font-weight: 600; cursor: pointer;
+          background: transparent; color: #6b7280;
+          transition: all 0.14s; white-space: nowrap;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          display: inline-flex; align-items: center; gap: 5px;
         }
-        .tk-sector-mobile-title { font-family:'Plus Jakarta Sans',sans-serif; font-size: 15px; font-weight: 700; color: ${DARK}; letter-spacing: -0.02em; margin-bottom: 11px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; }
-        .tk-sector-mobile-count { font-size: 12px; font-weight: 600; color: ${MUTED}; }
-        .tk-hscroll {
-          display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px;
-          margin-left: -24px; margin-right: -24px; padding-left: 24px; padding-right: 24px;
-          scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-          scrollbar-width: thin;
-        }
-        .tk-hscroll::-webkit-scrollbar { height: 4px; }
-        .tk-hscroll-item {
-          flex: 0 0 min(292px, calc(100vw - 52px));
-          scroll-snap-align: start;
-          min-width: 0;
-        }
-
-        /* Sector pills */
-        .sec-pill { padding: 6px 14px; border-radius: 100px; border: 1.5px solid ${BORD2}; font-size: 12.5px; font-weight: 600; cursor: pointer; background: transparent; color: ${MUTED}; transition: all 0.14s; white-space: nowrap; font-family:'Plus Jakarta Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; }
-        .sec-pill.active { background: ${V}; border-color: ${V}; color: white; }
-        .sec-pill:hover:not(.active) { border-color: ${HINT}; color: ${DARK}; }
-
-        /* Date pills */
-        .date-pill { padding: 6px 14px; border-radius: 100px; border: 1.5px solid ${BORD2}; font-size: 12.5px; font-weight: 600; cursor: pointer; background: transparent; color: ${MUTED}; transition: all 0.14s; white-space: nowrap; font-family:'Plus Jakarta Sans',sans-serif; }
-        .date-pill.active { background: ${VLIGHT}; border-color: ${V}; color: ${V}; }
-        .date-pill:hover:not(.active) { border-color: ${HINT}; color: ${DARK}; }
-
-        /* Ticket card */
-        .tk-card { background: white; border: 1px solid ${BORDER}; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.18s, transform 0.18s; cursor: pointer; }
-        .tk-card:hover { box-shadow: ${SHADOW_TICKET_HOVER}; transform: translateY(-2px); }
+        .sec-pill.active { background: #6d28d9; border-color: #6d28d9; color: white; }
+        .sec-pill:hover:not(.active) { border-color: #9ca3af; color: #0f0f1a; }
 
         /* Sort select */
-        .sort-sel { border: 1.5px solid ${BORD2}; border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family:'Plus Jakarta Sans',sans-serif; color: ${DARK}; background: white; cursor: pointer; outline: none; }
+        .sort-sel {
+          border: 1px solid #e5e7eb; border-radius: 10px;
+          padding: 6px 10px; font-size: 13px; font-weight: 500;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          color: #0f0f1a; background: white; cursor: pointer; outline: none;
+        }
+        .sort-sel:focus { border-color: #6d28d9; box-shadow: 0 0 0 2px rgba(109,40,217,0.1); }
 
         /* Sticky bar */
-        .sticky-bar { position:fixed; top:0; left:0; right:0; z-index:200; background:${SURFACE_STICKY}; backdrop-filter:blur(14px); border-bottom:1px solid ${BORDER}; transform:translateY(-100%); transition:transform 0.22s ease; }
-        .sticky-bar.visible { transform:translateY(0); }
-        @media(max-width:600px){ .sticky-price-cta { display:none!important; } }
-
-        /* CTA buy button */
-        .btn-buy { background:${V}; color:white; border:none; border-radius:10px; width:100%; padding:11px 14px; font-size:13.5px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:background 0.15s; display:flex; align-items:center; justify-content:center; gap:8px; }
-        .btn-buy:hover { background:${V_HOVER}; }
-        .btn-buy.seated { background:${BLUE}; }
-        .btn-buy.seated:hover { background:${BLUE_HOVER}; }
+        .sticky-bar {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+          background: rgba(243,243,240,0.97);
+          backdrop-filter: blur(14px);
+          border-bottom: 1px solid #e5e7eb;
+          transform: translateY(-100%); transition: transform 0.22s ease;
+        }
+        .sticky-bar.visible { transform: translateY(0); }
+        @media(max-width: 600px) { .sticky-price-cta { display: none !important; } }
 
         .pills-row::-webkit-scrollbar { height: 0; }
+
+        /* Card fade-up on load */
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
 
-      {/* Sticky bar */}
+      {/* ── Sticky bar ── */}
       <div className={`sticky-bar${sticky ? " visible" : ""}`}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -384,12 +330,29 @@ export default function EventDetail() {
       </div>
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 64px" }}>
-        <BackButton to="/" labelKey="eventTickets.backToEvents" />
 
+        {/* ── Breadcrumb ── */}
+        <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED, marginBottom: 16, flexWrap: "wrap", ...S }}>
+          <Link to="/" style={{ color: MUTED, textDecoration: "none" }}>Inicio</Link>
+          <span style={{ color: BORD2 }}>›</span>
+          <Link to="/recitales" style={{ color: MUTED, textDecoration: "none" }}>Recitales</Link>
+          <span style={{ color: BORD2 }}>›</span>
+          <Link to={`/recitales/${EVENT.location}`} style={{ color: MUTED, textDecoration: "none" }}>{EVENT.location}</Link>
+          <span style={{ color: BORD2 }}>›</span>
+          <span style={{ color: DARK, fontWeight: 600 }}>{EVENT.name}</span>
+        </nav>
 
-        <div ref={heroRef} style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, boxShadow: SHADOW_HERO, position: "relative" }}>
-
-          {/* Blurred background image — neutral brightness so any palette works */}
+        {/* ── Hero Box — dark interior floats over warm bg ── */}
+        <div
+          ref={heroRef}
+          style={{
+            borderRadius: 20, overflow: "hidden",
+            marginBottom: 14,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            position: "relative", minHeight: 320,
+          }}
+        >
+          {/* Blurred background image */}
           <div style={{
             position: "absolute", inset: 0, zIndex: 0,
             backgroundImage: `url(${EVENT.img})`,
@@ -398,184 +361,188 @@ export default function EventDetail() {
             transform: "scale(1.1)",
           }} />
 
-          {/* Layer 1 — horizontal scrim */}
+          {/* Dark overlay — left-heavy per spec */}
           <div style={{
             position: "absolute", inset: 0, zIndex: 1,
-            background: "linear-gradient(to right, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.22) 45%, rgba(0,0,0,0.11) 75%, rgba(0,0,0,0.08) 100%)",
+            background: "linear-gradient(to right, rgba(15,15,26,0.94) 0%, rgba(15,15,26,0.72) 45%, rgba(15,15,26,0.10) 100%)",
           }} />
 
-          {/* Layer 2 — vertical scrim */}
-          <div style={{
-            position: "absolute", inset: 0, zIndex: 1,
-            background: "linear-gradient(to bottom, rgba(0,0,0,0.22) 0%, transparent 30%, transparent 60%, rgba(0,0,0,0.38) 100%)",
-          }} />
+          {/* Hero content */}
+          <div style={{ position: "relative", zIndex: 2, padding: "clamp(28px,4vw,44px)", maxWidth: 640, display: "flex", flexDirection: "column" }}>
 
-          {/* Content */}
-          <div style={{ position: "relative", zIndex: 2, padding: "clamp(24px,4vw,40px)", display: "flex", gap: "clamp(20px,3vw,36px)", alignItems: "flex-start", flexWrap: "wrap" }}>
+            {/* Category badge */}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center",
+                padding: "4px 12px", borderRadius: 100,
+                background: "rgba(109,40,217,0.75)",
+                backdropFilter: "blur(8px)",
+                color: "white",
+                fontSize: 11, fontWeight: 700,
+                letterSpacing: "0.07em", textTransform: "uppercase",
+              }}>
+                {EVENT.category}
+              </span>
+            </div>
 
-            {/* Info — white text on dark bg */}
-            <div style={{ flex: 1, minWidth: 260, display: "flex", flexDirection: "column", gap: 0 }}>
+            {/* Title */}
+            <h1 style={{ ...E, fontSize: "clamp(30px,3.6vw,46px)", fontWeight: 400, lineHeight: 1.1, letterSpacing: "-0.5px", color: "white", marginBottom: 10 }}>
+              {EVENT.name}
+            </h1>
 
-              {/* Category badge — dark pill with blur: always legible on any image */}
-              <div style={{ marginBottom: 12 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", padding: "4px 12px", borderRadius: 100, background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.18)", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)", letterSpacing: "0.02em" }}>
-                  {EVENT.category}
-                </span>
-              </div>
-
-              {/* Title — white always, no text-shadow needed with directional overlay */}
-              <h1 style={{ ...E, fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 400, lineHeight: 1.15, letterSpacing: "-0.5px", color: "white", marginBottom: 6 }}>
-                {EVENT.name}
-              </h1>
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.78)", marginBottom: 18 }}>{EVENT.subtitle}</p>
-
-              {/* Meta */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "rgba(255,255,255,0.7)" }}>
-                  <MapPin size={14} style={{ color: V_SOFT, flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, color: "white" }}>{EVENT.venue}</span>
+            {/* Venue + location */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 500, color: "rgba(255,255,255,0.65)", marginBottom: 24 }}>
+              <MapPin size={14} style={{ color: "rgba(255,255,255,0.65)", flexShrink: 0 }} />
+              <span style={{ fontWeight: 600, color: "white" }}>{EVENT.venue}</span>
+              {EVENT.location && (
+                <>
                   <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
                   <span>{EVENT.location}</span>
-                </div>
-              </div>
+                </>
+              )}
+            </div>
 
-              {/* Date selector — pill style adapted for dark */}
-              <div style={{ marginBottom: 22 }}>
-                <p style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, color: "rgba(255,255,255,0.45)", marginBottom: 9 }}>
-                  Seleccioná una fecha
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                  {EVENT.dates.map((d, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setDateIdx(i)}
-                      style={{
-                        padding: "6px 14px", borderRadius: 100, fontSize: 12.5, fontWeight: 600,
-                        cursor: "pointer", transition: "all 0.14s", whiteSpace: "nowrap",
-                        border: dateIdx === i ? "1.5px solid rgba(196,181,253,0.9)" : "1.5px solid rgba(255,255,255,0.2)",
-                        background: dateIdx === i ? OVERLAY_V_70 : "rgba(255,255,255,0.1)",
-                        color: dateIdx === i ? "white" : "rgba(255,255,255,0.7)",
-                        backdropFilter: "blur(8px)",
-                        ...S,
-                      }}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price + CTA — frosted dark glass: violet price readable on ANY image */}
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                flexWrap: "wrap", gap: 16,
-                padding: "14px 18px", borderRadius: 14, marginBottom: 20,
-                background: OVERLAY_DARK_45,
-                border: "1px solid rgba(255,255,255,0.12)",
-                backdropFilter: "blur(12px)",
-              }}>
-                <div>
-                  <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: V_MUTED_LIGHT, marginBottom: 4 }}>
-                    Entradas desde
-                  </p>
-                  <p style={{ fontSize: "clamp(26px,3.5vw,36px)", fontWeight: 800, color: "white", lineHeight: 1 }}>
-                    {minPrice}
-                    <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginLeft: 6 }}>ARS</span>
-                  </p>
-                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 5 }}>
-                    <span style={{ color: V_MUTED_LIGHT, fontWeight: 600 }}>{activeDate.count} entradas</span> disponibles
-                  </p>
-                </div>
-                <button
-                  onClick={scrollToTickets}
-                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "13px 24px", borderRadius: 11, background: V, border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", ...S, boxShadow: SHADOW_V_STRONG, flexShrink: 0 }}
-                >
-                  Ver entradas <ArrowRight size={15} />
-                </button>
-              </div>
-
-              {/* Trust micro-signals — higher opacity for legibility on any image */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
-                {[
-                  { icon: <Lock size={12} style={{ color: V_MUTED_LIGHT }} />, text: "Fondos protegidos" },
-                  { icon: <CheckCircle size={12} style={{ color: GREEN_LIGHT }} />, text: "Vendedores verificados" },
-                  { icon: <RefreshCw size={12} style={{ color: ABORD }} />, text: "Reembolso garantizado" },
-                ].map(({ icon, text }) => (
-                  <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>
-                    {icon} {text}
-                  </div>
+            {/* Date selector pills */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, color: "rgba(255,255,255,0.45)", marginBottom: 9, ...S }}>
+                Seleccioná una fecha
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                {EVENT.dates.map((d, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDateIdx(i)}
+                    style={{
+                      padding: "6px 14px", borderRadius: 100,
+                      fontSize: 12.5, fontWeight: 600,
+                      cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
+                      ...S,
+                      border: dateIdx === i ? "1.5px solid #6d28d9" : "1.5px solid rgba(255,255,255,0.2)",
+                      background: dateIdx === i ? "#6d28d9" : "transparent",
+                      color: dateIdx === i ? "white" : "rgba(255,255,255,0.65)",
+                    }}
+                  >
+                    {d.label}
+                  </button>
                 ))}
               </div>
+            </div>
+
+            {/* Stock summary — replaces "Ver entradas" CTA */}
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 20 }}>
+              {activeDate?.count > 0
+                ? `${activeDate.count} entradas disponibles · desde ${fmt(minPrice)} ARS`
+                : "Sin entradas disponibles por ahora"}
+            </p>
+
+            {/* Trust micro-signals */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+              {[
+                { icon: <Lock size={12} style={{ color: "#a78bfa" }} />, text: "Fondos protegidos" },
+                { icon: <CheckCircle size={12} style={{ color: "#a78bfa" }} />, text: "Vendedores verificados" },
+                { icon: <RefreshCw size={12} style={{ color: "#a78bfa" }} />, text: "Reembolso garantizado" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+                  {icon} {text}
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Tickets section */}
-        <div ref={ticketsRef} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24, boxShadow: SHADOW_CARD_MD }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
-            <div>
-              <h2 style={{ ...E, fontSize: 22, fontWeight: 400, color: DARK, letterSpacing: "-0.3px" }}>Entradas disponibles</h2>
-              <p style={{ fontSize: 13, color: MUTED, marginTop: 3 }}>
-                {activeDate ? `${activeDate.full} · ${sorted.length} opciones` : `${sorted.length} entradas`}
-              </p>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 13, color: MUTED, fontWeight: 500, whiteSpace: "nowrap" }}>Ordenar</span>
-              <select className="sort-sel" value={sortIdx} onChange={(e) => setSortIdx(Number(e.target.value))}>
-                {SORTS.map((s, i) => <option key={i} value={i}>{s}</option>)}
-              </select>
-            </div>
+        {/* ── Listing header ── */}
+        <div ref={ticketsRef} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
+          <div>
+            <h2 style={{ ...E, fontSize: 24, fontWeight: 400, color: DARK, letterSpacing: "-0.3px" }}>
+              Entradas disponibles
+            </h2>
+            <p style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>
+              {activeDate ? `${activeDate.full} · ${sorted.length} opciones` : `${sorted.length} entradas`}
+            </p>
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, color: MUTED, fontWeight: 500, whiteSpace: "nowrap" }}>Ordenar</span>
+            <select className="sort-sel" value={sortIdx} onChange={(e) => setSortIdx(Number(e.target.value))}>
+              {SORTS.map((s, i) => <option key={i} value={i}>{s}</option>)}
+            </select>
+          </div>
+        </div>
 
-          {sectorsList.length > 1 && (
-            <div className="pills-row" style={{ display: "flex", gap: 7, overflowX: "auto", marginBottom: 20, paddingBottom: 2 }}>
-              {sectorsList.map((s) => {
-                const min = sectorMin(s);
-                return (
-                  <button key={s} type="button" className={`sec-pill${sector === s ? " active" : ""}`} onClick={() => setSector(s)}>
-                    {s}
-                    {min != null && s !== "Todos" && (
-                      <span style={{ fontSize: 11, fontWeight: 600, opacity: sector === s ? 0.85 : 0.65 }}>{fmt(min)}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+        {/* ── Filter pills ── */}
+        {sectorsList.length > 1 && (
+          <div className="pills-row" style={{ display: "flex", gap: 7, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
+            {sectorsList.map((s) => {
+              const min = sectorMin(s);
+              return (
+                <button key={s} type="button" className={`sec-pill${sector === s ? " active" : ""}`} onClick={() => setSector(s)}>
+                  {s}
+                  {min != null && s !== "Todos" && (
+                    <span style={{ fontSize: 11, fontWeight: 600, opacity: sector === s ? 0.85 : 0.65 }}>{fmt(min)}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-          {sorted.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", color: MUTED }}>
-              <p style={{ fontSize: 15 }}>{t("eventTickets.noTicketsAvailable")}</p>
-              <Link to="/sell-ticket" style={{ display: "inline-block", marginTop: 12, color: V, fontWeight: 600 }}>{t("boughtTickets.startSelling")}</Link>
-            </div>
-          ) : (
-            <>
-              <div className="tk-tickets-desktop">
-                {sorted.map((t) => (
-                  <EventTicketCard key={t.id} ticket={t} eventSlug={eventSlug} />
-                ))}
+        {/* ── Ticket grid / empty state ── */}
+        {sorted.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "48px 0", color: MUTED }}>
+            <p style={{ fontSize: 15 }}>{t("eventTickets.noTicketsAvailable")}</p>
+            <Link to="/sell-ticket" style={{ display: "inline-block", marginTop: 12, color: V, fontWeight: 600 }}>
+              {t("boughtTickets.startSelling")}
+            </Link>
+          </div>
+        ) : (
+          <div className="tk-grid">
+            {sorted.map((tkt, idx) => (
+              <div
+                key={tkt.id}
+                style={{ animation: "fadeUp 0.35s ease both", animationDelay: `${idx * 40}ms`, height: "100%" }}
+              >
+                <EventTicketCard ticket={tkt} eventSlug={eventSlug} />
               </div>
-              <div className="tk-tickets-mobile">
-                {ticketsGroupedBySector.map(({ sectorKey, tickets }) => (
-                  <section key={sectorKey} aria-label={sectorKey}>
-                    <div className="tk-sector-mobile-title">
-                      <span>{sectorKey}</span>
-                      <span className="tk-sector-mobile-count">
-                        {t("eventTickets.sectorRowCount", { count: tickets.length })}
-                      </span>
-                    </div>
-                    <div className="tk-hscroll" role="list">
-                      {tickets.map((tkt) => (
-                        <div key={tkt.id} className="tk-hscroll-item" role="listitem">
-                          <EventTicketCard ticket={tkt} eventSlug={eventSlug} />
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            </>
-          )}
+            ))}
+          </div>
+        )}
+
+        {/* ── Sell banner ── */}
+        <div style={{
+          marginTop: 36,
+          background: "white",
+          border: "1px solid #e5e7eb",
+          borderRadius: 14,
+          padding: "24px 28px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+        }}>
+          <div>
+            <p style={{ ...E, fontSize: 18, letterSpacing: "-0.3px", color: DARK, marginBottom: 4 }}>
+              ¿Tenés entradas para este evento?
+            </p>
+            <p style={{ fontSize: 13, color: MUTED }}>
+              Publicá en minutos y llegá a miles de compradores.
+            </p>
+          </div>
+          <Link
+            to="/sell-ticket"
+            style={{
+              display: "inline-block",
+              ...S,
+              fontSize: 13, fontWeight: 700, color: V,
+              border: "1.5px solid #6d28d9",
+              borderRadius: 10,
+              padding: "10px 20px",
+              background: "transparent",
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#f0ebff")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            Publicar mi entrada →
+          </Link>
         </div>
       </div>
     </div>
