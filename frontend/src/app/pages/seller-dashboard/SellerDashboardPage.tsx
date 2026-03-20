@@ -42,7 +42,7 @@ import {
   PENDING,
   S,
 } from '@/lib/design-tokens';
-import { TransactionActionRequiredCard } from '@/app/pages/my-tickets/TransactionActionRequiredCard';
+import { TransactionActionRequiredCard } from '@/app/components/transaction/TransactionActionRequiredCard';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { PageHeader } from '../../components/PageHeader';
 

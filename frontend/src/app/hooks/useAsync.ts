@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 interface AsyncState<T> {
   data: T | null;
@@ -66,9 +66,8 @@ export function useAsyncEffect<T>(
   const { data, isLoading, error, execute } = useAsync(asyncFunction);
 
   // Load on mount and when deps change
-  useState(() => {
-    execute();
-  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { execute(); }, deps);
 
   return {
     data,

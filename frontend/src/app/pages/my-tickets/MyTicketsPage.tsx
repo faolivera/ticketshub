@@ -38,7 +38,7 @@ import {
   URGENT_BORDER,
   S,
 } from '@/lib/design-tokens';
-import { TransactionActionRequiredCard } from './TransactionActionRequiredCard';
+import { TransactionActionRequiredCard } from '@/app/components/transaction/TransactionActionRequiredCard';
 import { PageHeader } from '../../components/PageHeader';
 
 // ─── Thumb (mirrors SellerDashboardPage) ──────────────────────────────────────
