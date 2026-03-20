@@ -412,7 +412,11 @@ export function SellListingWizard() {
   const canProceedStep4 = (() => {
     if (form.deliveryMethod === 'digital') return true;
     if (form.physicalDeliveryMethod === 'arrange') return true;
-    return form.physicalDeliveryMethod === 'pickup' && form.pickupAddress.trim().length > 0;
+    return (
+      form.physicalDeliveryMethod === 'pickup' &&
+      form.pickupCity.trim().length > 0 &&
+      form.pickupStreet.trim().length > 0
+    );
   })();
   const canProceedStep5 = true;
 
@@ -548,8 +552,8 @@ export function SellListingWizard() {
         sellTogether: form.sellTogether,
         pricePerTicket: { amount: Math.round(form.pricePerTicket * 100), currency: sellerCurrency as CurrencyCode },
         deliveryMethod,
-        pickupAddress: form.physicalDeliveryMethod === 'pickup' && form.pickupAddress.trim()
-          ? { line1: form.pickupAddress.trim(), city: '', countryCode: 'AR' }
+        pickupAddress: form.physicalDeliveryMethod === 'pickup'
+          ? { line1: form.pickupStreet.trim(), city: form.pickupCity.trim(), countryCode: 'AR' }
           : undefined,
         eventSectionId: form.eventSectionId,
         bestOfferConfig: form.bestOfferEnabled

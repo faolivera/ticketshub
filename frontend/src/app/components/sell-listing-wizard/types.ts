@@ -22,7 +22,8 @@ export interface WizardFormState {
   bestOfferMinPrice: string;
   deliveryMethod: 'digital' | 'physical';
   physicalDeliveryMethod: 'pickup' | 'arrange' | '';
-  pickupAddress: string;
+  pickupCity: string;
+  pickupStreet: string;
   sellTogether: boolean;
 }
 
@@ -38,7 +39,8 @@ export const defaultWizardFormState: WizardFormState = {
   bestOfferMinPrice: '',
   deliveryMethod: 'digital',
   physicalDeliveryMethod: '',
-  pickupAddress: '',
+  pickupCity: '',
+  pickupStreet: '',
   sellTogether: false,
 };
 

@@ -28,7 +28,8 @@ export const StepDeliveryMethod: FC<StepDeliveryMethodProps> = ({ form, onFormCh
           onFormChange({
             deliveryMethod: value,
             physicalDeliveryMethod: value === 'physical' ? form.physicalDeliveryMethod : '',
-            pickupAddress: value === 'physical' ? form.pickupAddress : '',
+            pickupCity: value === 'physical' ? form.pickupCity : '',
+            pickupStreet: value === 'physical' ? form.pickupStreet : '',
           })
         }
         className="grid gap-3 md:grid-cols-2"
@@ -79,7 +80,8 @@ export const StepDeliveryMethod: FC<StepDeliveryMethodProps> = ({ form, onFormCh
             onValueChange={(value: 'pickup' | 'arrange') =>
               onFormChange({
                 physicalDeliveryMethod: value,
-                pickupAddress: value === 'arrange' ? '' : form.pickupAddress,
+                pickupCity: value === 'arrange' ? '' : form.pickupCity,
+                pickupStreet: value === 'arrange' ? '' : form.pickupStreet,
               })
             }
             className="grid gap-3 md:grid-cols-2"
@@ -117,19 +119,32 @@ export const StepDeliveryMethod: FC<StepDeliveryMethodProps> = ({ form, onFormCh
           </RadioGroup>
 
           {form.physicalDeliveryMethod === 'pickup' && (
-            <div style={{ marginTop: 16 }}>
-              <Label htmlFor="wizard-pickup-address" style={{ fontSize: 13.5, fontWeight: 600, color: DARK, display: 'block', marginBottom: 6, ...S }}>
-                {t('sellListingWizard.pickupAddress')} <span style={{ color: '#dc2626' }}>*</span>
-              </Label>
-              <Input
-                id="wizard-pickup-address"
-                value={form.pickupAddress}
-                onChange={(e) => onFormChange({ pickupAddress: e.target.value })}
-                placeholder={t('sellListingWizard.pickupAddressPlaceholder')}
-                className="min-h-[44px]"
-                aria-describedby={!form.pickupAddress.trim() ? 'pickup-error' : undefined}
-              />
-              {!form.pickupAddress.trim() && (
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <Label htmlFor="wizard-pickup-city" style={{ fontSize: 13.5, fontWeight: 600, color: DARK, display: 'block', marginBottom: 6, ...S }}>
+                  {t('sellListingWizard.pickupCity')} <span style={{ color: '#dc2626' }}>*</span>
+                </Label>
+                <Input
+                  id="wizard-pickup-city"
+                  value={form.pickupCity}
+                  onChange={(e) => onFormChange({ pickupCity: e.target.value })}
+                  className="min-h-[44px]"
+                  aria-describedby={(!form.pickupCity.trim() || !form.pickupStreet.trim()) ? 'pickup-error' : undefined}
+                />
+              </div>
+              <div>
+                <Label htmlFor="wizard-pickup-street" style={{ fontSize: 13.5, fontWeight: 600, color: DARK, display: 'block', marginBottom: 6, ...S }}>
+                  {t('sellListingWizard.pickupStreet')} <span style={{ color: '#dc2626' }}>*</span>
+                </Label>
+                <Input
+                  id="wizard-pickup-street"
+                  value={form.pickupStreet}
+                  onChange={(e) => onFormChange({ pickupStreet: e.target.value })}
+                  className="min-h-[44px]"
+                  aria-describedby={(!form.pickupCity.trim() || !form.pickupStreet.trim()) ? 'pickup-error' : undefined}
+                />
+              </div>
+              {(!form.pickupCity.trim() || !form.pickupStreet.trim()) && (
                 <p id="pickup-error" style={{ fontSize: 12.5, color: MUTED, marginTop: 4, ...S }}>
                   {t('sellListingWizard.enterPickupAddress')}
                 </p>

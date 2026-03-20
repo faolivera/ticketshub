@@ -979,7 +979,8 @@
     "hideTransferDetails": "Ocultar datos"
   },
   "transaction": {
-    "timeRemaining": "Tiempo restante: {{time}}",
+    "timeRemaining": "{{time}}",
+    "paymentTimeLabel": "Tiempo para completar la compra",
     "paymentExpired": "El tiempo de pago expiró",
     "cancelButton": "Cancelar Transacción",
     "cancelConfirm": "¿Estás seguro de que quieres cancelar esta transacción? Esta acción no se puede deshacer.",
@@ -1541,8 +1542,8 @@
     "deliveryStepDescription": "Cómo llega la entrada al comprador",
     "digital": "Digital",
     "physical": "Físico",
-    "pickupAddress": "Dirección de entrega",
-    "pickupAddressPlaceholder": "Calle, número, ciudad, CP",
+    "pickupCity": "Ciudad",
+    "pickupStreet": "Calle y número",
     "reviewTitle": "Revisá y publicá",
     "reviewDescription": "Revisá los datos antes de publicar",
     "editSection": "Editar",
