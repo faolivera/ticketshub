@@ -18,6 +18,14 @@ import {
   GREEN,
   GLIGHT,
   GBORD,
+  ABG,
+  ABORD,
+  VL_BORDER,
+  WARN_SOLID,
+  ERROR_BG,
+  BADGE_DEMAND_BORDER,
+  DESTRUCTIVE,
+  V_HOVER,
   S,
 } from '@/lib/design-tokens';
 
@@ -85,7 +93,7 @@ function PrimaryBtn({ label, loading, disabled, type = 'submit', onClick }: {
       onMouseLeave={() => setHovered(false)}
       style={{
         width: '100%', padding: '13px', borderRadius: 11, border: 'none',
-        background: isDisabled ? BORD2 : hovered ? '#5b21b6' : V,
+        background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
         boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
@@ -163,8 +171,8 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
       <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div
           style={{
-            background: verified ? GLIGHT : '#fffbeb',
-            borderBottom: `1px solid ${verified ? GBORD : '#fde68a'}`,
+            background: verified ? GLIGHT : ABG,
+            borderBottom: `1px solid ${verified ? GBORD : ABORD}`,
             padding: '18px 20px',
             display: 'flex',
             alignItems: 'flex-start',
@@ -180,14 +188,14 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              background: verified ? GLIGHT : '#fffbeb',
-              border: `1.5px solid ${verified ? GBORD : '#fde68a'}`,
+              background: verified ? GLIGHT : ABG,
+              border: `1.5px solid ${verified ? GBORD : ABORD}`,
             }}
           >
             {verified ? (
               <CheckCircle size={22} style={{ color: GREEN }} />
             ) : (
-              <Clock size={22} style={{ color: '#d97706' }} />
+              <Clock size={22} style={{ color: WARN_SOLID }} />
             )}
           </div>
           <div>
@@ -235,7 +243,7 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
       <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: VLIGHT, borderBottom: '1px solid #ddd6fe', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <CreditCard size={20} color="white" />
           </div>
@@ -247,7 +255,7 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
 
         <div style={{ padding: '20px' }}>
           {error && (
-            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: '#fef2f2', border: '1px solid #fca5a5', fontSize: 13.5, color: '#dc2626', lineHeight: 1.5, ...S }}>
+            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
               {error}
             </div>
           )}

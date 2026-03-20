@@ -19,6 +19,10 @@ import {
   GREEN,
   GLIGHT,
   GBORD,
+  ABG,
+  AMBER,
+  ABORD,
+  VL_BORDER,
   S,
 } from '@/lib/design-tokens';
 
@@ -36,7 +40,7 @@ function getListingStatusInfo(status: string, t: (k: string) => string) {
     case 'Active':    return { label: t('boughtTickets.activeListing'), color: GLIGHT,    textColor: GREEN,     border: GBORD     };
     case 'Sold':      return { label: t('boughtTickets.sold'),          color: BG,        textColor: MUTED,     border: BORD2     };
     case 'Cancelled': return { label: t('boughtTickets.cancelled'),     color: BG,        textColor: MUTED,     border: BORD2     };
-    case 'Expired':   return { label: t('boughtTickets.expired'),       color: '#fffbeb', textColor: '#92400e', border: '#fde68a' };
+    case 'Expired':   return { label: t('boughtTickets.expired'),       color: ABG, textColor: AMBER, border: ABORD };
     default:          return { label: status,                           color: BG,        textColor: MUTED,     border: BORD2     };
   }
 }
@@ -89,7 +93,7 @@ function IconBtn({ onClick, title, children, isCopied = false }: {
         width: 38, height: 38, borderRadius: 9, flexShrink: 0,
         background: isCopied ? GLIGHT  : hov ? VLIGHT  : BG,
         color:      isCopied ? GREEN   : hov ? V       : MUTED,
-        border:     `1px solid ${isCopied ? GBORD : hov ? '#ddd6fe' : BORDER}`,
+        border:     `1px solid ${isCopied ? GBORD : hov ? VL_BORDER : BORDER}`,
         cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: 'all 0.14s',
@@ -144,7 +148,7 @@ function ActiveListingCard({ listing, copiedListingId, onCopyLink, pendingOfferC
               <span style={{
                 marginLeft: 'auto', flexShrink: 0,
                 fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
-                background: VLIGHT, color: V, border: '1px solid #ddd6fe', ...S,
+                background: VLIGHT, color: V, border: `1px solid ${VL_BORDER}`, ...S,
               }}>
                 {pendingOfferCount} {pendingOfferCount === 1
                   ? t('sellerDashboard.offer',  { defaultValue: 'oferta'  })

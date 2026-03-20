@@ -51,6 +51,7 @@ export const TRUST_VERIFIED_BORDER = "#99f6e4";
 export const ERROR = "#b91c1c";
 export const ERROR_DARK = "#991b1b";
 export const DESTRUCTIVE = "#dc2626";
+export const ERROR_BG = "#fef2f2";
 export const BADGE_DEMAND_BG = "#fee2e2";
 export const BADGE_DEMAND_BORDER = "#fca5a5";
 

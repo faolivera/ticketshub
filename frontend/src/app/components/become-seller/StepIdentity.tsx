@@ -25,6 +25,13 @@ import {
   AMBER,
   ABG,
   ABORD,
+  VL_BORDER,
+  ERROR_BG,
+  BADGE_DEMAND_BORDER,
+  DESTRUCTIVE,
+  ERROR_DARK,
+  ERROR,
+  V_HOVER,
   S,
 } from '@/lib/design-tokens';
 
@@ -103,7 +110,7 @@ function UploadArea({ preview, label, sublabel, onFileSelect, onRemove, inputRef
           <button
             type="button"
             onClick={onRemove}
-            style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: '#dc2626', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: DESTRUCTIVE, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <X size={13} color="white" />
           </button>
@@ -151,7 +158,7 @@ function PrimaryBtn({ label, loading, loadingLabel, disabled, onClick, icon }: {
       onMouseLeave={() => setHovered(false)}
       style={{
         width: '100%', padding: '13px', borderRadius: 11, border: 'none',
-        background: isDisabled ? BORD2 : hovered ? '#5b21b6' : V,
+        background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
         boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
@@ -364,7 +371,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
       <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: VLIGHT, borderBottom: '1px solid #ddd6fe', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Shield size={20} color="white" />
           </div>
@@ -378,11 +385,11 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
 
           {/* Rejection banner */}
           {existingVerification?.status === 'rejected' && (
-            <div style={{ padding: '12px 14px', borderRadius: 11, marginBottom: 20, background: '#fef2f2', border: '1px solid #fca5a5', display: 'flex', gap: 10 }}>
-              <AlertCircle size={16} style={{ color: '#dc2626', flexShrink: 0, marginTop: 1 }} />
+            <div style={{ padding: '12px 14px', borderRadius: 11, marginBottom: 20, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, display: 'flex', gap: 10 }}>
+              <AlertCircle size={16} style={{ color: DESTRUCTIVE, flexShrink: 0, marginTop: 1 }} />
               <div>
-                <p style={{ fontSize: 13.5, fontWeight: 700, color: '#dc2626', marginBottom: 3, ...S }}>Verificación rechazada</p>
-                <p style={{ fontSize: 13, color: '#991b1b', lineHeight: 1.5, ...S }}>
+                <p style={{ fontSize: 13.5, fontWeight: 700, color: DESTRUCTIVE, marginBottom: 3, ...S }}>Verificación rechazada</p>
+                <p style={{ fontSize: 13, color: ERROR_DARK, lineHeight: 1.5, ...S }}>
                   {existingVerification.rejectionReason ?? t('verification.rejectedMessage')}
                 </p>
               </div>
@@ -390,7 +397,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
           )}
 
           {error && (
-            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: '#fef2f2', border: '1px solid #fca5a5', fontSize: 13.5, color: '#dc2626', lineHeight: 1.5, ...S }}>
+            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
               {error}
             </div>
           )}
@@ -496,13 +503,13 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
                 style={{
                   padding: '14px 16px',
                   borderRadius: 11,
-                  background: '#fef2f2',
-                  border: '1px solid #fca5a5',
+                  background: ERROR_BG,
+                  border: `1px solid ${BADGE_DEMAND_BORDER}`,
                   ...S,
                 }}
               >
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <AlertCircle size={18} style={{ color: '#dc2626', flexShrink: 0, marginTop: 1 }} />
+                  <AlertCircle size={18} style={{ color: DESTRUCTIVE, flexShrink: 0, marginTop: 1 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {validationIssues.length > 0 && (
                       <>
@@ -510,7 +517,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
                           style={{
                             fontSize: 13,
                             fontWeight: 700,
-                            color: '#991b1b',
+                            color: ERROR_DARK,
                             marginBottom: 8,
                             lineHeight: 1.4,
                           }}
@@ -522,7 +529,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
                             margin: 0,
                             paddingLeft: 18,
                             fontSize: 13,
-                            color: '#b91c1c',
+                            color: ERROR,
                             lineHeight: 1.55,
                           }}
                         >
@@ -538,7 +545,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
                       <p
                         style={{
                           fontSize: 13.5,
-                          color: '#dc2626',
+                          color: DESTRUCTIVE,
                           lineHeight: 1.5,
                           marginTop: validationIssues.length > 0 ? 10 : 0,
                           marginBottom: 0,
