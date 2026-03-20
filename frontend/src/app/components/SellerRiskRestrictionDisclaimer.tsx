@@ -6,16 +6,29 @@ import { cn } from '@/app/components/ui/utils';
 
 interface SellerRiskRestrictionDisclaimerProps {
   className?: string;
+  variant?: 'limits' | 'proximity';
 }
 
 /**
  * Reusable disclaimer shown when the seller cannot create/update a listing due to risk limits (unverified seller).
- * Used in sell wizard (price step + publish error).
+ * variant='limits' (default): exceeds monetary/count caps.
+ * variant='proximity': event date is too close for unverified sellers.
  */
 export const SellerRiskRestrictionDisclaimer: FC<SellerRiskRestrictionDisclaimerProps> = ({
   className,
+  variant = 'limits',
 }) => {
   const { t } = useTranslation();
+
+  const titleKey = variant === 'proximity'
+    ? 'sellTicket.proximityRestrictionTitle'
+    : 'sellTicket.sellerRiskRestrictionTitle';
+  const introKey = variant === 'proximity'
+    ? 'sellTicket.proximityRestrictionIntro'
+    : 'sellTicket.sellerRiskRestrictionIntro';
+  const ctaKey = variant === 'proximity'
+    ? 'sellTicket.proximityRestrictionVerifyCta'
+    : 'sellTicket.sellerRiskRestrictionVerifyCta';
 
   return (
     <div
@@ -28,16 +41,16 @@ export const SellerRiskRestrictionDisclaimer: FC<SellerRiskRestrictionDisclaimer
         <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
         <div className="min-w-0">
           <p className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
-            {t('sellTicket.sellerRiskRestrictionTitle')}
+            {t(titleKey)}
           </p>
           <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-            {t('sellTicket.sellerRiskRestrictionIntro')}
+            {t(introKey)}
           </p>
           <Link
             to="/become-seller"
             className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
           >
-            {t('sellTicket.sellerRiskRestrictionVerifyCta')}
+            {t(ctaKey)}
           </Link>
         </div>
       </div>

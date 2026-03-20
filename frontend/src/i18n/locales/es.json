@@ -1485,7 +1485,10 @@
     "noDatesFound": "No se encontraron fechas coincidentes",
     "sellerRiskRestrictionTitle": "Verificación requerida para publicar",
     "sellerRiskRestrictionIntro": "Esta publicación supera los límites para vendedores no verificados, por favor verifica tus datos de vendedor.",
-    "sellerRiskRestrictionVerifyCta": "Verificarme como vendedor"
+    "sellerRiskRestrictionVerifyCta": "Verificarme como vendedor",
+    "proximityRestrictionTitle": "Para publicar este evento necesitás verificarte",
+    "proximityRestrictionIntro": "Los vendedores no verificados no pueden publicar entradas de eventos con fecha próxima. Completá tu verificación como vendedor, es rápido.",
+    "proximityRestrictionVerifyCta": "Completar verificación"
   },
   "sellListingWizard": {
     "title": "Publicar entrada",

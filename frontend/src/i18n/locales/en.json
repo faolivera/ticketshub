@@ -1486,7 +1486,10 @@
     "noDatesFound": "No matching dates found",
     "sellerRiskRestrictionTitle": "Verification required to publish",
     "sellerRiskRestrictionIntro": "This listing exceeds the limits for unverified sellers. Please verify your seller details.",
-    "sellerRiskRestrictionVerifyCta": "Verify as seller"
+    "sellerRiskRestrictionVerifyCta": "Verify as seller",
+    "proximityRestrictionTitle": "Verification required for this event",
+    "proximityRestrictionIntro": "Unverified sellers cannot publish tickets for events happening soon. Complete your seller verification — it only takes a few minutes.",
+    "proximityRestrictionVerifyCta": "Complete verification"
   },
   "sellListingWizard": {
     "title": "Publish listing",
