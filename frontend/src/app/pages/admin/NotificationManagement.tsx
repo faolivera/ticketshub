@@ -38,14 +38,14 @@ import {
 import { Switch } from '../../components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { AlertCircle, Pencil, Mail, Bell } from 'lucide-react';
-import { notificationsAdminService } from '../../../api/services/notifications-admin.service';
+import { notificationsAdminService } from '@/api/services/notifications-admin.service';
 import type {
   NotificationChannelConfig,
   NotificationTemplate,
   NotificationEventType,
   NotificationPriority,
-} from '../../../api/types/notifications';
-import { ALL_EVENT_TYPES, TEMPLATE_VARIABLES } from '../../../api/types/notifications';
+} from '@/api/types/notifications';
+import { ALL_EVENT_TYPES, TEMPLATE_VARIABLES } from '@/api/types/notifications';
 
 const PRIORITY_OPTIONS: NotificationPriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 

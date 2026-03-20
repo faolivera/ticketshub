@@ -43,17 +43,17 @@ import {
   Building2,
   AlertCircle,
 } from 'lucide-react';
-import { adminService } from '../../../api/services/admin.service';
+import { adminService } from '@/api/services/admin.service';
 import type {
   PaymentMethodOption,
   PaymentMethodType,
   PaymentGatewayProvider,
   BankTransferConfig,
-} from '../../../api/types/tickets';
+} from '@/api/types/tickets';
 import type {
   AdminCreatePaymentMethodRequest,
   AdminUpdatePaymentMethodRequest,
-} from '../../../api/types/admin';
+} from '@/api/types/admin';
 
 type FormMode = 'create' | 'edit';
 

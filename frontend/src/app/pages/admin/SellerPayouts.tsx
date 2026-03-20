@@ -36,13 +36,13 @@ import {
 } from '../../components/ui/alert-dialog';
 import { Badge } from '../../components/ui/badge';
 import { Banknote, Loader2, Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
-import { adminService } from '../../../api/services';
+import { adminService } from '@/api/services';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate } from '@/lib/format-date';
 import type {
   AdminSellerPayoutItem,
   AdminSellerPayoutTicketLine,
-} from '../../../api/types/admin';
+} from '@/api/types/admin';
 
 function formatTicketLine(
   line: AdminSellerPayoutTicketLine,

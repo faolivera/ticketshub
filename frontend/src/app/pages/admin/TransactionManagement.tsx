@@ -53,7 +53,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { adminService, paymentConfirmationsService } from '../../../api/services';
+import { adminService, paymentConfirmationsService } from '@/api/services';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDateTimeMedium } from '@/lib/format-date';
 import type {
@@ -64,7 +64,7 @@ import type {
   AdminTransactionPayoutReceiptFile,
   AdminTransactionsPendingSummaryResponse,
   AdminUpdateTransactionRequest,
-} from '../../../api/types/admin';
+} from '@/api/types/admin';
 
 const ITEMS_PER_PAGE = 20;
 

@@ -34,10 +34,10 @@ import {
 } from '../../components/ui/collapsible';
 import { Calendar, Check, X, Plus, Clock, MapPin, ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
-import { eventsService } from '../../../api/services/events.service';
-import { adminService } from '../../../api/services/admin.service';
-import type { AdminPendingEventItem, AdminPendingEventDateItem, AdminPendingSectionItem } from '../../../api/types/admin';
-import type { EventWithDates, EventDate } from '../../../api/types/events';
+import { eventsService } from '@/api/services/events.service';
+import { adminService } from '@/api/services/admin.service';
+import type { AdminPendingEventItem, AdminPendingEventDateItem, AdminPendingSectionItem } from '@/api/types/admin';
+import type { EventWithDates, EventDate } from '@/api/types/events';
 import { EditEventModal } from './components/EditEventModal';
 import { AllEventsTable } from './components/AllEventsTable';
 import { formatDateShort, formatDateTimeMedium } from '@/lib/format-date';

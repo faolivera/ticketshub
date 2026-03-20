@@ -17,12 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { adminService } from '../../../api/services/admin.service';
+import { adminService } from '@/api/services/admin.service';
 import type {
   PlatformConfig as PlatformConfigType,
   CurrencyCode,
   RiskPaymentMethodType,
-} from '../../../api/types/admin';
+} from '@/api/types/admin';
 import { Checkbox } from '../../components/ui/checkbox';
 
 const MIN_FEE = 0;

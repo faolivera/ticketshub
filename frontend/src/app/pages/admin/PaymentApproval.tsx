@@ -30,8 +30,8 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { CreditCard, Check, X, BanknoteIcon, User, FileText, Image, Eye, ExternalLink } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
-import { paymentConfirmationsService, adminService } from '../../../api/services';
-import type { AdminPaymentItem } from '../../../api/types/admin';
+import { paymentConfirmationsService, adminService } from '@/api/services';
+import type { AdminPaymentItem } from '@/api/types/admin';
 
 export function PaymentApproval() {
   const { t } = useTranslation();

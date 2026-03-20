@@ -36,7 +36,7 @@ import {
 } from '../../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Tag, Plus, X, Ticket, Pencil } from 'lucide-react';
-import { adminService } from '../../../api/services/admin.service';
+import { adminService } from '@/api/services/admin.service';
 import type {
   AdminPromotionListItem,
   AdminCreatePromotionRequest,
@@ -46,7 +46,7 @@ import type {
   PromotionStatus,
   PromotionConfigTarget,
   AdminUserSearchItem,
-} from '../../../api/types/admin';
+} from '@/api/types/admin';
 
 const EMAIL_AUTOCOMPLETE_DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 2;

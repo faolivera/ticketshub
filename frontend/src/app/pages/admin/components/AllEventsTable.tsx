@@ -7,10 +7,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from '@/app/components/ui/card';
+import { Button } from '@/app/components/ui/button';
+import { Badge } from '@/app/components/ui/badge';
+import { Input } from '@/app/components/ui/input';
 import {
   Table,
   TableBody,
@@ -18,8 +18,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
-import { cn } from '../../../components/ui/utils';
+} from '@/app/components/ui/table';
+import { cn } from '@/app/components/ui/utils';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDateTimeMedium } from '@/lib/format-date';
 import {
@@ -32,12 +32,12 @@ import {
   ChevronUp,
   Loader2,
 } from 'lucide-react';
-import { adminService } from '../../../../api/services/admin.service';
+import { adminService } from '@/api/services/admin.service';
 import type {
   AdminAllEventItem,
   AdminEventListingsResponse,
-} from '../../../../api/types/admin';
-import type { EventWithDates, EventDate } from '../../../../api/types/events';
+} from '@/api/types/admin';
+import type { EventWithDates, EventDate } from '@/api/types/events';
 import { EditEventModal } from './EditEventModal';
 
 const ITEMS_PER_PAGE = 20;

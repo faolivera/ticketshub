@@ -26,11 +26,11 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { MessageSquare, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { adminService } from '../../../api/services';
+import { adminService } from '@/api/services';
 import type {
   AdminSupportTicketItem,
   AdminSupportTicketsResponse,
-} from '../../../api/types/admin';
+} from '@/api/types/admin';
 import { formatDateTimeMedium } from '@/lib/format-date';
 
 const STATUS_OPTIONS = [

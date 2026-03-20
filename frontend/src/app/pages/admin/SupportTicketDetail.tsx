@@ -29,11 +29,11 @@ import {
 } from '../../components/ui/dialog';
 import { Loader2, Send, Scale, Database } from 'lucide-react';
 import { formatCurrency } from '@/lib/format-currency';
-import { adminService } from '../../../api/services';
+import { adminService } from '@/api/services';
 import type {
   AdminSupportTicketDetailResponse,
   AdminSupportMessageItem,
-} from '../../../api/types/admin';
+} from '@/api/types/admin';
 import { formatDateTimeMedium } from '@/lib/format-date';
 import { BackButton } from '@/app/components/BackButton';
 

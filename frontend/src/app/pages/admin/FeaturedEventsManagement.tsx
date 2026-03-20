@@ -19,8 +19,8 @@ import {
 } from '../../components/ui/table';
 import { Input } from '../../components/ui/input';
 import { Star, Upload, ImageIcon } from 'lucide-react';
-import { adminService } from '../../../api/services/admin.service';
-import type { AdminAllEventItem } from '../../../api/types/admin';
+import { adminService } from '@/api/services/admin.service';
+import type { AdminAllEventItem } from '@/api/types/admin';
 import { HighlightedEventsHero } from '@/app/components/home/HighlightedEventsHero';
 
 const PAGE_SIZE = 20;
