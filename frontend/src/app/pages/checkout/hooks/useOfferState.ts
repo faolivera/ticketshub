@@ -39,6 +39,7 @@ export interface UseOfferStateReturn {
   setOfferPriceCents: (v: number) => void;
   isSubmittingOffer: boolean;
   offerError: string | null;
+  setOfferError: (err: string | null) => void;
   handleSubmitOffer: () => Promise<void>;
   handleCancelOffer: () => Promise<void>;
 }
@@ -203,6 +204,7 @@ export function useOfferState(params: UseOfferStateParams): UseOfferStateReturn 
     setOfferPriceCents,
     isSubmittingOffer,
     offerError,
+    setOfferError,
     handleSubmitOffer,
     handleCancelOffer,
   };

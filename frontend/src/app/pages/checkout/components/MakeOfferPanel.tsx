@@ -17,7 +17,7 @@ interface MakeOfferPanelProps {
   canBuy: boolean;
   isPurchasing: boolean;
   onPurchase: () => void;
-  formattedTotal: string;
+  formattedTotal: string | null;
   primaryBtnLabel: string;
   primaryBtnVariant: "primary" | "warn" | "disabled";
   primaryBtnDisabled: boolean;
