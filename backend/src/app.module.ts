@@ -35,6 +35,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
 import { SocketModule } from './common/socket/socket.module';
 import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
 import { EventScoringModule } from './modules/event-scoring/event-scoring.module';
+import { GatewaysModule } from './modules/gateways/gateways.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { EventScoringModule } from './modules/event-scoring/event-scoring.module
     WalletModule,
     PaymentsModule,
     TransactionsModule,
+    GatewaysModule,
     PaymentConfirmationsModule,
     IdentityVerificationModule,
     ReviewsModule,

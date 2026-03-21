@@ -92,17 +92,7 @@ export class GatewayPaymentsService {
    * Process a provider status update (from webhook or polling).
    * Uses SELECT FOR UPDATE to prevent double-processing races.
    */
-  async handleOrderUpdate(
-    ctx: Ctx,
-    providerOrderId: string,
-    paymentMethodId: string,
-  ): Promise<void> {
-    const paymentMethod = await this.paymentMethodsService.findById(ctx, paymentMethodId);
-    if (!paymentMethod) {
-      throw new NotFoundException(`Payment method ${paymentMethodId} not found`);
-    }
-    const provider = this.getProvider(paymentMethod);
-
+  async handleOrderUpdate(ctx: Ctx, providerOrderId: string): Promise<void> {
     await this.txManager.executeInTransaction(ctx, async (txCtx) => {
       const order = await this.gatewayOrdersRepo.findByProviderOrderIdForUpdate(
         txCtx,
@@ -117,6 +107,12 @@ export class GatewayPaymentsService {
         this.logger.log(ctx, `Order ${providerOrderId} already terminal (${order.status}), skipping`);
         return;
       }
+
+      const paymentMethod = await this.paymentMethodsService.findById(ctx, order.paymentMethodId);
+      if (!paymentMethod) {
+        throw new NotFoundException(`Payment method ${order.paymentMethodId} not found`);
+      }
+      const provider = this.getProvider(paymentMethod);
 
       // Network call while holding the row lock — prevents double-processing
       const providerStatus = await provider.getOrder(ctx, providerOrderId, paymentMethod);
@@ -135,6 +131,25 @@ export class GatewayPaymentsService {
         this.logger.log(ctx, `Order ${providerOrderId} → ${providerStatus}`);
       }
     });
+  }
+
+  // ==================== pollPendingOrders ====================
+
+  /**
+   * Poll all pending gateway orders and process any resolved ones.
+   * Called by GatewayPaymentsScheduler on a cron interval.
+   * Returns the number of orders processed.
+   */
+  async pollPendingOrders(ctx: Ctx): Promise<number> {
+    const pendingOrders = await this.gatewayOrdersRepo.findPendingOrders(ctx);
+    let processed = 0;
+    for (const order of pendingOrders) {
+      await this.handleOrderUpdate(ctx, order.providerOrderId).catch((err) => {
+        this.logger.error(ctx, `Poll failed for order ${order.providerOrderId}`, err);
+      });
+      processed++;
+    }
+    return processed;
   }
 
   // ==================== handleTransactionCancelled ====================

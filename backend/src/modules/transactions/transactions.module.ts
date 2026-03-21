@@ -17,6 +17,7 @@ import { RiskEngineModule } from '../risk-engine/risk-engine.module';
 import { TermsModule } from '../terms/terms.module';
 import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
 import { EventScoringModule } from '../event-scoring/event-scoring.module';
+import { GatewaysModule } from '../gateways/gateways.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { EventScoringModule } from '../event-scoring/event-scoring.module';
     OffersModule,
     forwardRef(() => TransactionChatModule),
     forwardRef(() => EventScoringModule),
+    forwardRef(() => GatewaysModule),
   ],
   controllers: [TransactionsController],
   providers: [

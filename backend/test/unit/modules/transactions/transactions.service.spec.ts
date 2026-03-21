@@ -20,6 +20,7 @@ import { TransactionManager } from '../../../../src/common/database';
 import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engine.service';
 import { TermsService } from '../../../../src/modules/terms/terms.service';
 import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
+import { GatewayPaymentsService } from '../../../../src/modules/gateways/gateway-payments.service';
 import { PRIVATE_STORAGE_PROVIDER } from '../../../../src/common/storage/file-storage-provider.interface';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import {
@@ -198,6 +199,11 @@ describe('TransactionsService', () => {
       requestScoring: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockGatewayPaymentsService = {
+      createOrder: jest.fn().mockResolvedValue({ providerOrderId: 'order_1', checkoutUrl: 'https://checkout.example.com' }),
+      handleTransactionCancelled: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -219,6 +225,7 @@ describe('TransactionsService', () => {
         { provide: TransactionManager, useValue: mockTxManager },
         { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage },
         { provide: EventScoringService, useValue: mockEventScoringService },
+        { provide: GatewayPaymentsService, useValue: mockGatewayPaymentsService },
       ],
     }).compile();
 
