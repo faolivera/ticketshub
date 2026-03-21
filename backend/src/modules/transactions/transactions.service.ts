@@ -60,6 +60,7 @@ import {
   type ProofFileMimeType,
 } from './transactions.domain';
 import { EventScoringService } from '../event-scoring/event-scoring.service';
+import { GatewayPaymentsService } from '../gateways/gateway-payments.service';
 
 @Injectable()
 export class TransactionsService {
@@ -94,6 +95,8 @@ export class TransactionsService {
     private readonly privateStorage: FileStorageProvider,
     @Inject(forwardRef(() => EventScoringService))
     private readonly eventScoringService: EventScoringService,
+    @Inject(forwardRef(() => GatewayPaymentsService))
+    private readonly gatewayPaymentsService: GatewayPaymentsService,
   ) {}
 
   /**
@@ -185,7 +188,7 @@ export class TransactionsService {
     paymentMethodId: string,
     pricingSnapshotId: string | undefined,
     offerId: string | undefined,
-  ): Promise<{ transaction: Transaction; paymentIntentId: string }> {
+  ): Promise<{ transaction: Transaction; paymentIntentId: string; clientSecret?: string }> {
     this.logger.log(
       ctx,
       `Initiating purchase for listing ${listingId}${offerId ? ` (offer ${offerId})` : ''}`,
@@ -418,7 +421,26 @@ export class TransactionsService {
 
     await this.offersService.cancelAffectedOffers(ctx, listingId);
 
-    // Payment intent creation is outside the DB transaction
+    this.logger.log(ctx, `Transaction ${transaction.id} created`);
+
+    // Gateway payment: create order at provider and return checkout URL
+    if (paymentMethod?.type === 'payment_gateway' && paymentMethod.gatewayProvider) {
+      const { providerOrderId, checkoutUrl } =
+        await this.gatewayPaymentsService.createOrder(
+          ctx,
+          transaction.id,
+          { amount: totalPaid.amount, currency: totalPaid.currency },
+          `${listing.eventName} — tickets`,
+          paymentMethod,
+        );
+      return {
+        transaction,
+        paymentIntentId: providerOrderId,
+        clientSecret: checkoutUrl,
+      };
+    }
+
+    // Default: mock payment intent (bank transfer / manual approval)
     const paymentIntent = await this.paymentsService.createPaymentIntent(
       ctx,
       transaction.id,
@@ -430,8 +452,6 @@ export class TransactionsService {
         eventName: listing.eventName,
       },
     );
-
-    this.logger.log(ctx, `Transaction ${transaction.id} created`);
 
     // PAYMENT_REQUIRED emission disabled for now; event and processors remain for future logic.
     // const seller = await this.usersService.findById(ctx, listing.sellerId);
@@ -977,7 +997,7 @@ export class TransactionsService {
         );
 
         const newStatus = TransactionStatus.Cancelled;
-        return this.transactionsRepository.updateWithVersion(
+        const cancelled = await this.transactionsRepository.updateWithVersion(
           txCtx,
           transactionId,
           {
@@ -989,6 +1009,13 @@ export class TransactionsService {
           },
           transaction.version,
         );
+
+        await this.gatewayPaymentsService.handleTransactionCancelled(
+          txCtx,
+          transactionId,
+        );
+
+        return cancelled;
       },
     );
 
