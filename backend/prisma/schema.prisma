@@ -577,6 +577,8 @@ model Transaction {
   reviews                   Review[]
   chatMessages              TransactionChatMessage[]
   auditLogs                 TransactionAuditLog[]
+  gatewayOrder              GatewayOrder?
+  gatewayRefunds            GatewayRefund[]
 
   @@index([buyerId])
   @@index([sellerId])
@@ -1043,4 +1045,44 @@ model PlatformConfig {
   updatedAt                            DateTime @updatedAt
 
   @@map("platform_config")
+}
+
+model GatewayOrder {
+  id              String   @id
+  transactionId   String   @unique
+  paymentMethodId String
+  provider        String
+  providerOrderId String   @unique
+  checkoutUrl     String   @db.Text
+  status          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transaction Transaction     @relation(fields: [transactionId], references: [id])
+  refunds     GatewayRefund[]
+
+  @@index([status])
+  @@index([transactionId, status])
+  @@map("gateway_orders")
+}
+
+model GatewayRefund {
+  id              String   @id
+  transactionId   String
+  gatewayOrderId  String
+  providerOrderId String
+  paymentMethodId String
+  provider        String
+  amount          Int
+  currency        String
+  status          String
+  apiCallLog      Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transaction  Transaction  @relation(fields: [transactionId], references: [id])
+  gatewayOrder GatewayOrder @relation(fields: [gatewayOrderId], references: [id])
+
+  @@index([status])
+  @@map("gateway_refunds")
 }
