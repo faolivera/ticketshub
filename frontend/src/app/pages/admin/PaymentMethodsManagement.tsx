@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAsync } from '@/app/hooks';
 import { useTranslation } from 'react-i18next';
 import {
@@ -87,12 +87,13 @@ const initialFormData: FormData = {
 
 export function PaymentMethodsManagement() {
   const { t } = useTranslation();
+  const fetchPaymentMethods = useCallback(() => adminService.getPaymentMethods(), []);
   const {
     data: paymentMethodsData,
     isLoading,
     error: fetchError,
     execute,
-  } = useAsync<PaymentMethodOption[]>(() => adminService.getPaymentMethods());
+  } = useAsync<PaymentMethodOption[]>(fetchPaymentMethods);
   const paymentMethods = paymentMethodsData ?? [];
   const [mutationError, setMutationError] = useState<string | null>(null);
   const error = fetchError ?? mutationError;

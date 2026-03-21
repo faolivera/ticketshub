@@ -7,7 +7,7 @@ import { transactionsService } from '@/api/services';
 import type { TransactionChatMessage } from '@/api/types';
 import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
-import { SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER } from '@/lib/design-tokens';
+import { SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER, S } from '@/lib/design-tokens';
 
 export interface TicketChatProps {
   isOpen: boolean;

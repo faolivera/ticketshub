@@ -1,36 +1,24 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  MapPin, Calendar, Shield, Lock, CheckCircle, AlertCircle,
-  Minus, Plus, Check, CreditCard, Loader2, Mail,
-  RotateCcw, Clock, X,
-} from "lucide-react";
+import { Shield, Loader2, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { transactionsService } from "@/api/services/transactions.service";
 import { termsService } from "@/api/services/terms.service";
 import { AcceptanceMethod } from "@/api/types/terms";
-import { formatMonthYear } from "@/lib/format-date";
-import { getInitials } from "@/lib/string-utils";
 import { formatCurrencyFromUnits } from "@/lib/format-currency";
 import { useUser } from "@/app/contexts/UserContext";
 import {
   V, VLIGHT, V_HOVER, VL_BORDER,
-  DARK, MUTED, HINT, BG, CARD, SURFACE, BORDER, BORD2,
-  GREEN, GLIGHT, GBORD,
-  AMBER, ABG, ABORD, AMBER_BG_LIGHT, AMBER_TEXT_DARK,
-  ERROR, ERROR_DARK, BADGE_DEMAND_BG, BADGE_DEMAND_BORDER,
-  INFO, INFO_LIGHT, INFO_BORDER,
-  SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER,
+  DARK, MUTED, HINT, BG, CARD, BORDER, BORD2,
+  AMBER, ABG, ABORD,
+  ERROR, ERROR_DARK,
   S, E, V_FOCUS_RING,
-  SHADOW_CARD, SHADOW_CARD_SM,
+  SHADOW_CARD_SM,
   WARN_SOLID,
-  GRAY_BG, GRAY_BORDER, GRAY_TEXT,
 } from "@/lib/design-tokens";
-import { LoadingSpinner } from "@/app/components/LoadingSpinner";
-import { ErrorMessage, ErrorAlert } from "@/app/components/ErrorMessage";
+import { ErrorMessage } from "@/app/components/ErrorMessage";
 import { PageMeta } from "@/app/components/PageMeta";
 import { BackButton } from "@/app/components/BackButton";
-import { UserAvatar } from "@/app/components/UserAvatar";
 import { isPricingSnapshotExpiredError, isListingUnavailableError } from "./helpers";
 
 // Hooks
@@ -49,6 +37,9 @@ import { VerificationGate } from "./components/VerificationGate";
 import { TermsCheckbox } from "./components/TermsCheckbox";
 import { CheckoutSummary } from "./components/CheckoutSummary";
 import { MakeOfferPanel } from "./components/MakeOfferPanel";
+import { EventCard } from "./components/EventCard";
+import { SellerCard } from "./components/SellerCard";
+import { PaymentMethodsCard } from "./components/PaymentMethodsCard";
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
@@ -632,538 +623,40 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* ── Event card ── */}
-          <div style={card}>
-            <div style={{ position: "relative", height: 120, overflow: "hidden" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  zIndex: 0,
-                  backgroundImage: `url(${
-                    listing.bannerUrls?.rectangle || listing.bannerUrls?.square
-                  })`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  filter: "blur(12px) brightness(0.6) saturate(1.2)",
-                  transform: "scale(1.1)",
-                  backgroundColor: "#0f0f1a",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  zIndex: 1,
-                  background:
-                    "linear-gradient(to right, rgba(15,15,26,0.65) 0%, rgba(15,15,26,0.38) 45%, rgba(15,15,26,0.05) 100%)",
-                }}
-              />
-              <div
-                style={{
-                  position: "relative",
-                  zIndex: 2,
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "0 20px",
-                }}
-              >
-                <div
-                  style={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 10,
-                    background: V,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 22,
-                    flexShrink: 0,
-                    overflow: "hidden",
-                  }}
-                >
-                  {listing.bannerUrls?.square ? (
-                    <img
-                      src={listing.bannerUrls.square}
-                      alt=""
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : (
-                    "🎫"
-                  )}
-                </div>
-                <div>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
-                    {listing.eventName}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.55)",
-                      marginTop: 2,
-                    }}
-                  >
-                    {listing.venue}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.55)",
-                      marginTop: 2,
-                    }}
-                  >
-                    {eventDateFormatted}
-                  </p>
-                </div>
-              </div>
-            </div>
+          <EventCard
+            listing={listing}
+            sectorName={sectorName}
+            eventDateFormatted={eventDateFormatted}
+            isNumberedListing={data.isNumberedListing}
+            sortedNumberedUnits={sortedNumberedUnits}
+            selectedUnitIds={data.selectedUnitIds}
+            availableCount={data.availableCount}
+            hasAcceptedOffer={!!acceptedOffer}
+            quantity={data.quantity}
+            onToggleSeat={toggleSeatSelection}
+            onClearSeats={() => data.setSelectedUnitIds([])}
+            onQuantityDecrease={() => data.setQuantity((q) => q - 1)}
+            onQuantityIncrease={() => data.setQuantity((q) => q + 1)}
+          />
 
-            <div style={{ padding: "18px 20px" }}>
-              <div style={{ marginBottom: 14 }}>
-                <p style={lbl}>Sector</p>
-                <p style={{ fontSize: 14, fontWeight: 600, color: DARK }}>
-                  {sectorName}
-                </p>
-              </div>
-              <hr style={hr} />
-
-              {data.isNumberedListing ? (
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      marginBottom: 10,
-                    }}
-                  >
-                    <p style={lbl}>{t("buyTicket.selectSeats")}</p>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: data.selectedUnitIds.length > 0 ? V : MUTED,
-                      }}
-                    >
-                      {data.selectedUnitIds.length} / {data.availableCount}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {sortedNumberedUnits.map((unit) => {
-                      const sel = data.selectedUnitIds.includes(unit.id);
-                      const seatLabel = unit.seat
-                        ? `${unit.seat.row}-${unit.seat.seatNumber}`
-                        : unit.id;
-                      const disabled = listing.sellTogether || !!acceptedOffer;
-                      return (
-                        <button
-                          key={unit.id}
-                          type="button"
-                          className={`seat-btn${sel ? " selected" : ""}`}
-                          onClick={() => !disabled && toggleSeatSelection(unit.id)}
-                          disabled={disabled}
-                        >
-                          {sel && (
-                            <Check
-                              size={10}
-                              style={{
-                                display: "inline",
-                                marginRight: 4,
-                                verticalAlign: "middle",
-                              }}
-                            />
-                          )}
-                          {seatLabel}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {data.selectedUnitIds.length > 0 && (
-                    <div
-                      style={{
-                        marginTop: 10,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <p style={{ fontSize: 12, color: MUTED }}>
-                        <strong style={{ color: DARK, fontWeight: 600 }}>
-                          {data.selectedUnitIds.length} asiento
-                          {data.selectedUnitIds.length > 1 ? "s" : ""} seleccionado
-                          {data.selectedUnitIds.length > 1 ? "s" : ""}
-                        </strong>
-                      </p>
-                      {!acceptedOffer && !listing.sellTogether && (
-                        <button
-                          type="button"
-                          onClick={() => data.setSelectedUnitIds([])}
-                          style={{
-                            fontSize: 11.5,
-                            color: V,
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            fontWeight: 600,
-                            padding: 0,
-                            ...S,
-                          }}
-                        >
-                          Limpiar
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {!acceptedOffer && !listing.sellTogether && (
-                    <p style={{ fontSize: 11.5, color: HINT, marginTop: 6, lineHeight: 1.4 }}>
-                      Podés elegir cualquier combinación. El precio se actualiza al
-                      seleccionar.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
-                    <p style={lbl}>{t("buyTicket.quantity")}</p>
-                    <p style={{ fontSize: 11.5, color: HINT }}>
-                      {data.availableCount} {t("buyTicket.available")}
-                    </p>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <button
-                      type="button"
-                      className="qty-btn"
-                      disabled={
-                        data.quantity <= 1 || !!acceptedOffer || listing.sellTogether
-                      }
-                      onClick={() => data.setQuantity((q) => q - 1)}
-                    >
-                      <Minus size={13} />
-                    </button>
-                    <span
-                      style={{
-                        fontSize: 17,
-                        fontWeight: 700,
-                        color: DARK,
-                        minWidth: 36,
-                        textAlign: "center",
-                      }}
-                    >
-                      {data.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      className="qty-btn"
-                      disabled={
-                        data.quantity >= data.availableCount ||
-                        !!acceptedOffer ||
-                        listing.sellTogether
-                      }
-                      onClick={() => data.setQuantity((q) => q + 1)}
-                    >
-                      <Plus size={13} />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <hr style={hr} />
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  fontSize: 12.5,
-                  color: MUTED,
-                  lineHeight: 1.4,
-                }}
-              >
-                <div
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 8,
-                    background: GLIGHT,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Mail size={13} style={{ color: GREEN }} />
-                </div>
-                <span>
-                  {listing.type === "Physical" ? (
-                    <>
-                      <strong style={{ color: DARK, fontWeight: 600 }}>
-                        Acordás con el vendedor
-                      </strong>
-                      {" "}la entrega de la entrada
-                    </>
-                  ) : (
-                    <>
-                      <strong style={{ color: DARK, fontWeight: 600 }}>
-                        Recibís la entrada en tu app o por email
-                      </strong>
-                      {" "}una vez confirmado el pago
-                    </>
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Seller card ── */}
           {seller && !data.isOwnListing && (
-            <div style={card}>
-              <div style={{ padding: "18px 20px" }}>
-                <p style={lbl}>{t("buyTicket.seller")}</p>
-                <Link
-                  to={`/seller/${seller.id}`}
-                  style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                  }}
-                >
-                  <UserAvatar
-                    name={seller.publicName}
-                    src={seller.pic?.src ?? undefined}
-                    className="h-[42px] w-[42px] shrink-0"
-                  />
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 7,
-                        marginBottom: 4,
-                      }}
-                    >
-                      <p style={{ fontSize: 14.5, fontWeight: 700, color: DARK }}>
-                        {seller.publicName}
-                      </p>
-                      {data.isVerifiedSeller ? (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            padding: "2px 8px",
-                            borderRadius: 20,
-                            background: GLIGHT,
-                            color: GREEN,
-                            border: `1px solid ${GBORD}`,
-                            fontSize: 10.5,
-                            fontWeight: 600,
-                          }}
-                        >
-                          <CheckCircle size={9} /> Verificado
-                        </span>
-                      ) : (
-                        <span
-                          style={{
-                            padding: "2px 8px",
-                            borderRadius: 20,
-                            background: AMBER_BG_LIGHT,
-                            color: AMBER,
-                            fontSize: 10.5,
-                            fontWeight: 600,
-                          }}
-                        >
-                          Nuevo
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ fontSize: 12, color: MUTED }}>
-                      {t("buyTicket.sellerMemberSince", {
-                        date: formatMonthYear(seller.memberSince, true),
-                      })}
-                    </p>
-                    {seller.totalSales > 0 && (
-                      <p style={{ fontSize: 12, color: MUTED, marginTop: 1 }}>
-                        {t("buyTicket.sellerTotalSales", { count: seller.totalSales })}
-                        {seller.totalReviews > 0 &&
-                          ` · ${Math.round(seller.percentPositiveReviews!)}% positivas`}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-
-                {data.isNewSeller && (
-                  <div
-                    style={{
-                      marginTop: 14,
-                      background: INFO_LIGHT,
-                      border: `1px solid ${INFO_BORDER}`,
-                      borderRadius: 10,
-                      padding: "11px 13px",
-                      display: "flex",
-                      gap: 9,
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        background: INFO_LIGHT,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        marginTop: 1,
-                      }}
-                    >
-                      <Shield size={14} color={INFO} />
-                    </div>
-                    <div style={{ fontSize: 12, color: INFO, lineHeight: 1.5 }}>
-                      <strong style={{ display: "block", marginBottom: 2 }}>
-                        Vendedor nuevo. Igual, tu compra está protegida.
-                      </strong>
-                      Tu pago queda protegido hasta que entrás al evento.
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <SellerCard
+              seller={seller}
+              isVerifiedSeller={data.isVerifiedSeller}
+              isNewSeller={data.isNewSeller}
+            />
           )}
 
-          {/* ── Payment methods card ── */}
           {paymentMethods.length > 0 && (
-            <div style={card}>
-              <div style={{ padding: "18px 20px" }}>
-                <p style={lbl}>{t("buyTicket.paymentMethod")}</p>
-                {paymentMethods.length === 1 ? (
-                  <div>
-                    <p style={{ fontSize: 13.5, fontWeight: 600, color: DARK }}>
-                      {paymentMethods[0].name}
-                    </p>
-                    <p style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>
-                      Único método disponible
-                    </p>
-                  </div>
-                ) : (
-                  paymentMethods.map((method) => {
-                    const isSelected = data.selectedPaymentMethod?.id === method.id;
-                    const isAvailable = method.available !== false;
-                    const isCheaper = method.serviceFeePercent < maxFeePercent;
-                    const savings =
-                      qty > 0
-                        ? subtotal * ((maxFeePercent - method.serviceFeePercent) / 100)
-                        : 0;
-                    return (
-                      <button
-                        key={method.id}
-                        type="button"
-                        className={`pay-option${isSelected ? " selected" : ""}`}
-                        disabled={!isAvailable}
-                        onClick={() =>
-                          isAvailable && data.setSelectedPaymentMethod(method)
-                        }
-                        style={{
-                          opacity: isAvailable ? 1 : 0.4,
-                          cursor: isAvailable ? "pointer" : "not-allowed",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 16,
-                            height: 16,
-                            borderRadius: "50%",
-                            border: `2px solid ${isSelected ? V : BORD2}`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                            marginTop: 2,
-                          }}
-                        >
-                          {isSelected && (
-                            <div
-                              style={{
-                                width: 7,
-                                height: 7,
-                                borderRadius: "50%",
-                                background: V,
-                              }}
-                            />
-                          )}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 7,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <span
-                              style={{ fontSize: 13.5, fontWeight: 600, color: DARK }}
-                            >
-                              {method.name}
-                            </span>
-                            {!isAvailable && (
-                              <span style={{ fontSize: 11, color: MUTED }}>
-                                No disponible
-                              </span>
-                            )}
-                            {isAvailable && isCheaper && (
-                              <span
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 5,
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    color: GREEN,
-                                  }}
-                                >
-                                  -{maxFeePercent - method.serviceFeePercent}%
-                                </span>
-                                {savings > 0 && (
-                                  <span
-                                    style={{
-                                      fontSize: 10.5,
-                                      fontWeight: 600,
-                                      background: GLIGHT,
-                                      color: GREEN,
-                                      border: `1px solid ${GBORD}`,
-                                      padding: "2px 8px",
-                                      borderRadius: 20,
-                                    }}
-                                  >
-                                    Ahorrás{" "}
-                                    {formatCurrencyFromUnits(savings, listingCurrency)}
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+            <PaymentMethodsCard
+              paymentMethods={paymentMethods}
+              selectedPaymentMethod={data.selectedPaymentMethod}
+              maxFeePercent={maxFeePercent}
+              subtotal={subtotal}
+              qty={qty}
+              listingCurrency={listingCurrency}
+              onSelect={data.setSelectedPaymentMethod}
+            />
           )}
 
           {/* Verification warning */}
