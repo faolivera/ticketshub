@@ -132,12 +132,13 @@ Stores refund requests and their API audit log.
   {
     "amount": "1500.00",
     "description": "Tickets — Event Name",
-    "callback_success": "<frontend_success_url>",
-    "callback_fail": "<frontend_fail_url>",
+    "callback_success": "${FRONTEND_BASE_URL}/transactions/:id",
+    "callback_fail": "${FRONTEND_BASE_URL}/transactions/:id",
     "notification_url": "<backend>/api/payments/webhook/uala-bis",
     "external_reference": "<transactionId>"
   }
   ```
+- `callback_success` and `callback_fail` are both placeholders pointing to the transaction detail page. These are **not** payment confirmation signals — the actual approval arrives async via webhook or polling. A dedicated "payment processing" page is a frontend dependency outside this scope.
 - Amount: converted from cents to decimal string with **2 decimal places** (`(amount / 100).toFixed(2)`). Min: 25.00, Max: 9,999,999.00.
 - Response: `{ uuid, status: "PENDING", links: { checkout_link } }`
 - Persists a `GatewayOrder` record in DB (within a DB transaction).
@@ -318,3 +319,4 @@ All operations affecting multiple DB entities use `TransactionManager.executeInT
 - Admin UI for reviewing failed refunds
 - Automatic retry of failed refunds
 - Webhook signature verification (Ualá does not provide one)
+- Frontend "payment processing" page (required for proper callback_success / callback_fail UX — tracked as a frontend dependency)
