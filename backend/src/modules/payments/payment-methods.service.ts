@@ -189,7 +189,7 @@ export class PaymentMethodsService {
       case 'mercadopago':
         return ['ACCESS_TOKEN', 'PUBLIC_KEY'];
       case 'uala_bis':
-        return ['AUTH_TOKEN'];
+        return ['USERNAME', 'CLIENT_ID', 'CLIENT_SECRET_ID'];
       case 'payway':
         return ['API_KEY', 'SECRET_KEY'];
       case 'astropay':

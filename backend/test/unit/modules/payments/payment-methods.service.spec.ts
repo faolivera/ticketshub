@@ -302,5 +302,22 @@ describe('PaymentMethodsService', () => {
         service.getGatewayCredentials(mockCtx, methodWithoutPrefix),
       ).toThrow(BadRequestException);
     });
+
+    it('should load USERNAME, CLIENT_ID, CLIENT_SECRET_ID for uala_bis', () => {
+      const ualaBisMethod: PaymentMethodOption = {
+        ...mockPaymentMethod,
+        gatewayProvider: 'uala_bis',
+        gatewayConfigEnvPrefix: 'UALA_PROD',
+      };
+      configService.get.mockReturnValue({
+        UALA_PROD_USERNAME: 'myuser',
+        UALA_PROD_CLIENT_ID: 'myclientid',
+        UALA_PROD_CLIENT_SECRET_ID: 'mysecret',
+      });
+      const creds = service.getGatewayCredentials(mockCtx, ualaBisMethod);
+      expect(creds.username).toBe('myuser');
+      expect(creds.clientId).toBe('myclientid');
+      expect(creds.clientSecretId).toBe('mysecret');
+    });
   });
 });
