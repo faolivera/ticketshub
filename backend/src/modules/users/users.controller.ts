@@ -18,7 +18,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import type { Multer } from 'multer';
 import { UsersService } from './users.service';
 import { IdentityVerificationService } from '../identity-verification/identity-verification.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -289,7 +288,7 @@ export class UsersController {
   async uploadAvatar(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ApiResponse<UploadAvatarResponse>> {
     if (!file) {
       throw new BadRequestException('File is required');

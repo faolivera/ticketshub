@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
-import type { Multer } from 'multer';
 import { PaymentConfirmationsService } from './payment-confirmations.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -76,7 +75,7 @@ export class PaymentConfirmationsController {
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
     @Param('transactionId') transactionId: string,
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ApiResponse<UploadPaymentConfirmationResponse>> {
     if (!file) {
       throw new BadRequestException('No file uploaded');

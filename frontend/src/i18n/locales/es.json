@@ -1598,7 +1598,8 @@
     "saving": "Guardando...",
     "errorLoading": "Error al cargar",
     "resource": "datos",
-    "clearFilter": "Quitar filtro"
+    "clearFilter": "Quitar filtro",
+    "serverError": "Hubo un error. Intentá de nuevo más tarde."
   },
   "error": {
     "conflict": {

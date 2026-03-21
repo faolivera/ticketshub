@@ -16,7 +16,6 @@ import {
 import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import type { Multer } from 'multer';
 import { EventsService } from './events.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -327,7 +326,7 @@ export class EventsController {
     @User() user: AuthenticatedUserPublicInfo,
     @Param('id') eventId: string,
     @Param('type') bannerType: string,
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ApiResponse<UploadEventBannerResponse>> {
     if (bannerType !== 'square' && bannerType !== 'rectangle') {
       throw new BadRequestException(

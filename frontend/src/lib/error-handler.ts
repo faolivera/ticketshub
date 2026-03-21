@@ -112,6 +112,18 @@ export function getErrorMessage(error: ApiError): string {
 }
 
 /**
+ * Returns the error message only if it is safe to show to the user (4xx errors).
+ * For 5xx server errors, returns the provided fallback instead.
+ */
+export function getSafeErrorMessage(error: unknown, fallback: string): string {
+  const apiErr = error as ApiError | undefined;
+  if (!apiErr?.message || (apiErr.statusCode != null && apiErr.statusCode >= 500)) {
+    return fallback;
+  }
+  return apiErr.message;
+}
+
+/**
  * Checks if the error is a conflict error (optimistic locking)
  */
 export function isConflictError(error: ApiError): boolean {

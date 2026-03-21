@@ -1599,7 +1599,8 @@
     "saving": "Saving...",
     "errorLoading": "Failed to load",
     "resource": "data",
-    "clearFilter": "Clear filter"
+    "clearFilter": "Clear filter",
+    "serverError": "An error occurred. Please try again later."
   },
   "error": {
     "conflict": {

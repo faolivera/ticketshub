@@ -20,7 +20,6 @@ import {
 import type { Response } from 'express';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import type { Multer } from 'multer';
 import { AdminService } from './admin.service';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { User } from '../../common/decorators/user.decorator';
@@ -323,7 +322,7 @@ export class AdminController {
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
-    @UploadedFiles() receipts?: Multer.File[],
+    @UploadedFiles() receipts?: Express.Multer.File[],
   ): Promise<ApiResponse<AdminCompletePayoutResponse>> {
     const files =
       receipts
@@ -875,7 +874,7 @@ export class AdminController {
     @User() user: AuthenticatedUserPublicInfo,
     @Param('id') eventId: string,
     @Param('type') bannerType: string,
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ApiResponse<UploadEventBannerResponse>> {
     if (bannerType !== 'square' && bannerType !== 'rectangle' && bannerType !== 'og_image') {
       throw new BadRequestException(

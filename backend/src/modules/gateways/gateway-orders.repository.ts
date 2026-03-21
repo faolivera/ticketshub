@@ -65,7 +65,7 @@ export class GatewayOrdersRepository
     const client = this.getClient(ctx);
     const [row] = await client.$queryRaw<PrismaGatewayOrder[]>`
       SELECT * FROM gateway_orders
-      WHERE provider_order_id = ${providerOrderId}
+      WHERE "providerOrderId" = ${providerOrderId}
       FOR UPDATE
     `;
     return row ? this.map(row) : undefined;

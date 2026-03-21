@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, NotFoundException, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
@@ -28,6 +28,7 @@ export class GatewayPaymentsService {
 
   constructor(
     private readonly txManager: TransactionManager,
+    @Inject(forwardRef(() => TransactionsService))
     private readonly transactionsService: TransactionsService,
     private readonly paymentMethodsService: PaymentMethodsService,
     private readonly ualaBisProvider: UalaBisProvider,

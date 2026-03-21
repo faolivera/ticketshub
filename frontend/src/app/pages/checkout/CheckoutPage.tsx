@@ -10,7 +10,7 @@ import { useUser } from "@/app/contexts/UserContext";
 import {
   V, VLIGHT, V_HOVER, VL_BORDER,
   DARK, MUTED, HINT, BG, CARD, BORDER, BORD2,
-  AMBER, ABG, ABORD,
+  AMBER, AMBER_TEXT_DARK, ABG, ABORD,
   ERROR, ERROR_DARK,
   S, E, V_FOCUS_RING,
   SHADOW_CARD_SM,
@@ -20,6 +20,7 @@ import { ErrorMessage } from "@/app/components/ErrorMessage";
 import { PageMeta } from "@/app/components/PageMeta";
 import { BackButton } from "@/app/components/BackButton";
 import { isPricingSnapshotExpiredError, isListingUnavailableError } from "./helpers";
+import { getSafeErrorMessage } from "@/lib/error-handler";
 
 // Hooks
 import { useCheckoutData } from "./hooks/useCheckoutData";
@@ -260,6 +261,10 @@ export default function CheckoutPage() {
           paymentMethodId: data.selectedPaymentMethod?.id ?? "payway",
           offerId: acceptedOffer!.id,
         });
+        if (response.clientSecret) {
+          window.location.href = response.clientSecret;
+          return;
+        }
         navigate(`/transaction/${response.transaction.id}`, {
           state: { from: "/my-tickets" },
         });
@@ -281,6 +286,10 @@ export default function CheckoutPage() {
         paymentMethodId: data.selectedPaymentMethod?.id ?? "payway",
         pricingSnapshotId: pricingSnapshot!.id,
       });
+      if (response.clientSecret) {
+        window.location.href = response.clientSecret;
+        return;
+      }
       navigate(`/transaction/${response.transaction.id}`, {
         state: { from: "/my-tickets" },
       });
@@ -292,16 +301,7 @@ export default function CheckoutPage() {
       } else if (isListingUnavailableError(err)) {
         setIsUnavailable(true);
       } else {
-        const message = err?.message ?? String(err);
-        const isTermsRequired =
-          typeof message === "string" &&
-          (message.toLowerCase().includes("terms") ||
-            message.toLowerCase().includes("conditions"));
-        setPurchaseError(
-          isTermsRequired
-            ? t("buyTicket.acceptTermsRequired")
-            : message || t("buyTicket.purchaseFailed")
-        );
+        setPurchaseError(getSafeErrorMessage(err, t("common.serverError")));
       }
     } finally {
       setIsPurchasing(false);

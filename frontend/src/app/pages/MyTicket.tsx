@@ -27,6 +27,7 @@ import {
 } from '@/app/components/ui/select';
 import { transactionsService, paymentConfirmationsService, reviewsService, bffService, supportService } from '@/api/services';
 import type { ApiError } from '@/api/client';
+import { getSafeErrorMessage } from '@/lib/error-handler';
 import { SupportCategory } from '@/api/types/support';
 import { formatCurrency } from '@/lib/format-currency';
 import { formatDate, formatDateTime } from '@/lib/format-date';
@@ -184,7 +185,7 @@ export function MyTicket() {
       setTransaction(data.transaction);
     } catch (err) {
       console.error('Failed to upload transfer proof:', err);
-      setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+      setTransferProofError(getSafeErrorMessage(err, t('myTicket.proofUploadFailed')));
     } finally {
       setIsUploadingTransferProof(false);
     }
@@ -344,7 +345,7 @@ export function MyTicket() {
       setReviewData(updatedReviews);
     } catch (err) {
       console.error('Failed to confirm receipt:', err);
-      setReceiptProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+      setReceiptProofError(getSafeErrorMessage(err, t('myTicket.proofUploadFailed')));
     } finally {
       setIsConfirmingReceipt(false);
     }
@@ -454,10 +455,7 @@ export function MyTicket() {
       } else if (apiErr?.code === 'CLAIM_CONFIRM_RECEIPT_FIRST') {
         msg = t('myTicket.claimConfirmReceiptFirst');
       } else {
-        msg =
-          apiErr && typeof apiErr === 'object' && 'message' in apiErr
-            ? String(apiErr.message)
-            : t('myTicket.disputeSubmitFailed');
+        msg = getSafeErrorMessage(err, t('myTicket.disputeSubmitFailed'));
       }
       setDisputeError(msg);
     } finally {
@@ -998,7 +996,7 @@ export function MyTicket() {
                       setConfirmTransferModalStep(2);
                       setConfirmTransferPayloadTypeOtherText('');
                     } catch (err) {
-                      setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+                      setTransferProofError(getSafeErrorMessage(err, t('myTicket.proofUploadFailed')));
                     } finally {
                       setIsConfirmingTransfer(false);
                     }
@@ -1109,7 +1107,7 @@ export function MyTicket() {
                       if (transferProofPreview) URL.revokeObjectURL(transferProofPreview);
                       setTransferProofPreview(null);
                     } catch (err) {
-                      setTransferProofError((err as ApiError).message ?? t('myTicket.proofUploadFailed'));
+                      setTransferProofError(getSafeErrorMessage(err, t('myTicket.proofUploadFailed')));
                     } finally {
                       setIsUploadingTransferProof(false);
                     }

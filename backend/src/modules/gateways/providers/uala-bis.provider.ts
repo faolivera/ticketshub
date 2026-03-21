@@ -124,16 +124,16 @@ export class UalaBisProvider {
     const token = await this.getToken(ctx, paymentMethod);
     const { checkout } = this.getBaseUrls();
     const frontendBaseUrl =
-      this.configService.get<string>('app.frontendBaseUrl') ?? '';
+      this.configService.get<string>('app.publicUrl') ?? '';
     const backendBaseUrl =
-      this.configService.get<string>('app.baseUrl') ?? '';
+      this.configService.get<string>('app.backendUrl') ?? frontendBaseUrl;
 
     const body = {
       amount: this.centsToDecimalString(amount.amount),
       description,
-      callback_success: `${frontendBaseUrl}/transactions/${transactionId}`,
-      callback_fail: `${frontendBaseUrl}/transactions/${transactionId}`,
-      notification_url: `${backendBaseUrl}/api/payments/webhook/uala-bis`,
+      callback_success: `${frontendBaseUrl}/transaction/${transactionId}`,
+      callback_fail: `${frontendBaseUrl}/transaction/${transactionId}`,
+      notification_url: `${backendBaseUrl}/api/payment/webhook/uala-bis`,
       external_reference: transactionId,
     };
 
@@ -200,7 +200,7 @@ export class UalaBisProvider {
     const token = await this.getToken(ctx, paymentMethod);
     const { checkout } = this.getBaseUrls();
     const backendBaseUrl =
-      this.configService.get<string>('app.baseUrl') ?? '';
+      this.configService.get<string>('app.backendUrl') ?? '';
 
     const response = await fetch(
       `${checkout}/orders/${providerOrderId}/refund`,

@@ -15,7 +15,6 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
-import type { Multer } from 'multer';
 import { IdentityVerificationService } from './identity-verification.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -93,9 +92,9 @@ export class IdentityVerificationController {
     },
     @UploadedFiles()
     files: {
-      documentFront?: Multer.File[];
-      documentBack?: Multer.File[];
-      selfie?: Multer.File[];
+      documentFront?: Express.Multer.File[];
+      documentBack?: Express.Multer.File[];
+      selfie?: Express.Multer.File[];
     },
   ): Promise<ApiResponse<SubmitIdentityVerificationResponse>> {
     if (!files?.documentFront?.[0]) {

@@ -15,7 +15,6 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { Multer } from 'multer';
 import { TransactionsService } from './transactions.service';
 import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -127,7 +126,7 @@ export class TransactionsController {
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ApiResponse<UploadTransferProofResponse>> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -205,7 +204,7 @@ export class TransactionsController {
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
     @Param('id') id: string,
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ApiResponse<UploadReceiptProofResponse>> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
