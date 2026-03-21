@@ -14,7 +14,7 @@ import LandingNew from '@/app/pages/LandingNew';
 import EventDetail from '@/app/pages/Event';
 import { UserProfile } from '@/app/pages/UserProfile';
 import { SellerProfile } from '@/app/pages/SellerProfile';
-import Checkout from '@/app/pages/Checkout';
+import Checkout from '@/app/pages/checkout/CheckoutPage';
 import { SellerDashboardPage } from '@/app/pages/seller-dashboard/SellerDashboardPage';
 import { MyTicketsPage } from '@/app/pages/my-tickets/MyTicketsPage';
 import { SellerHistoryPage } from '@/app/pages/seller-dashboard/SellerHistoryPage';
