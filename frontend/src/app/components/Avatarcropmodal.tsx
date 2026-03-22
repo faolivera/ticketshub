@@ -15,6 +15,7 @@ async function getCroppedBlob(
 ): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = imageSrc;
@@ -164,7 +165,7 @@ export default function AvatarCropModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
-      <div className="w-full max-w-sm rounded-xl border border-border bg-card text-card-foreground shadow-xl">
+      <div className={`w-full ${aspect > 1 ? "max-w-2xl" : "max-w-sm"} rounded-xl border border-border bg-card text-card-foreground shadow-xl`}>
         {/* header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2 className="text-sm font-medium text-foreground">
@@ -186,7 +187,7 @@ export default function AvatarCropModal({
             <>
               <div
                 className="relative w-full overflow-hidden rounded-xl bg-muted"
-                style={{ aspectRatio: String(aspect) }}
+                style={{ aspectRatio: String(aspect), minHeight: 200 }}
               >
                 {/* @ts-expect-error react-easy-crop Cropper types are class-based and incompatible with React 18 JSX */}
                 <Cropper
