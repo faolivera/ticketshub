@@ -100,13 +100,12 @@ export class EventsController {
       HIGHLIGHTS_CACHE_KEY,
       HIGHLIGHTS_TTL_SECONDS,
       async () => {
-        const events = await this.eventsService.listEvents(
-          ctx,
-          { status: 'approved', highlighted: true, limit: 20 },
-          false,
-        );
+        const [events, cutoffDate] = await Promise.all([
+          this.eventsService.listEvents(ctx, { status: 'approved', highlighted: true, limit: 20 }, false),
+          this.eventsService.getTicketCutoffDate(ctx),
+        ]);
         return events.map((e) =>
-          this.eventsService.toPublicEventItem(e, { includeStatus: false }),
+          this.eventsService.toPublicEventItem(e, { includeStatus: false, cutoffDate }),
         );
       },
     );
@@ -135,9 +134,12 @@ export class EventsController {
       offset: offset ? parseInt(offset, 10) : undefined,
       highlighted: highlighted === 'true' ? true : undefined,
     };
-    const events = await this.eventsService.listEvents(ctx, query, false);
+    const [events, cutoffDate] = await Promise.all([
+      this.eventsService.listEvents(ctx, query, false),
+      this.eventsService.getTicketCutoffDate(ctx),
+    ]);
     const data: ListEventsPublicResponse = events.map((e) =>
-      this.eventsService.toPublicEventItem(e, { includeStatus: false }),
+      this.eventsService.toPublicEventItem(e, { includeStatus: false, cutoffDate }),
     );
     return { success: true, data };
   }
@@ -170,9 +172,13 @@ export class EventsController {
     @Context() ctx: Ctx,
     @Param('id') id: string,
   ): Promise<ApiResponse<PublicListEventItem>> {
-    const event = await this.eventsService.getEventById(ctx, id);
+    const [event, cutoffDate] = await Promise.all([
+      this.eventsService.getEventById(ctx, id),
+      this.eventsService.getTicketCutoffDate(ctx),
+    ]);
     const data = this.eventsService.toPublicEventItem(event, {
       includeStatus: true,
+      cutoffDate,
     });
     return { success: true, data };
   }

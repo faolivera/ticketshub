@@ -546,6 +546,12 @@ export default function EventDetail() {
 
             {/* Date selector pills */}
             <div style={{ marginBottom: 20 }}>
+              {EVENT.dates.length === 0 ? (
+                <p style={{ fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.65)", ...S }}>
+                  {t("eventTickets.noDatesAvailable")}
+                </p>
+              ) : (
+              <>
               <p style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, color: "rgba(255,255,255,0.45)", marginBottom: 9, ...S }}>
                 Seleccioná una fecha
               </p>
@@ -568,6 +574,8 @@ export default function EventDetail() {
                   </button>
                 ))}
               </div>
+              </>
+              )}
             </div>
 
             {/* Stock summary — replaces "Ver entradas" CTA */}

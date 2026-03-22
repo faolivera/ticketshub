@@ -21,6 +21,7 @@ describe('PlatformConfigService', () => {
     offerAcceptedExpirationMinutes: 1440,
     transactionChatPollIntervalSeconds: 15,
     transactionChatMaxMessages: 100,
+    minimumHoursToBuyTickets: 0,
     riskEngine: {
       buyer: {
         phoneRequiredEventHours: 72,

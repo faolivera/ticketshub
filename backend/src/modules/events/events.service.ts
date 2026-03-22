@@ -63,6 +63,7 @@ import { VerificationHelper } from '../../common/utils/verification-helper';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { EventScoringService } from '../event-scoring/event-scoring.service';
+import { PlatformConfigService } from '../config/config.service';
 
 @Injectable()
 export class EventsService {
@@ -85,6 +86,8 @@ export class EventsService {
     private readonly notificationsService: NotificationsService,
     @Inject(forwardRef(() => EventScoringService))
     private readonly eventScoringService: EventScoringService,
+    @Inject(PlatformConfigService)
+    private readonly platformConfigService: PlatformConfigService,
   ) {}
 
   /**
@@ -103,6 +106,36 @@ export class EventsService {
     const ms = d.getTime();
     const truncated = Math.floor(ms / 60000) * 60000;
     return new Date(truncated);
+  }
+
+  /**
+   * Compute the cutoff date for ticket purchasing.
+   * Listings whose event date falls before this cutoff are unavailable.
+   */
+  async getTicketCutoffDate(ctx: Ctx): Promise<Date> {
+    const config = await this.platformConfigService.getPlatformConfig(ctx);
+    const offsetMs = config.minimumHoursToBuyTickets * 60 * 60 * 1000;
+    return new Date(Date.now() + offsetMs);
+  }
+
+  /**
+   * Assert that an event date is still available for purchase (not past the cutoff).
+   * Throws BadRequestException if the date is expired or not found.
+   */
+  async assertEventDateNotExpired(
+    ctx: Ctx,
+    eventDateId: string,
+  ): Promise<void> {
+    const cutoff = await this.getTicketCutoffDate(ctx);
+    const eventDate = await this.eventsRepository.findEventDateById(
+      ctx,
+      eventDateId,
+    );
+    if (!eventDate || eventDate.date < cutoff) {
+      throw new BadRequestException(
+        'Event date is no longer available for purchase',
+      );
+    }
   }
 
   /**
@@ -305,6 +338,9 @@ export class EventsService {
     const offset = query.offset ?? 0;
     const limit = query.limit ?? 20;
     const isPublicListing = !includeAllStatuses && !query.search?.trim();
+    const cutoffDate = includeAllStatuses
+      ? undefined
+      : await this.getTicketCutoffDate(ctx);
     const result = await this.eventsRepository.listEventsPaginated(ctx, {
       approvedOnly: !includeAllStatuses,
       status: query.status as EventStatus | undefined,
@@ -314,6 +350,7 @@ export class EventsService {
       offset,
       orderBy: isPublicListing ? 'rankingScore' : 'createdAt',
       highlighted: query.highlighted,
+      cutoffDate,
     });
 
     const events = result.events;
@@ -369,10 +406,11 @@ export class EventsService {
         ctx,
         withImages.map((e) => e.id),
       );
-    return withImages.map((e) => {
+    const mappedEvents = withImages.map((e) => {
       const lp = minByEvent.get(e.id);
       return lp ? { ...e, lowestListingPrice: lp } : e;
     });
+    return mappedEvents;
   }
 
   /**
@@ -883,7 +921,7 @@ export class EventsService {
    */
   toPublicEventItem(
     event: EventWithDatesResponse,
-    options?: { includeStatus?: boolean },
+    options?: { includeStatus?: boolean; cutoffDate?: Date },
   ): PublicListEventItem {
     return {
       id: event.id,
@@ -903,7 +941,11 @@ export class EventsService {
       bannerUrls: event.bannerUrls,
       images: (event.images ?? []).map((img) => ({ src: img.src })),
       dates: (event.dates ?? [])
-        .filter((d) => new Date(d.date) >= new Date())
+        .filter(
+          (d) =>
+            options?.cutoffDate === undefined ||
+            new Date(d.date) >= options.cutoffDate!,
+        )
         .map((d) => ({
           id: d.id,
           date: d.date instanceof Date ? d.date.toISOString() : String(d.date),

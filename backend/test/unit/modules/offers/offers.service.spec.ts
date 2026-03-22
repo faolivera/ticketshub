@@ -9,6 +9,8 @@ import { UsersService } from '../../../../src/modules/users/users.service';
 import type { Offer } from '../../../../src/modules/offers/offers.domain';
 import type { TicketListingWithEvent } from '../../../../src/modules/tickets/tickets.domain';
 import type { User } from '../../../../src/modules/users/users.domain';
+import { BadRequestException } from '@nestjs/common';
+import { EventsService } from '../../../../src/modules/events/events.service';
 import type { Ctx } from '../../../../src/common/types/context';
 
 const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
@@ -18,6 +20,7 @@ describe('OffersService', () => {
   let offersRepository: jest.Mocked<IOffersRepository>;
   let ticketsService: jest.Mocked<TicketsService>;
   let usersService: jest.Mocked<UsersService>;
+  let eventsService: jest.Mocked<EventsService>;
 
   beforeEach(async () => {
     const mockOffersRepository = {
@@ -55,6 +58,10 @@ describe('OffersService', () => {
       findByIds: jest.fn(),
     };
 
+    const mockEventsService = {
+      assertEventDateNotExpired: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OffersService,
@@ -63,6 +70,7 @@ describe('OffersService', () => {
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: UsersService, useValue: mockUsersService },
+        { provide: EventsService, useValue: mockEventsService },
       ],
     }).compile();
 
@@ -70,6 +78,7 @@ describe('OffersService', () => {
     offersRepository = module.get(OFFERS_REPOSITORY);
     ticketsService = module.get(TicketsService);
     usersService = module.get(UsersService);
+    eventsService = module.get(EventsService);
   });
 
   describe('listMyOffers', () => {
@@ -269,6 +278,36 @@ describe('OffersService', () => {
       const result = await service.getOffersWithReceivedContextByIds(mockCtx, []);
       expect(result).toEqual([]);
       expect(offersRepository.findByIds).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createOffer', () => {
+    const mockListing = {
+      id: 'listing_1',
+      sellerId: 'seller_1',
+      eventDateId: 'edt_1',
+      status: 'Active',
+      bestOfferConfig: {
+        enabled: true,
+        minimumPrice: { amount: 1000, currency: 'ARS' },
+      },
+      pricePerTicket: { amount: 5000, currency: 'ARS' },
+      ticketUnits: [{ id: 'unit_1', status: 'Available', listingId: 'listing_1', version: 1 }],
+    };
+
+    it('should throw BadRequestException when event date is expired', async () => {
+      ticketsService.getListingById.mockResolvedValue(mockListing as any);
+      (eventsService.assertEventDateNotExpired as jest.Mock).mockRejectedValueOnce(
+        new BadRequestException('Event date is no longer available for purchase'),
+      );
+
+      await expect(
+        service.createOffer(mockCtx, 'buyer_1', {
+          listingId: 'listing_1',
+          offeredPrice: { amount: 2000, currency: 'ARS' },
+          tickets: { type: 'unnumbered', count: 1 },
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

@@ -1040,6 +1040,7 @@ model PlatformConfig {
   offerAcceptedExpirationMinutes       Int      @map("offer_accepted_expiration_minutes")
   transactionChatPollIntervalSeconds   Int      @map("transaction_chat_poll_interval_seconds")
   transactionChatMaxMessages           Int      @map("transaction_chat_max_messages")
+  minimumHoursToBuyTickets             Int      @default(0) @map("minimum_hours_to_buy_tickets")
   riskEngine                           Json?    @map("risk_engine")
   updatedAt                            DateTime @updatedAt
 

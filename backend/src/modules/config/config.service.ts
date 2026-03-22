@@ -87,6 +87,8 @@ export class PlatformConfigService {
         current.transactionChatPollIntervalSeconds,
       transactionChatMaxMessages:
         body.transactionChatMaxMessages ?? current.transactionChatMaxMessages,
+      minimumHoursToBuyTickets:
+        body.minimumHoursToBuyTickets ?? current.minimumHoursToBuyTickets,
       riskEngine: body.riskEngine
         ? {
             buyer: body.riskEngine.buyer
@@ -255,6 +257,7 @@ export class PlatformConfigService {
       transactionChatMaxMessages: this.nestConfigService.get<number>(
         'platform.transactionChatMaxMessages',
       )!,
+      minimumHoursToBuyTickets: 0,
       riskEngine,
       exchangeRates: {
         usdToArs: this.nestConfigService.get<number>(
@@ -328,6 +331,15 @@ export class PlatformConfigService {
     ) {
       throw new BadRequestException(
         `transactionChatMaxMessages must be between ${MIN_CHAT_MAX_MESSAGES} and ${MAX_CHAT_MAX_MESSAGES}`,
+      );
+    }
+    if (
+      !Number.isInteger(config.minimumHoursToBuyTickets) ||
+      config.minimumHoursToBuyTickets < 0 ||
+      config.minimumHoursToBuyTickets > 168
+    ) {
+      throw new BadRequestException(
+        'minimumHoursToBuyTickets must be an integer between 0 and 168',
       );
     }
     const re = config.riskEngine;

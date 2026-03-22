@@ -62,6 +62,7 @@ import {
 } from './transactions.domain';
 import { EventScoringService } from '../event-scoring/event-scoring.service';
 import { GatewayPaymentsService } from '../gateways/gateway-payments.service';
+import { EventsService } from '../events/events.service';
 
 @Injectable()
 export class TransactionsService {
@@ -98,6 +99,8 @@ export class TransactionsService {
     private readonly eventScoringService: EventScoringService,
     @Inject(forwardRef(() => GatewayPaymentsService))
     private readonly gatewayPaymentsService: GatewayPaymentsService,
+    @Inject(forwardRef(() => EventsService))
+    private readonly eventsService: EventsService,
   ) {}
 
   /**
@@ -196,6 +199,7 @@ export class TransactionsService {
     );
 
     const listing = await this.ticketsService.getListingById(ctx, listingId);
+    await this.eventsService.assertEventDateNotExpired(ctx, listing.eventDateId);
 
     if (listing.sellerId === buyerId) {
       throw new BadRequestException('Cannot buy your own listing');

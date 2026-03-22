@@ -21,6 +21,7 @@ import { RiskEngineService } from '../../../../src/modules/risk-engine/risk-engi
 import { TermsService } from '../../../../src/modules/terms/terms.service';
 import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import { GatewayPaymentsService } from '../../../../src/modules/gateways/gateway-payments.service';
+import { EventsService } from '../../../../src/modules/events/events.service';
 import { PRIVATE_STORAGE_PROVIDER } from '../../../../src/common/storage/file-storage-provider.interface';
 import { IdentityVerificationStatus } from '../../../../src/modules/users/users.domain';
 import {
@@ -43,6 +44,7 @@ describe('TransactionsService', () => {
   let termsService: jest.Mocked<TermsService>;
   let walletService: jest.Mocked<WalletService>;
   let txManager: jest.Mocked<TransactionManager>;
+  let eventsService: jest.Mocked<EventsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -204,6 +206,10 @@ describe('TransactionsService', () => {
       handleTransactionCancelled: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockEventsService = {
+      assertEventDateNotExpired: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -226,6 +232,7 @@ describe('TransactionsService', () => {
         { provide: PRIVATE_STORAGE_PROVIDER, useValue: mockPrivateStorage },
         { provide: EventScoringService, useValue: mockEventScoringService },
         { provide: GatewayPaymentsService, useValue: mockGatewayPaymentsService },
+        { provide: EventsService, useValue: mockEventsService },
       ],
     }).compile();
 
@@ -236,6 +243,7 @@ describe('TransactionsService', () => {
     termsService = module.get(TermsService);
     walletService = module.get(WalletService);
     txManager = module.get(TransactionManager);
+    eventsService = module.get(EventsService);
   });
 
   describe('cancelTransaction', () => {
@@ -1429,6 +1437,35 @@ describe('TransactionsService', () => {
         buyerId,
         'buyer',
       );
+    });
+
+    it('should throw BadRequestException when event date is expired', async () => {
+      const listingId = 'listing_1';
+      ticketsService.getListingById.mockResolvedValue({
+        id: listingId,
+        sellerId: 'seller_1',
+        eventDateId: 'edt_expired',
+        eventDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        pricePerTicket: { amount: 1000, currency: 'USD' },
+        ticketUnits: [],
+        seatingType: 'Unnumbered',
+        sellTogether: false,
+      } as never);
+      (eventsService.assertEventDateNotExpired as jest.Mock).mockRejectedValueOnce(
+        new BadRequestException('Event date is no longer available for purchase'),
+      );
+
+      await expect(
+        service.initiatePurchase(
+          mockCtx,
+          'buyer_1',
+          listingId,
+          ['unit_1'],
+          'payway',
+          'snap_1',
+          undefined,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

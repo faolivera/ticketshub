@@ -149,6 +149,7 @@ export class EventsRepository implements IEventsRepository {
       offset: number;
       orderBy?: 'createdAt' | 'rankingScore';
       highlighted?: boolean;
+      cutoffDate?: Date;
     },
   ): Promise<{ events: Event[]; total: number }> {
     this.logger.debug(_ctx, 'listEventsPaginated', {
@@ -158,11 +159,12 @@ export class EventsRepository implements IEventsRepository {
     });
     const where: Record<string, unknown> = {};
     if (opts.approvedOnly) {
+      const cutoff = opts.cutoffDate ?? new Date();
       where.status = 'approved';
       where.dates = {
         some: {
           status: 'approved',
-          date: { gte: new Date() },
+          date: { gte: cutoff },
         },
       };
     }

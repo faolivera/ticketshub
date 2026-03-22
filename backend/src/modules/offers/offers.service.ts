@@ -27,6 +27,7 @@ import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
 import { UsersService } from '../users/users.service';
 import { FireAndForget } from '../../common/utils/fire-and-forget';
+import { EventsService } from '../events/events.service';
 
 @Injectable()
 export class OffersService {
@@ -41,6 +42,8 @@ export class OffersService {
     private readonly platformConfigService: PlatformConfigService,
     private readonly notificationsService: NotificationsService,
     private readonly usersService: UsersService,
+    @Inject(forwardRef(() => EventsService))
+    private readonly eventsService: EventsService,
   ) {}
 
   private generateId(): string {
@@ -63,6 +66,7 @@ export class OffersService {
     if (!listing) {
       throw new NotFoundException('Listing not found');
     }
+    await this.eventsService.assertEventDateNotExpired(ctx, listing.eventDateId);
     if (listing.sellerId === userId) {
       throw new BadRequestException('Cannot make an offer on your own listing');
     }

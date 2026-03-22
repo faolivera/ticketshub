@@ -114,6 +114,9 @@ describe('BffService', () => {
     const mockEventsService = {
       getEventById: jest.fn(),
       getEventBySlug: jest.fn(),
+      toPublicEventItem: jest.fn().mockImplementation((event) => event),
+      getTicketCutoffDate: jest.fn().mockResolvedValue(new Date()),
+      assertEventDateNotExpired: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockUsersService = {

@@ -48,6 +48,7 @@ export class ConfigRepository
         transactionChatPollIntervalSeconds:
           row.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: row.transactionChatMaxMessages,
+        minimumHoursToBuyTickets: row.minimumHoursToBuyTickets,
       },
       riskEngine,
     );
@@ -333,6 +334,7 @@ export class ConfigRepository
         transactionChatPollIntervalSeconds:
           config.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: config.transactionChatMaxMessages,
+        minimumHoursToBuyTickets: config.minimumHoursToBuyTickets,
         riskEngine: riskEngineJson,
       },
       update: {
@@ -345,6 +347,7 @@ export class ConfigRepository
         transactionChatPollIntervalSeconds:
           config.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: config.transactionChatMaxMessages,
+        minimumHoursToBuyTickets: config.minimumHoursToBuyTickets,
         riskEngine: riskEngineJson,
       },
     });
@@ -360,6 +363,7 @@ export class ConfigRepository
         transactionChatPollIntervalSeconds:
           row.transactionChatPollIntervalSeconds,
         transactionChatMaxMessages: row.transactionChatMaxMessages,
+        minimumHoursToBuyTickets: row.minimumHoursToBuyTickets,
       },
       riskEngine,
     );

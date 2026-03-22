@@ -99,6 +99,8 @@ export interface PlatformConfig {
   transactionChatPollIntervalSeconds: number;
   /** Maximum number of chat messages per transaction. */
   transactionChatMaxMessages: number;
+  /** Minimum hours before event date that tickets can be purchased. 0 = no cutoff. */
+  minimumHoursToBuyTickets: number;
   /** Risk engine, seller limits, payout hold, and claim deadlines. Shown in its own section in admin. */
   riskEngine: RiskEngineConfig;
   /** Exchange rates for ConversionService (e.g. USD -> ARS). */

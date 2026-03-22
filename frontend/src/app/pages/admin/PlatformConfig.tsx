@@ -85,6 +85,7 @@ export function PlatformConfig() {
   const [ticketDidntWorkMinHours, setTicketDidntWorkMinHours] = useState('');
   const [ticketDidntWorkMaxHours, setTicketDidntWorkMaxHours] = useState('');
   const [usdToArs, setUsdToArs] = useState('');
+  const [minimumHoursToBuyTickets, setMinimumHoursToBuyTickets] = useState('');
 
   const fetchConfig = async () => {
     try {
@@ -149,6 +150,7 @@ export function PlatformConfig() {
       if (data.exchangeRates) {
         setUsdToArs(String(data.exchangeRates.usdToArs));
       }
+      setMinimumHoursToBuyTickets(String(data.minimumHoursToBuyTickets ?? 0));
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('admin.platformConfig.loadError')
@@ -258,6 +260,7 @@ export function PlatformConfig() {
         adminReviewTimeoutHours: Math.round(adminHours),
         transactionChatPollIntervalSeconds: Math.round(chatPoll),
         transactionChatMaxMessages: Math.round(chatMax),
+        minimumHoursToBuyTickets: Math.round(Number(minimumHoursToBuyTickets) || 0),
       };
       const cur = config?.riskEngine;
       payload.riskEngine = {
@@ -825,6 +828,21 @@ export function PlatformConfig() {
                 className="w-32"
                 value={usdToArs}
                 onChange={(e) => setUsdToArs(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="border-t pt-4">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">
+                {t('admin.platformConfig.minimumHoursToBuyTickets')}
+              </span>
+              <Input
+                type="number"
+                min={0}
+                max={168}
+                className="w-24"
+                value={minimumHoursToBuyTickets}
+                onChange={(e) => setMinimumHoursToBuyTickets(e.target.value)}
               />
             </div>
           </div>

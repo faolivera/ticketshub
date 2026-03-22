@@ -31,7 +31,7 @@ import { GatewaysModule } from '../gateways/gateways.module';
     ConfigModule,
     RiskEngineModule,
     TermsModule,
-    OffersModule,
+    forwardRef(() => OffersModule),
     forwardRef(() => TransactionChatModule),
     forwardRef(() => EventScoringModule),
     forwardRef(() => GatewaysModule),

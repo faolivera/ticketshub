@@ -16,6 +16,7 @@ import { EventBannerStorageService } from '../../../../src/modules/events/event-
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
+import { PlatformConfigService } from '../../../../src/modules/config/config.service';
 import {
   EventStatus,
   EventDateStatus,
@@ -45,6 +46,7 @@ describe('EventsService', () => {
   let ticketsService: jest.Mocked<TicketsService>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let bannerStorage: jest.Mocked<EventBannerStorageService>;
+  let platformConfigService: jest.Mocked<PlatformConfigService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -153,6 +155,10 @@ describe('EventsService', () => {
       emit: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockPlatformConfigService = {
+      getPlatformConfig: jest.fn().mockResolvedValue({ minimumHoursToBuyTickets: 0 }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventsService,
@@ -164,6 +170,7 @@ describe('EventsService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: EventScoringService, useValue: mockEventScoringService },
+        { provide: PlatformConfigService, useValue: mockPlatformConfigService },
       ],
     }).compile();
 
@@ -173,6 +180,7 @@ describe('EventsService', () => {
     ticketsService = module.get(TicketsService);
     transactionsService = module.get(TransactionsService);
     bannerStorage = module.get(EventBannerStorageService);
+    platformConfigService = module.get(PlatformConfigService);
   });
 
   describe('listEvents', () => {
@@ -1396,6 +1404,92 @@ describe('EventsService', () => {
       );
 
       expect(result.status).toBe(EventStatus.Rejected);
+    });
+  });
+
+  describe('assertEventDateNotExpired', () => {
+    it('should not throw when event date is in the future', async () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      eventsRepository.findEventDateById.mockResolvedValue({
+        id: 'edt_future',
+        eventId: 'evt_123',
+        date: futureDate,
+        status: EventDateStatus.Approved,
+        createdBy: 'user_1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await expect(
+        service.assertEventDateNotExpired(mockCtx, 'edt_future'),
+      ).resolves.toBeUndefined();
+    });
+
+    it('should throw BadRequestException when event date is in the past', async () => {
+      const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      eventsRepository.findEventDateById.mockResolvedValue({
+        id: 'edt_past',
+        eventId: 'evt_123',
+        date: pastDate,
+        status: EventDateStatus.Approved,
+        createdBy: 'user_1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await expect(
+        service.assertEventDateNotExpired(mockCtx, 'edt_past'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when event date is not found', async () => {
+      eventsRepository.findEventDateById.mockResolvedValue(null);
+
+      await expect(
+        service.assertEventDateNotExpired(mockCtx, 'edt_nonexistent'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw when date is within minimumHoursToBuyTickets buffer', async () => {
+      // Config says 2-hour buffer; event is 1 hour away → should be rejected
+      (platformConfigService.getPlatformConfig as jest.Mock).mockResolvedValueOnce({
+        minimumHoursToBuyTickets: 2,
+      });
+      const soonDate = new Date(Date.now() + 1 * 60 * 60 * 1000);
+      eventsRepository.findEventDateById.mockResolvedValue({
+        id: 'edt_soon',
+        eventId: 'evt_123',
+        date: soonDate,
+        status: EventDateStatus.Approved,
+        createdBy: 'user_1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await expect(
+        service.assertEventDateNotExpired(mockCtx, 'edt_soon'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should not throw when date is beyond the minimumHoursToBuyTickets buffer', async () => {
+      // Config says 2-hour buffer; event is 3 hours away → should pass
+      (platformConfigService.getPlatformConfig as jest.Mock).mockResolvedValueOnce({
+        minimumHoursToBuyTickets: 2,
+      });
+      const laterDate = new Date(Date.now() + 3 * 60 * 60 * 1000);
+      eventsRepository.findEventDateById.mockResolvedValue({
+        id: 'edt_later',
+        eventId: 'evt_123',
+        date: laterDate,
+        status: EventDateStatus.Approved,
+        createdBy: 'user_1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await expect(
+        service.assertEventDateNotExpired(mockCtx, 'edt_later'),
+      ).resolves.toBeUndefined();
     });
   });
 });

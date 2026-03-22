@@ -90,9 +90,13 @@ export class BffService {
    * Get event page data by slug: event details + enriched listings in a single call.
    */
   async getEventPageData(ctx: Ctx, eventSlug: string): Promise<EventPageData> {
-    const fullEvent = await this.eventsService.getEventBySlug(ctx, eventSlug);
+    const [fullEvent, cutoffDate] = await Promise.all([
+      this.eventsService.getEventBySlug(ctx, eventSlug),
+      this.eventsService.getTicketCutoffDate(ctx),
+    ]);
     const event = this.eventsService.toPublicEventItem(fullEvent, {
       includeStatus: true,
+      cutoffDate,
     });
     const listings = await this.getEventListings(ctx, fullEvent.id);
     return { event, listings };
@@ -243,6 +247,7 @@ export class BffService {
     buyerId?: string,
   ): Promise<BuyPageData> {
     const listing = await this.ticketsService.getListingById(ctx, ticketId);
+    await this.eventsService.assertEventDateNotExpired(ctx, listing.eventDateId);
     const [publicInfo, user, totalSales] = await Promise.all([
       this.usersService
         .getPublicUserInfoByIds(ctx, [listing.sellerId])

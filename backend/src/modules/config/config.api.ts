@@ -24,6 +24,7 @@ export interface GetPlatformConfigResponse {
   offerAcceptedExpirationMinutes: number;
   transactionChatPollIntervalSeconds: number;
   transactionChatMaxMessages: number;
+  minimumHoursToBuyTickets: number;
   riskEngine: RiskEngineConfig;
   exchangeRates: ExchangeRatesConfig;
 }
@@ -40,6 +41,7 @@ export interface UpdatePlatformConfigRequest {
   offerAcceptedExpirationMinutes?: number;
   transactionChatPollIntervalSeconds?: number;
   transactionChatMaxMessages?: number;
+  minimumHoursToBuyTickets?: number;
   riskEngine?: {
     buyer?: Partial<RiskEngineConfig['buyer']>;
     seller?: Partial<RiskEngineConfig['seller']> & {

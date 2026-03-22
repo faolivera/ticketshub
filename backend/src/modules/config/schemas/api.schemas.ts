@@ -71,6 +71,7 @@ export const GetPlatformConfigResponseSchema = z.object({
   offerAcceptedExpirationMinutes: z.number(),
   transactionChatPollIntervalSeconds: z.number(),
   transactionChatMaxMessages: z.number(),
+  minimumHoursToBuyTickets: z.number().int().min(0).max(168),
   riskEngine: RiskEngineConfigSchema,
   exchangeRates: ExchangeRatesConfigSchema,
 });
@@ -95,6 +96,7 @@ export const UpdatePlatformConfigRequestSchema = z.object({
     .optional(),
   transactionChatPollIntervalSeconds: z.number().min(5).max(120).optional(),
   transactionChatMaxMessages: z.number().min(10).max(500).optional(),
+  minimumHoursToBuyTickets: z.number().int().min(0).max(168).optional(),
   riskEngine: z
     .object({
       buyer: z
