@@ -294,13 +294,8 @@ export class ReviewsService {
     );
 
     const totalReviews = reviews.length;
-    const positiveReviews = reviews.filter(
-      (r) => r.rating === 'positive',
-    ).length;
-    const negativeReviews = reviews.filter(
-      (r) => r.rating === 'negative',
-    ).length;
-    const neutralReviews = reviews.filter((r) => r.rating === 'neutral').length;
+    const { positive: positiveReviews, negative: negativeReviews, neutral: neutralReviews } =
+      this.countRatings(reviews);
 
     const nonNeutralReviews = totalReviews - neutralReviews;
     const positivePercent =
@@ -369,15 +364,8 @@ export class ReviewsService {
     for (const sellerId of sellerIds) {
       const reviews = reviewsBySeller.get(sellerId) ?? [];
       const totalReviews = reviews.length;
-      const positiveReviews = reviews.filter(
-        (r) => r.rating === 'positive',
-      ).length;
-      const negativeReviews = reviews.filter(
-        (r) => r.rating === 'negative',
-      ).length;
-      const neutralReviews = reviews.filter(
-        (r) => r.rating === 'neutral',
-      ).length;
+      const { positive: positiveReviews, negative: negativeReviews, neutral: neutralReviews } =
+        this.countRatings(reviews);
 
       const nonNeutralReviews = totalReviews - neutralReviews;
       const positivePercent =
@@ -425,13 +413,8 @@ export class ReviewsService {
     );
 
     const totalReviews = reviews.length;
-    const positiveReviews = reviews.filter(
-      (r) => r.rating === 'positive',
-    ).length;
-    const negativeReviews = reviews.filter(
-      (r) => r.rating === 'negative',
-    ).length;
-    const neutralReviews = reviews.filter((r) => r.rating === 'neutral').length;
+    const { positive: positiveReviews, negative: negativeReviews, neutral: neutralReviews } =
+      this.countRatings(reviews);
 
     const nonNeutralReviews = totalReviews - neutralReviews;
     const positivePercent =
@@ -485,11 +468,8 @@ export class ReviewsService {
       'seller',
     );
 
-    const stats = {
-      positive: reviews.filter((r) => r.rating === 'positive').length,
-      neutral: reviews.filter((r) => r.rating === 'neutral').length,
-      negative: reviews.filter((r) => r.rating === 'negative').length,
-    };
+    const { positive, negative, neutral } = this.countRatings(reviews);
+    const stats = { positive, negative, neutral };
 
     if (reviews.length === 0) {
       return { stats, reviews: [] };
@@ -545,5 +525,21 @@ export class ReviewsService {
     });
 
     return { stats, reviews: enrichedReviews };
+  }
+
+  private countRatings(reviews: { rating: string }[]): {
+    positive: number;
+    negative: number;
+    neutral: number;
+  } {
+    return reviews.reduce(
+      (acc, r) => {
+        if (r.rating === 'positive') acc.positive++;
+        else if (r.rating === 'negative') acc.negative++;
+        else if (r.rating === 'neutral') acc.neutral++;
+        return acc;
+      },
+      { positive: 0, negative: 0, neutral: 0 },
+    );
   }
 }
