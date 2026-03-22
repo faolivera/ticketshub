@@ -2487,17 +2487,23 @@
       },
       "channels": {
         "title": "Channel Configuration",
-        "description": "Enable or disable channels per event type",
+        "description": "Enable or disable channels per event type and edit templates inline",
         "table": {
           "eventType": "Event Type",
+          "recipients": "Recipients",
           "inApp": "In-App",
           "email": "Email",
-          "priority": "Priority"
+          "priority": "Priority",
+          "templates": "Templates"
         }
       },
+      "recipients": {
+        "buyer": "Buyer",
+        "seller": "Seller",
+        "admin": "Admin",
+        "counterparty": "Other party"
+      },
       "templates": {
-        "title": "Notification Templates",
-        "description": "Edit notification content",
         "editTitle": "Edit Template",
         "editDescription": "Modify the notification title and body",
         "form": {
@@ -2507,40 +2513,66 @@
           "active": "Active",
           "variables": "Available variables"
         },
-        "noTemplates": "No templates configured",
-        "noActiveTemplates": "No active templates. Enable channels in the Channels tab to see editable templates here.",
-        "noTemplatesForChannel": "No active templates for this channel.",
-        "inAppSection": "In-App",
-        "emailSection": "Email",
         "errors": {
           "titleRequired": "Title is required",
           "bodyRequired": "Body is required"
         }
       },
+      "groups": {
+        "transactions": "Transaction Flow",
+        "disputes": "Disputes",
+        "offers": "Offers",
+        "identity": "Identity & Verification",
+        "events": "Events",
+        "social": "Social"
+      },
       "eventTypes": {
-        "PAYMENT_REQUIRED": "Payment Required",
         "BUYER_PAYMENT_SUBMITTED": "Payment Submitted",
-        "BUYER_PAYMENT_APPROVED": "Payment Approved",
+        "PAYMENT_RECEIVED": "Payment Received",
         "BUYER_PAYMENT_REJECTED": "Payment Rejected",
-        "SELLER_PAYMENT_RECEIVED": "Seller Payment Received",
-        "TICKET_TRANSFERRED": "Ticket Transferred",
+        "TICKET_SENT": "Ticket Sent",
+        "TICKET_RECEIVED": "Ticket Received",
         "TRANSACTION_COMPLETED": "Transaction Completed",
         "TRANSACTION_CANCELLED": "Transaction Cancelled",
-        "TRANSACTION_EXPIRED": "Transaction Expired",
         "DISPUTE_OPENED": "Dispute Opened",
         "DISPUTE_RESOLVED": "Dispute Resolved",
-        "IDENTITY_VERIFIED": "Identity Verified",
-        "IDENTITY_REJECTED": "Identity Rejected",
-        "EVENT_APPROVED": "Event Approved",
-        "EVENT_REJECTED": "Event Rejected",
-        "REVIEW_RECEIVED": "Review Received",
         "OFFER_RECEIVED": "Offer Received",
         "OFFER_ACCEPTED": "Offer Accepted",
         "OFFER_REJECTED": "Offer Rejected",
         "OFFER_CANCELLED": "Offer Cancelled",
+        "OFFER_EXPIRED": "Offer Expired",
         "IDENTITY_SUBMITTED": "Identity Submitted",
+        "IDENTITY_VERIFIED": "Identity Verified",
+        "IDENTITY_REJECTED": "Identity Rejected",
         "BANK_ACCOUNT_SUBMITTED": "Bank Account Submitted",
-        "SELLER_VERIFICATION_COMPLETE": "Seller Verification Complete"
+        "SELLER_VERIFICATION_COMPLETE": "Seller Verification Complete",
+        "EVENT_APPROVED": "Event Approved",
+        "EVENT_REJECTED": "Event Rejected",
+        "REVIEW_RECEIVED": "Review Received"
+      },
+      "eventTypeDescriptions": {
+        "BUYER_PAYMENT_SUBMITTED": "Buyer submits payment proof for admin review",
+        "PAYMENT_RECEIVED": "Payment confirmed — buyer and seller both notified",
+        "BUYER_PAYMENT_REJECTED": "Admin rejects the buyer's payment proof",
+        "TICKET_SENT": "Seller marks the ticket as sent to the buyer",
+        "TICKET_RECEIVED": "Buyer confirms receipt — seller notified",
+        "TRANSACTION_COMPLETED": "Funds released to seller, transaction closed",
+        "TRANSACTION_CANCELLED": "Transaction cancelled (failure, timeout, or rejection)",
+        "DISPUTE_OPENED": "A dispute is opened on a transaction",
+        "DISPUTE_RESOLVED": "Admin resolves a dispute",
+        "OFFER_RECEIVED": "Seller receives a new offer on a listing",
+        "OFFER_ACCEPTED": "Buyer's offer accepted by the seller",
+        "OFFER_REJECTED": "Seller rejects the buyer's offer",
+        "OFFER_CANCELLED": "Offer cancelled by buyer or seller",
+        "OFFER_EXPIRED": "Offer expired without action",
+        "IDENTITY_SUBMITTED": "Seller submits identity documents for review",
+        "IDENTITY_VERIFIED": "Admin approves identity verification",
+        "IDENTITY_REJECTED": "Admin rejects identity verification",
+        "BANK_ACCOUNT_SUBMITTED": "Seller submits bank account for verification",
+        "SELLER_VERIFICATION_COMPLETE": "Full verification complete — seller fully unlocked",
+        "EVENT_APPROVED": "Admin approves a new event listing",
+        "EVENT_REJECTED": "Admin rejects an event listing",
+        "REVIEW_RECEIVED": "User receives a review after a transaction"
       },
       "priority": {
         "LOW": "Low",

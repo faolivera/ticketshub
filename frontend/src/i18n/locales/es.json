@@ -2486,17 +2486,23 @@
       },
       "channels": {
         "title": "Configuración de Canales",
-        "description": "Habilita o deshabilita canales por tipo de evento",
+        "description": "Habilita o deshabilita canales por tipo de evento y editá las plantillas directamente",
         "table": {
           "eventType": "Tipo de Evento",
+          "recipients": "Destinatarios",
           "inApp": "In-App",
           "email": "Email",
-          "priority": "Prioridad"
+          "priority": "Prioridad",
+          "templates": "Plantillas"
         }
       },
+      "recipients": {
+        "buyer": "Comprador",
+        "seller": "Vendedor",
+        "admin": "Admin",
+        "counterparty": "Otra parte"
+      },
       "templates": {
-        "title": "Plantillas de Notificación",
-        "description": "Edita el contenido de las notificaciones",
         "editTitle": "Editar Plantilla",
         "editDescription": "Modifica el título y cuerpo de la notificación",
         "form": {
@@ -2506,40 +2512,66 @@
           "active": "Activa",
           "variables": "Variables disponibles"
         },
-        "noTemplates": "No hay plantillas configuradas",
-        "noActiveTemplates": "No hay plantillas activas. Activa canales en la pestaña Canales para ver plantillas editables aquí.",
-        "noTemplatesForChannel": "No hay plantillas activas para este canal.",
-        "inAppSection": "In-App",
-        "emailSection": "Email",
         "errors": {
           "titleRequired": "El título es requerido",
           "bodyRequired": "El cuerpo es requerido"
         }
       },
+      "groups": {
+        "transactions": "Flujo de Transacción",
+        "disputes": "Disputas",
+        "offers": "Ofertas",
+        "identity": "Identidad y Verificación",
+        "events": "Eventos",
+        "social": "Social"
+      },
       "eventTypes": {
-        "PAYMENT_REQUIRED": "Pago Requerido",
         "BUYER_PAYMENT_SUBMITTED": "Pago Enviado",
-        "BUYER_PAYMENT_APPROVED": "Pago Aprobado",
+        "PAYMENT_RECEIVED": "Pago Recibido",
         "BUYER_PAYMENT_REJECTED": "Pago Rechazado",
-        "SELLER_PAYMENT_RECEIVED": "Pago Recibido (Vendedor)",
-        "TICKET_TRANSFERRED": "Ticket Transferido",
+        "TICKET_SENT": "Ticket Enviado",
+        "TICKET_RECEIVED": "Ticket Recibido",
         "TRANSACTION_COMPLETED": "Transacción Completada",
         "TRANSACTION_CANCELLED": "Transacción Cancelada",
-        "TRANSACTION_EXPIRED": "Transacción Expirada",
         "DISPUTE_OPENED": "Disputa Abierta",
         "DISPUTE_RESOLVED": "Disputa Resuelta",
-        "IDENTITY_VERIFIED": "Identidad Verificada",
-        "IDENTITY_REJECTED": "Identidad Rechazada",
-        "EVENT_APPROVED": "Evento Aprobado",
-        "EVENT_REJECTED": "Evento Rechazado",
-        "REVIEW_RECEIVED": "Reseña Recibida",
         "OFFER_RECEIVED": "Oferta Recibida",
         "OFFER_ACCEPTED": "Oferta Aceptada",
         "OFFER_REJECTED": "Oferta Rechazada",
         "OFFER_CANCELLED": "Oferta Cancelada",
+        "OFFER_EXPIRED": "Oferta Expirada",
         "IDENTITY_SUBMITTED": "Identidad Enviada",
+        "IDENTITY_VERIFIED": "Identidad Verificada",
+        "IDENTITY_REJECTED": "Identidad Rechazada",
         "BANK_ACCOUNT_SUBMITTED": "Cuenta Bancaria Enviada",
-        "SELLER_VERIFICATION_COMPLETE": "Verificación de Vendedor Completa"
+        "SELLER_VERIFICATION_COMPLETE": "Verificación de Vendedor Completa",
+        "EVENT_APPROVED": "Evento Aprobado",
+        "EVENT_REJECTED": "Evento Rechazado",
+        "REVIEW_RECEIVED": "Reseña Recibida"
+      },
+      "eventTypeDescriptions": {
+        "BUYER_PAYMENT_SUBMITTED": "El comprador envía comprobante de pago para revisión",
+        "PAYMENT_RECEIVED": "Pago confirmado — comprador y vendedor son notificados",
+        "BUYER_PAYMENT_REJECTED": "El admin rechaza el comprobante del comprador",
+        "TICKET_SENT": "El vendedor marca el ticket como enviado al comprador",
+        "TICKET_RECEIVED": "El comprador confirma recepción — vendedor notificado",
+        "TRANSACTION_COMPLETED": "Fondos liberados al vendedor, transacción cerrada",
+        "TRANSACTION_CANCELLED": "Transacción cancelada (fallo, vencimiento o rechazo)",
+        "DISPUTE_OPENED": "Se abre una disputa sobre una transacción",
+        "DISPUTE_RESOLVED": "El admin resuelve una disputa",
+        "OFFER_RECEIVED": "El vendedor recibe una nueva oferta en un listado",
+        "OFFER_ACCEPTED": "Oferta del comprador aceptada por el vendedor",
+        "OFFER_REJECTED": "El vendedor rechaza la oferta del comprador",
+        "OFFER_CANCELLED": "Oferta cancelada por comprador o vendedor",
+        "OFFER_EXPIRED": "Oferta expirada sin acción",
+        "IDENTITY_SUBMITTED": "El vendedor envía documentos de identidad para revisión",
+        "IDENTITY_VERIFIED": "El admin aprueba la verificación de identidad",
+        "IDENTITY_REJECTED": "El admin rechaza la verificación de identidad",
+        "BANK_ACCOUNT_SUBMITTED": "El vendedor envía cuenta bancaria para verificación",
+        "SELLER_VERIFICATION_COMPLETE": "Verificación completa — vendedor totalmente habilitado",
+        "EVENT_APPROVED": "El admin aprueba un nuevo evento",
+        "EVENT_REJECTED": "El admin rechaza un evento",
+        "REVIEW_RECEIVED": "El usuario recibe una reseña tras una transacción"
       },
       "priority": {
         "LOW": "Baja",
