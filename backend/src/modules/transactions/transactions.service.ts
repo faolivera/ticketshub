@@ -43,6 +43,7 @@ import { OffersService } from '../offers/offers.service';
 import type { Offer, OfferTickets } from '../offers/offers.domain';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { TransactionManager } from '../../common/database';
+import { FireAndForget } from '../../common/utils/fire-and-forget';
 import { RiskEngineService } from '../risk-engine/risk-engine.service';
 import { TermsService } from '../terms/terms.service';
 import { TermsUserType } from '../terms/terms.domain';
@@ -557,24 +558,23 @@ export class TransactionsService {
     );
 
     // Emit notification (fire-and-forget, outside transaction)
-    const listing = await this.ticketsService.getListingById(
+    FireAndForget.run(
       ctx,
-      updated.listingId,
+      async (cleanCtx) => {
+        const listing = await this.ticketsService.getListingById(cleanCtx, updated.listingId);
+        const seller = await this.usersService.findById(cleanCtx, updated.sellerId);
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.BUYER_PAYMENT_APPROVED, {
+          transactionId: updated.id,
+          ticketId: listing.id,
+          eventName: listing.eventName,
+          buyerId: updated.buyerId,
+          sellerId: updated.sellerId,
+          sellerName: seller?.publicName || 'Seller',
+        });
+      },
+      this.logger,
+      'Failed to emit BUYER_PAYMENT_APPROVED',
     );
-    const seller = await this.usersService.findById(ctx, updated.sellerId);
-    // Notify both buyer and seller: buyer = "seller will transfer you the ticket", seller = "payment processed, transfer the ticket"
-    this.notificationsService
-      .emit(ctx, NotificationEventType.BUYER_PAYMENT_APPROVED, {
-        transactionId: updated.id,
-        ticketId: listing.id,
-        eventName: listing.eventName,
-        buyerId: updated.buyerId,
-        sellerId: updated.sellerId,
-        sellerName: seller?.publicName || 'Seller',
-      })
-      .catch((err) =>
-        this.logger.error(ctx, `Failed to emit BUYER_PAYMENT_APPROVED: ${err}`),
-      );
 
     this.logger.log(ctx, `Transaction ${transactionId} - payment received`);
     return updated;

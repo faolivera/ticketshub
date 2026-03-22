@@ -133,7 +133,7 @@ export class UalaBisProvider {
       description,
       callback_success: `${frontendBaseUrl}/transaction/${transactionId}`,
       callback_fail: `${frontendBaseUrl}/transaction/${transactionId}`,
-      notification_url: `${backendBaseUrl}/api/payment/webhook/uala-bis`,
+      notification_url: `${backendBaseUrl}/api/payments/webhook/uala-bis`,
       external_reference: transactionId,
     };
 

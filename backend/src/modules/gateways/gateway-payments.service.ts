@@ -124,9 +124,9 @@ export class GatewayPaymentsService {
       }
 
       if (providerStatus === 'approved') {
-        await this.handleApproved(ctx, txCtx, order, paymentMethod);
+        await this.handleApproved(txCtx, order, paymentMethod);
       } else if (providerStatus === 'rejected') {
-        await this.handleRejected(ctx, txCtx, order);
+        await this.handleRejected(txCtx, order);
       } else if (providerStatus === 'refunded' || providerStatus === 'cancelled') {
         await this.gatewayOrdersRepo.updateStatus(txCtx, order.id, providerStatus);
         this.logger.log(ctx, `Order ${providerOrderId} → ${providerStatus}`);
@@ -195,7 +195,6 @@ export class GatewayPaymentsService {
   }
 
   private async handleApproved(
-    ctx: Ctx,
     txCtx: TxCtx,
     order: GatewayOrderRecord,
     paymentMethod: PaymentMethodOption,
@@ -220,18 +219,14 @@ export class GatewayPaymentsService {
         updatedAt: new Date(),
       };
       await this.gatewayRefundsRepo.create(txCtx, refund);
-      this.logger.log(
-        ctx,
-        `Late approval for transaction ${order.transactionId} — refund queued`,
-      );
+      this.logger.log(txCtx, `Late approval for transaction ${order.transactionId} — refund queued`);
     } else {
       await this.transactionsService.handlePaymentReceived(txCtx, order.transactionId);
-      this.logger.log(ctx, `Order ${order.providerOrderId} approved — payment received`);
+      this.logger.log(txCtx, `Order ${order.providerOrderId} approved — payment received`);
     }
   }
 
   private async handleRejected(
-    ctx: Ctx,
     txCtx: TxCtx,
     order: GatewayOrderRecord,
   ): Promise<void> {
@@ -245,7 +240,7 @@ export class GatewayPaymentsService {
     if (transaction && cancellableStatuses.includes(transaction.status)) {
       await this.transactionsService.handlePaymentFailed(txCtx, order.transactionId);
     }
-    this.logger.log(ctx, `Order ${order.providerOrderId} rejected`);
+    this.logger.log(txCtx, `Order ${order.providerOrderId} rejected`);
   }
 
   private generateId(prefix: string): string {
