@@ -15,7 +15,6 @@ async function getCroppedBlob(
 ): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = imageSrc;
@@ -94,12 +93,26 @@ export default function AvatarCropModal({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) {
-      setImageSrc(externalImageSrc ?? null);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
+    if (!open) return;
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    if (!externalImageSrc) {
+      setImageSrc(null);
+      return;
     }
-  }, [open, externalImageSrc]);
+    // Fetch once as blob → same-origin blob URL avoids canvas CORS taint
+    let blobUrl: string | null = null;
+    fetch(externalImageSrc)
+      .then((res) => res.blob())
+      .then((blob) => {
+        blobUrl = URL.createObjectURL(blob);
+        setImageSrc(blobUrl);
+      })
+      .catch(() => setSaveError(t("userProfile.avatarCrop.saveError")));
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [open, externalImageSrc, t]);
 
   // ── file input ──────────────────────────────────────────────────────────────
   const onFileChange = useCallback(
