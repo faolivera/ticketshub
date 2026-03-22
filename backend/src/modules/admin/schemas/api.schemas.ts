@@ -240,6 +240,7 @@ export const AdminAllEventItemSchema = z.object({
   availableTicketsCount: z.number(),
   hasRectangleBanner: z.boolean(),
   highlight: z.boolean(),
+  squareBannerUrl: z.string().optional(),
 });
 
 export const AdminAllEventsResponseSchema = z.object({

@@ -126,6 +126,7 @@ describe('AdminService', () => {
       addEventSection: jest.fn(),
       uploadBanner: jest.fn().mockResolvedValue({}),
       getExistingImportSourceKeys: jest.fn().mockResolvedValue(new Set<string>()),
+      getBannerPublicUrl: jest.fn().mockReturnValue('https://cdn.example.com/square.jpg'),
     };
 
     const mockTicketsRepository = {
@@ -695,7 +696,7 @@ describe('AdminService', () => {
 
       expect(eventsService.getAllEventsPaginated).toHaveBeenCalledWith(
         mockCtx,
-        { page: 1, limit: 20, search: undefined },
+        { page: 1, limit: 20, search: undefined, highlighted: undefined },
       );
     });
 
@@ -709,8 +710,65 @@ describe('AdminService', () => {
 
       expect(eventsService.getAllEventsPaginated).toHaveBeenCalledWith(
         mockCtx,
-        { page: 1, limit: 20, search: 'concert' },
+        { page: 1, limit: 20, search: 'concert', highlighted: undefined },
       );
+    });
+
+    it('should pass highlighted=true filter to events service', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [],
+        total: 0,
+      });
+
+      await service.getAllEvents(mockCtx, { highlighted: true });
+
+      expect(eventsService.getAllEventsPaginated).toHaveBeenCalledWith(
+        mockCtx,
+        { page: 1, limit: 20, search: undefined, highlighted: true },
+      );
+    });
+
+    it('should expose squareBannerUrl when event has square banner', async () => {
+      const mockBanner = {
+        type: 'square' as const,
+        filename: 'square.jpg',
+        originalFilename: 'square.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 1000,
+        width: 800,
+        height: 800,
+        uploadedBy: 'user_123',
+        uploadedAt: new Date(),
+      };
+      const eventWithBanners: Event = {
+        ...mockEvent,
+        banners: { square: mockBanner, rectangle: { ...mockBanner, type: 'rectangle' as const, filename: 'rectangle.jpg' } },
+      };
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [eventWithBanners],
+        total: 1,
+      });
+      usersService.findByIds.mockResolvedValue([mockUser]);
+      ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
+
+      const result = await service.getAllEvents(mockCtx, {});
+
+      expect(result.events[0].squareBannerUrl).toBe('https://cdn.example.com/square.jpg');
+      expect(result.events[0].hasRectangleBanner).toBe(true);
+    });
+
+    it('should not expose squareBannerUrl when event has no square banner', async () => {
+      eventsService.getAllEventsPaginated.mockResolvedValue({
+        events: [mockEvent],
+        total: 1,
+      });
+      usersService.findByIds.mockResolvedValue([mockUser]);
+      ticketsService.getListingStatsByEventIds.mockResolvedValue(new Map());
+
+      const result = await service.getAllEvents(mockCtx, {});
+
+      expect(result.events[0].squareBannerUrl).toBeUndefined();
+      expect(result.events[0].hasRectangleBanner).toBe(false);
     });
 
     it('should return empty result when no events found', async () => {

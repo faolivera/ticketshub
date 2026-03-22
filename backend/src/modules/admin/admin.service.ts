@@ -661,12 +661,12 @@ export class AdminService {
 
     this.logger.log(
       ctx,
-      `Getting all events - page: ${page}, limit: ${limit}, search: ${query.search || 'none'}`,
+      `Getting all events - page: ${page}, limit: ${limit}, search: ${query.search || 'none'}, highlighted: ${query.highlighted ?? false}`,
     );
 
     const { events, total } = await this.eventsService.getAllEventsPaginated(
       ctx,
-      { page, limit, search: query.search },
+      { page, limit, search: query.search, highlighted: query.highlighted },
     );
 
     if (events.length === 0) {
@@ -696,12 +696,12 @@ export class AdminService {
         availableTicketsCount: 0,
       };
       const banners = event.banners;
-      const hasRectangleBanner = Boolean(
-        banners &&
-          typeof banners === 'object' &&
-          (banners as Record<string, unknown>).rectangle != null,
-      );
+      const eventBanners = event.banners;
+      const hasRectangleBanner = eventBanners?.rectangle != null;
       const highlight = event.highlight === true;
+      const squareBannerUrl = eventBanners?.square
+        ? this.eventsService.getBannerPublicUrl(event.id, eventBanners.square.filename)
+        : undefined;
 
       return {
         id: event.id,
@@ -716,6 +716,7 @@ export class AdminService {
         availableTicketsCount: stats.availableTicketsCount,
         hasRectangleBanner,
         highlight,
+        squareBannerUrl,
       };
     });
 

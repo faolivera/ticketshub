@@ -251,6 +251,7 @@ export interface AdminAllEventsQuery {
   page?: number;
   limit?: number;
   search?: string;
+  highlighted?: boolean;
 }
 
 /**
@@ -276,6 +277,8 @@ export interface AdminAllEventItem {
   hasRectangleBanner: boolean;
   /** Admin-set: featured event. */
   highlight: boolean;
+  /** URL of the event's square banner image, if it exists. Used for crop-to-rectangle flow. */
+  squareBannerUrl?: string;
 }
 
 /**

@@ -1189,9 +1189,18 @@ export class EventsService {
    */
   async getAllEventsPaginated(
     ctx: Ctx,
-    options: { page: number; limit: number; search?: string },
+    options: { page: number; limit: number; search?: string; highlighted?: boolean },
   ): Promise<{ events: Event[]; total: number }> {
     return await this.eventsRepository.getAllEventsPaginated(ctx, options);
+  }
+
+  /**
+   * Get the public URL for a banner stored under a given event.
+   * Used by admin views that need to expose banner URLs without direct
+   * access to EventBannerStorageService.
+   */
+  getBannerPublicUrl(eventId: string, filename: string): string {
+    return this.bannerStorage.getPublicUrl(eventId, filename);
   }
 
   /**
