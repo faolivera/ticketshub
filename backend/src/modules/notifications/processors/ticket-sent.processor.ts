@@ -2,23 +2,22 @@ import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import type { NotificationRecipient } from '../notifications.domain';
 import { NotificationEventType } from '../notifications.domain';
-import type { TicketTransferredContext } from '../notifications.contexts';
+import type { TicketSentContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
 @Injectable()
-export class TicketTransferredProcessor implements EventProcessor<TicketTransferredContext> {
-  readonly eventType = NotificationEventType.TICKET_TRANSFERRED;
+export class TicketSentProcessor implements EventProcessor<TicketSentContext> {
+  readonly eventType = NotificationEventType.TICKET_SENT;
 
   async getRecipients(
-    ctx: Ctx,
-    context: TicketTransferredContext,
+    _ctx: Ctx,
+    context: TicketSentContext,
   ): Promise<NotificationRecipient[]> {
-    // Only the buyer receives this notification
     return [{ userId: context.buyerId }];
   }
 
   getTemplateVariables(
-    context: TicketTransferredContext,
+    context: TicketSentContext,
     recipientId: string,
   ): Record<string, string> {
     void recipientId;

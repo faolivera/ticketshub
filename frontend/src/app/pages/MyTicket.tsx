@@ -239,6 +239,20 @@ export function MyTicket() {
     };
   }, [socket, transactionId, user?.id]);
 
+  // Refresh transaction data when a notification pointing to this transaction is received
+  useEffect(() => {
+    if (!socket || !transactionId) return;
+    const handler = (payload: { actionUrl?: string }) => {
+      if (payload.actionUrl?.includes(transactionId)) {
+        refetch();
+      }
+    };
+    socket.on(SOCKET_EVENTS.NOTIFICATION, handler);
+    return () => {
+      socket.off(SOCKET_EVENTS.NOTIFICATION, handler);
+    };
+  }, [socket, transactionId, refetch]);
+
   const openPreviewModal = async () => {
     if (!transactionId) return;
     setShowPreviewModal(true);

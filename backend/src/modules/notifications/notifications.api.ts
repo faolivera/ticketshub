@@ -202,12 +202,13 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'rejectionReason',
     'transactionId',
   ],
-  [NotificationEventType.TICKET_TRANSFERRED]: [
+  [NotificationEventType.TICKET_SENT]: [
     'eventName',
     'eventDate',
     'venue',
     'transactionId',
   ],
+  [NotificationEventType.TICKET_RECEIVED]: ['eventName', 'transactionId'],
   [NotificationEventType.TRANSACTION_COMPLETED]: [
     'eventName',
     'amount',

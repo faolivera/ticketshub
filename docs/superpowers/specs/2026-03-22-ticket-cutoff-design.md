@@ -41,7 +41,7 @@ With `minimumHoursToBuyTickets = 0` (default), this is equivalent to the current
 
 ### Single Source of Truth
 
-All cutoff computation lives in one private method in `EventsService`:
+All cutoff computation lives in one private method in `EventsService`. `EventsService` must inject `PlatformConfigService` (already injected in other services like `TransactionsService`), and `EventsModule` must import `ConfigModule`:
 
 ```typescript
 // backend/src/modules/events/events.service.ts
@@ -68,6 +68,19 @@ async assertEventDateNotExpired(ctx: Ctx, eventDateId: string): Promise<void> {
 }
 ```
 
+`findEventDateById` returns `EventDate | undefined` (consistent with the existing repository return type convention in this codebase).
+
+### Cutoff flow for public event list
+
+`listEvents` in `EventsService` returns `EventWithDatesResponse[]` (raw domain objects, not public DTOs). The public controller endpoint calls `toPublicEventItem` on each result. The cutoff must be fetched once in `listEvents`, passed to `listEventsPaginated` (for the DB-level filter), and also returned alongside the events list so the controller can pass it to `toPublicEventItem`. Implementation options:
+
+- Return `{ events, cutoffDate }` from `listEvents`, or
+- Have the controller call `eventsService.getTicketCutoffDate` separately.
+
+Preferred: `listEvents` returns `{ events: EventWithDatesResponse[]; cutoffDate: Date }` so the cutoff travels with the data and callers don't need to call a separate method.
+
+**Note:** `getEventBySlug` (used by `getEventPageData` in BFF) is intentionally not modified — it returns all dates in `EventWithDatesResponse`. Cutoff filtering for the event detail page happens only at the `toPublicEventItem` mapping step.
+
 ---
 
 ## Changes by Layer
@@ -82,12 +95,30 @@ Add to `PlatformConfig` model:
 minimumHoursToBuyTickets Int @default(0) @map("minimum_hours_to_buy_tickets")
 ```
 
-### 2. EventsRepository
+### 2. Config Layer
+
+**Files:** `config.domain.ts`, `config.repository.ts`, `config.service.ts`
+
+- `config.domain.ts` (`PlatformConfig` interface): add `minimumHoursToBuyTickets: number`.
+- `config.repository.ts` (`findPlatformConfig` read mapping): map the new DB column to the domain field.
+- `config.service.ts`:
+  - `updatePlatformConfig` merge block: add `minimumHoursToBuyTickets: body.minimumHoursToBuyTickets ?? current.minimumHoursToBuyTickets`.
+  - `validatePlatformConfig`: add validation — integer, min 0, max 168 (one week).
+  - `getDefaultsFromHocon` (or equivalent seeding path): return `0` as the default.
+
+### 3. EventsModule + EventsService DI
+
+**Files:** `events.module.ts`, `events.service.ts`
+
+- `events.module.ts`: add `ConfigModule` to the `imports` array.
+- `events.service.ts` constructor: inject `PlatformConfigService` (same pattern as `TransactionsService`).
+
+### 4. EventsRepository
 
 **File:** `backend/src/modules/events/events.repository.ts`
 
 - `listEventsPaginated` accepts a `cutoffDate: Date` parameter (replacing internal `new Date()`).
-- New method: `findEventDateById(ctx, eventDateId): Promise<EventDate | null>` — used by `assertEventDateNotExpired`.
+- New method: `findEventDateById(ctx, eventDateId): Promise<EventDate | undefined>` — used by `assertEventDateNotExpired`.
 
 The DB-level date filter in `listEventsPaginated`:
 ```typescript
@@ -98,42 +129,49 @@ where.dates = {
 
 This ensures events with no future dates are excluded at the DB level, so pagination counts remain accurate.
 
-### 3. EventsService
+### 5. EventsService
 
 **File:** `backend/src/modules/events/events.service.ts`
 
 - Add private `getTicketCutoffDate(ctx): Promise<Date>`.
 - Add public `assertEventDateNotExpired(ctx, eventDateId): Promise<void>`.
-- `listEvents`: fetch cutoff once, pass to `listEventsPaginated` and to `toPublicEventItem`.
-- `getHighlightedEvents`: same — fetch cutoff once, pass down.
-- `toPublicEventItem`: accepts `cutoffDate?: Date` in options (default `new Date()` for backward compatibility with admin callers that don't need cutoff filtering).
+- `listEvents`: fetch cutoff once, pass to `listEventsPaginated`. Return `{ events, cutoffDate }` so callers can pass it to `toPublicEventItem`.
+- `getHighlightedEvents` (or its cache-fill callback): fetch cutoff once, pass to `listEventsPaginated` and to `toPublicEventItem` for each event.
+- `toPublicEventItem`: accepts `cutoffDate?: Date` in options (default `new Date()` for backward compatibility with admin callers that should see all dates).
 
-### 4. BffService
+### 6. EventsController
+
+**File:** `backend/src/modules/events/events.controller.ts`
+
+- Public list endpoint: destructure `{ events, cutoffDate }` from `listEvents`, pass `cutoffDate` to each `toPublicEventItem` call.
+- Admin-facing endpoints that call `toPublicEventItem`: do not pass `cutoffDate` (let it default to `new Date()` or omit — admins see all dates).
+
+### 7. BffService
 
 **File:** `backend/src/modules/bff/bff.service.ts`
 
-- `getEventPageData`: fetch cutoff, pass to `toPublicEventItem`.
+- `getEventPageData`: call `getTicketCutoffDate` (via `eventsService`), pass result to `toPublicEventItem` as `cutoffDate`.
 - `getBuyPageData`: call `eventsService.assertEventDateNotExpired(ctx, listing.eventDateId)` after fetching the listing.
 
-### 5. OffersService
+### 8. OffersService
 
 **File:** `backend/src/modules/offers/offers.service.ts`
 
 - `createOffer`: call `eventsService.assertEventDateNotExpired(ctx, listing.eventDateId)` after the existing listing validations.
 
-### 6. TransactionsService
+### 9. TransactionsService
 
 **File:** `backend/src/modules/transactions/transactions.service.ts`
 
 - `initiatePurchase`: call `eventsService.assertEventDateNotExpired(ctx, listing.eventDateId)` after fetching the listing.
 
-### 7. Admin Config — Backend
+### 10. Admin Config — Backend
 
 **Files:** `admin.api.ts`, admin Zod schema, `admin.service.ts`
 
 - Add `minimumHoursToBuyTickets: number` to the `UpdatePlatformConfigRequest` schema and handler. No new endpoint needed — uses existing `PATCH /api/admin/platform-config`.
 
-### 8. Frontend — Event Detail Page
+### 11. Frontend — Event Detail Page
 
 **File:** `frontend/src/app/pages/Event.tsx`
 
@@ -142,17 +180,21 @@ When `event.dates` is empty after BFF response:
 - Hide the buy / make-offer buttons.
 - Show a message using `t('event.noDatesAvailable')` in the appropriate location in the layout.
 
-### 9. Frontend — Admin Platform Config
+### 12. Frontend — Admin Platform Config
 
 **File:** `frontend/src/app/pages/admin/PlatformConfig.tsx` (or equivalent)
 
 - Add a numeric input (integer, min 0) for `minimumHoursToBuyTickets` with label from i18n key `admin.platformConfig.minimumHoursToBuyTickets`.
 
-### 10. Frontend — Buy Page
+### 13. Frontend — Buy Page
 
 No changes needed. The existing `isListingUnavailableError` helper and `UnavailableOverlay` component already handle `BadRequestException` responses. The error message from `assertEventDateNotExpired` (`"Event date is no longer available for purchase"`) matches the `msg.includes("not available")` check.
 
-### 11. i18n
+### 14. Frontend — LandingNew.tsx
+
+No additional changes needed. A frontend date filter (`new Date(d.date) >= now`) was already added to `eventToCardShape` in a prior fix and is intentionally retained as a belt-and-suspenders guard against stale cached data. It does not affect pagination (it filters dates within an event card, not events from the result set).
+
+### 15. i18n
 
 **Files:** `frontend/src/i18n/locales/en.json`, `es.json`
 
@@ -176,5 +218,6 @@ The following service methods require new unit test coverage:
 ## Migration Notes
 
 - Default value of `minimumHoursToBuyTickets = 0` means zero behavior change on deploy.
-- `toPublicEventItem` keeps its `cutoffDate` optional — callers that don't pass it (e.g., admin endpoints) continue to use `new Date()`, which is correct since admins need to see all dates.
-- The two date filters added earlier in this session (`LandingNew.tsx` and `toPublicEventItem`) will be superseded by this implementation. The `toPublicEventItem` change will be replaced by the parameterized `cutoffDate`. The `LandingNew.tsx` frontend filter remains as a belt-and-suspenders guard against stale cached data.
+- `toPublicEventItem` keeps its `cutoffDate` optional — admin-facing callers omit it and see all dates, which is correct.
+- `getEventBySlug` is not modified — it returns all dates in `EventWithDatesResponse`. Cutoff filtering for the event detail page happens only at the mapping layer (`toPublicEventItem`).
+- All `new Date()` hardcodings used as event cutoffs are replaced by the parameterized `cutoffDate`. The only remaining `new Date()` usages are for timestamps (createdAt, updatedAt, expiresAt) which are unrelated.

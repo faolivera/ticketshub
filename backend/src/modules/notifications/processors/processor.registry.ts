@@ -4,7 +4,8 @@ import type { EventProcessor } from './processor.interface';
 import { BuyerPaymentSubmittedProcessor } from './buyer-payment-submitted.processor';
 import { PaymentReceivedProcessor } from './payment-received.processor';
 import { BuyerPaymentRejectedProcessor } from './buyer-payment-rejected.processor';
-import { TicketTransferredProcessor } from './ticket-transferred.processor';
+import { TicketSentProcessor } from './ticket-sent.processor';
+import { TicketReceivedProcessor } from './ticket-received.processor';
 import { TransactionCompletedProcessor } from './transaction-completed.processor';
 import { TransactionCancelledProcessor } from './transaction-cancelled.processor';
 import { DisputeOpenedProcessor } from './dispute-opened.processor';
@@ -34,7 +35,8 @@ export class ProcessorRegistry {
     private readonly buyerPaymentSubmitted: BuyerPaymentSubmittedProcessor,
     private readonly paymentReceived: PaymentReceivedProcessor,
     private readonly buyerPaymentRejected: BuyerPaymentRejectedProcessor,
-    private readonly ticketTransferred: TicketTransferredProcessor,
+    private readonly ticketSent: TicketSentProcessor,
+    private readonly ticketReceived: TicketReceivedProcessor,
     private readonly transactionCompleted: TransactionCompletedProcessor,
     private readonly transactionCancelled: TransactionCancelledProcessor,
     private readonly disputeOpened: DisputeOpenedProcessor,
@@ -62,7 +64,8 @@ export class ProcessorRegistry {
       this.buyerPaymentSubmitted,
       this.paymentReceived,
       this.buyerPaymentRejected,
-      this.ticketTransferred,
+      this.ticketSent,
+      this.ticketReceived,
       this.transactionCompleted,
       this.transactionCancelled,
       this.disputeOpened,

@@ -712,7 +712,7 @@ export class TransactionsService {
           listing.eventDate instanceof Date
             ? listing.eventDate.toISOString()
             : listing.eventDate;
-        await this.notificationsService.emit(cleanCtx, NotificationEventType.TICKET_TRANSFERRED, {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.TICKET_SENT, {
           transactionId: updated.id,
           ticketId: listing.id,
           eventName: listing.eventName,
@@ -723,7 +723,7 @@ export class TransactionsService {
         });
       },
       this.logger,
-      'Failed to emit TICKET_TRANSFERRED',
+      'Failed to emit TICKET_SENT',
     );
 
     return updated;
@@ -796,6 +796,23 @@ export class TransactionsService {
       ctx,
       `Transaction ${transactionId} - buyer confirmed receipt, now DepositHold`,
     );
+
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        const listing = await this.ticketsService.getListingById(cleanCtx, updated.listingId);
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.TICKET_RECEIVED, {
+          transactionId: updated.id,
+          ticketId: listing.id,
+          eventName: listing.eventName,
+          buyerId: updated.buyerId,
+          sellerId: updated.sellerId,
+        });
+      },
+      this.logger,
+      'Failed to emit TICKET_RECEIVED',
+    );
+
     return updated;
   }
 

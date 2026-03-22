@@ -117,10 +117,17 @@ export class NotificationsSeeder implements OnModuleInit {
         updatedAt: new Date(),
       },
       {
-        eventType: NotificationEventType.TICKET_TRANSFERRED,
+        eventType: NotificationEventType.TICKET_SENT,
         inAppEnabled: true,
         emailEnabled: true,
         priority: NotificationPriority.HIGH,
+        updatedAt: new Date(),
+      },
+      {
+        eventType: NotificationEventType.TICKET_RECEIVED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
         updatedAt: new Date(),
       },
       {
@@ -351,23 +358,43 @@ export class NotificationsSeeder implements OnModuleInit {
       },
 
 
-      // TICKET_TRANSFERRED (actionUrl points to the transaction with the transferred ticket)
+      // TICKET_SENT (buyer notified when seller transfers the ticket)
       {
-        eventType: NotificationEventType.TICKET_TRANSFERRED,
+        eventType: NotificationEventType.TICKET_SENT,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
-        titleTemplate: '¡Entrada transferida!',
+        titleTemplate: '¡Entrada enviada!',
         bodyTemplate:
-          'Has recibido tu entrada para "{{eventName}}". Por favor confirma que la recibiste para liberar el pago al vendedor.',
+          'El vendedor te envió tu entrada para "{{eventName}}". Revisá que todo esté en orden y confirmá la recepción.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
-        eventType: NotificationEventType.TICKET_TRANSFERRED,
+        eventType: NotificationEventType.TICKET_SENT,
         channel: NotificationChannel.EMAIL,
         locale: 'es',
-        titleTemplate: '¡Tu entrada para "{{eventName}}" está listo!',
+        titleTemplate: '¡Tu entrada para "{{eventName}}" está en camino!',
         bodyTemplate:
-          '¡Felicidades! Has recibido tu entrada para "{{eventName}}" el {{eventDate}} en {{venue}}. Por favor confirma que la recibiste en la app para liberar el pago al vendedor.',
+          '¡El vendedor te envió tu entrada para "{{eventName}}" el {{eventDate}} en {{venue}}. Revisá que todo esté en orden y confirmá la recepción en la app para liberar el pago al vendedor.',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
+      },
+
+      // TICKET_RECEIVED (seller notified when buyer confirms receipt)
+      {
+        eventType: NotificationEventType.TICKET_RECEIVED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Recepción confirmada',
+        bodyTemplate:
+          'El comprador confirmó haber recibido las entradas de "{{eventName}}". Los fondos serán liberados pronto.',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
+      },
+      {
+        eventType: NotificationEventType.TICKET_RECEIVED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'El comprador confirmó recibir las entradas de "{{eventName}}"',
+        bodyTemplate:
+          'El comprador confirmó haber recibido las entradas de "{{eventName}}". Los fondos serán liberados a tu cuenta en breve.',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 

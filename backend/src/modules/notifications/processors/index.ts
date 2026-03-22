@@ -4,7 +4,8 @@ export { ProcessorRegistry } from './processor.registry';
 import { BuyerPaymentSubmittedProcessor } from './buyer-payment-submitted.processor';
 import { PaymentReceivedProcessor } from './payment-received.processor';
 import { BuyerPaymentRejectedProcessor } from './buyer-payment-rejected.processor';
-import { TicketTransferredProcessor } from './ticket-transferred.processor';
+import { TicketSentProcessor } from './ticket-sent.processor';
+import { TicketReceivedProcessor } from './ticket-received.processor';
 import { TransactionCompletedProcessor } from './transaction-completed.processor';
 import { TransactionCancelledProcessor } from './transaction-cancelled.processor';
 import { DisputeOpenedProcessor } from './dispute-opened.processor';
@@ -27,7 +28,8 @@ export {
   BuyerPaymentSubmittedProcessor,
   PaymentReceivedProcessor,
   BuyerPaymentRejectedProcessor,
-  TicketTransferredProcessor,
+  TicketSentProcessor,
+  TicketReceivedProcessor,
   TransactionCompletedProcessor,
   TransactionCancelledProcessor,
   DisputeOpenedProcessor,
@@ -47,14 +49,12 @@ export {
   OfferExpiredProcessor,
 };
 
-/**
- * All processor classes for module registration
- */
 export const ALL_PROCESSORS = [
   BuyerPaymentSubmittedProcessor,
   PaymentReceivedProcessor,
   BuyerPaymentRejectedProcessor,
-  TicketTransferredProcessor,
+  TicketSentProcessor,
+  TicketReceivedProcessor,
   TransactionCompletedProcessor,
   TransactionCancelledProcessor,
   DisputeOpenedProcessor,
