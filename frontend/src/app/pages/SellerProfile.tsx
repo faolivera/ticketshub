@@ -497,7 +497,11 @@ export function SellerProfile() {
                       >
                         {review.buyerName}
                       </p>
-                      <span style={{ fontSize: 11, color: MUTED }}>{review.reviewDate}</span>
+                      <span style={{ fontSize: 11, color: MUTED }}>{new Date(review.reviewDate).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}</span>
                     </div>
                     <span
                       style={{
@@ -580,7 +584,13 @@ export function SellerProfile() {
                       }}
                     >
                       <Calendar style={{ width: 11, height: 11, flexShrink: 0 }} />
-                      {review.eventDate}
+                      {review.eventDate
+                        ? new Date(review.eventDate).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : 'Unknown'}
                     </span>
                   </div>
                 </article>

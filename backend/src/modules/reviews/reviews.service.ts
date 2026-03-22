@@ -510,17 +510,9 @@ export class ReviewsService {
         eventName: listing?.eventName ?? 'Unknown Event',
         ticketType: listing?.type ?? 'Unknown',
         eventDate: listing?.eventDate
-          ? new Date(listing.eventDate).toLocaleDateString('en-US', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            })
-          : 'Unknown',
-        reviewDate: new Date(review.createdAt).toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        }),
+          ? new Date(listing.eventDate).toISOString()
+          : null,
+        reviewDate: new Date(review.createdAt).toISOString(),
       };
     });
 

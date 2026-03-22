@@ -9,7 +9,7 @@ export interface SellerReview {
   comment: string;
   eventName: string;
   ticketType: string;
-  eventDate: string;
+  eventDate: string | null;
   reviewDate: string;
 }
 

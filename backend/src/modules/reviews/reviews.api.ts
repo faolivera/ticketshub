@@ -38,7 +38,8 @@ export interface SellerProfileReview {
   comment: string;
   eventName: string;
   ticketType: string;
-  eventDate: string;
+  // ISO 8601 — format on the client side
+  eventDate: string | null;
   reviewDate: string;
 }
 
