@@ -190,7 +190,8 @@
     "fromSellersCount_other": "from {{count}} sellers",
     "allDates": "All dates",
     "selectSeats": "Select seats",
-    "buyerGuarantee": "Buyer Protection Guarantee"
+    "buyerGuarantee": "Buyer Protection Guarantee",
+    "noDatesAvailable": "No dates available for this event"
   },
   "buyTicket": {
     "backToEvent": "Back to event",
@@ -602,7 +603,8 @@
     "tickets": "Tickets sold",
     "fromBuyers": "From buyers",
     "reviewBreakdown": "Review breakdown",
-    "noDataYet": "No data yet"
+    "noDataYet": "No data yet",
+    "unknownEvent": "Unknown"
   },
   "howItWorks": {
     "title": "How It Works",
@@ -1973,6 +1975,7 @@
       "maximumClaimHours": "Maximum hours to open claim",
       "exchangeRatesSectionTitle": "Exchange rates",
       "usdToArs": "1 USD = (ARS)",
+      "minimumHoursToBuyTickets": "Minimum hours before event to buy tickets",
       "save": "Save changes",
       "saving": "Saving...",
       "saved": "Settings saved successfully.",

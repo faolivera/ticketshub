@@ -129,6 +129,39 @@ export function formatDateTimeShort(value: DateInput): string {
 }
 
 /**
+ * Long date for review timestamps (e.g. "March 31, 2026").
+ * Uses current UI language. For createdAt/reviewDate fields where exact
+ * local-time rendering is acceptable.
+ */
+export function formatReviewDate(value: DateInput): string {
+  const date = toDate(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  const locale = getDateLocale();
+  return date.toLocaleDateString(locale, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/**
+ * Long date for event dates stored as UTC midnight.
+ * Parses only the date portion to avoid UTC-to-local timezone shift
+ * (e.g. UTC midnight would become the previous day for UTC-3 users).
+ */
+export function formatEventDate(isoString: string): string {
+  const datePart = typeof isoString === 'string' ? isoString.split('T')[0] : isoString;
+  const date = new Date(`${datePart}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return isoString;
+  const locale = getDateLocale();
+  return date.toLocaleDateString(locale, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/**
  * Medium date + short time for admin tables. Time always 24h.
  */
 export function formatDateTimeMedium(value: DateInput): string {

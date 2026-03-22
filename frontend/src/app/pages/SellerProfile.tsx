@@ -18,7 +18,7 @@ import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { Separator } from '../components/ui/separator';
 import type { SellerProfile as SellerProfileData } from '../../api/types';
-import { formatMonthYear } from '@/lib/format-date';
+import { formatMonthYear, formatReviewDate, formatEventDate } from '@/lib/format-date';
 import { PageMeta } from '@/app/components/PageMeta';
 import {
   V,
@@ -497,11 +497,7 @@ export function SellerProfile() {
                       >
                         {review.buyerName}
                       </p>
-                      <span style={{ fontSize: 11, color: MUTED }}>{new Date(review.reviewDate).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}</span>
+                      <span style={{ fontSize: 11, color: MUTED }}>{formatReviewDate(review.reviewDate)}</span>
                     </div>
                     <span
                       style={{
@@ -585,12 +581,8 @@ export function SellerProfile() {
                     >
                       <Calendar style={{ width: 11, height: 11, flexShrink: 0 }} />
                       {review.eventDate
-                        ? new Date(review.eventDate).toLocaleDateString('en-US', {
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })
-                        : 'Unknown'}
+                        ? formatEventDate(review.eventDate)
+                        : t('sellerProfile.unknownEvent')}
                     </span>
                   </div>
                 </article>

@@ -190,7 +190,8 @@
     "fromSellersCount_other": "de {{count}} vendedores",
     "allDates": "Todas las fechas",
     "selectSeats": "Elegir asientos",
-    "buyerGuarantee": "Garantía de Protección al Comprador"
+    "buyerGuarantee": "Garantía de Protección al Comprador",
+    "noDatesAvailable": "No hay fechas disponibles para este evento"
   },
   "buyTicket": {
     "backToEvent": "Volver al evento",
@@ -601,7 +602,8 @@
     "tickets": "Entradas vendidas",
     "fromBuyers": "De compradores",
     "reviewBreakdown": "Desglose de reseñas",
-    "noDataYet": "Sin datos aún"
+    "noDataYet": "Sin datos aún",
+    "unknownEvent": "Desconocido"
   },
   "howItWorks": {
     "title": "Cómo Funciona",
@@ -1972,6 +1974,7 @@
       "maximumClaimHours": "Máximo horas para abrir reclamo",
       "exchangeRatesSectionTitle": "Tipos de cambio",
       "usdToArs": "1 USD = (ARS)",
+      "minimumHoursToBuyTickets": "Mínimo de horas antes del evento para comprar entradas",
       "save": "Guardar cambios",
       "saving": "Guardando...",
       "saved": "Configuración guardada correctamente.",
