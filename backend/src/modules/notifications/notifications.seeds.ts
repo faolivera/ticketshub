@@ -96,13 +96,6 @@ export class NotificationsSeeder implements OnModuleInit {
 
     const configs: Omit<NotificationChannelConfig, 'id'>[] = [
       {
-        eventType: NotificationEventType.PAYMENT_REQUIRED,
-        inAppEnabled: true,
-        emailEnabled: true,
-        priority: NotificationPriority.HIGH,
-        updatedAt: new Date(),
-      },
-      {
         eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         inAppEnabled: true,
         emailEnabled: true,
@@ -110,21 +103,14 @@ export class NotificationsSeeder implements OnModuleInit {
         updatedAt: new Date(),
       },
       {
-        eventType: NotificationEventType.BUYER_PAYMENT_APPROVED,
-        inAppEnabled: true,
-        emailEnabled: true,
-        priority: NotificationPriority.NORMAL,
-        updatedAt: new Date(),
-      },
-      {
-        eventType: NotificationEventType.BUYER_PAYMENT_REJECTED,
+        eventType: NotificationEventType.PAYMENT_RECEIVED,
         inAppEnabled: true,
         emailEnabled: true,
         priority: NotificationPriority.HIGH,
         updatedAt: new Date(),
       },
       {
-        eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED,
+        eventType: NotificationEventType.BUYER_PAYMENT_REJECTED,
         inAppEnabled: true,
         emailEnabled: true,
         priority: NotificationPriority.HIGH,
@@ -146,13 +132,6 @@ export class NotificationsSeeder implements OnModuleInit {
       },
       {
         eventType: NotificationEventType.TRANSACTION_CANCELLED,
-        inAppEnabled: true,
-        emailEnabled: true,
-        priority: NotificationPriority.HIGH,
-        updatedAt: new Date(),
-      },
-      {
-        eventType: NotificationEventType.TRANSACTION_EXPIRED,
         inAppEnabled: true,
         emailEnabled: true,
         priority: NotificationPriority.HIGH,
@@ -256,6 +235,13 @@ export class NotificationsSeeder implements OnModuleInit {
         priority: NotificationPriority.NORMAL,
         updatedAt: new Date(),
       },
+      {
+        eventType: NotificationEventType.OFFER_EXPIRED,
+        inAppEnabled: true,
+        emailEnabled: true,
+        priority: NotificationPriority.NORMAL,
+        updatedAt: new Date(),
+      },
     ];
 
     let seededCount = 0;
@@ -307,26 +293,6 @@ export class NotificationsSeeder implements OnModuleInit {
     'id' | 'isActive' | 'createdAt' | 'updatedAt'
   >[] {
     return [
-      // PAYMENT_REQUIRED
-      {
-        eventType: NotificationEventType.PAYMENT_REQUIRED,
-        channel: NotificationChannel.IN_APP,
-        locale: 'es',
-        titleTemplate: 'Pago pendiente',
-        bodyTemplate:
-          'Tienes un pago pendiente de {{amountFormatted}} para "{{eventName}}"',
-        actionUrlTemplate: '/transaction/{{transactionId}}',
-      },
-      {
-        eventType: NotificationEventType.PAYMENT_REQUIRED,
-        channel: NotificationChannel.EMAIL,
-        locale: 'es',
-        titleTemplate: 'Pago pendiente para "{{eventName}}"',
-        bodyTemplate:
-          'Hola, tienes un pago pendiente de {{amountFormatted}} para el ticket de "{{eventName}}" de {{sellerName}}. El pago expira el {{expiresAt}}. Por favor realiza el pago para completar tu compra.',
-        actionUrlTemplate: '/transaction/{{transactionId}}',
-      },
-
       // BUYER_PAYMENT_SUBMITTED (notify admins; link to admin transactions)
       {
         eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
@@ -347,9 +313,9 @@ export class NotificationsSeeder implements OnModuleInit {
         actionUrlTemplate: '/admin/transactions',
       },
 
-      // BUYER_PAYMENT_APPROVED (buyer and seller get different copy via processor variables)
+      // PAYMENT_RECEIVED (buyer and seller get role-specific copy via processor variables)
       {
-        eventType: NotificationEventType.BUYER_PAYMENT_APPROVED,
+        eventType: NotificationEventType.PAYMENT_RECEIVED,
         channel: NotificationChannel.IN_APP,
         locale: 'es',
         titleTemplate: '{{title}}',
@@ -357,7 +323,7 @@ export class NotificationsSeeder implements OnModuleInit {
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
       {
-        eventType: NotificationEventType.BUYER_PAYMENT_APPROVED,
+        eventType: NotificationEventType.PAYMENT_RECEIVED,
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         titleTemplate: '{{title}}',
@@ -384,25 +350,6 @@ export class NotificationsSeeder implements OnModuleInit {
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
-      // SELLER_PAYMENT_RECEIVED
-      {
-        eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED,
-        channel: NotificationChannel.IN_APP,
-        locale: 'es',
-        titleTemplate: 'Pago disponible',
-        bodyTemplate:
-          'El pago de {{amountFormatted}} por "{{eventName}}" ya está disponible. Transferí la entrada al comprador.',
-        actionUrlTemplate: '/transaction/{{transactionId}}',
-      },
-      {
-        eventType: NotificationEventType.SELLER_PAYMENT_RECEIVED,
-        channel: NotificationChannel.EMAIL,
-        locale: 'es',
-        titleTemplate: 'Pago recibido - Transferí la entrada',
-        bodyTemplate:
-          'El pago de {{amountFormatted}} por tu entrada de "{{eventName}}" ya está disponible en escrow. Por favor transferí la entrada al comprador para completar la venta.',
-        actionUrlTemplate: '/transaction/{{transactionId}}',
-      },
 
       // TICKET_TRANSFERRED (actionUrl points to the transaction with the transferred ticket)
       {
@@ -463,24 +410,6 @@ export class NotificationsSeeder implements OnModuleInit {
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
 
-      // TRANSACTION_EXPIRED
-      {
-        eventType: NotificationEventType.TRANSACTION_EXPIRED,
-        channel: NotificationChannel.IN_APP,
-        locale: 'es',
-        titleTemplate: 'Transacción expirada',
-        bodyTemplate: 'La transacción de "{{eventName}}" ha expirado',
-        actionUrlTemplate: '/transaction/{{transactionId}}',
-      },
-      {
-        eventType: NotificationEventType.TRANSACTION_EXPIRED,
-        channel: NotificationChannel.EMAIL,
-        locale: 'es',
-        titleTemplate: 'Transacción expirada - "{{eventName}}"',
-        bodyTemplate:
-          'La transacción de "{{eventName}}" ha expirado debido a que no se completó el pago a tiempo.',
-        actionUrlTemplate: '/transaction/{{transactionId}}',
-      },
 
       // DISPUTE_OPENED
       {
@@ -666,6 +595,15 @@ export class NotificationsSeeder implements OnModuleInit {
           '{{reviewerName}} te dejó una reseña de {{rating}} estrellas',
         actionUrlTemplate: '/transaction/{{transactionId}}',
       },
+      {
+        eventType: NotificationEventType.REVIEW_RECEIVED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Recibiste una nueva reseña',
+        bodyTemplate:
+          '{{reviewerName}} te dejó una reseña de {{rating}} estrellas.',
+        actionUrlTemplate: '/transaction/{{transactionId}}',
+      },
 
       // OFFER_RECEIVED (seller notified when someone makes an offer on their listing)
       {
@@ -744,6 +682,26 @@ export class NotificationsSeeder implements OnModuleInit {
         titleTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible',
         bodyTemplate:
           'Tu oferta para "{{eventName}}" fue cancelada. {{reason}}',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
+      },
+
+      // OFFER_EXPIRED — buyer (both reasons) + seller (buyer_no_purchase only, handled by processor)
+      {
+        eventType: NotificationEventType.OFFER_EXPIRED,
+        channel: NotificationChannel.IN_APP,
+        locale: 'es',
+        titleTemplate: 'Oferta expirada',
+        bodyTemplate:
+          'Tu oferta para "{{eventName}}" expiró sin concretarse.',
+        actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
+      },
+      {
+        eventType: NotificationEventType.OFFER_EXPIRED,
+        channel: NotificationChannel.EMAIL,
+        locale: 'es',
+        titleTemplate: 'Tu oferta para "{{eventName}}" expiró',
+        bodyTemplate:
+          'Tu oferta para "{{eventName}}" expiró sin concretarse. Podés hacer una nueva oferta o comprar al precio publicado.',
         actionUrlTemplate: '/my-tickets?tab=offers&offerId={{offerId}}',
       },
     ];

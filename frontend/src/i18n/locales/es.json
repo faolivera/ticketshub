@@ -1751,7 +1751,10 @@
       "uploadError": "Error al subir imagen.",
       "uploading": "Subiendo...",
       "updating": "Actualizando...",
-      "search": "Buscar"
+      "search": "Buscar",
+      "dates": "Fechas",
+      "venue": "Venue",
+      "city": "Ciudad"
     },
     "supportTickets": {
       "title": "Tickets de soporte",

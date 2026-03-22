@@ -40,6 +40,7 @@ import {
   type FileStorageProvider,
 } from '../../common/storage/file-storage-provider.interface';
 import { NotificationsService } from '../notifications/notifications.service';
+import { FireAndForget } from '../../common/utils/fire-and-forget';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { OAuth2Client } from 'google-auth-library';
 
@@ -932,15 +933,18 @@ export class UsersService {
     };
     await this.usersRepository.updateBankAccount(ctx, userId, bankAccount);
 
-    this.notificationsService
-      .emit(ctx, NotificationEventType.BANK_ACCOUNT_SUBMITTED, {
-        userId,
-        userName:
-          `${user.firstName} ${user.lastName}`.trim() || user.publicName,
-      })
-      .catch((err) =>
-        this.logger.error(ctx, 'Failed to emit BANK_ACCOUNT_SUBMITTED:', err),
-      );
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.BANK_ACCOUNT_SUBMITTED, {
+          userId,
+          userName:
+            `${user.firstName} ${user.lastName}`.trim() || user.publicName,
+        });
+      },
+      this.logger,
+      'Failed to emit BANK_ACCOUNT_SUBMITTED',
+    );
 
     const updated = await this.getAuthenticatedUserInfo(ctx, userId);
     if (!updated) {
@@ -983,18 +987,17 @@ export class UsersService {
       const userName = user.identityVerification
         ? `${user.identityVerification.legalFirstName} ${user.identityVerification.legalLastName}`.trim()
         : `${user.firstName} ${user.lastName}`.trim() || user.publicName;
-      this.notificationsService
-        .emit(ctx, NotificationEventType.SELLER_VERIFICATION_COMPLETE, {
-          userId,
-          userName,
-        })
-        .catch((err) =>
-          this.logger.error(
-            ctx,
-            'Failed to emit SELLER_VERIFICATION_COMPLETE:',
-            err,
-          ),
-        );
+      FireAndForget.run(
+        ctx,
+        async (cleanCtx) => {
+          await this.notificationsService.emit(cleanCtx, NotificationEventType.SELLER_VERIFICATION_COMPLETE, {
+            userId,
+            userName,
+          });
+        },
+        this.logger,
+        'Failed to emit SELLER_VERIFICATION_COMPLETE',
+      );
     }
 
     const updated = await this.getAuthenticatedUserInfo(ctx, userId);

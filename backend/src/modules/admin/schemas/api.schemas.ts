@@ -241,6 +241,9 @@ export const AdminAllEventItemSchema = z.object({
   hasRectangleBanner: z.boolean(),
   highlight: z.boolean(),
   squareBannerUrl: z.string().optional(),
+  venue: z.string(),
+  city: z.string(),
+  dates: z.array(z.coerce.date()),
 });
 
 export const AdminAllEventsResponseSchema = z.object({

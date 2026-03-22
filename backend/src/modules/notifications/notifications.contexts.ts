@@ -5,22 +5,12 @@
  */
 
 import { NotificationEventType } from './notifications.domain';
+import { CancellationReason } from '../transactions/transactions.domain';
+import type { OfferExpiredReason } from '../offers/offers.domain';
 
 // ============================================================================
 // TRANSACTION CONTEXTS
 // ============================================================================
-
-export interface PaymentRequiredContext {
-  transactionId: string;
-  ticketId: string;
-  eventName: string;
-  amount: number;
-  currency: string;
-  expiresAt: string;
-  buyerId: string;
-  sellerId: string;
-  sellerName: string;
-}
 
 export interface BuyerPaymentSubmittedContext {
   transactionId: string;
@@ -33,13 +23,16 @@ export interface BuyerPaymentSubmittedContext {
   sellerId: string;
 }
 
-export interface BuyerPaymentApprovedContext {
+export interface PaymentReceivedContext {
   transactionId: string;
   ticketId: string;
   eventName: string;
   buyerId: string;
   sellerId: string;
   sellerName: string;
+  amount: number;
+  currency: string;
+  ticketCount: number;
 }
 
 export interface BuyerPaymentRejectedContext {
@@ -50,16 +43,6 @@ export interface BuyerPaymentRejectedContext {
   sellerId: string;
   sellerName: string;
   rejectionReason?: string;
-}
-
-export interface SellerPaymentReceivedContext {
-  transactionId: string;
-  ticketId: string;
-  eventName: string;
-  amount: number;
-  currency: string;
-  sellerId: string;
-  buyerId: string;
 }
 
 export interface TicketTransferredContext {
@@ -82,6 +65,8 @@ export interface TransactionCompletedContext {
   sellerId: string;
 }
 
+export { CancellationReason };
+
 export interface TransactionCancelledContext {
   transactionId: string;
   ticketId: string;
@@ -89,15 +74,7 @@ export interface TransactionCancelledContext {
   buyerId: string;
   sellerId: string;
   cancelledBy: 'buyer' | 'seller' | 'system';
-  reason?: string;
-}
-
-export interface TransactionExpiredContext {
-  transactionId: string;
-  ticketId: string;
-  eventName: string;
-  buyerId: string;
-  sellerId: string;
+  cancellationReason: CancellationReason;
 }
 
 // ============================================================================
@@ -227,6 +204,15 @@ export interface OfferCancelledContext {
   reason?: string;
 }
 
+export interface OfferExpiredContext {
+  offerId: string;
+  listingId: string;
+  eventName: string;
+  buyerId: string;
+  sellerId: string;
+  expiredReason: OfferExpiredReason;
+}
+
 // ============================================================================
 // TYPE MAP
 // ============================================================================
@@ -235,15 +221,12 @@ export interface OfferCancelledContext {
  * Maps each event type to its context interface for compile-time type safety.
  */
 export interface NotificationContextMap {
-  [NotificationEventType.PAYMENT_REQUIRED]: PaymentRequiredContext;
   [NotificationEventType.BUYER_PAYMENT_SUBMITTED]: BuyerPaymentSubmittedContext;
-  [NotificationEventType.BUYER_PAYMENT_APPROVED]: BuyerPaymentApprovedContext;
+  [NotificationEventType.PAYMENT_RECEIVED]: PaymentReceivedContext;
   [NotificationEventType.BUYER_PAYMENT_REJECTED]: BuyerPaymentRejectedContext;
-  [NotificationEventType.SELLER_PAYMENT_RECEIVED]: SellerPaymentReceivedContext;
   [NotificationEventType.TICKET_TRANSFERRED]: TicketTransferredContext;
   [NotificationEventType.TRANSACTION_COMPLETED]: TransactionCompletedContext;
   [NotificationEventType.TRANSACTION_CANCELLED]: TransactionCancelledContext;
-  [NotificationEventType.TRANSACTION_EXPIRED]: TransactionExpiredContext;
   [NotificationEventType.DISPUTE_OPENED]: DisputeOpenedContext;
   [NotificationEventType.DISPUTE_RESOLVED]: DisputeResolvedContext;
   [NotificationEventType.IDENTITY_VERIFIED]: IdentityVerifiedContext;
@@ -258,6 +241,7 @@ export interface NotificationContextMap {
   [NotificationEventType.OFFER_ACCEPTED]: OfferAcceptedContext;
   [NotificationEventType.OFFER_REJECTED]: OfferRejectedContext;
   [NotificationEventType.OFFER_CANCELLED]: OfferCancelledContext;
+  [NotificationEventType.OFFER_EXPIRED]: OfferExpiredContext;
 }
 
 /**

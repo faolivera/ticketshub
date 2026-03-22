@@ -19,6 +19,7 @@ import { ClaimConfirmReceiptFirstException } from '../../common/exceptions/claim
 import { ClaimInvalidStatusException } from '../../common/exceptions/claim-invalid-status.exception';
 import type { ClaimRefDateType } from '../../common/exceptions/claim-too-early.exception';
 import type { Ctx } from '../../common/types/context';
+import { FireAndForget } from '../../common/utils/fire-and-forget';
 import type {
   SupportTicket,
   SupportMessage,
@@ -264,19 +265,22 @@ export class SupportService {
       if (transaction) {
         const openedBy: 'buyer' | 'seller' =
           transaction.buyerId === userId ? 'buyer' : 'seller';
-        this.notificationsService
-          .emit(ctx, NotificationEventType.DISPUTE_OPENED, {
-            transactionId: data.transactionId,
-            disputeId: ticket.id,
-            eventName: data.subject,
-            buyerId: transaction.buyerId,
-            sellerId: transaction.sellerId,
-            openedBy,
-            reason: data.category,
-          })
-          .catch((err) =>
-            this.logger.error(ctx, `Failed to emit DISPUTE_OPENED: ${err}`),
-          );
+        FireAndForget.run(
+          ctx,
+          async (cleanCtx) => {
+            await this.notificationsService.emit(cleanCtx, NotificationEventType.DISPUTE_OPENED, {
+              transactionId: data.transactionId,
+              disputeId: ticket.id,
+              eventName: data.subject,
+              buyerId: transaction.buyerId,
+              sellerId: transaction.sellerId,
+              openedBy,
+              reason: data.category,
+            });
+          },
+          this.logger,
+          'Failed to emit DISPUTE_OPENED',
+        );
       }
     }
 
@@ -537,19 +541,22 @@ export class SupportService {
       if (transaction) {
         const resolvedInFavorOf: 'buyer' | 'seller' =
           resolution === DisputeResolution.BuyerWins ? 'buyer' : 'seller';
-        this.notificationsService
-          .emit(ctx, NotificationEventType.DISPUTE_RESOLVED, {
-            transactionId: ticket.transactionId,
-            disputeId: ticketId,
-            eventName: ticket.subject,
-            buyerId: transaction.buyerId,
-            sellerId: transaction.sellerId,
-            resolution,
-            resolvedInFavorOf,
-          })
-          .catch((err) =>
-            this.logger.error(ctx, `Failed to emit DISPUTE_RESOLVED: ${err}`),
-          );
+        FireAndForget.run(
+          ctx,
+          async (cleanCtx) => {
+            await this.notificationsService.emit(cleanCtx, NotificationEventType.DISPUTE_RESOLVED, {
+              transactionId: ticket.transactionId,
+              disputeId: ticketId,
+              eventName: ticket.subject,
+              buyerId: transaction.buyerId,
+              sellerId: transaction.sellerId,
+              resolution,
+              resolvedInFavorOf,
+            });
+          },
+          this.logger,
+          'Failed to emit DISPUTE_RESOLVED',
+        );
       }
     }
 

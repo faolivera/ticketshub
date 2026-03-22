@@ -55,7 +55,7 @@ describe('NotificationsRepository (Integration)', () => {
     overrides?: Partial<NotificationEvent>,
   ): NotificationEvent => ({
     id: generateNotificationEventId(),
-    type: NotificationEventType.PAYMENT_REQUIRED,
+    type: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     context: { transactionId: randomUUID() },
     triggeredBy: testUserId,
     triggeredAt: new Date(),
@@ -69,7 +69,7 @@ describe('NotificationsRepository (Integration)', () => {
   ): Notification => ({
     id: generateNotificationId(),
     eventId,
-    eventType: NotificationEventType.PAYMENT_REQUIRED,
+    eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     recipientId: testUserId,
     channel: NotificationChannel.IN_APP,
     title: 'Test Notification',
@@ -86,7 +86,7 @@ describe('NotificationsRepository (Integration)', () => {
     overrides?: Partial<NotificationTemplate>,
   ): NotificationTemplate => ({
     id: generateNotificationTemplateId(),
-    eventType: NotificationEventType.PAYMENT_REQUIRED,
+    eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     channel: NotificationChannel.IN_APP,
     locale: 'en',
     titleTemplate: 'Payment Required for {{transactionId}}',
@@ -102,7 +102,7 @@ describe('NotificationsRepository (Integration)', () => {
     overrides?: Partial<NotificationChannelConfig>,
   ): NotificationChannelConfig => ({
     id: generateNotificationChannelConfigId(),
-    eventType: NotificationEventType.PAYMENT_REQUIRED,
+    eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     inAppEnabled: true,
     emailEnabled: true,
     priority: NotificationPriority.NORMAL,
@@ -137,7 +137,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       expect(event).toBeDefined();
       expect(event.id).toBe(eventData.id);
-      expect(event.type).toBe(NotificationEventType.PAYMENT_REQUIRED);
+      expect(event.type).toBe(NotificationEventType.BUYER_PAYMENT_SUBMITTED);
       expect(event.status).toBe(NotificationEventStatus.PENDING);
       expect(event.context).toEqual(eventData.context);
     });
@@ -302,7 +302,7 @@ describe('NotificationsRepository (Integration)', () => {
     it('should filter by type', async () => {
       await repository.createEvent(
         ctx,
-        createValidEvent({ type: NotificationEventType.PAYMENT_REQUIRED }),
+        createValidEvent({ type: NotificationEventType.BUYER_PAYMENT_SUBMITTED }),
       );
       await repository.createEvent(
         ctx,
@@ -310,12 +310,12 @@ describe('NotificationsRepository (Integration)', () => {
       );
 
       const result = await repository.getEventsPaginated(ctx, 1, 10, {
-        type: NotificationEventType.PAYMENT_REQUIRED,
+        type: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
       });
 
       expect(result.events).toHaveLength(1);
       expect(result.events[0].type).toBe(
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
       );
     });
 
@@ -1150,7 +1150,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       expect(template).toBeDefined();
       expect(template.id).toBe(templateData.id);
-      expect(template.eventType).toBe(NotificationEventType.PAYMENT_REQUIRED);
+      expect(template.eventType).toBe(NotificationEventType.BUYER_PAYMENT_SUBMITTED);
       expect(template.channel).toBe(NotificationChannel.IN_APP);
       expect(template.locale).toBe('en');
       expect(template.isActive).toBe(true);
@@ -1197,7 +1197,7 @@ describe('NotificationsRepository (Integration)', () => {
     it('should return undefined when template does not exist', async () => {
       const template = await repository.findTemplate(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.IN_APP,
         'en',
       );
@@ -1209,13 +1209,13 @@ describe('NotificationsRepository (Integration)', () => {
 
       const found = await repository.findTemplate(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.IN_APP,
         'en',
       );
 
       expect(found).toBeDefined();
-      expect(found?.eventType).toBe(NotificationEventType.PAYMENT_REQUIRED);
+      expect(found?.eventType).toBe(NotificationEventType.BUYER_PAYMENT_SUBMITTED);
       expect(found?.channel).toBe(NotificationChannel.IN_APP);
       expect(found?.locale).toBe('en');
     });
@@ -1228,7 +1228,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       const found = await repository.findTemplate(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.IN_APP,
         'en',
       );
@@ -1240,7 +1240,7 @@ describe('NotificationsRepository (Integration)', () => {
       await repository.createTemplate(
         ctx,
         createValidTemplate({
-          eventType: NotificationEventType.PAYMENT_REQUIRED,
+          eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
           channel: NotificationChannel.IN_APP,
           locale: 'en',
         }),
@@ -1248,7 +1248,7 @@ describe('NotificationsRepository (Integration)', () => {
       await repository.createTemplate(
         ctx,
         createValidTemplate({
-          eventType: NotificationEventType.PAYMENT_REQUIRED,
+          eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
           channel: NotificationChannel.EMAIL,
           locale: 'en',
         }),
@@ -1264,12 +1264,12 @@ describe('NotificationsRepository (Integration)', () => {
 
       const found = await repository.findTemplate(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.EMAIL,
         'en',
       );
 
-      expect(found?.eventType).toBe(NotificationEventType.PAYMENT_REQUIRED);
+      expect(found?.eventType).toBe(NotificationEventType.BUYER_PAYMENT_SUBMITTED);
       expect(found?.channel).toBe(NotificationChannel.EMAIL);
     });
   });
@@ -1387,7 +1387,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       expect(config).toBeDefined();
       expect(config.id).toBe(configData.id);
-      expect(config.eventType).toBe(NotificationEventType.PAYMENT_REQUIRED);
+      expect(config.eventType).toBe(NotificationEventType.BUYER_PAYMENT_SUBMITTED);
       expect(config.inAppEnabled).toBe(true);
       expect(config.emailEnabled).toBe(true);
       expect(config.priority).toBe(NotificationPriority.NORMAL);
@@ -1409,7 +1409,7 @@ describe('NotificationsRepository (Integration)', () => {
     it('should return undefined when config does not exist', async () => {
       const config = await repository.findChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
       );
       expect(config).toBeUndefined();
     });
@@ -1419,11 +1419,11 @@ describe('NotificationsRepository (Integration)', () => {
 
       const found = await repository.findChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
       );
 
       expect(found).toBeDefined();
-      expect(found?.eventType).toBe(NotificationEventType.PAYMENT_REQUIRED);
+      expect(found?.eventType).toBe(NotificationEventType.BUYER_PAYMENT_SUBMITTED);
     });
   });
 
@@ -1437,7 +1437,7 @@ describe('NotificationsRepository (Integration)', () => {
       await repository.createChannelConfig(
         ctx,
         createValidChannelConfig({
-          eventType: NotificationEventType.PAYMENT_REQUIRED,
+          eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         }),
       );
       await repository.createChannelConfig(
@@ -1457,7 +1457,7 @@ describe('NotificationsRepository (Integration)', () => {
     it('should return undefined for non-existent config', async () => {
       const result = await repository.updateChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         { inAppEnabled: false },
       );
       expect(result).toBeUndefined();
@@ -1471,7 +1471,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       const updated = await repository.updateChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         { inAppEnabled: false },
       );
 
@@ -1486,7 +1486,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       const updated = await repository.updateChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         { emailEnabled: false },
       );
 
@@ -1501,7 +1501,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       const updated = await repository.updateChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         { priority: NotificationPriority.HIGH },
       );
 
@@ -1513,7 +1513,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       const updated = await repository.updateChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         { updatedBy: testUserId },
       );
 
@@ -1525,7 +1525,7 @@ describe('NotificationsRepository (Integration)', () => {
 
       const updated = await repository.updateChannelConfig(
         ctx,
-        NotificationEventType.PAYMENT_REQUIRED,
+        NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         {
           inAppEnabled: false,
           emailEnabled: false,

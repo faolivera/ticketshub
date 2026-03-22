@@ -63,10 +63,13 @@ interface CardShape {
 }
 
 /**
- * Transform API event to card shape. Dates are approved only, formatted as "DD Mon · HH:mm".
+ * Transform API event to card shape. Only approved future dates are included, formatted as "DD Mon · HH:mm".
  */
 function eventToCardShape(apiEvent: PublicListEventItem): CardShape {
-  const approvedDates = (apiEvent.dates || []).filter((d) => d.status === "approved");
+  const now = new Date();
+  const approvedDates = (apiEvent.dates || []).filter(
+    (d) => d.status === "approved" && new Date(d.date) >= now,
+  );
   const datesFormatted = approvedDates.map((d) => {
     const dateStr = typeof d.date === "string" ? d.date : d.date;
     return formatDate(dateStr, { month: "short", day: "numeric" });

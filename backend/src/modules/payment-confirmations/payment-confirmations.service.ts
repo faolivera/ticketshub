@@ -35,6 +35,7 @@ import type {
 import { TransactionStatus } from '../transactions/transactions.domain';
 import { Role } from '../users/users.domain';
 import { NotificationsService } from '../notifications/notifications.service';
+import { FireAndForget } from '../../common/utils/fire-and-forget';
 import { NotificationEventType } from '../notifications/notifications.domain';
 
 @Injectable()
@@ -189,31 +190,25 @@ export class PaymentConfirmationsService {
       transactionId,
     );
 
-    // Get listing and buyer for notification
-    const listing = await this.ticketsService.getListingById(
+    FireAndForget.run(
       ctx,
-      transaction.listingId,
+      async (cleanCtx) => {
+        const listing = await this.ticketsService.getListingById(cleanCtx, transaction.listingId);
+        const buyer = await this.usersService.findById(cleanCtx, userId);
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.BUYER_PAYMENT_SUBMITTED, {
+          transactionId,
+          ticketId: transaction.listingId,
+          eventName: listing.eventName,
+          amount: transaction.totalPaid.amount,
+          currency: transaction.totalPaid.currency,
+          buyerId: userId,
+          buyerName: buyer?.publicName || 'Buyer',
+          sellerId: transaction.sellerId,
+        });
+      },
+      this.logger,
+      'Failed to emit BUYER_PAYMENT_SUBMITTED',
     );
-    const buyer = await this.usersService.findById(ctx, userId);
-
-    // Emit notification for payment submitted
-    this.notificationsService
-      .emit(ctx, NotificationEventType.BUYER_PAYMENT_SUBMITTED, {
-        transactionId,
-        ticketId: transaction.listingId,
-        eventName: listing.eventName,
-        amount: transaction.totalPaid.amount,
-        currency: transaction.totalPaid.currency,
-        buyerId: userId,
-        buyerName: buyer?.publicName || 'Buyer',
-        sellerId: transaction.sellerId,
-      })
-      .catch((err) =>
-        this.logger.error(
-          ctx,
-          `Failed to emit BUYER_PAYMENT_SUBMITTED: ${err}`,
-        ),
-      );
 
     this.logger.log(
       ctx,

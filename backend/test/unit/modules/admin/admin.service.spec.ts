@@ -120,6 +120,7 @@ describe('AdminService', () => {
       getPendingEvents: jest.fn().mockResolvedValue([]),
       adminUpdateEventWithDates: jest.fn(),
       getAllEventsPaginated: jest.fn(),
+      getDatesByEventIds: jest.fn().mockResolvedValue([]),
       getEventById: jest.fn(),
       createEvent: jest.fn(),
       addEventDate: jest.fn(),
@@ -127,6 +128,7 @@ describe('AdminService', () => {
       uploadBanner: jest.fn().mockResolvedValue({}),
       getExistingImportSourceKeys: jest.fn().mockResolvedValue(new Set<string>()),
       getBannerPublicUrl: jest.fn().mockReturnValue('https://cdn.example.com/square.jpg'),
+      getSquareBannerContent: jest.fn().mockResolvedValue(null),
     };
 
     const mockTicketsRepository = {

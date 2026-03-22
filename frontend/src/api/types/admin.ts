@@ -241,6 +241,10 @@ export interface AdminAllEventItem {
   highlight: boolean;
   /** URL of the event's square banner image, if it exists. Used for crop-to-rectangle flow. */
   squareBannerUrl?: string;
+  venue: string;
+  city: string;
+  /** Sorted list of event date datetimes (ISO strings). */
+  dates: string[];
 }
 
 /**

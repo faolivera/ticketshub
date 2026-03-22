@@ -906,6 +906,26 @@ export class AdminController {
   }
 
   /**
+   * Stream the square banner image for an event (admin proxy).
+   * Avoids CORS issues when loading the image in the crop modal.
+   * Must be registered before /events/:id/banners/:type to avoid shadowing.
+   */
+  @Get('events/:id/banners/square/file')
+  async getEventSquareBannerFile(
+    @Context() ctx: Ctx,
+    @Param('id') eventId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.adminService.getEventSquareBannerContent(ctx, eventId);
+    if (!result) {
+      throw new NotFoundException('Square banner not found');
+    }
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${result.filename}"`);
+    res.send(result.buffer);
+  }
+
+  /**
    * Admin delete a banner from an event.
    */
   @Delete('events/:id/banners/:type')

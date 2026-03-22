@@ -69,6 +69,8 @@ interface AvatarCropModalProps {
   imageSrc?: string;
   /** Crop shape: "round" shows a circle overlay, "rect" shows a square */
   cropShape?: "round" | "rect";
+  /** Optional HTTP headers to include when fetching imageSrc (e.g. Authorization). */
+  fetchHeaders?: Record<string, string>;
 }
 
 // ─── component ────────────────────────────────────────────────────────────────
@@ -83,6 +85,7 @@ export default function AvatarCropModal({
   aspect = 1,
   imageSrc: externalImageSrc,
   cropShape = "round",
+  fetchHeaders,
 }: AvatarCropModalProps) {
   const { t } = useTranslation();
   const [imageSrc, setImageSrc] = useState<string | null>(externalImageSrc ?? null);
@@ -102,7 +105,7 @@ export default function AvatarCropModal({
     }
     // Fetch once as blob → same-origin blob URL avoids canvas CORS taint
     let blobUrl: string | null = null;
-    fetch(externalImageSrc)
+    fetch(externalImageSrc, { headers: fetchHeaders })
       .then((res) => res.blob())
       .then((blob) => {
         blobUrl = URL.createObjectURL(blob);
@@ -112,7 +115,7 @@ export default function AvatarCropModal({
     return () => {
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [open, externalImageSrc, t]);
+  }, [open, externalImageSrc, fetchHeaders, t]);
 
   // ── file input ──────────────────────────────────────────────────────────────
   const onFileChange = useCallback(

@@ -26,6 +26,7 @@ import type {
 import type { TicketListingWithEvent } from '../tickets/tickets.domain';
 import { TicketUnitStatus } from '../tickets/tickets.domain';
 import { UsersService } from '../users/users.service';
+import { FireAndForget } from '../../common/utils/fire-and-forget';
 
 @Injectable()
 export class OffersService {
@@ -120,18 +121,21 @@ export class OffersService {
       `Created offer ${created.id} for listing ${body.listingId}`,
     );
 
-    this.notificationsService
-      .emit(ctx, NotificationEventType.OFFER_RECEIVED, {
-        offerId: created.id,
-        listingId: body.listingId,
-        eventName: listing.eventName,
-        sellerId: listing.sellerId,
-        offeredAmount: created.offeredPrice.amount,
-        currency: created.offeredPrice.currency,
-      })
-      .catch((err) =>
-        this.logger.error(ctx, `Failed to emit OFFER_RECEIVED: ${err}`),
-      );
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.OFFER_RECEIVED, {
+          offerId: created.id,
+          listingId: body.listingId,
+          eventName: listing.eventName,
+          sellerId: listing.sellerId,
+          offeredAmount: created.offeredPrice.amount,
+          currency: created.offeredPrice.currency,
+        });
+      },
+      this.logger,
+      'Failed to emit OFFER_RECEIVED',
+    );
 
     return created;
   }
@@ -359,6 +363,42 @@ export class OffersService {
       ),
     ]);
 
+    const allExpired = [...pendingOffers, ...acceptedOffers];
+    if (allExpired.length > 0) {
+      FireAndForget.run(
+        ctx,
+        async (cleanCtx) => {
+          const listingIds = [...new Set(allExpired.map((o) => o.listingId))];
+          const listings = await this.ticketsService.getListingsByIds(cleanCtx, listingIds);
+          const listingMap = new Map(listings.map((l) => [l.id, l]));
+
+          await Promise.all(
+            allExpired.map((offer) => {
+              const listing = listingMap.get(offer.listingId);
+              if (!listing) return Promise.resolve();
+              const expiredReason = pendingOffers.some((o) => o.id === offer.id)
+                ? ('seller_no_response' as const)
+                : ('buyer_no_purchase' as const);
+              return this.notificationsService.emit(
+                cleanCtx,
+                NotificationEventType.OFFER_EXPIRED,
+                {
+                  offerId: offer.id,
+                  listingId: offer.listingId,
+                  eventName: listing.eventName,
+                  buyerId: offer.userId,
+                  sellerId: listing.sellerId,
+                  expiredReason,
+                },
+              );
+            }),
+          );
+        },
+        this.logger,
+        'Failed to emit OFFER_EXPIRED notifications',
+      );
+    }
+
     return { expiredPending, expiredAccepted };
   }
 
@@ -406,18 +446,21 @@ export class OffersService {
     });
     if (!updated) throw new NotFoundException('Offer not found');
     this.logger.log(ctx, `Offer ${offerId} accepted by seller ${sellerId}`);
-    this.notificationsService
-      .emit(ctx, NotificationEventType.OFFER_ACCEPTED, {
-        offerId: updated.id,
-        listingId: updated.listingId,
-        eventName: listing.eventName,
-        buyerId: updated.userId,
-        offeredAmount: updated.offeredPrice.amount,
-        currency: updated.offeredPrice.currency,
-      })
-      .catch((err) =>
-        this.logger.error(ctx, `Failed to emit OFFER_ACCEPTED: ${err}`),
-      );
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.OFFER_ACCEPTED, {
+          offerId: updated.id,
+          listingId: updated.listingId,
+          eventName: listing.eventName,
+          buyerId: updated.userId,
+          offeredAmount: updated.offeredPrice.amount,
+          currency: updated.offeredPrice.currency,
+        });
+      },
+      this.logger,
+      'Failed to emit OFFER_ACCEPTED',
+    );
     return updated;
   }
 
@@ -449,16 +492,19 @@ export class OffersService {
       rejectedAt: now,
     });
     if (!updated) throw new NotFoundException('Offer not found');
-    this.notificationsService
-      .emit(ctx, NotificationEventType.OFFER_REJECTED, {
-        offerId: updated.id,
-        listingId: updated.listingId,
-        eventName: listing.eventName,
-        buyerId: updated.userId,
-      })
-      .catch((err) =>
-        this.logger.error(ctx, `Failed to emit OFFER_REJECTED: ${err}`),
-      );
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.OFFER_REJECTED, {
+          offerId: updated.id,
+          listingId: updated.listingId,
+          eventName: listing.eventName,
+          buyerId: updated.userId,
+        });
+      },
+      this.logger,
+      'Failed to emit OFFER_REJECTED',
+    );
     return updated;
   }
 
@@ -523,17 +569,20 @@ export class OffersService {
           ctx,
           `Cancelled offer ${offer.id} (no longer satisfiable)`,
         );
-        this.notificationsService
-          .emit(ctx, NotificationEventType.OFFER_CANCELLED, {
-            offerId: offer.id,
-            listingId: offer.listingId,
-            eventName: listing.eventName,
-            buyerId: offer.userId,
-            reason: 'Tickets were sold or no longer available',
-          })
-          .catch((err) =>
-            this.logger.error(ctx, `Failed to emit OFFER_CANCELLED: ${err}`),
-          );
+        FireAndForget.run(
+          ctx,
+          async (cleanCtx) => {
+            await this.notificationsService.emit(cleanCtx, NotificationEventType.OFFER_CANCELLED, {
+              offerId: offer.id,
+              listingId: offer.listingId,
+              eventName: listing.eventName,
+              buyerId: offer.userId,
+              reason: 'Tickets were sold or no longer available',
+            });
+          },
+          this.logger,
+          'Failed to emit OFFER_CANCELLED',
+        );
       }
     }
   }

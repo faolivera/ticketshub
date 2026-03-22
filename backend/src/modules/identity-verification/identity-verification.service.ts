@@ -25,6 +25,7 @@ import {
   type IdentityDocumentMimeType,
 } from './identity-verification.domain';
 import { NotificationsService } from '../notifications/notifications.service';
+import { FireAndForget } from '../../common/utils/fire-and-forget';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import type {
   IdentityVerificationPublic,
@@ -208,17 +209,17 @@ export class IdentityVerificationService {
       `Identity verification ${verification.id} submitted for user ${userId}`,
     );
 
-    this.notificationsService
-      .emit(ctx, NotificationEventType.IDENTITY_SUBMITTED, {
-        userId,
-        userName: `${data.legalFirstName} ${data.legalLastName}`.trim(),
-      })
-      .catch((err) =>
-        this.logger.error(
-          ctx,
-          `Failed to emit IDENTITY_SUBMITTED: ${String(err)}`,
-        ),
-      );
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.IDENTITY_SUBMITTED, {
+          userId,
+          userName: `${data.legalFirstName} ${data.legalLastName}`.trim(),
+        });
+      },
+      this.logger,
+      'Failed to emit IDENTITY_SUBMITTED',
+    );
 
     return this.toPublic(verification);
   }
@@ -415,15 +416,17 @@ export class IdentityVerificationService {
         },
       );
 
-      // Emit identity verified notification
-      this.notificationsService
-        .emit(ctx, NotificationEventType.IDENTITY_VERIFIED, {
-          userId: verification.userId,
-          userName: `${verification.legalFirstName} ${verification.legalLastName}`,
-        })
-        .catch((err) =>
-          this.logger.error(ctx, `Failed to emit IDENTITY_VERIFIED: ${err}`),
-        );
+      FireAndForget.run(
+        ctx,
+        async (cleanCtx) => {
+          await this.notificationsService.emit(cleanCtx, NotificationEventType.IDENTITY_VERIFIED, {
+            userId: verification.userId,
+            userName: `${verification.legalFirstName} ${verification.legalLastName}`,
+          });
+        },
+        this.logger,
+        'Failed to emit IDENTITY_VERIFIED',
+      );
 
       // If bank is already approved, seller verification is complete
       const userAfter = await this.usersService.findById(
@@ -431,17 +434,17 @@ export class IdentityVerificationService {
         verification.userId,
       );
       if (userAfter?.bankAccount?.verified === true) {
-        this.notificationsService
-          .emit(ctx, NotificationEventType.SELLER_VERIFICATION_COMPLETE, {
-            userId: verification.userId,
-            userName: `${verification.legalFirstName} ${verification.legalLastName}`,
-          })
-          .catch((err) =>
-            this.logger.error(
-              ctx,
-              `Failed to emit SELLER_VERIFICATION_COMPLETE: ${String(err)}`,
-            ),
-          );
+        FireAndForget.run(
+          ctx,
+          async (cleanCtx) => {
+            await this.notificationsService.emit(cleanCtx, NotificationEventType.SELLER_VERIFICATION_COMPLETE, {
+              userId: verification.userId,
+              userName: `${verification.legalFirstName} ${verification.legalLastName}`,
+            });
+          },
+          this.logger,
+          'Failed to emit SELLER_VERIFICATION_COMPLETE',
+        );
       }
     }
 

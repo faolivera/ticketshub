@@ -902,11 +902,13 @@ export class EventsService {
       ...(options?.includeStatus !== false && { status: event.status }),
       bannerUrls: event.bannerUrls,
       images: (event.images ?? []).map((img) => ({ src: img.src })),
-      dates: (event.dates ?? []).map((d) => ({
-        id: d.id,
-        date: d.date instanceof Date ? d.date.toISOString() : String(d.date),
-        status: d.status,
-      })),
+      dates: (event.dates ?? [])
+        .filter((d) => new Date(d.date) >= new Date())
+        .map((d) => ({
+          id: d.id,
+          date: d.date instanceof Date ? d.date.toISOString() : String(d.date),
+          status: d.status,
+        })),
       sections: (event.sections ?? []).map((s) => ({
         id: s.id,
         name: s.name,
@@ -1195,12 +1197,43 @@ export class EventsService {
   }
 
   /**
+   * Get all dates for the given event IDs in a single query.
+   * Used by admin views that need dates without fetching full EventWithDates objects.
+   */
+  async getDatesByEventIds(ctx: Ctx, eventIds: string[]): Promise<EventDate[]> {
+    return this.eventsRepository.getDatesByEventIds(ctx, eventIds);
+  }
+
+  /**
    * Get the public URL for a banner stored under a given event.
    * Used by admin views that need to expose banner URLs without direct
    * access to EventBannerStorageService.
    */
   getBannerPublicUrl(eventId: string, filename: string): string {
     return this.bannerStorage.getPublicUrl(eventId, filename);
+  }
+
+  /**
+   * Retrieve the square banner file content for a given event.
+   * Returns null if the event has no square banner or the file is missing in storage.
+   * Used by the admin proxy endpoint to stream the image without CORS issues.
+   */
+  async getSquareBannerContent(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
+    this.logger.debug(ctx, 'getSquareBannerContent', { eventId });
+    const event = await this.eventsRepository.findEventById(ctx, eventId);
+    if (!event?.banners?.square) {
+      return null;
+    }
+    const { filename, contentType } = event.banners.square;
+    const buffer = await this.bannerStorage.readFile(eventId, filename);
+    if (!buffer) {
+      this.logger.warn(ctx, `Square banner not found in storage: ${filename}`);
+      return null;
+    }
+    return { buffer, contentType, filename };
   }
 
   /**

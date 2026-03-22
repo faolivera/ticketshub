@@ -454,22 +454,6 @@ export class TransactionsService {
       },
     );
 
-    // PAYMENT_REQUIRED emission disabled for now; event and processors remain for future logic.
-    // const seller = await this.usersService.findById(ctx, listing.sellerId);
-    // this.notificationsService
-    //   .emit(ctx, NotificationEventType.PAYMENT_REQUIRED, {
-    //     transactionId: transaction.id,
-    //     ticketId: listing.id,
-    //     eventName: listing.eventName,
-    //     amount: totalPaid.amount,
-    //     currency: totalPaid.currency,
-    //     expiresAt: transaction.paymentExpiresAt?.toISOString() || '',
-    //     buyerId,
-    //     sellerId: listing.sellerId,
-    //     sellerName: seller?.publicName || 'Seller',
-    //   })
-    //   .catch((err) => this.logger.error(ctx, `Failed to emit PAYMENT_REQUIRED: ${err}`));
-
     return {
       transaction,
       paymentIntentId: paymentIntent.id,
@@ -563,13 +547,16 @@ export class TransactionsService {
       async (cleanCtx) => {
         const listing = await this.ticketsService.getListingById(cleanCtx, updated.listingId);
         const seller = await this.usersService.findById(cleanCtx, updated.sellerId);
-        await this.notificationsService.emit(cleanCtx, NotificationEventType.BUYER_PAYMENT_APPROVED, {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.PAYMENT_RECEIVED, {
           transactionId: updated.id,
           ticketId: listing.id,
           eventName: listing.eventName,
           buyerId: updated.buyerId,
           sellerId: updated.sellerId,
-          sellerName: seller?.publicName || 'Seller',
+          sellerName: seller?.publicName || 'Vendedor',
+          amount: updated.sellerReceives.amount,
+          currency: updated.sellerReceives.currency,
+          ticketCount: updated.quantity,
         });
       },
       this.logger,
@@ -717,28 +704,27 @@ export class TransactionsService {
 
     this.logger.log(ctx, `Transaction ${transactionId} - ticket transferred`);
 
-    // Emit notification (fire-and-forget, outside transaction)
-    const listing = await this.ticketsService.getListingById(
+    FireAndForget.run(
       ctx,
-      updated.listingId,
+      async (cleanCtx) => {
+        const listing = await this.ticketsService.getListingById(cleanCtx, updated.listingId);
+        const eventDateStr =
+          listing.eventDate instanceof Date
+            ? listing.eventDate.toISOString()
+            : listing.eventDate;
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.TICKET_TRANSFERRED, {
+          transactionId: updated.id,
+          ticketId: listing.id,
+          eventName: listing.eventName,
+          eventDate: eventDateStr,
+          venue: listing.venue || '',
+          buyerId: updated.buyerId,
+          sellerId: updated.sellerId,
+        });
+      },
+      this.logger,
+      'Failed to emit TICKET_TRANSFERRED',
     );
-    const eventDateStr =
-      listing.eventDate instanceof Date
-        ? listing.eventDate.toISOString()
-        : listing.eventDate;
-    this.notificationsService
-      .emit(ctx, NotificationEventType.TICKET_TRANSFERRED, {
-        transactionId: updated.id,
-        ticketId: listing.id,
-        eventName: listing.eventName,
-        eventDate: eventDateStr,
-        venue: listing.venue || '',
-        buyerId: updated.buyerId,
-        sellerId: updated.sellerId,
-      })
-      .catch((err) =>
-        this.logger.error(ctx, `Failed to emit TICKET_TRANSFERRED: ${err}`),
-      );
 
     return updated;
   }
@@ -941,19 +927,22 @@ export class TransactionsService {
           error: err,
         }),
       );
-    this.notificationsService
-      .emit(ctx, NotificationEventType.TRANSACTION_COMPLETED, {
-        transactionId: updated.id,
-        ticketId: listing.id,
-        eventName: listing.eventName,
-        amount: updated.sellerReceives.amount,
-        currency: updated.sellerReceives.currency,
-        buyerId: updated.buyerId,
-        sellerId: updated.sellerId,
-      })
-      .catch((err) =>
-        this.logger.error(ctx, `Failed to emit TRANSACTION_COMPLETED: ${err}`),
-      );
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        await this.notificationsService.emit(cleanCtx, NotificationEventType.TRANSACTION_COMPLETED, {
+          transactionId: updated.id,
+          ticketId: listing.id,
+          eventName: listing.eventName,
+          amount: updated.sellerReceives.amount,
+          currency: updated.sellerReceives.currency,
+          buyerId: updated.buyerId,
+          sellerId: updated.sellerId,
+        });
+      },
+      this.logger,
+      'Failed to emit TRANSACTION_COMPLETED',
+    );
 
     this.logger.log(ctx, `Transaction ${transactionId} - payout completed`);
     return updated;
@@ -1031,6 +1020,34 @@ export class TransactionsService {
           error: err,
         }),
       );
+
+    const cancelledByLabel: 'buyer' | 'seller' | 'system' =
+      cancelledBy === RequiredActor.Buyer
+        ? 'buyer'
+        : cancelledBy === RequiredActor.Seller
+          ? 'seller'
+          : 'system';
+
+    FireAndForget.run(
+      ctx,
+      async (cleanCtx) => {
+        await this.notificationsService.emit(
+          cleanCtx,
+          NotificationEventType.TRANSACTION_CANCELLED,
+          {
+            transactionId: updated.id,
+            ticketId: listing.id,
+            eventName: listing.eventName,
+            buyerId: updated.buyerId,
+            sellerId: updated.sellerId,
+            cancelledBy: cancelledByLabel,
+            cancellationReason,
+          },
+        );
+      },
+      this.logger,
+      'Failed to emit TRANSACTION_CANCELLED',
+    );
 
     this.logger.log(
       ctx,
@@ -1815,27 +1832,26 @@ export class TransactionsService {
         `Transaction ${transactionId} - manual payment approved`,
       );
 
-      // Emit seller notification (payment available, transfer ticket)
-      const listing = await this.ticketsService.getListingById(
+      FireAndForget.run(
         ctx,
-        updated.listingId,
+        async (cleanCtx) => {
+          const listing = await this.ticketsService.getListingById(cleanCtx, updated.listingId);
+          const seller = await this.usersService.findById(cleanCtx, updated.sellerId);
+          await this.notificationsService.emit(cleanCtx, NotificationEventType.PAYMENT_RECEIVED, {
+            transactionId: updated.id,
+            ticketId: listing.id,
+            eventName: listing.eventName,
+            buyerId: updated.buyerId,
+            sellerId: updated.sellerId,
+            sellerName: seller?.publicName || 'Vendedor',
+            amount: updated.sellerReceives.amount,
+            currency: updated.sellerReceives.currency,
+            ticketCount: updated.quantity,
+          });
+        },
+        this.logger,
+        'Failed to emit SELLER_PAYMENT_RECEIVED',
       );
-      this.notificationsService
-        .emit(ctx, NotificationEventType.SELLER_PAYMENT_RECEIVED, {
-          transactionId: updated.id,
-          ticketId: listing.id,
-          eventName: listing.eventName,
-          amount: updated.sellerReceives.amount,
-          currency: updated.sellerReceives.currency,
-          sellerId: updated.sellerId,
-          buyerId: updated.buyerId,
-        })
-        .catch((err) =>
-          this.logger.error(
-            ctx,
-            `Failed to emit SELLER_PAYMENT_RECEIVED: ${err}`,
-          ),
-        );
 
       return updated;
     } else {

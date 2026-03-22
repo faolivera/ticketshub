@@ -27,7 +27,7 @@ describe('NotificationsService', () => {
     overrides: Partial<NotificationEvent> = {},
   ): NotificationEvent => ({
     id: 'ne_123456_abcd',
-    type: NotificationEventType.PAYMENT_REQUIRED,
+    type: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     context: { transactionId: 'tx_123' },
     triggeredBy: 'user_123',
     triggeredAt: new Date('2024-01-01T10:00:00Z'),
@@ -40,7 +40,7 @@ describe('NotificationsService', () => {
   ): Notification => ({
     id: 'n_123456_abcd',
     eventId: 'ne_123456_abcd',
-    eventType: NotificationEventType.PAYMENT_REQUIRED,
+    eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     recipientId: 'user_123',
     channel: NotificationChannel.EMAIL,
     title: 'Test Notification',

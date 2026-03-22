@@ -182,15 +182,6 @@ export interface GetEventNotificationsResponse {
  * Used by the admin UI to show available placeholders.
  */
 export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
-  [NotificationEventType.PAYMENT_REQUIRED]: [
-    'sellerName',
-    'eventName',
-    'amount',
-    'currency',
-    'amountFormatted',
-    'expiresAt',
-    'transactionId',
-  ],
   [NotificationEventType.BUYER_PAYMENT_SUBMITTED]: [
     'buyerName',
     'eventName',
@@ -199,22 +190,16 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'amountFormatted',
     'transactionId',
   ],
-  [NotificationEventType.BUYER_PAYMENT_APPROVED]: [
+  [NotificationEventType.PAYMENT_RECEIVED]: [
     'title',
     'body',
+    'amountFormatted',
     'transactionId',
   ],
   [NotificationEventType.BUYER_PAYMENT_REJECTED]: [
     'sellerName',
     'eventName',
     'rejectionReason',
-    'transactionId',
-  ],
-  [NotificationEventType.SELLER_PAYMENT_RECEIVED]: [
-    'eventName',
-    'amount',
-    'currency',
-    'amountFormatted',
     'transactionId',
   ],
   [NotificationEventType.TICKET_TRANSFERRED]: [
@@ -236,7 +221,6 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'reason',
     'transactionId',
   ],
-  [NotificationEventType.TRANSACTION_EXPIRED]: ['eventName', 'transactionId'],
   [NotificationEventType.DISPUTE_OPENED]: [
     'eventName',
     'openedBy',
@@ -290,5 +274,11 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'listingId',
     'eventName',
     'reason',
+  ],
+  [NotificationEventType.OFFER_EXPIRED]: [
+    'offerId',
+    'listingId',
+    'eventName',
+    'expiredReason',
   ],
 };

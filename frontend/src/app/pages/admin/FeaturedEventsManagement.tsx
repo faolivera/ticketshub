@@ -20,6 +20,7 @@ import {
 import { Input } from '../../components/ui/input';
 import { Star, Upload, ImageIcon, Crop } from 'lucide-react';
 import { adminService } from '@/api/services/admin.service';
+import { getToken } from '@/api/client';
 import type { AdminAllEventItem } from '@/api/types/admin';
 import { HighlightedEventsHero } from '@/app/components/home/HighlightedEventsHero';
 import AvatarCropModal from '@/app/components/Avatarcropmodal';
@@ -39,7 +40,7 @@ export function FeaturedEventsManagement() {
   const [searchInput, setSearchInput] = useState('');
   const [highlightedOnly, setHighlightedOnly] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [cropModalEvent, setCropModalEvent] = useState<{ id: string; squareBannerUrl: string } | null>(null);
+  const [cropModalEventId, setCropModalEventId] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const fetchEvents = async (pageNum: number, searchTerm: string, onlyHighlighted: boolean) => {
@@ -112,11 +113,11 @@ export function FeaturedEventsManagement() {
   };
 
   const handleCropSave = async (blob: Blob) => {
-    if (!cropModalEvent) return;
+    if (!cropModalEventId) return;
     const file = new File([blob], 'banner-rectangle.jpg', { type: 'image/jpeg' });
-    await adminService.uploadEventBanner(cropModalEvent.id, 'rectangle', file);
+    await adminService.uploadEventBanner(cropModalEventId, 'rectangle', file);
     setEvents((prev) =>
-      prev.map((e) => (e.id === cropModalEvent.id ? { ...e, hasRectangleBanner: true } : e))
+      prev.map((e) => (e.id === cropModalEventId ? { ...e, hasRectangleBanner: true } : e))
     );
   };
 
@@ -189,6 +190,9 @@ export function FeaturedEventsManagement() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('admin.featuredEvents.eventName')}</TableHead>
+                      <TableHead>{t('admin.featuredEvents.dates')}</TableHead>
+                      <TableHead>{t('admin.featuredEvents.venue')}</TableHead>
+                      <TableHead>{t('admin.featuredEvents.city')}</TableHead>
                       <TableHead>{t('admin.featuredEvents.status')}</TableHead>
                       <TableHead>{t('admin.featuredEvents.rectangleBanner')}</TableHead>
                       <TableHead>{t('admin.featuredEvents.highlight')}</TableHead>
@@ -199,6 +203,15 @@ export function FeaturedEventsManagement() {
                     {events.map((event) => (
                       <TableRow key={event.id}>
                         <TableCell className="font-medium">{event.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {event.dates.length === 0
+                            ? '—'
+                            : event.dates.map((d) =>
+                                new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
+                              ).join(', ')}
+                        </TableCell>
+                        <TableCell className="text-sm">{event.venue}</TableCell>
+                        <TableCell className="text-sm">{event.city}</TableCell>
                         <TableCell>
                           <Badge
                             variant={
@@ -270,7 +283,7 @@ export function FeaturedEventsManagement() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => setCropModalEvent({ id: event.id, squareBannerUrl: event.squareBannerUrl! })}
+                                onClick={() => setCropModalEventId(event.id)}
                                 disabled={actionLoading === event.id}
                               >
                                 <Crop className="h-4 w-4 mr-1" />
@@ -319,10 +332,11 @@ export function FeaturedEventsManagement() {
       </Card>
 
       <AvatarCropModal
-        open={cropModalEvent !== null}
-        onClose={() => setCropModalEvent(null)}
+        open={cropModalEventId !== null}
+        onClose={() => setCropModalEventId(null)}
         onSave={handleCropSave}
-        imageSrc={cropModalEvent?.squareBannerUrl}
+        imageSrc={cropModalEventId ? `/api/admin/events/${cropModalEventId}/banners/square/file` : undefined}
+        fetchHeaders={getToken() ? { Authorization: `Bearer ${getToken()}` } : undefined}
         aspect={1400 / 400}
         outputWidth={1400}
         outputHeight={400}

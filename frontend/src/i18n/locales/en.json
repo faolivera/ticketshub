@@ -1752,7 +1752,10 @@
       "uploadError": "Failed to upload image.",
       "uploading": "Uploading...",
       "updating": "Updating...",
-      "search": "Search"
+      "search": "Search",
+      "dates": "Dates",
+      "venue": "Venue",
+      "city": "City"
     },
     "supportTickets": {
       "title": "Support Tickets",

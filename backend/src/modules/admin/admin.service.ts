@@ -684,10 +684,20 @@ export class AdminService {
     const creatorsMap = new Map(creators.map((u) => [u.id, u]));
 
     const eventIds = events.map((e) => e.id);
-    const listingStatsMap = await this.ticketsService.getListingStatsByEventIds(
-      ctx,
-      eventIds,
-    );
+    const [listingStatsMap, allDates] = await Promise.all([
+      this.ticketsService.getListingStatsByEventIds(ctx, eventIds),
+      this.eventsService.getDatesByEventIds(ctx, eventIds),
+    ]);
+
+    const datesByEvent = new Map<string, Date[]>();
+    for (const d of allDates) {
+      const list = datesByEvent.get(d.eventId) ?? [];
+      list.push(d.date);
+      datesByEvent.set(d.eventId, list);
+    }
+    for (const list of datesByEvent.values()) {
+      list.sort((a, b) => a.getTime() - b.getTime());
+    }
 
     const enrichedEvents: AdminAllEventItem[] = events.map((event) => {
       const creator = creatorsMap.get(event.createdBy);
@@ -695,7 +705,6 @@ export class AdminService {
         listingsCount: 0,
         availableTicketsCount: 0,
       };
-      const banners = event.banners;
       const eventBanners = event.banners;
       const hasRectangleBanner = eventBanners?.rectangle != null;
       const highlight = event.highlight === true;
@@ -717,6 +726,9 @@ export class AdminService {
         hasRectangleBanner,
         highlight,
         squareBannerUrl,
+        venue: event.venue,
+        city: event.location.city,
+        dates: datesByEvent.get(event.id) ?? [],
       };
     });
 
@@ -1222,6 +1234,17 @@ export class AdminService {
       contentType: record.contentType,
       filename: record.originalFilename,
     };
+  }
+
+  /**
+   * Retrieve the square banner raw bytes for a given event.
+   * Delegates to EventsService to stream the image without CORS issues.
+   */
+  async getEventSquareBannerContent(
+    ctx: Ctx,
+    eventId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
+    return this.eventsService.getSquareBannerContent(ctx, eventId);
   }
 
   /**

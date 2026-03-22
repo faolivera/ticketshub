@@ -14,7 +14,7 @@ function createNotification(
   return {
     id: 'notif_1',
     eventId: 'evt_1',
-    eventType: NotificationEventType.PAYMENT_REQUIRED,
+    eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     recipientId: 'user_1',
     channel: 'IN_APP' as any,
     title: 'Payment required',
@@ -78,7 +78,7 @@ describe('InAppChannel', () => {
         'notification',
         {
           id: 'notif_1',
-          eventType: NotificationEventType.PAYMENT_REQUIRED,
+          eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
           title: 'Payment required',
           body: 'Please complete your payment.',
           actionUrl: '/wallet',
