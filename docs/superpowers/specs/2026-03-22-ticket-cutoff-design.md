@@ -16,7 +16,7 @@ A secondary requirement is a configurable "minimum hours to buy tickets" setting
 ## Goals
 
 1. Hide events whose **all** dates have passed the cutoff from the landing grid and highlighted events.
-2. Filter out individual past dates from any event that still has future dates.
+2. Filter out individual past dates from any event that still has future dates. This applies to all public-facing endpoints that return event data: the landing page grid (`GET /api/events`), highlighted events (`GET /api/events/highlights`), and the event detail page (`GET /api/event-page/:slug`). Achieved centrally via `toPublicEventItem`.
 3. Show "No hay fechas disponibles" on the event detail page when no future dates remain.
 4. Reject purchases (`initiatePurchase`) and offers (`createOffer`) at the backend when the listing's event date is past the cutoff.
 5. Reject buy-page data fetch (`getBuyPageData`) when the listing's event date is past the cutoff.
@@ -100,7 +100,9 @@ minimumHoursToBuyTickets Int @default(0) @map("minimum_hours_to_buy_tickets")
 **Files:** `config.domain.ts`, `config.repository.ts`, `config.service.ts`
 
 - `config.domain.ts` (`PlatformConfig` interface): add `minimumHoursToBuyTickets: number`.
-- `config.repository.ts` (`findPlatformConfig` read mapping): map the new DB column to the domain field.
+- `config.repository.ts`:
+  - `findPlatformConfig` (read mapping): map the new DB column to the domain field.
+  - `upsertPlatformConfig` (write path): add `minimumHoursToBuyTickets: config.minimumHoursToBuyTickets` to both the `create` and `update` blocks. Without this the value is never persisted to the DB.
 - `config.service.ts`:
   - `updatePlatformConfig` merge block: add `minimumHoursToBuyTickets: body.minimumHoursToBuyTickets ?? current.minimumHoursToBuyTickets`.
   - `validatePlatformConfig`: add validation — integer, min 0, max 168 (one week).
@@ -137,14 +139,15 @@ This ensures events with no future dates are excluded at the DB level, so pagina
 - Add public `assertEventDateNotExpired(ctx, eventDateId): Promise<void>`.
 - `listEvents`: fetch cutoff once, pass to `listEventsPaginated`. Return `{ events, cutoffDate }` so callers can pass it to `toPublicEventItem`.
 - `getHighlightedEvents` (or its cache-fill callback): fetch cutoff once, pass to `listEventsPaginated` and to `toPublicEventItem` for each event.
-- `toPublicEventItem`: accepts `cutoffDate?: Date` in options (default `new Date()` for backward compatibility with admin callers that should see all dates).
+- `toPublicEventItem`: accepts `cutoffDate?: Date` in options. When `cutoffDate` is `undefined`, **no date filtering is applied** — all dates are returned. Public-facing callers explicitly pass the fetched cutoff; admin callers omit it to see all dates.
 
 ### 6. EventsController
 
 **File:** `backend/src/modules/events/events.controller.ts`
 
 - Public list endpoint: destructure `{ events, cutoffDate }` from `listEvents`, pass `cutoffDate` to each `toPublicEventItem` call.
-- Admin-facing endpoints that call `toPublicEventItem`: do not pass `cutoffDate` (let it default to `new Date()` or omit — admins see all dates).
+- Highlights endpoint (`getHighlightedEvents` cache-fill callback): same — destructure `{ events, cutoffDate }` from `listEvents`, pass `cutoffDate` to each `toPublicEventItem` call inside the callback. This is critical because highlights are cached for 24 hours; failing to apply the cutoff here would serve stale past dates until cache expiry.
+- Admin-facing endpoints that call `toPublicEventItem`: omit `cutoffDate` entirely — admins see all dates.
 
 ### 7. BffService
 
