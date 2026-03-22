@@ -131,7 +131,7 @@ export interface IEventsRepository {
    */
   getAllEventsPaginated(
     ctx: Ctx,
-    options: { page: number; limit: number; search?: string },
+    options: { page: number; limit: number; search?: string; highlighted?: boolean },
   ): Promise<{ events: Event[]; total: number }>;
 
   /**

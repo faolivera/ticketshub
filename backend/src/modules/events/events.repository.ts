@@ -371,17 +371,15 @@ export class EventsRepository implements IEventsRepository {
 
   async getAllEventsPaginated(
     _ctx: Ctx,
-    options: { page: number; limit: number; search?: string },
+    options: { page: number; limit: number; search?: string; highlighted?: boolean },
   ): Promise<{ events: Event[]; total: number }> {
-    this.logger.debug(_ctx, 'getAllEventsPaginated', { page: options.page, limit: options.limit });
-    const where = options.search
-      ? {
-          name: {
-            contains: options.search,
-            mode: 'insensitive' as const,
-          },
-        }
-      : {};
+    this.logger.debug(_ctx, 'getAllEventsPaginated', { page: options.page, limit: options.limit, highlighted: options.highlighted });
+    const where = {
+      ...(options.search
+        ? { name: { contains: options.search, mode: 'insensitive' as const } }
+        : {}),
+      ...(options.highlighted === true ? { highlight: true } : {}),
+    };
 
     const [events, total] = await Promise.all([
       this.prisma.event.findMany({
