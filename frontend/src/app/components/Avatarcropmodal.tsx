@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Cropper, { Area } from "react-easy-crop";
 import { AlertCircle } from "lucide-react";
@@ -10,7 +10,8 @@ import { Alert, AlertDescription } from "./ui/alert";
 async function getCroppedBlob(
   imageSrc: string,
   croppedAreaPixels: Area,
-  outputSize = 400
+  outputWidth = 400,
+  outputHeight = 400,
 ): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -20,8 +21,8 @@ async function getCroppedBlob(
   });
 
   const canvas = document.createElement("canvas");
-  canvas.width = outputSize;
-  canvas.height = outputSize;
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
   const ctx = canvas.getContext("2d")!;
 
   ctx.drawImage(
@@ -32,8 +33,8 @@ async function getCroppedBlob(
     croppedAreaPixels.height,
     0,
     0,
-    outputSize,
-    outputSize
+    outputWidth,
+    outputHeight,
   );
 
   return new Promise((resolve, reject) => {
@@ -56,8 +57,16 @@ interface AvatarCropModalProps {
    * Upload it however you want — example uses FormData + fetch.
    */
   onSave?: (blob: Blob) => Promise<void>;
-  /** Square output size in px (default 400) */
+  /** Square output size in px (default 400). Used when outputWidth/outputHeight are not set. */
   outputSize?: number;
+  /** Output canvas width in px. Overrides outputSize when provided. */
+  outputWidth?: number;
+  /** Output canvas height in px. Overrides outputSize when provided. */
+  outputHeight?: number;
+  /** Crop aspect ratio. Default 1 (square). Pass e.g. 1400/400 for banner crops. */
+  aspect?: number;
+  /** Pre-load this image URL on open. When provided, file-picker step is skipped. */
+  imageSrc?: string;
   /** Crop shape: "round" shows a circle overlay, "rect" shows a square */
   cropShape?: "round" | "rect";
 }
@@ -69,15 +78,27 @@ export default function AvatarCropModal({
   onClose,
   onSave,
   outputSize = 400,
+  outputWidth,
+  outputHeight,
+  aspect = 1,
+  imageSrc: externalImageSrc,
   cropShape = "round",
 }: AvatarCropModalProps) {
   const { t } = useTranslation();
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(externalImageSrc ?? null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setImageSrc(externalImageSrc ?? null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+    }
+  }, [open, externalImageSrc]);
 
   // ── file input ──────────────────────────────────────────────────────────────
   const onFileChange = useCallback(
@@ -105,7 +126,9 @@ export default function AvatarCropModal({
     setSaveError(null);
     try {
       setSaving(true);
-      const blob = await getCroppedBlob(imageSrc, croppedAreaPixels, outputSize);
+      const w = outputWidth ?? outputSize;
+      const h = outputHeight ?? outputSize;
+      const blob = await getCroppedBlob(imageSrc, croppedAreaPixels, w, h);
 
       if (onSave) {
         await onSave(blob);
@@ -124,14 +147,14 @@ export default function AvatarCropModal({
     } finally {
       setSaving(false);
     }
-  }, [imageSrc, croppedAreaPixels, outputSize, onSave, onClose, t]);
+  }, [imageSrc, croppedAreaPixels, outputSize, outputWidth, outputHeight, onSave, onClose, t]);
 
   // ── reset on close ──────────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
-    setImageSrc(null);
+    setImageSrc(externalImageSrc ?? null);
     setSaveError(null);
     onClose();
-  }, [onClose]);
+  }, [onClose, externalImageSrc]);
 
   if (!open) return null;
 
@@ -163,14 +186,14 @@ export default function AvatarCropModal({
             <>
               <div
                 className="relative w-full overflow-hidden rounded-xl bg-muted"
-                style={{ aspectRatio: "1" }}
+                style={{ aspectRatio: String(aspect) }}
               >
                 {/* @ts-expect-error react-easy-crop Cropper types are class-based and incompatible with React 18 JSX */}
                 <Cropper
                   image={imageSrc}
                   crop={crop}
                   zoom={zoom}
-                  aspect={1}
+                  aspect={aspect}
                   cropShape={cropShape}
                   showGrid={false}
                   onCropChange={setCrop}
@@ -235,7 +258,7 @@ export default function AvatarCropModal({
 
         {/* footer */}
         <div className="flex gap-2 border-t border-border px-5 py-4">
-          {imageSrc && (
+          {imageSrc && !externalImageSrc && (
             <label className="flex-1 cursor-pointer">
               <span className="block w-full rounded-lg border border-input bg-background px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
                 {t("userProfile.avatarCrop.changeImage")}
