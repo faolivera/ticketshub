@@ -501,7 +501,7 @@ export class TransactionsRepository
    * Serializes update data to a JSON-safe object (e.g. dates as ISO strings) for audit payload.
    */
   private serializeUpdatesPayload(updateData: Record<string, unknown>): object {
-    return JSON.parse(JSON.stringify(updateData));
+    return structuredClone(updateData);
   }
 
   async getPaginated(
