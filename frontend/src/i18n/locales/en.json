@@ -1739,6 +1739,8 @@
       "hasRectangle": "Yes",
       "noRectangle": "No — add one below",
       "uploadRectangle": "Upload rectangle image",
+      "showHighlightedOnly": "Highlighted Events",
+      "cropFromSquare": "Crop from square",
       "setFeatured": "Set as featured",
       "removeFeatured": "Remove from featured",
       "approved": "Approved",

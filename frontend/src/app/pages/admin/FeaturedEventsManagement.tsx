@@ -18,10 +18,12 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { Input } from '../../components/ui/input';
-import { Star, Upload, ImageIcon } from 'lucide-react';
+import { Star, Upload, ImageIcon, Crop } from 'lucide-react';
 import { adminService } from '@/api/services/admin.service';
 import type { AdminAllEventItem } from '@/api/types/admin';
 import { HighlightedEventsHero } from '@/app/components/home/HighlightedEventsHero';
+import AvatarCropModal from '@/app/components/Avatarcropmodal';
+import { cn } from '@/app/components/ui/utils';
 
 const PAGE_SIZE = 20;
 
@@ -35,10 +37,12 @@ export function FeaturedEventsManagement() {
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [highlightedOnly, setHighlightedOnly] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [cropModalEvent, setCropModalEvent] = useState<{ id: string; squareBannerUrl: string } | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const fetchEvents = async (pageNum: number, searchTerm: string) => {
+  const fetchEvents = async (pageNum: number, searchTerm: string, onlyHighlighted: boolean) => {
     try {
       setLoading(true);
       setError(null);
@@ -46,6 +50,7 @@ export function FeaturedEventsManagement() {
         page: pageNum,
         limit: PAGE_SIZE,
         search: searchTerm.trim() || undefined,
+        highlighted: onlyHighlighted || undefined,
       });
       setEvents(data.events);
       setPage(data.page);
@@ -60,8 +65,8 @@ export function FeaturedEventsManagement() {
   };
 
   useEffect(() => {
-    fetchEvents(1, search);
-  }, [search]);
+    fetchEvents(1, search, highlightedOnly);
+  }, [search, highlightedOnly]);
 
   const handleSearch = () => {
     setSearch(searchInput.trim());
@@ -70,7 +75,7 @@ export function FeaturedEventsManagement() {
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
-    fetchEvents(newPage, search);
+    fetchEvents(newPage, search, highlightedOnly);
   };
 
   const handleSetHighlight = async (eventId: string, value: boolean) => {
@@ -106,6 +111,15 @@ export function FeaturedEventsManagement() {
     }
   };
 
+  const handleCropSave = async (blob: Blob) => {
+    if (!cropModalEvent) return;
+    const file = new File([blob], 'banner-rectangle.jpg', { type: 'image/jpeg' });
+    await adminService.uploadEventBanner(cropModalEvent.id, 'rectangle', file);
+    setEvents((prev) =>
+      prev.map((e) => (e.id === cropModalEvent.id ? { ...e, hasRectangleBanner: true } : e))
+    );
+  };
+
   const setFileInputRef = (eventId: string, el: HTMLInputElement | null) => {
     fileInputRefs.current[eventId] = el;
   };
@@ -135,7 +149,7 @@ export function FeaturedEventsManagement() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Input
                 placeholder={t('admin.featuredEvents.eventName')}
                 value={searchInput}
@@ -145,6 +159,13 @@ export function FeaturedEventsManagement() {
               />
               <Button onClick={handleSearch} variant="secondary">
                 {t('admin.featuredEvents.search')}
+              </Button>
+              <Button
+                onClick={() => setHighlightedOnly((v) => !v)}
+                variant={highlightedOnly ? 'default' : 'outline'}
+              >
+                <Star className={cn('h-4 w-4 mr-1', highlightedOnly && 'fill-current')} />
+                {t('admin.featuredEvents.showHighlightedOnly')}
               </Button>
             </div>
           </div>
@@ -159,7 +180,7 @@ export function FeaturedEventsManagement() {
             <p className="text-muted-foreground">{t('admin.featuredEvents.loading')}</p>
           ) : events.length === 0 ? (
             <p className="text-muted-foreground">
-              {search ? t('landing.noEventsFound') : t('landing.checkBackLater')}
+              {search || highlightedOnly ? t('landing.noEventsFound') : t('landing.checkBackLater')}
             </p>
           ) : (
             <>
@@ -171,7 +192,7 @@ export function FeaturedEventsManagement() {
                       <TableHead>{t('admin.featuredEvents.status')}</TableHead>
                       <TableHead>{t('admin.featuredEvents.rectangleBanner')}</TableHead>
                       <TableHead>{t('admin.featuredEvents.highlight')}</TableHead>
-                      <TableHead className="w-[180px]">{t('admin.eventBanners.uploadOrReplace')}</TableHead>
+                      <TableHead className="w-[220px]">{t('admin.eventBanners.uploadOrReplace')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -226,24 +247,37 @@ export function FeaturedEventsManagement() {
                           </Button>
                         </TableCell>
                         <TableCell>
-                          <input
-                            ref={(el) => setFileInputRef(event.id, el)}
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            className="hidden"
-                            onChange={(e) => handleFileChange(event.id, e)}
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => fileInputRefs.current[event.id]?.click()}
-                            disabled={actionLoading === event.id}
-                          >
-                            {actionLoading === event.id
-                              ? t('admin.featuredEvents.uploading')
-                              : t('admin.featuredEvents.uploadRectangle')}
-                            <Upload className="h-4 w-4 ml-1" />
-                          </Button>
+                          <div className="flex gap-1 flex-wrap">
+                            <input
+                              ref={(el) => setFileInputRef(event.id, el)}
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp"
+                              className="hidden"
+                              onChange={(e) => handleFileChange(event.id, e)}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => fileInputRefs.current[event.id]?.click()}
+                              disabled={actionLoading === event.id}
+                            >
+                              {actionLoading === event.id
+                                ? t('admin.featuredEvents.uploading')
+                                : t('admin.featuredEvents.uploadRectangle')}
+                              <Upload className="h-4 w-4 ml-1" />
+                            </Button>
+                            {event.squareBannerUrl && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setCropModalEvent({ id: event.id, squareBannerUrl: event.squareBannerUrl! })}
+                                disabled={actionLoading === event.id}
+                              >
+                                <Crop className="h-4 w-4 mr-1" />
+                                {t('admin.featuredEvents.cropFromSquare')}
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -283,6 +317,17 @@ export function FeaturedEventsManagement() {
           )}
         </CardContent>
       </Card>
+
+      <AvatarCropModal
+        open={cropModalEvent !== null}
+        onClose={() => setCropModalEvent(null)}
+        onSave={handleCropSave}
+        imageSrc={cropModalEvent?.squareBannerUrl}
+        aspect={1400 / 400}
+        outputWidth={1400}
+        outputHeight={400}
+        cropShape="rect"
+      />
     </div>
   );
 }

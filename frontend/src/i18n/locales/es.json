@@ -1738,6 +1738,8 @@
       "hasRectangle": "Sí",
       "noRectangle": "No — agregar abajo",
       "uploadRectangle": "Subir imagen rectangular",
+      "showHighlightedOnly": "Eventos Destacados",
+      "cropFromSquare": "Recortar desde cuadrada",
       "setFeatured": "Marcar como destacado",
       "removeFeatured": "Quitar de destacados",
       "approved": "Aprobado",
