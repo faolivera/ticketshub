@@ -27,6 +27,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from '../ui/sidebar';
 
 interface NavItem {
@@ -35,76 +36,116 @@ interface NavItem {
   labelKey: string;
 }
 
-const navItems: NavItem[] = [
+interface NavGroup {
+  labelKey: string | null;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
   {
-    to: '/admin',
-    icon: <LayoutDashboard className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.dashboard',
+    labelKey: null,
+    items: [
+      {
+        to: '/admin',
+        icon: <LayoutDashboard className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.dashboard',
+      },
+    ],
   },
   {
-    to: '/admin/users',
-    icon: <Users className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.users',
+    labelKey: 'admin.sidebar.groups.catalog',
+    items: [
+      {
+        to: '/admin/events',
+        icon: <Calendar className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.events',
+      },
+      {
+        to: '/admin/import-events',
+        icon: <Upload className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.importEvents',
+      },
+      {
+        to: '/admin/featured-events',
+        icon: <Star className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.featuredEvents',
+      },
+      {
+        to: '/admin/events-score',
+        icon: <BarChart3 className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.eventsScore',
+      },
+    ],
   },
   {
-    to: '/admin/events',
-    icon: <Calendar className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.events',
+    labelKey: 'admin.sidebar.groups.usersCompliance',
+    items: [
+      {
+        to: '/admin/users',
+        icon: <Users className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.users',
+      },
+      {
+        to: '/admin/identity-verifications',
+        icon: <Shield className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.identityVerifications',
+      },
+    ],
   },
   {
-    to: '/admin/import-events',
-    icon: <Upload className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.importEvents',
+    labelKey: 'admin.sidebar.groups.commerce',
+    items: [
+      {
+        to: '/admin/transactions',
+        icon: <CreditCard className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.transactions',
+      },
+      {
+        to: '/admin/seller-payouts',
+        icon: <Banknote className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.sellerPayouts',
+      },
+      {
+        to: '/admin/payment-methods',
+        icon: <Wallet className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.paymentMethods',
+      },
+    ],
   },
   {
-    to: '/admin/transactions',
-    icon: <CreditCard className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.transactions',
+    labelKey: 'admin.sidebar.groups.marketing',
+    items: [
+      {
+        to: '/admin/promotions',
+        icon: <Tag className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.promotions',
+      },
+    ],
   },
   {
-    to: '/admin/seller-payouts',
-    icon: <Banknote className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.sellerPayouts',
+    labelKey: 'admin.sidebar.groups.support',
+    items: [
+      {
+        to: '/admin/support-tickets',
+        icon: <MessageSquare className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.supportTickets',
+      },
+      {
+        to: '/admin/notifications',
+        icon: <Bell className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.notifications',
+      },
+    ],
   },
   {
-    to: '/admin/payment-methods',
-    icon: <Wallet className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.paymentMethods',
-  },
-  {
-    to: '/admin/identity-verifications',
-    icon: <Shield className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.identityVerifications',
-  },
-  {
-    to: '/admin/notifications',
-    icon: <Bell className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.notifications',
-  },
-  {
-    to: '/admin/platform-config',
-    icon: <Settings className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.platformConfig',
-  },
-  {
-    to: '/admin/events-score',
-    icon: <BarChart3 className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.eventsScore',
-  },
-  {
-    to: '/admin/featured-events',
-    icon: <Star className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.featuredEvents',
-  },
-  {
-    to: '/admin/promotions',
-    icon: <Tag className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.promotions',
-  },
-  {
-    to: '/admin/support-tickets',
-    icon: <MessageSquare className="w-4 h-4" />,
-    labelKey: 'admin.sidebar.supportTickets',
+    labelKey: 'admin.sidebar.groups.configuration',
+    items: [
+      {
+        to: '/admin/platform-config',
+        icon: <Settings className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.platformConfig',
+      },
+    ],
   },
 ];
 
@@ -120,29 +161,34 @@ export function AdminSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>{t('admin.sidebar.navigation')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.to}
-                      end={item.to === '/admin'}
-                      className={({ isActive }) =>
-                        isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
-                      }
-                    >
-                      {item.icon}
-                      <span>{t(item.labelKey)}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navGroups.map((group, groupIndex) => (
+          <SidebarGroup key={groupIndex}>
+            {group.labelKey && (
+              <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.to}
+                        end={item.to === '/admin'}
+                        className={({ isActive }) =>
+                          isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                        }
+                      >
+                        {item.icon}
+                        <span>{t(item.labelKey)}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+            {groupIndex < navGroups.length - 1 && <SidebarSeparator />}
+          </SidebarGroup>
+        ))}
       </SidebarContent>
     </Sidebar>
   );

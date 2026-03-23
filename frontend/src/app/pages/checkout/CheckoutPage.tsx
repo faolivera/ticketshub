@@ -382,7 +382,8 @@ export default function CheckoutPage() {
         <PageMeta title={t("seo.defaultTitle")} description={t("seo.defaultDescription")} />
         <ErrorMessage
           title={data.error || t("buyTicket.ticketNotFound")}
-          message={t("buyTicket.errorLoading")}
+          message={data.errorCode === "EVENT_DATE_EXPIRED" ? undefined : t("buyTicket.errorLoading")}
+          variant={data.errorCode === "EVENT_DATE_EXPIRED" ? "info" : "error"}
           fullScreen
         />
       </>

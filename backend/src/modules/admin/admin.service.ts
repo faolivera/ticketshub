@@ -103,6 +103,7 @@ import {
   DisputeResolution,
 } from '../support/support.domain';
 import type { SupportTicket, SupportMessage } from '../support/support.domain';
+import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
 
 @Injectable()
 export class AdminService {
@@ -130,7 +131,14 @@ export class AdminService {
     private readonly supportService: SupportService,
     @Inject(EventScoringService)
     private readonly eventScoringService: EventScoringService,
+    @Inject(CACHE_SERVICE)
+    private readonly cache: ICacheService,
   ) {}
+
+  async clearCache(ctx: Ctx): Promise<void> {
+    this.cache.clear();
+    this.logger.log(ctx, 'Cache cleared by admin');
+  }
 
   private static readonly USER_SEARCH_LIMIT = 20;
 

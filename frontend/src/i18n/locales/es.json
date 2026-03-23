@@ -271,6 +271,7 @@
     "acceptedOfferExpires": "Completa antes del plazo indicado en tu notificación.",
     "offeredPrice": "Precio ofertado",
     "errorLoading": "Error al cargar los detalles de la entrada. Inténtalo de nuevo.",
+    "eventDateExpired": "Estas entradas ya no están disponibles para la compra.",
     "loginRequired": "Inicio de Sesión Requerido",
     "mustBeLoggedIn": "Debes iniciar sesión para comprar entradas",
     "loginToBuy": "Iniciar Sesión para Comprar",
@@ -1712,7 +1713,6 @@
       "slugHint": "Dejar vacío para generar desde nombre y lugar (se añade sufijo al crear)"
     },
     "sidebar": {
-      "navigation": "Navegación",
       "dashboard": "Panel Principal",
       "users": "Usuarios",
       "events": "Gestión de Eventos",
@@ -1727,7 +1727,15 @@
       "eventsScore": "Puntuación de eventos",
       "promotions": "Promociones",
       "featuredEvents": "Eventos destacados",
-      "supportTickets": "Tickets de soporte"
+      "supportTickets": "Tickets de soporte",
+      "groups": {
+        "catalog": "Catálogo",
+        "usersCompliance": "Usuarios y Compliance",
+        "commerce": "Comercio",
+        "marketing": "Marketing",
+        "support": "Soporte",
+        "configuration": "Configuración"
+      }
     },
     "featuredEvents": {
       "title": "Eventos destacados",
@@ -1980,6 +1988,14 @@
       "saved": "Configuración guardada correctamente.",
       "loadError": "Error al cargar la configuración.",
       "saveError": "Error al guardar la configuración.",
+      "actionsTitle": "Acciones",
+      "actionsDescription": "Acciones operativas de la plataforma.",
+      "clearCacheLabel": "Limpiar Cache",
+      "clearCacheDescription": "Elimina todos los valores cacheados en memoria. El próximo request a cada recurso cacheado recargará desde la base de datos.",
+      "clearCache": "Limpiar Cache",
+      "clearingCache": "Limpiando...",
+      "cacheClearedSuccess": "Cache limpiado correctamente.",
+      "cacheClearedError": "Error al limpiar el cache.",
       "validation": {
         "allFieldsMustBeNumbers": "Todos los campos deben ser números.",
         "buyerFeeBetween": "La comisión del comprador debe estar entre {{min}} y {{max}}.",

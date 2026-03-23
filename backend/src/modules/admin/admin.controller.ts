@@ -144,6 +144,17 @@ export class AdminController {
   ) {}
 
   /**
+   * Clear the in-memory cache (all keys).
+   */
+  @Post('clear-cache')
+  async clearCache(
+    @Context() ctx: Ctx,
+  ): Promise<ApiResponse<{ cleared: boolean }>> {
+    await this.adminService.clearCache(ctx);
+    return { success: true, data: { cleared: true } };
+  }
+
+  /**
    * Get dashboard metrics (users, events, support tickets, pending counts).
    */
   @Get('dashboard-metrics')

@@ -44,7 +44,7 @@ export class ConfigController {
     @Context() ctx: Ctx,
   ): Promise<ApiResponse<GetPlatformConfigResponse>> {
     const data =
-      await this.platformConfigService.getPlatformConfigForAdmin(ctx);
+      await this.platformConfigService.getPlatformConfig(ctx);
     return { success: true, data };
   }
 

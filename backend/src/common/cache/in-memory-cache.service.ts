@@ -50,4 +50,9 @@ export class InMemoryCacheService implements ICacheService {
   invalidate(key: string): void {
     this.store.delete(key);
   }
+
+  clear(): void {
+    this.store.clear();
+    this.logger.debug(ON_APP_INIT_CTX, 'Cache cleared');
+  }
 }

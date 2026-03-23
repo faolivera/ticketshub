@@ -760,6 +760,13 @@ export const adminService = {
     );
     return response.data;
   },
+
+  /**
+   * Clear all server-side in-memory cache entries.
+   */
+  async clearCache(): Promise<void> {
+    await apiClient.post('/admin/clear-cache');
+  },
 };
 
 export default adminService;

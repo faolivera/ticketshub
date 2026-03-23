@@ -17,6 +17,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventBannerStorageService } from './event-banner-storage.service';
 import { ContextLogger } from '../../common/logger/context-logger';
+import { EventDateExpiredException } from '../../common/exceptions';
 import type { Ctx } from '../../common/types/context';
 import type { Image } from '../images/images.domain';
 import type {
@@ -132,9 +133,7 @@ export class EventsService {
       eventDateId,
     );
     if (!eventDate || eventDate.date < cutoff) {
-      throw new BadRequestException(
-        'Event date is no longer available for purchase',
-      );
+      throw new EventDateExpiredException();
     }
   }
 

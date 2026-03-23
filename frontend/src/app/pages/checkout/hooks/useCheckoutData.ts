@@ -34,6 +34,7 @@ export interface UseCheckoutDataReturn {
   // status
   isLoading: boolean;
   error: string | null;
+  errorCode: string | null;
   // re-fetch (call after snapshot-expired error, alongside risk.reset())
   refresh: () => Promise<void>;
 }
@@ -45,6 +46,7 @@ export function useCheckoutData(listingId: string | undefined): UseCheckoutDataR
   const [buyPageData, setBuyPageData] = useState<BuyPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   const [quantity, setQuantity] = useState(1);
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
@@ -73,6 +75,7 @@ export function useCheckoutData(listingId: string | undefined): UseCheckoutDataR
     async (id: string, cancelled: { current: boolean }) => {
       setIsLoading(true);
       setError(null);
+      setErrorCode(null);
       try {
         const data = await ticketsService.getBuyPage(id);
         if (!cancelled.current) {
@@ -80,8 +83,12 @@ export function useCheckoutData(listingId: string | undefined): UseCheckoutDataR
           const firstAvailable = data.paymentMethods?.find((m) => m.available !== false);
           if (firstAvailable) setSelectedPaymentMethod(firstAvailable);
         }
-      } catch {
-        if (!cancelled.current) setError(t("buyTicket.errorLoading"));
+      } catch (err: unknown) {
+        if (!cancelled.current) {
+          const code = String((err as Record<string, unknown>)?.code ?? "");
+          setErrorCode(code || null);
+          setError(code === "EVENT_DATE_EXPIRED" ? t("buyTicket.eventDateExpired") : t("buyTicket.errorLoading"));
+        }
       } finally {
         if (!cancelled.current) setIsLoading(false);
       }
@@ -143,6 +150,7 @@ export function useCheckoutData(listingId: string | undefined): UseCheckoutDataR
     isNewSeller,
     isLoading,
     error,
+    errorCode,
     refresh,
   };
 }

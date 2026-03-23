@@ -20,4 +20,9 @@ export interface ICacheService {
    * Removes the cached entry for `key`. No-op if the key does not exist.
    */
   invalidate(key: string): void;
+
+  /**
+   * Removes all cached entries.
+   */
+  clear(): void;
 }

@@ -8,10 +8,14 @@ import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type { PlatformConfig } from './config.domain';
 import type {
-  GetPlatformConfigResponse,
   UpdatePlatformConfigRequest,
   UpdatePlatformConfigResponse,
 } from './config.api';
+import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
+
+const PLATFORM_CONFIG_CACHE_KEY = 'platform_config';
+const CACHE_TTL_SECONDS = 24 * 60 * 60; // 24 hours
+
 const MIN_FEE = 0;
 const MAX_FEE = 100;
 const MIN_PAYMENT_TIMEOUT_MINUTES = 1;
@@ -34,28 +38,28 @@ export class PlatformConfigService {
     private readonly configRepository: IConfigRepository,
     @Inject(NestConfigService)
     private readonly nestConfigService: NestConfigService,
+    @Inject(CACHE_SERVICE)
+    private readonly cache: ICacheService,
   ) {}
 
   /**
    * Returns current platform config. If no row exists in DB, seeds from HOCON and returns.
+   * Result is cached in-memory for 24 hours.
    */
   async getPlatformConfig(ctx: Ctx): Promise<PlatformConfig> {
-    let config = await this.configRepository.findPlatformConfig(ctx);
-    if (!config) {
-      config = this.getDefaultsFromHocon();
-      await this.configRepository.upsertPlatformConfig(ctx, config);
-      this.logger.log(ctx, 'Seeded platform config from HOCON defaults');
-    }
-    return config;
-  }
-
-  /**
-   * Returns platform config for admin API (same as getPlatformConfig).
-   */
-  async getPlatformConfigForAdmin(
-    ctx: Ctx,
-  ): Promise<GetPlatformConfigResponse> {
-    return this.getPlatformConfig(ctx);
+    return this.cache.getOrCalculate(
+      PLATFORM_CONFIG_CACHE_KEY,
+      CACHE_TTL_SECONDS,
+      async () => {
+        let config = await this.configRepository.findPlatformConfig(ctx);
+        if (!config) {
+          config = this.getDefaultsFromHocon();
+          await this.configRepository.upsertPlatformConfig(ctx, config);
+          this.logger.log(ctx, 'Seeded platform config from HOCON defaults');
+        }
+        return config;
+      },
+    );
   }
 
   /**
@@ -141,6 +145,7 @@ export class PlatformConfigService {
       ctx,
       merged,
     );
+    this.cache.invalidate(PLATFORM_CONFIG_CACHE_KEY);
     this.logger.log(ctx, 'Updated platform config');
     return updated;
   }

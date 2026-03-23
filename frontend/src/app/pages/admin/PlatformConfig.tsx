@@ -46,6 +46,7 @@ export function PlatformConfig() {
   const [config, setConfig] = useState<PlatformConfigType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [clearingCache, setClearingCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -331,6 +332,20 @@ export function PlatformConfig() {
     }
   };
 
+  const handleClearCache = async () => {
+    setClearingCache(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await adminService.clearCache();
+      setSuccess(t('admin.platformConfig.cacheClearedSuccess'));
+    } catch {
+      setError(t('admin.platformConfig.cacheClearedError'));
+    } finally {
+      setClearingCache(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -449,6 +464,32 @@ export function PlatformConfig() {
                 max={MAX_CHAT_MAX_MESSAGES}
                 value={chatMaxMessages}
                 onChange={(e) => setChatMaxMessages(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="usdToArs">
+                {t('admin.platformConfig.usdToArs')}
+              </Label>
+              <Input
+                id="usdToArs"
+                type="number"
+                min={1}
+                max={1000000}
+                value={usdToArs}
+                onChange={(e) => setUsdToArs(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="minimumHoursToBuyTickets">
+                {t('admin.platformConfig.minimumHoursToBuyTickets')}
+              </Label>
+              <Input
+                id="minimumHoursToBuyTickets"
+                type="number"
+                min={0}
+                max={168}
+                value={minimumHoursToBuyTickets}
+                onChange={(e) => setMinimumHoursToBuyTickets(e.target.value)}
               />
             </div>
           </div>
@@ -813,42 +854,27 @@ export function PlatformConfig() {
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <Label className="text-sm font-medium">
-              {t('admin.platformConfig.exchangeRatesSectionTitle')}
-            </Label>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">
-                {t('admin.platformConfig.usdToArs')}
-              </span>
-              <Input
-                type="number"
-                min={1}
-                max={1000000}
-                className="w-32"
-                value={usdToArs}
-                onChange={(e) => setUsdToArs(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">
-                {t('admin.platformConfig.minimumHoursToBuyTickets')}
-              </span>
-              <Input
-                type="number"
-                min={0}
-                max={168}
-                className="w-24"
-                value={minimumHoursToBuyTickets}
-                onChange={(e) => setMinimumHoursToBuyTickets(e.target.value)}
-              />
-            </div>
-          </div>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? t('admin.platformConfig.saving') : t('admin.platformConfig.save')}
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('admin.platformConfig.actionsTitle')}</CardTitle>
+          <CardDescription>{t('admin.platformConfig.actionsDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3">
+            <div>
+              <p className="text-sm font-medium mb-1">{t('admin.platformConfig.clearCacheLabel')}</p>
+              <p className="text-sm text-muted-foreground mb-3">{t('admin.platformConfig.clearCacheDescription')}</p>
+              <Button variant="outline" onClick={handleClearCache} disabled={clearingCache}>
+                {clearingCache ? t('admin.platformConfig.clearingCache') : t('admin.platformConfig.clearCache')}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

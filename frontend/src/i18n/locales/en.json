@@ -233,6 +233,7 @@
     "verifyEmailToPurchase": "Please verify your email address to complete this purchase.",
     "description": "Review your ticket details and complete the purchase securely.",
     "errorLoading": "Failed to load ticket details. Please try again.",
+    "eventDateExpired": "These tickets are no longer available for purchase.",
     "loginRequired": "Login Required",
     "mustBeLoggedIn": "You must be logged in to purchase tickets",
     "loginToBuy": "Login to Buy",
@@ -1713,7 +1714,6 @@
       "slugHint": "Leave empty to auto-generate from name and venue (id suffix added on create)"
     },
     "sidebar": {
-      "navigation": "Navigation",
       "dashboard": "Dashboard",
       "users": "User Management",
       "events": "Event Management",
@@ -1728,7 +1728,15 @@
       "eventsScore": "Events Score",
       "promotions": "Promotions",
       "featuredEvents": "Featured Events",
-      "supportTickets": "Support Tickets"
+      "supportTickets": "Support Tickets",
+      "groups": {
+        "catalog": "Catalog",
+        "usersCompliance": "Users & Compliance",
+        "commerce": "Commerce",
+        "marketing": "Marketing",
+        "support": "Support",
+        "configuration": "Configuration"
+      }
     },
     "featuredEvents": {
       "title": "Featured Events",
@@ -1981,6 +1989,14 @@
       "saved": "Settings saved successfully.",
       "loadError": "Failed to load platform settings.",
       "saveError": "Failed to save settings.",
+      "actionsTitle": "Actions",
+      "actionsDescription": "Operational actions for the platform.",
+      "clearCacheLabel": "Clear Cache",
+      "clearCacheDescription": "Removes all in-memory cached values. The next request to each cached resource will reload from the database.",
+      "clearCache": "Clear Cache",
+      "clearingCache": "Clearing...",
+      "cacheClearedSuccess": "Cache cleared successfully.",
+      "cacheClearedError": "Failed to clear cache.",
       "validation": {
         "allFieldsMustBeNumbers": "All fields must be numbers.",
         "buyerFeeBetween": "Buyer fee must be between {{min}} and {{max}}.",

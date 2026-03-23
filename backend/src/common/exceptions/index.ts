@@ -7,3 +7,4 @@ export * from './claim-too-late.exception';
 export * from './claim-ticket-not-transferred.exception';
 export * from './claim-confirm-receipt-first.exception';
 export * from './invalid-phone-number.exception';
+export * from './event-date-expired.exception';

@@ -7,9 +7,10 @@ import { ConfigPublicController } from './config-public.controller';
 import { CONFIG_REPOSITORY } from './config.repository.interface';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
+import { CacheModule } from '../../common/cache';
 
 @Module({
-  imports: [PrismaModule, UsersModule],
+  imports: [PrismaModule, UsersModule, CacheModule],
   controllers: [
     ConfigController,
     ConfigPublicController,

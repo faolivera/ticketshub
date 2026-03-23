@@ -1,11 +1,11 @@
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface ErrorMessageProps {
   /**
    * Error message to display
    */
-  message: string;
+  message?: string;
   /**
    * Optional retry callback
    */
@@ -22,27 +22,36 @@ interface ErrorMessageProps {
    * Custom class name
    */
   className?: string;
+  /**
+   * Visual variant: "error" shows red AlertCircle (default), "info" shows neutral Clock icon
+   */
+  variant?: 'error' | 'info';
 }
 
 /**
  * Reusable error message component
  */
-export function ErrorMessage({ 
-  message, 
-  onRetry, 
+export function ErrorMessage({
+  message,
+  onRetry,
   title,
   fullScreen = false,
-  className = '' 
+  className = '',
+  variant = 'error',
 }: ErrorMessageProps) {
   const { t } = useTranslation();
 
+  const icon = variant === 'info'
+    ? <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+    : <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />;
+
   const content = (
     <div className={`text-center ${className}`}>
-      <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+      {icon}
       {title && (
         <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
       )}
-      <p className="text-gray-600 mb-4">{message}</p>
+      {message && <p className="text-gray-600 mb-4">{message}</p>}
       {onRetry && (
         <button
           onClick={onRetry}

@@ -98,8 +98,12 @@ export class BffService {
       includeStatus: true,
       cutoffDate,
     });
+    const validDateIds = new Set(
+      event.dates.filter((d) => d.status === 'approved').map((d) => d.id),
+    );
     const listings = await this.getEventListings(ctx, fullEvent.id);
-    return { event, listings };
+    const filteredListings = listings.filter((l) => validDateIds.has(l.eventDateId));
+    return { event, listings: filteredListings };
   }
 
   /**
