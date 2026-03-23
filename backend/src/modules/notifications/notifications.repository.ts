@@ -91,7 +91,8 @@ export class NotificationsRepository
 
   async countPendingEvents(ctx: Ctx): Promise<number> {
     this.logger.debug(ctx, 'countPendingEvents');
-    return this.prisma.notificationEvent.count({
+    const client = this.getClient(ctx);
+    return client.notificationEvent.count({
       where: { status: 'PENDING' },
     });
   }
