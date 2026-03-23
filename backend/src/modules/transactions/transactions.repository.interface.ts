@@ -17,11 +17,6 @@ export interface ITransactionsRepository {
   findById(ctx: Ctx, id: string): Promise<Transaction | undefined>;
 
   /**
-   * Get all transactions
-   */
-  getAll(ctx: Ctx): Promise<Transaction[]>;
-
-  /**
    * Get transactions by buyer
    */
   getByBuyerId(ctx: Ctx, buyerId: string): Promise<Transaction[]>;

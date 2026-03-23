@@ -55,18 +55,6 @@ export class ReviewsRepository implements IReviewsRepository {
     return review ? this.mapToReview(review) : undefined;
   }
 
-  async getAll(ctx: Ctx): Promise<Review[]> {
-    this.logger.debug(ctx, 'getAll');
-    const reviews = await this.prisma.review.findMany({
-      include: {
-        transaction: {
-          select: { buyerId: true, sellerId: true },
-        },
-      },
-    });
-    return reviews.map((r) => this.mapToReview(r));
-  }
-
   async findByTransactionAndReviewer(
     _ctx: Ctx,
     transactionId: string,

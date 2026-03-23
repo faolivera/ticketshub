@@ -319,16 +319,6 @@ export class TicketsRepository
     return listings.map((l) => this.mapToListing(l));
   }
 
-  async getAll(ctx: Ctx): Promise<TicketListing[]> {
-    this.logger.debug(ctx, 'getAll');
-    const client = this.getClient(ctx);
-    const listings = await client.ticketListing.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { ticketUnits: true },
-    });
-    return listings.map((l) => this.mapToListing(l));
-  }
-
   async getActiveListings(ctx: Ctx): Promise<TicketListing[]> {
     this.logger.debug(ctx, 'getActiveListings');
     const client = this.getClient(ctx);

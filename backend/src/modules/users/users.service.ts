@@ -214,13 +214,6 @@ export class UsersService {
   }
 
   /**
-   * Get all sellers (users with Seller or VerifiedSeller level)
-   */
-  async getSellers(ctx: Ctx): Promise<User[]> {
-    return await this.usersRepository.getSellers(ctx);
-  }
-
-  /**
    * Get paginated user list for admin with optional search by name or email.
    */
   async getListForAdmin(

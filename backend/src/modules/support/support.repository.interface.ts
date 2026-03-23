@@ -19,11 +19,6 @@ export interface ISupportRepository {
   findTicketById(ctx: Ctx, id: string): Promise<SupportTicket | undefined>;
 
   /**
-   * Get all tickets
-   */
-  getAllTickets(ctx: Ctx): Promise<SupportTicket[]>;
-
-  /**
    * Get tickets by user ID
    */
   getTicketsByUserId(ctx: Ctx, userId: string): Promise<SupportTicket[]>;

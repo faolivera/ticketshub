@@ -114,15 +114,6 @@ export class TransactionsRepository
     return transaction ? this.mapToTransaction(transaction) : undefined;
   }
 
-  async getAll(ctx: Ctx): Promise<Transaction[]> {
-    this.logger.debug(ctx, 'getAll');
-    const client = this.getClient(ctx);
-    const transactions = await client.transaction.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-    return transactions.map((t) => this.mapToTransaction(t));
-  }
-
   async getByBuyerId(ctx: Ctx, buyerId: string): Promise<Transaction[]> {
     this.logger.debug(ctx, 'getByBuyerId', { buyerId });
     const client = this.getClient(ctx);

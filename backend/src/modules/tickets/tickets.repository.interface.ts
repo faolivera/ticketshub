@@ -40,11 +40,6 @@ export interface ITicketsRepository {
   findByIds(ctx: Ctx, ids: string[]): Promise<TicketListing[]>;
 
   /**
-   * Get all listings
-   */
-  getAll(ctx: Ctx): Promise<TicketListing[]>;
-
-  /**
    * List listings with optional filters and pagination (DB-level).
    * Exactly one of eventId, eventDateId, sellerId may be set, or none for all active.
    */

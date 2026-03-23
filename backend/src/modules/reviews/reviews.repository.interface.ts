@@ -16,11 +16,6 @@ export interface IReviewsRepository {
   findById(ctx: Ctx, id: string): Promise<Review | undefined>;
 
   /**
-   * Get all reviews
-   */
-  getAll(ctx: Ctx): Promise<Review[]>;
-
-  /**
    * Find review by transaction and reviewer
    */
   findByTransactionAndReviewer(

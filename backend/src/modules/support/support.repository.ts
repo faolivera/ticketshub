@@ -63,14 +63,6 @@ export class SupportRepository implements ISupportRepository {
     return ticket ? this.mapToTicket(ticket) : undefined;
   }
 
-  async getAllTickets(ctx: Ctx): Promise<SupportTicket[]> {
-    this.logger.debug(ctx, 'getAllTickets');
-    const tickets = await this.prisma.supportTicket.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-    return tickets.map((t) => this.mapToTicket(t));
-  }
-
   async getTicketsByUserId(ctx: Ctx, userId: string): Promise<SupportTicket[]> {
     this.logger.debug(ctx, 'getTicketsByUserId', { userId });
     const tickets = await this.prisma.supportTicket.findMany({

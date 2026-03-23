@@ -45,11 +45,6 @@ export interface VerifiedSellerIdentityData {
  */
 export interface IUsersRepository {
   /**
-   * Get all users
-   */
-  getAll(ctx: Ctx): Promise<User[]>;
-
-  /**
    * Find user by ID
    */
   findById(ctx: Ctx, id: string): Promise<User | undefined>;
@@ -91,11 +86,6 @@ export interface IUsersRepository {
     ctx: Ctx,
     params: { page: number; limit: number; search?: string },
   ): Promise<{ users: User[]; total: number }>;
-
-  /**
-   * Get all sellers (users who have accepted seller terms)
-   */
-  getSellers(ctx: Ctx): Promise<User[]>;
 
   /**
    * Get all admin users (users with Admin role)

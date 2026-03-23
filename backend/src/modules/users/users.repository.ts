@@ -34,12 +34,6 @@ export class UsersRepository implements IUsersRepository {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAll(ctx: Ctx): Promise<User[]> {
-    this.logger.debug(ctx, 'getAll');
-    const users = await this.prisma.user.findMany();
-    return users.map((u) => this.mapToUser(u));
-  }
-
   async findById(_ctx: Ctx, id: string): Promise<User | undefined> {
     this.logger.debug(_ctx, 'findById', { id });
     const user = await this.prisma.user.findUnique({
@@ -148,16 +142,6 @@ export class UsersRepository implements IUsersRepository {
       users: users.map((u) => this.mapToUser(u)),
       total,
     };
-  }
-
-  async getSellers(ctx: Ctx): Promise<User[]> {
-    this.logger.debug(ctx, 'getSellers');
-    const users = await this.prisma.user.findMany({
-      where: {
-        acceptedSellerTermsAt: { not: null },
-      },
-    });
-    return users.map((u) => this.mapToUser(u));
   }
 
   async getAdmins(ctx: Ctx): Promise<User[]> {
