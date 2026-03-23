@@ -10,6 +10,7 @@ import { randomBytes } from 'crypto';
 import {
   REVIEWS_REPOSITORY,
   type IReviewsRepository,
+  type ReviewMetrics,
 } from './reviews.repository.interface';
 import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
@@ -287,15 +288,16 @@ export class ReviewsService {
   ): Promise<UserReviewMetrics> {
     this.logger.log(ctx, `Getting seller metrics for user ${userId}`);
 
-    const reviews = await this.reviewsRepository.getByRevieweeIdAndRole(
+    const metrics: ReviewMetrics = await this.reviewsRepository.getMetricsByRevieweeIdAndRole(
       ctx,
       userId,
       'seller',
     );
 
-    const totalReviews = reviews.length;
-    const { positive: positiveReviews, negative: negativeReviews, neutral: neutralReviews } =
-      this.countRatings(reviews);
+    const totalReviews = metrics.count;
+    const positiveReviews = metrics.positiveCount;
+    const negativeReviews = metrics.negativeCount;
+    const neutralReviews = metrics.neutralCount;
 
     const nonNeutralReviews = totalReviews - neutralReviews;
     const positivePercent =
@@ -406,15 +408,16 @@ export class ReviewsService {
   async getBuyerMetrics(ctx: Ctx, userId: string): Promise<UserReviewMetrics> {
     this.logger.log(ctx, `Getting buyer metrics for user ${userId}`);
 
-    const reviews = await this.reviewsRepository.getByRevieweeIdAndRole(
+    const metrics: ReviewMetrics = await this.reviewsRepository.getMetricsByRevieweeIdAndRole(
       ctx,
       userId,
       'buyer',
     );
 
-    const totalReviews = reviews.length;
-    const { positive: positiveReviews, negative: negativeReviews, neutral: neutralReviews } =
-      this.countRatings(reviews);
+    const totalReviews = metrics.count;
+    const positiveReviews = metrics.positiveCount;
+    const negativeReviews = metrics.negativeCount;
+    const neutralReviews = metrics.neutralCount;
 
     const nonNeutralReviews = totalReviews - neutralReviews;
     const positivePercent =
@@ -456,20 +459,24 @@ export class ReviewsService {
   async getSellerProfileReviews(
     ctx: Ctx,
     sellerId: string,
+    take: number = 20,
+    skip: number = 0,
   ): Promise<{
     stats: { positive: number; neutral: number; negative: number };
     reviews: SellerProfileReview[];
   }> {
     this.logger.log(ctx, `Getting seller profile reviews for user ${sellerId}`);
 
-    const reviews = await this.reviewsRepository.getByRevieweeIdAndRole(
-      ctx,
-      sellerId,
-      'seller',
-    );
+    const [statsMetrics, reviews] = await Promise.all([
+      this.reviewsRepository.getMetricsByRevieweeIdAndRole(ctx, sellerId, 'seller'),
+      this.reviewsRepository.getByRevieweeIdAndRole(ctx, sellerId, 'seller', take, skip),
+    ]);
 
-    const { positive, negative, neutral } = this.countRatings(reviews);
-    const stats = { positive, negative, neutral };
+    const stats = {
+      positive: statsMetrics.positiveCount,
+      negative: statsMetrics.negativeCount,
+      neutral: statsMetrics.neutralCount,
+    };
 
     if (reviews.length === 0) {
       return { stats, reviews: [] };

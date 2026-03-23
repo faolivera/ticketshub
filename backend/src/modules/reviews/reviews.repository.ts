@@ -8,7 +8,7 @@ import type {
 import type { Ctx } from '../../common/types/context';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Review, ReviewRating, ReviewPartyRole } from './reviews.domain';
-import type { IReviewsRepository } from './reviews.repository.interface';
+import type { IReviewsRepository, ReviewMetrics } from './reviews.repository.interface';
 
 type PrismaReviewWithTransaction = PrismaReview & {
   transaction: Pick<PrismaTransaction, 'buyerId' | 'sellerId'>;
@@ -97,14 +97,18 @@ export class ReviewsRepository implements IReviewsRepository {
     _ctx: Ctx,
     revieweeId: string,
     revieweeRole: ReviewPartyRole,
+    take: number = 20,
+    skip: number = 0,
   ): Promise<Review[]> {
-    this.logger.debug(_ctx, 'getByRevieweeIdAndRole', { revieweeId, revieweeRole });
+    this.logger.debug(_ctx, 'getByRevieweeIdAndRole', { revieweeId, revieweeRole, take, skip });
     const reviews = await this.prisma.review.findMany({
       where: {
         revieweeId,
         revieweeRole: this.mapRoleToDb(revieweeRole),
       },
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
       include: {
         transaction: {
           select: { buyerId: true, sellerId: true },
@@ -112,6 +116,26 @@ export class ReviewsRepository implements IReviewsRepository {
       },
     });
     return reviews.map((r) => this.mapToReview(r));
+  }
+
+  async getMetricsByRevieweeIdAndRole(
+    _ctx: Ctx,
+    revieweeId: string,
+    revieweeRole: ReviewPartyRole,
+  ): Promise<ReviewMetrics> {
+    this.logger.debug(_ctx, 'getMetricsByRevieweeIdAndRole', { revieweeId, revieweeRole });
+    const [positiveCount, negativeCount, neutralCount] = await Promise.all([
+      this.prisma.review.count({
+        where: { revieweeId, revieweeRole: this.mapRoleToDb(revieweeRole), rating: 1 },
+      }),
+      this.prisma.review.count({
+        where: { revieweeId, revieweeRole: this.mapRoleToDb(revieweeRole), rating: -1 },
+      }),
+      this.prisma.review.count({
+        where: { revieweeId, revieweeRole: this.mapRoleToDb(revieweeRole), rating: 0 },
+      }),
+    ]);
+    return { count: positiveCount + negativeCount + neutralCount, positiveCount, negativeCount, neutralCount };
   }
 
   async getByRevieweeIdsAndRole(

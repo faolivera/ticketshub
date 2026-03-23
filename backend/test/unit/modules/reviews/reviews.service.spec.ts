@@ -75,6 +75,7 @@ describe('ReviewsService', () => {
       getByRevieweeIdAndRole: jest.fn(),
       getByRevieweeIdsAndRole: jest.fn(),
       getByReviewerId: jest.fn(),
+      getMetricsByRevieweeIdAndRole: jest.fn(),
     };
 
     const mockTransactionsService = {
@@ -262,7 +263,12 @@ describe('ReviewsService', () => {
 
   describe('getSellerMetrics', () => {
     it('should return correct metrics with no reviews', async () => {
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 0,
+        positiveCount: 0,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(5);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -281,18 +287,20 @@ describe('ReviewsService', () => {
         positivePercent: null,
         badges: [],
       });
+      expect(reviewsRepository.getMetricsByRevieweeIdAndRole).toHaveBeenCalledWith(
+        mockCtx,
+        'seller_123',
+        'seller',
+      );
     });
 
     it('should calculate positive percentage excluding neutral reviews', async () => {
-      const reviews: Review[] = [
-        { ...mockReview, id: 'rev_1', rating: 'positive' },
-        { ...mockReview, id: 'rev_2', rating: 'positive' },
-        { ...mockReview, id: 'rev_3', rating: 'negative' },
-        { ...mockReview, id: 'rev_4', rating: 'neutral' },
-        { ...mockReview, id: 'rev_5', rating: 'neutral' },
-      ];
-
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 5,
+        positiveCount: 2,
+        negativeCount: 1,
+        neutralCount: 2,
+      });
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(10);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -309,12 +317,12 @@ describe('ReviewsService', () => {
     });
 
     it('should return null positivePercent when all reviews are neutral', async () => {
-      const reviews: Review[] = [
-        { ...mockReview, id: 'rev_1', rating: 'neutral' },
-        { ...mockReview, id: 'rev_2', rating: 'neutral' },
-      ];
-
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 2,
+        positiveCount: 0,
+        negativeCount: 0,
+        neutralCount: 2,
+      });
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(10);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -327,7 +335,12 @@ describe('ReviewsService', () => {
     });
 
     it('should include verified badge when user is VerifiedSeller', async () => {
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 0,
+        positiveCount: 0,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(0);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -348,17 +361,12 @@ describe('ReviewsService', () => {
     });
 
     it('should include trusted badge when threshold is met', async () => {
-      const positiveReviews: Review[] = Array(12)
-        .fill(null)
-        .map((_, i) => ({
-          ...mockReview,
-          id: `rev_${i}`,
-          rating: 'positive' as const,
-        }));
-
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(
-        positiveReviews,
-      );
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 12,
+        positiveCount: 12,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(15);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -370,17 +378,12 @@ describe('ReviewsService', () => {
     });
 
     it('should include best_seller badge when threshold is met for seller role', async () => {
-      const positiveReviews: Review[] = Array(50)
-        .fill(null)
-        .map((_, i) => ({
-          ...mockReview,
-          id: `rev_${i}`,
-          rating: 'positive' as const,
-        }));
-
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(
-        positiveReviews,
-      );
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 50,
+        positiveCount: 50,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
       transactionsService.getSellerCompletedSalesTotal.mockResolvedValue(55);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -405,12 +408,12 @@ describe('ReviewsService', () => {
 
   describe('getBuyerMetrics', () => {
     it('should return correct metrics for buyer with completed purchases', async () => {
-      const reviews: Review[] = [
-        { ...mockReview, id: 'rev_1', rating: 'positive' },
-        { ...mockReview, id: 'rev_2', rating: 'negative' },
-      ];
-
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(reviews);
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 2,
+        positiveCount: 1,
+        negativeCount: 1,
+        neutralCount: 0,
+      });
       transactionsService.getBuyerCompletedPurchasesTotal.mockResolvedValue(3);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
@@ -441,10 +444,20 @@ describe('ReviewsService', () => {
       expect(
         transactionsService.getBuyerCompletedPurchasesTotal,
       ).toHaveBeenCalledWith(mockCtx, 'buyer_123');
+      expect(reviewsRepository.getMetricsByRevieweeIdAndRole).toHaveBeenCalledWith(
+        mockCtx,
+        'buyer_123',
+        'buyer',
+      );
     });
 
     it('should return totalTransactions: 0 when buyer has no completed purchases', async () => {
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 0,
+        positiveCount: 0,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
       transactionsService.getBuyerCompletedPurchasesTotal.mockResolvedValue(0);
       usersService.findById.mockResolvedValue(null);
 
@@ -455,20 +468,13 @@ describe('ReviewsService', () => {
     });
 
     it('should not include best_seller badge for buyer role even with high metrics', async () => {
-      const positiveReviews: Review[] = Array(50)
-        .fill(null)
-        .map((_, i) => ({
-          ...mockReview,
-          id: `rev_${i}`,
-          rating: 'positive' as const,
-        }));
-
-      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue(
-        positiveReviews,
-      );
-      transactionsService.getBuyerCompletedPurchasesTotal.mockResolvedValue(
-        100,
-      );
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 50,
+        positiveCount: 50,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
+      transactionsService.getBuyerCompletedPurchasesTotal.mockResolvedValue(100);
       usersService.findById.mockResolvedValue({
         acceptedSellerTermsAt: new Date(),
         identityVerification: {

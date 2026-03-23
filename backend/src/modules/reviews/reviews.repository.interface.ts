@@ -2,6 +2,16 @@ import type { Ctx } from '../../common/types/context';
 import type { Review, ReviewPartyRole } from './reviews.domain';
 
 /**
+ * Aggregate metrics returned by getMetricsByRevieweeIdAndRole
+ */
+export interface ReviewMetrics {
+  count: number;
+  positiveCount: number;
+  negativeCount: number;
+  neutralCount: number;
+}
+
+/**
  * Reviews repository interface
  */
 export interface IReviewsRepository {
@@ -30,13 +40,24 @@ export interface IReviewsRepository {
   getByTransactionId(ctx: Ctx, transactionId: string): Promise<Review[]>;
 
   /**
-   * Get reviews where user is the reviewee with a specific role
+   * Get reviews where user is the reviewee with a specific role (paginated)
    */
   getByRevieweeIdAndRole(
     ctx: Ctx,
     revieweeId: string,
     revieweeRole: ReviewPartyRole,
+    take?: number,
+    skip?: number,
   ): Promise<Review[]>;
+
+  /**
+   * Get aggregate metrics (count per rating bucket) for a reviewee in a specific role
+   */
+  getMetricsByRevieweeIdAndRole(
+    ctx: Ctx,
+    revieweeId: string,
+    revieweeRole: ReviewPartyRole,
+  ): Promise<ReviewMetrics>;
 
   /**
    * Get reviews where any of the given users is the reviewee with a specific role (batch)
