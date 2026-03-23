@@ -1529,18 +1529,7 @@ export class TransactionsService {
     ctx: Ctx,
     sellerId: string,
   ): Promise<number> {
-    const transactions = await this.transactionsRepository.getBySellerId(
-      ctx,
-      sellerId,
-    );
-    return transactions
-      .filter(
-        (transaction) => transaction.status === TransactionStatus.Completed,
-      )
-      .reduce(
-        (total, transaction) => total + transaction.ticketUnitIds.length,
-        0,
-      );
+    return this.transactionsRepository.countCompletedBySellerId(ctx, sellerId);
   }
 
   /**
@@ -1550,18 +1539,7 @@ export class TransactionsService {
     ctx: Ctx,
     buyerId: string,
   ): Promise<number> {
-    const transactions = await this.transactionsRepository.getByBuyerId(
-      ctx,
-      buyerId,
-    );
-    return transactions
-      .filter(
-        (transaction) => transaction.status === TransactionStatus.Completed,
-      )
-      .reduce(
-        (total, transaction) => total + transaction.ticketUnitIds.length,
-        0,
-      );
+    return this.transactionsRepository.countCompletedByBuyerId(ctx, buyerId);
   }
 
   /**

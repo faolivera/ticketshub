@@ -83,6 +83,8 @@ describe('TransactionsService', () => {
       updateWithVersion: jest.fn(),
       getByBuyerId: jest.fn(),
       getBySellerId: jest.fn(),
+      countCompletedBySellerId: jest.fn(),
+      countCompletedByBuyerId: jest.fn(),
       getByListingId: jest.fn(),
       getByListingIds: jest.fn(),
       getPendingDepositRelease: jest.fn(),
@@ -1468,27 +1470,36 @@ describe('TransactionsService', () => {
     });
   });
 
+  describe('getSellerCompletedSalesTotal', () => {
+    it('should return the count from countCompletedBySellerId', async () => {
+      transactionsRepository.countCompletedBySellerId.mockResolvedValue(5);
+
+      const result = await service.getSellerCompletedSalesTotal(
+        mockCtx,
+        'seller_123',
+      );
+
+      expect(result).toBe(5);
+      expect(
+        transactionsRepository.countCompletedBySellerId,
+      ).toHaveBeenCalledWith(mockCtx, 'seller_123');
+    });
+
+    it('should return 0 when seller has no completed transactions', async () => {
+      transactionsRepository.countCompletedBySellerId.mockResolvedValue(0);
+
+      const result = await service.getSellerCompletedSalesTotal(
+        mockCtx,
+        'seller_123',
+      );
+
+      expect(result).toBe(0);
+    });
+  });
+
   describe('getBuyerCompletedPurchasesTotal', () => {
-    it('should count ticket units from completed transactions for a buyer', async () => {
-      const completed1 = createMockTransaction({
-        status: TransactionStatus.Completed,
-        ticketUnitIds: ['unit_1', 'unit_2'],
-      });
-      const completed2 = createMockTransaction({
-        id: 'txn_456',
-        status: TransactionStatus.Completed,
-        ticketUnitIds: ['unit_3'],
-      });
-      const pending = createMockTransaction({
-        id: 'txn_789',
-        status: TransactionStatus.PendingPayment,
-        ticketUnitIds: ['unit_4', 'unit_5'],
-      });
-      transactionsRepository.getByBuyerId.mockResolvedValue([
-        completed1,
-        completed2,
-        pending,
-      ]);
+    it('should return the count from countCompletedByBuyerId', async () => {
+      transactionsRepository.countCompletedByBuyerId.mockResolvedValue(3);
 
       const result = await service.getBuyerCompletedPurchasesTotal(
         mockCtx,
@@ -1496,31 +1507,13 @@ describe('TransactionsService', () => {
       );
 
       expect(result).toBe(3);
-      expect(transactionsRepository.getByBuyerId).toHaveBeenCalledWith(
-        mockCtx,
-        'buyer_123',
-      );
+      expect(
+        transactionsRepository.countCompletedByBuyerId,
+      ).toHaveBeenCalledWith(mockCtx, 'buyer_123');
     });
 
     it('should return 0 when buyer has no completed transactions', async () => {
-      transactionsRepository.getByBuyerId.mockResolvedValue([
-        createMockTransaction({ status: TransactionStatus.PendingPayment }),
-        createMockTransaction({
-          id: 'txn_2',
-          status: TransactionStatus.Cancelled,
-        }),
-      ]);
-
-      const result = await service.getBuyerCompletedPurchasesTotal(
-        mockCtx,
-        'buyer_123',
-      );
-
-      expect(result).toBe(0);
-    });
-
-    it('should return 0 when buyer has no transactions at all', async () => {
-      transactionsRepository.getByBuyerId.mockResolvedValue([]);
+      transactionsRepository.countCompletedByBuyerId.mockResolvedValue(0);
 
       const result = await service.getBuyerCompletedPurchasesTotal(
         mockCtx,

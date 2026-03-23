@@ -166,6 +166,16 @@ export interface ITransactionsRepository {
     eventIds: string[],
   ): Promise<Map<string, number>>;
 
+  /**
+   * Count completed ticket units sold by a seller (sum of quantity on Completed transactions).
+   */
+  countCompletedBySellerId(ctx: Ctx, sellerId: string): Promise<number>;
+
+  /**
+   * Count completed ticket units bought by a buyer (sum of quantity on Completed transactions).
+   */
+  countCompletedByBuyerId(ctx: Ctx, buyerId: string): Promise<number>;
+
   getAuditLogsByTransactionId(
     ctx: Ctx,
     transactionId: string,

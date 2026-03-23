@@ -658,6 +658,32 @@ export class TransactionsRepository
     return map;
   }
 
+  async countCompletedBySellerId(
+    ctx: Ctx,
+    sellerId: string,
+  ): Promise<number> {
+    this.logger.debug(ctx, 'countCompletedBySellerId', { sellerId });
+    const client = this.getClient(ctx);
+    const result = await client.transaction.aggregate({
+      where: { sellerId, status: 'Completed' },
+      _sum: { quantity: true },
+    });
+    return result._sum.quantity ?? 0;
+  }
+
+  async countCompletedByBuyerId(
+    ctx: Ctx,
+    buyerId: string,
+  ): Promise<number> {
+    this.logger.debug(ctx, 'countCompletedByBuyerId', { buyerId });
+    const client = this.getClient(ctx);
+    const result = await client.transaction.aggregate({
+      where: { buyerId, status: 'Completed' },
+      _sum: { quantity: true },
+    });
+    return result._sum.quantity ?? 0;
+  }
+
   async getAuditLogsByTransactionId(
     ctx: Ctx,
     transactionId: string,
