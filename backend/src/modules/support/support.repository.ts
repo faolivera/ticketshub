@@ -72,6 +72,7 @@ export class SupportRepository implements ISupportRepository {
     return tickets.map((t) => this.mapToTicket(t));
   }
 
+  // TODO: paginate — capped at 500 rows. Implement proper pagination when volume justifies it.
   async getActiveTickets(ctx: Ctx): Promise<SupportTicket[]> {
     this.logger.debug(ctx, 'getActiveTickets');
     const tickets = await this.prisma.supportTicket.findMany({
@@ -85,7 +86,11 @@ export class SupportRepository implements ISupportRepository {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: 500,
     });
+    if (tickets.length === 500) {
+      this.logger.warn(ctx, 'getActiveTickets', { warning: 'result cap reached — implement pagination' });
+    }
     return tickets.map((t) => this.mapToTicket(t));
   }
 

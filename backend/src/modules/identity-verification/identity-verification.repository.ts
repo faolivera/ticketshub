@@ -56,6 +56,7 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
     return record ? this.mapToDomain(record) : undefined;
   }
 
+  // TODO: paginate — capped at 500 rows. Implement proper pagination when volume justifies it.
   async findAll(
     _ctx: Ctx,
     status?: IdentityVerificationStatus,
@@ -64,7 +65,11 @@ export class IdentityVerificationRepository implements IIdentityVerificationRepo
     const records = await this.prisma.identityVerificationRequest.findMany({
       where: status ? { status: this.mapStatusToDb(status) } : undefined,
       orderBy: { submittedAt: 'desc' },
+      take: 500,
     });
+    if (records.length === 500) {
+      this.logger.warn(_ctx, 'findAll', { warning: 'result cap reached — implement pagination' });
+    }
     return records.map((r) => this.mapToDomain(r));
   }
 

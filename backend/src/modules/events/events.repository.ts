@@ -203,11 +203,13 @@ export class EventsRepository implements IEventsRepository {
     };
   }
 
+  // TODO: paginate — capped at 500 rows. Implement proper pagination when volume justifies it.
   async getPendingEvents(ctx: Ctx): Promise<Event[]> {
     this.logger.debug(ctx, 'getPendingEvents');
     const [pendingEvents, pendingDates, pendingSections] = await Promise.all([
       this.prisma.event.findMany({
         where: { status: 'pending' },
+        take: 500,
       }),
       this.prisma.eventDate.findMany({
         where: { status: 'pending' },
@@ -218,6 +220,10 @@ export class EventsRepository implements IEventsRepository {
         select: { eventId: true },
       }),
     ]);
+
+    if (pendingEvents.length === 500) {
+      this.logger.warn(ctx, 'getPendingEvents', { warning: 'result cap reached — implement pagination' });
+    }
 
     const eventIdsWithPendingDates = new Set(
       pendingDates.map((d) => d.eventId),

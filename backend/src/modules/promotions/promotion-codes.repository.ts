@@ -89,12 +89,17 @@ export class PromotionCodesRepository
     return row ? this.mapToDomain(row) : undefined;
   }
 
+  // TODO: paginate — capped at 500 rows. Implement proper pagination when volume justifies it.
   async list(ctx: Ctx): Promise<PromotionCode[]> {
     this.logger.debug(ctx, 'list');
     const client = this.getClient(ctx);
     const rows = await client.promotionCode.findMany({
       orderBy: { createdAt: 'desc' },
+      take: 500,
     });
+    if (rows.length === 500) {
+      this.logger.warn(ctx, 'list', { warning: 'result cap reached — implement pagination' });
+    }
     return rows.map((r) => this.mapToDomain(r));
   }
 
