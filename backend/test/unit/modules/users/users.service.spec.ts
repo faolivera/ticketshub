@@ -113,7 +113,6 @@ describe('UsersService', () => {
       setBuyerDisputed: jest.fn(),
       updateForAdmin: jest.fn(),
       findManyPaginated: jest.fn(),
-      getAll: jest.fn(),
     };
 
     const mockImagesRepository = {

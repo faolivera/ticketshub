@@ -152,7 +152,6 @@ describe('TicketsService', () => {
       create: jest.fn(),
       findById: jest.fn(),
       findByIds: jest.fn(),
-      getAll: jest.fn(),
       getActiveListings: jest.fn(),
       getByEventId: jest.fn(),
       getByEventDateId: jest.fn(),

@@ -81,7 +81,6 @@ describe('TransactionsService', () => {
       findByIdForUpdate: jest.fn(),
       update: jest.fn(),
       updateWithVersion: jest.fn(),
-      getAll: jest.fn(),
       getByBuyerId: jest.fn(),
       getBySellerId: jest.fn(),
       getByListingId: jest.fn(),

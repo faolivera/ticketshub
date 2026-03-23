@@ -132,7 +132,6 @@ describe('AdminService', () => {
     };
 
     const mockTicketsRepository = {
-      getAll: jest.fn().mockResolvedValue([]),
       getAllByEventId: jest.fn().mockResolvedValue([]),
       getPendingByEventIds: jest.fn().mockResolvedValue([]),
     };

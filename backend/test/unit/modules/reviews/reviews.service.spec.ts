@@ -70,7 +70,6 @@ describe('ReviewsService', () => {
     const mockReviewsRepository = {
       create: jest.fn(),
       findById: jest.fn(),
-      getAll: jest.fn(),
       findByTransactionAndReviewer: jest.fn(),
       getByTransactionId: jest.fn(),
       getByRevieweeIdAndRole: jest.fn(),
