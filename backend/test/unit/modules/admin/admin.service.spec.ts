@@ -2167,4 +2167,36 @@ describe('AdminService', () => {
       );
     });
   });
+
+  describe('searchUsersByEmail', () => {
+    it('should call findByEmailContaining with take=20 and return mapped id/email', async () => {
+      const mockUsers = [
+        { id: 'user_1', email: 'alice@example.com' },
+        { id: 'user_2', email: 'alice2@example.com' },
+      ];
+      usersService.findByEmailContaining.mockResolvedValue(mockUsers as any);
+
+      const result = await service.searchUsersByEmail(mockCtx, 'alice');
+
+      expect(usersService.findByEmailContaining).toHaveBeenCalledWith(mockCtx, 'alice', 20);
+      expect(result).toEqual([
+        { id: 'user_1', email: 'alice@example.com' },
+        { id: 'user_2', email: 'alice2@example.com' },
+      ]);
+    });
+
+    it('should return [] without calling findByEmailContaining when term is less than 2 chars', async () => {
+      const result = await service.searchUsersByEmail(mockCtx, 'a');
+
+      expect(usersService.findByEmailContaining).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+
+    it('should return [] without calling findByEmailContaining when term is empty string', async () => {
+      const result = await service.searchUsersByEmail(mockCtx, '');
+
+      expect(usersService.findByEmailContaining).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+  });
 });
