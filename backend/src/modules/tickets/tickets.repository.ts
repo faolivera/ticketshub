@@ -450,6 +450,7 @@ export class TicketsRepository
     return listings.map((l) => this.mapToListing(l));
   }
 
+  // TODO: paginate — currently capped at 100 rows. Tech debt: implement cursor pagination when seller listing volume justifies it.
   async getBySellerId(ctx: Ctx, sellerId: string): Promise<TicketListing[]> {
     this.logger.debug(ctx, 'getBySellerId', { sellerId });
     const client = this.getClient(ctx);
@@ -457,6 +458,7 @@ export class TicketsRepository
       where: { sellerId },
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
+      take: 100,
     });
     return listings.map((l) => this.mapToListing(l));
   }
