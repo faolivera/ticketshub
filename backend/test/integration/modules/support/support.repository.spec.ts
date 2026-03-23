@@ -104,27 +104,6 @@ describe('SupportRepository (Integration)', () => {
     });
   });
 
-  describe('getAllTickets', () => {
-    it('should return empty array when no tickets', async () => {
-      const all = await repository.getAllTickets(ctx);
-      expect(all).toEqual([]);
-    });
-
-    it('should return all tickets ordered by createdAt desc', async () => {
-      await repository.createTicket(
-        ctx,
-        createValidTicket({ id: randomUUID(), subject: 'First' }),
-      );
-      await repository.createTicket(
-        ctx,
-        createValidTicket({ id: randomUUID(), subject: 'Second' }),
-      );
-      const all = await repository.getAllTickets(ctx);
-      expect(all).toHaveLength(2);
-      expect(all[0].subject).toBe('Second');
-    });
-  });
-
   describe('getTicketsByUserId', () => {
     it('should return tickets for user', async () => {
       await repository.createTicket(ctx, createValidTicket());

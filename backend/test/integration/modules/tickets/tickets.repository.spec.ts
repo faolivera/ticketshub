@@ -293,26 +293,6 @@ describe('TicketsRepository (Integration)', () => {
     });
   });
 
-  // ==================== getAll ====================
-
-  describe('getAll', () => {
-    it('should return empty array when no listings exist', async () => {
-      const listings = await repository.getAll(ctx);
-      expect(listings).toEqual([]);
-    });
-
-    it('should return all listings ordered by createdAt desc', async () => {
-      const listing1 = await repository.create(ctx, createValidListing());
-      const listing2 = await repository.create(ctx, createValidListing());
-
-      const listings = await repository.getAll(ctx);
-
-      expect(listings).toHaveLength(2);
-      expect(listings[0].id).toBe(listing2.id);
-      expect(listings[1].id).toBe(listing1.id);
-    });
-  });
-
   // ==================== getActiveListings ====================
 
   describe('getActiveListings', () => {

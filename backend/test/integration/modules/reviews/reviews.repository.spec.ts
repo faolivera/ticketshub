@@ -194,31 +194,6 @@ describe('ReviewsRepository (Integration)', () => {
     });
   });
 
-  describe('getAll', () => {
-    it('should return empty array when no reviews', async () => {
-      await truncateAllTables(prisma);
-      await createTestTransaction();
-      const all = await repository.getAll(ctx);
-      expect(all).toEqual([]);
-    });
-
-    it('should return all reviews', async () => {
-      await repository.create(ctx, createValidReview({ id: randomUUID() }));
-      await repository.create(
-        ctx,
-        createValidReview({
-          id: randomUUID(),
-          reviewerId: sellerId,
-          revieweeId: buyerId,
-          reviewerRole: 'seller',
-          revieweeRole: 'buyer',
-        }),
-      );
-      const all = await repository.getAll(ctx);
-      expect(all).toHaveLength(2);
-    });
-  });
-
   describe('findByTransactionAndReviewer', () => {
     it('should return undefined when no match', async () => {
       const otherUserId = await createTestUser();

@@ -314,26 +314,6 @@ describe('TransactionsRepository (Integration)', () => {
     });
   });
 
-  // ==================== getAll ====================
-
-  describe('getAll', () => {
-    it('should return empty array when no transactions exist', async () => {
-      const transactions = await repository.getAll(ctx);
-      expect(transactions).toEqual([]);
-    });
-
-    it('should return all transactions ordered by createdAt desc', async () => {
-      const t1 = await repository.create(ctx, createValidTransaction());
-      const t2 = await repository.create(ctx, createValidTransaction());
-
-      const transactions = await repository.getAll(ctx);
-
-      expect(transactions).toHaveLength(2);
-      expect(transactions[0].id).toBe(t2.id);
-      expect(transactions[1].id).toBe(t1.id);
-    });
-  });
-
   // ==================== getByBuyerId ====================
 
   describe('getByBuyerId', () => {

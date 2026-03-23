@@ -95,28 +95,6 @@ describe('UsersRepository (Integration)', () => {
     });
   });
 
-  describe('getAll', () => {
-    it('should return empty array when no users exist', async () => {
-      const users = await repository.getAll(ctx);
-      expect(users).toEqual([]);
-    });
-
-    it('should return all users', async () => {
-      await repository.add(
-        ctx,
-        createValidUserData({ email: 'user1@example.com' }),
-      );
-      await repository.add(
-        ctx,
-        createValidUserData({ email: 'user2@example.com' }),
-      );
-
-      const users = await repository.getAll(ctx);
-
-      expect(users).toHaveLength(2);
-    });
-  });
-
   describe('findById', () => {
     it('should return undefined when user does not exist', async () => {
       const user = await repository.findById(ctx, 'non-existent-id');
@@ -230,47 +208,6 @@ describe('UsersRepository (Integration)', () => {
 
       expect(users).toHaveLength(2);
       expect(users.every((u) => u.email.includes('doe'))).toBe(true);
-    });
-  });
-
-  describe('getSellers', () => {
-    it('should return empty array when no sellers exist', async () => {
-      await repository.add(ctx, createValidUserData());
-      await repository.add(
-        ctx,
-        createValidUserData({ email: 'buyer@test.com' }),
-      );
-
-      const sellers = await repository.getSellers(ctx);
-
-      expect(sellers).toEqual([]);
-    });
-
-    it('should return only users who accepted seller terms', async () => {
-      await repository.add(
-        ctx,
-        createValidUserData({ email: 'basic@test.com' }),
-      );
-      await repository.add(
-        ctx,
-        createValidUserData({
-          email: 'seller@test.com',
-          acceptedSellerTermsAt: new Date(),
-        }),
-      );
-      await repository.add(
-        ctx,
-        createValidUserData({
-          email: 'verified@test.com',
-          acceptedSellerTermsAt: new Date(),
-        }),
-      );
-
-      const sellers = await repository.getSellers(ctx);
-
-      expect(sellers).toHaveLength(2);
-      expect(sellers.some((s) => s.email === 'seller@test.com')).toBe(true);
-      expect(sellers.some((s) => s.email === 'verified@test.com')).toBe(true);
     });
   });
 

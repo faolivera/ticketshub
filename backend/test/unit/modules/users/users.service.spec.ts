@@ -99,7 +99,6 @@ describe('UsersService', () => {
       setGoogleId: jest.fn(),
       findByIds: jest.fn(),
       findByEmailContaining: jest.fn(),
-      getSellers: jest.fn(),
       getAdmins: jest.fn(),
       add: jest.fn(),
       updateBasicInfo: jest.fn(),
