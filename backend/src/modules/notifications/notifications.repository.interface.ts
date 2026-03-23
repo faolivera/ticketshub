@@ -30,9 +30,14 @@ export interface INotificationsRepository {
   findEventById(ctx: Ctx, id: string): Promise<NotificationEvent | undefined>;
 
   /**
-   * Find pending events for processing
+   * Find pending events for processing (capped at 200)
    */
   findPendingEvents(ctx: Ctx): Promise<NotificationEvent[]>;
+
+  /**
+   * Count total pending events (used for backlog monitoring)
+   */
+  countPendingEvents(ctx: Ctx): Promise<number>;
 
   /**
    * Update event

@@ -84,8 +84,16 @@ export class NotificationsRepository
     const events = await client.notificationEvent.findMany({
       where: { status: 'PENDING' },
       orderBy: { triggeredAt: 'asc' },
+      take: 200,
     });
     return events.map((e) => this.mapToNotificationEvent(e));
+  }
+
+  async countPendingEvents(ctx: Ctx): Promise<number> {
+    this.logger.debug(ctx, 'countPendingEvents');
+    return this.prisma.notificationEvent.count({
+      where: { status: 'PENDING' },
+    });
   }
 
   async updateEvent(

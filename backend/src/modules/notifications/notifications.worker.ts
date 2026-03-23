@@ -256,6 +256,15 @@ export class NotificationsWorker {
    * Process all pending events with atomic claiming.
    */
   async processPendingEvents(ctx: Ctx): Promise<void> {
+    const pendingCount = await this.repository.countPendingEvents(ctx);
+    this.logger.debug(ctx, 'processPendingEvents', { pendingCount });
+    if (pendingCount > 200) {
+      this.logger.warn(ctx, 'processPendingEvents', {
+        warning: 'pending event backlog exceeds batch size',
+        pendingCount,
+      });
+    }
+
     const events = await this.service.getPendingEvents(ctx);
     if (events.length === 0) return;
 
