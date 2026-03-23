@@ -383,21 +383,19 @@ describe('ReviewsRepository (Integration)', () => {
 
       // Insert 4 reviews (positive, positive, negative, neutral) for stableSellerId
       const reviewRatings: Array<Review['rating']> = ['positive', 'positive', 'negative', 'neutral'];
+      const ratingToInt = (r: Review['rating']): number => r === 'positive' ? 1 : r === 'negative' ? -1 : 0;
       for (let i = 0; i < reviewRatings.length; i++) {
-        await repository.create(
-          ctx,
-          createValidReview({
+        await prisma.review.create({
+          data: {
             id: randomUUID(),
             transactionId: txIds[i],
-            buyerId: stableBuyerId,
-            sellerId: stableSellerId,
             reviewerId: stableBuyerId,
             revieweeId: stableSellerId,
             revieweeRole: 'seller',
             reviewerRole: 'buyer',
-            rating: reviewRatings[i],
-          }),
-        );
+            rating: ratingToInt(reviewRatings[i]),
+          },
+        });
       }
 
       const metrics: ReviewMetrics = await repository.getMetricsByRevieweeIdAndRole(
@@ -421,21 +419,19 @@ describe('ReviewsRepository (Integration)', () => {
       }
 
       const reviewRatings: Array<Review['rating']> = ['positive', 'positive', 'negative', 'neutral'];
+      const ratingToInt = (r: Review['rating']): number => r === 'positive' ? 1 : r === 'negative' ? -1 : 0;
       for (let i = 0; i < reviewRatings.length; i++) {
-        await repository.create(
-          ctx,
-          createValidReview({
+        await prisma.review.create({
+          data: {
             id: randomUUID(),
             transactionId: extraTxIds[i],
-            buyerId: stableBuyerId,
-            sellerId: stableSellerId,
             reviewerId: stableBuyerId,
             revieweeId: stableSellerId,
             revieweeRole: 'seller',
             reviewerRole: 'buyer',
-            rating: reviewRatings[i],
-          }),
-        );
+            rating: ratingToInt(reviewRatings[i]),
+          },
+        });
       }
 
       const metrics: ReviewMetrics = await repository.getMetricsByRevieweeIdAndRole(
@@ -468,28 +464,28 @@ describe('ReviewsRepository (Integration)', () => {
       const tx2 = await createExtraTransaction(stableSellerId, stableBuyerId);
 
       // 2 seller reviews: reviewee is stableSellerId, role=seller
-      await repository.create(ctx, createValidReview({
-        id: randomUUID(),
-        transactionId,
-        buyerId: stableBuyerId,
-        sellerId: stableSellerId,
-        reviewerId: stableBuyerId,
-        reviewerRole: 'buyer',
-        revieweeId: stableSellerId,
-        revieweeRole: 'seller',
-        rating: 'positive',
-      }));
-      await repository.create(ctx, createValidReview({
-        id: randomUUID(),
-        transactionId: tx2,
-        buyerId: stableBuyerId,
-        sellerId: stableSellerId,
-        reviewerId: stableBuyerId,
-        reviewerRole: 'buyer',
-        revieweeId: stableSellerId,
-        revieweeRole: 'seller',
-        rating: 'positive',
-      }));
+      await prisma.review.create({
+        data: {
+          id: randomUUID(),
+          transactionId,
+          reviewerId: stableBuyerId,
+          reviewerRole: 'buyer',
+          revieweeId: stableSellerId,
+          revieweeRole: 'seller',
+          rating: 1,
+        },
+      });
+      await prisma.review.create({
+        data: {
+          id: randomUUID(),
+          transactionId: tx2,
+          reviewerId: stableBuyerId,
+          reviewerRole: 'buyer',
+          revieweeId: stableSellerId,
+          revieweeRole: 'seller',
+          rating: 1,
+        },
+      });
 
       // Create 3 more transactions where stableSellerId is the buyer and some other user is seller
       const altSeller1 = await createTestUser();
@@ -505,17 +501,17 @@ describe('ReviewsRepository (Integration)', () => {
 
       // 3 buyer reviews: reviewee is stableSellerId (acting as buyer), role=buyer
       for (const [txId, altSellerId] of [[tx3, altSeller1], [tx4, altSeller2], [tx5, altSeller3]] as const) {
-        await repository.create(ctx, createValidReview({
-          id: randomUUID(),
-          transactionId: txId,
-          buyerId: stableSellerId,
-          sellerId: altSellerId,
-          reviewerId: altSellerId,
-          reviewerRole: 'seller',
-          revieweeId: stableSellerId,
-          revieweeRole: 'buyer',
-          rating: 'positive',
-        }));
+        await prisma.review.create({
+          data: {
+            id: randomUUID(),
+            transactionId: txId,
+            reviewerId: altSellerId,
+            reviewerRole: 'seller',
+            revieweeId: stableSellerId,
+            revieweeRole: 'buyer',
+            rating: 1,
+          },
+        });
       }
 
       const sellerMetrics: ReviewMetrics = await repository.getMetricsByRevieweeIdAndRole(
