@@ -372,6 +372,12 @@ model Event {
   isPopular       Boolean       @default(false)
   /** Admin-set: featured event; requires rectangle banner. */
   highlight       Boolean       @default(false)
+  /** Ticket app name (e.g. "entradas", "movistararena"). */
+  ticketApp       String?
+  /** Whether tickets are transferable via the ticket app. */
+  transferable    Boolean?
+  /** Artist names for this event. */
+  artists         String[]      @default([])
 
   // Relations
   createdBy       User          @relation("EventCreator", fields: [createdById], references: [id])
