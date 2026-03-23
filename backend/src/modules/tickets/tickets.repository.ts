@@ -624,6 +624,9 @@ export class TicketsRepository
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
     });
+    if (listings.length > 500) {
+      this.logger.warn(ctx, 'getPendingByEventId', { count: listings.length, warning: 'unusually large result set' });
+    }
     return listings.map((l) => this.mapToListing(l));
   }
 
@@ -659,6 +662,9 @@ export class TicketsRepository
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
     });
+    if (listings.length > 500) {
+      this.logger.warn(ctx, 'getPendingByEventDateId', { count: listings.length, warning: 'unusually large result set' });
+    }
     return listings.map((l) => this.mapToListing(l));
   }
 
@@ -693,6 +699,9 @@ export class TicketsRepository
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
     });
+    if (listings.length > 500) {
+      this.logger.warn(ctx, 'getAllByEventDateId', { count: listings.length, warning: 'unusually large result set' });
+    }
     return listings.map((l) => this.mapToListing(l));
   }
 
@@ -710,6 +719,9 @@ export class TicketsRepository
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
     });
+    if (listings.length > 500) {
+      this.logger.warn(ctx, 'getPendingByEventSectionId', { count: listings.length, warning: 'unusually large result set' });
+    }
     return listings.map((l) => this.mapToListing(l));
   }
 
@@ -724,6 +736,9 @@ export class TicketsRepository
       orderBy: { createdAt: 'desc' },
       include: { ticketUnits: true },
     });
+    if (listings.length > 500) {
+      this.logger.warn(ctx, 'getAllByEventSectionId', { count: listings.length, warning: 'unusually large result set' });
+    }
     return listings.map((l) => this.mapToListing(l));
   }
 
