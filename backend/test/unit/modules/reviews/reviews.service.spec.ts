@@ -25,6 +25,7 @@ describe('ReviewsService', () => {
   let reviewsRepository: jest.Mocked<IReviewsRepository>;
   let transactionsService: jest.Mocked<TransactionsService>;
   let usersService: jest.Mocked<UsersService>;
+  let ticketsService: jest.Mocked<TicketsService>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -80,6 +81,7 @@ describe('ReviewsService', () => {
 
     const mockTransactionsService = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
       getSellerCompletedSalesTotal: jest.fn(),
       getCompletedSalesTotalBatch: jest.fn(),
       getBuyerCompletedPurchasesTotal: jest.fn(),
@@ -93,6 +95,7 @@ describe('ReviewsService', () => {
 
     const mockTicketsService = {
       getListingById: jest.fn(),
+      getListingsByIds: jest.fn(),
     };
 
     const mockNotificationsService = {
@@ -114,7 +117,7 @@ describe('ReviewsService', () => {
     reviewsRepository = module.get(REVIEWS_REPOSITORY);
     transactionsService = module.get(TransactionsService);
     usersService = module.get(UsersService);
-    void module.get(TicketsService);
+    ticketsService = module.get(TicketsService);
   });
 
   describe('createReview', () => {
@@ -265,6 +268,7 @@ describe('ReviewsService', () => {
     it('should return correct metrics with no reviews', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 0,
+        avgRating: null,
         positiveCount: 0,
         negativeCount: 0,
         neutralCount: 0,
@@ -297,6 +301,7 @@ describe('ReviewsService', () => {
     it('should calculate positive percentage excluding neutral reviews', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 5,
+        avgRating: 0.2,
         positiveCount: 2,
         negativeCount: 1,
         neutralCount: 2,
@@ -319,6 +324,7 @@ describe('ReviewsService', () => {
     it('should return null positivePercent when all reviews are neutral', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 2,
+        avgRating: 0,
         positiveCount: 0,
         negativeCount: 0,
         neutralCount: 2,
@@ -337,6 +343,7 @@ describe('ReviewsService', () => {
     it('should include verified badge when user is VerifiedSeller', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 0,
+        avgRating: null,
         positiveCount: 0,
         negativeCount: 0,
         neutralCount: 0,
@@ -363,6 +370,7 @@ describe('ReviewsService', () => {
     it('should include trusted badge when threshold is met', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 12,
+        avgRating: 1,
         positiveCount: 12,
         negativeCount: 0,
         neutralCount: 0,
@@ -380,6 +388,7 @@ describe('ReviewsService', () => {
     it('should include best_seller badge when threshold is met for seller role', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 50,
+        avgRating: 1,
         positiveCount: 50,
         negativeCount: 0,
         neutralCount: 0,
@@ -410,6 +419,7 @@ describe('ReviewsService', () => {
     it('should return correct metrics for buyer with completed purchases', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 2,
+        avgRating: 0,
         positiveCount: 1,
         negativeCount: 1,
         neutralCount: 0,
@@ -454,6 +464,7 @@ describe('ReviewsService', () => {
     it('should return totalTransactions: 0 when buyer has no completed purchases', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 0,
+        avgRating: null,
         positiveCount: 0,
         negativeCount: 0,
         neutralCount: 0,
@@ -470,6 +481,7 @@ describe('ReviewsService', () => {
     it('should not include best_seller badge for buyer role even with high metrics', async () => {
       reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
         count: 50,
+        avgRating: 1,
         positiveCount: 50,
         negativeCount: 0,
         neutralCount: 0,
@@ -753,6 +765,151 @@ describe('ReviewsService', () => {
 
       expect(result.get(sellerId)!.badges).toContain('verified');
       expect(result.get(sellerId)!.badges).not.toContain('new_seller');
+    });
+  });
+
+  describe('getSellerProfileReviews', () => {
+    const mockSellerReview: Review = {
+      id: 'rev_profile_1',
+      transactionId: 'txn_profile_1',
+      buyerId: 'buyer_profile_1',
+      sellerId: 'seller_profile',
+      reviewerId: 'buyer_profile_1',
+      reviewerRole: 'buyer',
+      revieweeId: 'seller_profile',
+      revieweeRole: 'seller',
+      rating: 'positive',
+      comment: 'Very smooth transaction',
+      createdAt: new Date('2025-01-15T10:00:00Z'),
+      updatedAt: new Date('2025-01-15T10:00:00Z'),
+    };
+
+    it('should return combined stats and enriched review list (happy path)', async () => {
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 3,
+        avgRating: 0.67,
+        positiveCount: 2,
+        negativeCount: 0,
+        neutralCount: 1,
+      });
+      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([mockSellerReview]);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        { id: 'buyer_profile_1', publicName: 'Alice' } as any,
+      ]);
+      transactionsService.findByIds.mockResolvedValue([
+        {
+          ...mockTransaction,
+          id: 'txn_profile_1',
+          listingId: 'listing_profile_1',
+          buyerId: 'buyer_profile_1',
+          sellerId: 'seller_profile',
+        } as any,
+      ]);
+      ticketsService.getListingsByIds.mockResolvedValue([
+        {
+          id: 'listing_profile_1',
+          eventName: 'Rock Festival',
+          type: 'General',
+          eventDate: new Date('2025-03-01T21:00:00Z'),
+        } as any,
+      ]);
+
+      const result = await service.getSellerProfileReviews(mockCtx, 'seller_profile', 20, 0);
+
+      expect(result.stats).toEqual({ positive: 2, negative: 0, neutral: 1 });
+      expect(result.reviews).toHaveLength(1);
+      const enriched = result.reviews[0];
+      expect(enriched.id).toBe('rev_profile_1');
+      expect(enriched.buyerName).toBe('Alice');
+      expect(enriched.type).toBe('positive');
+      expect(enriched.comment).toBe('Very smooth transaction');
+      expect(enriched.eventName).toBe('Rock Festival');
+      expect(enriched.ticketType).toBe('General');
+      expect(enriched.eventDate).toBe(new Date('2025-03-01T21:00:00Z').toISOString());
+      expect(enriched.reviewDate).toBe(new Date('2025-01-15T10:00:00Z').toISOString());
+      expect(reviewsRepository.getMetricsByRevieweeIdAndRole).toHaveBeenCalledWith(mockCtx, 'seller_profile', 'seller');
+      expect(reviewsRepository.getByRevieweeIdAndRole).toHaveBeenCalledWith(mockCtx, 'seller_profile', 'seller', 20, 0);
+    });
+
+    it('should return empty reviews list and zero stats when seller has no reviews', async () => {
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 0,
+        avgRating: null,
+        positiveCount: 0,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
+      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([]);
+
+      const result = await service.getSellerProfileReviews(mockCtx, 'seller_profile', 20, 0);
+
+      expect(result.stats).toEqual({ positive: 0, negative: 0, neutral: 0 });
+      expect(result.reviews).toHaveLength(0);
+      expect(usersService.getPublicUserInfoByIds).not.toHaveBeenCalled();
+      expect(transactionsService.findByIds).not.toHaveBeenCalled();
+      expect(ticketsService.getListingsByIds).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to "Anonymous" when buyer info is missing', async () => {
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 1,
+        avgRating: 1,
+        positiveCount: 1,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
+      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([mockSellerReview]);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([]);
+      transactionsService.findByIds.mockResolvedValue([
+        {
+          ...mockTransaction,
+          id: 'txn_profile_1',
+          listingId: 'listing_profile_1',
+          buyerId: 'buyer_profile_1',
+          sellerId: 'seller_profile',
+        } as any,
+      ]);
+      ticketsService.getListingsByIds.mockResolvedValue([
+        {
+          id: 'listing_profile_1',
+          eventName: 'Jazz Night',
+          type: 'VIP',
+          eventDate: new Date('2025-06-10T20:00:00Z'),
+        } as any,
+      ]);
+
+      const result = await service.getSellerProfileReviews(mockCtx, 'seller_profile', 20, 0);
+
+      expect(result.reviews[0].buyerName).toBe('Anonymous');
+    });
+
+    it('should fall back to "Unknown Event" and null eventDate when listing is not found', async () => {
+      reviewsRepository.getMetricsByRevieweeIdAndRole.mockResolvedValue({
+        count: 1,
+        avgRating: 1,
+        positiveCount: 1,
+        negativeCount: 0,
+        neutralCount: 0,
+      });
+      reviewsRepository.getByRevieweeIdAndRole.mockResolvedValue([mockSellerReview]);
+      usersService.getPublicUserInfoByIds.mockResolvedValue([
+        { id: 'buyer_profile_1', publicName: 'Bob' } as any,
+      ]);
+      transactionsService.findByIds.mockResolvedValue([
+        {
+          ...mockTransaction,
+          id: 'txn_profile_1',
+          listingId: 'listing_missing',
+          buyerId: 'buyer_profile_1',
+          sellerId: 'seller_profile',
+        } as any,
+      ]);
+      ticketsService.getListingsByIds.mockResolvedValue([]);
+
+      const result = await service.getSellerProfileReviews(mockCtx, 'seller_profile', 20, 0);
+
+      expect(result.reviews[0].eventName).toBe('Unknown Event');
+      expect(result.reviews[0].eventDate).toBeNull();
     });
   });
 });

@@ -6,6 +6,7 @@ import type { Review, ReviewPartyRole } from './reviews.domain';
  */
 export interface ReviewMetrics {
   count: number;
+  avgRating: number | null;
   positiveCount: number;
   negativeCount: number;
   neutralCount: number;
