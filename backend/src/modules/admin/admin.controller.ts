@@ -447,16 +447,24 @@ export class AdminController {
   }
 
   /**
-   * Get all ticket listings for a specific event.
+   * Get paginated ticket listings for a specific event.
    * Returns aggregated listing data with seller info, event date, and section.
+   * Query params: page (default 1), limit (default 50).
    */
   @Get('events/:eventId/listings')
   @ValidateResponse(AdminEventListingsResponseSchema)
   async getEventListings(
     @Context() ctx: Ctx,
     @Param('eventId') eventId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ): Promise<ApiResponse<AdminEventListingsResponse>> {
-    const data = await this.adminService.getEventListings(ctx, eventId);
+    const data = await this.adminService.getEventListings(
+      ctx,
+      eventId,
+      page ? parseInt(page, 10) : undefined,
+      limit ? parseInt(limit, 10) : undefined,
+    );
     return { success: true, data };
   }
 

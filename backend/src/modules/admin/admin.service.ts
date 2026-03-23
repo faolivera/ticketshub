@@ -769,13 +769,19 @@ export class AdminService {
   async getEventListings(
     ctx: Ctx,
     eventId: string,
+    page: number = 1,
+    limit: number = 50,
   ): Promise<AdminEventListingsResponse> {
-    this.logger.log(ctx, `Getting listings for event ${eventId}`);
+    this.logger.log(ctx, `Getting listings for event ${eventId}`, { page, limit });
 
-    const listings = await this.ticketsRepository.getAllByEventId(ctx, eventId);
+    const { listings, total } = await this.ticketsRepository.getAllByEventIdPaginated(
+      ctx,
+      eventId,
+      { page, limit },
+    );
 
     if (listings.length === 0) {
-      return { listings: [], total: 0 };
+      return { listings: [], total };
     }
 
     // Collect unique seller IDs
@@ -832,12 +838,12 @@ export class AdminService {
 
     this.logger.log(
       ctx,
-      `Found ${enrichedListings.length} listings for event ${eventId}`,
+      `Found ${enrichedListings.length} listings (page ${page}) for event ${eventId}, total ${total}`,
     );
 
     return {
       listings: enrichedListings,
-      total: enrichedListings.length,
+      total,
     };
   }
 

@@ -738,6 +738,33 @@ export class TicketsRepository
     return listings.map((l) => this.mapToListing(l));
   }
 
+  async getAllByEventIdPaginated(
+    ctx: Ctx,
+    eventId: string,
+    pagination: { page: number; limit: number },
+  ): Promise<{ listings: TicketListing[]; total: number }> {
+    this.logger.debug(ctx, 'getAllByEventIdPaginated', { eventId, pagination });
+    const client = this.getClient(ctx);
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
+    const [records, total] = await Promise.all([
+      client.ticketListing.findMany({
+        where: { eventId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: { ticketUnits: true },
+      }),
+      client.ticketListing.count({ where: { eventId } }),
+    ]);
+
+    return {
+      listings: records.map((l) => this.mapToListing(l)),
+      total,
+    };
+  }
+
   async getListingStatsByEventIds(
     ctx: Ctx,
     eventIds: string[],

@@ -173,6 +173,16 @@ export interface ITicketsRepository {
   getAllByEventId(ctx: Ctx, eventId: string): Promise<TicketListing[]>;
 
   /**
+   * Get all listings for an event (including all statuses) with pagination.
+   * Returns listings for the requested page and the total count.
+   */
+  getAllByEventIdPaginated(
+    ctx: Ctx,
+    eventId: string,
+    pagination: { page: number; limit: number },
+  ): Promise<{ listings: TicketListing[]; total: number }>;
+
+  /**
    * Get listing stats (count and available tickets) for multiple event IDs
    */
   getListingStatsByEventIds(

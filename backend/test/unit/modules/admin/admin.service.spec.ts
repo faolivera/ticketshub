@@ -132,7 +132,7 @@ describe('AdminService', () => {
     };
 
     const mockTicketsRepository = {
-      getAllByEventId: jest.fn().mockResolvedValue([]),
+      getAllByEventIdPaginated: jest.fn().mockResolvedValue({ listings: [], total: 0 }),
       getPendingByEventIds: jest.fn().mockResolvedValue([]),
     };
 
@@ -958,7 +958,7 @@ describe('AdminService', () => {
     };
 
     it('should return enriched listings with seller, date, and section info', async () => {
-      ticketsRepository.getAllByEventId.mockResolvedValue([mockListing as any]);
+      ticketsRepository.getAllByEventIdPaginated.mockResolvedValue({ listings: [mockListing as any], total: 1 });
       usersService.findByIds.mockResolvedValue([mockSeller]);
       eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
 
@@ -985,7 +985,7 @@ describe('AdminService', () => {
     });
 
     it('should return empty response when event has no listings', async () => {
-      ticketsRepository.getAllByEventId.mockResolvedValue([]);
+      ticketsRepository.getAllByEventIdPaginated.mockResolvedValue({ listings: [], total: 0 });
 
       const result = await service.getEventListings(mockCtx, 'evt_123');
 
@@ -1007,10 +1007,10 @@ describe('AdminService', () => {
         publicName: 'Another Seller',
       };
 
-      ticketsRepository.getAllByEventId.mockResolvedValue([
-        mockListing as any,
-        secondListing as any,
-      ]);
+      ticketsRepository.getAllByEventIdPaginated.mockResolvedValue({
+        listings: [mockListing as any, secondListing as any],
+        total: 2,
+      });
       usersService.findByIds.mockResolvedValue([mockSeller, secondSeller]);
       eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
 
@@ -1028,7 +1028,7 @@ describe('AdminService', () => {
     });
 
     it('should handle unknown seller gracefully', async () => {
-      ticketsRepository.getAllByEventId.mockResolvedValue([mockListing as any]);
+      ticketsRepository.getAllByEventIdPaginated.mockResolvedValue({ listings: [mockListing as any], total: 1 });
       usersService.findByIds.mockResolvedValue([]);
       eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
 
@@ -1047,9 +1047,7 @@ describe('AdminService', () => {
         ],
       };
 
-      ticketsRepository.getAllByEventId.mockResolvedValue([
-        listingWithAllAvailable as any,
-      ]);
+      ticketsRepository.getAllByEventIdPaginated.mockResolvedValue({ listings: [listingWithAllAvailable as any], total: 1 });
       usersService.findByIds.mockResolvedValue([mockSeller]);
       eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
 
@@ -1068,10 +1066,10 @@ describe('AdminService', () => {
         id: 'listing_456',
       };
 
-      ticketsRepository.getAllByEventId.mockResolvedValue([
-        mockListing as any,
-        secondListing as any,
-      ]);
+      ticketsRepository.getAllByEventIdPaginated.mockResolvedValue({
+        listings: [mockListing as any, secondListing as any],
+        total: 2,
+      });
       usersService.findByIds.mockResolvedValue([mockSeller]);
       eventsService.getEventById.mockResolvedValue(mockEventWithDates as any);
 
