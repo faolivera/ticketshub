@@ -1258,4 +1258,169 @@ describe('TicketsRepository (Integration)', () => {
       expect(found?.deliveryMethod).toBeUndefined();
     });
   });
+
+  // ==================== getActiveListingsSummaryBySellerId (consistency with getBySellerId) ====================
+
+  describe('getActiveListingsSummaryBySellerId (consistency with getBySellerId)', () => {
+    // CONSISTENCY INVARIANT:
+    // `getActiveListingsSummaryBySellerId` and `getBySellerId` (filtered to Active) MUST return consistent data.
+    // If a new ListingStatus is added in the future that should count as "active" for risk purposes,
+    // it must be added to BOTH methods, or the risk engine will undercount.
+
+    it('count matches: Active listings only are returned by both methods', async () => {
+      // Seed 3 Active + 2 Pending + 1 Sold directly via prisma
+      for (let i = 0; i < 3; i++) {
+        const listingId = randomUUID();
+        await prisma.ticketListing.create({
+          data: {
+            id: listingId,
+            seller: { connect: { id: testUserId } },
+            event: { connect: { id: testEventId } },
+            eventDate: { connect: { id: testEventDateId } },
+            eventSection: { connect: { id: testEventSectionId } },
+            type: 'Digital',
+            sellTogether: false,
+            pricePerTicket: { amount: 5000, currency: 'EUR' },
+            status: 'Active',
+            version: 1,
+            ticketUnits: { create: [{ status: 'available' }, { status: 'available' }] },
+          },
+        });
+      }
+      for (let i = 0; i < 2; i++) {
+        await prisma.ticketListing.create({
+          data: {
+            seller: { connect: { id: testUserId } },
+            event: { connect: { id: testEventId } },
+            eventDate: { connect: { id: testEventDateId } },
+            eventSection: { connect: { id: testEventSectionId } },
+            type: 'Digital',
+            sellTogether: false,
+            pricePerTicket: { amount: 5000, currency: 'EUR' },
+            status: 'Pending',
+            version: 1,
+          },
+        });
+      }
+      await prisma.ticketListing.create({
+        data: {
+          seller: { connect: { id: testUserId } },
+          event: { connect: { id: testEventId } },
+          eventDate: { connect: { id: testEventDateId } },
+          eventSection: { connect: { id: testEventSectionId } },
+          type: 'Digital',
+          sellTogether: false,
+          pricePerTicket: { amount: 5000, currency: 'EUR' },
+          status: 'Sold',
+          version: 1,
+        },
+      });
+
+      const summary = await repository.getActiveListingsSummaryBySellerId(ctx, testUserId);
+      const all = await repository.getBySellerId(ctx, testUserId);
+      const activeFromFetch = all.filter((l) => l.status === ListingStatus.Active);
+
+      expect(summary).toHaveLength(3);
+      expect(activeFromFetch).toHaveLength(3);
+    });
+
+    it('amounts match: pricePerTicket * ticketUnit count is consistent', async () => {
+      // Seed 3 Active listings with known prices and unit counts directly via prisma
+      const seeds = [
+        { amount: 1000, units: 2 },
+        { amount: 2500, units: 1 },
+        { amount: 4000, units: 3 },
+      ];
+      for (const seed of seeds) {
+        await prisma.ticketListing.create({
+          data: {
+            seller: { connect: { id: testUserId } },
+            event: { connect: { id: testEventId } },
+            eventDate: { connect: { id: testEventDateId } },
+            eventSection: { connect: { id: testEventSectionId } },
+            type: 'Digital',
+            sellTogether: false,
+            pricePerTicket: { amount: seed.amount, currency: 'EUR' },
+            status: 'Active',
+            version: 1,
+            ticketUnits: {
+              create: Array.from({ length: seed.units }, () => ({ status: 'available' })),
+            },
+          },
+        });
+      }
+      await prisma.ticketListing.create({
+        data: {
+          seller: { connect: { id: testUserId } },
+          event: { connect: { id: testEventId } },
+          eventDate: { connect: { id: testEventDateId } },
+          eventSection: { connect: { id: testEventSectionId } },
+          type: 'Digital',
+          sellTogether: false,
+          pricePerTicket: { amount: 9999, currency: 'EUR' },
+          status: 'Pending',
+          version: 1,
+        },
+      });
+
+      const summary = await repository.getActiveListingsSummaryBySellerId(ctx, testUserId);
+      const all = await repository.getBySellerId(ctx, testUserId);
+      const activeFromFetch = all.filter((l) => l.status === ListingStatus.Active);
+
+      // Compute expected amounts from the fetch side
+      const expectedAmounts = activeFromFetch
+        .map((l) => l.pricePerTicket.amount * l.ticketUnits.length)
+        .sort((a, b) => a - b);
+      const summaryAmounts = summary.map((s) => s.amount).sort((a, b) => a - b);
+
+      expect(summaryAmounts).toEqual(expectedAmounts);
+    });
+
+    it('excludeListingId is consistent: exclusion reduces summary count by exactly 1 while fetch is unaffected', async () => {
+      // Seed 3 Active listings directly via prisma
+      const createdIds: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const listingId = randomUUID();
+        await prisma.ticketListing.create({
+          data: {
+            id: listingId,
+            seller: { connect: { id: testUserId } },
+            event: { connect: { id: testEventId } },
+            eventDate: { connect: { id: testEventDateId } },
+            eventSection: { connect: { id: testEventSectionId } },
+            type: 'Digital',
+            sellTogether: false,
+            pricePerTicket: { amount: 5000, currency: 'EUR' },
+            status: 'Active',
+            version: 1,
+            ticketUnits: { create: [{ status: 'available' }] },
+          },
+        });
+        createdIds.push(listingId);
+      }
+
+      const excludedId = createdIds[0];
+      const summaryWithExclusion = await repository.getActiveListingsSummaryBySellerId(
+        ctx,
+        testUserId,
+        excludedId,
+      );
+      const summaryWithoutExclusion = await repository.getActiveListingsSummaryBySellerId(
+        ctx,
+        testUserId,
+      );
+      const all = await repository.getBySellerId(ctx, testUserId);
+      const activeFromFetch = all.filter((l) => l.status === ListingStatus.Active);
+
+      // Summary with exclusion should have 2 items
+      expect(summaryWithExclusion).toHaveLength(2);
+      // Summary without exclusion should have 3 items
+      expect(summaryWithoutExclusion).toHaveLength(3);
+      // The count difference is exactly 1
+      expect(summaryWithoutExclusion.length - summaryWithExclusion.length).toBe(1);
+      // The excluded listing IS still returned by getBySellerId (exclusion only applies to aggregate)
+      expect(activeFromFetch.some((l) => l.id === excludedId)).toBe(true);
+      expect(activeFromFetch).toHaveLength(3);
+    });
+  });
 });

@@ -1275,4 +1275,176 @@ describe('TransactionsRepository (Integration)', () => {
       expect(payload.status).toBeDefined();
     });
   });
+
+  // ==================== countCompletedBySellerId / countCompletedByBuyerId (consistency invariants) ====================
+
+  describe('countCompletedBySellerId / countCompletedByBuyerId (consistency invariants)', () => {
+    // CONSISTENCY INVARIANT:
+    // `countCompletedBySellerId`, `countCompletedByBuyerId`, and `getCompletedSalesTotalBatch`
+    // MUST all use the same definition of "completed".
+    // If TransactionStatus values change or new "completed-like" statuses are added,
+    // ALL THREE methods must be updated together, or totals will diverge.
+    //
+    // Note: `getCompletedSalesTotalBatch` is a service-level method (TransactionsService),
+    // not a repository method. It builds on `getCompletedBySellerIds` (repo).
+    // Service-level consistency should be verified via the service unit/integration tests.
+
+    it('countCompletedBySellerId matches manual sum of quantity from getBySellerId filtered to Completed', async () => {
+      // Seed 2 Completed transactions (quantity=2 each) and 1 Pending for the test seller
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          sellerId: testSellerId,
+          status: TransactionStatus.Completed,
+          requiredActor: RequiredActor.None,
+          completedAt: new Date(),
+          quantity: 2,
+        }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          sellerId: testSellerId,
+          status: TransactionStatus.Completed,
+          requiredActor: RequiredActor.None,
+          completedAt: new Date(),
+          quantity: 2,
+        }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          sellerId: testSellerId,
+          status: TransactionStatus.PendingPayment,
+          quantity: 2,
+        }),
+      );
+
+      const aggregateCount = await repository.countCompletedBySellerId(ctx, testSellerId);
+      const allTransactions = await repository.getBySellerId(ctx, testSellerId);
+      const manualSum = allTransactions
+        .filter((t) => t.status === TransactionStatus.Completed)
+        .reduce((sum, t) => sum + t.quantity, 0);
+
+      expect(aggregateCount).toBe(4); // 2 + 2
+      expect(manualSum).toBe(4);
+      expect(aggregateCount).toBe(manualSum);
+    });
+
+    it('countCompletedByBuyerId matches manual sum of quantity from getByBuyerId filtered to Completed', async () => {
+      // Seed 2 Completed transactions (quantity=2 each) and 1 Pending for the test buyer
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          buyerId: testBuyerId,
+          status: TransactionStatus.Completed,
+          requiredActor: RequiredActor.None,
+          completedAt: new Date(),
+          quantity: 2,
+        }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          buyerId: testBuyerId,
+          status: TransactionStatus.Completed,
+          requiredActor: RequiredActor.None,
+          completedAt: new Date(),
+          quantity: 2,
+        }),
+      );
+      await repository.create(
+        ctx,
+        createValidTransaction({
+          buyerId: testBuyerId,
+          status: TransactionStatus.PendingPayment,
+          quantity: 2,
+        }),
+      );
+
+      const aggregateCount = await repository.countCompletedByBuyerId(ctx, testBuyerId);
+      const allTransactions = await repository.getByBuyerId(ctx, testBuyerId);
+      const manualSum = allTransactions
+        .filter((t) => t.status === TransactionStatus.Completed)
+        .reduce((sum, t) => sum + t.quantity, 0);
+
+      expect(aggregateCount).toBe(4); // 2 + 2
+      expect(manualSum).toBe(4);
+      expect(aggregateCount).toBe(manualSum);
+    });
+
+    it('countCompletedBySellerId is consistent with getCompletedBySellerIds for two sellers', async () => {
+      // NOTE: `getCompletedSalesTotalBatch` is a service method, not a repository method.
+      // This test instead verifies consistency at the repo layer between
+      // `countCompletedBySellerId` and `getCompletedBySellerIds` (the repo method it wraps).
+
+      const sellerAId = testSellerId;
+      const sellerBId = await createTestUser({
+        email: `seller-b-${Date.now()}@test.com`,
+      });
+      const eventBId = await createTestEvent(sellerBId);
+      const eventBDateId = await createTestEventDate(eventBId, sellerBId);
+      const eventBSectionId = await createTestEventSection(eventBId, sellerBId);
+      const listingBId = await prisma.ticketListing.create({
+        data: {
+          seller: { connect: { id: sellerBId } },
+          event: { connect: { id: eventBId } },
+          eventDate: { connect: { id: eventBDateId } },
+          eventSection: { connect: { id: eventBSectionId } },
+          type: 'Physical',
+          sellTogether: false,
+          pricePerTicket: { amount: 5000, currency: 'EUR' },
+          status: 'Active',
+        },
+      }).then((l) => l.id);
+      const snapshotBId = await createTestPricingSnapshot(listingBId);
+
+      // 2 completed transactions for seller A (quantity 2 each => 4 total)
+      for (let i = 0; i < 2; i++) {
+        await repository.create(
+          ctx,
+          createValidTransaction({
+            sellerId: sellerAId,
+            status: TransactionStatus.Completed,
+            requiredActor: RequiredActor.None,
+            completedAt: new Date(),
+            quantity: 2,
+          }),
+        );
+      }
+
+      // 3 completed transactions for seller B (quantity 1 each => 3 total)
+      for (let i = 0; i < 3; i++) {
+        await repository.create(
+          ctx,
+          createValidTransaction({
+            sellerId: sellerBId,
+            listingId: listingBId,
+            pricingSnapshotId: snapshotBId,
+            status: TransactionStatus.Completed,
+            requiredActor: RequiredActor.None,
+            completedAt: new Date(),
+            quantity: 1,
+          }),
+        );
+      }
+
+      const countA = await repository.countCompletedBySellerId(ctx, sellerAId);
+      const countB = await repository.countCompletedBySellerId(ctx, sellerBId);
+
+      // Verify against getCompletedBySellerIds (the underlying repo method used by getCompletedSalesTotalBatch)
+      const completedForBoth = await repository.getCompletedBySellerIds(ctx, [sellerAId, sellerBId]);
+      const manualA = completedForBoth
+        .filter((t) => t.sellerId === sellerAId)
+        .reduce((sum, t) => sum + t.quantity, 0);
+      const manualB = completedForBoth
+        .filter((t) => t.sellerId === sellerBId)
+        .reduce((sum, t) => sum + t.quantity, 0);
+
+      expect(countA).toBe(4);
+      expect(countB).toBe(3);
+      expect(countA).toBe(manualA);
+      expect(countB).toBe(manualB);
+    });
+  });
 });

@@ -1,5 +1,6 @@
 -- Unify BUYER_PAYMENT_APPROVED + SELLER_PAYMENT_RECEIVED into PAYMENT_RECEIVED
--- Note: PAYMENT_RECEIVED was already added to the enum in a prior partial run.
+-- Note: PAYMENT_RECEIVED may already exist in the enum from a prior partial run; add it if missing.
+ALTER TYPE "NotificationEventType" ADD VALUE IF NOT EXISTS 'PAYMENT_RECEIVED';
 
 -- Step 1: Migrate notification_events rows to PAYMENT_RECEIVED
 UPDATE "notification_events" SET "type" = 'PAYMENT_RECEIVED' WHERE "type" IN ('BUYER_PAYMENT_APPROVED', 'SELLER_PAYMENT_RECEIVED');
