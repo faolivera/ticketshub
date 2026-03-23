@@ -474,9 +474,12 @@ export class TicketsRepository
         status: PrismaListingStatus.Active,
         ...(excludeListingId ? { NOT: { id: excludeListingId } } : {}),
       },
-      select: { pricePerTicket: true },
+      select: { pricePerTicket: true, _count: { select: { ticketUnits: true } } },
     });
-    return listings.map((l) => this.deserializeMoney(l.pricePerTicket));
+    return listings.map((l) => {
+      const price = this.deserializeMoney(l.pricePerTicket);
+      return { amount: price.amount * l._count.ticketUnits, currency: price.currency };
+    });
   }
 
   async update(
