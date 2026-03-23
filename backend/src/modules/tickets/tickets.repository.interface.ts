@@ -69,6 +69,16 @@ export interface ITicketsRepository {
   getBySellerId(ctx: Ctx, sellerId: string): Promise<TicketListing[]>;
 
   /**
+   * Get price summaries for active listings by seller (used by risk engine).
+   * Optionally excludes one listing by id (e.g. when updating that listing).
+   */
+  getActiveListingsSummaryBySellerId(
+    ctx: Ctx,
+    sellerId: string,
+    excludeListingId?: string,
+  ): Promise<{ amount: number; currency: string }[]>;
+
+  /**
    * Update listing
    */
   update(

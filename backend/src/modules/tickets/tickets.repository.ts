@@ -461,6 +461,24 @@ export class TicketsRepository
     return listings.map((l) => this.mapToListing(l));
   }
 
+  async getActiveListingsSummaryBySellerId(
+    ctx: Ctx,
+    sellerId: string,
+    excludeListingId?: string,
+  ): Promise<{ amount: number; currency: string }[]> {
+    this.logger.debug(ctx, 'getActiveListingsSummaryBySellerId', { sellerId });
+    const client = this.getClient(ctx);
+    const listings = await client.ticketListing.findMany({
+      where: {
+        sellerId,
+        status: PrismaListingStatus.Active,
+        ...(excludeListingId ? { NOT: { id: excludeListingId } } : {}),
+      },
+      select: { pricePerTicket: true },
+    });
+    return listings.map((l) => this.deserializeMoney(l.pricePerTicket));
+  }
+
   async update(
     ctx: Ctx,
     id: string,

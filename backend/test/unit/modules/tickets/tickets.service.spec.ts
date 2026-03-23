@@ -156,6 +156,7 @@ describe('TicketsService', () => {
       getByEventId: jest.fn(),
       getByEventDateId: jest.fn(),
       getBySellerId: jest.fn().mockResolvedValue([]),
+      getActiveListingsSummaryBySellerId: jest.fn().mockResolvedValue([]),
       update: jest.fn(),
       delete: jest.fn(),
       reserveUnits: jest.fn(),
@@ -485,9 +486,9 @@ describe('TicketsService', () => {
       };
       usersService.findById.mockResolvedValueOnce(tier0User as any);
       eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
-      ticketsRepository.getBySellerId.mockResolvedValueOnce([
-        { id: 'l1', status: ListingStatus.Active, pricePerTicket: { amount: 1000, currency: 'USD' }, ticketUnits: [{ id: 'u1' }] },
-        { id: 'l2', status: ListingStatus.Active, pricePerTicket: { amount: 1000, currency: 'USD' }, ticketUnits: [{ id: 'u2' }] },
+      ticketsRepository.getActiveListingsSummaryBySellerId.mockResolvedValueOnce([
+        { amount: 1000, currency: 'USD' },
+        { amount: 1000, currency: 'USD' },
       ] as any);
 
       await expect(
@@ -507,7 +508,7 @@ describe('TicketsService', () => {
       };
       usersService.findById.mockResolvedValueOnce(tier0User as any);
       eventsService.getEventById.mockResolvedValue(mockApprovedEvent as any);
-      ticketsRepository.getBySellerId.mockResolvedValueOnce([]);
+      ticketsRepository.getActiveListingsSummaryBySellerId.mockResolvedValueOnce([]);
       conversionService.sumInCurrency.mockResolvedValueOnce({ amount: 25000, currency: 'USD' });
 
       await expect(

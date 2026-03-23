@@ -103,16 +103,9 @@ export class TicketsService {
     sellerId: string,
     excludeListingId?: string,
   ): Promise<{ count: number; amounts: ConfigMoney[] }> {
-    const listings = await this.ticketsRepository.getBySellerId(ctx, sellerId);
-    const active = listings.filter((l) => l.status === ListingStatus.Active);
-    const toSum = excludeListingId
-      ? active.filter((l) => l.id !== excludeListingId)
-      : active;
-    const amounts: ConfigMoney[] = toSum.map((l) => ({
-      amount: l.pricePerTicket.amount * l.ticketUnits.length,
-      currency: l.pricePerTicket.currency,
-    }));
-    return { count: toSum.length, amounts };
+    const prices = await this.ticketsRepository.getActiveListingsSummaryBySellerId(ctx, sellerId, excludeListingId);
+    const amounts: ConfigMoney[] = prices.map((p) => ({ amount: p.amount, currency: p.currency as ConfigMoney['currency'] }));
+    return { count: prices.length, amounts };
   }
 
   /**
