@@ -852,29 +852,42 @@ export function HighlightedEventsHero({
         }}
       />
 
-      {/* ── LAYER 3: Bottom scrim — only bottom 40% for card legibility ──── */}
+      {/* ── LAYER 3: Bottom scrim for event card legibility ──────────────── */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.40) 28%, transparent 44%)",
+            "linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.25) 42%, transparent 62%)",
           zIndex: 2,
         }}
       />
 
-      {/* ── LAYER 4: Diagonal fade — solid PANEL_BG left → transparent right */}
-      {/* 105deg tilts the gradient so top fades at ~32%, bottom fades at ~46% */}
+      {/* ── LAYER 4: Diagonal solid mask ─────────────────────────────────── */}
+      {/* polygon: top-left → (45% top) → (55% bottom) → bottom-left        */}
+      {/* Creates a diagonal cut: image visible from 45% at top, 55% at bottom */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(105deg, ${PANEL_BG} 0%, ${PANEL_BG} 24%, rgba(15,8,37,0.85) 32%, rgba(15,8,37,0.30) 40%, rgba(15,8,37,0.0) 50%)`,
+          background: PANEL_BG,
+          clipPath: "polygon(0 0, 35% 0, 45% 100%, 0 100%)",
           zIndex: 3,
         }}
       />
 
-      {/* ── LAYER 5: Watermark ───────────────────────────────────────────── */}
+      {/* ── LAYER 5: Diagonal feather — softens the hard clip-path edge ──── */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(to bottom, ${PANEL_BG} 0%, rgba(15,8,37,0.55) 40%, rgba(15,8,37,0.0) 60%)`,
+          clipPath: "polygon(33% 0, 40% 0, 48% 100%, 42% 100%)",
+          zIndex: 4,
+        }}
+      />
+
+      {/* ── LAYER 6: Watermark ───────────────────────────────────────────── */}
       <div
         style={{
           position: "absolute",
@@ -888,23 +901,23 @@ export function HighlightedEventsHero({
           whiteSpace: "nowrap",
           pointerEvents: "none",
           userSelect: "none",
-          zIndex: 4,
+          zIndex: 5,
           ...S,
         }}
       >
         {watermarkWord}
       </div>
 
-      {/* ── LAYER 6: Stock badge ─────────────────────────────────────────── */}
+      {/* ── LAYER 7: Stock badge ─────────────────────────────────────────── */}
       {StockBadge}
 
-      {/* ── LAYER 7: Content ─────────────────────────────────────────────── */}
+      {/* ── LAYER 8: Content ─────────────────────────────────────────────── */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           display: "flex",
-          zIndex: 5,
+          zIndex: 6,
         }}
       >
         {/* Brand copy — left 43%, transparent bg (color from diagonal mask) */}
@@ -1073,13 +1086,14 @@ export function HighlightedEventsHero({
           </div>
         </div>
 
-        {/* Event area — right side, card starts at 55% so it's fully over the image */}
+        {/* Event area — right side, transparent, image shows through */}
         <div style={{ flex: 1, position: "relative" }}>
+          {/* Floating event card — pinned to bottom */}
           <div
             style={{
               position: "absolute",
               bottom: 14,
-              left: "18%",
+              left: 14,
               right: 14,
               zIndex: 1,
             }}
