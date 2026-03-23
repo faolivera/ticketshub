@@ -162,8 +162,8 @@ export class AdminService {
   ): Promise<AdminUserSearchResponse> {
     const term = searchTerm?.trim() ?? '';
     if (term.length < 2) return [];
-    const users = await this.usersService.findByEmailContaining(ctx, term);
-    return users.slice(0, AdminService.USER_SEARCH_LIMIT).map((u) => ({
+    const users = await this.usersService.findByEmailContaining(ctx, term, AdminService.USER_SEARCH_LIMIT);
+    return users.map((u) => ({
       id: u.id,
       email: u.email,
     }));

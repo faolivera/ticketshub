@@ -75,9 +75,10 @@ export interface IUsersRepository {
   setGoogleId(ctx: Ctx, userId: string, googleId: string): Promise<User | undefined>;
 
   /**
-   * Find users whose email contains the search term (case-insensitive)
+   * Find users whose email contains the search term (case-insensitive).
+   * Optional take param limits the number of rows fetched from the DB.
    */
-  findByEmailContaining(ctx: Ctx, searchTerm: string): Promise<User[]>;
+  findByEmailContaining(ctx: Ctx, searchTerm: string, take?: number): Promise<User[]>;
 
   /**
    * Find users with pagination and optional search by name or email

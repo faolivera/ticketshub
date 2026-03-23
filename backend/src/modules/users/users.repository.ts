@@ -97,7 +97,7 @@ export class UsersRepository implements IUsersRepository {
     }
   }
 
-  async findByEmailContaining(_ctx: Ctx, searchTerm: string): Promise<User[]> {
+  async findByEmailContaining(_ctx: Ctx, searchTerm: string, take?: number): Promise<User[]> {
     this.logger.debug(_ctx, 'findByEmailContaining');
     if (!searchTerm?.trim()) return [];
     const term = searchTerm.trim();
@@ -108,6 +108,7 @@ export class UsersRepository implements IUsersRepository {
           mode: 'insensitive',
         },
       },
+      ...(take !== undefined && { take }),
     });
     return users.map((u) => this.mapToUser(u));
   }

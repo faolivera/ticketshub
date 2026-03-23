@@ -207,10 +207,11 @@ export class UsersService {
 
   /**
    * Find users whose email contains the search term (case-insensitive).
+   * Optional take param is pushed down to the DB query.
    * Used for admin transaction search.
    */
-  async findByEmailContaining(ctx: Ctx, searchTerm: string): Promise<User[]> {
-    return await this.usersRepository.findByEmailContaining(ctx, searchTerm);
+  async findByEmailContaining(ctx: Ctx, searchTerm: string, take?: number): Promise<User[]> {
+    return await this.usersRepository.findByEmailContaining(ctx, searchTerm, take);
   }
 
   /**
