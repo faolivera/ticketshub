@@ -41,6 +41,9 @@ import {
   GBORD,
   PENDING,
   S,
+  R_HERO,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 import { TransactionActionRequiredCard } from '@/app/components/transaction/TransactionActionRequiredCard';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
@@ -93,7 +96,7 @@ function IconBtn({ href, onClick, title, children, active }: {
 }) {
   const [hov, setHov] = useState(false);
   const style: React.CSSProperties = {
-    width: 34, height: 34, borderRadius: 8, border: `1px solid ${active ? GBORD : hov ? '#ddd6fe' : BORDER}`,
+    width: 34, height: 34, borderRadius: R_BUTTON, border: `1px solid ${active ? GBORD : hov ? '#ddd6fe' : BORDER}`,
     background: active ? GLIGHT : hov ? VLIGHT : BG,
     color: active ? GREEN : hov ? V : MUTED,
     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -151,7 +154,7 @@ function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing, t }: {
     : { aspectRatio: '1', flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, overflow: 'hidden', position: 'relative', minWidth: 100, maxWidth: 160 };
 
   return (
-    <div style={{ background: CARD, borderRadius: 14, border: `1px solid #ddd6fe`, overflow: 'hidden' }}>
+    <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid #ddd6fe`, overflow: 'hidden' }}>
       <div style={{ display: 'flex' }}>
 
         {/* Accent bar */}
@@ -212,7 +215,7 @@ function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing, t }: {
         <button
           type="button" onClick={() => onAccept(offer.id)} disabled={isProcessing}
           style={{
-            flex: 1, padding: '9px 0', borderRadius: 10, border: 'none',
+            flex: 1, padding: '9px 0', borderRadius: R_BUTTON, border: 'none',
             background: isProcessing ? BORD2 : V, color: CARD,
             fontSize: 13, fontWeight: 700, cursor: isProcessing ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -227,7 +230,7 @@ function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing, t }: {
         <button
           type="button" onClick={() => onReject(offer.id)} disabled={isProcessing}
           style={{
-            flex: 1, padding: '9px 0', borderRadius: 10,
+            flex: 1, padding: '9px 0', borderRadius: R_BUTTON,
             background: CARD, color: MUTED, border: `1.5px solid ${BORD2}`,
             fontSize: 13, fontWeight: 600, cursor: isProcessing ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, ...S,
@@ -254,7 +257,7 @@ function SaleWaitingRow({ tx, t }: {
     <Link to={`/transaction/${tx.id}`} state={{ from: '/seller-dashboard' }} style={{ textDecoration: 'none' }}>
       <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
         style={{
-          display: 'flex', background: CARD, borderRadius: 12,
+          display: 'flex', background: CARD, borderRadius: R_CARD,
           border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
           transition: 'border-color 0.13s',
         }}>
@@ -296,7 +299,7 @@ function ListingRow({ listing, copiedListingId, onCopyLink, pendingOfferCount = 
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
-        background: CARD, borderRadius: 14,
+        background: CARD, borderRadius: R_CARD,
         border: `1px solid ${BORDER}`, overflow: 'hidden',
         boxShadow: hov ? '0 2px 10px rgba(0,0,0,0.05)' : 'none',
         transition: 'box-shadow 0.14s',
@@ -337,7 +340,7 @@ function ListingRow({ listing, copiedListingId, onCopyLink, pendingOfferCount = 
       <div style={{ borderTop: `1px solid ${BORDER}`, padding: '8px 12px', display: 'flex', gap: 6, alignItems: 'center' }}>
         <Link to={`/edit-listing/${listing.id}`} style={{ textDecoration: 'none', flex: 1 }}>
           <button style={{
-            width: '100%', padding: '8px 0', borderRadius: 8,
+            width: '100%', padding: '8px 0', borderRadius: R_BUTTON,
             background: V, color: CARD, border: 'none',
             fontSize: 13, fontWeight: 700, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, ...S,
@@ -480,14 +483,14 @@ export function SellerDashboardPage() {
   // ── Guards ────────────────────────────────────────────────────────────────
   const guardCard = (title: string, body: string, ctaLabel: string, ctaTo: string) => (
     <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, padding: '40px 32px', maxWidth: 360, textAlign: 'center' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, padding: '40px 32px', maxWidth: 360, textAlign: 'center' }}>
         <div style={{ width: 56, height: 56, borderRadius: '50%', background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
           <Ticket size={24} style={{ color: V }} />
         </div>
         <p style={{ fontSize: 18, fontWeight: 800, color: DARK, marginBottom: 8, ...S }}>{title}</p>
         <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.55, ...S }}>{body}</p>
         <Link to={ctaTo} style={{ textDecoration: 'none' }}>
-          <button style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: V, color: CARD, fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
+          <button style={{ padding: '11px 24px', borderRadius: R_BUTTON, border: 'none', background: V, color: CARD, fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
             {ctaLabel}
           </button>
         </Link>
@@ -624,7 +627,7 @@ export function SellerDashboardPage() {
                     disabled={sdHistLoading}
                     onClick={() => void loadSellerHistoryPage(true)}
                     style={{
-                      padding: '9px 14px', borderRadius: 10, background: BG, border: `1px solid ${BORDER}`,
+                      padding: '9px 14px', borderRadius: R_BUTTON, background: BG, border: `1px solid ${BORDER}`,
                       fontSize: 13, fontWeight: 700, color: V, cursor: sdHistLoading ? 'wait' : 'pointer', ...S,
                     }}
                   >
@@ -684,12 +687,12 @@ export function SellerDashboardPage() {
             <SubLabel icon={<CheckCircle size={11} />} label={t('boughtTickets.activeListings')} color={GREEN} />
           )}
           {activeListings.length === 0 ? (
-            <div style={{ borderRadius: 12, border: `1px solid ${BORDER}`, padding: '24px 20px', textAlign: 'center' }}>
+            <div style={{ borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '24px 20px', textAlign: 'center' }}>
               <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 14, ...S }}>
                 {t('boughtTickets.listedTicketsWillAppear')}
               </p>
               <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
-                <button style={{ padding: '8px 18px', borderRadius: 9, border: 'none', background: V, color: CARD, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, ...S }}>
+                <button style={{ padding: '8px 18px', borderRadius: R_BUTTON, border: 'none', background: V, color: CARD, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, ...S }}>
                   <Plus size={13} />{t('boughtTickets.startSelling')}
                 </button>
               </Link>
@@ -724,7 +727,7 @@ export function SellerDashboardPage() {
                   const sector = l.sectionName || l.type || 'General';
                   const price  = formatCurrencyDisplay(l.pricePerTicket.amount, l.pricePerTicket.currency);
                   return (
-                    <div key={l.id} style={{ background: BG, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                    <div key={l.id} style={{ background: BG, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                       <div style={{ height: 64, background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
                         {url && <img src={url} alt={l.eventName} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, filter: 'grayscale(0.4)', opacity: 0.75 }} />}
                       </div>
@@ -790,7 +793,7 @@ export function SellerDashboardPage() {
               </div>
               <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {/* Received offer card skeleton */}
-                <div style={{ background: CARD, borderRadius: 14, border: `1px solid #ddd6fe`, overflow: 'hidden' }}>
+                <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid #ddd6fe`, overflow: 'hidden' }}>
                   <div style={{ display: 'flex' }}>
                     <div style={{ width: 3, flexShrink: 0, background: '#ddd6fe', alignSelf: 'stretch' }} />
                     <div className="sd-sk" style={{ width: 90, flexShrink: 0, alignSelf: 'stretch', minHeight: 90, borderRadius: 0 }} />
@@ -805,13 +808,13 @@ export function SellerDashboardPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, padding: '9px 11px', borderTop: '1px solid #f0ebff' }}>
-                    <div className="sd-sk" style={{ flex: 1, height: 34, borderRadius: 10 }} />
-                    <div className="sd-sk" style={{ flex: 1, height: 34, borderRadius: 10 }} />
+                    <div className="sd-sk" style={{ flex: 1, height: 34, borderRadius: R_BUTTON }} />
+                    <div className="sd-sk" style={{ flex: 1, height: 34, borderRadius: R_BUTTON }} />
                   </div>
                 </div>
                 {/* 2 sale-in-progress row skeletons */}
                 {[75, 85].map((w, i) => (
-                  <div key={i} style={{ display: 'flex', background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                  <div key={i} style={{ display: 'flex', background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                     <div className="sd-sk" style={{ width: 52, flexShrink: 0, alignSelf: 'stretch', minHeight: 52, borderRadius: 0 }} />
                     <div style={{ flex: 1, padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ flex: 1 }}>
@@ -834,7 +837,7 @@ export function SellerDashboardPage() {
               <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {/* 2 listing card skeletons */}
                 {[70, 80].map((w, i) => (
-                  <div key={i} style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                  <div key={i} style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                     <div style={{ display: 'flex' }}>
                       <div className="sd-sk" style={{ width: 72, flexShrink: 0, alignSelf: 'stretch', minHeight: 72, borderRadius: 0 }} />
                       <div style={{ flex: 1, padding: '10px 13px' }}>
@@ -849,9 +852,9 @@ export function SellerDashboardPage() {
                       </div>
                     </div>
                     <div style={{ borderTop: `1px solid ${BORDER}`, padding: '8px 12px', display: 'flex', gap: 6 }}>
-                      <div className="sd-sk" style={{ flex: 1, height: 32, borderRadius: 8 }} />
-                      <div className="sd-sk" style={{ width: 34, height: 32, borderRadius: 8 }} />
-                      <div className="sd-sk" style={{ width: 34, height: 32, borderRadius: 8 }} />
+                      <div className="sd-sk" style={{ flex: 1, height: 32, borderRadius: R_BUTTON }} />
+                      <div className="sd-sk" style={{ width: 34, height: 32, borderRadius: R_BUTTON }} />
+                      <div className="sd-sk" style={{ width: 34, height: 32, borderRadius: R_BUTTON }} />
                     </div>
                   </div>
                 ))}
@@ -868,14 +871,14 @@ export function SellerDashboardPage() {
               {listingsCol}
             </div>
           ) : (
-            <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
+            <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
                 <Ticket size={24} style={{ color: V }} />
               </div>
               <p style={{ fontSize: 16, fontWeight: 800, color: DARK, marginBottom: 6, ...S }}>{t('boughtTickets.noListingsYet')}</p>
               <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 22, lineHeight: 1.55, ...S }}>{t('boughtTickets.listedTicketsWillAppear')}</p>
               <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
-                <button style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: V, color: CARD, fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
+                <button style={{ padding: '10px 22px', borderRadius: R_BUTTON, border: 'none', background: V, color: CARD, fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
                   {t('boughtTickets.startSelling')}
                 </button>
               </Link>

@@ -6,7 +6,7 @@ import type { HelpCardProps } from './types';
 export function HelpCard({ title, body, supportLabel, supportTo }: HelpCardProps) {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <h2 className="mb-2 text-base" style={{ ...S, fontWeight: 700, color: DARK }}>
@@ -17,7 +17,7 @@ export function HelpCard({ title, body, supportLabel, supportTo }: HelpCardProps
       </p>
       <Link
         to={supportTo}
-        className="flex w-full items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-bold text-white no-underline"
+        className="flex w-full items-center justify-center gap-2 rounded-button py-3 text-sm font-bold text-white no-underline"
         style={{ background: DARK, ...S }}
       >
         <Mail className="h-4 w-4" />

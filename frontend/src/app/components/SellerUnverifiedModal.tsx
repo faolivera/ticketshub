@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { S } from '@/lib/design-tokens';
+import { S, R_BUTTON, R_INPUT, R_CARD } from '@/lib/design-tokens';
 import {
   Dialog,
   DialogContent,
@@ -121,7 +121,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
 
           {/* Icon */}
           <div style={{
-            width: 44, height: 44, borderRadius: 12,
+            width: 44, height: 44, borderRadius: R_INPUT,
             background: '#f0ebff', display: 'flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 16,
           }}>
@@ -139,7 +139,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
               <p>{t('sellerUnverifiedModal.message')}</p>
 
               {hasStatus && (needsDni || needsBank) && (
-                <div style={{ background: '#f3f3f0', borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ background: '#f3f3f0', borderRadius: R_INPUT, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {needsDni && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0f0f1a', fontWeight: 600 }}>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6d28d9', flexShrink: 0 }} />
@@ -175,7 +175,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
             onClick={handleGoToProfile}
             style={{
               width: '100%', marginTop: 20, padding: '12px 0',
-              borderRadius: 12, border: 'none',
+              borderRadius: R_BUTTON, border: 'none',
               background: '#6d28d9', color: 'white',
               fontSize: 14, fontWeight: 700, cursor: 'pointer',
               ...S,

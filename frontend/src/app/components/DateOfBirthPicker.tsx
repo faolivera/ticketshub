@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, S, R_BUTTON, R_INPUT, R_CARD } from '@/lib/design-tokens';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MONTHS_ES = [
@@ -76,7 +76,7 @@ function DayPanel({ selected, month, year, onSelect }: {
           return (
             <button key={d} type="button" onClick={() => onSelect(d)}
               style={{
-                padding: '7px 0', borderRadius: 8, border: 'none',
+                padding: '7px 0', borderRadius: R_BUTTON, border: 'none',
                 background: isSelected ? V : 'transparent',
                 color: isSelected ? 'white' : DARK,
                 fontSize: 13, fontWeight: isSelected ? 700 : 400,
@@ -111,7 +111,7 @@ function MonthPanel({ selected, onSelect }: {
           return (
             <button key={m} type="button" onClick={() => onSelect(m)}
               style={{
-                padding: '9px 14px', borderRadius: 9, border: 'none',
+                padding: '9px 14px', borderRadius: R_BUTTON, border: 'none',
                 background: isSelected ? V : 'transparent',
                 color: isSelected ? 'white' : DARK,
                 fontSize: 13.5, fontWeight: isSelected ? 700 : 400,
@@ -158,7 +158,7 @@ function YearPanel({ selected, onSelect }: {
             <button key={y} ref={isSelected ? selectedRef : undefined}
               type="button" onClick={() => onSelect(y)}
               style={{
-                padding: '8px 0', borderRadius: 9, border: 'none',
+                padding: '8px 0', borderRadius: R_BUTTON, border: 'none',
                 background: isSelected ? V : 'transparent',
                 color: isSelected ? 'white' : DARK,
                 fontSize: 13, fontWeight: isSelected ? 700 : 400,
@@ -301,7 +301,7 @@ export function DateOfBirthPicker({
       <div style={{
         display: 'flex', alignItems: 'stretch',
         border: `1.5px solid ${borderColor}`,
-        borderRadius: 11, background: disabled ? BG : CARD,
+        borderRadius: R_INPUT, background: disabled ? BG : CARD,
         boxShadow, transition: 'border-color 0.14s, box-shadow 0.14s',
         overflow: 'hidden', userSelect: 'none',
         opacity: disabled ? 0.6 : 1,
@@ -372,7 +372,7 @@ export function DateOfBirthPicker({
           width: PANEL_WIDTHS[open],
           maxHeight: PANEL_MAX_HEIGHTS[open],
           overflowY: 'auto',
-          background: CARD, borderRadius: 16,
+          background: CARD, borderRadius: R_CARD,
           border: `1px solid ${BORDER}`,
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           animation: 'popIn 0.14s cubic-bezier(0.32,0.72,0,1)',

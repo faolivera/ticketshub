@@ -3,6 +3,7 @@ import {
   V, DARK, MUTED, CARD, BORDER, BORD2,
   GREEN, GLIGHT, GBORD,
   SHADOW_CARD_SM,
+  R_CARD, R_HERO,
 } from "@/lib/design-tokens";
 import { formatCurrencyFromUnits } from "@/lib/format-currency";
 import type { BuyPagePaymentMethodOption } from "@/api/types";
@@ -42,7 +43,7 @@ export function PaymentMethodsCard({
       style={{
         background: CARD,
         border: `1px solid ${BORDER}`,
-        borderRadius: 16,
+        borderRadius: R_CARD,
         overflow: "hidden",
         boxShadow: SHADOW_CARD_SM,
       }}
@@ -127,7 +128,7 @@ export function PaymentMethodsCard({
                               color: GREEN,
                               border: `1px solid ${GBORD}`,
                               padding: "2px 8px",
-                              borderRadius: 20,
+                              borderRadius: R_HERO,
                             }}
                           >
                             Ahorrás {formatCurrencyFromUnits(savings, listingCurrency)}

@@ -116,3 +116,10 @@ export const INFO_BORDER = "#bfdbfe";
 
 export const S = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 export const E = { fontFamily: "'DM Serif Display', serif" };
+
+// Border radius tokens
+export const R_HERO   = 20;
+export const R_CARD   = 14;
+export const R_BUTTON = 12;
+export const R_INPUT  = 12;
+export const R_PILL   = 9999;

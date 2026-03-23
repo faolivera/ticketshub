@@ -24,6 +24,8 @@ import {
   ABORD,
   VL_BORDER,
   S,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 export interface ListingCardProps {
@@ -90,7 +92,7 @@ function IconBtn({ onClick, title, children, isCopied = false }: {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        width: 38, height: 38, borderRadius: 9, flexShrink: 0,
+        width: 38, height: 38, borderRadius: R_BUTTON, flexShrink: 0,
         background: isCopied ? GLIGHT  : hov ? VLIGHT  : BG,
         color:      isCopied ? GREEN   : hov ? V       : MUTED,
         border:     `1px solid ${isCopied ? GBORD : hov ? VL_BORDER : BORDER}`,
@@ -123,7 +125,7 @@ function ActiveListingCard({ listing, copiedListingId, onCopyLink, pendingOfferC
   return (
     <div
       style={{
-        background: CARD, borderRadius: 16,
+        background: CARD, borderRadius: R_CARD,
         border: `1px solid ${BORDER}`, overflow: 'hidden',
         boxShadow: hov ? '0 2px 12px rgba(0,0,0,0.06)' : 'none',
         transition: 'box-shadow 0.15s',
@@ -183,7 +185,7 @@ function ActiveListingCard({ listing, copiedListingId, onCopyLink, pendingOfferC
       <div style={{ borderTop: `1px solid ${BORDER}`, padding: '9px 12px', display: 'flex', gap: 7, alignItems: 'center' }}>
         <Link to={`/edit-listing/${listing.id}`} style={{ textDecoration: 'none', flex: 1 }}>
           <button style={{
-            width: '100%', padding: '9px 0', borderRadius: 9,
+            width: '100%', padding: '9px 0', borderRadius: R_BUTTON,
             background: V, color: 'white', border: 'none',
             fontSize: 13, fontWeight: 700, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, ...S,
@@ -223,7 +225,7 @@ function PastListingCard({ listing }: ListingCardProps) {
 
   return (
     <div style={{
-      background: CARD, borderRadius: 14,
+      background: CARD, borderRadius: R_CARD,
       border: `1px solid ${hov ? BORD2 : BORDER}`,
       overflow: 'hidden', opacity: 0.8, transition: 'all 0.14s',
     }}

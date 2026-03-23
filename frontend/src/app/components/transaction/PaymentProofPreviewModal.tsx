@@ -13,7 +13,7 @@ export function PaymentProofPreviewModal({
   const { t } = useTranslation();
   return (
     <ModalOverlay title={title} onClose={onClose}>
-      <div className="max-h-[70vh] overflow-auto rounded-xl border border-gray-100">
+      <div className="max-h-[70vh] overflow-auto rounded-card border border-gray-100">
         {loading ? (
           <div className="flex h-64 items-center justify-center">
             <LoadingSpinner size="md" text={t('common.loading')} />

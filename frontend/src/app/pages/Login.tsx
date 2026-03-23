@@ -6,7 +6,7 @@ import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 import { useUser } from '@/app/contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
 import { getGoogleClientId } from '@/config/env';
-import { V, VLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E, R_HERO, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
 
 const googleClientId = getGoogleClientId();
 
@@ -27,7 +27,7 @@ function GoogleLoginButtonBlock({
       <div
         aria-hidden
         style={{
-          width: '100%', height: 52, borderRadius: 11,
+          width: '100%', height: 52, borderRadius: R_INPUT,
           background: BG, border: `1px solid ${BORDER}`,
           animation: 'pulse 1.5s ease-in-out infinite',
         }}
@@ -98,7 +98,7 @@ function InputField({ label, icon, name, type, value, placeholder, autoComplete,
         style={{
           width: '100%', padding: '12px 14px',
           border: `1.5px solid ${focused ? V : BORD2}`,
-          borderRadius: 11, fontSize: 14, color: DARK,
+          borderRadius: R_INPUT, fontSize: 14, color: DARK,
           background: disabled ? BG : CARD,
           outline: 'none', transition: 'border-color 0.14s',
           boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
@@ -229,7 +229,7 @@ export function Login() {
 
         {/* Card */}
         <div style={{
-          background: CARD, borderRadius: 20,
+          background: CARD, borderRadius: R_HERO,
           border: `1px solid ${BORDER}`,
           boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
           padding: '28px 24px',
@@ -238,7 +238,7 @@ export function Login() {
           {/* Error message */}
           {displayError && (
             <div style={{
-              padding: '12px 14px', borderRadius: 11, marginBottom: 20,
+              padding: '12px 14px', borderRadius: R_INPUT, marginBottom: 20,
               background: '#fef2f2', border: '1px solid #fca5a5',
               fontSize: 13.5, color: '#dc2626', lineHeight: 1.5,
             }}>
@@ -254,7 +254,7 @@ export function Login() {
                 style={{
                   width: '100%', display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
-                  minHeight: 52, borderRadius: 11, overflow: 'hidden',
+                  minHeight: 52, borderRadius: R_INPUT, overflow: 'hidden',
                 }}
               >
                 <GoogleLoginButtonBlock
@@ -313,7 +313,7 @@ export function Login() {
               disabled={isBusy}
               style={{
                 width: '100%', padding: '13px',
-                borderRadius: 11, border: 'none',
+                borderRadius: R_BUTTON, border: 'none',
                 background: isBusy ? BORD2 : V,
                 color: 'white', fontSize: 14.5, fontWeight: 700,
                 cursor: isBusy ? 'not-allowed' : 'pointer',

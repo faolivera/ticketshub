@@ -38,7 +38,7 @@ export const StepDeliveryMethod: FC<StepDeliveryMethodProps> = ({ form, onFormCh
         <Label
           htmlFor="delivery-digital"
           className={cn(
-            'flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors',
+            'flex items-center gap-4 p-4 rounded-card border-2 cursor-pointer transition-colors',
             form.deliveryMethod === 'digital'
               ? 'border-primary bg-primary/5'
               : 'border-border hover:border-primary/50'
@@ -55,7 +55,7 @@ export const StepDeliveryMethod: FC<StepDeliveryMethodProps> = ({ form, onFormCh
         <Label
           htmlFor="delivery-physical"
           className={cn(
-            'flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors',
+            'flex items-center gap-4 p-4 rounded-card border-2 cursor-pointer transition-colors',
             form.deliveryMethod === 'physical'
               ? 'border-primary bg-primary/5'
               : 'border-border hover:border-primary/50'
@@ -89,7 +89,7 @@ export const StepDeliveryMethod: FC<StepDeliveryMethodProps> = ({ form, onFormCh
             <Label
               htmlFor="physical-pickup"
               className={cn(
-                'flex flex-col gap-1 p-4 rounded-xl border-2 cursor-pointer transition-colors',
+                'flex flex-col gap-1 p-4 rounded-card border-2 cursor-pointer transition-colors',
                 form.physicalDeliveryMethod === 'pickup'
                   ? 'border-primary bg-primary/5'
                   : 'border-border hover:border-primary/50'
@@ -104,7 +104,7 @@ export const StepDeliveryMethod: FC<StepDeliveryMethodProps> = ({ form, onFormCh
             <Label
               htmlFor="physical-arrange"
               className={cn(
-                'flex flex-col gap-1 p-4 rounded-xl border-2 cursor-pointer transition-colors',
+                'flex flex-col gap-1 p-4 rounded-card border-2 cursor-pointer transition-colors',
                 form.physicalDeliveryMethod === 'arrange'
                   ? 'border-primary bg-primary/5'
                   : 'border-border hover:border-primary/50'

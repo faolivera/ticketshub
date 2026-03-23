@@ -30,6 +30,8 @@ import {
   SUCCESS,
   S,
   E,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 const DS = { ...E, fontWeight: 400 };
@@ -206,7 +208,7 @@ export function SupportCaseDetail() {
                   </p>
                   {/* Bubble */}
                   <div style={{
-                    maxWidth: '85%', padding: '10px 14px', borderRadius: 14,
+                    maxWidth: '85%', padding: '10px 14px', borderRadius: R_CARD,
                     borderBottomLeftRadius: fromSupport ? 4 : 14,
                     borderBottomRightRadius: fromSupport ? 14 : 4,
                     background: fromSupport ? VLIGHT : BG,
@@ -250,7 +252,7 @@ export function SupportCaseDetail() {
                   onClick={handleSendReply}
                   disabled={!replyText.trim() || sendingReply}
                   style={{
-                    padding: '10px 20px', borderRadius: 12, border: 'none',
+                    padding: '10px 20px', borderRadius: R_BUTTON, border: 'none',
                     background: !replyText.trim() || sendingReply ? VL_BORDER : V,
                     color: !replyText.trim() || sendingReply ? '#a78bfa' : 'white',
                     fontSize: 13.5, fontWeight: 700,
@@ -271,7 +273,7 @@ export function SupportCaseDetail() {
                   onClick={handleCloseTicket}
                   disabled={closing}
                   style={{
-                    padding: '10px 20px', borderRadius: 12,
+                    padding: '10px 20px', borderRadius: R_BUTTON,
                     border: `1.5px solid ${BORD2}`, background: 'transparent',
                     color: MUTED, fontSize: 13.5, fontWeight: 600,
                     cursor: closing ? 'not-allowed' : 'pointer',

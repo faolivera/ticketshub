@@ -181,7 +181,7 @@ export default function AvatarCropModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
-      <div className={`w-full ${aspect > 1 ? "max-w-2xl" : "max-w-sm"} rounded-xl border border-border bg-card text-card-foreground shadow-xl`}>
+      <div className={`w-full ${aspect > 1 ? "max-w-2xl" : "max-w-sm"} rounded-hero border border-border bg-card text-card-foreground shadow-xl`}>
         {/* header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2 className="text-sm font-medium text-foreground">
@@ -202,7 +202,7 @@ export default function AvatarCropModal({
           {imageSrc ? (
             <>
               <div
-                className="relative w-full overflow-hidden rounded-xl bg-muted"
+                className="relative w-full overflow-hidden rounded-card bg-muted"
                 style={{ aspectRatio: String(aspect), minHeight: 200 }}
               >
                 {/* @ts-expect-error react-easy-crop Cropper types are class-based and incompatible with React 18 JSX */}
@@ -246,7 +246,7 @@ export default function AvatarCropModal({
               </div>
             </>
           ) : (
-            <label className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border py-10 cursor-pointer hover:bg-muted/50 transition-colors">
+            <label className="flex flex-col items-center justify-center gap-3 rounded-input border-2 border-dashed border-border py-10 cursor-pointer hover:bg-muted/50 transition-colors">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <svg className="text-muted-foreground" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
                   <path d="M3 13l4-4 3 3 4-5 3 6H3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -277,7 +277,7 @@ export default function AvatarCropModal({
         <div className="flex gap-2 border-t border-border px-5 py-4">
           {imageSrc && !externalImageSrc && (
             <label className="flex-1 cursor-pointer">
-              <span className="block w-full rounded-lg border border-input bg-background px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+              <span className="block w-full rounded-button border border-input bg-background px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
                 {t("userProfile.avatarCrop.changeImage")}
               </span>
               <input type="file" accept="image/*" className="hidden" onChange={onFileChange} />

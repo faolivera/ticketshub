@@ -21,7 +21,7 @@
 
 import { Link } from 'react-router-dom';
 import { BackButton } from '@/app/components/BackButton';
-import { V, VLIGHT, DARK, MUTED, S, E } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, S, E, R_BUTTON } from '@/lib/design-tokens';
 
 const DS = { ...E, fontWeight: 400 } as const;
 
@@ -120,7 +120,7 @@ function ActionButton({ action, onClick }: { action: PageHeaderAction; onClick?:
       onClick={onClick}
       style={{
         padding: '9px 18px',
-        borderRadius: 12,
+        borderRadius: R_BUTTON,
         background: V,
         color: 'white',
         border: 'none',

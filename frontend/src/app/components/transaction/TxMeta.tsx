@@ -32,7 +32,7 @@ export function TxMeta({
 
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <h2 className="mb-3 text-base" style={{ ...S, fontWeight: 700, color: DARK }}>
@@ -57,7 +57,7 @@ export function TxMeta({
           <button
             type="button"
             onClick={onCopy}
-            className="inline-flex items-center gap-1 rounded-lg p-1.5 transition-colors"
+            className="inline-flex items-center gap-1 rounded-button p-1.5 transition-colors"
             style={{
               color: copied ? GREEN : MUTED,
               background: copied ? GLIGHT : 'transparent',

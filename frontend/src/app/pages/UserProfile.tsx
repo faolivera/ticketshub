@@ -33,6 +33,9 @@ import {
   DESTRUCTIVE,
   SURFACE,
   S,
+  R_HERO,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -95,7 +98,7 @@ function VerifRow({ icon, label, value, status, verifyLabel, verifyTo, verifySta
     return (
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        padding: '13px 16px', borderRadius: 12,
+        padding: '13px 16px', borderRadius: R_CARD,
         background: BG, border: `1px solid ${BORDER}`,
       }}>
         <div style={{ color: MUTED, flexShrink: 0, display: 'flex' }}>{icon}</div>
@@ -120,7 +123,7 @@ function VerifRow({ icon, label, value, status, verifyLabel, verifyTo, verifySta
         onMouseLeave={() => setHovered(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: 12,
-          padding: '13px 16px', borderRadius: 12,
+          padding: '13px 16px', borderRadius: R_CARD,
           background: hovered ? VLIGHT : BG,
           border: hovered ? `1px solid #ddd6fe` : `1px solid ${BORDER}`,
           cursor: 'pointer', transition: 'all 0.14s',
@@ -146,7 +149,7 @@ function ProfileCompletion({ steps }: { steps: Array<{ label: string; done: bool
 
   return (
     <div style={{
-      padding: '14px 16px', borderRadius: 12,
+      padding: '14px 16px', borderRadius: R_CARD,
       background: VLIGHT, border: '1px solid #ddd6fe', marginBottom: 20,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -226,7 +229,7 @@ export function UserProfile() {
 
         {/* ── PROFILE CARD ── */}
         <div style={{
-          background: CARD, borderRadius: 20,
+          background: CARD, borderRadius: R_HERO,
           border: `1px solid ${BORDER}`,
           boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
           overflow: 'hidden', marginBottom: 16,
@@ -297,7 +300,7 @@ export function UserProfile() {
                 title={t('userProfile.logout')}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: 36, height: 36, borderRadius: 9,
+                  width: 36, height: 36, borderRadius: R_BUTTON,
                   background: BG, border: `1px solid ${BORD2}`,
                   cursor: 'pointer', color: MUTED, transition: 'all 0.14s', flexShrink: 0,
                 }}
@@ -387,7 +390,7 @@ export function UserProfile() {
             <div style={{ padding: '0 16px 18px' }}>
               <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
                 <div style={{
-                  padding: '14px 16px', borderRadius: 12,
+                  padding: '14px 16px', borderRadius: R_CARD,
                   background: isSeller ? VLIGHT : BG,
                   border: isSeller ? '1px solid #ddd6fe' : `1px solid ${BORDER}`,
                   marginBottom: 12,
@@ -405,7 +408,7 @@ export function UserProfile() {
                   <button
                     type="button"
                     style={{
-                      width: '100%', padding: '13px', borderRadius: 11,
+                      width: '100%', padding: '13px', borderRadius: R_BUTTON,
                       background: V, border: 'none', color: 'white',
                       fontSize: 14, fontWeight: 700,
                       ...S,

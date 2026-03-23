@@ -5,7 +5,7 @@ import { formatDateTime } from '@/lib/format-date';
 import type { PublicListEventItem, EventDate } from '@/api/types';
 import { EventDateStatus } from '@/api/types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, BG, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, CARD, BG, S, R_CARD, R_INPUT } from '@/lib/design-tokens';
 import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepChooseDateProps {
@@ -56,7 +56,7 @@ export const StepChooseDate: FC<StepChooseDateProps> = ({
               aria-checked={isSelected}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
-                padding: '14px 16px', borderRadius: 14, textAlign: 'left',
+                padding: '14px 16px', borderRadius: R_CARD, textAlign: 'left',
                 border: `2px solid ${isSelected ? V : BORDER}`,
                 background: isSelected ? VLIGHT : CARD,
                 cursor: 'pointer', transition: 'all 0.15s',
@@ -89,7 +89,7 @@ export const StepChooseDate: FC<StepChooseDateProps> = ({
                 aria-disabled="true"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '12px 16px', borderRadius: 12,
+                  padding: '12px 16px', borderRadius: R_INPUT,
                   border: `1px solid ${BORDER}`, background: BG,
                   opacity: 0.55, cursor: 'not-allowed',
                 }}
@@ -111,7 +111,7 @@ export const StepChooseDate: FC<StepChooseDateProps> = ({
         onClick={onAddDate}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          width: '100%', marginTop: 12, padding: '12px 16px', borderRadius: 12,
+          width: '100%', marginTop: 12, padding: '12px 16px', borderRadius: R_INPUT,
           border: `1.5px dashed ${HINT}`, background: 'transparent',
           color: MUTED, cursor: 'pointer', fontSize: 14, fontWeight: 600,
           transition: 'all 0.14s',

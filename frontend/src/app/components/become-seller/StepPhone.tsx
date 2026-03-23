@@ -4,7 +4,7 @@ import { Phone, Loader2 } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
 import { otpService } from '@/api/services/otp.service';
 import { OTPType } from '@/api/types/otp';
-import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, VL_BORDER, ERROR_BG, BADGE_DEMAND_BORDER, DESTRUCTIVE, V_HOVER, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, VL_BORDER, ERROR_BG, BADGE_DEMAND_BORDER, DESTRUCTIVE, V_HOVER, S, R_HERO, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
 
 const PHONE_PREFIX = '+549';
 
@@ -37,7 +37,7 @@ function OtpInput({ id, value, onChange, onKeyDown, disabled }: {
         width: 46, height: 54, textAlign: 'center',
         fontSize: 22, fontWeight: 800, color: DARK,
         border: `2px solid ${value ? V : focused ? V : BORD2}`,
-        borderRadius: 12,
+        borderRadius: R_INPUT,
         background: value ? VLIGHT : CARD,
         outline: 'none',
         boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
@@ -60,7 +60,7 @@ function PrimaryBtn({ label, loading, loadingLabel, disabled }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        width: '100%', padding: '13px', borderRadius: 11, border: 'none',
+        width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none',
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -177,11 +177,11 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     <>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: R_BUTTON, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Phone size={20} color="white" />
           </div>
           <div>
@@ -194,7 +194,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
         <div style={{ padding: '20px' }}>
 
           {error && (
-            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
+            <div style={{ padding: '11px 14px', borderRadius: R_INPUT, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
               {error}
             </div>
           )}
@@ -207,7 +207,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
                 </label>
                 {/* Prefix + number row */}
                 <div style={{
-                  display: 'flex', borderRadius: 11, overflow: 'hidden',
+                  display: 'flex', borderRadius: R_INPUT, overflow: 'hidden',
                   border: `1.5px solid ${phoneFocused ? V : BORD2}`,
                   boxShadow: phoneFocused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
                   transition: 'border-color 0.14s, box-shadow 0.14s', background: CARD,
@@ -235,7 +235,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
           ) : (
             <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {/* Code sent info */}
-              <div style={{ padding: '12px 14px', borderRadius: 11, background: BG, border: `1px solid ${BORDER}` }}>
+              <div style={{ padding: '12px 14px', borderRadius: R_INPUT, background: BG, border: `1px solid ${BORDER}` }}>
                 <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>
                   {t('becomeSeller.step1.codeSent', { phone: PHONE_PREFIX + phoneNumber })}
                 </p>

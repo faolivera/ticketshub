@@ -17,6 +17,8 @@ import {
   BORDER,
   BORD2,
   S,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 export interface ReceivedOfferCardProps {
@@ -74,7 +76,7 @@ export function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing }: R
   return (
     <div
       style={{
-        background: CARD, borderRadius: 16,
+        background: CARD, borderRadius: R_CARD,
         border: `1px solid ${isPending ? '#ddd6fe' : BORDER}`,
         overflow: 'hidden',
         boxShadow: hov && isPending ? '0 4px 16px rgba(109,40,217,0.08)' : 'none',
@@ -179,7 +181,7 @@ export function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing }: R
             onClick={() => onAccept(offer.id)}
             disabled={isProcessing}
             style={{
-              flex: 1, padding: '10px 0', borderRadius: 10, border: 'none',
+              flex: 1, padding: '10px 0', borderRadius: R_BUTTON, border: 'none',
               background: isProcessing ? BORD2 : V, color: 'white',
               fontSize: 13.5, fontWeight: 700, cursor: isProcessing ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -194,7 +196,7 @@ export function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing }: R
             onClick={() => onReject(offer.id)}
             disabled={isProcessing}
             style={{
-              flex: 1, padding: '10px 0', borderRadius: 10,
+              flex: 1, padding: '10px 0', borderRadius: R_BUTTON,
               background: CARD, color: MUTED,
               border: `1px solid ${BORD2}`,
               fontSize: 13.5, fontWeight: 600, cursor: isProcessing ? 'not-allowed' : 'pointer',

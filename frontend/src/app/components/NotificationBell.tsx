@@ -6,7 +6,7 @@ import { notificationsService, type NotificationItem } from '@/api/services/noti
 import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 import { formatDateShort } from '@/lib/format-date';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
-import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, S, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
 import {
   Drawer,
   DrawerContent,
@@ -202,7 +202,7 @@ export function NotificationBell() {
         <Drawer open={isOpen} onOpenChange={setIsOpen} direction="top">
           <DrawerContent
             className="max-h-[85vh] flex flex-col"
-            style={{ background: CARD, border: `1px solid ${BORDER}`, borderBottomLeftRadius: 12, borderBottomRightRadius: 12, boxShadow: '0 8px 28px rgba(0,0,0,0.12)' }}
+            style={{ background: CARD, border: `1px solid ${BORDER}`, borderBottomLeftRadius: R_INPUT, borderBottomRightRadius: R_INPUT, boxShadow: '0 8px 28px rgba(0,0,0,0.12)' }}
           >
             <DrawerHeader style={{ flexShrink: 0, borderBottom: `1px solid ${BORDER}`, paddingBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 32 }}>
@@ -334,7 +334,7 @@ export function NotificationBell() {
             width: 320,
             maxWidth: '96vw',
             background: CARD,
-            borderRadius: 12,
+            borderRadius: R_INPUT,
             boxShadow: '0 8px 28px rgba(0,0,0,0.12)',
             border: `1px solid ${BORDER}`,
             zIndex: 50,
@@ -368,7 +368,7 @@ export function NotificationBell() {
                   color: V,
                   background: 'none',
                   border: 'none',
-                  borderRadius: 8,
+                  borderRadius: R_BUTTON,
                   cursor: 'pointer',
                   minHeight: 44,
                   minWidth: 44,

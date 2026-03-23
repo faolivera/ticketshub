@@ -17,6 +17,9 @@ import {
   GBORD,
   S,
   E,
+  R_CARD,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 const DS = { ...E, fontWeight: 400 };
@@ -200,7 +203,7 @@ function StepCard({ step, index, isLast }: { step: typeof BUYER_STEPS[0]; index:
 
       {/* Card */}
       <div style={{
-        flex: 1, background: CARD, borderRadius: 16,
+        flex: 1, background: CARD, borderRadius: R_CARD,
         border: `1px solid ${step.highlight ? '#ddd6fe' : BORDER}`,
         padding: '16px 18px', marginBottom: 20,
         boxShadow: step.highlight ? '0 4px 20px rgba(109,40,217,0.08)' : 'none',
@@ -208,7 +211,7 @@ function StepCard({ step, index, isLast }: { step: typeof BUYER_STEPS[0]; index:
         {/* Icon + title */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
           <div style={{
-            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+            width: 44, height: 44, borderRadius: R_INPUT, flexShrink: 0,
             background: step.accent, border: `1px solid ${step.accentBorder}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -259,12 +262,12 @@ function DesktopStepRow({ buyerStep, sellerStep, index }: {
     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 24, marginBottom: 20, alignItems: 'stretch' }}>
       {/* Buyer card */}
       <div style={{
-        background: CARD, borderRadius: 16, padding: '16px 18px',
+        background: CARD, borderRadius: R_CARD, padding: '16px 18px',
         border: `1px solid ${isHighlight ? '#ddd6fe' : BORDER}`,
         boxShadow: isHighlight ? '0 4px 20px rgba(109,40,217,0.08)' : 'none',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: buyerStep.accent, border: `1px solid ${buyerStep.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 38, height: 38, borderRadius: R_INPUT, flexShrink: 0, background: buyerStep.accent, border: `1px solid ${buyerStep.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {buyerStep.icon}
           </div>
           <p style={{ fontSize: 14, fontWeight: 800, color: DARK, lineHeight: 1.3, ...S }}>{buyerStep.title}</p>
@@ -297,12 +300,12 @@ function DesktopStepRow({ buyerStep, sellerStep, index }: {
 
       {/* Seller card */}
       <div style={{
-        background: CARD, borderRadius: 16, padding: '16px 18px',
+        background: CARD, borderRadius: R_CARD, padding: '16px 18px',
         border: `1px solid ${isHighlight ? '#ddd6fe' : BORDER}`,
         boxShadow: isHighlight ? '0 4px 20px rgba(109,40,217,0.08)' : 'none',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: sellerStep.accent, border: `1px solid ${sellerStep.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 38, height: 38, borderRadius: R_INPUT, flexShrink: 0, background: sellerStep.accent, border: `1px solid ${sellerStep.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {sellerStep.icon}
           </div>
           <p style={{ fontSize: 14, fontWeight: 800, color: DARK, lineHeight: 1.3, ...S }}>{sellerStep.title}</p>
@@ -368,12 +371,12 @@ export function HowItWorks() {
 
             {/* Toggle */}
             <div style={{
-              display: 'flex', background: CARD, borderRadius: 14,
+              display: 'flex', background: CARD, borderRadius: R_CARD,
               border: `1px solid ${BORDER}`, padding: 4, marginBottom: 28,
             }}>
               {(['buyer', 'seller'] as const).map(v => (
                 <button key={v} type="button" onClick={() => setView(v)} style={{
-                  flex: 1, padding: '10px 0', borderRadius: 11, border: 'none',
+                  flex: 1, padding: '10px 0', borderRadius: R_BUTTON, border: 'none',
                   background: view === v ? V : 'transparent',
                   color: view === v ? 'white' : MUTED,
                   fontSize: 14, fontWeight: 700, cursor: 'pointer',
@@ -488,10 +491,10 @@ export function HowItWorks() {
                 <div key={i} style={{
                   background: 'rgba(255,255,255,0.05)',
                   border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 16, padding: '20px 18px',
+                  borderRadius: R_CARD, padding: '20px 18px',
                 }}>
                   <div style={{
-                    width: 40, height: 40, borderRadius: 10,
+                    width: 40, height: 40, borderRadius: R_INPUT,
                     background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     marginBottom: 14,
                   }}>
@@ -517,7 +520,7 @@ export function HowItWorks() {
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to="/" style={{ textDecoration: 'none' }}>
                 <button style={{
-                  padding: '13px 28px', borderRadius: 12, border: 'none',
+                  padding: '13px 28px', borderRadius: R_BUTTON, border: 'none',
                   background: V, color: 'white',
                   fontSize: 15, fontWeight: 700, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 7,
@@ -529,7 +532,7 @@ export function HowItWorks() {
               </Link>
               <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
                 <button style={{
-                  padding: '13px 28px', borderRadius: 12,
+                  padding: '13px 28px', borderRadius: R_BUTTON,
                   border: `1.5px solid ${BORD2}`, background: CARD,
                   color: DARK, fontSize: 15, fontWeight: 700, cursor: 'pointer', ...S,
                 }}>

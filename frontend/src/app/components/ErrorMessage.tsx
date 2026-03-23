@@ -55,7 +55,7 @@ export function ErrorMessage({
       {onRetry && (
         <button
           onClick={onRetry}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-button hover:bg-blue-700 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           {t('common.retry')}
@@ -80,7 +80,7 @@ export function ErrorMessage({
  */
 export function ErrorAlert({ message, className = '' }: { message: string; className?: string }) {
   return (
-    <div className={`p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 ${className}`}>
+    <div className={`p-4 bg-red-50 border border-red-200 rounded-card flex items-center gap-2 text-red-700 ${className}`}>
       <AlertCircle className="w-5 h-5 flex-shrink-0" />
       <span className="text-sm">{message}</span>
     </div>

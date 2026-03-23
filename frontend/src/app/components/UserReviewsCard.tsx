@@ -228,7 +228,7 @@ export const UserReviewsCard: FC<UserReviewsCardProps> = ({
         {content}
         <Link
           to={`/seller/${userId}`}
-          className="block w-full rounded-[10px] border-[1.5px] py-2.5 px-4 text-center text-[13.5px] font-semibold no-underline transition-colors duration-[0.16s] ease-out hover:bg-[#f0ebff]"
+          className="block w-full rounded-button border-[1.5px] py-2.5 px-4 text-center text-[13.5px] font-semibold no-underline transition-colors duration-[0.16s] ease-out hover:bg-[#f0ebff]"
           style={{
             ...S,
             borderColor: BORD2,

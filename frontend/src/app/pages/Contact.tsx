@@ -26,11 +26,15 @@ import {
   SUCCESS_LIGHT,
   SUCCESS_BORDER,
   S,
+  R_HERO,
+  R_CARD,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
-  border: `1.5px solid ${BORDER}`, borderRadius: 10,
+  border: `1.5px solid ${BORDER}`, borderRadius: R_INPUT,
   fontSize: 14, color: DARK, background: CARD,
   outline: 'none', transition: 'border-color 0.15s',
   boxSizing: 'border-box', ...S,
@@ -52,7 +56,7 @@ function RightPanel({ success, isAuthenticated, t }: {
     return (
       <div style={{
         background: SUCCESS_LIGHT, border: `1px solid ${SUCCESS_BORDER}`,
-        borderRadius: 20, padding: '28px 24px',
+        borderRadius: R_HERO, padding: '28px 24px',
         display: 'flex', flexDirection: 'column', gap: 16,
       }}>
         <div style={{ width: 48, height: 48, borderRadius: '50%', background: SUCCESS_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -70,7 +74,7 @@ function RightPanel({ success, isAuthenticated, t }: {
           <Link to="/support" style={{ textDecoration: 'none' }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '10px 16px', borderRadius: 12,
+              padding: '10px 16px', borderRadius: R_BUTTON,
               background: CARD, border: `1px solid ${SUCCESS_BORDER}`,
               fontSize: 13.5, fontWeight: 700, color: SUCCESS, cursor: 'pointer', ...S,
             }}>
@@ -85,8 +89,8 @@ function RightPanel({ success, isAuthenticated, t }: {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, padding: '22px' }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+      <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '22px' }}>
+        <div style={{ width: 40, height: 40, borderRadius: R_INPUT, background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
           <MessageCircle size={20} style={{ color: V }} />
         </div>
         <p style={{ fontSize: 15, fontWeight: 700, color: DARK, marginBottom: 6, ...S }}>
@@ -97,8 +101,8 @@ function RightPanel({ success, isAuthenticated, t }: {
         </p>
       </div>
 
-      <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 34, height: 34, borderRadius: R_INPUT, background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Clock size={16} style={{ color: MUTED }} />
         </div>
         <div>
@@ -112,7 +116,7 @@ function RightPanel({ success, isAuthenticated, t }: {
       </div>
 
       {isAuthenticated && (
-        <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: '14px 18px' }}>
+        <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '14px 18px' }}>
           <p style={{ fontSize: 12, color: HINT, marginBottom: 6, ...S }}>
             {t('contact.existingCasesLabel', { defaultValue: '¿Ya enviaste una consulta?' })}
           </p>
@@ -134,7 +138,7 @@ function SuccessBannerMobile({ isAuthenticated, t }: {
   t: (k: string, o?: Record<string, string>) => string;
 }) {
   return (
-    <div style={{ background: SUCCESS_LIGHT, border: `1px solid ${SUCCESS_BORDER}`, borderRadius: 14, padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
+    <div style={{ background: SUCCESS_LIGHT, border: `1px solid ${SUCCESS_BORDER}`, borderRadius: R_CARD, padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
       <div style={{ width: 38, height: 38, borderRadius: '50%', background: SUCCESS_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <CheckCircle size={18} style={{ color: SUCCESS }} />
       </div>
@@ -244,7 +248,7 @@ export function Contact() {
         }}>
 
           {/* ── Form card ─────────────────────────────────────────────── */}
-          <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+          <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
             <div style={{ padding: '24px 28px' }}>
 
               {/* Success — mobile only (desktop shows in right panel) */}
@@ -254,7 +258,7 @@ export function Contact() {
 
               {/* Error */}
               {error && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
+                <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: R_INPUT, padding: '12px 16px', marginBottom: 20 }}>
                   <p style={{ fontSize: 13.5, color: '#dc2626', ...S }}>{error}</p>
                 </div>
               )}
@@ -282,7 +286,7 @@ export function Contact() {
                     </div>
                   </>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: BG, borderRadius: 10, border: `1px solid ${BORDER}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: BG, borderRadius: R_INPUT, border: `1px solid ${BORDER}` }}>
                     <Mail size={13} style={{ color: HINT, flexShrink: 0 }} />
                     <p style={{ fontSize: 13, color: MUTED, ...S }}>
                       {t('contact.sendingAs', { defaultValue: 'Enviando como' })}{' '}
@@ -333,7 +337,7 @@ export function Contact() {
                   <button
                     type="submit" disabled={isSubmitting}
                     style={{
-                      padding: '11px 28px', borderRadius: 12,
+                      padding: '11px 28px', borderRadius: R_BUTTON,
                       background: isSubmitting ? VL_BORDER : V,
                       color: isSubmitting ? '#a78bfa' : 'white',
                       border: 'none', fontSize: 14, fontWeight: 700,

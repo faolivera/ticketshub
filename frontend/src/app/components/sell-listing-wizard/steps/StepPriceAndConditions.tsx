@@ -18,6 +18,8 @@ import {
   GLIGHT,
   GBORD,
   S,
+  R_CARD,
+  R_INPUT,
 } from '@/lib/design-tokens';
 import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
@@ -84,7 +86,7 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
         <div style={{
           background: hasPromo ? GLIGHT : BG,
           border: `1px solid ${hasPromo ? GBORD : BORDER}`,
-          borderRadius: 12, padding: '12px 16px', marginBottom: 20,
+          borderRadius: R_INPUT, padding: '12px 16px', marginBottom: 20,
         }}>
           {/* Label */}
           <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: hasPromo ? GREEN : HINT, marginBottom: 8, ...S }}>
@@ -143,7 +145,7 @@ export const StepPriceAndConditions: FC<StepPriceAndConditionsProps> = ({
       {/* Best offer toggle */}
       <div style={{
         display: 'flex', alignItems: 'flex-start', gap: 14,
-        background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12,
+        background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD,
         padding: '14px 16px',
       }}>
         <Switch

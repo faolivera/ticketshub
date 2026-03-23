@@ -15,7 +15,7 @@ export function EventCard({
 }: EventCardProps) {
   return (
     <div
-      className="overflow-hidden rounded-[16px] border shadow-sm"
+      className="overflow-hidden rounded-card border shadow-sm"
       style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <div className="relative">
@@ -37,14 +37,14 @@ export function EventCard({
             </h1>
             <div className="flex flex-wrap gap-2">
               <span
-                className="rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
+                className="rounded-pill px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
                 style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}
               >
                 {ticketTypeLabel}
               </span>
               {sectorLabel && (
                 <span
-                  className="rounded-lg px-2.5 py-1 text-[11px] font-bold"
+                  className="rounded-pill px-2.5 py-1 text-[11px] font-bold"
                   style={{ background: 'rgba(255,255,255,0.15)' }}
                 >
                   {sectorLabel}

@@ -27,6 +27,9 @@ import {
   ABORD,
   S,
   E,
+  R_HERO,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 export type WizardStep = 1 | 2 | 3 | 4;
@@ -128,7 +131,7 @@ function StepTrack({ currentStep, visualByStep }: { currentStep: WizardStep; vis
   };
 
   return (
-    <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, padding: '18px 20px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+    <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '18px 20px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {steps.map((step, i) => {
           const vis = visualByStep[step];
@@ -243,7 +246,7 @@ export function BecomeSellerWizard() {
       <div style={{ minHeight: '100vh', background: BG, padding: '24px 16px 48px', ...S }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
-          <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             <div style={{
               background: payoutReady ? GLIGHT : ABG,
               borderBottom: `1px solid ${payoutReady ? GBORD : ABORD}`,
@@ -273,7 +276,7 @@ export function BecomeSellerWizard() {
             <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
                 <button style={{
-                  width: '100%', padding: '13px', borderRadius: 11, border: 'none',
+                  width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none',
                   background: V, color: 'white', fontSize: 14.5, fontWeight: 700,
                   cursor: 'pointer', boxShadow: '0 4px 18px rgba(109,40,217,0.28)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
@@ -283,7 +286,7 @@ export function BecomeSellerWizard() {
               </Link>
               <Link to="/user-profile" style={{ textDecoration: 'none' }}>
                 <button style={{
-                  width: '100%', padding: '12px', borderRadius: 11,
+                  width: '100%', padding: '12px', borderRadius: R_BUTTON,
                   border: `1.5px solid ${BORD2}`, background: CARD,
                   color: DARK, fontSize: 14, fontWeight: 600, cursor: 'pointer', ...S,
                 }}>

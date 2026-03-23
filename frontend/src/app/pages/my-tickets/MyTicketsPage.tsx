@@ -37,6 +37,9 @@ import {
   URGENT_LIGHT,
   URGENT_BORDER,
   S,
+  R_HERO,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 import { TransactionActionRequiredCard } from '@/app/components/transaction/TransactionActionRequiredCard';
 import { PageHeader } from '../../components/PageHeader';
@@ -133,7 +136,7 @@ function AcceptedOfferBanner({ offer, highlighted, t, thumbSize, isMobile }: {
 
   return (
     <div ref={ref} style={{
-      background: CARD, borderRadius: 16,
+      background: CARD, borderRadius: R_CARD,
       border: `1.5px solid ${V}`, overflow: 'hidden',
       boxShadow: highlighted ? `0 0 0 3px ${VLIGHT}` : 'none',
     }}>
@@ -202,7 +205,7 @@ function BuyerWaitingRow({ tx, t }: {
   return (
     <Link to={`/transaction/${tx.id}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
       <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
-        display: 'flex', background: CARD, borderRadius: 12,
+        display: 'flex', background: CARD, borderRadius: R_CARD,
         border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
         transition: 'border-color 0.13s',
       }}>
@@ -241,7 +244,7 @@ function PendingOfferRow({ offer, highlighted, t }: {
   return (
     <Link to={`/buy/${summary.eventSlug}/${offer.listingId}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
       <div ref={divRef} style={{
-        display: 'flex', background: highlighted ? '#fdfcff' : CARD, borderRadius: 12,
+        display: 'flex', background: highlighted ? '#fdfcff' : CARD, borderRadius: R_CARD,
         border: `1px solid ${highlighted ? '#ddd6fe' : BORDER}`, overflow: 'hidden',
         transition: 'border-color 0.13s',
       }}>
@@ -282,7 +285,7 @@ function HistoryTxRow({ tx, t }: { tx: TransactionWithDetails; t: (k: string, o?
   const status = getTransactionStatusInfo(tx.status, t, false);
   return (
     <Link to={`/transaction/${tx.id}`} state={{ from: '/my-tickets' }} style={{ textDecoration: 'none' }}>
-      <div style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden', opacity: 0.8 }}>
+      <div style={{ display: 'flex', background: BG, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden', opacity: 0.8 }}>
         <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
           {(tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle) && (
             <img src={tx.bannerUrls?.square ?? tx.bannerUrls?.rectangle!} alt={tx.eventName}
@@ -320,7 +323,7 @@ function HistoryOfferRow({ offer, t }: { offer: OfferWithListingSummary; t: (k: 
         : t('boughtTickets.offerStatusCancelled');
 
   return (
-    <div style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden', opacity: 0.75 }}>
+    <div style={{ display: 'flex', background: BG, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden', opacity: 0.75 }}>
       <div style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
         {(summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle) && (
           <img src={summary.bannerUrls?.square ?? summary.bannerUrls?.rectangle!} alt={summary.eventName}
@@ -427,14 +430,14 @@ export function MyTicketsPage() {
   if (!isAuthenticated) {
     return (
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, padding: '40px 32px', maxWidth: 360, textAlign: 'center' }}>
+        <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, padding: '40px 32px', maxWidth: 360, textAlign: 'center' }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <Ticket size={24} style={{ color: V }} />
           </div>
           <p style={{ fontSize: 18, fontWeight: 800, color: DARK, marginBottom: 8, ...S }}>{t('boughtTickets.loginRequired')}</p>
           <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.55, ...S }}>{t('boughtTickets.loginToView')}</p>
           <Link to="/register" style={{ textDecoration: 'none' }}>
-            <button style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
+            <button style={{ padding: '11px 24px', borderRadius: R_BUTTON, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
               {t('header.login')}
             </button>
           </Link>
@@ -482,7 +485,7 @@ export function MyTicketsPage() {
               <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* 3 transaction row skeletons */}
                 {[72, 88, 72].map((w, i) => (
-                  <div key={i} style={{ display: 'flex', background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                  <div key={i} style={{ display: 'flex', background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                     <div className="mt-sk" style={{ width: 52, flexShrink: 0, alignSelf: 'stretch', minHeight: 52, borderRadius: 0 }} />
                     <div style={{ flex: 1, padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ flex: 1 }}>
@@ -504,7 +507,7 @@ export function MyTicketsPage() {
               </div>
               <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[80, 65, 75, 70].map((w, i) => (
-                  <div key={i} style={{ display: 'flex', background: BG, borderRadius: 10, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+                  <div key={i} style={{ display: 'flex', background: BG, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                     <div className="mt-sk" style={{ width: 44, flexShrink: 0, alignSelf: 'stretch', minHeight: 44, borderRadius: 0 }} />
                     <div style={{ flex: 1, padding: '7px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ flex: 1 }}>
@@ -523,14 +526,14 @@ export function MyTicketsPage() {
 
         {/* Empty state */}
         {!isLoading && !error && !hasAnything && (
-          <div style={{ background: CARD, borderRadius: 18, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
+          <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <Ticket size={24} style={{ color: BORD2 }} />
             </div>
             <p style={{ fontSize: 16, fontWeight: 800, color: DARK, marginBottom: 6, ...S }}>{t('boughtTickets.noTicketsYet')}</p>
             <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 22, lineHeight: 1.55, ...S }}>{t('boughtTickets.purchasedTicketsWillAppear')}</p>
             <Link to="/" style={{ textDecoration: 'none' }}>
-              <button style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
+              <button style={{ padding: '10px 22px', borderRadius: R_BUTTON, border: 'none', background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', ...S }}>
                 {t('landing.upcomingEvents')}
               </button>
             </Link>
@@ -664,7 +667,7 @@ export function MyTicketsPage() {
                     onClick={() => void loadHistoryPage(true)}
                     style={{
                       padding: '10px 14px',
-                      borderRadius: 10,
+                      borderRadius: R_BUTTON,
                       background: BG,
                       border: `1px solid ${BORDER}`,
                       display: 'flex',

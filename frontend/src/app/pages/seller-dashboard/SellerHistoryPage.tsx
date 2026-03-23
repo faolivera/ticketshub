@@ -29,6 +29,8 @@ import {
   GBORD,
   S,
   E,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 function Thumb({ url, name, size }: { url?: string | null; name: string; size: number }) {
@@ -61,7 +63,7 @@ export function CompletedSaleRow({ tx, t }: {
       <div
         onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
         style={{
-          display: 'flex', background: CARD, borderRadius: 13,
+          display: 'flex', background: CARD, borderRadius: R_CARD,
           border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
           transition: 'border-color 0.13s',
           opacity: isCompleted ? 1 : 0.8,
@@ -111,7 +113,7 @@ export function ClosedOfferRow({ offer, t }: {
     <div
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
-        display: 'flex', background: CARD, borderRadius: 13,
+        display: 'flex', background: CARD, borderRadius: R_CARD,
         border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
         transition: 'border-color 0.13s',
         opacity: offer.status === 'rejected' || offer.status === 'cancelled' ? 0.75 : 1,
@@ -192,7 +194,7 @@ export function SellerHistoryPage() {
         {error && <ErrorAlert message={error} className="mb-6" />}
 
         {!loading && !error && items.length === 0 && (
-          <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
+          <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '52px 24px', textAlign: 'center' }}>
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <Ticket size={22} style={{ color: BORD2 }} />
             </div>
@@ -224,7 +226,7 @@ export function SellerHistoryPage() {
                 disabled={loadingMore}
                 onClick={() => void loadPage(true)}
                 style={{
-                  padding: '12px 16px', borderRadius: 10, border: `1px solid ${BORDER}`,
+                  padding: '12px 16px', borderRadius: R_BUTTON, border: `1px solid ${BORDER}`,
                   background: BG, fontSize: 14, fontWeight: 700, color: V, cursor: loadingMore ? 'wait' : 'pointer', ...S,
                 }}
               >

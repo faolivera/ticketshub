@@ -16,7 +16,7 @@ function Bone({
 function EventCardSkeleton() {
   return (
     <div
-      className="overflow-hidden rounded-[16px] border shadow-sm"
+      className="overflow-hidden rounded-card border shadow-sm"
       style={{ background: CARD, borderColor: BORDER }}
     >
       {/* banner */}
@@ -36,7 +36,7 @@ function EventCardSkeleton() {
 function StepperSkeleton() {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ background: CARD, borderColor: BORDER }}
     >
       <Bone className="mb-4 h-4 w-32 rounded-md" />
@@ -60,7 +60,7 @@ function StepperSkeleton() {
 function ActionCardSkeleton() {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ background: CARD, borderColor: BORDER }}
     >
       <Bone className="mb-4 h-5 w-40 rounded-md" />
@@ -69,7 +69,7 @@ function ActionCardSkeleton() {
         <Bone className="h-3 w-5/6 rounded-md" />
         <Bone className="h-3 w-4/6 rounded-md" />
       </div>
-      <Bone className="mt-5 h-11 w-full rounded-[10px]" />
+      <Bone className="mt-5 h-11 w-full rounded-button" />
     </div>
   );
 }
@@ -77,7 +77,7 @@ function ActionCardSkeleton() {
 function TxMetaSkeleton() {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ background: CARD, borderColor: BORDER }}
     >
       <Bone className="mb-3 h-4 w-28 rounded-md" />
@@ -93,7 +93,7 @@ function TxMetaSkeleton() {
 function EscrowCardSkeleton() {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ background: BLIGHT, borderColor: '#1e3a5f40' }}
     >
       <div className="mb-2 flex items-center gap-2">
@@ -112,7 +112,7 @@ function EscrowCardSkeleton() {
 function CounterpartCardSkeleton() {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ background: CARD, borderColor: BORDER }}
     >
       <Bone className="mb-4 h-4 w-24 rounded-md" />
@@ -123,7 +123,7 @@ function CounterpartCardSkeleton() {
           <Bone className="h-3 w-20 rounded-md" />
         </div>
       </div>
-      <Bone className="mt-4 h-11 w-full rounded-[10px]" />
+      <Bone className="mt-4 h-11 w-full rounded-button" />
     </div>
   );
 }
@@ -152,7 +152,7 @@ export function TransactionSkeleton() {
 
       <TransactionLayout
         backButton={
-          <Bone className="mb-2 h-8 w-24 rounded-lg" style={{ ...S }} />
+          <Bone className="mb-2 h-8 w-24 rounded-button" style={{ ...S }} />
         }
         mainColumn={
           <>

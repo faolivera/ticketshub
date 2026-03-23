@@ -49,14 +49,14 @@ export function EmptyState({
         action.to ? (
           <Link
             to={action.to}
-            className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-button hover:bg-blue-700 transition-colors"
           >
             {action.label}
           </Link>
         ) : (
           <button
             onClick={action.onClick}
-            className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-button hover:bg-blue-700 transition-colors"
           >
             {action.label}
           </button>

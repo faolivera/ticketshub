@@ -47,6 +47,10 @@ import {
   ABG,
   ABORD,
   S,
+  R_HERO,
+  R_CARD,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 import { DS } from '@/app/components/sell-listing-wizard/wizardTokens';
 
@@ -115,7 +119,7 @@ function ContextPanel({
 
       {/* Event card */}
       {event && (
-        <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
+        <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
           {banner && (
             <div style={{ aspectRatio: '16/7', overflow: 'hidden' }}>
               <img src={banner} alt={event.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -134,7 +138,7 @@ function ContextPanel({
 
       {/* Selection summary — fills in as user progresses */}
       {currentStep >= 2 && (selectedDate || selectedSection || form.pricePerTicket > 0) && (
-        <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: '12px 14px' }}>
+        <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, padding: '12px 14px' }}>
           <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: HINT, marginBottom: 10, ...S }}>
             {t('sellListingWizard.reviewTitle', { defaultValue: 'Tu publicación' })}
           </p>
@@ -172,7 +176,7 @@ function ContextPanel({
 
       {/* Fee reminder */}
       {currentStep < 3 && (
-        <div style={{ background: GLIGHT, borderRadius: 12, border: `1px solid ${GBORD}`, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+        <div style={{ background: GLIGHT, borderRadius: R_INPUT, border: `1px solid ${GBORD}`, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <Tag size={13} style={{ color: GREEN, flexShrink: 0, marginTop: 1 }} />
           <p style={{ fontSize: 12.5, color: GREEN, lineHeight: 1.5, ...S }}>
             {zeroFeePromoLabel && baseSellerPlatformFeePercent > 0 && promotedFeeText ? (
@@ -604,7 +608,7 @@ export function SellListingWizard() {
       {/* Loading overlay */}
       {isLoadingEvent && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ background: CARD, borderRadius: 14, padding: '20px 28px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: CARD, borderRadius: R_CARD, padding: '20px 28px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <Loader2 size={22} style={{ color: V, animation: 'spin 0.7s linear infinite' }} />
             <span style={{ fontSize: 14, color: DARK, ...S }}>{t('common.loading')}</span>
           </div>
@@ -618,10 +622,10 @@ export function SellListingWizard() {
             {t('sellListingWizard.draftBannerText', { defaultValue: 'Tenés una publicación sin terminar. ¿Querés continuar desde donde dejaste?' })}
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={restoreDraft} style={{ padding: '6px 16px', borderRadius: 8, background: V, color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', ...S }}>
+            <button onClick={restoreDraft} style={{ padding: '6px 16px', borderRadius: R_BUTTON, background: V, color: 'white', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', ...S }}>
               {t('sellListingWizard.draftRestore', { defaultValue: 'Continuar' })}
             </button>
-            <button onClick={discardDraft} style={{ padding: '6px 14px', borderRadius: 8, background: 'transparent', color: MUTED, border: `1px solid ${BORD2}`, fontSize: 13, fontWeight: 600, cursor: 'pointer', ...S }}>
+            <button onClick={discardDraft} style={{ padding: '6px 14px', borderRadius: R_BUTTON, background: 'transparent', color: MUTED, border: `1px solid ${BORD2}`, fontSize: 13, fontWeight: 600, cursor: 'pointer', ...S }}>
               {t('common.discard', { defaultValue: 'Descartar' })}
             </button>
           </div>
@@ -644,7 +648,7 @@ export function SellListingWizard() {
         {/* ── Wizard card ───────────────────────────────────────────────── */}
         <div style={{
           background: CARD,
-          borderRadius: 20,
+          borderRadius: R_HERO,
           border: `1px solid ${BORDER}`,
           overflow: 'hidden',
           width: '100%',
@@ -654,7 +658,7 @@ export function SellListingWizard() {
           {/* Header */}
           <div style={{ padding: 'clamp(16px,3vw,24px)', paddingBottom: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 44, height: 44, borderRadius: R_INPUT, background: VLIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Ticket size={22} style={{ color: V }} />
               </div>
               <div>
@@ -757,7 +761,7 @@ export function SellListingWizard() {
       {/* ── Create date modal ──────────────────────────────────────────── */}
       {showCreateDateModal && event && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,15,26,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
-          <div style={{ background: CARD, borderRadius: 20, width: '100%', maxWidth: 440, padding: '24px' }}>
+          <div style={{ background: CARD, borderRadius: R_HERO, width: '100%', maxWidth: 440, padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Calendar size={20} style={{ color: V }} />
@@ -780,7 +784,7 @@ export function SellListingWizard() {
                 <Input type="time" value={newDateForm.time} onChange={(e) => setNewDateForm((p) => ({ ...p, time: e.target.value }))} className="mt-2 min-h-[44px]" />
               </div>
               {/* Warning — prominent, not at the bottom */}
-              <div style={{ background: ABG, border: `1px solid ${ABORD}`, borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ background: ABG, border: `1px solid ${ABORD}`, borderRadius: R_INPUT, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                 <Clock size={16} style={{ color: AMBER, flexShrink: 0, marginTop: 1 }} />
                 <p style={{ fontSize: 13, color: AMBER, lineHeight: 1.5, ...S }}>{t('sellTicket.newDatePendingNote')}</p>
               </div>
@@ -804,7 +808,7 @@ export function SellListingWizard() {
       {/* ── Create section modal ───────────────────────────────────────── */}
       {showCreateSectionModal && event && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,15,26,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
-          <div style={{ background: CARD, borderRadius: 20, width: '100%', maxWidth: 440, padding: '24px' }}>
+          <div style={{ background: CARD, borderRadius: R_HERO, width: '100%', maxWidth: 440, padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Ticket size={20} style={{ color: V }} />
@@ -819,7 +823,7 @@ export function SellListingWizard() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 }}>
               {/* Warning — prominent, before the form */}
-              <div style={{ background: ABG, border: `1px solid ${ABORD}`, borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ background: ABG, border: `1px solid ${ABORD}`, borderRadius: R_INPUT, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                 <Clock size={16} style={{ color: AMBER, flexShrink: 0, marginTop: 1 }} />
                 <p style={{ fontSize: 13, color: AMBER, lineHeight: 1.5, ...S }}>{t('sellTicket.newSectionPendingNote')}</p>
               </div>
@@ -836,7 +840,7 @@ export function SellListingWizard() {
                       type="button"
                       onClick={() => setNewSectionSeatingType(type)}
                       style={{
-                        padding: '12px 14px', borderRadius: 10, textAlign: 'left',
+                        padding: '12px 14px', borderRadius: R_BUTTON, textAlign: 'left',
                         border: `2px solid ${newSectionSeatingType === type ? V : BORDER}`,
                         background: newSectionSeatingType === type ? VLIGHT : CARD,
                         cursor: 'pointer',

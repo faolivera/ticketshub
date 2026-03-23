@@ -7,6 +7,7 @@ import {
   AMBER, AMBER_BG_LIGHT,
   INFO, INFO_LIGHT, INFO_BORDER,
   SHADOW_CARD_SM,
+  R_CARD, R_HERO, R_BUTTON,
 } from "@/lib/design-tokens";
 import { formatMonthYear } from "@/lib/format-date";
 import { UserAvatar } from "@/app/components/UserAvatar";
@@ -35,7 +36,7 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
       style={{
         background: CARD,
         border: `1px solid ${BORDER}`,
-        borderRadius: 16,
+        borderRadius: R_CARD,
         overflow: "hidden",
         boxShadow: SHADOW_CARD_SM,
       }}
@@ -69,7 +70,7 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
                     alignItems: "center",
                     gap: 4,
                     padding: "2px 8px",
-                    borderRadius: 20,
+                    borderRadius: R_HERO,
                     background: GLIGHT,
                     color: GREEN,
                     border: `1px solid ${GBORD}`,
@@ -83,7 +84,7 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
                 <span
                   style={{
                     padding: "2px 8px",
-                    borderRadius: 20,
+                    borderRadius: R_HERO,
                     background: AMBER_BG_LIGHT,
                     color: AMBER,
                     fontSize: 10.5,
@@ -115,7 +116,7 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
               marginTop: 14,
               background: INFO_LIGHT,
               border: `1px solid ${INFO_BORDER}`,
-              borderRadius: 10,
+              borderRadius: R_BUTTON,
               padding: "11px 13px",
               display: "flex",
               gap: 9,

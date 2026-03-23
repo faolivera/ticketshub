@@ -33,6 +33,9 @@ import {
   ERROR,
   V_HOVER,
   S,
+  R_HERO,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 function parseIsoToDob(iso: string): DateOfBirthValue | null {
@@ -83,7 +86,7 @@ function TextInput({ value, onChange, placeholder, type = 'text', inputMode, pat
         style={{
           width: '100%', padding: '12px 14px',
           border: `1.5px solid ${focused ? V : BORD2}`,
-          borderRadius: 11, fontSize: 14, color: DARK,
+          borderRadius: R_INPUT, fontSize: 14, color: DARK,
           background: CARD, outline: 'none',
           boxShadow: focused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
           transition: 'border-color 0.14s, box-shadow 0.14s', ...S,
@@ -106,7 +109,7 @@ function UploadArea({ preview, label, sublabel, onFileSelect, onRemove, inputRef
     <div>
       {preview ? (
         <div style={{ position: 'relative' }}>
-          <img src={preview} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }} />
+          <img src={preview} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: R_INPUT, border: `1px solid ${BORDER}`, display: 'block' }} />
           <button
             type="button"
             onClick={onRemove}
@@ -121,7 +124,7 @@ function UploadArea({ preview, label, sublabel, onFileSelect, onRemove, inputRef
           onMouseLeave={() => setHovered(false)}
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            height: 120, borderRadius: 11, cursor: 'pointer', transition: 'all 0.14s',
+            height: 120, borderRadius: R_INPUT, cursor: 'pointer', transition: 'all 0.14s',
             border: `2px dashed ${hovered ? V : BORD2}`,
             background: hovered ? VLIGHT : BG,
           }}
@@ -157,7 +160,7 @@ function PrimaryBtn({ label, loading, loadingLabel, disabled, onClick, icon }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        width: '100%', padding: '13px', borderRadius: 11, border: 'none',
+        width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none',
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -185,9 +188,9 @@ function StatusCard({ type, title, subtitle, onContinue, continueLabel }: {
   const Icon       = isPending ? Clock   : CheckCircle;
 
   return (
-    <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+    <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
       <div style={{ background: iconBg, borderBottom: `1px solid ${borderColor}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: iconBg, border: `1.5px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 44, height: 44, borderRadius: R_BUTTON, background: iconBg, border: `1.5px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Icon size={22} style={{ color: iconColor }} />
         </div>
         <div>
@@ -332,7 +335,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, padding: '40px', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, padding: '40px', display: 'flex', justifyContent: 'center' }}>
         <Loader2 size={28} style={{ color: V, animation: 'spin 0.7s linear infinite' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
@@ -368,11 +371,11 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
     <>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: R_BUTTON, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Shield size={20} color="white" />
           </div>
           <div>
@@ -385,7 +388,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
 
           {/* Rejection banner */}
           {existingVerification?.status === 'rejected' && (
-            <div style={{ padding: '12px 14px', borderRadius: 11, marginBottom: 20, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, display: 'flex', gap: 10 }}>
+            <div style={{ padding: '12px 14px', borderRadius: R_INPUT, marginBottom: 20, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, display: 'flex', gap: 10 }}>
               <AlertCircle size={16} style={{ color: DESTRUCTIVE, flexShrink: 0, marginTop: 1 }} />
               <div>
                 <p style={{ fontSize: 13.5, fontWeight: 700, color: DESTRUCTIVE, marginBottom: 3, ...S }}>Verificación rechazada</p>
@@ -397,7 +400,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
           )}
 
           {error && (
-            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
+            <div style={{ padding: '11px 14px', borderRadius: R_INPUT, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
               {error}
             </div>
           )}
@@ -502,7 +505,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
                 role="alert"
                 style={{
                   padding: '14px 16px',
-                  borderRadius: 11,
+                  borderRadius: R_INPUT,
                   background: ERROR_BG,
                   border: `1px solid ${BADGE_DEMAND_BORDER}`,
                   ...S,

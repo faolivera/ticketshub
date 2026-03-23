@@ -16,7 +16,7 @@ import type { PaymentInfoBuyerProps, PaymentInfoSellerProps } from './types';
 export function PaymentInfoBuyerCard(p: PaymentInfoBuyerProps) {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <div className="mb-4 flex items-center gap-2">
@@ -62,7 +62,7 @@ export function PaymentInfoBuyerCard(p: PaymentInfoBuyerProps) {
         </p>
       )}
       <div
-        className="mt-4 flex gap-2 rounded-xl p-3 text-xs leading-relaxed"
+        className="mt-4 flex gap-2 rounded-card p-3 text-xs leading-relaxed"
         style={{ background: BLIGHT, color: BLUE }}
       >
         <Shield className="mt-0.5 h-4 w-4 shrink-0" />
@@ -75,7 +75,7 @@ export function PaymentInfoBuyerCard(p: PaymentInfoBuyerProps) {
 export function PaymentInfoSellerCard(p: PaymentInfoSellerProps) {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <div className="mb-4 flex items-center gap-2">

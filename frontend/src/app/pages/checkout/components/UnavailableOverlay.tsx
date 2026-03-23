@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ERROR, BADGE_DEMAND_BG, MUTED, DARK, V, VL_BORDER, S } from "@/lib/design-tokens";
+import { ERROR, BADGE_DEMAND_BG, MUTED, DARK, V, VL_BORDER, S, R_CARD } from "@/lib/design-tokens";
 
 interface UnavailableOverlayProps {
   isUnavailable: boolean;
@@ -52,7 +52,7 @@ export function UnavailableOverlay({
         style={{
           display: "block",
           padding: "12px 16px",
-          borderRadius: 12,
+          borderRadius: R_CARD,
           border: `1.5px solid ${VL_BORDER}`,
           color: V,
           fontSize: 13.5,

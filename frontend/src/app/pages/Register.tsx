@@ -25,6 +25,9 @@ import {
   GBORD,
   S,
   E,
+  R_HERO,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 // ─── Back button ─────────────────────────────────────────────────────────────
@@ -106,7 +109,7 @@ function InputField({
         style={{
           width: '100%', padding: '12px 14px',
           border: `1.5px solid ${focused ? V : BORD2}`,
-          borderRadius: 11, fontSize: 14, color: DARK,
+          borderRadius: R_INPUT, fontSize: 14, color: DARK,
           background: disabled ? BG : CARD,
           outline: 'none', transition: 'border-color 0.14s, box-shadow 0.14s',
           boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
@@ -126,7 +129,7 @@ function InputField({
 function ErrorBox({ message }: { message: string }) {
   return (
     <div style={{
-      padding: '12px 14px', borderRadius: 11, marginBottom: 20,
+      padding: '12px 14px', borderRadius: R_INPUT, marginBottom: 20,
       background: '#fef2f2', border: '1px solid #fca5a5',
       fontSize: 13.5, color: '#dc2626', lineHeight: 1.5, ...S,
     }}>
@@ -146,7 +149,7 @@ function SubmitBtn({ label, disabled }: { label: string; disabled: boolean }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         width: '100%', padding: '13px',
-        borderRadius: 11, border: 'none',
+        borderRadius: R_BUTTON, border: 'none',
         background: disabled ? BORD2 : hovered ? '#5b21b6' : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -347,7 +350,7 @@ export function Register() {
 
 
         <div style={{
-          background: CARD, borderRadius: 20,
+          background: CARD, borderRadius: R_HERO,
           border: `1px solid ${BORDER}`,
           boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
           padding: '28px 24px',
@@ -411,7 +414,7 @@ export function Register() {
                       width: 48, height: 56, textAlign: 'center',
                       fontSize: 22, fontWeight: 800, color: DARK,
                       border: `2px solid ${digit ? V : BORD2}`,
-                      borderRadius: 12, background: digit ? VLIGHT : CARD,
+                      borderRadius: R_INPUT, background: digit ? VLIGHT : CARD,
                       outline: 'none', transition: 'all 0.14s',
                       boxShadow: digit ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
                       ...S,
@@ -473,7 +476,7 @@ export function Register() {
       </div>
 
       <div style={{
-        background: CARD, borderRadius: 20,
+        background: CARD, borderRadius: R_HERO,
         border: `1px solid ${BORDER}`,
         boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
         padding: '28px 24px',
@@ -550,7 +553,7 @@ export function Register() {
 
           {/* Terms */}
           <div style={{
-            padding: '14px 16px', borderRadius: 12,
+            padding: '14px 16px', borderRadius: R_INPUT,
             background: BG, border: `1px solid ${BORDER}`,
           }}>
             <ClientTnC

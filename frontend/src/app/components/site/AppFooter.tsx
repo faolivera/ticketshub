@@ -12,6 +12,7 @@ import {
   FOOTER_BORDER_TOP,
   FOOTER_CAPTION,
   V_SOFT,
+  R_BUTTON,
 } from "@/lib/design-tokens";
 
 /** Global site footer (non-admin routes). */
@@ -108,7 +109,7 @@ export function AppFooter(): JSX.Element {
                 alignItems: "center",
                 gap: 7,
                 padding: "8px 15px",
-                borderRadius: 8,
+                borderRadius: R_BUTTON,
                 background: V,
                 border: "none",
                 color: "white",

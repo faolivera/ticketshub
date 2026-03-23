@@ -7,7 +7,7 @@ import type { PublicListEventItem, EventSection } from '@/api/types';
 import { EventSectionStatus, SeatingType } from '@/api/types';
 import type { WizardFormState, NumberedSeatInput } from '../types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S, R_INPUT, R_BUTTON } from '@/lib/design-tokens';
 import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepZoneAndSeatsProps {
@@ -84,7 +84,7 @@ export const StepZoneAndSeats: FC<StepZoneAndSeatsProps> = ({
                 aria-checked={isSelected}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '12px 16px', borderRadius: 12, textAlign: 'left',
+                  padding: '12px 16px', borderRadius: R_INPUT, textAlign: 'left',
                   border: `2px solid ${isSelected ? V : BORDER}`,
                   background: isSelected ? VLIGHT : CARD,
                   cursor: 'pointer', transition: 'all 0.15s',
@@ -109,7 +109,7 @@ export const StepZoneAndSeats: FC<StepZoneAndSeatsProps> = ({
           onClick={onCreateSection}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            marginTop: 10, padding: '8px 14px', borderRadius: 9,
+            marginTop: 10, padding: '8px 14px', borderRadius: R_BUTTON,
             border: `1.5px dashed ${HINT}`, background: 'transparent',
             color: MUTED, cursor: 'pointer', fontSize: 13.5, fontWeight: 600,
             minHeight: 44, transition: 'all 0.14s', ...S,
@@ -207,7 +207,7 @@ export const StepZoneAndSeats: FC<StepZoneAndSeatsProps> = ({
               disabled={(form.quantity ?? 1) <= 1}
               aria-label={t('sellListingWizard.quantityDecrease')}
               style={{
-                width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+                width: 44, height: 44, borderRadius: R_BUTTON, flexShrink: 0,
                 border: `1.5px solid ${BORDER}`, background: CARD, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: DARK, opacity: (form.quantity ?? 1) <= 1 ? 0.35 : 1,
@@ -229,7 +229,7 @@ export const StepZoneAndSeats: FC<StepZoneAndSeatsProps> = ({
               disabled={(form.quantity ?? 1) >= 100}
               aria-label={t('sellListingWizard.quantityIncrease')}
               style={{
-                width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+                width: 44, height: 44, borderRadius: R_BUTTON, flexShrink: 0,
                 border: `1.5px solid ${V}`, background: VLIGHT, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: V, opacity: (form.quantity ?? 1) >= 100 ? 0.35 : 1,

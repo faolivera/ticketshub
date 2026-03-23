@@ -15,6 +15,10 @@ import {
   S, E, V_FOCUS_RING,
   SHADOW_CARD_SM,
   WARN_SOLID,
+  R_BUTTON,
+  R_INPUT,
+  R_CARD,
+  R_HERO,
 } from "@/lib/design-tokens";
 import { ErrorMessage } from "@/app/components/ErrorMessage";
 import { PageMeta } from "@/app/components/PageMeta";
@@ -325,19 +329,19 @@ export default function CheckoutPage() {
         </div>
         <div className="co-sk-layout">
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW_CARD_SM }}>
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD, overflow: "hidden", boxShadow: SHADOW_CARD_SM }}>
               <div className="co-sk" style={{ height: 82, borderRadius: 0, background: "#d4d1ce" }} />
               <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
                 <div className="co-sk" style={{ height: 13, width: "55%" }} />
                 <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                   {[1, 2, 3].map((n) => (
-                    <div key={n} className="co-sk" style={{ flex: 1, height: 52, borderRadius: 10 }} />
+                    <div key={n} className="co-sk" style={{ flex: 1, height: 52, borderRadius: R_BUTTON }} />
                   ))}
                 </div>
                 <div className="co-sk" style={{ height: 13, width: "40%", marginTop: 4 }} />
               </div>
             </div>
-            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW_CARD_SM, padding: "16px 20px" }}>
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD, overflow: "hidden", boxShadow: SHADOW_CARD_SM, padding: "16px 20px" }}>
               <div className="co-sk" style={{ height: 12, width: 80, marginBottom: 14 }} />
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div className="co-sk" style={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0 }} />
@@ -347,7 +351,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </div>
-            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW_CARD_SM, padding: "16px 20px" }}>
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD, overflow: "hidden", boxShadow: SHADOW_CARD_SM, padding: "16px 20px" }}>
               <div className="co-sk" style={{ height: 12, width: 100, marginBottom: 16 }} />
               {[70, 55, 65].map((w, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
@@ -361,15 +365,15 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW_CARD_SM, padding: "20px 20px 24px" }}>
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD, overflow: "hidden", boxShadow: SHADOW_CARD_SM, padding: "20px 20px 24px" }}>
             <div className="co-sk" style={{ height: 14, width: "55%", marginBottom: 20 }} />
             {[1, 2, 3].map((n) => (
               <div key={n} style={{ marginBottom: 14 }}>
                 <div className="co-sk" style={{ height: 11, width: "30%", marginBottom: 7 }} />
-                <div className="co-sk" style={{ height: 42, width: "100%", borderRadius: 10 }} />
+                <div className="co-sk" style={{ height: 42, width: "100%", borderRadius: R_INPUT }} />
               </div>
             ))}
-            <div className="co-sk" style={{ height: 50, width: "100%", borderRadius: 10, marginTop: 24 }} />
+            <div className="co-sk" style={{ height: 50, width: "100%", borderRadius: R_BUTTON, marginTop: 24 }} />
           </div>
         </div>
       </>
@@ -457,7 +461,7 @@ export default function CheckoutPage() {
   const card: React.CSSProperties = {
     background: CARD,
     border: `1px solid ${BORDER}`,
-    borderRadius: 16,
+    borderRadius: R_CARD,
     overflow: "hidden",
     boxShadow: SHADOW_CARD_SM,
   };
@@ -611,7 +615,7 @@ export default function CheckoutPage() {
               style={{
                 background: ABG,
                 border: `1.5px solid ${ABORD}`,
-                borderRadius: 14,
+                borderRadius: R_CARD,
                 padding: 18,
               }}
             >
@@ -673,7 +677,7 @@ export default function CheckoutPage() {
 
         {/* ════════════════ RIGHT COLUMN (sticky) ════════════════ */}
         <div className="co-sticky">
-          <div style={{ ...card, borderRadius: 20 }}>
+          <div style={{ ...card, borderRadius: R_HERO }}>
 
             {showUnavailable ? (
               <UnavailableOverlay
@@ -805,7 +809,7 @@ export default function CheckoutPage() {
             style={{
               width: "100%",
               padding: "13px 16px",
-              borderRadius: 12,
+              borderRadius: R_BUTTON,
               border: "none",
               fontSize: 14,
               fontWeight: 700,

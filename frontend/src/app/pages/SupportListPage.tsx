@@ -29,6 +29,9 @@ import {
   GBORD,
   S,
   E,
+  R_CARD,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 const DS = { ...E, fontWeight: 400 };
@@ -130,7 +133,7 @@ export function SupportListPage() {
 
         {/* Error */}
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: R_INPUT, padding: '12px 16px', marginBottom: 16 }}>
             <p style={{ fontSize: 13.5, color: '#dc2626', ...S }}>{error}</p>
           </div>
         )}
@@ -144,7 +147,7 @@ export function SupportListPage() {
             <p style={{ fontSize: 15, fontWeight: 700, color: DARK, marginBottom: 6, ...S }}>{t('support.emptyTitle')}</p>
             <p style={{ fontSize: 13.5, color: MUTED, marginBottom: 18, lineHeight: 1.55, ...S }}>{t('support.emptyDescription')}</p>
             <Link to="/contact" style={{ textDecoration: 'none' }}>
-              <button style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: V, color: 'white', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', ...S }}>
+              <button style={{ padding: '10px 22px', borderRadius: R_BUTTON, border: 'none', background: V, color: 'white', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', ...S }}>
                 {t('support.newCase')}
               </button>
             </Link>
@@ -163,7 +166,7 @@ export function SupportListPage() {
                     className="ticket-row"
                     style={{
                       background: CARD,
-                      borderRadius: 14,
+                      borderRadius: R_CARD,
                       border: `1px solid ${isUrgent ? '#fca5a5' : BORDER}`,
                       padding: '14px 16px',
                       display: 'flex', alignItems: 'center', gap: 12,

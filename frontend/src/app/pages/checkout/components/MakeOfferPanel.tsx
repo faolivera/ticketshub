@@ -4,6 +4,7 @@ import {
   V, DARK, MUTED, HINT, BORDER,
   AMBER_BG_LIGHT, AMBER_TEXT_DARK,
   WARN_SOLID, S, BADGE_DEMAND_BORDER, ERROR_DARK,
+  R_HERO, R_BUTTON,
 } from "@/lib/design-tokens";
 import { formatCurrencyFromUnits } from "@/lib/format-currency";
 import { ErrorAlert } from "@/app/components/ErrorMessage";
@@ -111,7 +112,7 @@ export function MakeOfferPanel({
                   background: AMBER_BG_LIGHT,
                   color: AMBER_TEXT_DARK,
                   padding: "3px 9px",
-                  borderRadius: 20,
+                  borderRadius: R_HERO,
                 }}
               >
                 Expira en <Countdown targetDate={pendingOffer.expiresAt} />
@@ -244,7 +245,7 @@ export function MakeOfferPanel({
                         background: V,
                         color: "white",
                         border: "none",
-                        borderRadius: 8,
+                        borderRadius: R_BUTTON,
                         fontSize: 13,
                         fontWeight: 700,
                         cursor:
@@ -269,7 +270,7 @@ export function MakeOfferPanel({
                         padding: "8px 10px",
                         background: "#fef2f2",
                         border: `1px solid ${BADGE_DEMAND_BORDER}`,
-                        borderRadius: 8,
+                        borderRadius: R_BUTTON,
                         display: "flex",
                         gap: 7,
                         alignItems: "flex-start",

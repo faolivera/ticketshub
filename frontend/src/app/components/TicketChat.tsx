@@ -7,7 +7,7 @@ import { transactionsService } from '@/api/services';
 import type { TransactionChatMessage } from '@/api/types';
 import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
-import { SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER, S } from '@/lib/design-tokens';
+import { SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER, S, R_INPUT, R_CARD } from '@/lib/design-tokens';
 
 export interface TicketChatProps {
   isOpen: boolean;
@@ -301,7 +301,7 @@ export function TicketChat({
                       )}
                       <div>
                         <div
-                          className={`rounded-xl px-3 py-2 ${
+                          className={`rounded-card px-3 py-2 ${
                             isDelivery
                               ? 'text-center border'
                               : isCurrentUser
@@ -362,7 +362,7 @@ export function TicketChat({
                   disabled={atLimit}
                   className="flex-1 px-3 py-2 text-sm border focus:outline-none focus:ring-2 disabled:opacity-50"
                   style={{
-                    borderRadius: 10,
+                    borderRadius: R_INPUT,
                     borderColor: '#e5e7eb',
                     ...S,
                   }}

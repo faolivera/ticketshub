@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { BORDER, DARK, V, HINT, GREEN, GLIGHT, GBORD } from "@/lib/design-tokens";
+import { BORDER, DARK, V, HINT, GREEN, GLIGHT, GBORD, R_HERO } from "@/lib/design-tokens";
 import { formatCurrencyFromUnits } from "@/lib/format-currency";
 import { PriceLine } from "./PriceLine";
 import type { Offer } from "@/api/types/offers";
@@ -141,7 +141,7 @@ export function CheckoutSummary({
                 color: GREEN,
                 border: `1px solid ${GBORD}`,
                 padding: "1px 7px",
-                borderRadius: 20,
+                borderRadius: R_HERO,
               }}
             >
               Ahorraste {formatCurrencyFromUnits(totalSavings, listingCurrency)}

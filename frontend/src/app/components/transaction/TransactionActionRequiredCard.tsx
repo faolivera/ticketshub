@@ -30,6 +30,7 @@ import {
   WARN_SOLID,
   ABG,
   S,
+  R_CARD,
 } from '@/lib/design-tokens';
 
 interface TransactionActionRequiredCardProps {
@@ -99,7 +100,7 @@ export function TransactionActionRequiredCard({
     >
       <div style={{
         background: CARD,
-        borderRadius: 14,
+        borderRadius: R_CARD,
         border: `1px solid ${BORDER}`,
         overflow: 'hidden',
         transition: 'border-color 0.13s, box-shadow 0.13s',

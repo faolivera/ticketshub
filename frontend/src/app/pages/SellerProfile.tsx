@@ -41,6 +41,8 @@ import {
   BG,
   E,
   S,
+  R_CARD,
+  R_PILL,
 } from '@/lib/design-tokens';
 
 export function SellerProfile() {
@@ -150,7 +152,7 @@ export function SellerProfile() {
           style={{
             background: CARD,
             border: `1px solid ${BORDER}`,
-            borderRadius: 16,
+            borderRadius: R_CARD,
             padding: '28px',
             marginBottom: 12,
             boxShadow: SHADOW_CARD_SM,
@@ -203,7 +205,7 @@ export function SellerProfile() {
                   fontWeight: 600,
                   letterSpacing: '0.02em',
                   padding: '4px 10px',
-                  borderRadius: 20,
+                  borderRadius: R_PILL,
                   background: VLIGHT,
                   color: '#5b21b6',
                   border: `1px solid ${VL_BORDER}`,
@@ -328,7 +330,7 @@ export function SellerProfile() {
             style={{
               background: CARD,
               border: `1px solid ${BORDER}`,
-              borderRadius: 12,
+              borderRadius: R_CARD,
               padding: '16px 18px',
               marginBottom: 24,
               boxShadow: SHADOW_CARD_SM,
@@ -452,7 +454,7 @@ export function SellerProfile() {
             style={{
               background: CARD,
               border: `1px solid ${BORDER}`,
-              borderRadius: 12,
+              borderRadius: R_CARD,
               boxShadow: SHADOW_CARD_SM,
             }}
           >
@@ -470,7 +472,7 @@ export function SellerProfile() {
                   style={{
                     background: CARD,
                     border: `1px solid ${BORDER}`,
-                    borderRadius: 12,
+                    borderRadius: R_CARD,
                     padding: '18px',
                     boxShadow: SHADOW_CARD_SM,
                   }}
@@ -508,7 +510,7 @@ export function SellerProfile() {
                         fontWeight: 700,
                         letterSpacing: '0.02em',
                         padding: '5px 10px',
-                        borderRadius: 20,
+                        borderRadius: R_PILL,
                         flexShrink: 0,
                         ...reviewPillStyles[review.type],
                       }}

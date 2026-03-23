@@ -12,7 +12,7 @@ export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
       aria-labelledby="tx-modal-title"
     >
       <div
-        className="max-h-[90vh] w-full max-w-[460px] overflow-y-auto rounded-[20px] p-6 sm:p-7"
+        className="max-h-[90vh] w-full max-w-[460px] overflow-y-auto rounded-hero p-6 sm:p-7"
         style={{ background: CARD, ...S }}
       >
         <div className="mb-5 flex items-center justify-between gap-3">
@@ -26,7 +26,7 @@ export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 transition-colors hover:bg-gray-100"
+            className="rounded-button p-1.5 transition-colors hover:bg-gray-100"
             style={{ color: MUTED }}
             aria-label="Close"
           >

@@ -25,6 +25,8 @@ import {
   GLIGHT,
   PENDING,
   S,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 export type TransactionCardVariant = 'action' | 'waiting' | 'completed';
@@ -72,7 +74,7 @@ function ActionCard({ transaction: tx, userId, role, fromUrl }: Omit<Transaction
     <Link to={`/transaction/${tx.id}`} state={{ from: fromUrl }} style={{ textDecoration: 'none' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div style={{
-        display: 'flex', background: CARD, borderRadius: 16,
+        display: 'flex', background: CARD, borderRadius: R_CARD,
         border: `1.5px solid ${V}`, overflow: 'hidden',
         boxShadow: hov ? '0 4px 16px rgba(109,40,217,0.12)' : 'none',
         transition: 'box-shadow 0.15s',
@@ -99,7 +101,7 @@ function ActionCard({ transaction: tx, userId, role, fromUrl }: Omit<Transaction
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{status.label}</span>
             </div>
             <div style={{
-              padding: '7px 14px', borderRadius: 9,
+              padding: '7px 14px', borderRadius: R_BUTTON,
               background: V, color: 'white',
               fontSize: 12.5, fontWeight: 700, flexShrink: 0, ...S,
             }}>
@@ -124,7 +126,7 @@ function WaitingCard({ transaction: tx, userId, role, fromUrl }: Omit<Transactio
     <Link to={`/transaction/${tx.id}`} state={{ from: fromUrl }} style={{ textDecoration: 'none' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div style={{
-        display: 'flex', background: CARD, borderRadius: 13,
+        display: 'flex', background: CARD, borderRadius: R_CARD,
         border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
         transition: 'border-color 0.14s',
       }}>
@@ -161,7 +163,7 @@ function CompletedCard({ transaction: tx, role, fromUrl }: Omit<TransactionCardP
     <Link to={`/transaction/${tx.id}`} state={{ from: fromUrl }} style={{ textDecoration: 'none' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div style={{
-        background: CARD, borderRadius: 14,
+        background: CARD, borderRadius: R_CARD,
         border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
         transition: 'border-color 0.14s',
       }}>

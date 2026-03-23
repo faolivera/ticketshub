@@ -28,6 +28,8 @@ import {
   GBORD,
   S,
   E,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 const DS = { ...E, fontWeight: 400 };
@@ -144,14 +146,14 @@ export function EditListing() {
 
         {/* Error */}
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: R_INPUT, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
             <AlertTriangle size={15} style={{ color: '#dc2626', flexShrink: 0 }} />
             <p style={{ fontSize: 13.5, color: '#dc2626', ...S }}>{error}</p>
           </div>
         )}
 
         {/* Disclaimer */}
-        <div style={{ background: VLIGHT, border: `1px solid ${VL_BORDER}`, borderRadius: 12, padding: '12px 16px', marginBottom: 22, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ background: VLIGHT, border: `1px solid ${VL_BORDER}`, borderRadius: R_INPUT, padding: '12px 16px', marginBottom: 22, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ width: 20, height: 20, borderRadius: '50%', background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'white' }}>i</span>
           </div>
@@ -241,7 +243,7 @@ export function EditListing() {
                 </div>
 
                 {/* Quantity */}
-                <div style={{ padding: '10px 12px', background: BG, borderRadius: 10 }}>
+                <div style={{ padding: '10px 12px', background: BG, borderRadius: R_INPUT }}>
                   <p style={{ fontSize: 13, color: DARK, fontWeight: 600, ...S }}>
                     {t('editListing.quantityAvailable', {
                       available: availableUnits.length,
@@ -301,7 +303,7 @@ export function EditListing() {
               <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 18 }}>
                 <div style={{
                   display: 'flex', alignItems: 'flex-start', gap: 14,
-                  background: BG, borderRadius: 12, padding: '12px 14px',
+                  background: BG, borderRadius: R_INPUT, padding: '12px 14px',
                 }}>
                   <Switch
                     id="edit-best-offer"
@@ -355,7 +357,7 @@ export function EditListing() {
                     onClick={handleSave}
                     disabled={!canSave}
                     style={{
-                      width: '100%', padding: '12px 0', borderRadius: 12,
+                      width: '100%', padding: '12px 0', borderRadius: R_BUTTON,
                       background: canSave ? V : VL_BORDER,
                       color: canSave ? 'white' : '#a78bfa',
                       border: 'none', fontSize: 14, fontWeight: 700,
@@ -380,7 +382,7 @@ export function EditListing() {
                         onClick={() => setShowCancelConfirm(true)}
                         disabled={isCancelling}
                         style={{
-                          width: '100%', padding: '11px 0', borderRadius: 12,
+                          width: '100%', padding: '11px 0', borderRadius: R_BUTTON,
                           background: 'transparent', border: '1.5px solid #fca5a5',
                           color: '#dc2626', fontSize: 14, fontWeight: 600,
                           cursor: 'pointer',
@@ -397,7 +399,7 @@ export function EditListing() {
                     ) : (
                       /* Inline confirmation panel */
                       <div style={{
-                        background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 12,
+                        background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: R_INPUT,
                         padding: '14px 16px',
                       }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginBottom: 14 }}>
@@ -416,7 +418,7 @@ export function EditListing() {
                             onClick={handleCancelListing}
                             disabled={isCancelling}
                             style={{
-                              flex: 1, padding: '9px 0', borderRadius: 10, border: 'none',
+                              flex: 1, padding: '9px 0', borderRadius: R_BUTTON, border: 'none',
                               background: '#dc2626', color: 'white',
                               fontSize: 13.5, fontWeight: 700,
                               cursor: isCancelling ? 'not-allowed' : 'pointer',
@@ -434,7 +436,7 @@ export function EditListing() {
                             onClick={() => setShowCancelConfirm(false)}
                             disabled={isCancelling}
                             style={{
-                              flex: 1, padding: '9px 0', borderRadius: 10,
+                              flex: 1, padding: '9px 0', borderRadius: R_BUTTON,
                               border: '1px solid #fca5a5', background: 'transparent',
                               color: '#dc2626', fontSize: 13.5, fontWeight: 600,
                               cursor: 'pointer', ...S,

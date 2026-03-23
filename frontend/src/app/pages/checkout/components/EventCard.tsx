@@ -3,7 +3,7 @@ import { Check, Minus, Plus, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { BuyPageData, TicketUnit } from "@/api/types";
 import {
-  V, VLIGHT, DARK, MUTED, HINT, CARD, BORDER, BORD2, GREEN, GLIGHT, S,
+  V, VLIGHT, DARK, MUTED, HINT, CARD, BORDER, BORD2, GREEN, GLIGHT, S, R_CARD, R_BUTTON,
 } from "@/lib/design-tokens";
 
 interface EventCardProps {
@@ -42,7 +42,7 @@ export const EventCard: FC<EventCardProps> = ({
   const card: React.CSSProperties = {
     background: CARD,
     border: `1px solid ${BORDER}`,
-    borderRadius: 16,
+    borderRadius: R_CARD,
     overflow: "hidden",
     boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
   };
@@ -103,7 +103,7 @@ export const EventCard: FC<EventCardProps> = ({
             style={{
               width: 100,
               height: 100,
-              borderRadius: 10,
+              borderRadius: R_BUTTON,
               background: V,
               display: "flex",
               alignItems: "center",
@@ -321,7 +321,7 @@ export const EventCard: FC<EventCardProps> = ({
             style={{
               width: 30,
               height: 30,
-              borderRadius: 8,
+              borderRadius: R_BUTTON,
               background: GLIGHT,
               display: "flex",
               alignItems: "center",

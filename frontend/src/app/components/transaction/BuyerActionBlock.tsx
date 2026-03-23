@@ -122,13 +122,13 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             onCopyCbu={onCopyCbu}
             labels={bankLabels}
           />
-          <div className="mt-3 rounded-xl border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
+          <div className="mt-3 rounded-card border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
             <p className="text-xs font-medium" style={{ color: MUTED }}>{t('transaction.hero.transferAmount')}</p>
             <p className="mt-0.5 text-lg font-bold" style={{ color: V }}>
               {formatCurrency(transaction.totalPaid.amount, transaction.totalPaid.currency)}
             </p>
           </div>
-          <div className="mt-4 rounded-xl border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
+          <div className="mt-4 rounded-card border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
             <PaymentCountdown
               expiresAt={transaction.paymentExpiresAt!}
               onExpired={onPaymentExpired}
@@ -145,7 +145,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             type="button"
             onClick={onTriggerUpload}
             disabled={isUploading}
-            className="mt-4 w-full rounded-[10px] py-3.5 text-sm font-bold text-white disabled:opacity-50"
+            className="mt-4 w-full rounded-button py-3.5 text-sm font-bold text-white disabled:opacity-50"
             style={{ background: V }}
           >
             {isUploading ? (
@@ -197,7 +197,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
             subtitle={t('transaction.hero.buyerGatewaySubtitle')}
           >
             {transaction.paymentExpiresAt && (
-              <div className="mt-4 rounded-xl border p-3" style={{ borderColor: BORDER }}>
+              <div className="mt-4 rounded-card border p-3" style={{ borderColor: BORDER }}>
                 <PaymentCountdown
                   expiresAt={transaction.paymentExpiresAt}
                   onExpired={onPaymentExpired}
@@ -304,7 +304,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
         >
           <TransferTimeline role="buyer" effectiveStatus={effectiveStatus} />
           {payloadLabel && (
-            <p className="mt-4 rounded-lg border p-3 text-sm" style={{ borderColor: BORDER, background: SURFACE }}>
+            <p className="mt-4 rounded-card border p-3 text-sm" style={{ borderColor: BORDER, background: SURFACE }}>
               <span className="font-semibold">{t('myTicket.sentAs')}: </span>
               {payloadLabel}
             </p>
@@ -312,7 +312,7 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
           <button
             type="button"
             onClick={onOpenConfirmReceipt}
-            className="mt-4 w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
+            className="mt-4 w-full rounded-button py-3.5 text-sm font-bold text-white"
             style={{ background: V }}
           >
             {t('myTicket.confirmTicketReceived')}

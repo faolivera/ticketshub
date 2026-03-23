@@ -109,6 +109,11 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-hero:   20px;
+  --radius-card:   14px;
+  --radius-button: 12px;
+  --radius-input:  12px;
+  --radius-pill:   9999px;
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

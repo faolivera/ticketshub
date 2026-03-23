@@ -33,7 +33,7 @@ export const SellerRiskRestrictionDisclaimer: FC<SellerRiskRestrictionDisclaimer
   return (
     <div
       className={cn(
-        'rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30',
+        'rounded-card border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30',
         className
       )}
     >
@@ -48,7 +48,7 @@ export const SellerRiskRestrictionDisclaimer: FC<SellerRiskRestrictionDisclaimer
           </p>
           <Link
             to="/become-seller"
-            className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
+            className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-button hover:bg-amber-700 transition-colors"
           >
             {t(ctaKey)}
           </Link>

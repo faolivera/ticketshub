@@ -117,7 +117,7 @@ function BannerUpload({ label, hint, file, preview, onChange, aspectRatio, t }: 
 
       {preview ? (
         <div className="relative">
-          <div className={`${aspectRatioClass} w-full max-w-md overflow-hidden rounded-lg border border-gray-200`}>
+          <div className={`${aspectRatioClass} w-full max-w-md overflow-hidden rounded-card border border-gray-200`}>
             <img
               src={preview}
               alt="Banner preview"
@@ -132,7 +132,7 @@ function BannerUpload({ label, hint, file, preview, onChange, aspectRatio, t }: 
             <button
               type="button"
               onClick={handleRemove}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-button transition-colors"
             >
               <X className="w-4 h-4" />
               {t('createEvent.remove')}
@@ -145,7 +145,7 @@ function BannerUpload({ label, hint, file, preview, onChange, aspectRatio, t }: 
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          className={`${aspectRatioClass} w-full max-w-md border-2 border-dashed rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 ${
+          className={`${aspectRatioClass} w-full max-w-md border-2 border-dashed rounded-input cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 ${
             isDragging
               ? 'border-blue-500 bg-blue-50'
               : 'border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
@@ -368,7 +368,7 @@ export function CreateEvent() {
           labelKey={fromSellTicket ? 'createEvent.backToSellTicket' : 'createEvent.backToHome'}
         />
 
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-card shadow-md p-8">
           <div className="flex items-center gap-3 mb-6">
             <Plus className="w-8 h-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-900">{t('createEvent.title')}</h1>
@@ -396,7 +396,7 @@ export function CreateEvent() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={t('createEvent.eventNamePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
@@ -414,7 +414,7 @@ export function CreateEvent() {
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -430,7 +430,7 @@ export function CreateEvent() {
                   type="time"
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -449,7 +449,7 @@ export function CreateEvent() {
                 value={formData.venue}
                 onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                 placeholder={t('createEvent.venuePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
@@ -467,7 +467,7 @@ export function CreateEvent() {
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder={t('createEvent.locationPlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
               <p className="text-sm text-gray-500 mt-1">{t('createEvent.locationHint')}</p>
@@ -486,7 +486,7 @@ export function CreateEvent() {
                 <select
                   value={formData.category}
                   onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">{t('createEvent.selectCategory')}</option>
                   {eventCategories.map((category) => (
@@ -503,13 +503,13 @@ export function CreateEvent() {
                     value={customCategory}
                     onChange={(e) => setCustomCategory(e.target.value)}
                     placeholder={t('createEvent.enterCustomCategory')}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-blue-500"
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={handleAddCustomCategory}
-                    className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-3 bg-blue-600 text-white rounded-button hover:bg-blue-700"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -519,7 +519,7 @@ export function CreateEvent() {
                       setShowCustomCategory(false);
                       setCustomCategory('');
                     }}
-                    className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    className="px-4 py-3 bg-gray-200 text-gray-700 rounded-button hover:bg-gray-300"
                   >
                     {t('common.cancel')}
                   </button>
@@ -560,7 +560,7 @@ export function CreateEvent() {
             {/* Preview Summary */}
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">{t('createEvent.eventSummary')}</h3>
-              <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+              <div className="space-y-3 bg-gray-50 p-4 rounded-card">
                 <div>
                   <span className="text-sm text-gray-600">{t('createEvent.eventName')}:</span>
                   <p className="font-semibold text-gray-900">{formData.name || '-'}</p>
@@ -595,14 +595,14 @@ export function CreateEvent() {
               <button
                 type="button"
                 onClick={() => navigate(fromSellTicket ? '/sell-ticket' : '/')}
-                className="flex-1 px-6 py-4 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-6 py-4 border border-gray-300 text-gray-700 font-semibold rounded-button hover:bg-gray-50 transition-colors"
               >
                 {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || isUploadingBanners}
-                className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-4 bg-blue-600 text-white font-semibold rounded-button hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {(isSubmitting || isUploadingBanners) ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

@@ -15,6 +15,7 @@ import {
   V, VLIGHT, DARK, MUTED, BORDER, BORD2, S, E,
   SURFACE_STICKY, SHADOW_DROP, BG,
   SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER,
+  R_HERO, R_CARD, R_BUTTON, R_INPUT,
 } from "@/lib/design-tokens";
 import type { PublicListEventItem } from "@/api/types/events";
 import type { ListingWithSeller } from "@/api/types/tickets";
@@ -305,7 +306,7 @@ export default function EventDetail() {
           </div>
 
           {/* Hero skeleton */}
-          <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 14, background: "#2a2a3a", minHeight: 320, padding: "clamp(28px,4vw,44px)" }}>
+          <div style={{ borderRadius: R_HERO, overflow: "hidden", marginBottom: 14, background: "#2a2a3a", minHeight: 320, padding: "clamp(28px,4vw,44px)" }}>
             {/* Category badge */}
             <div className="ev-sk-dark" style={{ height: 20, width: 72, borderRadius: 100, marginBottom: 16 }} />
             {/* Title */}
@@ -337,7 +338,7 @@ export default function EventDetail() {
               <div className="ev-sk" style={{ height: 22, width: 160, marginBottom: 6 }} />
               <div className="ev-sk" style={{ height: 11, width: 110 }} />
             </div>
-            <div className="ev-sk" style={{ height: 34, width: 96, borderRadius: 10 }} />
+            <div className="ev-sk" style={{ height: 34, width: 96, borderRadius: R_BUTTON }} />
           </div>
 
           {/* Filter pills skeleton */}
@@ -350,12 +351,12 @@ export default function EventDetail() {
           {/* Ticket grid skeleton */}
           <div className="tk-grid">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} style={{ background: "white", borderRadius: 14, padding: 16, border: `1px solid ${BORDER}` }}>
+              <div key={i} style={{ background: "white", borderRadius: R_CARD, padding: 16, border: `1px solid ${BORDER}` }}>
                 <div className="ev-sk" style={{ height: 11, width: "55%", marginBottom: 8 }} />
                 <div className="ev-sk" style={{ height: 22, width: "40%", marginBottom: 10 }} />
                 <div className="ev-sk" style={{ height: 10, width: "75%", marginBottom: 6 }} />
                 <div className="ev-sk" style={{ height: 10, width: "60%", marginBottom: 14 }} />
-                <div className="ev-sk" style={{ height: 36, width: "100%", borderRadius: 9 }} />
+                <div className="ev-sk" style={{ height: 36, width: "100%", borderRadius: R_BUTTON }} />
               </div>
             ))}
           </div>
@@ -451,13 +452,13 @@ export default function EventDetail() {
               <button
                 type="button"
                 onClick={() => setDateOpen(!dateOpen)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 7, background: "white", border: `1px solid ${BORD2}`, color: DARK, fontSize: 12.5, fontWeight: 600, cursor: "pointer", ...S, whiteSpace: "nowrap" }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: R_BUTTON, background: "white", border: `1px solid ${BORD2}`, color: DARK, fontSize: 12.5, fontWeight: 600, cursor: "pointer", ...S, whiteSpace: "nowrap" }}
               >
                 {activeDate?.label}
                 <ChevronDown size={12} style={{ transform: dateOpen ? "rotate(180deg)" : "none", transition: "transform 0.14s" }} />
               </button>
               {dateOpen && EVENT.dates?.length > 0 && (
-                <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "white", border: `1px solid ${BORDER}`, borderRadius: 10, boxShadow: SHADOW_DROP, zIndex: 300, overflow: "hidden", minWidth: 200 }}>
+                <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "white", border: `1px solid ${BORDER}`, borderRadius: R_INPUT, boxShadow: SHADOW_DROP, zIndex: 300, overflow: "hidden", minWidth: 200 }}>
                   {EVENT.dates.map((d, i) => (
                     <button key={d.id} type="button" onClick={() => { setDateIdx(i); setDateOpen(false); }}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "10px 14px", background: dateIdx === i ? VLIGHT : "white", border: "none", cursor: "pointer", fontSize: 13, fontWeight: dateIdx === i ? 600 : 400, color: dateIdx === i ? V : DARK, ...S }}
@@ -473,7 +474,7 @@ export default function EventDetail() {
           <div className="sticky-price-cta" style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
             <span style={{ fontSize: 13, color: MUTED }}>Desde</span>
             <span style={{ fontSize: 17, fontWeight: 800, color: V }}>{fmt(minPrice)}</span>
-            <button type="button" onClick={scrollToTickets} style={{ padding: "7px 16px", borderRadius: 8, background: V, border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, ...S }}>
+            <button type="button" onClick={scrollToTickets} style={{ padding: "7px 16px", borderRadius: R_BUTTON, background: V, border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, ...S }}>
               Ver entradas <ArrowRight size={13} />
             </button>
           </div>
@@ -488,7 +489,7 @@ export default function EventDetail() {
         <div
           ref={heroRef}
           style={{
-            borderRadius: 20, overflow: "hidden",
+            borderRadius: R_HERO, overflow: "hidden",
             marginBottom: 14,
             boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
             position: "relative", minHeight: 320,
@@ -651,7 +652,7 @@ export default function EventDetail() {
                 Avisanos y te notificamos en cuanto aparezca una entrada para este evento.
               </p>
               {alertSent ? (
-                <div style={{ background: SUCCESS_LIGHT, border: `1.5px solid ${SUCCESS_BORDER}`, borderRadius: 10, padding: "14px 18px", maxWidth: 380, margin: "0 auto 24px", display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left" }}>
+                <div style={{ background: SUCCESS_LIGHT, border: `1.5px solid ${SUCCESS_BORDER}`, borderRadius: R_INPUT, padding: "14px 18px", maxWidth: 380, margin: "0 auto 24px", display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left" }}>
                   <CheckCircle size={16} style={{ color: SUCCESS, flexShrink: 0, marginTop: 1 }} />
                   <div>
                     <p style={{ ...S, fontSize: 13, fontWeight: 700, color: SUCCESS, marginBottom: 2 }}>¡Alerta activada!</p>
@@ -666,9 +667,9 @@ export default function EventDetail() {
                       placeholder="Tu WhatsApp o email"
                       value={alertPhone}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setAlertPhone(e.target.value); setAlertError(false); }}
-                      style={{ flex: 1, ...S, fontSize: 13.5, fontWeight: 500, padding: "10px 14px", border: `1.5px solid ${alertError ? "#e11d48" : "#d1d5db"}`, borderRadius: 10, color: DARK, background: BG, outline: "none" }}
+                      style={{ flex: 1, ...S, fontSize: 13.5, fontWeight: 500, padding: "10px 14px", border: `1.5px solid ${alertError ? "#e11d48" : "#d1d5db"}`, borderRadius: R_INPUT, color: DARK, background: BG, outline: "none" }}
                     />
-                    <button onClick={handleAlert} style={{ ...S, fontSize: 13, fontWeight: 700, background: V, color: "white", border: "none", borderRadius: 10, padding: "10px 18px", cursor: "pointer", boxShadow: "0 4px 14px rgba(109,40,217,0.28)", whiteSpace: "nowrap" }}>
+                    <button onClick={handleAlert} style={{ ...S, fontSize: 13, fontWeight: 700, background: V, color: "white", border: "none", borderRadius: R_BUTTON, padding: "10px 18px", cursor: "pointer", boxShadow: "0 4px 14px rgba(109,40,217,0.28)", whiteSpace: "nowrap" }}>
                       Avisarme →
                     </button>
                   </div>
@@ -695,7 +696,7 @@ export default function EventDetail() {
               <div>
                 <Link
                   to="/sell-ticket"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, ...S, fontSize: 13, fontWeight: 700, color: V, border: "1.5px solid #6d28d9", borderRadius: 10, padding: "10px 20px", textDecoration: "none", background: "transparent" }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, ...S, fontSize: 13, fontWeight: 700, color: V, border: "1.5px solid #6d28d9", borderRadius: R_BUTTON, padding: "10px 20px", textDecoration: "none", background: "transparent" }}
                   onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.background = VLIGHT}
                   onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.background = "transparent"}
                 >
@@ -725,7 +726,7 @@ export default function EventDetail() {
           marginTop: 36,
           background: "white",
           border: "1px solid #e5e7eb",
-          borderRadius: 14,
+          borderRadius: R_CARD,
           padding: "24px 28px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
           boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
@@ -745,7 +746,7 @@ export default function EventDetail() {
               ...S,
               fontSize: 13, fontWeight: 700, color: V,
               border: "1.5px solid #6d28d9",
-              borderRadius: 10,
+              borderRadius: R_BUTTON,
               padding: "10px 20px",
               background: "transparent",
               textDecoration: "none",

@@ -3,6 +3,7 @@ import {
   SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER,
   AMBER, AMBER_TEXT_DARK, AMBER_BG_LIGHT, ABORD, ABG,
   ERROR_DARK, BADGE_DEMAND_BG, BADGE_DEMAND_BORDER,
+  R_CARD, R_HERO,
 } from "@/lib/design-tokens";
 import type { Offer } from "@/api/types/offers";
 
@@ -42,7 +43,7 @@ export function OfferBanner({
           padding: "12px 14px",
           background: SUCCESS_LIGHT,
           border: `1px solid ${SUCCESS_BORDER}`,
-          borderRadius: 12,
+          borderRadius: R_CARD,
         }}
       >
         <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
@@ -92,7 +93,7 @@ export function OfferBanner({
                     background: secondsLeft < 3600 ? BADGE_DEMAND_BG : AMBER_BG_LIGHT,
                     border: `1px solid ${secondsLeft < 3600 ? BADGE_DEMAND_BORDER : ABORD}`,
                     padding: "3px 10px",
-                    borderRadius: 20,
+                    borderRadius: R_HERO,
                   }}
                 >
                   <Clock size={11} />
@@ -116,7 +117,7 @@ export function OfferBanner({
           padding: "12px 14px",
           background: isBuyerNoPurchase ? ABG : "#f1efe8",
           border: `1px solid ${isBuyerNoPurchase ? ABORD : "#d3d1c7"}`,
-          borderRadius: 12,
+          borderRadius: R_CARD,
         }}
       >
         <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>

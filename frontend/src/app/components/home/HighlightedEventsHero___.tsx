@@ -13,8 +13,6 @@ import {
   TRUST_ESCROW,
   TRUST_VERIFIED,
   AMBER_c1,
-  R_HERO,
-  R_BUTTON,
 } from "@/lib/design-tokens";
 import { Lock, CheckCircle, RefreshCw, LucideIcon } from "lucide-react";
 import { PublicListEventItem } from "@/api/types/events";
@@ -174,7 +172,7 @@ export function HighlightedEventsHero({
     return (
       <div
         style={{
-          borderRadius: R_HERO,
+          borderRadius: 20,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD,
@@ -217,11 +215,11 @@ export function HighlightedEventsHero({
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <div
                   className="hh-sk"
-                  style={{ height: 38, flex: 1, borderRadius: R_BUTTON, opacity: 0.4 }}
+                  style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.4 }}
                 />
                 <div
                   className="hh-sk"
-                  style={{ height: 38, flex: 1, borderRadius: R_BUTTON, opacity: 0.4 }}
+                  style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.4 }}
                 />
               </div>
             </div>
@@ -264,11 +262,11 @@ export function HighlightedEventsHero({
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <div
                   className="hh-sk"
-                  style={{ height: 40, width: 148, borderRadius: R_BUTTON, opacity: 0.3 }}
+                  style={{ height: 40, width: 148, borderRadius: 12, opacity: 0.3 }}
                 />
                 <div
                   className="hh-sk"
-                  style={{ height: 40, width: 118, borderRadius: R_BUTTON, opacity: 0.3 }}
+                  style={{ height: 40, width: 118, borderRadius: 12, opacity: 0.3 }}
                 />
               </div>
             </div>
@@ -357,18 +355,47 @@ export function HighlightedEventsHero({
     </div>
   ) : null;
 
-  // ── Event overlay — Card C: text directly on image, no container ─────────────
+  // ── Event card (right panel / mobile overlay) ──────────────────────────────
 
   const EventCard = (
-    <div>
-      {/* Event name */}
+    <div
+      style={{
+        background: "rgba(8,4,22,0.62)",
+        border: "1px solid rgba(255,255,255,0.11)",
+        borderRadius: 14,
+        padding: "18px 20px",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}
+    >
+      {/* Category pill */}
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          padding: "3px 9px",
+          borderRadius: 9999,
+          background: "rgba(124,58,237,0.28)",
+          border: "1px solid rgba(167,139,250,0.22)",
+          ...S,
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: "0.07em",
+          color: V_MUTED_LIGHT,
+          marginBottom: 10,
+        }}
+      >
+        {categoryLabel}
+      </div>
+
+      {/* Name */}
       <div
         style={{
           ...S,
-          fontSize: 17,
+          fontSize: 15,
           fontWeight: 700,
           color: "#fff",
-          marginBottom: 4,
+          marginBottom: 3,
           lineHeight: 1.2,
         }}
       >
@@ -379,14 +406,19 @@ export function HighlightedEventsHero({
       <div
         style={{
           ...S,
-          fontSize: 11,
-          color: "rgba(255,255,255,0.62)",
+          fontSize: 10,
+          color: "rgba(255,255,255,0.60)",
           marginBottom: 14,
-          lineHeight: 1.5,
+          lineHeight: 1.6,
         }}
       >
         {venueStr}
-        {dateStr ? ` · ${dateStr}` : null}
+        {dateStr ? (
+          <>
+            <br />
+            {dateStr}
+          </>
+        ) : null}
       </div>
 
       {/* Price + CTA */}
@@ -403,8 +435,8 @@ export function HighlightedEventsHero({
               style={{
                 ...S,
                 fontSize: 9,
-                color: "rgba(255,255,255,0.50)",
-                letterSpacing: "0.06em",
+                color: "rgba(255,255,255,0.55)",
+                letterSpacing: "0.05em",
                 textTransform: "uppercase",
                 marginBottom: 2,
               }}
@@ -412,10 +444,17 @@ export function HighlightedEventsHero({
               Desde
             </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-              <span style={{ ...S, fontSize: 22, fontWeight: 700, color: "#fff" }}>
+              <span style={{ ...S, fontSize: 19, fontWeight: 700, color: "#fff" }}>
                 ${formatPrice(event.lowestListingPrice.amount)}
               </span>
-              <span style={{ ...S, fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>
+              <span
+                style={{
+                  ...S,
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.50)",
+                  fontWeight: 400,
+                }}
+              >
                 ARS
               </span>
             </div>
@@ -429,13 +468,13 @@ export function HighlightedEventsHero({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            height: 38,
-            padding: "0 18px",
-            borderRadius: R_BUTTON,
-            background: "#fff",
-            color: "#0f0825",
-            fontSize: 12,
-            fontWeight: 700,
+            height: 34,
+            padding: "0 14px",
+            borderRadius: 10,
+            background: V,
+            color: "#fff",
+            fontSize: 11,
+            fontWeight: 600,
             textDecoration: "none",
             whiteSpace: "nowrap",
             boxShadow: SHADOW_HERO_CTA,
@@ -455,7 +494,7 @@ export function HighlightedEventsHero({
     return (
       <div
         style={{
-          borderRadius: R_HERO,
+          borderRadius: 20,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD,
@@ -657,7 +696,7 @@ export function HighlightedEventsHero({
                 justifyContent: "center",
                 height: 40,
                 padding: "0 16px",
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: V,
                 color: "#fff",
                 fontSize: 12,
@@ -682,7 +721,7 @@ export function HighlightedEventsHero({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 38,
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: "#fff",
                 color: PANEL_BG,
                 fontSize: 11,
@@ -702,7 +741,7 @@ export function HighlightedEventsHero({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 38,
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: "rgba(255,255,255,0.07)",
                 border: "1px solid rgba(255,255,255,0.18)",
                 color: "rgba(255,255,255,0.70)",
@@ -768,7 +807,7 @@ export function HighlightedEventsHero({
     <div
       style={{
         position: "relative",
-        borderRadius: R_HERO,
+        borderRadius: 20,
         overflow: "hidden",
         border: `1px solid ${BORDER}`,
         boxShadow: SHADOW_CARD,
@@ -819,7 +858,7 @@ export function HighlightedEventsHero({
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.50) 32%, transparent 52%)",
+            "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.40) 28%, transparent 44%)",
           zIndex: 2,
         }}
       />
@@ -868,7 +907,7 @@ export function HighlightedEventsHero({
           zIndex: 5,
         }}
       >
-        {/* Brand copy — Panel A: no eyebrow, headline, CTAs, trust, dots */}
+        {/* Brand copy — left panel, no subtitle, trust inline */}
         <div
           style={{
             width: "40%",
@@ -877,9 +916,33 @@ export function HighlightedEventsHero({
             flexDirection: "column",
             justifyContent: "center",
             flexShrink: 0,
-            gap: 18,
+            gap: 20,
           }}
         >
+          {/* Eyebrow */}
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <div
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: V_SOFT,
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                ...S,
+                fontSize: 10,
+                letterSpacing: "0.07em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.32)",
+              }}
+            >
+              Mercado secundario verificado
+            </span>
+          </div>
+
           {/* Headline */}
           <div>
             <span
@@ -920,7 +983,7 @@ export function HighlightedEventsHero({
                 justifyContent: "center",
                 height: 42,
                 padding: "0 20px",
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: "#fff",
                 color: PANEL_BG,
                 fontSize: 13,
@@ -941,7 +1004,7 @@ export function HighlightedEventsHero({
                 justifyContent: "center",
                 height: 42,
                 padding: "0 16px",
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: "rgba(255,255,255,0.07)",
                 border: "1px solid rgba(255,255,255,0.17)",
                 color: "rgba(255,255,255,0.68)",
@@ -955,8 +1018,15 @@ export function HighlightedEventsHero({
             </Link>
           </div>
 
-          {/* Trust signals */}
-          <div style={{ display: "flex", gap: 14, flexWrap: "nowrap" }}>
+          {/* Trust signals + dots — compact row */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              flexWrap: "nowrap",
+            }}
+          >
             {TRUST.map(({ Icon, label, color }) => (
               <div
                 key={label}
@@ -975,20 +1045,20 @@ export function HighlightedEventsHero({
                 </span>
               </div>
             ))}
+            {DotNav && (
+              <div style={{ marginLeft: "auto" }}>{DotNav}</div>
+            )}
           </div>
-
-          {/* Dots — own row */}
-          {DotNav}
         </div>
 
-        {/* Event area — right side, text directly on image */}
+        {/* Event area — right side, card starts at 55% so it's fully over the image */}
         <div style={{ flex: 1, position: "relative" }}>
           <div
             style={{
               position: "absolute",
-              bottom: 20,
-              left: 20,
-              right: 20,
+              bottom: 14,
+              left: "18%",
+              right: 14,
               zIndex: 1,
             }}
           >

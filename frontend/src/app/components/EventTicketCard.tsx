@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Shield, CheckCircle, MessageCircle, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { V, VLIGHT, DARK, MUTED, BG, S, SUCCESS } from "@/lib/design-tokens";
+import { V, VLIGHT, DARK, MUTED, BG, S, SUCCESS, R_CARD, R_BUTTON } from "@/lib/design-tokens";
 import { UserAvatar } from "@/app/components/UserAvatar";
 import { getInitials } from "@/lib/string-utils";
 
@@ -70,7 +70,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
         ...S,
         background: "#ffffff",
         border: "1px solid #e5e7eb",
-        borderRadius: 14,
+        borderRadius: R_CARD,
         padding: "20px 20px 16px",
         boxShadow: hovered
           ? "0 10px 28px rgba(109,40,217,0.12), 0 2px 6px rgba(0,0,0,0.06)"
@@ -172,7 +172,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
         <span style={{
           ...S,
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          width: "100%", padding: "13px 20px", borderRadius: 10,
+          width: "100%", padding: "13px 20px", borderRadius: R_BUTTON,
           fontSize: 14, fontWeight: 700,
           background: V, color: "#ffffff",
           boxShadow: "0 4px 18px rgba(109,40,217,0.28)",

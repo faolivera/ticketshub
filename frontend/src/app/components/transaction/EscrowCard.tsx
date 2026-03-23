@@ -5,7 +5,7 @@ import type { EscrowCardProps } from './types';
 export function EscrowCard({ message, title }: EscrowCardProps) {
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="rounded-card border p-5"
       style={{ ...S, background: INFO_LIGHT, borderColor: INFO_BORDER }}
     >
       <div className="mb-2 flex items-center gap-2">

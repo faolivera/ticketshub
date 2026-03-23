@@ -27,6 +27,9 @@ import {
   DESTRUCTIVE,
   V_HOVER,
   S,
+  R_HERO,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 const CBU_CVU_LENGTH = 22;
@@ -70,7 +73,7 @@ function TextInput({ value, onChange, placeholder, inputMode, mono }: {
       style={{
         width: '100%', padding: '12px 14px',
         border: `1.5px solid ${focused ? V : BORD2}`,
-        borderRadius: 11, fontSize: 14, color: DARK,
+        borderRadius: R_INPUT, fontSize: 14, color: DARK,
         background: CARD, outline: 'none',
         fontFamily: mono ? 'monospace' : S.fontFamily,
         boxShadow: focused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
@@ -92,7 +95,7 @@ function PrimaryBtn({ label, loading, disabled, type = 'submit', onClick }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        width: '100%', padding: '13px', borderRadius: 11, border: 'none',
+        width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none',
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -157,7 +160,7 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, padding: '40px', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, padding: '40px', display: 'flex', justifyContent: 'center' }}>
         <Loader2 size={28} style={{ color: V, animation: 'spin 0.7s linear infinite' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
@@ -168,7 +171,7 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
   if (variant === 'verifyUser' && bankAccount != null && !submitted) {
     const verified = user?.bankDetailsVerified === true;
     return (
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div
           style={{
             background: verified ? GLIGHT : ABG,
@@ -183,7 +186,7 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
             style={{
               width: 44,
               height: 44,
-              borderRadius: 12,
+              borderRadius: R_BUTTON,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -217,9 +220,9 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
   // ── Already submitted / existing (become-seller flow) ─────────────────────
   if (submitted || bankAccount != null) {
     return (
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ background: GLIGHT, borderBottom: `1px solid ${GBORD}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: GLIGHT, border: `1.5px solid ${GBORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: R_BUTTON, background: GLIGHT, border: `1.5px solid ${GBORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <CheckCircle size={22} style={{ color: GREEN }} />
           </div>
           <div>
@@ -240,11 +243,11 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
   return (
     <>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: R_BUTTON, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <CreditCard size={20} color="white" />
           </div>
           <div>
@@ -255,7 +258,7 @@ export function StepBank({ onComplete, variant = 'becomeSeller' }: StepBankProps
 
         <div style={{ padding: '20px' }}>
           {error && (
-            <div style={{ padding: '11px 14px', borderRadius: 11, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
+            <div style={{ padding: '11px 14px', borderRadius: R_INPUT, marginBottom: 16, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, lineHeight: 1.5, ...S }}>
               {error}
             </div>
           )}

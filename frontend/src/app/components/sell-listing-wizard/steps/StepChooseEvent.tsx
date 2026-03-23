@@ -8,7 +8,7 @@ import { Badge } from '@/app/components/ui/badge';
 import type { EventSelectItem } from '@/api/types';
 import { EventCategory } from '@/api/types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S, R_BUTTON, R_INPUT, R_CARD } from '@/lib/design-tokens';
 import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 const EVENT_CATEGORY_I18N: Record<EventCategory, string> = {
@@ -46,7 +46,7 @@ const EventCard = forwardRef<HTMLButtonElement, EventCardProps>(({ event, onClic
         name: event.name, venue: event.venue, category: categoryLabel,
       })}
       className={cn(
-        'group flex min-h-[44px] w-full flex-col rounded-xl border border-border bg-card text-left shadow-md transition-all duration-200',
+        'group flex min-h-[44px] w-full flex-col rounded-card border border-border bg-card text-left shadow-md transition-all duration-200',
         'hover:shadow-lg hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
       )}
     >
@@ -104,7 +104,7 @@ export function StepChooseEvent({ onSelect, isMobile, initialSearchTerm = '' }: 
           placeholder={t('sellListingWizard.searchEvents')}
           style={{
             width: '100%', paddingLeft: 44, paddingRight: 16, paddingTop: 12, paddingBottom: 12,
-            borderRadius: 12, border: `1.5px solid ${BORDER}`, background: CARD,
+            borderRadius: R_INPUT, border: `1.5px solid ${BORDER}`, background: CARD,
             fontSize: 14, color: DARK, outline: 'none',
             ...S,
           }}
@@ -133,7 +133,7 @@ export function StepChooseEvent({ onSelect, isMobile, initialSearchTerm = '' }: 
           >
             <button style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '11px 22px', borderRadius: 11, border: 'none',
+              padding: '11px 22px', borderRadius: R_BUTTON, border: 'none',
               background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44, ...S,
             }}>
               <Plus size={18} />
@@ -147,7 +147,7 @@ export function StepChooseEvent({ onSelect, isMobile, initialSearchTerm = '' }: 
           <Link to="/create-event" state={{ fromSellTicket: true }} style={{ textDecoration: 'none' }}>
             <button style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '11px 22px', borderRadius: 11, border: 'none',
+              padding: '11px 22px', borderRadius: R_BUTTON, border: 'none',
               background: V, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44, ...S,
             }}>
               <Plus size={18} />
@@ -181,7 +181,7 @@ export function StepChooseEvent({ onSelect, isMobile, initialSearchTerm = '' }: 
                 color: V,
                 background: `${VLIGHT}33`,
                 border: `1.5px solid ${BORDER}`,
-                borderRadius: 12,
+                borderRadius: R_BUTTON,
                 cursor: isLoadingMore ? 'wait' : 'pointer',
                 minHeight: 44,
                 display: 'inline-flex',

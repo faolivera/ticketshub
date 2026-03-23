@@ -32,7 +32,7 @@ export function TermsModal({ termsVersionId, title, onClose }: TermsModalProps) 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-hero shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">
             {title || t('terms.termsAndConditions')}
@@ -63,7 +63,7 @@ export function TermsModal({ termsVersionId, title, onClose }: TermsModalProps) 
         <div className="p-6 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-button hover:bg-blue-700 transition-colors"
           >
             {t('common.close')}
           </button>

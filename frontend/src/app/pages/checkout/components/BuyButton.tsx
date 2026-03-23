@@ -1,5 +1,5 @@
 import { Loader2, Shield } from "lucide-react";
-import { V, BORD2, MUTED, WARN_SOLID, S } from "@/lib/design-tokens";
+import { V, BORD2, MUTED, WARN_SOLID, S, R_BUTTON } from "@/lib/design-tokens";
 
 interface BuyButtonProps {
   label: string;
@@ -25,7 +25,7 @@ export function BuyButton({ label, variant, onClick, total, disabled, isLoading 
       style={{
         width: "100%",
         padding: "13px 16px",
-        borderRadius: 12,
+        borderRadius: R_BUTTON,
         border: "none",
         fontSize: 14,
         fontWeight: 700,

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Ticket } from 'lucide-react';
 import { PageMeta } from '@/app/components/PageMeta';
-import { V, VLIGHT, VL_BORDER, DARK, MUTED, HINT, BG, BORDER, S, E } from '@/lib/design-tokens';
+import { V, VLIGHT, VL_BORDER, DARK, MUTED, HINT, BG, BORDER, S, E, R_BUTTON } from '@/lib/design-tokens';
 
 const DS = { ...E, fontWeight: 400 };
 
@@ -40,7 +40,7 @@ export function NotFound() {
 
         <Link to="/" style={{ textDecoration: 'none' }}>
           <button style={{
-            padding: '12px 28px', borderRadius: 12,
+            padding: '12px 28px', borderRadius: R_BUTTON,
             background: V, color: 'white', border: 'none',
             fontSize: 14, fontWeight: 700, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 8,

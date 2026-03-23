@@ -24,6 +24,8 @@ import {
   GLIGHT,
   GBORD,
   S,
+  R_CARD,
+  R_INPUT,
 } from '@/lib/design-tokens';
 import { stepHeadingStyle } from '../wizardTokens';
 
@@ -158,7 +160,7 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
 
       {/* Promo code (only shown if no active promo already) */}
       {!promotionName && (
-        <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
+        <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: R_CARD, padding: '14px 16px', marginBottom: 20 }}>
           <label style={{ fontSize: 13.5, fontWeight: 600, color: DARK, display: 'block', marginBottom: 10, ...S }}>
             {t('sellListingWizard.promotionCode')}
           </label>
@@ -187,7 +189,7 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
             </p>
           )}
           {showVerifiedSellerDisclaimer && (
-            <div style={{ marginTop: 10, padding: '10px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
+            <div style={{ marginTop: 10, padding: '10px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: R_INPUT }}>
               <p style={{ fontSize: 13, color: '#92400e', ...S }}>
                 {t('sellListingWizard.promotionVerifiedSellerDisclaimer')}{' '}
                 <Link to="/become-seller" style={{ fontWeight: 700, color: '#92400e' }}>
@@ -200,7 +202,7 @@ export const StepReviewAndPublish: FC<StepReviewAndPublishProps> = ({
       )}
 
       {/* Summary card */}
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD, overflow: 'hidden' }}>
         <div style={{ background: BG, padding: '10px 16px', borderBottom: `1px solid ${BORDER}` }}>
           <p style={{ fontSize: 12.5, fontWeight: 700, color: DARK, ...S }}>{t('sellListingWizard.summaryTitle')}</p>
         </div>
@@ -271,7 +273,7 @@ function ReviewSection({ title, onEdit, content }: {
   return (
     <div style={{
       display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
-      background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px',
+      background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD, padding: '12px 16px',
     }}>
       <div style={{ minWidth: 0, flex: 1 }}>{content}</div>
       <button

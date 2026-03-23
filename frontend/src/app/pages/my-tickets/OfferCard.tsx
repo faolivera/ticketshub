@@ -21,6 +21,8 @@ import {
   SUCCESS,
   DESTRUCTIVE,
   S,
+  R_CARD,
+  R_BUTTON,
 } from '@/lib/design-tokens';
 
 export interface OfferCardProps {
@@ -76,7 +78,7 @@ export function OfferCard({ offer }: OfferCardProps) {
       <Link to={to} style={{ textDecoration: 'none' }}
         onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
         <div style={{
-          display: 'flex', background: CARD, borderRadius: 16,
+          display: 'flex', background: CARD, borderRadius: R_CARD,
           border: `1.5px solid ${V}`, overflow: 'hidden',
           boxShadow: hov ? '0 4px 16px rgba(109,40,217,0.12)' : 'none',
           transition: 'box-shadow 0.15s',
@@ -100,7 +102,7 @@ export function OfferCard({ offer }: OfferCardProps) {
               </p>
             </div>
             <div style={{
-              padding: '8px 14px', borderRadius: 9,
+              padding: '8px 14px', borderRadius: R_BUTTON,
               background: V, color: 'white',
               fontSize: 13, fontWeight: 700, textAlign: 'center', ...S,
             }}>
@@ -118,7 +120,7 @@ export function OfferCard({ offer }: OfferCardProps) {
       <Link to={to} state={{ from: '/my-tickets?tab=offers' }} style={{ textDecoration: 'none' }}
         onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
         <div style={{
-          display: 'flex', background: CARD, borderRadius: 13,
+          display: 'flex', background: CARD, borderRadius: R_CARD,
           border: `1px solid ${hov ? BORD2 : BORDER}`, overflow: 'hidden',
           transition: 'border-color 0.14s',
         }}>
@@ -152,7 +154,7 @@ export function OfferCard({ offer }: OfferCardProps) {
   return (
     <Link to={to} state={{ from: '/my-tickets?tab=offers' }} style={{ textDecoration: 'none' }}>
       <div style={{
-        display: 'flex', background: CARD, borderRadius: 12,
+        display: 'flex', background: CARD, borderRadius: R_CARD,
         border: `1px solid #f0f0ee`, overflow: 'hidden', opacity: 0.65,
       }}>
         <Thumb size={52} summary={summary} grayscale />

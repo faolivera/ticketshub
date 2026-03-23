@@ -13,7 +13,7 @@ export function BankDetailsBlock({
 }: BankDetailsBlockProps) {
   return (
     <div
-      className="mt-4 space-y-2.5 rounded-xl border p-4 text-sm"
+      className="mt-4 space-y-2.5 rounded-card border p-4 text-sm"
       style={{ ...S, background: CARD, borderColor: BORDER }}
     >
       <Row label={labels.bank} value={bankName} />
@@ -25,7 +25,7 @@ export function BankDetailsBlock({
           <button
             type="button"
             onClick={() => onCopyCbu(cbu)}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold"
+            className="inline-flex shrink-0 items-center gap-1 rounded-pill px-2.5 py-1 text-xs font-bold"
             style={{
               background: copiedCbu ? GLIGHT : VLIGHT,
               color: copiedCbu ? GREEN : V,

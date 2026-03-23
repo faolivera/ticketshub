@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { AMBER, AMBER_TEXT_DARK, AMBER_BG_LIGHT, ABG, ABORD, S } from "@/lib/design-tokens";
+import { AMBER, AMBER_TEXT_DARK, AMBER_BG_LIGHT, ABG, ABORD, S, R_CARD, R_BUTTON } from "@/lib/design-tokens";
 
 interface VerificationGateProps {
   isAuthenticated: boolean;
@@ -29,7 +29,7 @@ export function VerificationGate({
       style={{
         background: ABG,
         border: `1.5px solid ${ABORD}`,
-        borderRadius: 14,
+        borderRadius: R_CARD,
         padding: 18,
       }}
     >
@@ -38,7 +38,7 @@ export function VerificationGate({
           style={{
             width: 36,
             height: 36,
-            borderRadius: 9,
+            borderRadius: R_BUTTON,
             background: AMBER_BG_LIGHT,
             display: "flex",
             alignItems: "center",
@@ -80,7 +80,7 @@ export function VerificationGate({
             style={{
               display: "inline-block",
               padding: "10px 20px",
-              borderRadius: 12,
+              borderRadius: R_BUTTON,
               background: AMBER,
               color: "white",
               fontSize: 13,

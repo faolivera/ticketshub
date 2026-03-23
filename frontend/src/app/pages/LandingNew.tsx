@@ -39,6 +39,9 @@ import {
   OVERLAY_DARK_45,
   V_SOFT,
   V_FOCUS_RING,
+  R_BUTTON,
+  R_INPUT,
+  R_CARD,
 } from "@/lib/design-tokens";
 import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero";
 import { ShieldSVG, MapSVG } from "@/app/components/site/SiteBrandIcons";
@@ -359,7 +362,7 @@ export default function TicketsHub() {
 
         {/* ── SEARCH + FILTERS BOX ── */}
         {(isLoading && !heroLoaded) ? <SkeletonSearchBar /> : <div style={{
-          background:CARD, borderRadius:16,
+          background:CARD, borderRadius:R_CARD,
           border:`1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD_MD,
           padding:"14px 18px",
@@ -373,7 +376,7 @@ export default function TicketsHub() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t("landing.searchPlaceholder")}
-                style={{ width:"100%", padding:"9px 12px 9px 36px", border:`1.5px solid ${BORDER}`, borderRadius:10, fontSize:13.5, color:DARK, background:BG, transition:"border-color 0.18s, box-shadow 0.18s", ...S }}
+                style={{ width:"100%", padding:"9px 12px 9px 36px", border:`1.5px solid ${BORDER}`, borderRadius:R_INPUT, fontSize:13.5, color:DARK, background:BG, transition:"border-color 0.18s, box-shadow 0.18s", ...S }}
               />
             </div>
             <div style={{ width:1, height:28, background:BORD2, flexShrink:0 }} />
@@ -381,18 +384,18 @@ export default function TicketsHub() {
               <button
                 type="button"
                 onClick={() => { setCityOpen(!cityOpen); setCitySearch(""); }}
-                style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 12px", borderRadius:9, background:cityOpen ? VLIGHT : BG, border:`1.5px solid ${cityOpen ? V : BORDER}`, cursor:"pointer", ...S, fontSize:13, fontWeight:600, color:activeCity==="Todas las ciudades" ? MUTED : DARK, transition:"all 0.14s", whiteSpace:"nowrap" }}
+                style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 12px", borderRadius:R_BUTTON, background:cityOpen ? VLIGHT : BG, border:`1.5px solid ${cityOpen ? V : BORDER}`, cursor:"pointer", ...S, fontSize:13, fontWeight:600, color:activeCity==="Todas las ciudades" ? MUTED : DARK, transition:"all 0.14s", whiteSpace:"nowrap" }}
               >
                 <MapSVG size={13} color={activeCity==="Todas las ciudades" ? MUTED : BLUE} />
                 {activeCity==="Todas las ciudades" ? t("landing.cityLabel") : activeCity}
                 <ChevronDown size={12} style={{ color:MUTED, transform:cityOpen?"rotate(180deg)":"none", transition:"transform 0.14s" }} />
               </button>
               {cityOpen && (
-                <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, background:"white", border:`1px solid ${BORDER}`, borderRadius:12, boxShadow: SHADOW_DROP_LG, minWidth:210, zIndex:200, overflow:"hidden" }}>
+                <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, background:"white", border:`1px solid ${BORDER}`, borderRadius:R_INPUT, boxShadow: SHADOW_DROP_LG, minWidth:210, zIndex:200, overflow:"hidden" }}>
                   <div style={{ padding:"9px 9px 7px", borderBottom:`1px solid ${BORDER}` }}>
                     <div style={{ position:"relative" }}>
                       <Search size={12} style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", color:MUTED }} />
-                      <input autoFocus value={citySearch} onChange={(e) => setCitySearch(e.target.value)} placeholder={t("landing.searchCityPlaceholder")} style={{ width:"100%", padding:"6px 8px 6px 27px", border:`1px solid ${BORDER}`, borderRadius:7, fontSize:13, color:DARK, background:BG, ...S }} />
+                      <input autoFocus value={citySearch} onChange={(e) => setCitySearch(e.target.value)} placeholder={t("landing.searchCityPlaceholder")} style={{ width:"100%", padding:"6px 8px 6px 27px", border:`1px solid ${BORDER}`, borderRadius:R_INPUT, fontSize:13, color:DARK, background:BG, ...S }} />
                     </div>
                   </div>
                   <div style={{ maxHeight:185, overflowY:"auto" }}>
@@ -426,7 +429,7 @@ export default function TicketsHub() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("landing.searchPlaceholder")}
-                  style={{ width:"100%", minHeight:44, padding:"10px 12px 10px 36px", border:`1.5px solid ${BORDER}`, borderRadius:10, fontSize:15, color:DARK, background:BG, transition:"border-color 0.18s, box-shadow 0.18s", ...S }}
+                  style={{ width:"100%", minHeight:44, padding:"10px 12px 10px 36px", border:`1.5px solid ${BORDER}`, borderRadius:R_INPUT, fontSize:15, color:DARK, background:BG, transition:"border-color 0.18s, box-shadow 0.18s", ...S }}
                 />
               </div>
               <button
@@ -436,7 +439,7 @@ export default function TicketsHub() {
                 onClick={() => setMobileFiltersOpen((o) => !o)}
                 style={{
                   display:"flex", alignItems:"center", justifyContent:"center",
-                  flexShrink:0, width:44, minWidth:44, minHeight:44, padding:0, borderRadius:10,
+                  flexShrink:0, width:44, minWidth:44, minHeight:44, padding:0, borderRadius:R_BUTTON,
                   border:`1.5px solid ${mobileFiltersOpen ? V : BORDER}`,
                   background: mobileFiltersOpen ? VLIGHT : BG,
                   color: mobileFiltersOpen ? V : DARK,
@@ -467,7 +470,7 @@ export default function TicketsHub() {
                       onClick={() => { setCityOpen(!cityOpen); setCitySearch(""); }}
                       style={{
                         display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", minHeight:48,
-                        gap:10, padding:"10px 14px", borderRadius:10,
+                        gap:10, padding:"10px 14px", borderRadius:R_BUTTON,
                         background:cityOpen ? VLIGHT : BG, border:`1.5px solid ${cityOpen ? V : BORDER}`,
                         cursor:"pointer", ...S, fontSize:15, fontWeight:600, color:activeCity==="Todas las ciudades" ? MUTED : DARK,
                       }}
@@ -481,7 +484,7 @@ export default function TicketsHub() {
                     {cityOpen && (
                       <div style={{
                         position:"absolute", top:"calc(100% + 6px)", left:0, right:0,
-                        background:"white", border:`1px solid ${BORDER}`, borderRadius:12,
+                        background:"white", border:`1px solid ${BORDER}`, borderRadius:R_INPUT,
                         boxShadow: SHADOW_DROP_LG, zIndex:200, overflow:"hidden", maxHeight:260,
                         display:"flex", flexDirection:"column",
                       }}>
@@ -493,7 +496,7 @@ export default function TicketsHub() {
                               value={citySearch}
                               onChange={(e) => setCitySearch(e.target.value)}
                               placeholder={t("landing.searchCityPlaceholder")}
-                              style={{ width:"100%", minHeight:44, padding:"8px 10px 8px 32px", border:`1px solid ${BORDER}`, borderRadius:8, fontSize:15, color:DARK, background:BG, ...S }}
+                              style={{ width:"100%", minHeight:44, padding:"8px 10px 8px 32px", border:`1px solid ${BORDER}`, borderRadius:R_INPUT, fontSize:15, color:DARK, background:BG, ...S }}
                             />
                           </div>
                         </div>
@@ -585,7 +588,7 @@ export default function TicketsHub() {
                   disabled={isLoadingMore}
                   style={{
                     display:"flex", alignItems:"center", gap:8,
-                    padding:"11px 28px", borderRadius:10,
+                    padding:"11px 28px", borderRadius:R_BUTTON,
                     border:`1.5px solid ${BORD2}`,
                     background: isLoadingMore ? VLIGHT : "white",
                     color: isLoadingMore ? V : DARK,
@@ -620,14 +623,14 @@ export default function TicketsHub() {
 function SkeletonSearchBar() {
   const pillWidths = [52, 44, 60, 72, 68];
   return (
-    <div style={{ background: CARD, borderRadius: 16, border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_MD, padding: "14px 18px", marginBottom: 28 }}>
+    <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_MD, padding: "14px 18px", marginBottom: 28 }}>
       {/* Desktop skeleton (hidden on mobile via inline media — same class as real bar) */}
       <div className="th-desk-only" style={{ display: "flex", alignItems: "center", gap: 14 }}>
         {/* Search input */}
-        <div className="sk" style={{ flex: "1 1 220px", height: 38, borderRadius: 10 }} />
+        <div className="sk" style={{ flex: "1 1 220px", height: 38, borderRadius: R_INPUT }} />
         <div style={{ width: 1, height: 28, background: BORD2, flexShrink: 0 }} />
         {/* City picker */}
-        <div className="sk" style={{ width: 140, height: 38, borderRadius: 9, flexShrink: 0 }} />
+        <div className="sk" style={{ width: 140, height: 38, borderRadius: R_BUTTON, flexShrink: 0 }} />
         <div style={{ width: 1, height: 28, background: BORD2, flexShrink: 0 }} />
         {/* Category pills */}
         <div style={{ display: "flex", gap: 6 }}>
@@ -638,8 +641,8 @@ function SkeletonSearchBar() {
       </div>
       {/* Mobile skeleton */}
       <div className="th-mob-only" style={{ display: "flex", gap: 10 }}>
-        <div className="sk" style={{ flex: 1, height: 44, borderRadius: 10 }} />
-        <div className="sk" style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0 }} />
+        <div className="sk" style={{ flex: 1, height: 44, borderRadius: R_INPUT }} />
+        <div className="sk" style={{ width: 44, height: 44, borderRadius: R_BUTTON, flexShrink: 0 }} />
       </div>
     </div>
   );
@@ -648,7 +651,7 @@ function SkeletonSearchBar() {
 // ─── SKELETON CARD ────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div style={{ background: CARD, borderRadius: 14, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_SM }}>
+    <div style={{ background: CARD, borderRadius: R_CARD, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_SM }}>
       {/* Image placeholder */}
       <div className="sk" style={{ width: "100%", aspectRatio: "4/3" }} />
       {/* Content */}
@@ -658,7 +661,7 @@ function SkeletonCard() {
         <div className="sk" style={{ height: 12, width: "38%", borderRadius: 5, marginTop: 2 }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
           <div className="sk" style={{ height: 12, width: "32%", borderRadius: 5 }} />
-          <div className="sk" style={{ height: 28, width: "38%", borderRadius: 8 }} />
+          <div className="sk" style={{ height: 28, width: "38%", borderRadius: R_BUTTON }} />
         </div>
       </div>
     </div>
@@ -698,7 +701,7 @@ function EventCard({ event, index, hovered, onHover }: EventCardProps) {
         onMouseLeave={() => onHover(null)}
         style={{
           background: CARD,
-          borderRadius: 14,
+          borderRadius: R_CARD,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
           boxShadow: hovered ? SHADOW_CARD_HOVER : SHADOW_CARD_SM,
@@ -785,7 +788,7 @@ function EventCard({ event, index, hovered, onHover }: EventCardProps) {
               className="th-card-btn"
               style={{
                 padding: "7px 12px",
-                borderRadius: 8,
+                borderRadius: R_BUTTON,
                 background: "white",
                 border: `1.5px solid ${BORD2}`,
                 color: DARK,

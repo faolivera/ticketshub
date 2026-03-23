@@ -39,7 +39,7 @@ import { isSellerUnverified } from '../components/SellerUnverifiedModal';
 import type { TransactionWithDetails, PaymentConfirmation, ReviewRating, TransactionReviewsData, BankTransferConfig } from '@/api/types';
 import type { TransactionTicketUnit, TransactionDetailsChatConfig } from '@/api/types/bff';
 import { TransactionStatus, CancellationReason } from '@/api/types';
-import { DARK, V, VLIGHT, BORD2, BG, HINT, BORDER, SURFACE, MUTED, SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER, S } from '@/lib/design-tokens';
+import { DARK, V, VLIGHT, BORD2, BG, HINT, BORDER, SURFACE, MUTED, SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER, S, R_BUTTON, R_INPUT, R_CARD } from '@/lib/design-tokens';
 
 export function MyTicket() {
   const { t } = useTranslation();
@@ -608,7 +608,7 @@ export function MyTicket() {
             <div
               style={{
                 marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                gap: 16, borderRadius: 12, border: `1px solid ${SUCCESS_BORDER}`,
+                gap: 16, borderRadius: R_CARD, border: `1px solid ${SUCCESS_BORDER}`,
                 background: SUCCESS_LIGHT, padding: 16,
               }}
             >
@@ -645,7 +645,7 @@ export function MyTicket() {
               rectangleUrl={transaction.bannerUrls?.rectangle}
               quantity={transaction.quantity}
             />
-            <div className="rounded-[16px] border border-gray-200 bg-white p-5 sm:p-6">
+            <div className="rounded-card border border-gray-200 bg-white p-5 sm:p-6">
               <h2 className="mb-4" style={{ ...S, fontSize: 16, fontWeight: 700, color: DARK }}>
                 {t('myTicket.ticketStatus')}
               </h2>
@@ -656,7 +656,7 @@ export function MyTicket() {
                 labels={stepLabels}
               />
               {sellerUnverifiedGate && (
-                <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
+                <div className="mb-4 rounded-card border border-amber-300 bg-amber-50 p-4">
                   <p className="mb-1 text-sm font-medium text-amber-900">
                     {effectiveStatus === TransactionStatus.DepositHold
                       ? t('myTicket.statusDepositHoldSeller')
@@ -756,14 +756,14 @@ export function MyTicket() {
                   <button
                     type="button"
                     onClick={handleOpenDisputeClick}
-                    className="mt-4 w-full rounded-[10px] border-2 border-red-200 py-3 text-sm font-bold text-red-700 hover:bg-red-50"
+                    className="mt-4 w-full rounded-button border-2 border-red-200 py-3 text-sm font-bold text-red-700 hover:bg-red-50"
                   >
                     {t('myTicket.reportProblem')}
                   </button>
                 )}
             </div>
             {(transaction.status === TransactionStatus.Completed || transaction.status === TransactionStatus.TransferringFund) && reviewData && (
-              <div className="rounded-[16px] border bg-white p-5 sm:p-6" style={{ borderColor: BORDER }}>
+              <div className="rounded-card border bg-white p-5 sm:p-6" style={{ borderColor: BORDER }}>
                 <h2 className="mb-4" style={{ ...S, fontSize: 16, fontWeight: 700, color: DARK }}>
                   {t('reviews.leaveReview')}
                 </h2>
@@ -775,7 +775,7 @@ export function MyTicket() {
                   return (
                     <div className="space-y-3" style={{ ...S }}>
                       {counterpartReview && (
-                        <div className="rounded-[10px] border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
+                        <div className="rounded-button border p-3" style={{ borderColor: BORDER, background: SURFACE }}>
                           <p style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                             {t('reviews.otherPartyReview')}
                           </p>
@@ -799,7 +799,7 @@ export function MyTicket() {
                                 key={r}
                                 type="button"
                                 onClick={() => setSelectedRating(r)}
-                                className={`flex flex-1 flex-col items-center gap-1 rounded-[10px] border-2 p-2 ${getRatingColor(r, selectedRating === r)}`}
+                                className={`flex flex-1 flex-col items-center gap-1 rounded-button border-2 p-2 ${getRatingColor(r, selectedRating === r)}`}
                                 style={{ fontSize: 12, fontWeight: 600 }}
                               >
                                 {getRatingIcon(r)}
@@ -811,7 +811,7 @@ export function MyTicket() {
                             value={reviewComment}
                             onChange={(e) => setReviewComment(e.target.value)}
                             placeholder={t('reviews.commentPlaceholder')}
-                            className="w-full rounded-[10px] border p-3 outline-none"
+                            className="w-full rounded-button border p-3 outline-none"
                             rows={2}
                             style={{ fontSize: 13.5, color: DARK, borderColor: BORDER, background: BG, ...S }}
                           />
@@ -820,14 +820,14 @@ export function MyTicket() {
                             type="button"
                             onClick={handleSubmitReview}
                             disabled={!selectedRating || isSubmittingReview}
-                            className="w-full rounded-[10px] py-3 text-white disabled:opacity-50"
+                            className="w-full rounded-button py-3 text-white disabled:opacity-50"
                             style={{ background: V, fontSize: 14, fontWeight: 700 }}
                           >
                             {isSubmittingReview ? t('reviews.submitting') : t('reviews.submitReview')}
                           </button>
                         </>
                       ) : (
-                        <div style={{ borderRadius: 10, border: `1px solid ${SUCCESS_BORDER}`, background: SUCCESS_LIGHT, padding: 16 }}>
+                        <div style={{ borderRadius: R_INPUT, border: `1px solid ${SUCCESS_BORDER}`, background: SUCCESS_LIGHT, padding: 16 }}>
                           <div style={{ display: 'flex', gap: 12 }}>
                             <CheckCircle style={{ marginTop: 2, width: 20, height: 20, flexShrink: 0, color: SUCCESS }} />
                             <div>
@@ -953,7 +953,7 @@ export function MyTicket() {
             <>
               <p className="mb-4 text-sm text-gray-600">{t('myTicket.confirmTransferPayloadHint')}</p>
               {counterpartyEmail && (
-                <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <p className="mb-4 rounded-card border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   {t('myTicket.transferDisclaimerBuyerEmail', { email: counterpartyEmail })}
                 </p>
               )}
@@ -961,7 +961,7 @@ export function MyTicket() {
                 {(['ticketera', 'pdf_or_image', 'other'] as const).map((type) => (
                   <label
                     key={type}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 has-[:checked]:border-violet-600 has-[:checked]:bg-violet-50"
+                    className="flex cursor-pointer items-center gap-3 rounded-card border p-3 has-[:checked]:border-violet-600 has-[:checked]:bg-violet-50"
                   >
                     <input
                       type="radio"
@@ -980,7 +980,7 @@ export function MyTicket() {
                   value={confirmTransferPayloadTypeOtherText}
                   onChange={(e) => setConfirmTransferPayloadTypeOtherText(e.target.value)}
                   placeholder={t('myTicket.payloadTypeOtherPlaceholder')}
-                  className="mb-4 w-full rounded-lg border px-3 py-2 text-sm"
+                  className="mb-4 w-full rounded-input border px-3 py-2 text-sm"
                 />
               )}
               {transferProofError && <p className="mb-2 text-sm text-red-600">{transferProofError}</p>}
@@ -988,7 +988,7 @@ export function MyTicket() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmTransferModal(false)}
-                  className="flex-1 rounded-[10px] border py-2.5 text-sm font-semibold"
+                  className="flex-1 rounded-button border py-2.5 text-sm font-semibold"
                 >
                   {t('myTicket.cancel')}
                 </button>
@@ -1015,7 +1015,7 @@ export function MyTicket() {
                       setIsConfirmingTransfer(false);
                     }
                   }}
-                  className="flex-1 rounded-[10px] bg-violet-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                  className="flex-1 rounded-button bg-violet-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                 >
                   {isConfirmingTransfer ? t('myTicket.confirmingTransfer') : t('myTicket.confirmTransferSubmit')}
                 </button>
@@ -1032,10 +1032,10 @@ export function MyTicket() {
                     <img
                       src={transferProofPreview}
                       alt=""
-                      style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
+                      style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: R_INPUT, border: `1px solid ${BORDER}`, display: 'block' }}
                     />
                   ) : (
-                    <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <div style={{ height: 120, borderRadius: R_INPUT, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                       <Upload size={20} style={{ color: HINT }} />
                       <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transferProofFile.name}</p>
                     </div>
@@ -1056,7 +1056,7 @@ export function MyTicket() {
                 </div>
               ) : (
                 <label
-                  className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all"
+                  className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-input border-2 border-dashed transition-all"
                   style={{ borderColor: BORD2, background: BG }}
                   onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
@@ -1101,7 +1101,7 @@ export function MyTicket() {
                     setTransferProofPreview(null);
                     if (transferProofModalInputRef.current) transferProofModalInputRef.current.value = '';
                   }}
-                  className="flex-1 rounded-[10px] border py-2.5 text-sm font-semibold"
+                  className="flex-1 rounded-button border py-2.5 text-sm font-semibold"
                 >
                   {t('myTicket.skipTransferProofStep')}
                 </button>
@@ -1126,7 +1126,7 @@ export function MyTicket() {
                       setIsUploadingTransferProof(false);
                     }
                   }}
-                  className="flex-1 rounded-[10px] bg-violet-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                  className="flex-1 rounded-button bg-violet-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
                 >
                   {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
                 </button>
@@ -1149,7 +1149,7 @@ export function MyTicket() {
                     setChatWasAutoOpened(false);
                     setIsChatOpen(true);
                   }}
-                  className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-violet-600 py-3 font-semibold text-white"
+                  className="flex w-full items-center justify-center gap-2 rounded-button bg-violet-600 py-3 font-semibold text-white"
                 >
                   <MessageCircle className="h-5 w-5" />
                   {isBuyer ? t('myTicket.contactSeller') : t('myTicket.contactBuyer')}
@@ -1157,7 +1157,7 @@ export function MyTicket() {
                 <button
                   type="button"
                   onClick={() => setDisputeModalStep('form')}
-                  className="flex w-full items-center justify-center gap-2 rounded-[10px] border-2 border-red-300 py-3 font-semibold text-red-700"
+                  className="flex w-full items-center justify-center gap-2 rounded-button border-2 border-red-300 py-3 font-semibold text-red-700"
                 >
                   <AlertCircle className="h-5 w-5" />
                   {t('myTicket.reportProblem')}
@@ -1172,14 +1172,14 @@ export function MyTicket() {
                 <Link
                   to={reportSuccessTicketId ? `/support/${reportSuccessTicketId}` : '#'}
                   onClick={handleCloseDisputeModal}
-                  className="flex flex-1 items-center justify-center rounded-[10px] bg-violet-600 py-3 font-semibold text-white no-underline"
+                  className="flex flex-1 items-center justify-center rounded-button bg-violet-600 py-3 font-semibold text-white no-underline"
                 >
                   {t('myTicket.reportProblemSuccessLink')}
                 </Link>
                 <button
                   type="button"
                   onClick={handleCloseDisputeModal}
-                  className="flex-1 rounded-[10px] border py-3 font-semibold"
+                  className="flex-1 rounded-button border py-3 font-semibold"
                 >
                   {t('myTicket.close')}
                 </button>
@@ -1189,7 +1189,7 @@ export function MyTicket() {
             <>
               <p className="mb-4 text-sm text-gray-600">{t('myTicket.disputeIntro')}</p>
               {!user?.phoneVerified && (
-                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                <div className="mb-4 rounded-card border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                   <p className="mb-2">{t('myTicket.disputePhoneRequiredDisclaimer')}</p>
                   <Link
                     to="/verify-user"
@@ -1235,7 +1235,7 @@ export function MyTicket() {
                     type="text"
                     value={disputeSubject}
                     onChange={(e) => setDisputeSubject(e.target.value)}
-                    className="w-full rounded-lg border px-3 py-2"
+                    className="w-full rounded-input border px-3 py-2"
                   />
                 </div>
                 <div>
@@ -1246,7 +1246,7 @@ export function MyTicket() {
                     value={disputeDescription}
                     onChange={(e) => setDisputeDescription(e.target.value)}
                     rows={4}
-                    className="w-full rounded-lg border px-3 py-2"
+                    className="w-full rounded-input border px-3 py-2"
                   />
                 </div>
                 {disputeError && (
@@ -1264,13 +1264,13 @@ export function MyTicket() {
                   </p>
                 )}
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={handleCloseDisputeModal} className="flex-1 rounded-lg border py-2">
+                  <button type="button" onClick={handleCloseDisputeModal} className="flex-1 rounded-button border py-2">
                     {t('myTicket.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingDispute || !user?.phoneVerified}
-                    className="flex-1 rounded-lg bg-red-600 py-2 text-white disabled:opacity-50"
+                    className="flex-1 rounded-button bg-red-600 py-2 text-white disabled:opacity-50"
                   >
                     {isSubmittingDispute ? t('myTicket.disputeSubmitting') : t('myTicket.disputeSubmit')}
                   </button>
@@ -1293,11 +1293,11 @@ export function MyTicket() {
             if (receiptProofInputRef.current) receiptProofInputRef.current.value = '';
           }}
         >
-          <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="mb-3 rounded-card border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             {t('transaction.confirmReceiptWarning')}
           </p>
           {transaction.depositReleaseAt && (
-            <p className="mb-4 rounded-lg border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900">
+            <p className="mb-4 rounded-card border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900">
               {t('transaction.confirmReceiptEscrowNote', {
                 date: formatDateTime(transaction.depositReleaseAt),
               })}
@@ -1312,10 +1312,10 @@ export function MyTicket() {
                 <img
                   src={receiptProofPreview}
                   alt=""
-                  style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
+                  style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: R_INPUT, border: `1px solid ${BORDER}`, display: 'block' }}
                 />
               ) : (
-                <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <div style={{ height: 120, borderRadius: R_INPUT, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <Upload size={20} style={{ color: HINT }} />
                   <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{receiptProofFile.name}</p>
                 </div>
@@ -1336,7 +1336,7 @@ export function MyTicket() {
             </div>
           ) : (
             <label
-              className="group mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all hover:border-violet-600 hover:bg-violet-50"
+              className="group mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-input border-2 border-dashed transition-all hover:border-violet-600 hover:bg-violet-50"
               style={{ borderColor: BORD2, background: BG }}
               onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
               onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
@@ -1370,7 +1370,7 @@ export function MyTicket() {
                 setShowConfirmModal(false);
                 setReceiptProofFile(null);
               }}
-              className="flex-1 rounded-lg border py-2"
+              className="flex-1 rounded-button border py-2"
             >
               {t('myTicket.cancel')}
             </button>
@@ -1378,7 +1378,7 @@ export function MyTicket() {
               type="button"
               onClick={() => void handleConfirmReceipt()}
               disabled={isConfirmingReceipt}
-              className="flex-1 rounded-lg bg-violet-600 py-2 text-white disabled:opacity-50"
+              className="flex-1 rounded-button bg-violet-600 py-2 text-white disabled:opacity-50"
             >
               {isConfirmingReceipt ? t('myTicket.confirmingReceipt') : t('myTicket.confirm')}
             </button>

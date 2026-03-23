@@ -34,6 +34,7 @@ import {
   DESTRUCTIVE,
   DARK,
   S,
+  R_INPUT,
 } from '@/lib/design-tokens';
 import type { SellerActionBlockProps } from './types';
 
@@ -119,7 +120,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           })}
         >
           <div
-            className="mb-4 space-y-1 rounded-xl border p-3 text-sm"
+            className="mb-4 space-y-1 rounded-card border p-3 text-sm"
             style={{ borderColor: ABORD, background: ABG }}
           >
             <p className="font-semibold" style={{ color: AMBER }}>
@@ -141,7 +142,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           <button
             type="button"
             onClick={onOpenTransferModal}
-            className="mt-4 w-full rounded-[10px] py-3.5 text-sm font-bold text-white"
+            className="mt-4 w-full rounded-button py-3.5 text-sm font-bold text-white"
             style={{ background: V }}
           >
             {t('myTicket.confirmTicketTransferred')}
@@ -175,7 +176,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
             buyerName={transaction.buyerName}
             deliveryMethod={payloadLabel || undefined}
           />
-          <div className="mt-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
+          <div className="mt-4 rounded-card border p-4" style={{ borderColor: BORDER }}>
             <p style={{ fontSize: 11.5, fontWeight: 700, color: HINT, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
               {t('myTicket.attachTransferProofAfterTransfer')}
             </p>
@@ -189,10 +190,10 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
                       <img
                         src={transferProofPreview}
                         alt=""
-                        style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 11, border: `1px solid ${BORDER}`, display: 'block' }}
+                        style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: R_INPUT, border: `1px solid ${BORDER}`, display: 'block' }}
                       />
                     ) : (
-                      <div style={{ height: 120, borderRadius: 11, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <div style={{ height: 120, borderRadius: R_INPUT, border: `1px solid ${BORDER}`, background: BG, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                         <Upload size={20} style={{ color: HINT }} />
                         <p style={{ fontSize: 13, color: DARK, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transferProofFile.name}</p>
                       </div>
@@ -207,7 +208,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
                   </div>
                 ) : (
                   <label
-                    className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all"
+                    className="mb-2 flex h-28 cursor-pointer flex-col items-center justify-center rounded-input border-2 border-dashed transition-all"
                     style={{ borderColor: BORD2, background: BG }}
                     onMouseEnter={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = V; (e.currentTarget as HTMLLabelElement).style.background = VLIGHT; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLLabelElement).style.borderColor = BORD2; (e.currentTarget as HTMLLabelElement).style.background = BG; }}
@@ -230,7 +231,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
                     type="button"
                     disabled={isUploadingTransferProof}
                     onClick={onUploadTransferProof}
-                    className="mt-2 w-full rounded-[10px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                    className="mt-2 w-full rounded-button py-2.5 text-sm font-bold text-white disabled:opacity-50"
                     style={{ background: V }}
                   >
                     {isUploadingTransferProof ? t('myTicket.confirmingTransfer') : t('myTicket.uploadTransferProof')}
@@ -269,7 +270,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           />
           {payloadLabel && (
             <p
-              className="mt-4 rounded-lg border p-3 text-sm"
+              className="mt-4 rounded-card border p-3 text-sm"
               style={{ borderColor: BORDER, background: SURFACE }}
             >
               <span className="font-semibold">{t('transaction.hero.sentAsLabel')} </span>
@@ -297,7 +298,7 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           subtitle={t('transaction.hero.sellerFundsReleasedSubtitle', { amount: netFormatted })}
         >
           <div
-            className="mt-4 space-y-2 rounded-xl border p-4 text-sm"
+            className="mt-4 space-y-2 rounded-card border p-4 text-sm"
             style={{ borderColor: GBORD, background: GLIGHT }}
           >
             <div className="flex justify-between">

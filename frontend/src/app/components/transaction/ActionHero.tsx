@@ -81,7 +81,7 @@ export function ActionHero({
   const s = variantStyles[variant];
   return (
     <div
-      className="rounded-[14px] border p-5 sm:p-6"
+      className="rounded-card border p-5 sm:p-6"
       style={{
         ...S,
         background: s.bg,

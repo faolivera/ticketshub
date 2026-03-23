@@ -29,6 +29,9 @@ import {
   SURFACE,
   V_HOVER,
   S,
+  R_HERO,
+  R_BUTTON,
+  R_INPUT,
 } from '@/lib/design-tokens';
 
 export interface StepTermsProps {
@@ -43,7 +46,7 @@ function PrimaryBtn({ label, loading, disabled }: { label: string; loading?: boo
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        width: '100%', padding: '13px', borderRadius: 11, border: 'none',
+        width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none',
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -95,9 +98,9 @@ export function StepTerms({ onComplete }: StepTermsProps) {
   // ── Done state ────────────────────────────────────────────────────────────
   if (done) {
     return (
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ background: GLIGHT, borderBottom: `1px solid ${GBORD}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: GLIGHT, border: `1.5px solid ${GBORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: R_BUTTON, background: GLIGHT, border: `1.5px solid ${GBORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <CheckCircle size={22} style={{ color: GREEN }} />
           </div>
           <div>
@@ -107,7 +110,7 @@ export function StepTerms({ onComplete }: StepTermsProps) {
         </div>
         <div style={{ padding: '16px 20px' }}>
           <button type="button" onClick={onComplete}
-            style={{ width: '100%', padding: '13px', borderRadius: 11, border: 'none', background: V, color: 'white', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(109,40,217,0.28)', ...S }}>
+            style={{ width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none', background: V, color: 'white', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(109,40,217,0.28)', ...S }}>
             {t('becomeSeller.step2.continue')}
           </button>
         </div>
@@ -119,11 +122,11 @@ export function StepTerms({ onComplete }: StepTermsProps) {
   return (
     <>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ background: CARD, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ background: VLIGHT, borderBottom: `1px solid ${VL_BORDER}`, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: R_BUTTON, background: V, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <FileText size={20} color="white" />
           </div>
           <div>
@@ -133,7 +136,7 @@ export function StepTerms({ onComplete }: StepTermsProps) {
 
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          <div style={{ padding: '14px 16px', borderRadius: 12, background: SURFACE, border: `1px solid ${BORDER}` }}>
+          <div style={{ padding: '14px 16px', borderRadius: R_INPUT, background: SURFACE, border: `1px solid ${BORDER}` }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12, ...S }}>
               {t('becomeSeller.step2.whatYouCanDo')}
             </p>
@@ -179,7 +182,7 @@ export function StepTerms({ onComplete }: StepTermsProps) {
 
           {/* Accept terms form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ padding: '14px 16px', borderRadius: 12, background: BG, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ padding: '14px 16px', borderRadius: R_INPUT, background: BG, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               {/* Custom checkbox */}
               <div
                 onClick={() => setTermsAccepted(!termsAccepted)}
@@ -211,7 +214,7 @@ export function StepTerms({ onComplete }: StepTermsProps) {
             </div>
 
             {error && (
-              <div style={{ padding: '11px 14px', borderRadius: 11, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, ...S }}>
+              <div style={{ padding: '11px 14px', borderRadius: R_INPUT, background: ERROR_BG, border: `1px solid ${BADGE_DEMAND_BORDER}`, fontSize: 13.5, color: DESTRUCTIVE, ...S }}>
                 {error}
               </div>
             )}
