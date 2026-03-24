@@ -4,7 +4,7 @@ import { EMAIL_SENDER } from '../../../../src/common/email/email-sender.interfac
 import type { IEmailSender } from '../../../../src/common/email/email-sender.interface';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import type { Notification } from '../../../../src/modules/notifications/notifications.domain';
-import { NotificationEventType } from '../../../../src/modules/notifications/notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../../../../src/modules/notifications/notifications.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 
 const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-req' };
@@ -18,6 +18,7 @@ function createNotification(
     eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     recipientId: 'user_1',
     channel: 'EMAIL' as any,
+    recipientRole: NotificationRecipientRole.ADMIN,
     title: 'Payment required',
     body: 'Please complete your payment.',
     status: 'PENDING' as any,

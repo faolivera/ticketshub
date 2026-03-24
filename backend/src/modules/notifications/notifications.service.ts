@@ -15,6 +15,7 @@ import {
   NotificationEventStatus,
   NotificationStatus,
   NotificationChannel,
+  NotificationRecipientRole,
   generateNotificationEventId,
   generateNotificationId,
   generateNotificationTemplateId,
@@ -253,6 +254,7 @@ export class NotificationsService {
       eventType: data.eventType,
       channel: data.channel as NotificationChannel,
       locale: data.locale,
+      recipientRole: data.recipientRole,
       titleTemplate: data.titleTemplate,
       bodyTemplate: data.bodyTemplate,
       actionUrlTemplate: data.actionUrlTemplate,
@@ -478,6 +480,7 @@ export class NotificationsService {
       eventId: string;
       eventType: NotificationEventType;
       recipientId: string;
+      recipientRole: NotificationRecipientRole;
       channel: NotificationChannel;
       title: string;
       body: string;
@@ -489,6 +492,7 @@ export class NotificationsService {
       eventId: data.eventId,
       eventType: data.eventType,
       recipientId: data.recipientId,
+      recipientRole: data.recipientRole,
       channel: data.channel,
       title: data.title,
       body: data.body,
@@ -514,6 +518,7 @@ export class NotificationsService {
     eventType: NotificationEventType,
     channel: NotificationChannel,
     locale: string,
+    recipientRole: NotificationRecipientRole,
   ): Promise<NotificationTemplate | undefined> {
     // Try exact locale first
     let template = await this.repository.findTemplate(
@@ -521,6 +526,7 @@ export class NotificationsService {
       eventType,
       channel,
       locale,
+      recipientRole,
     );
 
     // Fall back to Spanish if not found
@@ -530,6 +536,7 @@ export class NotificationsService {
         eventType,
         channel,
         'es',
+        recipientRole,
       );
     }
 

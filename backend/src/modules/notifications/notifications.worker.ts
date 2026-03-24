@@ -16,7 +16,7 @@ import type {
   Notification,
   NotificationChannelConfig,
 } from './notifications.domain';
-import { NotificationChannel } from './notifications.domain';
+import { NotificationChannel, NotificationRecipientRole } from './notifications.domain';
 
 @Injectable()
 export class NotificationsWorker {
@@ -92,9 +92,10 @@ export class NotificationsWorker {
           ctx,
           event,
           recipient.userId,
+          recipient.role,
           locale,
           channelConfig,
-          processor.getTemplateVariables(event.context, recipient.userId),
+          processor.getTemplateVariables(event.context, recipient.userId, recipient.role),
         );
       }
 
@@ -118,6 +119,7 @@ export class NotificationsWorker {
     ctx: Ctx,
     event: NotificationEvent,
     userId: string,
+    role: NotificationRecipientRole,
     locale: string,
     channelConfig: NotificationChannelConfig,
     variables: Record<string, string>,
@@ -132,7 +134,7 @@ export class NotificationsWorker {
     }
 
     for (const channel of channels) {
-      await this.processChannel(ctx, event, userId, channel, locale, variables);
+      await this.processChannel(ctx, event, userId, role, channel, locale, variables);
     }
   }
 
@@ -140,24 +142,24 @@ export class NotificationsWorker {
     ctx: Ctx,
     event: NotificationEvent,
     userId: string,
+    role: NotificationRecipientRole,
     channel: NotificationChannel,
     locale: string,
     variables: Record<string, string>,
   ): Promise<void> {
-    // Render template
-
     const content = await this.templateService.renderContent(
       ctx,
       event.type,
       channel,
       locale,
+      role,
       variables,
     );
 
     if (!content) {
       this.logger.warn(
         ctx,
-        `No template found for ${event.type}/${channel}/${locale}, skipping`,
+        `No template found for ${event.type}/${channel}/${locale}/${role}, skipping`,
       );
       return;
     }
@@ -167,6 +169,7 @@ export class NotificationsWorker {
       eventId: event.id,
       eventType: event.type,
       recipientId: userId,
+      recipientRole: role,
       channel,
       title: content.title,
       body: content.body,

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { InAppChannel } from '../../../../src/modules/notifications/channels/in-app.channel';
 import { REALTIME_BROADCASTER } from '../../../../src/modules/realtime/realtime.module';
 import type { IRealtimeBroadcaster } from '../../../../src/common/realtime';
-import { NotificationEventType } from '../../../../src/modules/notifications/notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../../../../src/modules/notifications/notifications.domain';
 import type { Notification } from '../../../../src/modules/notifications/notifications.domain';
 import type { Ctx } from '../../../../src/common/types/context';
 
@@ -17,6 +17,7 @@ function createNotification(
     eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     recipientId: 'user_1',
     channel: 'IN_APP' as any,
+    recipientRole: NotificationRecipientRole.ADMIN,
     title: 'Payment required',
     body: 'Please complete your payment.',
     actionUrl: '/wallet',

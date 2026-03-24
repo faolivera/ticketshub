@@ -9,6 +9,7 @@ import {
   NotificationEventType,
   NotificationEventStatus,
   NotificationChannel,
+  NotificationRecipientRole,
 } from './notifications.domain';
 
 /**
@@ -196,13 +197,14 @@ export interface INotificationsRepository {
   ): Promise<NotificationTemplate | undefined>;
 
   /**
-   * Find template by event type, channel, and locale
+   * Find template by event type, channel, locale, and recipient role
    */
   findTemplate(
     ctx: Ctx,
     eventType: NotificationEventType,
     channel: NotificationChannel,
     locale: string,
+    recipientRole: NotificationRecipientRole,
   ): Promise<NotificationTemplate | undefined>;
 
   /**

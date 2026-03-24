@@ -2,6 +2,7 @@ import type { Ctx } from '../../../common/types/context';
 import type {
   NotificationEventType,
   NotificationRecipient,
+  NotificationRecipientRole,
 } from '../notifications.domain';
 
 /**
@@ -27,5 +28,6 @@ export interface EventProcessor<TContext = Record<string, unknown>> {
   getTemplateVariables(
     context: TContext,
     recipientId: string,
+    role: NotificationRecipientRole,
   ): Record<string, string>;
 }

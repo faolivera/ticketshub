@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import type { NotificationRecipient } from '../notifications.domain';
-import { NotificationEventType } from '../notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../notifications.domain';
 import type { BuyerPaymentRejectedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
@@ -14,12 +14,13 @@ export class BuyerPaymentRejectedProcessor implements EventProcessor<BuyerPaymen
     context: BuyerPaymentRejectedContext,
   ): Promise<NotificationRecipient[]> {
     // Only the buyer receives this notification
-    return [{ userId: context.buyerId }];
+    return [{ userId: context.buyerId, role: NotificationRecipientRole.BUYER }];
   }
 
   getTemplateVariables(
     context: BuyerPaymentRejectedContext,
     recipientId: string,
+    _role: NotificationRecipientRole,
   ): Record<string, string> {
     void recipientId;
     return {

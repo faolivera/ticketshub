@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import type { NotificationRecipient } from '../notifications.domain';
-import { NotificationEventType } from '../notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../notifications.domain';
 import type { ReviewReceivedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
@@ -14,12 +14,13 @@ export class ReviewReceivedProcessor implements EventProcessor<ReviewReceivedCon
     context: ReviewReceivedContext,
   ): Promise<NotificationRecipient[]> {
     // The user who received the review
-    return [{ userId: context.revieweeId }];
+    return [{ userId: context.revieweeId, role: NotificationRecipientRole.SELLER }];
   }
 
   getTemplateVariables(
     context: ReviewReceivedContext,
     recipientId: string,
+    _role: NotificationRecipientRole,
   ): Record<string, string> {
     void recipientId;
     return {

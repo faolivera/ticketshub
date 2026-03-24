@@ -15,6 +15,7 @@ import {
   NotificationEventStatus,
   NotificationStatus,
   NotificationChannel,
+  NotificationRecipientRole,
 } from '../../../../src/modules/notifications/notifications.domain';
 
 describe('NotificationsService', () => {
@@ -43,6 +44,7 @@ describe('NotificationsService', () => {
     eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     recipientId: 'user_123',
     channel: NotificationChannel.EMAIL,
+    recipientRole: NotificationRecipientRole.ADMIN,
     title: 'Test Notification',
     body: 'Test notification body',
     status: NotificationStatus.PENDING,

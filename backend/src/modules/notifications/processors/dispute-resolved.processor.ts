@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import type { NotificationRecipient } from '../notifications.domain';
-import { NotificationEventType } from '../notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../notifications.domain';
 import type { DisputeResolvedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
@@ -14,12 +14,16 @@ export class DisputeResolvedProcessor implements EventProcessor<DisputeResolvedC
     context: DisputeResolvedContext,
   ): Promise<NotificationRecipient[]> {
     // Both buyer and seller receive the resolution notification
-    return [{ userId: context.buyerId }, { userId: context.sellerId }];
+    return [
+      { userId: context.buyerId, role: NotificationRecipientRole.BUYER },
+      { userId: context.sellerId, role: NotificationRecipientRole.SELLER },
+    ];
   }
 
   getTemplateVariables(
     context: DisputeResolvedContext,
     recipientId: string,
+    _role: NotificationRecipientRole,
   ): Record<string, string> {
     void recipientId;
     return {

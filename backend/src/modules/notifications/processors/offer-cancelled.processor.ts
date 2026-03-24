@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import type { NotificationRecipient } from '../notifications.domain';
-import { NotificationEventType } from '../notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../notifications.domain';
 import type { OfferCancelledContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
@@ -13,12 +13,13 @@ export class OfferCancelledProcessor implements EventProcessor<OfferCancelledCon
     _ctx: Ctx,
     context: OfferCancelledContext,
   ): Promise<NotificationRecipient[]> {
-    return [{ userId: context.buyerId }];
+    return [{ userId: context.buyerId, role: NotificationRecipientRole.BUYER }];
   }
 
   getTemplateVariables(
     context: OfferCancelledContext,
     recipientId: string,
+    _role: NotificationRecipientRole,
   ): Record<string, string> {
     void recipientId;
     return {

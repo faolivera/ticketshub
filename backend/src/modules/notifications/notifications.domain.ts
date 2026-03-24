@@ -84,6 +84,15 @@ export enum NotificationPriority {
   URGENT = 'URGENT',
 }
 
+/**
+ * Role of the notification recipient
+ */
+export enum NotificationRecipientRole {
+  BUYER = 'BUYER',
+  SELLER = 'SELLER',
+  ADMIN = 'ADMIN',
+}
+
 // ============================================================================
 // ENTITIES
 // ============================================================================
@@ -112,6 +121,7 @@ export interface Notification {
   eventType: NotificationEventType;
   recipientId: string;
   channel: NotificationChannel;
+  recipientRole: NotificationRecipientRole;
 
   // Content (rendered from template)
   title: string;
@@ -149,6 +159,7 @@ export interface NotificationTemplate {
   eventType: NotificationEventType;
   channel: NotificationChannel;
   locale: string;
+  recipientRole: NotificationRecipientRole;
 
   // Templates with {{variable}} placeholders
   titleTemplate: string;
@@ -185,6 +196,7 @@ export interface NotificationChannelConfig {
  */
 export interface NotificationRecipient {
   userId: string;
+  role: NotificationRecipientRole;
 }
 
 /**

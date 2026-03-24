@@ -9,6 +9,7 @@ import {
   NotificationChannel as PrismaNotificationChannel,
   NotificationStatus as PrismaNotificationStatus,
   NotificationPriority as PrismaNotificationPriority,
+  NotificationRecipientRole as PrismaNotificationRecipientRole,
 } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { BaseRepository } from '../../common/repositories/base.repository';
@@ -26,6 +27,7 @@ import {
   NotificationChannel,
   NotificationEventType,
   NotificationPriority,
+  NotificationRecipientRole,
   NOTIFICATION_RETENTION_DAYS,
 } from './notifications.domain';
 import type { INotificationsRepository } from './notifications.repository.interface';
@@ -190,6 +192,7 @@ export class NotificationsRepository
         eventType: this.mapEventTypeToDb(notification.eventType),
         recipientId: notification.recipientId,
         channel: this.mapChannelToDb(notification.channel),
+        recipientRole: this.mapRecipientRoleToDb(notification.recipientRole),
         title: notification.title,
         body: notification.body,
         actionUrl: notification.actionUrl,
@@ -531,6 +534,7 @@ export class NotificationsRepository
         eventType: this.mapEventTypeToDb(template.eventType),
         channel: this.mapChannelToDb(template.channel),
         locale: template.locale,
+        recipientRole: this.mapRecipientRoleToDb(template.recipientRole),
         titleTemplate: template.titleTemplate,
         bodyTemplate: template.bodyTemplate,
         actionUrlTemplate: template.actionUrlTemplate,
@@ -560,14 +564,16 @@ export class NotificationsRepository
     eventType: NotificationEventType,
     channel: NotificationChannel,
     locale: string,
+    recipientRole: NotificationRecipientRole,
   ): Promise<NotificationTemplate | undefined> {
-    this.logger.debug(ctx, 'findTemplate', { eventType, channel, locale });
+    this.logger.debug(ctx, 'findTemplate', { eventType, channel, locale, recipientRole });
     const client = this.getClient(ctx);
     const template = await client.notificationTemplate.findFirst({
       where: {
         eventType: this.mapEventTypeToDb(eventType),
         channel: this.mapChannelToDb(channel),
         locale,
+        recipientRole: this.mapRecipientRoleToDb(recipientRole),
         isActive: true,
       },
     });
@@ -723,6 +729,12 @@ export class NotificationsRepository
     return priority as PrismaNotificationPriority;
   }
 
+  private mapRecipientRoleToDb(
+    role: NotificationRecipientRole,
+  ): PrismaNotificationRecipientRole {
+    return role as PrismaNotificationRecipientRole;
+  }
+
   // ==========================================================================
   // MAPPERS - Prisma to Domain
   // ==========================================================================
@@ -757,6 +769,12 @@ export class NotificationsRepository
     return priority as NotificationPriority;
   }
 
+  private mapRecipientRoleFromDb(
+    role: PrismaNotificationRecipientRole,
+  ): NotificationRecipientRole {
+    return role as NotificationRecipientRole;
+  }
+
   private mapToNotificationEvent(
     prisma: PrismaNotificationEvent,
   ): NotificationEvent {
@@ -779,6 +797,7 @@ export class NotificationsRepository
       eventType: this.mapEventTypeFromDb(prisma.eventType),
       recipientId: prisma.recipientId,
       channel: this.mapChannelFromDb(prisma.channel),
+      recipientRole: this.mapRecipientRoleFromDb(prisma.recipientRole),
       title: prisma.title,
       body: prisma.body,
       actionUrl: prisma.actionUrl ?? undefined,
@@ -804,6 +823,7 @@ export class NotificationsRepository
       eventType: this.mapEventTypeFromDb(prisma.eventType),
       channel: this.mapChannelFromDb(prisma.channel),
       locale: prisma.locale,
+      recipientRole: this.mapRecipientRoleFromDb(prisma.recipientRole),
       titleTemplate: prisma.titleTemplate,
       bodyTemplate: prisma.bodyTemplate,
       actionUrlTemplate: prisma.actionUrlTemplate ?? undefined,

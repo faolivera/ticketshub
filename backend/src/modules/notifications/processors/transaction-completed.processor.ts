@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import { formatMoney } from '../../../common/format-money';
 import type { NotificationRecipient } from '../notifications.domain';
-import { NotificationEventType } from '../notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../notifications.domain';
 import type { TransactionCompletedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
@@ -15,12 +15,13 @@ export class TransactionCompletedProcessor implements EventProcessor<Transaction
     context: TransactionCompletedContext,
   ): Promise<NotificationRecipient[]> {
     // Only the seller receives this notification (funds released)
-    return [{ userId: context.sellerId }];
+    return [{ userId: context.sellerId, role: NotificationRecipientRole.SELLER }];
   }
 
   getTemplateVariables(
     context: TransactionCompletedContext,
     recipientId: string,
+    _role: NotificationRecipientRole,
   ): Record<string, string> {
     void recipientId;
     return {

@@ -13,6 +13,7 @@ import type {
 import {
   NotificationEventType,
   NotificationChannel,
+  NotificationRecipientRole,
 } from '../notifications.domain';
 
 @Injectable()
@@ -35,6 +36,7 @@ export class TemplateService {
     eventType: NotificationEventType,
     channel: NotificationChannel,
     locale: string,
+    recipientRole: NotificationRecipientRole,
     variables: Record<string, string>,
   ): Promise<ChannelContent | null> {
     // Try to find template for the requested locale
@@ -43,6 +45,7 @@ export class TemplateService {
       eventType,
       channel,
       locale,
+      recipientRole,
     );
 
     // Fall back to default locale if not found
@@ -56,13 +59,14 @@ export class TemplateService {
         eventType,
         channel,
         this.defaultLocale,
+        recipientRole,
       );
     }
 
     if (!template) {
       this.logger.warn(
         ctx,
-        `No template found for ${eventType}/${channel}/${locale}`,
+        `No template found for ${eventType}/${channel}/${locale}/${recipientRole}`,
       );
       return null;
     }
@@ -94,8 +98,9 @@ export class TemplateService {
     eventType: NotificationEventType,
     channel: NotificationChannel,
     locale: string,
+    recipientRole: NotificationRecipientRole,
   ): Promise<NotificationTemplate | undefined> {
-    return await this.repository.findTemplate(ctx, eventType, channel, locale);
+    return await this.repository.findTemplate(ctx, eventType, channel, locale, recipientRole);
   }
 
   /**

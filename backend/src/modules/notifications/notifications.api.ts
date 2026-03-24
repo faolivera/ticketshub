@@ -9,6 +9,7 @@ import type {
   NotificationChannelConfig,
   NotificationEventStatus,
   NotificationPriority,
+  NotificationRecipientRole,
 } from './notifications.domain';
 import { NotificationEventType } from './notifications.domain';
 
@@ -106,6 +107,7 @@ export interface CreateTemplateRequest {
   eventType: NotificationEventType;
   channel: string;
   locale: string;
+  recipientRole: NotificationRecipientRole;
   titleTemplate: string;
   bodyTemplate: string;
   actionUrlTemplate?: string;

@@ -281,6 +281,12 @@ enum NotificationPriority {
   URGENT
 }
 
+enum NotificationRecipientRole {
+  BUYER
+  SELLER
+  ADMIN
+}
+
 // =============================================================================
 // MODELS
 // =============================================================================
@@ -946,6 +952,7 @@ model Notification {
   eventType     NotificationEventType
   recipientId   String
   channel       NotificationChannel
+  recipientRole NotificationRecipientRole
   title         String
   body          String
   actionUrl     String?
@@ -973,19 +980,20 @@ model Notification {
 }
 
 model NotificationTemplate {
-  id                String                @id @default(uuid())
+  id                String                    @id @default(uuid())
   eventType         NotificationEventType
   channel           NotificationChannel
   locale            String
+  recipientRole     NotificationRecipientRole
   titleTemplate     String
   bodyTemplate      String
   actionUrlTemplate String?
-  isActive          Boolean               @default(true)
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  isActive          Boolean                   @default(true)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
   updatedBy         String?
 
-  @@unique([eventType, channel, locale])
+  @@unique([eventType, channel, locale, recipientRole])
   @@map("notification_templates")
 }
 

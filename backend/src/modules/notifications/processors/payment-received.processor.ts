@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import { formatMoney } from '../../../common/format-money';
 import type { NotificationRecipient } from '../notifications.domain';
-import { NotificationEventType } from '../notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../notifications.domain';
 import type { PaymentReceivedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 
@@ -14,30 +14,33 @@ export class PaymentReceivedProcessor implements EventProcessor<PaymentReceivedC
     _ctx: Ctx,
     context: PaymentReceivedContext,
   ): Promise<NotificationRecipient[]> {
-    return [{ userId: context.buyerId }, { userId: context.sellerId }];
+    return [
+      { userId: context.buyerId, role: NotificationRecipientRole.BUYER },
+      { userId: context.sellerId, role: NotificationRecipientRole.SELLER },
+    ];
   }
 
   getTemplateVariables(
     context: PaymentReceivedContext,
     recipientId: string,
+    role: NotificationRecipientRole,
   ): Record<string, string> {
     const amountFormatted = formatMoney(context.amount, context.currency);
 
-    if (recipientId === context.buyerId) {
+    if (role === NotificationRecipientRole.BUYER) {
       return {
-        title: 'Pago confirmado',
-        body: `Tu pago por las entradas de "${context.eventName}" fue confirmado. ${context.sellerName} te enviará las entradas pronto.`,
-        transactionId: context.transactionId,
+        eventName: context.eventName,
         amountFormatted,
+        transactionId: context.transactionId,
       };
     }
 
-    const entradas = context.ticketCount === 1 ? '1 entrada' : `${context.ticketCount} entradas`;
+    const ticketCount = String(context.ticketCount);
     return {
-      title: 'Nuevo pago confirmado',
-      body: `Recibimos el pago por ${entradas} para "${context.eventName}". ¡Transferílas lo antes posible para que el comprador pueda disfrutar del evento!`,
-      transactionId: context.transactionId,
+      eventName: context.eventName,
+      ticketCount,
       amountFormatted,
+      transactionId: context.transactionId,
     };
   }
 }

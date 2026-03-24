@@ -7,6 +7,7 @@ import {
   NotificationChannel,
   NotificationStatus,
   NotificationPriority,
+  NotificationRecipientRole,
   generateNotificationEventId,
   generateNotificationId,
   generateNotificationTemplateId,
@@ -72,6 +73,7 @@ describe('NotificationsRepository (Integration)', () => {
     eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     recipientId: testUserId,
     channel: NotificationChannel.IN_APP,
+    recipientRole: NotificationRecipientRole.ADMIN,
     title: 'Test Notification',
     body: 'This is a test notification body',
     status: NotificationStatus.PENDING,
@@ -89,6 +91,7 @@ describe('NotificationsRepository (Integration)', () => {
     eventType: NotificationEventType.BUYER_PAYMENT_SUBMITTED,
     channel: NotificationChannel.IN_APP,
     locale: 'en',
+    recipientRole: NotificationRecipientRole.ADMIN,
     titleTemplate: 'Payment Required for {{transactionId}}',
     bodyTemplate:
       'Please complete your payment for transaction {{transactionId}}',
@@ -1200,6 +1203,7 @@ describe('NotificationsRepository (Integration)', () => {
         NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.IN_APP,
         'en',
+        NotificationRecipientRole.ADMIN,
       );
       expect(template).toBeUndefined();
     });
@@ -1212,6 +1216,7 @@ describe('NotificationsRepository (Integration)', () => {
         NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.IN_APP,
         'en',
+        NotificationRecipientRole.ADMIN,
       );
 
       expect(found).toBeDefined();
@@ -1231,6 +1236,7 @@ describe('NotificationsRepository (Integration)', () => {
         NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.IN_APP,
         'en',
+        NotificationRecipientRole.ADMIN,
       );
 
       expect(found).toBeUndefined();
@@ -1267,6 +1273,7 @@ describe('NotificationsRepository (Integration)', () => {
         NotificationEventType.BUYER_PAYMENT_SUBMITTED,
         NotificationChannel.EMAIL,
         'en',
+        NotificationRecipientRole.ADMIN,
       );
 
       expect(found?.eventType).toBe(NotificationEventType.BUYER_PAYMENT_SUBMITTED);

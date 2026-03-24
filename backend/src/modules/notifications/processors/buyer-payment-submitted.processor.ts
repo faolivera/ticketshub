@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Ctx } from '../../../common/types/context';
 import { formatMoney } from '../../../common/format-money';
 import type { NotificationRecipient } from '../notifications.domain';
-import { NotificationEventType } from '../notifications.domain';
+import { NotificationEventType, NotificationRecipientRole } from '../notifications.domain';
 import type { BuyerPaymentSubmittedContext } from '../notifications.contexts';
 import type { EventProcessor } from './processor.interface';
 import { UsersService } from '../../users/users.service';
@@ -20,12 +20,13 @@ export class BuyerPaymentSubmittedProcessor implements EventProcessor<BuyerPayme
     void context;
     // All admins receive this notification (payment confirmation to review)
     const adminIds = await this.usersService.getAdminUserIds(ctx);
-    return adminIds.map((userId) => ({ userId }));
+    return adminIds.map((userId) => ({ userId, role: NotificationRecipientRole.ADMIN }));
   }
 
   getTemplateVariables(
     context: BuyerPaymentSubmittedContext,
     recipientId: string,
+    _role: NotificationRecipientRole,
   ): Record<string, string> {
     void recipientId;
     return {
