@@ -65,6 +65,13 @@ export class MercadoPagoProvider implements GatewayProvider {
     return cents / 100;
   }
 
+  private resolveExternalUrl(url: string): string {
+    if (!url || url.includes('localhost') || url.includes('127.0.0.1')) {
+      return 'https://ticketshub-latest.onrender.com';
+    }
+    return url;
+  }
+
   private async getMerchantOrder(
     ctx: Ctx,
     preferenceId: string,
@@ -93,8 +100,8 @@ export class MercadoPagoProvider implements GatewayProvider {
     paymentMethod: PaymentMethodOption,
   ): Promise<GatewayProviderOrder> {
     const accessToken = this.getAccessToken(ctx, paymentMethod);
-    const publicUrl = this.configService.get<string>('app.publicUrl') ?? '';
-    const backendUrl = this.configService.get<string>('app.backendUrl') ?? publicUrl;
+    const publicUrl = this.resolveExternalUrl(this.configService.get<string>('app.publicUrl') ?? '');
+    const backendUrl = this.resolveExternalUrl(this.configService.get<string>('app.backendUrl') ?? publicUrl);
     const transactionUrl = `${publicUrl}/transaction/${transactionId}`;
 
     const body = {

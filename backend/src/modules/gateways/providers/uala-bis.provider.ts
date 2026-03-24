@@ -41,6 +41,13 @@ export class UalaBisProvider {
         };
   }
 
+  private resolveExternalUrl(url: string): string {
+    if (!url || url.includes('localhost') || url.includes('127.0.0.1')) {
+      return 'https://ticketshub-latest.onrender.com';
+    }
+    return url;
+  }
+
   private isTokenValid(entry: TokenCacheEntry): boolean {
     return entry.expiresAt.getTime() - Date.now() > TOKEN_REFRESH_MARGIN_MS;
   }
@@ -123,10 +130,12 @@ export class UalaBisProvider {
   ): Promise<GatewayProviderOrder> {
     const token = await this.getToken(ctx, paymentMethod);
     const { checkout } = this.getBaseUrls();
-    const frontendBaseUrl =
-      this.configService.get<string>('app.publicUrl') ?? '';
-    const backendBaseUrl =
-      this.configService.get<string>('app.backendUrl') ?? frontendBaseUrl;
+    const frontendBaseUrl = this.resolveExternalUrl(
+      this.configService.get<string>('app.publicUrl') ?? '',
+    );
+    const backendBaseUrl = this.resolveExternalUrl(
+      this.configService.get<string>('app.backendUrl') ?? frontendBaseUrl,
+    );
 
     const body = {
       amount: this.centsToDecimalString(amount.amount),
@@ -199,8 +208,9 @@ export class UalaBisProvider {
   ): Promise<void> {
     const token = await this.getToken(ctx, paymentMethod);
     const { checkout } = this.getBaseUrls();
-    const backendBaseUrl =
-      this.configService.get<string>('app.backendUrl') ?? '';
+    const backendBaseUrl = this.resolveExternalUrl(
+      this.configService.get<string>('app.backendUrl') ?? '',
+    );
 
     const response = await fetch(
       `${checkout}/orders/${providerOrderId}/refund`,
