@@ -634,6 +634,7 @@ describe('AdminService', () => {
       updatedAt: new Date(),
       isPopular: false,
       highlight: false,
+      artists: [],
     };
 
     const mockUser: User = {
@@ -2052,6 +2053,7 @@ describe('AdminService', () => {
       updatedAt: new Date(),
       isPopular: false,
       highlight: false,
+      artists: [],
     };
 
     it('should create event, dates, and sections and return results', async () => {

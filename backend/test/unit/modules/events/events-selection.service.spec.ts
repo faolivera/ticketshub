@@ -40,6 +40,7 @@ describe('EventsService - getEventsForSelection', () => {
       updatedAt: new Date(),
       isPopular: false,
       highlight: false,
+      artists: [],
       ...overrides,
     };
   };

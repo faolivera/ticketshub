@@ -24,6 +24,11 @@ export interface CreateEventRequest {
   importInfo?: { sourceCode: string; sourceId: string };
   /** Admin-only: custom slug for /event/{slug}. If omitted, slug is generated from name, venue, and event id. */
   slug?: string;
+  ticketApp?: string;
+  transferable?: boolean;
+  artists?: string[];
+  /** Admin-only: mark the event as popular at creation time. Defaults to false. */
+  isPopular?: boolean;
 }
 
 /**

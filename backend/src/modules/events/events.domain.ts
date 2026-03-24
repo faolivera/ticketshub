@@ -77,6 +77,12 @@ export interface Event {
   isPopular: boolean;
   /** Admin-set: featured event (shown in landing hero). */
   highlight: boolean;
+  /** Ticket app name (e.g. "entradas", "movistararena"). */
+  ticketApp?: string;
+  /** Whether tickets are transferable via the ticket app. */
+  transferable?: boolean;
+  /** Artist names. Always an array; may be empty. */
+  artists: string[];
 }
 
 /**

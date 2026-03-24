@@ -64,6 +64,7 @@ describe('EventsService', () => {
     updatedAt: new Date(),
     isPopular: false,
     highlight: false,
+    artists: [],
   };
 
   const mockPendingEventDate: EventDate = {
@@ -199,6 +200,7 @@ describe('EventsService', () => {
       updatedAt: new Date(),
       isPopular: false,
       highlight: false,
+    artists: [],
     };
 
     const mockApprovedSection: EventSection = {
@@ -540,6 +542,7 @@ describe('EventsService', () => {
       updatedAt: new Date(),
       isPopular: false,
       highlight: false,
+    artists: [],
     };
 
     const mockApprovedEventDate: EventDate = {
@@ -963,6 +966,7 @@ describe('EventsService', () => {
       updatedAt: new Date(),
       isPopular: false,
       highlight: false,
+    artists: [],
     };
 
     const mockSquareImageBuffer = Buffer.from('mock-square-image-data');
@@ -1103,6 +1107,7 @@ describe('EventsService', () => {
       updatedAt: new Date(),
       isPopular: false,
       highlight: false,
+    artists: [],
     };
 
     it('should throw NotFoundException when event does not exist', async () => {
@@ -1225,6 +1230,7 @@ describe('EventsService', () => {
         updatedAt: new Date(),
         isPopular: false,
         highlight: false,
+    artists: [],
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithoutBanners);
 
@@ -1266,6 +1272,7 @@ describe('EventsService', () => {
         updatedAt: new Date(),
         isPopular: false,
         highlight: false,
+    artists: [],
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithBanner);
       bannerStorage.getPublicUrl.mockReturnValue(
@@ -1304,6 +1311,7 @@ describe('EventsService', () => {
         updatedAt: new Date(),
         isPopular: false,
         highlight: false,
+    artists: [],
       };
       eventsRepository.findEventById.mockResolvedValue(eventWithoutBanner);
 
@@ -1344,6 +1352,7 @@ describe('EventsService', () => {
         updatedAt: new Date(),
         isPopular: false,
         highlight: false,
+    artists: [],
       };
       const approvedEvent = {
         ...eventWithBanner,
@@ -1385,6 +1394,7 @@ describe('EventsService', () => {
         updatedAt: new Date(),
         isPopular: false,
         highlight: false,
+    artists: [],
       };
       const rejectedEvent = {
         ...eventWithoutBanner,
