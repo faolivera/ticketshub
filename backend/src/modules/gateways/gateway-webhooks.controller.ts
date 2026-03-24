@@ -39,7 +39,10 @@ export class GatewayWebhooksController {
   }
 
   /**
-   * MercadoPago webhook (placeholder — not yet implemented).
+   * MercadoPago webhook.
+   * MP sends: { type: "payment", data: { id: "paymentId" }, ... }
+   * We only act on type=payment; other types (e.g. "test") are acknowledged and ignored.
+   * No signature validation — MP webhook secret not configured.
    */
   @Post('mercadopago')
   @HttpCode(HttpStatus.OK)
@@ -47,7 +50,25 @@ export class GatewayWebhooksController {
     @Context() ctx: Ctx,
     @Body() body: Record<string, unknown>,
   ): Promise<{ received: boolean }> {
-    this.logger.log(ctx, 'MercadoPago webhook received (not yet implemented)', body);
+    const type = body['type'] as string | undefined;
+    const dataId = (body['data'] as Record<string, unknown> | undefined)?.['id'] as string | undefined;
+
+    if (type !== 'payment') {
+      this.logger.log(ctx, `MP webhook received with type=${type ?? 'unknown'}, ignoring`);
+      return { received: true };
+    }
+
+    if (!dataId) {
+      this.logger.error(ctx, 'MP webhook missing data.id', body);
+      return { received: true };
+    }
+
+    this.logger.log(ctx, `MP webhook received for payment ${dataId}`);
+
+    await this.gatewayPaymentsService.handleMercadoPagoWebhook(ctx, dataId).catch((err) => {
+      this.logger.error(ctx, `MP webhook processing failed for payment ${dataId}`, err);
+    });
+
     return { received: true };
   }
 }
