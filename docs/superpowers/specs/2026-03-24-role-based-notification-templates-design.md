@@ -229,9 +229,10 @@ Two sections:
 **2. Templates by role**
 
 One section per role that receives this event. Each role section shows:
-- Role badge + completion status ("Complete" / "N missing")
+- Role badge + completion status ("Complete" / "Missing ES template")
 - 2×2 grid: columns = In-App / Email, cells = ES / EN
-- Each cell: template preview (title truncated) + "Edit →" link, or dashed border + "+ Create →" if missing
+- **ES cell:** required — shows template preview + "Edit →", or dashed red border + "+ Create →" if missing
+- **EN cell:** optional — shows template preview + "Edit →" if it exists, or a neutral "uses ES fallback" indicator if absent. No error state.
 - `isActive` toggle visible inline on each cell
 
 Clicking "Edit →" or "+ Create →" opens the existing template dialog, pre-populated with `eventType`, `channel`, `locale`, and `recipientRole`. Available variables shown in the dialog are filtered to the role's specific variable set from `TEMPLATE_VARIABLES`.
@@ -288,4 +289,5 @@ The seeder's `syncTemplates()` method (called at `onModuleInit`) must also be up
 - Per-user notification preferences (opt-in/opt-out)
 - Template versioning / history
 - Additional locales beyond ES/EN
+- Mandatory EN templates — ES is the only required locale; EN is optional with automatic fallback to ES
 - Bulk admin broadcast notifications
