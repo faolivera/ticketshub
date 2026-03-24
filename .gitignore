@@ -34,3 +34,4 @@ backend/dumps/
 # Infra (AWS policies, etc.)
 infra/
 
+.superpowers/
