@@ -12,6 +12,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { EventScoringModule } from '../event-scoring/event-scoring.module';
 import { CacheModule } from '../../common/cache';
 import { ConfigModule } from '../config/config.module';
+import { AddressModule } from '../address/address.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ConfigModule } from '../config/config.module';
     forwardRef(() => EventScoringModule),
     CacheModule,
     ConfigModule,
+    AddressModule,
   ],
   controllers: [EventsController],
   providers: [

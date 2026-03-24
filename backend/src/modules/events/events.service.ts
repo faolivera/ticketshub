@@ -65,6 +65,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { EventScoringService } from '../event-scoring/event-scoring.service';
 import { PlatformConfigService } from '../config/config.service';
+import { AddressService } from '../address/address.service';
 
 @Injectable()
 export class EventsService {
@@ -89,6 +90,8 @@ export class EventsService {
     private readonly eventScoringService: EventScoringService,
     @Inject(PlatformConfigService)
     private readonly platformConfigService: PlatformConfigService,
+    @Inject(AddressService)
+    private readonly addressService: AddressService,
   ) {}
 
   /**
@@ -185,7 +188,7 @@ export class EventsService {
       name: data.name,
       category: data.category,
       venue: data.venue,
-      location: data.location,
+      location: this.addressService.normalizeCity(data.location),
       imageIds: data.imageIds || [],
       importInfo: data.importInfo,
       status: isAdmin ? EventStatus.Approved : EventStatus.Pending,
