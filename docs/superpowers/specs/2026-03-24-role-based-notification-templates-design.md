@@ -1,7 +1,7 @@
 # Role-Based Notification Templates
 
 **Date:** 2026-03-24
-**Status:** Approved
+**Status:** Approved (rev 2)
 
 ## Problem
 
@@ -77,7 +77,7 @@ interface NotificationRecipient {
 }
 ```
 
-### Processors (all 27)
+### Processors (all 21)
 
 Each processor already knows which role each userId plays. They now declare it explicitly:
 
@@ -97,6 +97,18 @@ const adminIds = await this.usersService.getAdminUserIds(ctx);
 return adminIds.map(userId => ({ userId, role: NotificationRecipientRole.ADMIN }));
 ```
 
+**Special case — `DISPUTE_OPENED`:**
+`counterparty` is a runtime-resolved role: either buyer or seller depending on who opened the dispute. The processor resolves it at runtime:
+```typescript
+async getRecipients(_ctx, context): Promise<NotificationRecipient[]> {
+  const role = context.openedByRole === 'buyer'
+    ? NotificationRecipientRole.SELLER
+    : NotificationRecipientRole.BUYER;
+  return [{ userId: context.counterpartyId, role }];
+}
+```
+Both a `BUYER` template and a `SELLER` template must exist for `DISPUTE_OPENED`. The processor returns whichever applies at runtime. Both templates are seeded with real content (not left as inactive placeholders) since both are always needed.
+
 ### `getTemplateVariables` signature
 
 The current pattern of `if (recipientId === context.buyerId)` to infer role is replaced with an explicit role parameter:
@@ -113,6 +125,21 @@ getTemplateVariables(context: TContext, recipientId: string, role: NotificationR
 
 Adds `recipientRole` as a required parameter. The repository `findTemplate()` query adds it to the lookup: `(eventType, channel, locale, recipientRole)`.
 
+The existing locale fallback behavior is **preserved**: if a template for the user's locale is not found, the service falls back to `es`. This applies per `(eventType, channel, recipientRole)` tuple — the role dimension does not affect locale fallback logic.
+
+### `INotificationsRepository.findTemplate()` signature
+
+Updated to include `recipientRole`:
+```typescript
+// Before
+findTemplate(ctx, eventType, channel, locale): Promise<NotificationTemplate | undefined>
+
+// After
+findTemplate(ctx, eventType, channel, locale, recipientRole): Promise<NotificationTemplate | undefined>
+```
+
+Both the interface and implementation must be updated.
+
 ### Worker
 
 When processing each recipient:
@@ -126,7 +153,20 @@ When processing each recipient:
 - `GET /api/admin/notifications/templates` — now returns templates with `recipientRole` field
 - `POST /api/admin/notifications/templates` — requires `recipientRole` in body
 - `PUT /api/admin/notifications/templates/:id` — unchanged (role is immutable after creation)
-- New: `GET /api/admin/notifications/events/:eventType` — returns channel config + all templates for that event type, grouped by role. Used by the detail page.
+- `POST /api/admin/notifications/templates` — requires `recipientRole` in body. **No server-side validation** of whether the role is valid for that event type (out of scope). Orphaned templates created for invalid role+event combinations are harmless — no processor will ever look them up, so they are never sent. They may appear in the detail page UI but will be labeled as unexpected and filtered from the overview status count.
+- New: `GET /api/admin/notifications/events/:eventType` — returns channel config + all templates for that event type, grouped by role. Used by the detail page. Response type: `GetNotificationEventDetailResponse`:
+  ```typescript
+  interface GetNotificationEventDetailResponse {
+    eventType: NotificationEventType;
+    channelConfig: NotificationChannelConfig;
+    // Backend guarantees an entry for every role that receives this event type.
+    // The frontend may treat all role keys as non-optional after loading.
+    templatesByRole: Partial<Record<NotificationRecipientRole, {
+      role: NotificationRecipientRole;
+      templates: NotificationTemplate[]; // all channels × locales for this role
+    }>>;
+  }
+  ```
 
 ---
 
@@ -149,7 +189,24 @@ export const TEMPLATE_VARIABLES: Record<
 >
 ```
 
-`EVENT_TYPE_RECIPIENTS` is updated to remove `counterparty`, replacing it with the concrete role(s) per event.
+**`TEMPLATE_VARIABLES` for multi-role events** (previously using the `{{title}}`/`{{body}}` bypass — now replaced with real per-role variable sets):
+
+| Event | Role | Variables |
+|-------|------|-----------|
+| `PAYMENT_RECEIVED` | BUYER | `eventName`, `amountFormatted`, `transactionId` |
+| `PAYMENT_RECEIVED` | SELLER | `eventName`, `ticketCount`, `amountFormatted`, `transactionId` |
+| `TRANSACTION_CANCELLED` | BUYER | `eventName`, `cancelledBy`, `reason`, `transactionId` |
+| `TRANSACTION_CANCELLED` | SELLER | `eventName`, `cancelledBy`, `reason`, `transactionId` |
+| `DISPUTE_OPENED` | BUYER | `eventName`, `reason`, `disputeId`, `transactionId` |
+| `DISPUTE_OPENED` | SELLER | `eventName`, `reason`, `disputeId`, `transactionId` |
+| `DISPUTE_RESOLVED` | BUYER | `eventName`, `resolution`, `resolvedInFavorOf`, `disputeId`, `transactionId` |
+| `DISPUTE_RESOLVED` | SELLER | `eventName`, `resolution`, `resolvedInFavorOf`, `disputeId`, `transactionId` |
+| `OFFER_EXPIRED` | BUYER | `offerId`, `eventName`, `expiredReason` |
+| `OFFER_EXPIRED` | SELLER | `offerId`, `eventName`, `expiredReason` |
+
+Single-role events retain their existing variable sets, now nested under the appropriate role key.
+
+`EVENT_TYPE_RECIPIENTS` is updated to remove `counterparty`, replacing it with the concrete role(s) per event. `DISPUTE_OPENED` maps to `['buyer', 'seller']` (both templates exist, one is used at runtime).
 
 ### Routing
 
@@ -179,6 +236,8 @@ One section per role that receives this event. Each role section shows:
 
 Clicking "Edit →" or "+ Create →" opens the existing template dialog, pre-populated with `eventType`, `channel`, `locale`, and `recipientRole`. Available variables shown in the dialog are filtered to the role's specific variable set from `TEMPLATE_VARIABLES`.
 
+**Template save validation:** `titleTemplate` and `bodyTemplate` must be non-empty before saving. The `isActive` toggle in the dialog is disabled (and forced to `false`) when either field is empty, preventing blank templates from being enabled.
+
 ---
 
 ## Section 4 — Migration
@@ -191,18 +250,36 @@ Only `prisma migrate deploy`. The migration SQL file contains both schema change
 
 **Single-role events** — `UPDATE` existing templates setting `recipient_role` to the known role.
 
-**Multi-role events** — assign the existing template to the first role via `UPDATE`. `INSERT` placeholder templates for remaining roles with `is_active = false` and empty content. The admin sees these as "missing" in the detail page and fills them in before enabling.
+**Multi-role events** — assign the existing template to the first role via `UPDATE`. `INSERT` placeholder templates for remaining roles with `is_active = false` and empty content. The admin sees these as "N missing" in the detail page and completes them before enabling.
 
-Multi-role events requiring manual completion post-deploy:
-- `PAYMENT_RECEIVED` (buyer + seller)
-- `TRANSACTION_CANCELLED` (buyer + seller)
-- `DISPUTE_OPENED` (buyer or seller as counterparty — split into two roles)
-- `DISPUTE_RESOLVED` (buyer + seller)
-- `OFFER_EXPIRED` (buyer + seller)
+**`DISPUTE_OPENED`** — the existing template is assigned to `SELLER` (the more common counterparty). A `BUYER` placeholder is inserted as `is_active = false`. Both need real authored content before going live.
+
+**`OFFER_EXPIRED`** — the existing template is assigned to `BUYER`. A `SELLER` placeholder is inserted as `is_active = false`.
+
+The `OFFER_EXPIRED` processor has conditional recipient logic: when `expiredReason === 'buyer_no_purchase'` it returns both buyer and seller; when `expiredReason === 'seller_no_response'` it returns only buyer. The processor must be updated to return role-tagged recipients:
+```typescript
+if (context.expiredReason === 'buyer_no_purchase') {
+  return [
+    { userId: context.buyerId, role: NotificationRecipientRole.BUYER },
+    { userId: context.sellerId, role: NotificationRecipientRole.SELLER },
+  ];
+}
+return [{ userId: context.buyerId, role: NotificationRecipientRole.BUYER }];
+```
+When `SELLER` is returned but the SELLER template is inactive, `TemplateService.renderContent()` returns `null` and the worker skips that channel with a warning log. This is acceptable — the seller was not notified for `OFFER_EXPIRED` before this change either. Once the admin authors the SELLER template, activating it will enable seller notifications for the `buyer_no_purchase` case.
+
+Multi-role events requiring manual template completion post-deploy:
+- `PAYMENT_RECEIVED` — new `SELLER` template needed (existing → `BUYER`)
+- `TRANSACTION_CANCELLED` — new `SELLER` template needed (existing → `BUYER`)
+- `DISPUTE_OPENED` — new `BUYER` template needed (existing → `SELLER`)
+- `DISPUTE_RESOLVED` — new `SELLER` template needed (existing → `BUYER`)
+- `OFFER_EXPIRED` — new `SELLER` template needed (existing → `BUYER`)
 
 ### Seeds
 
 `notifications.seeds.ts` is updated to seed all templates with `recipientRole` explicitly set. This ensures fresh environments (dev, staging) work correctly without relying on the backfill SQL.
+
+The seeder's `syncTemplates()` method (called at `onModuleInit`) must also be updated to include `recipientRole` in its `findTemplate()` lookup call. Without this, it will attempt to create duplicate templates or crash on the new unique constraint at app startup.
 
 ---
 
