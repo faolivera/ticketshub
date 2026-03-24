@@ -153,6 +153,29 @@ export class GatewayPaymentsService {
     return processed;
   }
 
+  // ==================== handleMercadoPagoWebhook ====================
+
+  /**
+   * Process a MercadoPago webhook notification.
+   * MP sends a paymentId — we fetch the payment to get the preferenceId,
+   * then hand off to the standard handleOrderUpdate flow.
+   * Must be called OUTSIDE a DB transaction (makes a network call).
+   */
+  async handleMercadoPagoWebhook(ctx: Ctx, paymentId: string): Promise<void> {
+    const enabledMethods = await this.paymentMethodsService.findEnabled(ctx);
+    const mpMethod = enabledMethods.find((m) => m.gatewayProvider === 'mercadopago');
+
+    if (!mpMethod) {
+      this.logger.error(ctx, `MP webhook received but no enabled MercadoPago payment method found`);
+      return;
+    }
+
+    const { preferenceId } = await this.mercadoPagoProvider.fetchPayment(ctx, paymentId, mpMethod);
+    this.logger.log(ctx, `MP webhook: paymentId ${paymentId} → preferenceId ${preferenceId}`);
+
+    await this.handleOrderUpdate(ctx, preferenceId);
+  }
+
   // ==================== handleTransactionCancelled ====================
 
   /**
