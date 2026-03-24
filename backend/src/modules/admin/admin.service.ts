@@ -1807,6 +1807,10 @@ export class AdminService {
         sections: item.sections,
         sourceCode: item.sourceCode,
         sourceId: item.sourceId,
+        ticketApp: item.ticketApp,
+        transferable: item.transferable,
+        artists: item.artists ?? [],
+        isPopular: item.popular,
       };
     });
 
@@ -1950,6 +1954,11 @@ export class AdminService {
           importInfo: { sourceCode: item.sourceCode, sourceId: item.sourceId },
           ...(item.slug != null &&
             item.slug.trim() !== '' && { slug: item.slug.trim() }),
+          ticketApp: item.ticketApp,
+          transferable: item.transferable,
+          artists: item.artists ?? [],
+          isPopular: item.popular,
+          // isManualCreation is intentionally not forwarded
         };
         const event = await this.eventsService.createEvent(
           ctx,

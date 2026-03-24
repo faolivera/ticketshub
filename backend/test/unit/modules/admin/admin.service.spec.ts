@@ -2016,6 +2016,27 @@ describe('AdminService', () => {
       expect(result.events).toHaveLength(0);
       expect(result.eventsForImport).toHaveLength(0);
     });
+
+    it('should include ticketApp, transferable, artists, and popular→isPopular in preview items', async () => {
+      const payload = {
+        events: [
+          {
+            ...validPayload.events[0],
+            ticketApp: 'movistararena',
+            transferable: false,
+            artists: ['Taylor Swift'],
+            popular: true,
+          },
+        ],
+      };
+
+      const result = await service.getImportPreview(mockCtx, payload);
+
+      expect(result.events[0].ticketApp).toBe('movistararena');
+      expect(result.events[0].transferable).toBe(false);
+      expect(result.events[0].artists).toEqual(['Taylor Swift']);
+      expect(result.events[0].isPopular).toBe(true);
+    });
   });
 
   describe('executeImport', () => {
@@ -2087,6 +2108,48 @@ describe('AdminService', () => {
       );
       expect(eventsService.addEventDate).toHaveBeenCalledTimes(1);
       expect(eventsService.addEventSection).toHaveBeenCalledTimes(1);
+    });
+
+    it('should forward ticketApp, transferable, artists, and popular→isPopular to createEvent', async () => {
+      const payload = {
+        events: [
+          {
+            ...validPayload.events[0],
+            ticketApp: 'entradas',
+            transferable: true,
+            artists: ['Bizarrap'],
+            popular: true,
+            isManualCreation: true,
+          },
+        ],
+      };
+
+      eventsService.createEvent.mockResolvedValue({
+        ...mockCreatedEvent,
+        ticketApp: 'entradas',
+        transferable: true,
+        artists: ['Bizarrap'],
+        isPopular: true,
+      });
+      eventsService.addEventDate.mockResolvedValue({} as never);
+      eventsService.addEventSection.mockResolvedValue({} as never);
+
+      await service.executeImport(mockCtx, payload, 'admin_1');
+
+      expect(eventsService.createEvent).toHaveBeenCalledWith(
+        mockCtx,
+        'admin_1',
+        Role.Admin,
+        expect.objectContaining({
+          ticketApp: 'entradas',
+          transferable: true,
+          artists: ['Bizarrap'],
+          isPopular: true,
+        }),
+      );
+      // isManualCreation must NOT appear in the createEvent call
+      const callArg = (eventsService.createEvent as jest.Mock).mock.calls[0][3];
+      expect(callArg).not.toHaveProperty('isManualCreation');
     });
 
     it('should report failed event and continue with next', async () => {
