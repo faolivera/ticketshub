@@ -193,8 +193,11 @@ export class EventsService {
       approvedBy: isAdmin ? userId : undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
-      isPopular: false,
+      isPopular: data.isPopular ?? false,
       highlight: false,
+      ticketApp: data.ticketApp,
+      transferable: data.transferable,
+      artists: data.artists ?? [],
     };
 
     return await this.eventsRepository.createEvent(ctx, event);

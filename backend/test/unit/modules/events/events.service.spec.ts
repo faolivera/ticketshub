@@ -38,6 +38,7 @@ import type {
 } from '../../../../src/modules/events/events.domain';
 import type { TicketListing } from '../../../../src/modules/tickets/tickets.domain';
 import type { Ctx } from '../../../../src/common/types/context';
+import type { CreateEventRequest } from '../../../../src/modules/events/events.api';
 
 describe('EventsService', () => {
   let service: EventsService;
@@ -1500,6 +1501,82 @@ describe('EventsService', () => {
       await expect(
         service.assertEventDateNotExpired(mockCtx, 'edt_later'),
       ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('createEvent', () => {
+    const mockAdminUser = {
+      id: 'admin_1',
+      email: 'admin@test.com',
+      emailVerified: true,
+      phoneVerified: true,
+      roles: ['admin'],
+    };
+
+    const baseRequest: CreateEventRequest = {
+      name: 'Test Concert',
+      category: EventCategory.Concert,
+      venue: 'Test Hall',
+      location: { line1: '1 Main St', city: 'Buenos Aires', countryCode: 'AR' },
+    };
+
+    beforeEach(() => {
+      (service as any).usersService = {
+        findById: jest.fn().mockResolvedValue(mockAdminUser),
+      };
+      eventsRepository.createEvent.mockImplementation(async (_ctx, event) => event);
+    });
+
+    it('should pass ticketApp, transferable, and artists to the repository', async () => {
+      const request: CreateEventRequest = {
+        ...baseRequest,
+        ticketApp: 'entradas',
+        transferable: true,
+        artists: ['Bad Bunny', 'J Balvin'],
+      };
+
+      const result = await service.createEvent(mockCtx, 'admin_1', Role.Admin, request);
+
+      expect(eventsRepository.createEvent).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({
+          ticketApp: 'entradas',
+          transferable: true,
+          artists: ['Bad Bunny', 'J Balvin'],
+        }),
+      );
+      expect(result.ticketApp).toBe('entradas');
+      expect(result.transferable).toBe(true);
+      expect(result.artists).toEqual(['Bad Bunny', 'J Balvin']);
+    });
+
+    it('should default artists to [] when not provided', async () => {
+      await service.createEvent(mockCtx, 'admin_1', Role.Admin, baseRequest);
+
+      expect(eventsRepository.createEvent).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({ artists: [] }),
+      );
+    });
+
+    it('should set isPopular from request when provided', async () => {
+      const request: CreateEventRequest = { ...baseRequest, isPopular: true };
+
+      await service.createEvent(mockCtx, 'admin_1', Role.Admin, request);
+
+      expect(eventsRepository.createEvent).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({ isPopular: true }),
+      );
+    });
+
+    it('should default isPopular to false when not provided (regression)', async () => {
+      await service.createEvent(mockCtx, 'admin_1', Role.Admin, baseRequest);
+
+      expect(eventsRepository.createEvent).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({ isPopular: false }),
+      );
     });
   });
 });
