@@ -34,6 +34,7 @@ import type {
   GetChannelConfigsResponse,
   UpdateChannelConfigRequest,
   GetEventsResponse,
+  GetNotificationEventDetailResponse,
 } from './notifications.api';
 
 @Injectable()
@@ -301,6 +302,36 @@ export class NotificationsService {
   async getAllChannelConfigs(ctx: Ctx): Promise<GetChannelConfigsResponse> {
     const configs = await this.repository.findAllChannelConfigs(ctx);
     return { configs };
+  }
+
+  /**
+   * Get full event type detail: channel config + templates grouped by role.
+   * Used by the admin detail page.
+   */
+  async getNotificationEventDetail(
+    ctx: Ctx,
+    eventType: NotificationEventType,
+  ): Promise<GetNotificationEventDetailResponse> {
+    const [channelConfig, templates] = await Promise.all([
+      this.repository.findChannelConfig(ctx, eventType),
+      this.repository.findTemplatesByEventType(ctx, eventType),
+    ]);
+
+    if (!channelConfig) {
+      throw new NotFoundException('Channel config not found');
+    }
+
+    const templatesByRole: GetNotificationEventDetailResponse['templatesByRole'] =
+      {};
+    for (const template of templates) {
+      const role = template.recipientRole;
+      if (!templatesByRole[role]) {
+        templatesByRole[role] = { role, templates: [] };
+      }
+      templatesByRole[role]!.templates.push(template);
+    }
+
+    return { eventType, channelConfig, templatesByRole };
   }
 
   /**

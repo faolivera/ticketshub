@@ -38,6 +38,7 @@ import type {
   GetEventsResponse,
   GetEventResponse,
   GetEventNotificationsResponse,
+  GetNotificationEventDetailResponse,
 } from '../notifications.api';
 
 @Controller('api/admin/notifications')
@@ -97,6 +98,26 @@ export class NotificationsAdminController {
     @Body() body: UpdateTemplateRequest,
   ): Promise<ApiResponse<UpdateTemplateResponse>> {
     const result = await this.service.updateTemplate(ctx, id, body, user.id);
+    return { success: true, data: result };
+  }
+
+  // ==========================================================================
+  // EVENT TYPE DETAIL
+  // ==========================================================================
+
+  /**
+   * Get channel config + templates grouped by role for an event type.
+   * Used by the admin notification detail page.
+   */
+  @Get('event-type/:eventType')
+  async getNotificationEventDetail(
+    @Context() ctx: Ctx,
+    @Param('eventType') eventType: NotificationEventType,
+  ): Promise<ApiResponse<GetNotificationEventDetailResponse>> {
+    const result = await this.service.getNotificationEventDetail(
+      ctx,
+      eventType,
+    );
     return { success: true, data: result };
   }
 

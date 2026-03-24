@@ -213,6 +213,14 @@ export interface INotificationsRepository {
   findAllTemplates(ctx: Ctx): Promise<NotificationTemplate[]>;
 
   /**
+   * Find all templates for a given event type
+   */
+  findTemplatesByEventType(
+    ctx: Ctx,
+    eventType: NotificationEventType,
+  ): Promise<NotificationTemplate[]>;
+
+  /**
    * Update template
    */
   updateTemplate(

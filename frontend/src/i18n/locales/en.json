@@ -2598,6 +2598,42 @@
         "NORMAL": "Normal",
         "HIGH": "High",
         "URGENT": "Urgent"
+      },
+      "configure": "Configure",
+      "recipients": {
+        "BUYER": "Buyer",
+        "SELLER": "Seller",
+        "ADMIN": "Admin"
+      },
+      "detail": {
+        "backToList": "Back",
+        "channelConfig": "Channel Configuration",
+        "channelConfigDescription": "Enable or disable notification channels for this event type",
+        "inApp": "In-App",
+        "email": "Email",
+        "priority": "Priority",
+        "templates": "Templates by Role",
+        "templatesDescription": "Customize notification content for each recipient",
+        "noTemplates": "No templates for this role",
+        "channel": "Channel",
+        "locale": "Language",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "editTemplate": "Edit Template",
+        "editTitle": "Edit Template",
+        "editDescription": "Modify the title and body of the notification",
+        "form": {
+          "title": "Title",
+          "body": "Body",
+          "actionUrl": "Action URL (optional)",
+          "active": "Active",
+          "variables": "Available variables"
+        },
+        "errors": {
+          "titleRequired": "Title is required",
+          "bodyRequired": "Body is required"
+        }
       }
     },
     "identityVerification": {

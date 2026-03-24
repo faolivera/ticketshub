@@ -115,6 +115,24 @@ export interface CreateTemplateRequest {
 
 export type CreateTemplateResponse = NotificationTemplate;
 
+/**
+ * GET /admin/notifications/event-type/:eventType
+ * Returns channel config + all templates for the event type grouped by role.
+ */
+export interface GetNotificationEventDetailResponse {
+  eventType: NotificationEventType;
+  channelConfig: NotificationChannelConfig;
+  templatesByRole: Partial<
+    Record<
+      NotificationRecipientRole,
+      {
+        role: NotificationRecipientRole;
+        templates: NotificationTemplate[];
+      }
+    >
+  >;
+}
+
 // ============================================================================
 // ADMIN ENDPOINTS - CHANNEL CONFIG
 // ============================================================================

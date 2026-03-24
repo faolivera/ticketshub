@@ -587,6 +587,18 @@ export class NotificationsRepository
     return templates.map((t) => this.mapToNotificationTemplate(t));
   }
 
+  async findTemplatesByEventType(
+    ctx: Ctx,
+    eventType: NotificationEventType,
+  ): Promise<NotificationTemplate[]> {
+    this.logger.debug(ctx, 'findTemplatesByEventType', { eventType });
+    const client = this.getClient(ctx);
+    const templates = await client.notificationTemplate.findMany({
+      where: { eventType },
+    });
+    return templates.map((t) => this.mapToNotificationTemplate(t));
+  }
+
   async updateTemplate(
     ctx: Ctx,
     id: string,

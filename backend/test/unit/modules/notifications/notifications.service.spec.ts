@@ -16,7 +16,9 @@ import {
   NotificationStatus,
   NotificationChannel,
   NotificationRecipientRole,
+  NotificationPriority,
 } from '../../../../src/modules/notifications/notifications.domain';
+import type { NotificationChannelConfig } from '../../../../src/modules/notifications/notifications.domain';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
@@ -77,6 +79,7 @@ describe('NotificationsService', () => {
       findTemplateById: jest.fn(),
       findTemplate: jest.fn(),
       findAllTemplates: jest.fn(),
+      findTemplatesByEventType: jest.fn(),
       updateTemplate: jest.fn(),
       createChannelConfig: jest.fn(),
       findChannelConfig: jest.fn(),
@@ -393,6 +396,118 @@ describe('NotificationsService', () => {
         'user_123',
         ['n_1', 'n_2'],
       );
+    });
+  });
+
+  describe('getNotificationEventDetail', () => {
+    const mockChannelConfig: NotificationChannelConfig = {
+      id: 'cc_1',
+      eventType: NotificationEventType.PAYMENT_RECEIVED,
+      inAppEnabled: true,
+      emailEnabled: true,
+      priority: NotificationPriority.HIGH,
+      updatedAt: new Date('2024-01-01T10:00:00Z'),
+    };
+
+    const createMockTemplate = (
+      overrides: Partial<import('../../../../src/modules/notifications/notifications.domain').NotificationTemplate> = {},
+    ) => ({
+      id: 'tmpl_1',
+      eventType: NotificationEventType.PAYMENT_RECEIVED,
+      channel: NotificationChannel.IN_APP,
+      locale: 'es',
+      recipientRole: NotificationRecipientRole.BUYER,
+      titleTemplate: 'Pago recibido',
+      bodyTemplate: 'Tu pago fue procesado.',
+      isActive: true,
+      createdAt: new Date('2024-01-01T10:00:00Z'),
+      updatedAt: new Date('2024-01-01T10:00:00Z'),
+      ...overrides,
+    });
+
+    it('should return channelConfig and templatesByRole grouped correctly', async () => {
+      const buyerTemplate = createMockTemplate({
+        recipientRole: NotificationRecipientRole.BUYER,
+      });
+      const sellerTemplate = createMockTemplate({
+        id: 'tmpl_2',
+        recipientRole: NotificationRecipientRole.SELLER,
+        titleTemplate: 'Pago recibido por el comprador',
+      });
+
+      repository.findChannelConfig.mockResolvedValue(mockChannelConfig);
+      repository.findTemplatesByEventType.mockResolvedValue([
+        buyerTemplate,
+        sellerTemplate,
+      ]);
+
+      const result = await service.getNotificationEventDetail(
+        mockCtx,
+        NotificationEventType.PAYMENT_RECEIVED,
+      );
+
+      expect(result.eventType).toBe(NotificationEventType.PAYMENT_RECEIVED);
+      expect(result.channelConfig).toEqual(mockChannelConfig);
+      expect(result.templatesByRole[NotificationRecipientRole.BUYER]).toEqual({
+        role: NotificationRecipientRole.BUYER,
+        templates: [buyerTemplate],
+      });
+      expect(result.templatesByRole[NotificationRecipientRole.SELLER]).toEqual({
+        role: NotificationRecipientRole.SELLER,
+        templates: [sellerTemplate],
+      });
+    });
+
+    it('should group multiple templates for the same role', async () => {
+      const buyerInApp = createMockTemplate({
+        id: 'tmpl_1',
+        channel: NotificationChannel.IN_APP,
+        recipientRole: NotificationRecipientRole.BUYER,
+      });
+      const buyerEmail = createMockTemplate({
+        id: 'tmpl_2',
+        channel: NotificationChannel.EMAIL,
+        recipientRole: NotificationRecipientRole.BUYER,
+      });
+
+      repository.findChannelConfig.mockResolvedValue(mockChannelConfig);
+      repository.findTemplatesByEventType.mockResolvedValue([
+        buyerInApp,
+        buyerEmail,
+      ]);
+
+      const result = await service.getNotificationEventDetail(
+        mockCtx,
+        NotificationEventType.PAYMENT_RECEIVED,
+      );
+
+      expect(
+        result.templatesByRole[NotificationRecipientRole.BUYER]?.templates,
+      ).toHaveLength(2);
+    });
+
+    it('should return empty templatesByRole when no templates exist', async () => {
+      repository.findChannelConfig.mockResolvedValue(mockChannelConfig);
+      repository.findTemplatesByEventType.mockResolvedValue([]);
+
+      const result = await service.getNotificationEventDetail(
+        mockCtx,
+        NotificationEventType.PAYMENT_RECEIVED,
+      );
+
+      expect(result.templatesByRole).toEqual({});
+    });
+
+    it('should throw NotFoundException when channel config not found', async () => {
+      repository.findChannelConfig.mockResolvedValue(undefined);
+      repository.findTemplatesByEventType.mockResolvedValue([]);
+
+      await expect(
+        service.getNotificationEventDetail(
+          mockCtx,
+          NotificationEventType.PAYMENT_RECEIVED,
+        ),
+      ).rejects.toThrow('Channel config not found');
     });
   });
 });

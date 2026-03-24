@@ -7,6 +7,7 @@ import type {
   UpdateChannelConfigRequest,
   UpdateTemplateRequest,
   NotificationEventType,
+  GetNotificationEventDetailResponse,
 } from '../types/notifications';
 
 export const notificationsAdminService = {
@@ -42,6 +43,15 @@ export const notificationsAdminService = {
     const response = await apiClient.put<NotificationTemplate>(
       `/admin/notifications/templates/${id}`,
       data
+    );
+    return response.data;
+  },
+
+  async getNotificationEventDetail(
+    eventType: NotificationEventType
+  ): Promise<GetNotificationEventDetailResponse> {
+    const response = await apiClient.get<GetNotificationEventDetailResponse>(
+      `/admin/notifications/event-type/${eventType}`
     );
     return response.data;
   },

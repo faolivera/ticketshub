@@ -38,6 +38,7 @@ import TransactionManagement from '@/app/pages/admin/TransactionManagement';
 import { PaymentMethodsManagement } from '@/app/pages/admin/PaymentMethodsManagement';
 import { IdentityVerificationManagement } from '@/app/pages/admin/IdentityVerificationManagement';
 import { NotificationManagement } from '@/app/pages/admin/NotificationManagement';
+import { NotificationEventDetail } from '@/app/pages/admin/NotificationEventDetail';
 import { PlatformConfig } from '@/app/pages/admin/PlatformConfig';
 import { EventsScoreConfig } from '@/app/pages/admin/EventsScoreConfig';
 import { FeaturedEventsManagement } from '@/app/pages/admin/FeaturedEventsManagement';
@@ -116,6 +117,7 @@ function AppLayout() {
                 <Route path="payment-methods" element={<PaymentMethodsManagement />} />
                 <Route path="identity-verifications" element={<IdentityVerificationManagement />} />
                 <Route path="notifications" element={<NotificationManagement />} />
+                <Route path="notifications/:eventType" element={<NotificationEventDetail />} />
                 <Route path="platform-config" element={<PlatformConfig />} />
                 <Route path="events-score" element={<EventsScoreConfig />} />
                 <Route path="featured-events" element={<FeaturedEventsManagement />} />

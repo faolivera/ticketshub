@@ -2597,6 +2597,42 @@
         "NORMAL": "Normal",
         "HIGH": "Alta",
         "URGENT": "Urgente"
+      },
+      "configure": "Configurar",
+      "recipients": {
+        "BUYER": "Comprador",
+        "SELLER": "Vendedor",
+        "ADMIN": "Admin"
+      },
+      "detail": {
+        "backToList": "Volver",
+        "channelConfig": "Configuración de Canales",
+        "channelConfigDescription": "Habilita o deshabilita los canales de notificación para este evento",
+        "inApp": "In-App",
+        "email": "Email",
+        "priority": "Prioridad",
+        "templates": "Plantillas por Rol",
+        "templatesDescription": "Personalizá el contenido de la notificación para cada destinatario",
+        "noTemplates": "No hay plantillas para este rol",
+        "channel": "Canal",
+        "locale": "Idioma",
+        "status": "Estado",
+        "active": "Activa",
+        "inactive": "Inactiva",
+        "editTemplate": "Editar Plantilla",
+        "editTitle": "Editar Plantilla",
+        "editDescription": "Modificá el título y cuerpo de la notificación",
+        "form": {
+          "title": "Título",
+          "body": "Cuerpo",
+          "actionUrl": "URL de Acción (opcional)",
+          "active": "Activa",
+          "variables": "Variables disponibles"
+        },
+        "errors": {
+          "titleRequired": "El título es requerido",
+          "bodyRequired": "El cuerpo es requerido"
+        }
       }
     },
     "identityVerification": {
