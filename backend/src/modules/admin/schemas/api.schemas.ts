@@ -797,6 +797,11 @@ export const ImportEventItemSchema = z
         'Slug must be lowercase letters, numbers, and hyphens only',
       )
       .optional(),
+    ticketApp: z.string().optional(),
+    transferable: z.boolean().optional(),
+    artists: z.array(z.string()).optional(),
+    popular: z.boolean().optional(),
+    isManualCreation: z.boolean().optional(),
   })
   .refine(
     (data) => {
@@ -806,7 +811,16 @@ export const ImportEventItemSchema = z
       return new Set(names).size === names.length;
     },
     { message: 'Section names must be unique per event', path: ['sections'] },
-  );
+  )
+  .superRefine((val, ctx) => {
+    if (val.transferable !== undefined && !val.ticketApp) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['transferable'],
+        message: 'transferable requires ticketApp to be present',
+      });
+    }
+  });
 
 export const ImportEventsPayloadSchema = z.object({
   events: z.array(ImportEventItemSchema).min(1, 'At least one event is required'),
@@ -824,6 +838,10 @@ export const ImportEventsPreviewItemSchema = z.object({
   sections: z.array(ImportEventSectionItemSchema).optional(),
   sourceCode: z.string(),
   sourceId: z.string(),
+  ticketApp: z.string().optional(),
+  transferable: z.boolean().optional(),
+  artists: z.array(z.string()).optional(),
+  isPopular: z.boolean().optional(),
 });
 
 export const ImportEventsPreviewResponseSchema = z.object({
