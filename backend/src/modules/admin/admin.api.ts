@@ -994,6 +994,16 @@ export interface ImportEventItem {
   imageOGBase64?: string;
   /** Optional custom slug for the event URL. If omitted, slug is generated from name, venue, and event id. */
   slug?: string;
+  /** Ticket app name (e.g. "entradas", "movistararena"). Omitted if not present. */
+  ticketApp?: string;
+  /** Whether tickets are transferable. Only present if ticketApp exists. */
+  transferable?: boolean;
+  /** Artist names. Omitted if empty. */
+  artists?: string[];
+  /** Whether the event is popular. Omitted if not present. */
+  popular?: boolean;
+  /** Whether the event was created manually. Omitted if not present. */
+  isManualCreation?: boolean;
 }
 
 /**
@@ -1021,6 +1031,10 @@ export interface ImportEventsPreviewItem {
   sections?: ImportEventSectionItem[];
   sourceCode: string;
   sourceId: string;
+  ticketApp?: string;
+  transferable?: boolean;
+  artists?: string[];
+  isPopular?: boolean;
 }
 
 /**
