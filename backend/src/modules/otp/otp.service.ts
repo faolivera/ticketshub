@@ -12,6 +12,7 @@ import {
 } from './otp.domain';
 import type { IEmailSender } from '../../common/email/email-sender.interface';
 import { EMAIL_SENDER } from '../../common/email/email-sender.interface';
+import { wrapEmailHtml } from '../../common/email/email-wrapper';
 import type { ISmsOtpProvider } from '../../common/sms/sms-otp-provider.interface';
 import { SMS_OTP_PROVIDER } from '../../common/sms/sms-otp-provider.interface';
 import { MOCK_SMS_OTP_CODE } from '../../common/sms/mock-sms-otp-provider';
@@ -108,10 +109,32 @@ export class OTPService {
     await this.otpRepository.create(ctx, otp);
 
     if (type === OTPType.EmailVerification && destination) {
+      const otpBodyHtml = `<div class="th-wrap">
+  <div class="th-header">
+    <span class="th-logo-text">Tickets<span>Hub</span></span>
+  </div>
+  <div class="th-body">
+    <div class="th-icon th-icon--neutral">&#128274;</div>
+    <h1 class="th-title">Tu código de verificación</h1>
+    <p class="th-text">Ingresá el siguiente código para continuar. Es válido durante los próximos 10 minutos.</p>
+    <div class="th-code-block">
+      <div class="th-code">${code}</div>
+      <span class="th-code-hint">Válido por 10 minutos · No lo compartás con nadie</span>
+    </div>
+    <div class="th-alert th-alert--warning">
+      <p>Si no fuiste vos quien solicitó este código, ignorá este mensaje. Tu cuenta no fue afectada.</p>
+    </div>
+  </div>
+  <div class="th-footer">
+    <p class="th-footer-brand">TicketsHub</p>
+    <p>ticketshub.com.ar · <a href="mailto:hola@ticketshub.com.ar">hola@ticketshub.com.ar</a></p>
+  </div>
+</div>`;
       const result = await this.emailSender.send(ctx, {
         to: destination,
-        subject: 'Your verification code',
-        body: `Your code is: ${code}`,
+        subject: 'Tu código de verificación — TicketsHub',
+        body: `Tu código de verificación es: ${code}`,
+        htmlBody: wrapEmailHtml(otpBodyHtml),
       });
       if (!result.success) {
         this.logger.error(

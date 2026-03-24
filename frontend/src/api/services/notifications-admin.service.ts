@@ -55,6 +55,13 @@ export const notificationsAdminService = {
     );
     return response.data;
   },
+
+  async getTemplatePreview(id: string): Promise<string> {
+    const response = await apiClient.get<{ html: string }>(
+      `/admin/notifications/templates/${id}/preview`
+    );
+    return response.data.html;
+  },
 };
 
 export default notificationsAdminService;

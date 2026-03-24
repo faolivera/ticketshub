@@ -30,7 +30,8 @@ export interface PaymentReceivedContext {
   buyerId: string;
   sellerId: string;
   sellerName: string;
-  amount: number;
+  sellerReceivesAmount: number;
+  buyerPaidAmount: number;
   currency: string;
   ticketCount: number;
 }

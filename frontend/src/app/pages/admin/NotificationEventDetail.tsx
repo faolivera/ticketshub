@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
-import { AlertCircle, ArrowLeft, Bell, Mail, Pencil } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Bell, Mail, Pencil, Eye } from 'lucide-react';
 import { notificationsAdminService } from '@/api/services/notifications-admin.service';
 import type {
   NotificationEventType,
@@ -441,47 +441,104 @@ interface TemplateCardProps {
 }
 
 function TemplateCard({ template, onEdit, t }: TemplateCardProps) {
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
+  const handlePreview = async () => {
+    setPreviewOpen(true);
+    if (previewHtml) return;
+    setLoadingPreview(true);
+    try {
+      const html = await notificationsAdminService.getTemplatePreview(template.id);
+      setPreviewHtml(html);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
   return (
-    <div className="rounded-lg border p-4 space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {template.channel === 'IN_APP' ? (
-            <Bell className="h-3.5 w-3.5 text-muted-foreground" />
-          ) : (
-            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-          )}
-          <span className="text-xs font-medium">
-            {template.channel === 'IN_APP' ? 'In-App' : 'Email'}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {template.locale.toUpperCase()}
-          </span>
+    <>
+      <div className="rounded-lg border p-4 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {template.channel === 'IN_APP' ? (
+              <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            <span className="text-xs font-medium">
+              {template.channel === 'IN_APP' ? 'In-App' : 'Email'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {template.locale.toUpperCase()}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Badge
+              variant={template.isActive ? 'default' : 'secondary'}
+              className="text-xs"
+            >
+              {template.isActive
+                ? t('admin.notifications.detail.active')
+                : t('admin.notifications.detail.inactive')}
+            </Badge>
+            {template.channel === 'EMAIL' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handlePreview}
+                title="Vista previa del email"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => onEdit(template)}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={template.isActive ? 'default' : 'secondary'}
-            className="text-xs"
-          >
-            {template.isActive
-              ? t('admin.notifications.detail.active')
-              : t('admin.notifications.detail.inactive')}
-          </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => onEdit(template)}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
+        <div>
+          <p className="text-sm font-medium truncate">{template.titleTemplate}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+            {template.bodyTemplate}
+          </p>
         </div>
       </div>
-      <div>
-        <p className="text-sm font-medium truncate">{template.titleTemplate}</p>
-        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-          {template.bodyTemplate}
-        </p>
-      </div>
-    </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Vista previa del email
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {template.titleTemplate} · {template.locale.toUpperCase()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {loadingPreview ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                {t('common.loading')}
+              </div>
+            ) : previewHtml ? (
+              <iframe
+                srcDoc={previewHtml}
+                title="Email preview"
+                className="w-full h-full border-0"
+                sandbox="allow-same-origin"
+              />
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

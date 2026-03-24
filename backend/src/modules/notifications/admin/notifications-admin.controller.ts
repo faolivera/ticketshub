@@ -39,6 +39,7 @@ import type {
   GetEventResponse,
   GetEventNotificationsResponse,
   GetNotificationEventDetailResponse,
+  PreviewTemplateResponse,
 } from '../notifications.api';
 
 @Controller('api/admin/notifications')
@@ -84,6 +85,18 @@ export class NotificationsAdminController {
     @Body() body: CreateTemplateRequest,
   ): Promise<ApiResponse<CreateTemplateResponse>> {
     const result = await this.service.createTemplate(ctx, body, user.id);
+    return { success: true, data: result };
+  }
+
+  /**
+   * Get full HTML preview of an email template (variables shown unreplaced)
+   */
+  @Get('templates/:id/preview')
+  async previewTemplate(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+  ): Promise<ApiResponse<PreviewTemplateResponse>> {
+    const result = await this.service.getTemplatePreview(ctx, id);
     return { success: true, data: result };
   }
 

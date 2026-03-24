@@ -35,7 +35,9 @@ import type {
   UpdateChannelConfigRequest,
   GetEventsResponse,
   GetNotificationEventDetailResponse,
+  PreviewTemplateResponse,
 } from './notifications.api';
+import { wrapEmailHtml } from '../../common/email/email-wrapper';
 
 @Injectable()
 export class NotificationsService {
@@ -266,6 +268,17 @@ export class NotificationsService {
     };
 
     return await this.repository.createTemplate(ctx, template);
+  }
+
+  /**
+   * Get a full HTML preview of an email template (variables are not replaced).
+   */
+  async getTemplatePreview(ctx: Ctx, id: string): Promise<PreviewTemplateResponse> {
+    const template = await this.repository.findTemplateById(ctx, id);
+    if (!template) {
+      throw new NotFoundException('Template not found');
+    }
+    return { html: wrapEmailHtml(template.bodyTemplate) };
   }
 
   /**

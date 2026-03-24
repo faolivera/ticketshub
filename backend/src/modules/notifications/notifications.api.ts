@@ -101,6 +101,13 @@ export interface UpdateTemplateRequest {
 export type UpdateTemplateResponse = NotificationTemplate;
 
 /**
+ * GET /admin/notifications/templates/:id/preview
+ */
+export interface PreviewTemplateResponse {
+  html: string;
+}
+
+/**
  * POST /admin/notifications/templates
  */
 export interface CreateTemplateRequest {
@@ -211,10 +218,10 @@ export const TEMPLATE_VARIABLES: Record<NotificationEventType, string[]> = {
     'transactionId',
   ],
   [NotificationEventType.PAYMENT_RECEIVED]: [
-    'title',
-    'body',
+    'eventName',
     'amountFormatted',
     'transactionId',
+    'ticketCount',
   ],
   [NotificationEventType.BUYER_PAYMENT_REJECTED]: [
     'sellerName',

@@ -558,7 +558,8 @@ export class TransactionsService {
           buyerId: updated.buyerId,
           sellerId: updated.sellerId,
           sellerName: seller?.publicName || 'Vendedor',
-          amount: updated.sellerReceives.amount,
+          sellerReceivesAmount: updated.sellerReceives.amount,
+          buyerPaidAmount: updated.totalPaid.amount,
           currency: updated.sellerReceives.currency,
           ticketCount: updated.quantity,
         });
@@ -1843,7 +1844,8 @@ export class TransactionsService {
             buyerId: updated.buyerId,
             sellerId: updated.sellerId,
             sellerName: seller?.publicName || 'Vendedor',
-            amount: updated.sellerReceives.amount,
+            sellerReceivesAmount: updated.sellerReceives.amount,
+            buyerPaidAmount: updated.totalPaid.amount,
             currency: updated.sellerReceives.currency,
             ticketCount: updated.quantity,
           });

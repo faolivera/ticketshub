@@ -76,12 +76,15 @@ export class TemplateService {
       return null;
     }
 
-    // Render the template
-    const title = this.renderer.render(ctx, template.titleTemplate, variables);
-    const body = this.renderer.render(ctx, template.bodyTemplate, variables);
+    // Render actionUrl first so it can be used as a variable inside the body
     const actionUrl = template.actionUrlTemplate
       ? this.renderer.render(ctx, template.actionUrlTemplate, variables)
       : undefined;
+
+    const allVariables = actionUrl ? { ...variables, actionUrl } : variables;
+
+    const title = this.renderer.render(ctx, template.titleTemplate, allVariables);
+    const body = this.renderer.render(ctx, template.bodyTemplate, allVariables);
 
     return {
       title,
@@ -111,11 +114,14 @@ export class TemplateService {
     template: NotificationTemplate,
     variables: Record<string, string>,
   ): ChannelContent {
-    const title = this.renderer.render(ctx, template.titleTemplate, variables);
-    const body = this.renderer.render(ctx, template.bodyTemplate, variables);
     const actionUrl = template.actionUrlTemplate
       ? this.renderer.render(ctx, template.actionUrlTemplate, variables)
       : undefined;
+
+    const allVariables = actionUrl ? { ...variables, actionUrl } : variables;
+
+    const title = this.renderer.render(ctx, template.titleTemplate, allVariables);
+    const body = this.renderer.render(ctx, template.bodyTemplate, allVariables);
 
     return {
       title,

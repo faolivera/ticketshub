@@ -25,21 +25,18 @@ export class PaymentReceivedProcessor implements EventProcessor<PaymentReceivedC
     recipientId: string,
     role: NotificationRecipientRole,
   ): Record<string, string> {
-    const amountFormatted = formatMoney(context.amount, context.currency);
-
     if (role === NotificationRecipientRole.BUYER) {
       return {
         eventName: context.eventName,
-        amountFormatted,
+        amountFormatted: formatMoney(context.buyerPaidAmount, context.currency),
         transactionId: context.transactionId,
       };
     }
 
-    const ticketCount = String(context.ticketCount);
     return {
       eventName: context.eventName,
-      ticketCount,
-      amountFormatted,
+      ticketCount: String(context.ticketCount),
+      amountFormatted: formatMoney(context.sellerReceivesAmount, context.currency),
       transactionId: context.transactionId,
     };
   }
