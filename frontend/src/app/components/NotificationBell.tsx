@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bell, CheckCheck, Loader2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Bell, CheckCheck, Loader2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { notificationsService, type NotificationItem } from '@/api/services/notifications.service';
@@ -7,13 +8,6 @@ import { useSocket, SOCKET_EVENTS } from '@/app/contexts/SocketContext';
 import { formatDateShort } from '@/lib/format-date';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
 import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, S, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-} from '@/app/components/ui/drawer';
 
 const POLL_INTERVAL_MS = 30000; // Poll every 30 seconds (fallback when socket disconnected)
 
@@ -100,18 +94,18 @@ export function NotificationBell() {
     }
   }, [isOpen, fetchNotifications]);
 
-  // Close dropdown when clicking outside (desktop only; mobile uses Drawer overlay)
+  // Close when clicking outside the bell button and outside the drawer content (portal)
   useEffect(() => {
-    if (isMobile) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+      const target = event.target as Element;
+      if (dropdownRef.current?.contains(target)) return;
+      if (target.closest('[data-slot="drawer-content"]')) return;
+      setIsOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMobile]);
+  }, []);
 
   const handleNotificationClick = (notification: NotificationItem) => {
     setIsOpen(false);
@@ -198,45 +192,57 @@ export function NotificationBell() {
         )}
       </button>
 
-      {isMobile ? (
-        <Drawer open={isOpen} onOpenChange={setIsOpen} direction="top">
-          <DrawerContent
-            className="max-h-[85vh] flex flex-col"
-            style={{ background: CARD, border: `1px solid ${BORDER}`, borderBottomLeftRadius: R_INPUT, borderBottomRightRadius: R_INPUT, boxShadow: '0 8px 28px rgba(0,0,0,0.12)' }}
+      {isMobile && isOpen && createPortal(
+        <>
+          <style>{`@keyframes notif-slide-down{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+          {/* Backdrop — closes on tap, sits below the header (z-499) */}
+          <div
+            onClick={() => setIsOpen(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 499, background: 'rgba(0,0,0,0.35)' }}
+          />
+          {/* Panel — slides in below the header */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 58,
+              left: 0,
+              right: 0,
+              zIndex: 499,
+              background: CARD,
+              borderBottom: `1px solid ${BORDER}`,
+              borderBottomLeftRadius: R_INPUT,
+              borderBottomRightRadius: R_INPUT,
+              boxShadow: '0 8px 28px rgba(0,0,0,0.12)',
+              maxHeight: 'calc(85vh - 58px)',
+              display: 'flex',
+              flexDirection: 'column',
+              animation: 'notif-slide-down 0.2s ease',
+            }}
           >
-            <DrawerHeader style={{ flexShrink: 0, borderBottom: `1px solid ${BORDER}`, paddingBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 32 }}>
-                <DrawerTitle style={{ fontSize: 18, fontWeight: 600, color: DARK, ...S }}>
-                  {t('notifications.title')}
-                </DrawerTitle>
+            <div style={{ flexShrink: 0, borderBottom: `1px solid ${BORDER}`, padding: '12px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 18, fontWeight: 600, color: DARK, ...S }}>{t('notifications.title')}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 {unreadCount > 0 && (
                   <button
                     type="button"
                     onClick={handleMarkAllAsRead}
-                    style={{
-                      minHeight: 44,
-                      minWidth: 44,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 6,
-                      padding: '8px 12px',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: V,
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      ...S,
-                    }}
+                    style={{ minHeight: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', fontSize: 13, fontWeight: 600, color: V, background: 'none', border: 'none', cursor: 'pointer', ...S }}
                   >
                     <CheckCheck size={16} />
                     <span>{t('notifications.markAllRead')}</span>
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  style={{ minHeight: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: MUTED, borderRadius: 100 }}
+                  aria-label={t('notifications.close')}
+                >
+                  <X size={20} />
+                </button>
               </div>
-            </DrawerHeader>
-            <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '0 16px 24px' }}>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '12px 16px 24px' }}>
               {isLoading && !hasLoaded ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
                   <Loader2 size={32} style={{ color: MUTED }} className="animate-spin" />
@@ -253,62 +259,17 @@ export function NotificationBell() {
                       <button
                         type="button"
                         onClick={() => handleNotificationClick(notification)}
-                        style={{
-                          width: '100%',
-                          minHeight: 44,
-                          padding: '14px 16px',
-                          textAlign: 'left',
-                          background: !notification.read ? VLIGHT : 'transparent',
-                          border: 'none',
-                          borderBottom: `1px solid ${BORDER}`,
-                          cursor: 'pointer',
-                          transition: 'background 0.14s',
-                          ...S,
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = !notification.read ? VLIGHT : '#f9fafb'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = !notification.read ? VLIGHT : 'transparent'; }}
+                        style={{ width: '100%', minHeight: 44, padding: '14px 16px', textAlign: 'left', background: !notification.read ? VLIGHT : 'transparent', border: 'none', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', transition: 'background 0.14s', ...S }}
                       >
                         <div style={{ display: 'flex', gap: 12 }}>
                           {!notification.read && (
-                            <div
-                              style={{
-                                marginTop: 6,
-                                width: 10,
-                                height: 10,
-                                borderRadius: '50%',
-                                background: V,
-                                flexShrink: 0,
-                              }}
-                            />
+                            <div style={{ marginTop: 6, width: 10, height: 10, borderRadius: '50%', background: V, flexShrink: 0 }} />
                           )}
                           <div style={{ flex: 1, minWidth: 0, marginLeft: notification.read ? 22 : 0 }}>
-                            <p
-                              style={{
-                                fontSize: 14,
-                                color: DARK,
-                                fontWeight: !notification.read ? 600 : 400,
-                                lineHeight: 1.3,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                ...S,
-                              }}
-                            >
+                            <p style={{ fontSize: 14, color: DARK, fontWeight: !notification.read ? 600 : 400, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>
                               {notification.title}
                             </p>
-                            <p
-                              style={{
-                                fontSize: 13,
-                                color: MUTED,
-                                marginTop: 4,
-                                lineHeight: 1.4,
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                ...S,
-                              }}
-                            >
+                            <p style={{ fontSize: 13, color: MUTED, marginTop: 4, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', ...S }}>
                               {notification.body}
                             </p>
                             <p style={{ fontSize: 11, color: HINT, marginTop: 4, ...S }}>
@@ -322,16 +283,17 @@ export function NotificationBell() {
                 </ul>
               )}
             </div>
-            <DrawerClose className="absolute top-4 right-4 rounded-full p-2 min-w-[44px] min-h-[44px] touch-manipulation" />
-          </DrawerContent>
-        </Drawer>
-      ) : isOpen ? (
+          </div>
+        </>,
+        document.body
+      )}
+      {!isMobile && isOpen ? (
         <div
           style={{
             position: 'absolute',
             right: 0,
             marginTop: 8,
-            width: 320,
+            width: 400,
             maxWidth: '96vw',
             background: CARD,
             borderRadius: R_INPUT,

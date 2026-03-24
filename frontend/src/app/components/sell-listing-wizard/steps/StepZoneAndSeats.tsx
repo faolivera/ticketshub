@@ -7,7 +7,9 @@ import type { PublicListEventItem, EventSection } from '@/api/types';
 import { EventSectionStatus, SeatingType } from '@/api/types';
 import type { WizardFormState, NumberedSeatInput } from '../types';
 import { cn } from '@/app/components/ui/utils';
-import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S, R_INPUT, R_BUTTON } from '@/lib/design-tokens';
+import { Switch } from '@/app/components/ui/switch';
+import { Label } from '@/app/components/ui/label';
+import { V, VLIGHT, DARK, MUTED, HINT, BORDER, BG, CARD, S, R_INPUT, R_BUTTON, R_CARD } from '@/lib/design-tokens';
 import { stepHeadingStyle, stepDescStyle } from '../wizardTokens';
 
 interface StepZoneAndSeatsProps {
@@ -191,6 +193,29 @@ export const StepZoneAndSeats: FC<StepZoneAndSeatsProps> = ({
             <Plus size={16} className="mr-2" />
             {t('sellListingWizard.addSeat')}
           </Button>
+
+          {validSeats.length > 1 && (
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 14,
+              background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD,
+              padding: '14px 16px', marginTop: 16,
+            }}>
+              <Switch
+                id="wizard-sell-together"
+                checked={form.sellTogether}
+                onCheckedChange={(checked) => onFormChange({ sellTogether: checked })}
+                aria-describedby="sell-together-desc"
+              />
+              <div style={{ flex: 1 }}>
+                <Label htmlFor="wizard-sell-together" style={{ fontSize: 14, fontWeight: 600, color: DARK, cursor: 'pointer', display: 'block', marginBottom: 3, ...S }}>
+                  {t('sellTicket.sellTogether')}
+                </Label>
+                <p id="sell-together-desc" style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>
+                  {t('sellTicket.sellTogetherDesc')}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -241,6 +266,29 @@ export const StepZoneAndSeats: FC<StepZoneAndSeatsProps> = ({
           <p style={{ fontSize: 12.5, color: HINT, marginTop: 6, ...S }}>
             {t('sellListingWizard.quantityMin')}
           </p>
+
+          {(form.quantity ?? 1) > 1 && (
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 14,
+              background: CARD, border: `1px solid ${BORDER}`, borderRadius: R_CARD,
+              padding: '14px 16px', marginTop: 16,
+            }}>
+              <Switch
+                id="wizard-sell-together"
+                checked={form.sellTogether}
+                onCheckedChange={(checked) => onFormChange({ sellTogether: checked })}
+                aria-describedby="sell-together-desc"
+              />
+              <div style={{ flex: 1 }}>
+                <Label htmlFor="wizard-sell-together" style={{ fontSize: 14, fontWeight: 600, color: DARK, cursor: 'pointer', display: 'block', marginBottom: 3, ...S }}>
+                  {t('sellTicket.sellTogether')}
+                </Label>
+                <p id="sell-together-desc" style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>
+                  {t('sellTicket.sellTogetherDesc')}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

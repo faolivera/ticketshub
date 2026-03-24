@@ -2653,6 +2653,7 @@
     "title": "Notifications",
     "empty": "You have no notifications",
     "markAllRead": "Mark all as read",
+    "close": "Close notifications",
     "viewAll": "View all notifications",
     "justNow": "Just now",
     "minutesAgo": "{{count}} min ago",

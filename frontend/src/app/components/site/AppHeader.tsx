@@ -64,7 +64,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
         style={{
           position: "sticky",
           top: 0,
-          zIndex: 100,
+          zIndex: 500,
           background: BG_STICKY_HEADER,
           backdropFilter: "blur(16px)",
           borderBottom: `1px solid ${BORDER}`,
@@ -131,9 +131,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
               </Link>
             )}
             {isAuthenticated && (
-              <div className="app-header-desk-only">
-                <NotificationBell />
-              </div>
+              <NotificationBell />
             )}
             {!isAuthenticated && (
               <div ref={langRef} style={{ position: "relative" }}>

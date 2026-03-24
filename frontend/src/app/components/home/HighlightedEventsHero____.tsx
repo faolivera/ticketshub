@@ -13,6 +13,8 @@ import {
   TRUST_ESCROW,
   TRUST_VERIFIED,
   AMBER_c1,
+  R_HERO,
+  R_BUTTON,
 } from "@/lib/design-tokens";
 import { Lock, CheckCircle, RefreshCw, LucideIcon } from "lucide-react";
 import { PublicListEventItem } from "@/api/types/events";
@@ -172,7 +174,7 @@ export function HighlightedEventsHero({
     return (
       <div
         style={{
-          borderRadius: 20,
+          borderRadius: R_HERO,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD,
@@ -192,79 +194,85 @@ export function HighlightedEventsHero({
         `}</style>
 
         {preferSquareLayout ? (
-          // Mobile skeleton — matches: image / headline / event block / CTAs / trust
+          // Mobile skeleton
           <div>
-            <div className="hh-sk" style={{ height: 200 }} />
+            <div className="hh-sk" style={{ height: 220 }} />
             <div
               style={{
                 background: PANEL_BG,
                 padding: "20px 18px 24px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 14,
+                gap: 10,
               }}
             >
-              {/* Headline 2 lines */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <div className="hh-sk" style={{ height: 26, width: "88%", borderRadius: 6, opacity: 0.35 }} />
-                <div className="hh-sk" style={{ height: 26, width: "70%", borderRadius: 6, opacity: 0.35 }} />
-              </div>
-              {/* Event context block */}
-              <div className="hh-sk" style={{ height: 60, borderRadius: 12, opacity: 0.22 }} />
-              {/* Primary CTA */}
-              <div className="hh-sk" style={{ height: 44, borderRadius: 12, opacity: 0.35 }} />
-              {/* Secondary CTAs */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <div className="hh-sk" style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.25 }} />
-                <div className="hh-sk" style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.25 }} />
-              </div>
-              {/* Trust signals */}
-              <div style={{ display: "flex", gap: 12 }}>
-                <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
-                <div className="hh-sk" style={{ height: 10, width: 90, borderRadius: 100, opacity: 0.18 }} />
-                <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
+              <div
+                className="hh-sk"
+                style={{ height: 26, width: "85%", borderRadius: 6, opacity: 0.4 }}
+              />
+              <div
+                className="hh-sk"
+                style={{ height: 26, width: "65%", borderRadius: 6, opacity: 0.4 }}
+              />
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <div
+                  className="hh-sk"
+                  style={{ height: 38, flex: 1, borderRadius: R_BUTTON, opacity: 0.4 }}
+                />
+                <div
+                  className="hh-sk"
+                  style={{ height: 38, flex: 1, borderRadius: R_BUTTON, opacity: 0.4 }}
+                />
               </div>
             </div>
           </div>
         ) : (
-          // Desktop skeleton — matches: left panel (headline/CTAs/trust/dots) + right image area
-          <div style={{ display: "flex", height: 340, background: PANEL_BG, borderRadius: 20, overflow: "hidden" }}>
-            {/* Left panel */}
+          // Desktop skeleton
+          <div style={{ display: "flex", height: 340 }}>
             <div
               style={{
-                width: "40%",
-                padding: "0 36px",
+                width: "42%",
+                background: PANEL_BG,
+                padding: "32px 36px",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
-                gap: 18,
+                gap: 12,
               }}
             >
-              {/* Headline 2 lines */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div className="hh-sk" style={{ height: 28, width: "95%", borderRadius: 6, opacity: 0.28 }} />
-                <div className="hh-sk" style={{ height: 28, width: "75%", borderRadius: 6, opacity: 0.28 }} />
-              </div>
-              {/* CTAs */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <div className="hh-sk" style={{ height: 42, width: 148, borderRadius: 12, opacity: 0.32 }} />
-                <div className="hh-sk" style={{ height: 42, width: 118, borderRadius: 12, opacity: 0.20 }} />
-              </div>
-              {/* Trust signals */}
-              <div style={{ display: "flex", gap: 12 }}>
-                <div className="hh-sk" style={{ height: 10, width: 88, borderRadius: 100, opacity: 0.18 }} />
-                <div className="hh-sk" style={{ height: 10, width: 96, borderRadius: 100, opacity: 0.18 }} />
-                <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
-              </div>
-              {/* Dots */}
-              <div style={{ display: "flex", gap: 5 }}>
-                <div className="hh-sk" style={{ height: 5, width: 20, borderRadius: 3, opacity: 0.30 }} />
-                <div className="hh-sk" style={{ height: 5, width: 5, borderRadius: 3, opacity: 0.18 }} />
-                <div className="hh-sk" style={{ height: 5, width: 5, borderRadius: 3, opacity: 0.18 }} />
+              <div
+                className="hh-sk"
+                style={{ height: 10, width: 160, borderRadius: 100, opacity: 0.25 }}
+              />
+              <div
+                className="hh-sk"
+                style={{ height: 30, width: "90%", borderRadius: 6, opacity: 0.25 }}
+              />
+              <div
+                className="hh-sk"
+                style={{ height: 30, width: "68%", borderRadius: 6, opacity: 0.25 }}
+              />
+              <div
+                className="hh-sk"
+                style={{
+                  height: 12,
+                  width: "78%",
+                  borderRadius: 4,
+                  opacity: 0.18,
+                  marginTop: 4,
+                }}
+              />
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <div
+                  className="hh-sk"
+                  style={{ height: 40, width: 148, borderRadius: R_BUTTON, opacity: 0.3 }}
+                />
+                <div
+                  className="hh-sk"
+                  style={{ height: 40, width: 118, borderRadius: R_BUTTON, opacity: 0.3 }}
+                />
               </div>
             </div>
-            {/* Right image area */}
-            <div className="hh-sk" style={{ flex: 1, opacity: 0.14 }} />
+            <div className="hh-sk" style={{ flex: 1, opacity: 0.15 }} />
           </div>
         )}
       </div>
@@ -423,7 +431,7 @@ export function HighlightedEventsHero({
             justifyContent: "center",
             height: 38,
             padding: "0 18px",
-            borderRadius: 12,
+            borderRadius: R_BUTTON,
             background: "#fff",
             color: "#0f0825",
             fontSize: 12,
@@ -447,15 +455,15 @@ export function HighlightedEventsHero({
     return (
       <div
         style={{
-          borderRadius: 20,
+          borderRadius: R_HERO,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD,
           marginBottom: 14,
         }}
       >
-        {/* Image section — clean, no text overlay */}
-        <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
+        {/* Image section */}
+        <div style={{ position: "relative", height: 220, overflow: "hidden" }}>
           {events.map((ev, i) => (
             <img
               key={ev.slug}
@@ -474,20 +482,19 @@ export function HighlightedEventsHero({
             />
           ))}
 
-          {StockBadge}
-
-          {/* Bottom fade into panel */}
+          {/* Gradient: bottom blends into panel */}
           <div
             style={{
               position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 80,
-              background: `linear-gradient(to bottom, transparent 0%, ${PANEL_BG} 100%)`,
-              pointerEvents: "none",
+              inset: 0,
+              background:
+                "linear-gradient(to bottom, transparent 30%, rgba(15,8,37,0.95) 100%)",
             }}
           />
+
+          {StockBadge}
+
+          {/* Dots — top right */}
           {events.length > 1 && (
             <div
               style={{
@@ -496,7 +503,6 @@ export function HighlightedEventsHero({
                 right: 12,
                 display: "flex",
                 gap: 4,
-                zIndex: 3,
               }}
             >
               {events.map((_, i) => (
@@ -511,83 +517,162 @@ export function HighlightedEventsHero({
                     border: "none",
                     cursor: "pointer",
                     padding: 0,
-                    background: i === index ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.25)",
+                    background:
+                      i === index
+                        ? "rgba(255,255,255,0.8)"
+                        : "rgba(255,255,255,0.25)",
                     transition: "all 0.3s ease",
                   }}
                 />
               ))}
             </div>
           )}
+
+          {/* Event name pinned to bottom of image */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 12,
+              left: 14,
+              right: 14,
+            }}
+          >
+            <div
+              style={{
+                ...S,
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: "0.07em",
+                color: V_SOFT,
+                textTransform: "uppercase",
+                marginBottom: 3,
+              }}
+            >
+              {categoryLabel}
+            </div>
+            <div
+              style={{
+                ...S,
+                fontSize: 18,
+                fontWeight: 700,
+                color: "#fff",
+                lineHeight: 1.2,
+              }}
+            >
+              {event.name}
+            </div>
+            {venueStr ? (
+              <div
+                style={{
+                  ...S,
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.48)",
+                  marginTop: 2,
+                }}
+              >
+                {venueStr}
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        {/* Brand + event panel */}
-        <div style={{ background: PANEL_BG, padding: "20px 18px 24px" }}>
-
-          {/* 1 — Brand headline */}
-          <div style={{ marginBottom: 16 }}>
-            <span style={{ ...S, fontSize: 22, fontWeight: 700, color: "#fff", display: "block", lineHeight: 1.2 }}>
+        {/* Brand copy + CTAs panel */}
+        <div style={{ background: PANEL_BG, padding: "18px 16px 22px" }}>
+          {/* Headline */}
+          <div style={{ marginBottom: 14 }}>
+            <span
+              style={{
+                ...S,
+                fontSize: 20,
+                fontWeight: 700,
+                color: "#fff",
+                display: "block",
+                lineHeight: 1.2,
+              }}
+            >
               Entradas para los shows
             </span>
-            <span style={{ ...E, fontSize: 23, fontStyle: "italic", fontWeight: 400, color: V_SOFT, display: "block", lineHeight: 1.2 }}>
+            <span
+              style={{
+                ...E,
+                fontSize: 21,
+                fontStyle: "italic",
+                fontWeight: 400,
+                color: V_SOFT,
+                display: "block",
+                lineHeight: 1.2,
+              }}
+            >
               que ya están agotados.
             </span>
           </div>
 
-          {/* 2 — Event context: name + venue + price compact */}
+          {/* Price + event CTA row */}
           <div
             style={{
-              padding: "12px 14px",
-              borderRadius: 12,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.09)",
-              marginBottom: 14,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ ...S, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 2, lineHeight: 1.2 }}>
-                  {event.name}
-                </div>
-                <div style={{ ...S, fontSize: 11, color: "rgba(255,255,255,0.48)" }}>
-                  {venueStr}{dateStr ? ` · ${dateStr}` : null}
-                </div>
-              </div>
-              {event.lowestListingPrice && (
-                <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Desde</div>
-                  <div style={{ ...S, fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
-                    ${formatPrice(event.lowestListingPrice.amount)}
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontWeight: 400, marginLeft: 2 }}>ARS</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 3 — Primary CTA: this event */}
-          <Link
-            to={`/event/${event.slug}`}
-            style={{
-              ...S,
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              height: 44,
-              borderRadius: 12,
-              background: V,
-              color: "#fff",
-              fontSize: 13,
-              fontWeight: 700,
-              textDecoration: "none",
-              marginBottom: 8,
-              boxShadow: SHADOW_HERO_CTA,
+              justifyContent: event.lowestListingPrice ? "space-between" : "flex-end",
+              marginBottom: 12,
             }}
           >
-            {isLowStock ? `Ver las ${availableCount} entradas →` : "Ver entradas →"}
-          </Link>
+            {event.lowestListingPrice && (
+              <div>
+                <div
+                  style={{
+                    ...S,
+                    fontSize: 9,
+                    color: "rgba(255,255,255,0.28)",
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    marginBottom: 1,
+                  }}
+                >
+                  Desde
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+                  <span
+                    style={{ ...S, fontSize: 18, fontWeight: 700, color: "#fff" }}
+                  >
+                    ${formatPrice(event.lowestListingPrice.amount)}
+                  </span>
+                  <span
+                    style={{
+                      ...S,
+                      fontSize: 10,
+                      color: "rgba(255,255,255,0.30)",
+                    }}
+                  >
+                    ARS
+                  </span>
+                </div>
+              </div>
+            )}
+            <Link
+              to={`/event/${event.slug}`}
+              style={{
+                ...S,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 40,
+                padding: "0 16px",
+                borderRadius: R_BUTTON,
+                background: V,
+                color: "#fff",
+                fontSize: 12,
+                fontWeight: 700,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                boxShadow: SHADOW_HERO_CTA,
+              }}
+            >
+              {isLowStock ? `${availableCount} entradas →` : "Ver entradas →"}
+            </Link>
+          </div>
 
-          {/* 4 — Secondary CTAs */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+          {/* Explore + how it works */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
             <Link
               to="/events"
               style={{
@@ -597,12 +682,13 @@ export function HighlightedEventsHero({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 38,
-                borderRadius: 12,
+                borderRadius: R_BUTTON,
                 background: "#fff",
                 color: PANEL_BG,
                 fontSize: 11,
                 fontWeight: 700,
                 textDecoration: "none",
+                textAlign: "center",
               }}
             >
               Explorar eventos →
@@ -616,23 +702,46 @@ export function HighlightedEventsHero({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 38,
-                borderRadius: 12,
+                borderRadius: R_BUTTON,
                 background: "rgba(255,255,255,0.07)",
                 border: "1px solid rgba(255,255,255,0.18)",
-                color: "rgba(255,255,255,0.65)",
+                color: "rgba(255,255,255,0.70)",
                 fontSize: 11,
                 fontWeight: 500,
                 textDecoration: "none",
+                textAlign: "center",
               }}
             >
               ¿Cómo funciona?
             </Link>
           </div>
 
-          {/* 5 — Trust signals */}
-          <div style={{ display: "flex", gap: 14, flexWrap: "nowrap", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+          {/* Trust signals — compact single row */}
+          <div
+            style={{
+              display: "flex",
+              gap: 14,
+              flexWrap: "nowrap",
+              overflowX: "auto",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
             {TRUST.map(({ Icon, label, color }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0, ...S, fontSize: 10, color: "rgba(255,255,255,0.38)", whiteSpace: "nowrap" }}>
+              <div
+                key={label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  flexShrink: 0,
+                  ...S,
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.38)",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 <Icon size={11} color={color} strokeWidth={2.2} />
                 {label}
               </div>
@@ -659,7 +768,7 @@ export function HighlightedEventsHero({
     <div
       style={{
         position: "relative",
-        borderRadius: 20,
+        borderRadius: R_HERO,
         overflow: "hidden",
         border: `1px solid ${BORDER}`,
         boxShadow: SHADOW_CARD,
@@ -811,7 +920,7 @@ export function HighlightedEventsHero({
                 justifyContent: "center",
                 height: 42,
                 padding: "0 20px",
-                borderRadius: 12,
+                borderRadius: R_BUTTON,
                 background: "#fff",
                 color: PANEL_BG,
                 fontSize: 13,
@@ -832,7 +941,7 @@ export function HighlightedEventsHero({
                 justifyContent: "center",
                 height: 42,
                 padding: "0 16px",
-                borderRadius: 12,
+                borderRadius: R_BUTTON,
                 background: "rgba(255,255,255,0.07)",
                 border: "1px solid rgba(255,255,255,0.17)",
                 color: "rgba(255,255,255,0.68)",

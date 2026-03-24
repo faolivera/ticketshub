@@ -16,6 +16,14 @@ export interface EventsRankingConfigRow {
 const CONFIG_ID = 'default';
 const BATCH_SIZE = 100;
 
+const DEFAULT_CONFIG = {
+  weightActiveListings: 1,
+  weightTransactions: 1,
+  weightProximity: 0.5,
+  weightPopular: 1,
+  jobIntervalMinutes: 5,
+} as const;
+
 @Injectable()
 export class EventScoringRepository {
   private readonly logger = new ContextLogger(EventScoringRepository.name);
@@ -59,14 +67,16 @@ export class EventScoringRepository {
   }
 
   /**
-   * Load ranking config (singleton row).
+   * Load ranking config (singleton row). Returns in-memory defaults if no row exists yet.
    */
-  async getConfig(ctx: Ctx): Promise<EventsRankingConfigRow | null> {
+  async getConfig(ctx: Ctx): Promise<EventsRankingConfigRow> {
     this.logger.debug(ctx, 'getConfig');
     const row = await this.prisma.eventsRankingConfig.findUnique({
       where: { id: CONFIG_ID },
     });
-    if (!row) return null;
+    if (!row) {
+      return { ...DEFAULT_CONFIG, lastRunAt: null, updatedAt: new Date() };
+    }
     return {
       weightActiveListings: row.weightActiveListings,
       weightTransactions: row.weightTransactions,
@@ -97,11 +107,11 @@ export class EventScoringRepository {
       where: { id: CONFIG_ID },
       create: {
         id: CONFIG_ID,
-        weightActiveListings: data.weightActiveListings ?? 1,
-        weightTransactions: data.weightTransactions ?? 1,
-        weightProximity: data.weightProximity ?? 0.5,
-        weightPopular: data.weightPopular ?? 1,
-        jobIntervalMinutes: data.jobIntervalMinutes ?? 5,
+        weightActiveListings: data.weightActiveListings ?? DEFAULT_CONFIG.weightActiveListings,
+        weightTransactions: data.weightTransactions ?? DEFAULT_CONFIG.weightTransactions,
+        weightProximity: data.weightProximity ?? DEFAULT_CONFIG.weightProximity,
+        weightPopular: data.weightPopular ?? DEFAULT_CONFIG.weightPopular,
+        jobIntervalMinutes: data.jobIntervalMinutes ?? DEFAULT_CONFIG.jobIntervalMinutes,
         lastRunAt: data.lastRunAt ?? null,
       },
       update: {

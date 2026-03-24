@@ -2652,6 +2652,7 @@
     "title": "Notificaciones",
     "empty": "No tienes notificaciones",
     "markAllRead": "Marcar todo como leído",
+    "close": "Cerrar notificaciones",
     "viewAll": "Ver todas las notificaciones",
     "justNow": "Ahora mismo",
     "minutesAgo": "Hace {{count}} min",

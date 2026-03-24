@@ -70,9 +70,6 @@ export class EventScoringService {
    */
   async getConfig(ctx: Ctx): Promise<GetEventsRankingConfigResponse> {
     const row = await this.eventScoringRepository.getConfig(ctx);
-    if (!row) {
-      throw new Error('Events ranking config not found (missing default row)');
-    }
     return {
       weightActiveListings: row.weightActiveListings,
       weightTransactions: row.weightTransactions,
@@ -116,11 +113,6 @@ export class EventScoringService {
   async runScoringJob(ctx: Ctx): Promise<{ processed: number }> {
     this.logger.log(ctx, 'runScoringJob: starting');
     const config = await this.eventScoringRepository.getConfig(ctx);
-    if (!config) {
-      this.logger.warn(ctx, 'runScoringJob: no config row, skipping');
-      return { processed: 0 };
-    }
-
     const eventIds = await this.eventScoringRepository.getPendingEventIds(ctx);
     if (eventIds.length === 0) {
       await this.eventScoringRepository.updateConfig(ctx, { lastRunAt: new Date() });
