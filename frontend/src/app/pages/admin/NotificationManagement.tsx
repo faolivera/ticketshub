@@ -53,7 +53,8 @@ export function NotificationManagement() {
     [],
   );
 
-  const { data: channelConfigs = [], isLoading, error, execute, setData } = useAsync(fetchConfigs);
+  const { data, isLoading, error, execute, setData } = useAsync(fetchConfigs);
+  const channelConfigs = data ?? [];
 
   useEffect(() => {
     execute();

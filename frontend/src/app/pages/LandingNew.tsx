@@ -337,8 +337,8 @@ export default function TicketsHub() {
           100% { background-position:  200% 0; }
         }
         .sk { background: linear-gradient(90deg, #ece9e6 25%, #f5f4f1 50%, #ece9e6 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; border-radius: 6px; }
-        .th-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
-        @media(max-width:1100px){ .th-grid{ grid-template-columns:repeat(3,1fr)!important; } }
+        .th-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
+        @media(max-width:1100px){ .th-grid{ grid-template-columns:repeat(3,minmax(0,1fr))!important; } }
         @media(max-width:680px) { .th-grid{ grid-template-columns:1fr!important; } }
         .th-hero-wrap { display:flex; align-items:center; gap:40px; }
         @media(max-width:820px){ .th-hero-wrap{ flex-direction:column; gap:20px; } .th-hero-img{ display:none!important; } }
