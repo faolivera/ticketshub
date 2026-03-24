@@ -52,6 +52,9 @@ export class EventsRepository implements IEventsRepository {
         updatedAt: event.updatedAt,
         isPopular: event.isPopular ?? false,
         highlight: event.highlight ?? false,
+        ticketApp: event.ticketApp,
+        transferable: event.transferable,
+        artists: event.artists ?? [],
       },
     });
     return this.mapToEvent(created);
@@ -776,6 +779,9 @@ export class EventsRepository implements IEventsRepository {
       updatedAt: prismaEvent.updatedAt,
       isPopular: prismaEvent.isPopular ?? false,
       highlight: prismaEvent.highlight ?? false,
+      ticketApp: prismaEvent.ticketApp ?? undefined,
+      transferable: prismaEvent.transferable ?? undefined,
+      artists: prismaEvent.artists ?? [],
     };
   }
 
