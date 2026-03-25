@@ -4,7 +4,6 @@ import { eventsService } from "@/api/services/events.service";
 import {
   V,
   V_SOFT,
-  V_MUTED_LIGHT,
   BORDER,
   S,
   E,
@@ -13,8 +12,6 @@ import {
   TRUST_ESCROW,
   TRUST_VERIFIED,
   AMBER_c1,
-  R_HERO,
-  R_BUTTON,
 } from "@/lib/design-tokens";
 import { Lock, CheckCircle, RefreshCw, LucideIcon } from "lucide-react";
 import { PublicListEventItem } from "@/api/types/events";
@@ -174,7 +171,7 @@ export function HighlightedEventsHero({
     return (
       <div
         style={{
-          borderRadius: R_HERO,
+          borderRadius: 20,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD,
@@ -194,85 +191,97 @@ export function HighlightedEventsHero({
         `}</style>
 
         {preferSquareLayout ? (
-          // Mobile skeleton
+          // Mobile skeleton — matches: image / headline / event block / CTAs / trust
           <div>
-            <div className="hh-sk" style={{ height: 220 }} />
+            <div className="hh-sk" style={{ height: 200 }} />
             <div
               style={{
                 background: PANEL_BG,
                 padding: "20px 18px 24px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 10,
+                gap: 14,
               }}
             >
-              <div
-                className="hh-sk"
-                style={{ height: 26, width: "85%", borderRadius: 6, opacity: 0.4 }}
-              />
-              <div
-                className="hh-sk"
-                style={{ height: 26, width: "65%", borderRadius: 6, opacity: 0.4 }}
-              />
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <div
-                  className="hh-sk"
-                  style={{ height: 38, flex: 1, borderRadius: R_BUTTON, opacity: 0.4 }}
-                />
-                <div
-                  className="hh-sk"
-                  style={{ height: 38, flex: 1, borderRadius: R_BUTTON, opacity: 0.4 }}
-                />
+              {/* Headline 2 lines */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div className="hh-sk" style={{ height: 26, width: "88%", borderRadius: 6, opacity: 0.35 }} />
+                <div className="hh-sk" style={{ height: 26, width: "70%", borderRadius: 6, opacity: 0.35 }} />
+              </div>
+              {/* Event context block */}
+              <div className="hh-sk" style={{ height: 60, borderRadius: 12, opacity: 0.22 }} />
+              {/* Primary CTA */}
+              <div className="hh-sk" style={{ height: 44, borderRadius: 12, opacity: 0.35 }} />
+              {/* Secondary CTAs */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <div className="hh-sk" style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.25 }} />
+                <div className="hh-sk" style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.25 }} />
+              </div>
+              {/* Trust signals */}
+              <div style={{ display: "flex", gap: 12 }}>
+                <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
+                <div className="hh-sk" style={{ height: 10, width: 90, borderRadius: 100, opacity: 0.18 }} />
+                <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
               </div>
             </div>
           </div>
         ) : (
-          // Desktop skeleton
-          <div style={{ display: "flex", height: 340 }}>
+          // Desktop skeleton — 3-zone left panel + parallelogram image area
+          <div style={{ position: "relative", height: 340, background: PANEL_BG, borderRadius: 20, overflow: "hidden" }}>
+            {/* Left panel — 3 zones: headline · event+dots · ctas+trust */}
             <div
               style={{
-                width: "42%",
-                background: PANEL_BG,
-                padding: "32px 36px",
+                position: "absolute",
+                top: 0, left: 0,
+                width: 345,
+                height: "100%",
+                padding: "28px 32px 26px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 12,
+                justifyContent: "space-between",
               }}
             >
-              <div
-                className="hh-sk"
-                style={{ height: 10, width: 160, borderRadius: 100, opacity: 0.25 }}
-              />
-              <div
-                className="hh-sk"
-                style={{ height: 30, width: "90%", borderRadius: 6, opacity: 0.25 }}
-              />
-              <div
-                className="hh-sk"
-                style={{ height: 30, width: "68%", borderRadius: 6, opacity: 0.25 }}
-              />
-              <div
-                className="hh-sk"
-                style={{
-                  height: 12,
-                  width: "78%",
-                  borderRadius: 4,
-                  opacity: 0.18,
-                  marginTop: 4,
-                }}
-              />
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <div
-                  className="hh-sk"
-                  style={{ height: 40, width: 148, borderRadius: R_BUTTON, opacity: 0.3 }}
-                />
-                <div
-                  className="hh-sk"
-                  style={{ height: 40, width: 118, borderRadius: R_BUTTON, opacity: 0.3 }}
-                />
+              {/* Zone 1 — Headline */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div className="hh-sk" style={{ height: 26, width: "92%", borderRadius: 6, opacity: 0.28 }} />
+                <div className="hh-sk" style={{ height: 26, width: "74%", borderRadius: 6, opacity: 0.28 }} />
+              </div>
+              {/* Zone 2 — Event + dots */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div className="hh-sk" style={{ height: 24, width: "65%", borderRadius: 5, opacity: 0.26 }} />
+                  <div className="hh-sk" style={{ height: 13, width: "80%", borderRadius: 4, opacity: 0.18 }} />
+                </div>
+                <div style={{ display: "flex", gap: 5 }}>
+                  <div className="hh-sk" style={{ height: 5, width: 20, borderRadius: 3, opacity: 0.30 }} />
+                  <div className="hh-sk" style={{ height: 5, width: 5,  borderRadius: 3, opacity: 0.18 }} />
+                  <div className="hh-sk" style={{ height: 5, width: 5,  borderRadius: 3, opacity: 0.18 }} />
+                </div>
+              </div>
+              {/* Zone 3 — CTAs + trust */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <div className="hh-sk" style={{ height: 42, width: 148, borderRadius: 12, opacity: 0.32 }} />
+                  <div className="hh-sk" style={{ height: 42, width: 118, borderRadius: 12, opacity: 0.20 }} />
+                </div>
+                <div style={{ display: "flex", gap: 14 }}>
+                  <div className="hh-sk" style={{ height: 10, width: 88, borderRadius: 100, opacity: 0.18 }} />
+                  <div className="hh-sk" style={{ height: 10, width: 96, borderRadius: 100, opacity: 0.18 }} />
+                  <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
+                </div>
               </div>
             </div>
-            <div className="hh-sk" style={{ flex: 1, opacity: 0.15 }} />
+            {/* Parallelogram image area shimmer */}
+            <div
+              className="hh-sk"
+              style={{
+                position: "absolute",
+                bottom: 0, right: 0,
+                width: 1026, height: 300,
+                clipPath: "path('M 333,0 L 990,0 Q 1026,0 1008,36 L 729,300 L 0,300 L 279,36 Q 297,0 333,0 Z')",
+                opacity: 0.14,
+              }}
+            />
           </div>
         )}
       </div>
@@ -293,13 +302,6 @@ export function HighlightedEventsHero({
     .join(" · ");
 
   const dateStr = event.startDate ? formatStartDate(event.startDate) : "";
-
-  const categoryLabel = event.category
-    ? event.category.toUpperCase()
-    : "EVENTO";
-
-  // Watermark: first word of event name
-  const watermarkWord = event.name?.split(" ")[0]?.toUpperCase() ?? "";
 
   // ── Stock badge (shared between layouts) ───────────────────────────────────
 
@@ -357,113 +359,21 @@ export function HighlightedEventsHero({
     </div>
   ) : null;
 
-  // ── Event overlay — Card C: text directly on image, no container ─────────────
-
-  const EventCard = (
-    <div>
-      {/* Event name */}
-      <div
-        style={{
-          ...S,
-          fontSize: 17,
-          fontWeight: 700,
-          color: "#fff",
-          marginBottom: 4,
-          lineHeight: 1.2,
-        }}
-      >
-        {event.name}
-      </div>
-
-      {/* Venue + date */}
-      <div
-        style={{
-          ...S,
-          fontSize: 11,
-          color: "rgba(255,255,255,0.62)",
-          marginBottom: 14,
-          lineHeight: 1.5,
-        }}
-      >
-        {venueStr}
-        {dateStr ? ` · ${dateStr}` : null}
-      </div>
-
-      {/* Price + CTA */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: event.lowestListingPrice ? "space-between" : "flex-end",
-        }}
-      >
-        {event.lowestListingPrice && (
-          <div>
-            <div
-              style={{
-                ...S,
-                fontSize: 9,
-                color: "rgba(255,255,255,0.50)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                marginBottom: 2,
-              }}
-            >
-              Desde
-            </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-              <span style={{ ...S, fontSize: 22, fontWeight: 700, color: "#fff" }}>
-                ${formatPrice(event.lowestListingPrice.amount)}
-              </span>
-              <span style={{ ...S, fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>
-                ARS
-              </span>
-            </div>
-          </div>
-        )}
-
-        <Link
-          to={`/event/${event.slug}`}
-          style={{
-            ...S,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: 38,
-            padding: "0 18px",
-            borderRadius: R_BUTTON,
-            background: "#fff",
-            color: "#0f0825",
-            fontSize: 12,
-            fontWeight: 700,
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-            boxShadow: SHADOW_HERO_CTA,
-          }}
-        >
-          {isLowStock
-            ? `Ver las ${availableCount} entradas →`
-            : "Ver entradas →"}
-        </Link>
-      </div>
-    </div>
-  );
-
   // ── MOBILE layout ──────────────────────────────────────────────────────────
 
   if (preferSquareLayout) {
     return (
       <div
         style={{
-          borderRadius: R_HERO,
+          borderRadius: 20,
           overflow: "hidden",
           border: `1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD,
           marginBottom: 14,
         }}
       >
-        {/* Image section */}
-        <div style={{ position: "relative", height: 220, overflow: "hidden" }}>
+        {/* Image section — clean, no text overlay */}
+        <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
           {events.map((ev, i) => (
             <img
               key={ev.slug}
@@ -482,19 +392,20 @@ export function HighlightedEventsHero({
             />
           ))}
 
-          {/* Gradient: bottom blends into panel */}
+          {StockBadge}
+
+          {/* Bottom fade into panel */}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to bottom, transparent 30%, rgba(15,8,37,0.95) 100%)",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 80,
+              background: `linear-gradient(to bottom, transparent 0%, ${PANEL_BG} 100%)`,
+              pointerEvents: "none",
             }}
           />
-
-          {StockBadge}
-
-          {/* Dots — top right */}
           {events.length > 1 && (
             <div
               style={{
@@ -503,6 +414,7 @@ export function HighlightedEventsHero({
                 right: 12,
                 display: "flex",
                 gap: 4,
+                zIndex: 3,
               }}
             >
               {events.map((_, i) => (
@@ -517,162 +429,83 @@ export function HighlightedEventsHero({
                     border: "none",
                     cursor: "pointer",
                     padding: 0,
-                    background:
-                      i === index
-                        ? "rgba(255,255,255,0.8)"
-                        : "rgba(255,255,255,0.25)",
+                    background: i === index ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.25)",
                     transition: "all 0.3s ease",
                   }}
                 />
               ))}
             </div>
           )}
-
-          {/* Event name pinned to bottom of image */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: 12,
-              left: 14,
-              right: 14,
-            }}
-          >
-            <div
-              style={{
-                ...S,
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: "0.07em",
-                color: V_SOFT,
-                textTransform: "uppercase",
-                marginBottom: 3,
-              }}
-            >
-              {categoryLabel}
-            </div>
-            <div
-              style={{
-                ...S,
-                fontSize: 18,
-                fontWeight: 700,
-                color: "#fff",
-                lineHeight: 1.2,
-              }}
-            >
-              {event.name}
-            </div>
-            {venueStr ? (
-              <div
-                style={{
-                  ...S,
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.48)",
-                  marginTop: 2,
-                }}
-              >
-                {venueStr}
-              </div>
-            ) : null}
-          </div>
         </div>
 
-        {/* Brand copy + CTAs panel */}
-        <div style={{ background: PANEL_BG, padding: "18px 16px 22px" }}>
-          {/* Headline */}
-          <div style={{ marginBottom: 14 }}>
-            <span
-              style={{
-                ...S,
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#fff",
-                display: "block",
-                lineHeight: 1.2,
-              }}
-            >
+        {/* Brand + event panel */}
+        <div style={{ background: PANEL_BG, padding: "20px 18px 24px" }}>
+
+          {/* 1 — Brand headline */}
+          <div style={{ marginBottom: 16 }}>
+            <span style={{ ...S, fontSize: 22, fontWeight: 700, color: "#fff", display: "block", lineHeight: 1.2 }}>
               Entradas para los shows
             </span>
-            <span
-              style={{
-                ...E,
-                fontSize: 21,
-                fontStyle: "italic",
-                fontWeight: 400,
-                color: V_SOFT,
-                display: "block",
-                lineHeight: 1.2,
-              }}
-            >
+            <span style={{ ...E, fontSize: 23, fontStyle: "italic", fontWeight: 400, color: V_SOFT, display: "block", lineHeight: 1.2 }}>
               que ya están agotados.
             </span>
           </div>
 
-          {/* Price + event CTA row */}
+          {/* 2 — Event context: name + venue + price compact */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: event.lowestListingPrice ? "space-between" : "flex-end",
-              marginBottom: 12,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              marginBottom: 14,
             }}
           >
-            {event.lowestListingPrice && (
-              <div>
-                <div
-                  style={{
-                    ...S,
-                    fontSize: 9,
-                    color: "rgba(255,255,255,0.28)",
-                    letterSpacing: "0.05em",
-                    textTransform: "uppercase",
-                    marginBottom: 1,
-                  }}
-                >
-                  Desde
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...S, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 2, lineHeight: 1.2 }}>
+                  {event.name}
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-                  <span
-                    style={{ ...S, fontSize: 18, fontWeight: 700, color: "#fff" }}
-                  >
-                    ${formatPrice(event.lowestListingPrice.amount)}
-                  </span>
-                  <span
-                    style={{
-                      ...S,
-                      fontSize: 10,
-                      color: "rgba(255,255,255,0.30)",
-                    }}
-                  >
-                    ARS
-                  </span>
+                <div style={{ ...S, fontSize: 11, color: "rgba(255,255,255,0.48)" }}>
+                  {venueStr}{dateStr ? ` · ${dateStr}` : null}
                 </div>
               </div>
-            )}
-            <Link
-              to={`/event/${event.slug}`}
-              style={{
-                ...S,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: 40,
-                padding: "0 16px",
-                borderRadius: R_BUTTON,
-                background: V,
-                color: "#fff",
-                fontSize: 12,
-                fontWeight: 700,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                boxShadow: SHADOW_HERO_CTA,
-              }}
-            >
-              {isLowStock ? `${availableCount} entradas →` : "Ver entradas →"}
-            </Link>
+              {event.lowestListingPrice && (
+                <div style={{ flexShrink: 0, textAlign: "right" }}>
+                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Desde</div>
+                  <div style={{ ...S, fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
+                    ${formatPrice(event.lowestListingPrice.amount)}
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontWeight: 400, marginLeft: 2 }}>ARS</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Explore + how it works */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          {/* 3 — Primary CTA: this event */}
+          <Link
+            to={`/event/${event.slug}`}
+            style={{
+              ...S,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 44,
+              borderRadius: 12,
+              background: V,
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              textDecoration: "none",
+              marginBottom: 8,
+              boxShadow: SHADOW_HERO_CTA,
+            }}
+          >
+            {isLowStock ? `Ver las ${availableCount} entradas →` : "Ver entradas →"}
+          </Link>
+
+          {/* 4 — Secondary CTAs */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
             <Link
               to="/events"
               style={{
@@ -682,13 +515,12 @@ export function HighlightedEventsHero({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 38,
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: "#fff",
                 color: PANEL_BG,
                 fontSize: 11,
                 fontWeight: 700,
                 textDecoration: "none",
-                textAlign: "center",
               }}
             >
               Explorar eventos →
@@ -702,46 +534,23 @@ export function HighlightedEventsHero({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 38,
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: "rgba(255,255,255,0.07)",
                 border: "1px solid rgba(255,255,255,0.18)",
-                color: "rgba(255,255,255,0.70)",
+                color: "rgba(255,255,255,0.65)",
                 fontSize: 11,
                 fontWeight: 500,
                 textDecoration: "none",
-                textAlign: "center",
               }}
             >
               ¿Cómo funciona?
             </Link>
           </div>
 
-          {/* Trust signals — compact single row */}
-          <div
-            style={{
-              display: "flex",
-              gap: 14,
-              flexWrap: "nowrap",
-              overflowX: "auto",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-              WebkitOverflowScrolling: "touch",
-            }}
-          >
+          {/* 5 — Trust signals */}
+          <div style={{ display: "flex", gap: 14, flexWrap: "nowrap", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
             {TRUST.map(({ Icon, label, color }) => (
-              <div
-                key={label}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  flexShrink: 0,
-                  ...S,
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.38)",
-                  whiteSpace: "nowrap",
-                }}
-              >
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0, ...S, fontSize: 10, color: "rgba(255,255,255,0.38)", whiteSpace: "nowrap" }}>
                 <Icon size={11} color={color} strokeWidth={2.2} />
                 {label}
               </div>
@@ -752,23 +561,29 @@ export function HighlightedEventsHero({
     );
   }
 
-  // ── DESKTOP layout ─────────────────────────────────────────────────────────
+  // ── DESKTOP layout — Option B ──────────────────────────────────────────────
   //
   // Layer structure (bottom → top):
-  //   1. Image          — right-aligned, covers right ~70%
-  //   2. Dark tint      — 20% opacity over image area only
-  //   3. Bottom scrim   — vertical gradient for event card legibility
-  //   4. Diagonal mask  — solid PANEL_BG, clip-path polygon for diagonal cut
-  //   5. Diagonal feather — soft gradient to blur the diagonal edge
-  //   6. Watermark      — low-opacity text in image area
-  //   7. Stock badge    — top-right corner
-  //   8. Content        — brand copy left + event card right
+  //   1. Parallelogram images  — 570×300px, bottom-flush, clip-path with rounded
+  //                              top corners matching logo diagonal angle (~29°)
+  //   2. Right-edge vignette   — subtle dark fade inside the parallelogram shape
+  //   3. Stock badge           — absolute, top-right
+  //   4. Left panel            — 345px wide, 3 zones:
+  //                              Zone 1 (top)    headline brand copy
+  //                              Zone 2 (middle) event name + venue + dot nav
+  //                              Zone 3 (bottom) CTAs + trust signals
+  //
+  // Parallelogram path (570×300, lean=165px, r=20):
+  //   M 185,0 L 550,0 Q 570,0 560,18 L 405,300 L 0,300 L 155,18 Q 165,0 185,0 Z
+
+  const PARA_CLIP =
+    "path('M 333,0 L 990,0 Q 1026,0 1008,36 L 729,300 L 0,300 L 279,36 Q 297,0 333,0 Z')";
 
   return (
     <div
       style={{
         position: "relative",
-        borderRadius: R_HERO,
+        borderRadius: 20,
         overflow: "hidden",
         border: `1px solid ${BORDER}`,
         boxShadow: SHADOW_CARD,
@@ -779,140 +594,136 @@ export function HighlightedEventsHero({
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* ── LAYER 1: Image — right-aligned, ~70% width ──────────────────── */}
+      {/* ── LAYER 1: Parallelogram images ───────────────────────────────── */}
       {events.map((ev, i) => (
-        <img
+        <div
           key={ev.slug}
-          src={resolveBannerSrc(ev, false)}
-          alt=""
           style={{
             position: "absolute",
-            top: 0,
+            bottom: 0,
             right: 0,
-            width: "80%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center 35%",
+            width: 1026,
+            height: 300,
+            clipPath: PARA_CLIP,
+            zIndex: 0,
             opacity: i === index ? 1 : 0,
             transition: "opacity 0.9s ease-in-out",
-            zIndex: 0,
           }}
-        />
+        >
+          <img
+            src={resolveBannerSrc(ev, false)}
+            alt=""
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center 10%",
+              display: "block",
+            }}
+          />
+        </div>
       ))}
 
-      {/* ── LAYER 2: Dark tint over image area ──────────────────────────── */}
+      {/* ── LAYER 2: Right-edge vignette inside the parallelogram ───────── */}
       <div
         style={{
           position: "absolute",
-          top: 0,
+          bottom: 0,
           right: 0,
-          width: "80%",
-          height: "100%",
-          background: "rgba(10,4,25,0.20)",
+          width: 570,
+          height: 300,
+          clipPath: PARA_CLIP,
+          background: "linear-gradient(to left, rgba(11,7,30,0.28) 0%, transparent 14%)",
+          pointerEvents: "none",
           zIndex: 1,
         }}
       />
 
-      {/* ── LAYER 3: Bottom scrim — only bottom 40% for card legibility ──── */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.50) 32%, transparent 52%)",
-          zIndex: 2,
-        }}
-      />
-
-      {/* ── LAYER 4: Diagonal fade — solid PANEL_BG left → transparent right */}
-      {/* 105deg tilts the gradient so top fades at ~32%, bottom fades at ~46% */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `linear-gradient(105deg, ${PANEL_BG} 0%, ${PANEL_BG} 24%, rgba(15,8,37,0.85) 32%, rgba(15,8,37,0.30) 40%, rgba(15,8,37,0.0) 50%)`,
-          zIndex: 3,
-        }}
-      />
-
-      {/* ── LAYER 5: Watermark ───────────────────────────────────────────── */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          right: "8%",
-          transform: "translateY(-50%)",
-          fontSize: 88,
-          fontWeight: 900,
-          color: "rgba(255,255,255,0.05)",
-          letterSpacing: "-0.03em",
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-          userSelect: "none",
-          zIndex: 4,
-          ...S,
-        }}
-      >
-        {watermarkWord}
-      </div>
-
-      {/* ── LAYER 6: Stock badge ─────────────────────────────────────────── */}
+      {/* ── LAYER 3: Stock badge ─────────────────────────────────────────── */}
       {StockBadge}
 
-      {/* ── LAYER 7: Content ─────────────────────────────────────────────── */}
+      {/* ── LAYER 4: Left panel — 3 zones ───────────────────────────────── */}
       <div
         style={{
           position: "absolute",
-          inset: 0,
+          top: 0,
+          left: 0,
+          width: 345,
+          height: "100%",
+          padding: "28px 32px 26px",
           display: "flex",
-          zIndex: 5,
+          flexDirection: "column",
+          justifyContent: "space-between",
+          zIndex: 2,
         }}
       >
-        {/* Brand copy — Panel A: no eyebrow, headline, CTAs, trust, dots */}
-        <div
-          style={{
-            width: "40%",
-            padding: "0 36px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            flexShrink: 0,
-            gap: 18,
-          }}
-        >
-          {/* Headline */}
+        {/* Zone 1 — Brand identity (top) */}
+        <div>
+          <span
+            style={{
+              ...S,
+              fontSize: "clamp(18px, 1.7vw, 22px)",
+              fontWeight: 700,
+              color: "#fff",
+              lineHeight: 1.2,
+              display: "block",
+            }}
+          >
+            Entradas para los shows
+          </span>
+          <span
+            style={{
+              ...E,
+              fontSize: "clamp(19px, 1.85vw, 23px)",
+              fontStyle: "italic",
+              fontWeight: 400,
+              color: V_SOFT,
+              lineHeight: 1.2,
+              display: "block",
+            }}
+          >
+            que ya están agotados.
+          </span>
+        </div>
+
+        {/* Zone 2 — Event content + dot navigation (middle) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div>
-            <span
+            <div
               style={{
                 ...S,
-                fontSize: "clamp(20px, 2vw, 27px)",
-                fontWeight: 700,
+                fontSize: "clamp(17px, 1.6vw, 21px)",
+                fontWeight: 800,
                 color: "#fff",
-                lineHeight: 1.2,
-                display: "block",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.1,
+                marginBottom: 3,
               }}
             >
-              Entradas para los shows
-            </span>
-            <span
+              {event.name}
+            </div>
+            <div
               style={{
-                ...E,
-                fontSize: "clamp(22px, 2.2vw, 29px)",
-                fontStyle: "italic",
-                fontWeight: 400,
-                color: V_SOFT,
-                lineHeight: 1.2,
-                display: "block",
+                ...S,
+                fontSize: 11,
+                color: "rgba(255,255,255,0.42)",
+                lineHeight: 1.5,
               }}
             >
-              que ya están agotados.
-            </span>
+              {venueStr}
+              {dateStr ? ` · ${dateStr}` : null}
+            </div>
           </div>
+          {/* Dot nav lives here — navigates the event, not the page */}
+          {DotNav}
+        </div>
 
+        {/* Zone 3 — Action + trust (bottom) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
           {/* CTAs */}
           <div style={{ display: "flex", gap: 8 }}>
             <Link
-              to="/events"
+              to={`/event/${event.slug}`}
               style={{
                 ...S,
                 display: "inline-flex",
@@ -920,17 +731,19 @@ export function HighlightedEventsHero({
                 justifyContent: "center",
                 height: 42,
                 padding: "0 20px",
-                borderRadius: R_BUTTON,
+                borderRadius: 12,
                 background: "#fff",
                 color: PANEL_BG,
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: 700,
                 textDecoration: "none",
                 whiteSpace: "nowrap",
                 boxShadow: SHADOW_HERO_CTA,
               }}
             >
-              Explorar eventos →
+              {isLowStock
+                ? `Ver las ${availableCount} entradas →`
+                : "Ver entradas →"}
             </Link>
             <Link
               to="/how-it-works"
@@ -941,10 +754,10 @@ export function HighlightedEventsHero({
                 justifyContent: "center",
                 height: 42,
                 padding: "0 16px",
-                borderRadius: R_BUTTON,
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.17)",
-                color: "rgba(255,255,255,0.68)",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.055)",
+                border: "1px solid rgba(255,255,255,0.13)",
+                color: "rgba(255,255,255,0.58)",
                 fontSize: 12,
                 fontWeight: 500,
                 textDecoration: "none",
@@ -967,7 +780,7 @@ export function HighlightedEventsHero({
                   style={{
                     ...S,
                     fontSize: 10,
-                    color: "rgba(255,255,255,0.38)",
+                    color: "rgba(255,255,255,0.32)",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -975,24 +788,6 @@ export function HighlightedEventsHero({
                 </span>
               </div>
             ))}
-          </div>
-
-          {/* Dots — own row */}
-          {DotNav}
-        </div>
-
-        {/* Event area — right side, text directly on image */}
-        <div style={{ flex: 1, position: "relative" }}>
-          <div
-            style={{
-              position: "absolute",
-              bottom: 20,
-              left: 20,
-              right: 20,
-              zIndex: 1,
-            }}
-          >
-            {EventCard}
           </div>
         </div>
       </div>

@@ -43,9 +43,9 @@ import {
   R_INPUT,
   R_CARD,
 } from "@/lib/design-tokens";
-import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero";
-import { ShieldSVG, MapSVG } from "@/app/components/site/SiteBrandIcons";
-import { Search, ArrowRight, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar, SlidersHorizontal } from "lucide-react";
+import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero4";
+import { MapSVG } from "@/app/components/site/SiteBrandIcons";
+import { Search, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar, SlidersHorizontal } from "lucide-react";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
