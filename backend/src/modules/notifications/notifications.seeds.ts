@@ -327,7 +327,7 @@ export class NotificationsSeeder implements OnModuleInit {
         channel: NotificationChannel.EMAIL,
         locale: 'es',
         recipientRole: NotificationRecipientRole.ADMIN,
-        titleTemplate: 'Pago recibido para "{{eventName}}"',
+        titleTemplate: '{{buyerName}} envió un comprobante de pago para "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
   <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
   <div class="th-body">
@@ -415,7 +415,7 @@ export class NotificationsSeeder implements OnModuleInit {
       <div class="th-row"><span class="th-label">Monto a recibir</span><span class="th-value th-value--highlight">{{amountFormatted}}</span></div>
       <div class="th-row"><span class="th-label">ID de transacción</span><span class="th-value">{{transactionId}}</span></div>
     </div>
-    <div class="th-alert th-alert--info"><p>El dinero queda retenido de forma segura hasta que validemos la entrega. Una vez confirmada, acreditamos el monto en tu cuenta.</p></div>
+    <div class="th-alert th-alert--info"><p>El dinero queda retenido de forma segura hasta que se complete la transacción. Una vez completada, acreditamos el monto en tu cuenta.</p></div>
     <div class="th-btn-wrap"><a href="{{actionUrl}}" class="th-btn">Ver mi venta</a></div>
   </div>
   <div class="th-footer">
@@ -454,8 +454,7 @@ export class NotificationsSeeder implements OnModuleInit {
       <div class="th-row"><span class="th-label">Motivo</span><span class="th-value">{{rejectionReason}}</span></div>
       <div class="th-row"><span class="th-label">ID de transacción</span><span class="th-value">{{transactionId}}</span></div>
     </div>
-    <div class="th-alert th-alert--warning"><p>Podés reintentar el pago con el mismo método o elegir uno diferente. Las entradas seguirán disponibles hasta que se completen.</p></div>
-    <div class="th-btn-wrap"><a href="{{actionUrl}}" class="th-btn">Reintentar pago</a></div>
+    <div class="th-alert th-alert--warning"><p>Podés reintentar la compra con el mismo método o elegir uno diferente.</p></div>
   </div>
   <div class="th-footer">
     <p class="th-footer-brand">TicketsHub</p>
@@ -497,7 +496,7 @@ export class NotificationsSeeder implements OnModuleInit {
     <div class="th-alert th-alert--info"><p>Revisá que todo esté en orden antes de confirmar la recepción. El pago se libera al vendedor únicamente después de tu confirmación. Si encontrás algún problema, reportalo antes de confirmar.</p></div>
     <div class="th-btn-group">
       <a href="{{actionUrl}}" class="th-btn">Ver mis entradas</a>
-      <a href="{{actionUrl}}" class="th-btn th-btn--secondary">Reportar un problema</a>
+      <a href="{{actionUrl}}?reportProblem=true" class="th-btn th-btn--secondary">Reportar un problema</a>
     </div>
   </div>
   <div class="th-footer">
@@ -530,12 +529,12 @@ export class NotificationsSeeder implements OnModuleInit {
   <div class="th-body">
     <div class="th-icon th-icon--success">&#10003;</div>
     <h1 class="th-title">La entrega fue registrada</h1>
-    <p class="th-text">El comprador recibió las entradas de <strong>{{eventName}}</strong>. Estamos procesando la liberación del pago a tu cuenta.</p>
+    <p class="th-text">El comprador recibió las entradas de <strong>{{eventName}}</strong>.</p>
     <div class="th-info-box">
       <div class="th-row"><span class="th-label">Evento</span><span class="th-value">{{eventName}}</span></div>
       <div class="th-row"><span class="th-label">ID de transacción</span><span class="th-value">{{transactionId}}</span></div>
     </div>
-    <div class="th-alert th-alert--success"><p>El pago se acreditará en tu cuenta en breve. Vas a recibir una notificación cuando se confirme la acreditación.</p></div>
+    <div class="th-alert th-alert--success"><p>El pago se acreditará en tu cuenta una vez que se complete la transacción. Vas a recibir una notificación cuando se confirme la acreditación.</p></div>
     <div class="th-btn-wrap"><a href="{{actionUrl}}" class="th-btn">Ver mi venta</a></div>
   </div>
   <div class="th-footer">
@@ -691,8 +690,8 @@ export class NotificationsSeeder implements OnModuleInit {
       <div class="th-row"><span class="th-label">ID de disputa</span><span class="th-value">{{disputeId}}</span></div>
       <div class="th-row"><span class="th-label">ID de transacción</span><span class="th-value">{{transactionId}}</span></div>
     </div>
-    <div class="th-alert th-alert--warning"><p>Nuestro equipo se va a comunicar con vos dentro de las próximas 24 horas. Desde el panel podés enviar tu versión del caso o adjuntar evidencia.</p></div>
-    <div class="th-btn-wrap"><a href="{{actionUrl}}" class="th-btn">Ver la disputa</a></div>
+    <div class="th-alert th-alert--warning"><p>Nuestro equipo se va a comunicar con vos en la brevedad.</p></div>
+    <div class="th-btn-wrap"><a href="{{actionUrl}}" class="th-btn">Ver venta disputada</a></div>
   </div>
   <div class="th-footer">
     <p class="th-footer-brand">TicketsHub</p>
@@ -731,8 +730,8 @@ export class NotificationsSeeder implements OnModuleInit {
       <div class="th-row"><span class="th-label">ID de disputa</span><span class="th-value">{{disputeId}}</span></div>
       <div class="th-row"><span class="th-label">ID de transacción</span><span class="th-value">{{transactionId}}</span></div>
     </div>
-    <div class="th-alert th-alert--warning"><p>Nuestro equipo se va a comunicar con vos dentro de las próximas 24 horas. Desde el panel podés enviar tu versión del caso o adjuntar evidencia.</p></div>
-    <div class="th-btn-wrap"><a href="{{actionUrl}}" class="th-btn">Ver la disputa</a></div>
+    <div class="th-alert th-alert--warning"><p>Nuestro equipo se va a comunicar con vos en la brevedad.</p></div>
+    <div class="th-btn-wrap"><a href="{{actionUrl}}" class="th-btn">Ver compra disputada</a></div>
   </div>
   <div class="th-footer">
     <p class="th-footer-brand">TicketsHub</p>

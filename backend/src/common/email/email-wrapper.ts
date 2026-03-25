@@ -1,3 +1,6 @@
+import * as juice from 'juice';
+import { convert } from 'html-to-text'
+
 const WRAPPER_TEMPLATE = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -129,6 +132,35 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
  * Wraps an email body HTML (a th-wrap div) in the full HTML email wrapper
  * that includes the doctype, head, and body-scoped styles.
  */
-export function wrapEmailHtml(bodyHtml: string): string {
-  return WRAPPER_TEMPLATE.replace('__CONTENT__', bodyHtml);
+export function wrapEmail(bodyHtml: string): {html: string, text: string} {
+  const html = WRAPPER_TEMPLATE.replace('__CONTENT__', bodyHtml);
+  return {
+    html: juice(html),
+    text: htmlToPlainText(html)
+  }
+}
+
+function htmlToPlainText(html: string) {
+  const plainText = convert(html, {
+    formatters: {
+      'thRow': (elem, walk, builder, formatOptions) => {
+        const label = elem.children.find(
+          (c: any) => c.attribs?.class?.includes('th-label')
+        );
+        const value = elem.children.find(
+          (c: any) => c.attribs?.class?.includes('th-value')
+        );
+        
+        const labelText = label?.children?.[0]?.data?.trim() ?? '';
+        const valueText = value?.children?.[0]?.data?.trim() ?? '';
+        
+        builder.addInline(`${labelText}: ${valueText}`);
+        builder.addLineBreak();
+      },
+    },
+    selectors: [
+      { selector: '.th-row', format: 'thRow' },
+    ],
+  });
+  return plainText
 }

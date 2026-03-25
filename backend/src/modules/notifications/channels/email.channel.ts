@@ -9,7 +9,7 @@ import type {
 } from './channel.interface';
 import type { IEmailSender } from '../../../common/email/email-sender.interface';
 import { EMAIL_SENDER } from '../../../common/email/email-sender.interface';
-import { wrapEmailHtml } from '../../../common/email/email-wrapper';
+import { wrapEmail } from '../../../common/email/email-wrapper';
 import { UsersService } from '../../users/users.service';
 
 const FALLBACK_PUBLIC_URL = 'https://www.ticketshub.com.ar';
@@ -41,13 +41,13 @@ export class EmailChannel implements NotificationChannelProvider {
    * so email links are clickable. In-app notifications keep the relative path
    * for client-side navigation.
    */
-  private buildHtmlBody(notification: Notification): string {
+  private buildEmailBody(notification: Notification): {html: string, text: string} {
     let body = notification.body;
     if (notification.actionUrl) {
       const fullUrl = `${this.resolveBaseUrl()}${notification.actionUrl}`;
       body = body.replaceAll(notification.actionUrl, fullUrl);
     }
-    return wrapEmailHtml(body);
+    return wrapEmail(body);
   }
 
   async send(ctx: Ctx, notification: Notification): Promise<ChannelSendResult> {
@@ -60,13 +60,14 @@ export class EmailChannel implements NotificationChannelProvider {
       return { success: false, error: 'Recipient has no email' };
     }
 
+    const emailBody = this.buildEmailBody(notification);
     const result = await this.emailSender.send(ctx, {
       to: user.email,
       subject: notification.title,
-      body: notification.body,
-      htmlBody: this.buildHtmlBody(notification),
+      body: emailBody.text,
+      htmlBody: emailBody.html,
     });
-
+    console.log(result)
     if (result.success) {
       return { success: true, externalId: result.messageId };
     }

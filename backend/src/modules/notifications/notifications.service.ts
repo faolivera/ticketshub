@@ -37,7 +37,7 @@ import type {
   GetNotificationEventDetailResponse,
   PreviewTemplateResponse,
 } from './notifications.api';
-import { wrapEmailHtml } from '../../common/email/email-wrapper';
+import { wrapEmail } from '../../common/email/email-wrapper';
 
 @Injectable()
 export class NotificationsService {
@@ -278,7 +278,7 @@ export class NotificationsService {
     if (!template) {
       throw new NotFoundException('Template not found');
     }
-    return { html: wrapEmailHtml(template.bodyTemplate) };
+    return { html: wrapEmail(template.bodyTemplate).html };
   }
 
   /**

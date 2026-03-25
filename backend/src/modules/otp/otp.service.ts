@@ -12,7 +12,7 @@ import {
 } from './otp.domain';
 import type { IEmailSender } from '../../common/email/email-sender.interface';
 import { EMAIL_SENDER } from '../../common/email/email-sender.interface';
-import { wrapEmailHtml } from '../../common/email/email-wrapper';
+import { wrapEmail } from '../../common/email/email-wrapper';
 import type { ISmsOtpProvider } from '../../common/sms/sms-otp-provider.interface';
 import { SMS_OTP_PROVIDER } from '../../common/sms/sms-otp-provider.interface';
 import { MOCK_SMS_OTP_CODE } from '../../common/sms/mock-sms-otp-provider';
@@ -134,7 +134,7 @@ export class OTPService {
         to: destination,
         subject: 'Tu código de verificación — TicketsHub',
         body: `Tu código de verificación es: ${code}`,
-        htmlBody: wrapEmailHtml(otpBodyHtml),
+        htmlBody: wrapEmail(otpBodyHtml).html,
       });
       if (!result.success) {
         this.logger.error(
