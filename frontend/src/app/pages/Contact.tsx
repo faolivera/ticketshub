@@ -225,8 +225,7 @@ export function Contact() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        .th-input:focus{border-color:${V}!important;box-shadow:0 0 0 3px ${VLIGHT}}
+      <style>{`.th-input:focus{border-color:${V}!important;box-shadow:0 0 0 3px ${VLIGHT}}
         .th-input:read-only{background:${BG}!important;color:${MUTED}!important;cursor:default}
       `}</style>
       <PageMeta title={t('seo.contact.title')} description={t('seo.contact.description')} />

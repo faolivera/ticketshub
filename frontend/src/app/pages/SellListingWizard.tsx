@@ -601,7 +601,6 @@ export function SellListingWizard() {
   return (
     <div style={{ minHeight: '100vh', background: BG }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
 

@@ -17,6 +17,7 @@ import { UsersService } from '../../../../src/modules/users/users.service';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
+import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
 import { CACHE_SERVICE } from '../../../../src/common/cache';
 import { AddressService } from '../../../../src/modules/address/address.service';
 import {
@@ -162,7 +163,14 @@ describe('EventsService', () => {
     };
 
     const mockPlatformConfigService = {
-      getPlatformConfig: jest.fn().mockResolvedValue({ minimumHoursToBuyTickets: 0 }),
+      getPlatformConfig: jest.fn().mockResolvedValue({
+        minimumHoursToBuyTickets: 0,
+        buyerPlatformFeePercentage: 10,
+      }),
+    };
+
+    const mockPaymentMethodsService = {
+      getPublicPaymentMethods: jest.fn().mockResolvedValue([]),
     };
 
     const mockAddressService = {
@@ -187,6 +195,7 @@ describe('EventsService', () => {
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: EventScoringService, useValue: mockEventScoringService },
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
+        { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
         { provide: AddressService, useValue: mockAddressService },
         { provide: CACHE_SERVICE, useValue: mockCacheService },
       ],
@@ -310,7 +319,7 @@ describe('EventsService', () => {
       );
     });
 
-    it('should attach lowestListingPrice when tickets service returns a map entry', async () => {
+    it('should attach lowestListingPriceWithFees with commission applied when tickets service returns a map entry', async () => {
       eventsRepository.listEventsPaginated.mockResolvedValue({
         events: [mockApprovedEvent],
         total: 1,
@@ -330,8 +339,8 @@ describe('EventsService', () => {
 
       const result = await service.listEvents(mockCtx, {}, false);
 
-      expect(result[0].lowestListingPrice).toEqual({
-        amount: 1_500_000,
+      expect(result[0].lowestListingPriceWithFees).toEqual({
+        amount: 1_650_000, // 1_500_000 * (1 + 10% platform fee), no payment method fees
         currency: 'ARS',
       });
     });

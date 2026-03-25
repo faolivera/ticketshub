@@ -11,7 +11,6 @@ export function NotFound() {
 
   return (
     <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', background: BG }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');`}</style>
       <PageMeta title={t('seo.notFound.title')} description={t('seo.notFound.description')} />
 
       <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>

@@ -102,11 +102,6 @@ export const GetSellTicketConfigResponseSchema = z.object({
   activePromotion: ActivePromotionSummarySchema.optional(),
 });
 
-const CommissionPercentRangeSchema = z.object({
-  min: z.number(),
-  max: z.number(),
-});
-
 const SellerReputationSchema = z.object({
   totalSales: z.number(),
   totalReviews: z.number(),
@@ -140,7 +135,7 @@ export const ListingWithSellerSchema = z.object({
   bannerUrls: BannerUrlsSchema.optional(),
   sellerPublicName: z.string(),
   sellerPic: ImageSchema.nullable(),
-  commissionPercentRange: CommissionPercentRangeSchema,
+  maxTotalCommissionPercent: z.number(),
   sellerReputation: SellerReputationSchema,
 });
 
@@ -212,7 +207,7 @@ const BffTransactionWithDetailsSchema = z.object({
 const TicketListingWithEventSchema = ListingWithSellerSchema.omit({
   sellerPublicName: true,
   sellerPic: true,
-  commissionPercentRange: true,
+  maxTotalCommissionPercent: true,
 });
 
 export const GetMyTicketsResponseSchema = z.object({

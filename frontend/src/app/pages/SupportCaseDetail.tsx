@@ -129,8 +129,7 @@ export function SupportCaseDetail() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, ...S }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        @keyframes spin{to{transform:rotate(360deg)}}
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}
         .th-textarea{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid ${BORDER};background:${CARD};font-size:14px;color:${DARK};outline:none;resize:vertical;min-height:88px;font-family:'Plus Jakarta Sans',sans-serif;box-sizing:border-box;transition:border-color 0.15s;line-height:1.55}
         .th-textarea:focus{border-color:${V};box-shadow:0 0 0 3px ${VLIGHT}}
       `}</style>

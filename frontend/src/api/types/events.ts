@@ -261,8 +261,8 @@ export interface PublicListEventItem {
   status?: string;
   /** Optional; used for client-side search filter when present */
   description?: string;
-  /** Cheapest active listing with stock (amount in minor units, e.g. cents) */
-  lowestListingPrice?: { amount: number; currency: string };
+  /** Cheapest listing price with max total buyer commission applied (platform + highest payment method) */
+  lowestListingPriceWithFees?: { amount: number; currency: string };
   bannerUrls?: EventBannerUrls;
   images: Array<{ src: string }>;
   dates: PublicListEventDate[];

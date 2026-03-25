@@ -118,10 +118,11 @@ export interface PublicListEventItem {
   /** Omitted in list response; present for single-event and event-page */
   status?: string;
   /**
-   * Cheapest active listing with available inventory (minor units, e.g. cents).
-   * Only on list when at least one such listing exists.
+   * Cheapest active listing price with the maximum total buyer commission applied
+   * (platform fee + highest payment method fee). Use this for "desde" display.
+   * Only present when at least one such listing exists.
    */
-  lowestListingPrice?: { amount: number; currency: string };
+  lowestListingPriceWithFees?: { amount: number; currency: string };
   bannerUrls?: EventBannerUrls;
   images: Array<{ src: string }>;
   dates: PublicListEventDate[];
@@ -157,7 +158,7 @@ export interface EventBannerUrls {
 export type EventWithDatesResponse = EventWithDates & {
   images: Image[];
   bannerUrls?: EventBannerUrls;
-  lowestListingPrice?: { amount: number; currency: string };
+  lowestListingPriceWithFees?: { amount: number; currency: string };
 };
 
 /**

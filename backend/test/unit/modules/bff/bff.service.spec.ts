@@ -724,7 +724,7 @@ describe('BffService', () => {
       },
     ];
 
-    it('should return listings with commissionPercentRange = platform + payment method (min/max)', async () => {
+    it('should return listings with maxTotalCommissionPercent = platform + highest payment method', async () => {
       const mockSellerMetricsMap = new Map<string, UserReviewMetrics>([
         [
           'seller_123',
@@ -755,7 +755,7 @@ describe('BffService', () => {
       const result = await service.getEventListings(mockCtx, 'event_123');
 
       expect(result).toHaveLength(1);
-      expect(result[0].commissionPercentRange).toEqual({ min: 10, max: 13 }); // platform 10% + 0% and 10% + 3%
+      expect(result[0].maxTotalCommissionPercent).toBe(13); // platform 10% + highest payment method 3%
       expect(result[0].sellerReputation).toEqual({
         totalSales: 5,
         totalReviews: 3,
@@ -768,7 +768,7 @@ describe('BffService', () => {
       );
     });
 
-    it('should return single commission value when only platform (no payment methods with numeric commission)', async () => {
+    it('should return maxTotalCommissionPercent = platform only when no payment methods have numeric commission', async () => {
       const mockSellerMetricsMap = new Map<string, UserReviewMetrics>([
         [
           'seller_123',
@@ -804,7 +804,7 @@ describe('BffService', () => {
 
       const result = await service.getEventListings(mockCtx, 'event_123');
 
-      expect(result[0].commissionPercentRange).toEqual({ min: 10, max: 10 });
+      expect(result[0].maxTotalCommissionPercent).toBe(10); // only platform fee, no payment method commission
     });
 
     it('should return empty array when no active listings', async () => {

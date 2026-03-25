@@ -329,7 +329,6 @@ export function HowItWorks() {
         description="Comprar y vender entradas de forma segura. Tus fondos y entradas protegidos en cada transacción."
       />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         .hiw-mobile  { display: block; }
         .hiw-desktop { display: none; }
         @media (min-width: 768px) {

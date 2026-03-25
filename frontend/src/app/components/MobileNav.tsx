@@ -26,6 +26,8 @@ export type NavTab =
 
 export interface MobileNavProps {
   isAuthenticated: boolean;
+  /** True while auth state is being resolved — hides auth-sensitive slots to prevent flash */
+  isAuthLoading?: boolean;
   /** Whether the user has completed seller onboarding */
   isSeller?: boolean;
   activeTab: NavTab;
@@ -120,6 +122,26 @@ function NavItem({ label, icon, active, badge, dimmed, onClick }: {
   );
 }
 
+// ─── SHIMMER SLOT ─────────────────────────────────────────────────────────────
+function NavSlotShimmer() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "4px 8px", minWidth: 52 }}>
+      <div className="th-shimmer" style={{ width: 22, height: 22, borderRadius: 6 }} />
+      <div className="th-shimmer" style={{ width: 36, height: 8, borderRadius: 4 }} />
+    </div>
+  );
+}
+
+// ─── FAB SHIMMER ─────────────────────────────────────────────────────────────
+function FABShimmer() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+      <div className="th-shimmer" style={{ width: 48, height: 48, borderRadius: "50%", transform: "translateY(-10px)" }} />
+      <div className="th-shimmer" style={{ width: 32, height: 8, borderRadius: 4, marginTop: -6 }} />
+    </div>
+  );
+}
+
 // ─── FAB ─────────────────────────────────────────────────────────────────────
 function FAB({ onPress }: { onPress: () => void }) {
   const [pressed, setPressed] = useState(false);
@@ -139,7 +161,7 @@ function FAB({ onPress }: { onPress: () => void }) {
 
 // ─── MOBILENAV ────────────────────────────────────────────────────────────────
 function MobileNav({
-  isAuthenticated, isSeller = false, activeTab, onTabChange,
+  isAuthenticated, isAuthLoading = false, isSeller = false, activeTab, onTabChange,
   pendingBuyerCount = 0, pendingSellerCount = 0,
   onFabPress, onLoginRequired,
 }: MobileNavProps) {
@@ -155,7 +177,7 @@ function MobileNav({
       onClick={() => onTabChange("how-it-works")} />
   );
 
-  // ── Slot 5: Perfil (authenticated) or Ingresar (guest) ───────────────────
+  // ── Slot 5: perfil / ingresar (resolved) ────────────────────────────────
   const slot5 = isAuthenticated ? (
     <NavItem label="Perfil" icon={c => <IconProfile c={c} />}
       active={activeTab === "profile"}
@@ -172,33 +194,46 @@ function MobileNav({
         .th-mobile-nav-root{}
         @media(min-width:768px){.th-mobile-nav-root{display:none!important;pointer-events:none;}}
         .th-bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,0.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid ${BORDER};padding-bottom:env(safe-area-inset-bottom,0px);}
+        @keyframes th-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        .th-shimmer{background:linear-gradient(90deg,#ebebeb 25%,#f5f5f5 50%,#ebebeb 75%);background-size:200% 100%;animation:th-shimmer 1.4s ease-in-out infinite;}
       `}</style>
 
       <nav className="th-bottom-nav" aria-label="Navegación principal">
         <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "6px 0 10px", maxWidth: 480, margin: "0 auto" }}>
+          {isAuthLoading ? (
+            <>
+              <NavSlotShimmer />
+              <NavSlotShimmer />
+              <FABShimmer />
+              <NavSlotShimmer />
+              <NavSlotShimmer />
+            </>
+          ) : (
+            <>
+              {/* Slot 1 — Explorar */}
+              <NavItem label="Explorar" icon={c => <IconHome c={c} />}
+                active={activeTab === "home"}
+                onClick={() => onTabChange("home")} />
 
-          {/* Slot 1 — Explorar (always) */}
-          <NavItem label="Explorar" icon={c => <IconHome c={c} />}
-            active={activeTab === "home"}
-            onClick={() => onTabChange("home")} />
+              {/* Slot 2 — Mis entradas (dimmed for guests) */}
+              <NavItem label="Mis entradas" icon={c => <IconTicket c={c} />}
+                active={activeTab === "tickets"} badge={pendingBuyerCount}
+                dimmed={!isAuthenticated}
+                onClick={() => {
+                  if (!isAuthenticated) { onLoginRequired?.("tickets"); return; }
+                  onTabChange("tickets");
+                }} />
 
-          {/* Slot 2 — Mis entradas (dimmed for guests) */}
-          <NavItem label="Mis entradas" icon={c => <IconTicket c={c} />}
-            active={activeTab === "tickets"} badge={pendingBuyerCount}
-            dimmed={!isAuthenticated}
-            onClick={() => {
-              if (!isAuthenticated) { onLoginRequired?.("tickets"); return; }
-              onTabChange("tickets");
-            }} />
+              {/* Slot 3 — FAB */}
+              <FAB onPress={onFabPress} />
 
-          {/* Slot 3 — FAB (always) */}
-          <FAB onPress={onFabPress} />
+              {/* Slot 4 — context-dependent */}
+              {slot4}
 
-          {/* Slot 4 — context-dependent */}
-          {slot4}
-
-          {/* Slot 5 — context-dependent */}
-          {slot5}
+              {/* Slot 5 — context-dependent */}
+              {slot5}
+            </>
+          )}
         </div>
       </nav>
     </div>
@@ -214,7 +249,7 @@ function MobileNav({
 export function MobileNavWithRouting() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { isAuthenticated, canSell } = useUser();
+  const { isAuthenticated, isLoading, canSell } = useUser();
 
   const isSeller = typeof canSell === "function" ? canSell() : false;
 
@@ -280,6 +315,7 @@ export function MobileNavWithRouting() {
   return (
     <MobileNav
       isAuthenticated={isAuthenticated}
+      isAuthLoading={isLoading}
       isSeller={isSeller}
       activeTab={tab}
       onTabChange={onTabChange}

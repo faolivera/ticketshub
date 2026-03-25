@@ -470,11 +470,11 @@ export function HighlightedEventsHero({
                   {venueStr}{dateStr ? ` · ${dateStr}` : null}
                 </div>
               </div>
-              {event.lowestListingPrice && (
+              {event.lowestListingPriceWithFees && (
                 <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Desde</div>
+                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Precio final</div>
                   <div style={{ ...S, fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
-                    ${formatPrice(event.lowestListingPrice.amount)}
+                    ${formatPrice(event.lowestListingPriceWithFees!.amount)}
                     <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontWeight: 400, marginLeft: 2 }}>ARS</span>
                   </div>
                 </div>

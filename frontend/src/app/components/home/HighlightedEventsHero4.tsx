@@ -344,9 +344,9 @@ export function HighlightedEventsHero({
           }}
           aria-label={`Ver evento ${i + 1}`}
           style={{
-            height: 5,
-            width: i === index ? 20 : 5,
-            borderRadius: 3,
+            height: 6,
+            width: i === index ? 22 : 6,
+            borderRadius: 4,
             border: "none",
             cursor: "pointer",
             padding: 0,
@@ -443,10 +443,10 @@ export function HighlightedEventsHero({
 
           {/* 1 — Brand headline */}
           <div style={{ marginBottom: 16 }}>
-            <span style={{ ...S, fontSize: 24, fontWeight: 700, color: "#fff", display: "block", lineHeight: 1.2 }}>
+            <span style={{ ...S, fontSize: "clamp(14px, 4.5vw, 22px)", fontWeight: 700, color: "#fff", display: "block", lineHeight: 1.2, whiteSpace: "nowrap" }}>
               Las experiencias no se agotan,
             </span>
-            <span style={{ ...E, fontSize: 25, fontStyle: "italic", fontWeight: 400, color: V_SOFT, display: "block", lineHeight: 1.2 }}>
+            <span style={{ ...E, fontSize: "clamp(15px, 4.8vw, 23px)", fontStyle: "italic", fontWeight: 400, color: V_SOFT, display: "block", lineHeight: 1.2 }}>
               Solo cambian de manos.
             </span>
           </div>
@@ -642,6 +642,7 @@ export function HighlightedEventsHero({
               color: "#fff",
               lineHeight: 1.2,
               display: "block",
+              whiteSpace: "nowrap",
             }}
           >
             Las experiencias no se agotan,

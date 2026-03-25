@@ -60,6 +60,7 @@ interface TicketDisplay {
   qty: number;
   price: string;
   priceNum: number;
+  maxTotalCommissionPercent: number;
   currency: string;
   seller: string;
   sellerId: string;
@@ -139,6 +140,7 @@ function buildEventAndTickets(
       qty: available,
       price: formatPrice(priceCents),
       priceNum,
+      maxTotalCommissionPercent: listing.maxTotalCommissionPercent ?? 10,
       currency: listing.pricePerTicket?.currency || "ARS",
       seller: listing.sellerPublicName || "Vendedor",
       sellerId: listing.sellerId,
@@ -257,12 +259,15 @@ export default function EventDetail() {
     });
   }, [filteredBySector, sortIdx]);
 
-  const minPrice = useMemo(() => (sorted.length ? Math.min(...sorted.map((t) => t.priceNum)) : 0), [sorted]);
+  const minPriceWithFees = useMemo(() => {
+    if (!sorted.length) return 0;
+    return Math.min(...sorted.map((t) => Math.round(t.priceNum * (1 + t.maxTotalCommissionPercent / 100))));
+  }, [sorted]);
 
   const sectorMin = (s: string): number | null => {
     const list = s === "Todos" ? sorted : sorted.filter((t) => t.sector === s);
     if (!list.length) return null;
-    return Math.min(...list.map((t) => t.priceNum));
+    return Math.min(...list.map((t) => Math.round(t.priceNum * (1 + t.maxTotalCommissionPercent / 100))));
   };
 
   const scrollToTickets = (): void => {
@@ -377,7 +382,6 @@ export default function EventDetail() {
   return (
     <div style={{ ...S, backgroundColor: BG, color: DARK, minHeight: "100vh" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         /* Unified ticket grid — 2 cols desktop, 1 col mobile */
@@ -467,8 +471,8 @@ export default function EventDetail() {
             </div>
           </div>
           <div className="sticky-price-cta" style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-            <span style={{ fontSize: 13, color: MUTED }}>Desde</span>
-            <span style={{ fontSize: 17, fontWeight: 800, color: V }}>{fmt(minPrice)}</span>
+            <span style={{ fontSize: 13, color: MUTED }}>Desde (c/comisión)</span>
+            <span style={{ fontSize: 17, fontWeight: 800, color: V }}>{fmt(minPriceWithFees)}</span>
             <button type="button" onClick={scrollToTickets} style={{ padding: "7px 16px", borderRadius: R_BUTTON, background: V, border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, ...S }}>
               Ver entradas <ArrowRight size={13} />
             </button>
@@ -577,7 +581,7 @@ export default function EventDetail() {
             {/* Stock summary — replaces "Ver entradas" CTA */}
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 20 }}>
               {activeDate?.count > 0
-                ? `${activeDate.count} entradas disponibles · desde ${fmt(minPrice)} ARS`
+                ? `${activeDate.count} entradas disponibles · desde ${fmt(minPriceWithFees)} ARS (precio final c/comisión)`
                 : "Sin entradas disponibles por ahora"}
             </p>
 

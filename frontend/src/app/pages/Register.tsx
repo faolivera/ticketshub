@@ -179,9 +179,6 @@ function RegisterPageWrap({
       padding: '24px 16px', ...S,
     }}>
       <PageMeta title={title} description={description} />
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-      `}</style>
       <div style={{ width: '100%', maxWidth: 420 }}>{children}</div>
     </div>
   );

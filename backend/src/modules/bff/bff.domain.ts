@@ -21,11 +21,6 @@ export interface SellerReviewStats {
   negative: number;
 }
 
-export interface CommissionPercentRange {
-  min: number;
-  max: number;
-}
-
 export interface SellerProfile {
   id: string;
   publicName: string;
@@ -52,7 +47,8 @@ export interface ListingWithSeller extends PublicTicketListingWithEvent {
   sellerPublicName: string;
   /** Seller profile image; null when none set */
   sellerPic: Image | null;
-  commissionPercentRange: CommissionPercentRange;
+  /** Max total commission percent the buyer will pay (platform fee + highest payment method fee) */
+  maxTotalCommissionPercent: number;
   sellerReputation: SellerReputation;
 }
 

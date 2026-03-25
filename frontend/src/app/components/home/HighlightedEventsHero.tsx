@@ -386,10 +386,10 @@ export function HighlightedEventsHero({
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: event.lowestListingPrice ? "space-between" : "flex-end",
+          justifyContent: event.lowestListingPriceWithFees ? "space-between" : "flex-end",
         }}
       >
-        {event.lowestListingPrice && (
+        {event.lowestListingPriceWithFees && (
           <div>
             <div
               style={{
@@ -401,11 +401,11 @@ export function HighlightedEventsHero({
                 marginBottom: 2,
               }}
             >
-              Desde
+              Precio final desde
             </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
               <span style={{ ...S, fontSize: 22, fontWeight: 700, color: "#fff" }}>
-                ${formatPrice(event.lowestListingPrice.amount)}
+                ${formatPrice(event.lowestListingPriceWithFees!.amount)}
               </span>
               <span style={{ ...S, fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>
                 ARS
@@ -552,11 +552,11 @@ export function HighlightedEventsHero({
                   {venueStr}{dateStr ? ` · ${dateStr}` : null}
                 </div>
               </div>
-              {event.lowestListingPrice && (
+              {event.lowestListingPriceWithFees && (
                 <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Desde</div>
+                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Precio final</div>
                   <div style={{ ...S, fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
-                    ${formatPrice(event.lowestListingPrice.amount)}
+                    ${formatPrice(event.lowestListingPriceWithFees!.amount)}
                     <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontWeight: 400, marginLeft: 2 }}>ARS</span>
                   </div>
                 </div>

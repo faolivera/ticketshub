@@ -457,11 +457,11 @@ export function HighlightedEventsHero({
                   {venueStr}{dateStr ? ` · ${dateStr}` : null}
                 </div>
               </div>
-              {event.lowestListingPrice && (
+              {event.lowestListingPriceWithFees && (
                 <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Desde</div>
+                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Precio final</div>
                   <div style={{ ...S, fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
-                    ${formatPrice(event.lowestListingPrice.amount)}
+                    ${formatPrice(event.lowestListingPriceWithFees!.amount)}
                     <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontWeight: 400, marginLeft: 2 }}>ARS</span>
                   </div>
                 </div>
@@ -669,13 +669,13 @@ export function HighlightedEventsHero({
               ...S,
               fontSize: 11,
               color: "rgba(255,255,255,0.50)",
-              marginBottom: event.lowestListingPrice ? 6 : 0,
+              marginBottom: event.lowestListingPriceWithFees ? 6 : 0,
             }}
           >
             {venueStr}
             {dateStr ? ` · ${dateStr}` : null}
           </div>
-          {event.lowestListingPrice && (
+          {event.lowestListingPriceWithFees && (
             <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
               <span
                 style={{
@@ -686,10 +686,10 @@ export function HighlightedEventsHero({
                   letterSpacing: "0.05em",
                 }}
               >
-                Desde{" "}
+                Precio final desde{" "}
               </span>
               <span style={{ ...S, fontSize: 19, fontWeight: 700, color: "#fff" }}>
-                ${formatPrice(event.lowestListingPrice.amount)}
+                ${formatPrice(event.lowestListingPriceWithFees!.amount)}
               </span>
               <span
                 style={{

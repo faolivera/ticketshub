@@ -202,8 +202,8 @@ export interface ListingWithSeller extends TicketListingWithEvent {
   sellerPublicName: string;
   /** Seller profile image; null when none set */
   sellerPic: import('./common').Image | null;
-  /** Commission percent range (min–max) depending on payment method */
-  commissionPercentRange: { min: number; max: number };
+  /** Max total buyer commission percent (platform fee + highest payment method fee) */
+  maxTotalCommissionPercent: number;
   sellerReputation: SellerReputation;
 }
 

@@ -82,7 +82,7 @@ function eventToCardShape(apiEvent: PublicListEventItem): CardShape {
     apiEvent.bannerUrls?.square ||
     apiEvent.images?.[0]?.src ||
     DEFAULT_IMAGE;
-  const lp = apiEvent.lowestListingPrice;
+  const lp = apiEvent.lowestListingPriceWithFees;
   const priceMinor = lp?.amount;
   const priceDisplay =
     priceMinor != null && !Number.isNaN(priceMinor)
@@ -343,7 +343,6 @@ export default function TicketsHub() {
   return (
     <div style={{ ...S, background:BG, color:DARK, minHeight:"100vh", overflowX:"hidden" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
         @keyframes shimmer {
           0%   { background-position: -200% 0; }
@@ -352,7 +351,8 @@ export default function TicketsHub() {
         .sk { background: linear-gradient(90deg, #ece9e6 25%, #f5f4f1 50%, #ece9e6 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; border-radius: 6px; }
         .th-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
         @media(max-width:1100px){ .th-grid{ grid-template-columns:repeat(3,minmax(0,1fr))!important; } }
-        @media(max-width:680px) { .th-grid{ grid-template-columns:1fr!important; } }
+        @media(max-width:900px) { .th-grid{ grid-template-columns:repeat(2,minmax(0,1fr))!important; } }
+        @media(max-width:540px) { .th-grid{ grid-template-columns:1fr!important; } }
         .th-hero-wrap { display:flex; align-items:center; gap:40px; }
         @media(max-width:820px){ .th-hero-wrap{ flex-direction:column; gap:20px; } .th-hero-img{ display:none!important; } }
         .th-search-bar { display:flex; align-items:center; gap:0; flex:1; }
@@ -368,7 +368,7 @@ export default function TicketsHub() {
       `}</style>
 
       {/* ══════ PAGE BODY ══════ */}
-      <div style={{ maxWidth:1280, margin:"0 auto", padding:"24px 24px 0" }}>
+      <div style={{ width:"100%", maxWidth:1280, margin:"0 auto", padding:"24px 24px 0", boxSizing:"border-box" }}>
 
         {/* ── HERO BOX ── */}
         <HighlightedEventsHero onLoad={() => setHeroLoaded(true)} />
@@ -566,7 +566,7 @@ export default function TicketsHub() {
       </div>{/* end maxWidth wrapper */}
 
       {/* ══════ EVENTS GRID ══════ */}
-      <div id="eventos" style={{ maxWidth:1280, margin:"0 auto", padding:"0 24px 56px" }}>
+      <div id="eventos" style={{ width:"100%", maxWidth:1280, margin:"0 auto", padding:"0 24px 56px", boxSizing:"border-box" }}>
         <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:10 }}>
           <h2 style={{ ...E, fontSize:24, color:DARK, letterSpacing:"-0.3px" }}>{t("landing.eventsSectionTitle")}</h2>
           {!isLoading && !error && <span style={{ color:MUTED, fontSize:13 }}>{filtered.length} evento{filtered.length !== 1 ? "s" : ""}</span>}
@@ -786,7 +786,7 @@ function EventCard({ event, index, hovered, onHover }: EventCardProps) {
                     letterSpacing: "0.04em",
                   }}
                 >
-                  Desde
+                  Precio final desde
                 </div>
                 <div style={{ fontSize: 17, fontWeight: 800, color: V, lineHeight: 1, ...S2 }}>
                   ${event.price}

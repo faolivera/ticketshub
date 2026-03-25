@@ -753,7 +753,6 @@ export function SellerDashboardPage() {
   return (
     <div style={{ minHeight: '100vh', background: BG, ...S }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes spin { to { transform: rotate(360deg) } }
         .sd-grid { display: flex; flex-direction: column; gap: 28px; }
         @media (min-width: 768px) {

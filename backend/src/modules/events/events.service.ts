@@ -68,6 +68,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import { EventScoringService } from '../event-scoring/event-scoring.service';
 import { PlatformConfigService } from '../config/config.service';
+import { PaymentMethodsService } from '../payments/payment-methods.service';
 import { AddressService } from '../address/address.service';
 
 @Injectable()
@@ -93,6 +94,8 @@ export class EventsService {
     private readonly eventScoringService: EventScoringService,
     @Inject(PlatformConfigService)
     private readonly platformConfigService: PlatformConfigService,
+    @Inject(PaymentMethodsService)
+    private readonly paymentMethodsService: PaymentMethodsService,
     @Inject(AddressService)
     private readonly addressService: AddressService,
     @Inject(CACHE_SERVICE)
@@ -427,14 +430,35 @@ export class EventsService {
     }));
 
     const withImages = await this.attachImages(ctx, eventsWithDates);
-    const minByEvent =
-      await this.ticketsService.getMinActiveListingPriceByEventIds(
+    const [minByEvent, paymentMethods, platformConfig] = await Promise.all([
+      this.ticketsService.getMinActiveListingPriceByEventIds(
         ctx,
         withImages.map((e) => e.id),
-      );
+      ),
+      this.paymentMethodsService.getPublicPaymentMethods(ctx),
+      this.platformConfigService.getPlatformConfig(ctx),
+    ]);
+
+    const paymentMethodCommissions = paymentMethods
+      .map((pm) => pm.buyerCommissionPercent)
+      .filter((p): p is number => p != null);
+    const maxPaymentMethodCommission =
+      paymentMethodCommissions.length > 0
+        ? Math.max(...paymentMethodCommissions)
+        : 0;
+    const maxTotalCommissionPercent =
+      platformConfig.buyerPlatformFeePercentage + maxPaymentMethodCommission;
+
     const mappedEvents = withImages.map((e) => {
       const lp = minByEvent.get(e.id);
-      return lp ? { ...e, lowestListingPrice: lp } : e;
+      if (!lp) return e;
+      return {
+        ...e,
+        lowestListingPriceWithFees: {
+          amount: Math.round(lp.amount * (1 + maxTotalCommissionPercent / 100)),
+          currency: lp.currency,
+        },
+      };
     });
     return mappedEvents;
   }
@@ -983,10 +1007,10 @@ export class EventsService {
         status: s.status,
         seatingType: s.seatingType,
       })),
-      ...(event.lowestListingPrice != null && {
-        lowestListingPrice: {
-          amount: event.lowestListingPrice.amount,
-          currency: event.lowestListingPrice.currency,
+      ...(event.lowestListingPriceWithFees != null && {
+        lowestListingPriceWithFees: {
+          amount: event.lowestListingPriceWithFees.amount,
+          currency: event.lowestListingPriceWithFees.currency,
         },
       }),
     };

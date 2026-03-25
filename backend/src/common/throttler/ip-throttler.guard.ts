@@ -5,6 +5,7 @@ import { Request } from 'express';
 @Injectable()
 export class IpThrottlerGuard extends ThrottlerGuard {
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    if (process.env.NODE_ENV !== 'production') return true;
     const req = context.switchToHttp().getRequest<Request>();
     if (req.path === '/metrics') return true;
     return super.canActivate(context);

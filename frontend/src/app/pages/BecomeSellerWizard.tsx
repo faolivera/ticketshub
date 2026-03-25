@@ -244,7 +244,6 @@ export function BecomeSellerWizard() {
 
     return (
       <div style={{ minHeight: '100vh', background: BG, padding: '24px 16px 48px', ...S }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
           <div style={{ background: CARD, borderRadius: R_HERO, border: `1px solid ${BORDER}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             <div style={{
@@ -304,7 +303,6 @@ export function BecomeSellerWizard() {
   return (
     <div style={{ minHeight: '100vh', background: BG, padding: '24px 16px 48px', ...S }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
       `}</style>
 

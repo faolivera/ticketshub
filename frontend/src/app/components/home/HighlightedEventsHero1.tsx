@@ -41,7 +41,7 @@ const DEFAULT_IMAGE = "https://picsum.photos/seed/event/1400/400";
  * Featured-events hero for the home page; admin preview reuses this component.
  *
  * Expected event fields (in addition to existing ones):
- *   - lowestListingPrice?: { amount: number; currency: string }  — cheapest active listing (in cents)
+ *   - lowestListingPriceWithFees?: { amount: number; currency: string }  — cheapest listing with max commission applied (in cents)
  *   - availableCount?: number  — total tickets in stock (not yet in API response; drives CTA label)
  */
 const MOBILE_MAX_WIDTH = "(max-width: 767px)";
@@ -283,9 +283,9 @@ export function HighlightedEventsHero({ onLoad }: HighlightedEventsHeroProps): J
                 ) : (
                   <>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>Ver entradas →</span>
-                    {event.lowestListingPrice && (
+                    {event.lowestListingPriceWithFees && (
                       <span style={{ fontSize: 11, opacity: 0.8 }}>
-                        desde ${Math.round(event.lowestListingPrice.amount / 100).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+                        precio final desde ${Math.round(event.lowestListingPriceWithFees!.amount / 100).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
                       </span>
                     )}
                   </>

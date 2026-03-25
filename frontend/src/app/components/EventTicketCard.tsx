@@ -14,9 +14,9 @@ function getBuyPill(qty: number): string | null {
   return `Comprá 1 a ${qty}`;
 }
 
-function fmtWithFee(priceNum: number | undefined): string | null {
+function fmtWithFee(priceNum: number | undefined, commissionPercent: number): string | null {
   if (!priceNum) return null;
-  const total = Math.round(priceNum * 1.1);
+  const total = Math.round(priceNum * (1 + commissionPercent / 100));
   return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(total);
 }
 
@@ -39,6 +39,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
     qty,
     price,
     priceNum,
+    maxTotalCommissionPercent,
     seller,
     sellerId,
     sellerAvatarUrl,
@@ -60,7 +61,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
     Number.isFinite(sellerPositivePercent);
   const sellerPositivePercentRounded = hasReviews ? Math.round(sellerPositivePercent) : null;
   const buyPillText = getBuyPill(qty);
-  const totalWithFee = fmtWithFee(priceNum);
+  const totalWithFee = fmtWithFee(priceNum, maxTotalCommissionPercent ?? 10);
 
   return (
     <div
@@ -116,7 +117,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
           <span style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>ARS</span>
         </div>
         <p style={{ fontSize: 11.5, color: MUTED, marginTop: 6 }}>
-          Precio base ${price} · +10% comisión incluida
+          Precio base ${price} · +{maxTotalCommissionPercent ?? 10}% comisión incluida
         </p>
       </div>
 

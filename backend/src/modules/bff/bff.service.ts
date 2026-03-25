@@ -140,20 +140,15 @@ export class BffService {
     const sellersMap = new Map(sellers.map((s) => [s.id, s]));
 
     const platformCommissionPercent = platformConfig.buyerPlatformFeePercentage;
-    const combinedCommissionPercents = paymentMethods
-      .map((pm) =>
-        pm.buyerCommissionPercent != null
-          ? platformCommissionPercent + pm.buyerCommissionPercent
-          : null,
-      )
+    const paymentMethodCommissions = paymentMethods
+      .map((pm) => pm.buyerCommissionPercent)
       .filter((p): p is number => p != null);
-    const commissionPercentRange =
-      combinedCommissionPercents.length > 0
-        ? {
-            min: Math.min(...combinedCommissionPercents),
-            max: Math.max(...combinedCommissionPercents),
-          }
-        : { min: platformCommissionPercent, max: platformCommissionPercent };
+    const maxPaymentMethodCommission =
+      paymentMethodCommissions.length > 0
+        ? Math.max(...paymentMethodCommissions)
+        : 0;
+    const maxTotalCommissionPercent =
+      platformCommissionPercent + maxPaymentMethodCommission;
 
     return activeListings.map((listing) => {
       const seller = sellersMap.get(listing.sellerId);
@@ -163,7 +158,7 @@ export class BffService {
         ...publicListing,
         sellerPublicName: seller?.publicName ?? 'Unknown',
         sellerPic: seller?.pic ?? null,
-        commissionPercentRange,
+        maxTotalCommissionPercent,
         sellerReputation: {
           totalSales: metrics?.totalTransactions ?? 0,
           totalReviews: metrics?.totalReviews ?? 0,

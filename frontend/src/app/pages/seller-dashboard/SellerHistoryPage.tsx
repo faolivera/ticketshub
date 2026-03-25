@@ -178,7 +178,6 @@ export function SellerHistoryPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, padding: '24px 16px 56px', ...S }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
 
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
 
