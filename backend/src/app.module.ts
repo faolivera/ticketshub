@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { IpThrottlerGuard } from './common/throttler';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { MetricsModule } from './common/metrics/metrics.module';
@@ -41,6 +44,12 @@ import { GatewaysModule } from './modules/gateways/gateways.module';
   imports: [
     // Scheduling support for cron jobs
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([
+      { name: 'default',          ttl: 60_000,  limit: 20  },
+      { name: 'authenticated',    ttl: 60_000,  limit: 200 },
+      { name: 'sensitive-public', ttl: 60_000,  limit: 5   },
+      { name: 'contact',          ttl: 600_000, limit: 3   },
+    ]),
 
     // Global modules (must be first). ConfigModule before PrometheusModule so ConfigService is available for defaultLabels.
     ConfigModule.forRoot({
@@ -93,6 +102,12 @@ import { GatewaysModule } from './modules/gateways/gateways.module';
     SocketModule,
     BffModule,
     SsrModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: IpThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
