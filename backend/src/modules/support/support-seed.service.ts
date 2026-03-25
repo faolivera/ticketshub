@@ -22,8 +22,27 @@ import {
   DeliveryMethod,
   SeatingType,
 } from '../tickets/tickets.domain';
-import type { SeedDemoResponse } from './support.api';
 import type { User } from '../users/users.domain';
+
+interface SeedDemoResult {
+  credentials: {
+    admin: { email: string; password: string };
+    seller: { email: string; password: string };
+    buyer: { email: string; password: string };
+  };
+  ids: {
+    adminUserId: string;
+    sellerUserId: string;
+    buyerUserId: string;
+    eventId: string;
+    eventDateIds: string[];
+    ticketListingIds: string[];
+  };
+  created: {
+    eventDates: string[];
+    ticketListings: string[];
+  };
+}
 import type { CreateEventRequest } from '../events/events.api';
 import type { CreateListingRequest } from '../tickets/tickets.api';
 
@@ -43,7 +62,7 @@ export class SupportSeedService {
     private readonly configService: ConfigService,
   ) {}
 
-  async seedDemoData(ctx: Ctx): Promise<SeedDemoResponse> {
+  async seedDemoData(ctx: Ctx): Promise<SeedDemoResult> {
     const isProduction = this.configService.get<boolean>('app.isProduction');
     if (isProduction) {
       throw new ForbiddenException(

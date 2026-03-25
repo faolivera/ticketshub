@@ -6,6 +6,7 @@ import type {
   TicketSeat,
   TicketListing,
   TicketListingWithEvent,
+  PublicTicketListingWithEvent,
   BestOfferConfig,
 } from './tickets.domain';
 
@@ -45,7 +46,7 @@ export interface CreateListingTicketUnitInput {
 /**
  * Response after creating a listing (enriched with section-derived seatingType)
  */
-export type CreateListingResponse = TicketListingWithEvent;
+export type CreateListingResponse = PublicTicketListingWithEvent;
 
 /**
  * Request to update a listing
@@ -66,12 +67,12 @@ export type UpdateListingResponse = TicketListing;
 /**
  * Response for getting listing details
  */
-export type GetListingResponse = TicketListingWithEvent;
+export type GetListingResponse = PublicTicketListingWithEvent;
 
 /**
  * Response for listing listings
  */
-export type ListListingsResponse = TicketListingWithEvent[];
+export type ListListingsResponse = PublicTicketListingWithEvent[];
 
 /**
  * Query params for listing listings

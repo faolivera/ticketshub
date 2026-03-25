@@ -23,7 +23,6 @@ export type OfferTickets =
 export interface Offer {
   id: string;
   listingId: string;
-  userId: string;
   offeredPrice: Money;
   status: OfferStatus;
   tickets: OfferTickets;

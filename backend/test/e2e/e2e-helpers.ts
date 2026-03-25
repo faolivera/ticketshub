@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
+import { SupportSeedService } from '../../src/modules/support/support-seed.service';
 
 export interface SeedIds {
   sellerUserId: string;
@@ -9,23 +10,16 @@ export interface SeedIds {
   ticketListingIds: string[];
 }
 
+const E2E_SEED_CTX = { requestId: 'e2e-seed', userId: undefined } as any;
+
 /**
- * Call POST /api/support/dev/seed-demo to create demo users and listings.
- * Requires ENVIRONMENT=test and app.isProduction=false.
+ * Seed demo data directly via SupportSeedService (no HTTP endpoint exposed).
  */
 export async function seedDemoData(
   app: INestApplication,
 ): Promise<{ credentials: { seller: { email: string; password: string }; buyer: { email: string; password: string } }; ids: SeedIds }> {
-  const res = await request(app.getHttpServer())
-    .post('/api/support/dev/seed-demo')
-    .expect((r) => {
-      if (r.status !== 200 && r.status !== 201) {
-        throw new Error(`Expected 200 or 201, got ${r.status}`);
-      }
-    });
-  expect(res.body.success).toBe(true);
-  expect(res.body.data).toBeDefined();
-  const data = res.body.data;
+  const seedService = app.get(SupportSeedService);
+  const data = await seedService.seedDemoData(E2E_SEED_CTX);
   return {
     credentials: data.credentials,
     ids: data.ids,

@@ -42,7 +42,6 @@ import type {
   ConfirmReceiptResponse,
   UploadTransferProofResponse,
   UploadReceiptProofResponse,
-  GetTransactionResponse,
   GetPendingPaymentsResponse,
   ApprovePaymentRequest,
   ApprovePaymentResponse,
@@ -77,24 +76,6 @@ export class TransactionsController {
       body.offerId,
     );
     return { success: true, data: result };
-  }
-
-  /**
-   * Get transaction by ID
-   */
-  @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async getTransaction(
-    @Context() ctx: Ctx,
-    @User() user: AuthenticatedUserPublicInfo,
-    @Param('id') id: string,
-  ): Promise<ApiResponse<GetTransactionResponse>> {
-    const transaction = await this.transactionsService.getTransactionById(
-      ctx,
-      id,
-      user.id,
-    );
-    return { success: true, data: transaction };
   }
 
   /**
@@ -273,22 +254,6 @@ export class TransactionsController {
       CancellationReason.BuyerCancelled,
     );
     return { success: true, data: { cancelled: true } };
-  }
-
-  /**
-   * Handle payment confirmation (for testing - in production use webhook)
-   */
-  @Post(':id/payment-received')
-  @UseGuards(JwtAuthGuard)
-  async handlePaymentReceived(
-    @Context() ctx: Ctx,
-    @Param('id') id: string,
-  ): Promise<ApiResponse<GetTransactionResponse>> {
-    const transaction = await this.transactionsService.handlePaymentReceived(
-      ctx,
-      id,
-    );
-    return { success: true, data: transaction as any };
   }
 
   /**

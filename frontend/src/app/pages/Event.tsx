@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   MapPin, CheckCircle, ChevronDown, ArrowLeft, ArrowRight,
-  Lock, RefreshCw, Users, Plus, Zap,
+  Lock, RefreshCw,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
@@ -11,6 +11,7 @@ import { formatDate, formatTime } from "@/lib/format-date";
 import { getInitials } from "@/lib/string-utils";
 import { EventTicketCard } from "@/app/components/EventTicketCard";
 import { BackButton } from "@/app/components/BackButton";
+import EmptyEventState from "@/app/components/event/EmptyEventState";
 import {
   V, VLIGHT, DARK, MUTED, BORDER, BORD2, S, E,
   SURFACE_STICKY, SHADOW_DROP, BG,
@@ -168,9 +169,6 @@ export default function EventDetail() {
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [alertPhone, setAlertPhone] = useState<string>("");
-  const [alertSent, setAlertSent] = useState<boolean>(false);
-  const [alertError, setAlertError] = useState<boolean>(false);
   const waitingCount = 0; // TODO: proveer desde el backend
   const heroRef = useRef<HTMLDivElement>(null);
   const ticketsRef = useRef<HTMLDivElement>(null);
@@ -265,15 +263,6 @@ export default function EventDetail() {
     ticketsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  function handleAlert(): void {
-    const val = alertPhone.trim();
-    const isPhone = /^\+549\d{10}$/.test(val.replace(/\s/g, ""));
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-    if (!val || (!isPhone && !isEmail)) { setAlertError(true); return; }
-    setAlertError(false);
-    setAlertSent(true);
-    // TODO: llamar al endpoint de waiting list con alertPhone y eventSlug
-  }
 
   if (isLoading) {
     return (
@@ -638,76 +627,7 @@ export default function EventDetail() {
 
         {/* ── Ticket grid / empty state ── */}
         {sorted.length === 0 ? (
-          <div className="empty-state-wrap" style={{ textAlign: "center" }}>
-            <div className="empty-state-card" style={{ background: "white", border: "1px solid #e5e7eb", padding: "40px 32px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-              {waitingCount >= 1 && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", borderRadius: 100, fontSize: 11.5, fontWeight: 600, padding: "3px 10px", marginBottom: 16 }}>
-                  <Users size={10} /> {waitingCount} personas esperando entradas
-                </div>
-              )}
-              <p style={{ ...E, fontSize: 17, color: DARK, marginBottom: 6, letterSpacing: "-0.2px" }}>
-                Sin entradas disponibles por ahora
-              </p>
-              <p style={{ ...S, fontSize: 13.5, color: MUTED, lineHeight: 1.6, maxWidth: 340, margin: "0 auto 24px" }}>
-                Avisanos y te notificamos en cuanto aparezca una entrada para este evento.
-              </p>
-              {alertSent ? (
-                <div style={{ background: SUCCESS_LIGHT, border: `1.5px solid ${SUCCESS_BORDER}`, borderRadius: R_INPUT, padding: "14px 18px", maxWidth: 380, margin: "0 auto 24px", display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left" }}>
-                  <CheckCircle size={16} style={{ color: SUCCESS, flexShrink: 0, marginTop: 1 }} />
-                  <div>
-                    <p style={{ ...S, fontSize: 13, fontWeight: 700, color: SUCCESS, marginBottom: 2 }}>¡Alerta activada!</p>
-                    <p style={{ ...S, fontSize: 12, color: SUCCESS, lineHeight: 1.5 }}>Te avisamos cuando haya entradas disponibles.</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: "flex", gap: 8, maxWidth: 380, margin: "0 auto 6px" }}>
-                    <input
-                      type="text"
-                      placeholder="Tu WhatsApp o email"
-                      value={alertPhone}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setAlertPhone(e.target.value); setAlertError(false); }}
-                      style={{ flex: 1, ...S, fontSize: 13.5, fontWeight: 500, padding: "10px 14px", border: `1.5px solid ${alertError ? "#e11d48" : "#d1d5db"}`, borderRadius: R_INPUT, color: DARK, background: BG, outline: "none" }}
-                    />
-                    <button onClick={handleAlert} style={{ ...S, fontSize: 13, fontWeight: 700, background: V, color: "white", border: "none", borderRadius: R_BUTTON, padding: "10px 18px", cursor: "pointer", boxShadow: "0 4px 14px rgba(109,40,217,0.28)", whiteSpace: "nowrap" }}>
-                      Avisarme →
-                    </button>
-                  </div>
-                  {alertError && (
-                    <p style={{ ...S, fontSize: 11.5, color: "#e11d48", marginBottom: 4, textAlign: "center" }}>
-                      Ingresá un email válido o teléfono con formato +549...
-                    </p>
-                  )}
-                  <p style={{ ...S, fontSize: 11.5, color: "#9ca3af", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                    <Lock size={10} /> Sin spam. Solo te escribimos si hay entradas.
-                  </p>
-                </>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, color: "#d1d5db" }}>
-                <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
-                <span style={{ ...S, fontSize: 12 }}>o si tenés entradas</span>
-                <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
-              </div>
-              {waitingCount === 0 && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: VLIGHT, color: V, border: "1.5px solid #c4b5fd", borderRadius: 100, fontSize: 11.5, fontWeight: 600, padding: "3px 10px", marginBottom: 12 }}>
-                  <Zap size={10} /> Sé el primero en publicar para este evento
-                </div>
-              )}
-              <div>
-                <Link
-                  to="/sell-ticket"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, ...S, fontSize: 13, fontWeight: 700, color: V, border: "1.5px solid #6d28d9", borderRadius: R_BUTTON, padding: "10px 20px", textDecoration: "none", background: "transparent" }}
-                  onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.background = VLIGHT}
-                  onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.background = "transparent"}
-                >
-                  <Plus size={13} /> Publicar mi entrada
-                </Link>
-                <p style={{ ...S, fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
-                  {waitingCount >= 1 ? `Llegá a las ${waitingCount} personas que están esperando` : "Llegá a los primeros compradores del evento"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <EmptyEventState waitingCount={waitingCount} />
         ) : (
           <div className="tk-grid">
             {sorted.map((tkt, idx) => (

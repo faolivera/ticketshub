@@ -329,7 +329,6 @@ export const GetTransactionDetailsResponseSchema = z.object({
   ticketUnits: z.array(TransactionTicketUnitSchema),
   paymentMethodPublicName: z.string().nullable(),
   chat: TransactionDetailsChatConfigSchema.optional(),
-  counterpartyEmail: z.string().optional(),
 });
 
 export const ValidateSellListingResponseSchema = z.discriminatedUnion('status', [

@@ -108,9 +108,10 @@ export class UsersService {
       user.bankAccount?.cbuOrCvu?.length >= 4
         ? user.bankAccount.cbuOrCvu.slice(-4)
         : undefined;
-    const { identityVerification, bankAccount, ...rest } = user;
+    const { identityVerification, bankAccount, googleId, ...rest } = user;
     void identityVerification;
     void bankAccount;
+    void googleId;
     const response: PublicMeUser = {
       ...rest,
       identityVerified,

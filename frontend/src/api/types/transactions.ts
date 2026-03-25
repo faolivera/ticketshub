@@ -93,9 +93,11 @@ export interface Transaction {
   // Pricing breakdown (BFF view: single servicePrice for buyer, no commission breakdown)
   ticketPrice: Money;
   servicePrice: Money;
-  sellerPlatformFee: Money;
+  /** Only present when the requester is the seller (or admin) */
+  sellerPlatformFee?: Money;
   totalPaid: Money;
-  sellerReceives: Money;
+  /** Only present when the requester is the seller (or admin) */
+  sellerReceives?: Money;
 
   // Pricing snapshot reference
   pricingSnapshotId: string;

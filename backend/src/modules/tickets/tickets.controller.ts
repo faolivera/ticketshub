@@ -45,7 +45,7 @@ export class TicketsController {
     @User() user: AuthenticatedUserPublicInfo,
     @Body() body: CreateListingRequest,
   ): Promise<ApiResponse<CreateListingResponse>> {
-    const listing = await this.ticketsService.createListing(ctx, user.id, body);
+    const { promotionSnapshot: _, ...listing } = await this.ticketsService.createListing(ctx, user.id, body);
     return { success: true, data: listing };
   }
 
@@ -72,7 +72,8 @@ export class TicketsController {
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     };
-    const listings = await this.ticketsService.listListings(ctx, query);
+    const raw = await this.ticketsService.listListings(ctx, query);
+    const listings = raw.map(({ promotionSnapshot: _, ...rest }) => rest);
     return { success: true, data: listings };
   }
 
@@ -84,7 +85,7 @@ export class TicketsController {
     @Context() ctx: Ctx,
     @Param('id') id: string,
   ): Promise<ApiResponse<GetListingResponse>> {
-    const listing = await this.ticketsService.getListingById(ctx, id);
+    const { promotionSnapshot: _, ...listing } = await this.ticketsService.getListingById(ctx, id);
     return { success: true, data: listing };
   }
 

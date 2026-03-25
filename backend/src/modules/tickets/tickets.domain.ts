@@ -144,3 +144,6 @@ export interface TicketListingWithEvent extends TicketListing {
   pendingReason?: string[];
   bannerUrls?: BannerUrls;
 }
+
+/** Public-facing listing shape: promotionSnapshot is internal and must not be sent over HTTP */
+export type PublicTicketListingWithEvent = Omit<TicketListingWithEvent, 'promotionSnapshot'>;

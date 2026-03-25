@@ -1,5 +1,5 @@
 import type { Money } from '../tickets/tickets.domain';
-import type { Offer, OfferTickets } from './offers.domain';
+import type { Offer, PublicOffer, OfferTickets } from './offers.domain';
 
 /** Request to create an offer. */
 export interface CreateOfferRequest {
@@ -12,7 +12,7 @@ export interface CreateOfferRequest {
 export type CreateOfferResponse = Offer;
 
 /** Response for listing offers for a listing (seller view). */
-export type ListOffersByListingResponse = Offer[];
+export type ListOffersByListingResponse = PublicOffer[];
 
 /** Listing summary attached to each offer in "my offers" (buyer view). */
 export interface OfferListingSummary {
@@ -45,7 +45,7 @@ export interface OfferReceivedContext {
 }
 
 /** Enriched offer returned by GET /offers/received (seller view). */
-export interface OfferWithReceivedContext extends Offer {
+export interface OfferWithReceivedContext extends PublicOffer {
   receivedContext: OfferReceivedContext;
 }
 

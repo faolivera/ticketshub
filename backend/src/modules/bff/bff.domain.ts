@@ -1,5 +1,5 @@
 import type { Image } from '../images/images.domain';
-import type { TicketListingWithEvent } from '../tickets/tickets.domain';
+import type { TicketListingWithEvent, PublicTicketListingWithEvent } from '../tickets/tickets.domain';
 import type { PublicListEventItem } from '../events/events.api';
 
 export type SellerReviewType = 'positive' | 'neutral' | 'negative';
@@ -48,7 +48,7 @@ export interface SellerReputation {
 /**
  * Ticket listing enriched with seller public info — composed by the BFF layer
  */
-export interface ListingWithSeller extends TicketListingWithEvent {
+export interface ListingWithSeller extends PublicTicketListingWithEvent {
   sellerPublicName: string;
   /** Seller profile image; null when none set */
   sellerPic: Image | null;
@@ -106,7 +106,7 @@ export interface CheckoutRisk {
 
 /** Full buy page data (listing + seller + payment methods + pricing snapshot) */
 export interface BuyPageData {
-  listing: TicketListingWithEvent;
+  listing: PublicTicketListingWithEvent;
   seller: BuyPageSellerInfo;
   paymentMethods: BuyPagePaymentMethodOption[];
   pricingSnapshot: BuyPagePricingSnapshot;

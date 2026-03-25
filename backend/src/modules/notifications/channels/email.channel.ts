@@ -67,7 +67,6 @@ export class EmailChannel implements NotificationChannelProvider {
       body: emailBody.text,
       htmlBody: emailBody.html,
     });
-    console.log(result)
     if (result.success) {
       return { success: true, externalId: result.messageId };
     }

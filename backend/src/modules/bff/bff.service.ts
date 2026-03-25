@@ -158,8 +158,9 @@ export class BffService {
     return activeListings.map((listing) => {
       const seller = sellersMap.get(listing.sellerId);
       const metrics = metricsMap.get(listing.sellerId);
+      const { promotionSnapshot: _, ...publicListing } = listing;
       return {
-        ...listing,
+        ...publicListing,
         sellerPublicName: seller?.publicName ?? 'Unknown',
         sellerPic: seller?.pic ?? null,
         commissionPercentRange,
@@ -336,8 +337,9 @@ export class BffService {
       };
     }
 
+    const { promotionSnapshot: _, ...publicListing } = listing;
     return {
-      listing,
+      listing: publicListing,
       seller,
       paymentMethods: buyPagePaymentMethods,
       pricingSnapshot,
@@ -393,15 +395,19 @@ export class BffService {
    * Transactions use BFF view with servicePrice (no buyer commission breakdown).
    */
   async getMyTickets(ctx: Ctx, userId: string): Promise<GetMyTicketsData> {
-    const [boughtRaw, soldRaw, listed] = await Promise.all([
+    const [boughtRaw, soldRaw, listedRaw] = await Promise.all([
       this.transactionsService.listTransactions(ctx, userId, { role: 'buyer' }),
       this.transactionsService.listTransactions(ctx, userId, {
         role: 'seller',
       }),
       this.ticketsService.getMyListings(ctx, userId),
     ]);
-    const bought = boughtRaw.map((tx) => this.toBffTransaction(tx));
+    const bought = boughtRaw.map((tx) => {
+      const { sellerPlatformFee: _, sellerReceives: __, ...rest } = this.toBffTransaction(tx);
+      return rest;
+    });
     const sold = soldRaw.map((tx) => this.toBffTransaction(tx));
+    const listed = listedRaw.map(({ promotionSnapshot: _, ...rest }) => rest);
     return { bought, sold, listed };
   }
 
@@ -508,7 +514,14 @@ export class BffService {
     ]);
 
     const txMap = new Map(
-      txDetails.map((t) => [t.id, this.toBffTransaction(t)]),
+      txDetails.map((t) => {
+        const bff = this.toBffTransaction(t);
+        if (role === 'buyer') {
+          const { sellerPlatformFee: _, sellerReceives: __, ...rest } = bff;
+          return [t.id, rest] as const;
+        }
+        return [t.id, bff] as const;
+      }),
     );
     const offerMap = new Map<string, (typeof buyerOffers)[0] | (typeof sellerOffers)[0]>();
     if (role === 'buyer') {
@@ -647,8 +660,11 @@ export class BffService {
       );
     }
 
+    const bffFull = this.toBffTransaction(transaction);
     const bffTransaction: BffTransactionWithDetails =
-      this.toBffTransaction(transaction);
+      isBuyer && !isAdmin
+        ? (({ sellerPlatformFee: _, sellerReceives: __, ...rest }) => rest)(bffFull)
+        : bffFull;
 
     let chat: GetTransactionDetailsResponse['chat'];
     const chatMode = getTransactionChatMode(transaction.status);
@@ -678,12 +694,6 @@ export class BffService {
       };
     }
 
-    let counterpartyEmail: string | undefined;
-    if (isSeller && transaction.buyerId) {
-      const buyer = await this.usersService.findById(ctx, transaction.buyerId);
-      counterpartyEmail = buyer?.email;
-    }
-
     return {
       transaction: bffTransaction,
       paymentConfirmation,
@@ -692,7 +702,6 @@ export class BffService {
       ticketUnits,
       paymentMethodPublicName,
       ...(chat && { chat }),
-      ...(counterpartyEmail !== undefined && { counterpartyEmail }),
     };
   }
 

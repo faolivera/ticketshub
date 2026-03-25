@@ -101,8 +101,6 @@ export function MyTicket() {
   const [transferProofPreview, setTransferProofPreview] = useState<string | null>(null);
   const [transferProofError, setTransferProofError] = useState<string | null>(null);
   const [isUploadingTransferProof, setIsUploadingTransferProof] = useState(false);
-  const [counterpartyEmail, setCounterpartyEmail] = useState<string | null>(null);
-
   const [receiptProofFile, setReceiptProofFile] = useState<File | null>(null);
   const [receiptProofError, setReceiptProofError] = useState<string | null>(null);
   const [isConfirmingReceipt, setIsConfirmingReceipt] = useState(false);
@@ -118,7 +116,6 @@ export function MyTicket() {
       setTicketUnits(data.ticketUnits ?? []);
       setPaymentMethodPublicName(data.paymentMethodPublicName ?? null);
       setChatConfig(data.chat ?? null);
-      setCounterpartyEmail(data.counterpartyEmail ?? null);
     } catch (err) {
       console.error('Failed to refetch transaction:', err);
     }
@@ -210,7 +207,6 @@ export function MyTicket() {
         setTicketUnits(data.ticketUnits ?? []);
         setPaymentMethodPublicName(data.paymentMethodPublicName ?? null);
         setChatConfig(data.chat ?? null);
-        setCounterpartyEmail(data.counterpartyEmail ?? null);
         if (data.chat?.hasUnreadMessages) {
           setIsChatOpen(true);
         }
@@ -422,7 +418,6 @@ export function MyTicket() {
       setDisputeModalStep('report_sent');
       const data = await bffService.getTransactionDetails(transactionId);
       setTransaction(data.transaction);
-      setCounterpartyEmail(data.counterpartyEmail ?? null);
     } catch (err: unknown) {
       let msg: string;
       const apiErr = err as ApiError | undefined;
@@ -574,7 +569,7 @@ export function MyTicket() {
       : t('transaction.escrowBuyerWaiting')
     : effectiveStatus === TransactionStatus.Completed
       ? t('transaction.escrowSellerReleased', {
-          amount: formatCurrency(transaction.sellerReceives.amount, transaction.sellerReceives.currency),
+          amount: formatCurrency(transaction.sellerReceives!.amount, transaction.sellerReceives!.currency),
         })
       : t('transaction.escrowSellerWaiting');
   const sellerUnverifiedGate = Boolean(
@@ -706,7 +701,6 @@ export function MyTicket() {
                 <SellerActionBlock
                   effectiveStatus={effectiveStatus}
                   transaction={transaction}
-                  counterpartyEmail={counterpartyEmail}
                   canOpenDispute={!!canOpenDispute}
                   onOpenDispute={handleOpenDisputeClick}
                   onOpenTransferModal={() => {
@@ -909,9 +903,9 @@ export function MyTicket() {
                   quantity: transaction.quantity,
                 })}
                 commissionLabel={t('myTicket.sellerPlatformFee')}
-                commissionFormatted={`-${formatCurrency(transaction.sellerPlatformFee.amount, transaction.sellerPlatformFee.currency)}`}
+                commissionFormatted={`-${formatCurrency(transaction.sellerPlatformFee!.amount, transaction.sellerPlatformFee!.currency)}`}
                 netLabel={t('myTicket.youReceive')}
-                netFormatted={formatCurrency(transaction.sellerReceives.amount, transaction.sellerReceives.currency)}
+                netFormatted={formatCurrency(transaction.sellerReceives!.amount, transaction.sellerReceives!.currency)}
                 methodLabel={t('myTicket.paymentMethod')}
                 methodName={paymentMethodDisplay}
               />
@@ -952,11 +946,6 @@ export function MyTicket() {
           {confirmTransferModalStep === 1 ? (
             <>
               <p className="mb-4 text-sm text-gray-600">{t('myTicket.confirmTransferPayloadHint')}</p>
-              {counterpartyEmail && (
-                <p className="mb-4 rounded-card border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  {t('myTicket.transferDisclaimerBuyerEmail', { email: counterpartyEmail })}
-                </p>
-              )}
               <div className="mb-4 space-y-2">
                 {(['ticketera', 'pdf_or_image', 'other'] as const).map((type) => (
                   <label

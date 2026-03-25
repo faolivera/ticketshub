@@ -13,7 +13,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { PlatformConfigService } from '../config/config.service';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
-import type { Offer, OfferTickets } from './offers.domain';
+import type { Offer, PublicOffer, OfferTickets } from './offers.domain';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationEventType } from '../notifications/notifications.domain';
 import type {
@@ -187,7 +187,7 @@ export class OffersService {
     ctx: Ctx,
     listingId: string,
     sellerId: string,
-  ): Promise<Offer[]> {
+  ): Promise<PublicOffer[]> {
     const listing = await this.ticketsService.getListingById(ctx, listingId);
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.sellerId !== sellerId) {
@@ -196,7 +196,8 @@ export class OffersService {
       );
     }
     const offers = await this.offersRepository.findByListingId(ctx, listingId);
-    return this.applyLazyExpiration(ctx, offers);
+    const expired = await this.applyLazyExpiration(ctx, offers);
+    return expired.map(({ userId: _, ...rest }) => rest);
   }
 
   async listReceivedOffers(
@@ -246,7 +247,8 @@ export class OffersService {
             listingPrice: { amount: 0, currency: 'EUR' },
             buyerName: buyerNameMap.get(offer.userId) ?? 'Unknown',
           };
-      return { ...offer, receivedContext: context };
+      const { userId: _, ...publicOffer } = offer;
+      return { ...publicOffer, receivedContext: context };
     });
   }
 

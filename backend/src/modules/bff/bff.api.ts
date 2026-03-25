@@ -1,4 +1,4 @@
-import type { TicketListingWithEvent } from '../tickets/tickets.domain';
+import type { PublicTicketListingWithEvent } from '../tickets/tickets.domain';
 import type { TransactionWithDetails } from '../transactions/transactions.domain';
 import type {
   OfferWithListingSummary,
@@ -17,16 +17,20 @@ import type { SellerProfile, EventPageData, BuyPageData } from './bff.domain';
  */
 export type BffTransactionWithDetails = Omit<
   TransactionWithDetails,
-  'buyerPlatformFee' | 'paymentMethodCommission'
+  'buyerPlatformFee' | 'paymentMethodCommission' | 'sellerPlatformFee' | 'sellerReceives'
 > & {
   /** Combined buyer fee: buyerPlatformFee + paymentMethodCommission (single line for buyer UI) */
   servicePrice: Money;
+  /** Only present when the requester is the seller (or admin) */
+  sellerPlatformFee?: Money;
+  /** Only present when the requester is the seller (or admin) */
+  sellerReceives?: Money;
 };
 
 export interface GetMyTicketsData {
   bought: BffTransactionWithDetails[];
   sold: BffTransactionWithDetails[];
-  listed: TicketListingWithEvent[];
+  listed: PublicTicketListingWithEvent[];
 }
 
 /**
@@ -164,6 +168,4 @@ export interface GetTransactionDetailsResponse {
   paymentMethodPublicName: string | null;
   /** Present when user is buyer/seller and transaction status allows chat */
   chat?: TransactionDetailsChatConfig;
-  /** Buyer email; only present when requester is the seller (for transfer disclaimer) */
-  counterpartyEmail?: string;
 }

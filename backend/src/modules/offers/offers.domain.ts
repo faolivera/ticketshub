@@ -49,3 +49,6 @@ export interface Offer {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** Public-facing offer shape: userId is internal and must not be sent over HTTP to counterparties */
+export type PublicOffer = Omit<Offer, 'userId'>;

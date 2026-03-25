@@ -231,7 +231,6 @@ export interface BuyerActionBlockProps {
 export interface SellerActionBlockProps {
   effectiveStatus: TransactionStatus;
   transaction: TransactionWithDetails;
-  counterpartyEmail: string | null;
   canOpenDispute: boolean;
   onOpenDispute: () => void;
   onOpenTransferModal: () => void;

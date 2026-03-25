@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { SupportService } from './support.service';
-import { SupportSeedService } from './support-seed.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -33,7 +32,6 @@ import type {
   GetSupportTicketResponse,
   ListSupportTicketsResponse,
   ListSupportTicketsQuery,
-  SeedDemoResponse,
 } from './support.api';
 import { SupportCategory, SupportTicketStatus } from './support.domain';
 
@@ -42,8 +40,6 @@ export class SupportController {
   constructor(
     @Inject(SupportService)
     private readonly supportService: SupportService,
-    @Inject(SupportSeedService)
-    private readonly supportSeedService: SupportSeedService,
   ) {}
 
   /**
@@ -218,12 +214,4 @@ export class SupportController {
     return { success: true, data: ticket };
   }
 
-  /**
-   * Seed demo data for local testing (dev only)
-   */
-  @Post('dev/seed-demo')
-  async seedDemo(@Context() ctx: Ctx): Promise<ApiResponse<SeedDemoResponse>> {
-    const result = await this.supportSeedService.seedDemoData(ctx);
-    return { success: true, data: result };
-  }
 }

@@ -43,7 +43,6 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
   const {
     effectiveStatus,
     transaction,
-    counterpartyEmail,
     canOpenDispute,
     onOpenDispute,
     onOpenTransferModal,
@@ -74,16 +73,16 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
           : '';
 
   const netFormatted = formatCurrency(
-    transaction.sellerReceives.amount,
-    transaction.sellerReceives.currency
+    transaction.sellerReceives!.amount,
+    transaction.sellerReceives!.currency
   );
   const priceFormatted = formatCurrency(
     transaction.ticketPrice.amount,
     transaction.ticketPrice.currency
   );
   const commissionFormatted = formatCurrency(
-    transaction.sellerPlatformFee.amount,
-    transaction.sellerPlatformFee.currency
+    transaction.sellerPlatformFee!.amount,
+    transaction.sellerPlatformFee!.currency
   );
 
   if (isSellerUnverifiedGate) {
@@ -127,11 +126,6 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               {t('myTicket.buyerDisclaimerTitle')}
             </p>
             <p style={{ color: DARK }}>{t('myTicket.buyerDisclaimerName', { name: transaction.buyerName })}</p>
-            {counterpartyEmail && (
-              <p style={{ color: DARK }}>
-                {t('myTicket.buyerDisclaimerEmail', { email: counterpartyEmail })}
-              </p>
-            )}
           </div>
           <TransferTimeline
             role="seller"

@@ -84,25 +84,3 @@ export interface ListSupportTicketsQuery {
   offset?: number;
 }
 
-/**
- * Response for POST /api/support/dev/seed-demo
- */
-export interface SeedDemoResponse {
-  credentials: {
-    admin: { email: string; password: string };
-    seller: { email: string; password: string };
-    buyer: { email: string; password: string };
-  };
-  ids: {
-    adminUserId: string;
-    sellerUserId: string;
-    buyerUserId: string;
-    eventId: string;
-    eventDateIds: string[];
-    ticketListingIds: string[];
-  };
-  created: {
-    eventDates: string[];
-    ticketListings: string[];
-  };
-}
