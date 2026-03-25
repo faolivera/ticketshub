@@ -13,6 +13,7 @@ import {
   Inject,
   BadRequestException,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -72,6 +73,7 @@ export class EventsController {
    * Create a new event
    */
   @Post()
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard)
   async createEvent(
     @Context() ctx: Ctx,
@@ -188,6 +190,7 @@ export class EventsController {
    * Add a date to an event
    */
   @Post(':id/dates')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard)
   async addEventDate(
     @Context() ctx: Ctx,
@@ -209,6 +212,7 @@ export class EventsController {
    * Approve or reject an event (admin only)
    */
   @Patch(':id/approve')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async approveEvent(
@@ -231,6 +235,7 @@ export class EventsController {
    * Approve or reject an event date (admin only)
    */
   @Patch('dates/:dateId/approve')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async approveEventDate(
@@ -253,6 +258,7 @@ export class EventsController {
    * Get pending events for admin review
    */
   @Get('admin/pending')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   async getPendingEvents(
@@ -266,6 +272,7 @@ export class EventsController {
    * Add a section to an event
    */
   @Post(':eventId/sections')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard)
   async addSection(
     @Context() ctx: Ctx,
@@ -305,6 +312,7 @@ export class EventsController {
    * Only event creator or admin can upload.
    */
   @Post(':id/banners/:type')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
@@ -379,6 +387,7 @@ export class EventsController {
    * Only event creator or admin can delete.
    */
   @Delete(':id/banners/:type')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard)
   async deleteBanner(
     @Context() ctx: Ctx,

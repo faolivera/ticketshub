@@ -10,6 +10,7 @@ import {
   Res,
   NotFoundException,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { Response, Request } from 'express';
 import { TermsService } from './terms.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -72,6 +73,7 @@ export class TermsController {
   }
 
   @Post(':versionId/accept')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard)
   async acceptTerms(
     @Context() ctx: Ctx,
@@ -106,6 +108,7 @@ export class TermsController {
   }
 
   @Get('status')
+  @ThrottleAuthenticated()
   @UseGuards(JwtAuthGuard)
   async getTermsStatus(
     @Context() ctx: Ctx,

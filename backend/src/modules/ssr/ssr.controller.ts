@@ -6,6 +6,7 @@ import {
   Header,
   NotFoundException,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Context } from '../../common/decorators/ctx.decorator';
@@ -17,6 +18,7 @@ import {
   SSR_STATIC_META,
 } from './ssr.api';
 
+@SkipThrottle()
 @Controller()
 export class SsrController {
   private readonly defaultOgImage: string;

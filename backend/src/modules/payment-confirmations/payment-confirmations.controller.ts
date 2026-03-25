@@ -12,6 +12,7 @@ import {
   Inject,
   BadRequestException,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { PaymentConfirmationsService } from './payment-confirmations.service';
@@ -37,6 +38,7 @@ import type {
   UpdateConfirmationStatusResponse,
 } from './payment-confirmations.api';
 
+@ThrottleAuthenticated()
 @Controller('api')
 export class PaymentConfirmationsController {
   constructor(

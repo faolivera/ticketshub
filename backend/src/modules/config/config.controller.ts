@@ -6,6 +6,7 @@ import {
   Inject,
   UseGuards,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { ValidateResponse } from '../../common/decorators/validate-response.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -29,6 +30,7 @@ import { PlatformConfigService } from './config.service';
  * Admin-only controller for platform configuration.
  * Only users with Admin role can read and update platform settings.
  */
+@ThrottleAuthenticated()
 @Controller('api/admin/config')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)

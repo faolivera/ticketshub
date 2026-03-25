@@ -1,4 +1,5 @@
 import { Controller, Get, Inject, UseGuards } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { ValidateResponse } from '../../common/decorators/validate-response.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -12,6 +13,7 @@ import { PlatformConfigService } from './config.service';
  * Controller for config values needed by authenticated (non-admin) flows,
  * e.g. seller platform fee % for the sell-ticket pricing summary.
  */
+@ThrottleAuthenticated()
 @Controller('api/config')
 @UseGuards(JwtAuthGuard)
 export class ConfigPublicController {

@@ -10,6 +10,7 @@ import {
   DefaultValuePipe,
   ParseBoolPipe,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { User } from '../../common/decorators/user.decorator';
@@ -26,6 +27,7 @@ import type {
   MarkAsReadBatchResponse,
 } from './notifications.api';
 
+@ThrottleAuthenticated()
 @Controller('api/notifications')
 export class NotificationsController {
   constructor(private readonly service: NotificationsService) {}

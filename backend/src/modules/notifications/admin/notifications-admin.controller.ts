@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../../common/throttler';
 import { NotificationsService } from '../notifications.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -42,6 +43,7 @@ import type {
   PreviewTemplateResponse,
 } from '../notifications.api';
 
+@ThrottleAuthenticated()
 @Controller('api/admin/notifications')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)

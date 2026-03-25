@@ -10,6 +10,7 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { PromotionsService } from './promotions.service';
 import { PromotionCodesService } from './promotion-codes.service';
 import { Context } from '../../common/decorators/ctx.decorator';
@@ -37,6 +38,7 @@ import {
 } from './schemas/api.schemas';
 import { PromotionStatus, PromotionType } from './promotions.domain';
 
+@ThrottleAuthenticated()
 @Controller('api/admin/promotions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)

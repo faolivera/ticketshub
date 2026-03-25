@@ -8,6 +8,7 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { ThrottleAuthenticated } from '../../common/throttler';
 import { PromotionCodesService } from './promotion-codes.service';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { User } from '../../common/decorators/user.decorator';
@@ -22,6 +23,7 @@ import type {
 } from './promotions.api';
 import { ClaimPromotionCodeRequestSchema } from './schemas/api.schemas';
 
+@ThrottleAuthenticated()
 @Controller('api/promotions')
 @UseGuards(JwtAuthGuard)
 export class PromotionsClaimController {
