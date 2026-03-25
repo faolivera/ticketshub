@@ -2,9 +2,10 @@
 //   @Throttle({ name: { ttl, limit } }) → Reflect.defineMetadata(THROTTLER_TTL + name, ttl, target)
 //   @SkipThrottle({ name: true })       → Reflect.defineMetadata(THROTTLER_SKIP + name, true, target)
 // So assertions must use the composite key directly.
-// Note: these constants are not re-exported from the main index in v6.5.0, import from internal path.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { THROTTLER_LIMIT, THROTTLER_SKIP, THROTTLER_TTL } = require('@nestjs/throttler/dist/throttler.constants');
+// @nestjs/throttler v6 metadata keys (stable string values of the library's constants)
+const THROTTLER_TTL = 'THROTTLER:TTL';
+const THROTTLER_LIMIT = 'THROTTLER:LIMIT';
+const THROTTLER_SKIP = 'THROTTLER:SKIP';
 import { ThrottleAuthenticated } from '@/common/throttler/throttle-authenticated.decorator';
 import { ThrottleSensitivePublic } from '@/common/throttler/throttle-sensitive-public.decorator';
 import { ThrottleContact } from '@/common/throttler/throttle-contact.decorator';
