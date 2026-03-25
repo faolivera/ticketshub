@@ -30,6 +30,7 @@ import {
 } from './schemas/api.schemas';
 import { isValidArgentinaPhone } from '../../common/utils/phone-validator';
 import { InvalidPhoneNumberException } from '../../common/exceptions/invalid-phone-number.exception';
+import { ThrottleSensitivePublic } from '../../common/throttler';
 
 @Controller('api/otp')
 @UseGuards(JwtAuthGuard)
@@ -41,6 +42,7 @@ export class OTPController {
     private readonly usersService: UsersService,
   ) {}
 
+  @ThrottleSensitivePublic()
   @Post('send')
   @HttpCode(HttpStatus.OK)
   @ValidateResponse(SendOTPResponseSchema)
@@ -92,6 +94,7 @@ export class OTPController {
     };
   }
 
+  @ThrottleSensitivePublic()
   @Post('verify')
   @HttpCode(HttpStatus.OK)
   @ValidateResponse(VerifyOTPResponseSchema)

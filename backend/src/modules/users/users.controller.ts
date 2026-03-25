@@ -50,6 +50,7 @@ import {
   LoginResponseSchema,
   GetMeResponseSchema,
 } from './schemas/api.schemas';
+import { ThrottleAuthenticated, ThrottleSensitivePublic } from '../../common/throttler';
 
 const ALLOWED_AVATAR_MIME_TYPES = [
   'image/jpeg',
@@ -68,6 +69,7 @@ export class UsersController {
     private readonly identityVerificationService: IdentityVerificationService,
   ) {}
 
+  @ThrottleSensitivePublic()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ValidateResponse(LoginResponseSchema)
@@ -125,6 +127,7 @@ export class UsersController {
     };
   }
 
+  @ThrottleSensitivePublic()
   @Post('auth/google')
   @HttpCode(HttpStatus.OK)
   @ValidateResponse(LoginResponseSchema)
@@ -171,6 +174,7 @@ export class UsersController {
     };
   }
 
+  @ThrottleSensitivePublic()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ValidateResponse(LoginResponseSchema)
@@ -209,6 +213,7 @@ export class UsersController {
     };
   }
 
+  @ThrottleAuthenticated()
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(GetMeResponseSchema)
@@ -236,6 +241,7 @@ export class UsersController {
     };
   }
 
+  @ThrottleAuthenticated()
   @Get('bank-account')
   @UseGuards(JwtAuthGuard)
   async getBankAccount(
@@ -249,6 +255,7 @@ export class UsersController {
     };
   }
 
+  @ThrottleAuthenticated()
   @Put('upgrade-to-seller')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -264,6 +271,7 @@ export class UsersController {
     };
   }
 
+  @ThrottleAuthenticated()
   @Post('profile/avatar')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
@@ -307,6 +315,7 @@ export class UsersController {
     };
   }
 
+  @ThrottleAuthenticated()
   @Put('bank-account')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -336,6 +345,7 @@ export class UsersController {
   /**
    * List all users with bank account and full bank data (admin only)
    */
+  @ThrottleAuthenticated()
   @Get('admin/bank-accounts')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
@@ -352,6 +362,7 @@ export class UsersController {
   /**
    * Update bank account verification status (admin only)
    */
+  @ThrottleAuthenticated()
   @Patch('admin/bank-account-status/:userId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)

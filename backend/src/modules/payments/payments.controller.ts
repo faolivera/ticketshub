@@ -16,6 +16,8 @@ import { Context } from '../../common/decorators/ctx.decorator';
 import type { Ctx } from '../../common/types/context';
 import type { ApiResponse } from '../../common/types/api';
 import type { WebhookResponse, GetPaymentStatusResponse } from './payments.api';
+import { ThrottleAuthenticated } from '../../common/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('api/payments')
 export class PaymentsController {
@@ -28,6 +30,7 @@ export class PaymentsController {
    * Webhook endpoint for payment provider
    * Note: In production, implement signature verification
    */
+  @SkipThrottle()
   @Post('webhook')
   async handleWebhook(
     @Context() ctx: Ctx,
@@ -52,6 +55,7 @@ export class PaymentsController {
   /**
    * Get payment status by ID
    */
+  @ThrottleAuthenticated()
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async getPaymentStatus(
@@ -66,6 +70,7 @@ export class PaymentsController {
    * Mock endpoint to simulate payment confirmation (for testing)
    * In production, this would be handled by the webhook
    */
+  @ThrottleAuthenticated()
   @Post(':id/confirm')
   @UseGuards(JwtAuthGuard)
   async confirmPayment(

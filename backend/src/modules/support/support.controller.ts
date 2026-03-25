@@ -34,6 +34,7 @@ import type {
   ListSupportTicketsQuery,
 } from './support.api';
 import { SupportCategory, SupportTicketStatus } from './support.domain';
+import { ThrottleAuthenticated, ThrottleContact } from '../../common/throttler';
 
 @Controller('api/support')
 export class SupportController {
@@ -45,6 +46,7 @@ export class SupportController {
   /**
    * Public contact form (no auth). Creates a ticket with guest name/email and guestId (guest:{ip}).
    */
+  @ThrottleContact()
   @Post('contact')
   async createContactTicket(
     @Context() ctx: Ctx,
@@ -66,6 +68,7 @@ export class SupportController {
   /**
    * Create a support ticket (authenticated)
    */
+  @ThrottleAuthenticated()
   @Post()
   @UseGuards(JwtAuthGuard)
   async createTicket(
@@ -80,6 +83,7 @@ export class SupportController {
   /**
    * List my tickets
    */
+  @ThrottleAuthenticated()
   @Get()
   @UseGuards(JwtAuthGuard)
   async listTickets(
@@ -107,6 +111,7 @@ export class SupportController {
   /**
    * Get ticket by ID
    */
+  @ThrottleAuthenticated()
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async getTicket(
@@ -126,6 +131,7 @@ export class SupportController {
   /**
    * Add message to ticket
    */
+  @ThrottleAuthenticated()
   @Post(':id/messages')
   @UseGuards(JwtAuthGuard)
   async addMessage(
@@ -149,6 +155,7 @@ export class SupportController {
   /**
    * Close ticket
    */
+  @ThrottleAuthenticated()
   @Post(':id/close')
   @UseGuards(JwtAuthGuard)
   async closeTicket(
@@ -163,6 +170,7 @@ export class SupportController {
   /**
    * Resolve dispute (admin only)
    */
+  @ThrottleAuthenticated()
   @Patch(':id/resolve')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
@@ -185,6 +193,7 @@ export class SupportController {
   /**
    * List all active tickets (admin only)
    */
+  @ThrottleAuthenticated()
   @Get('admin/active')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
@@ -198,6 +207,7 @@ export class SupportController {
   /**
    * Update ticket status (admin only)
    */
+  @ThrottleAuthenticated()
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)

@@ -43,6 +43,7 @@ import {
   ValidateSellListingResponseSchema,
   GetActivityHistoryResponseSchema,
 } from './schemas/api.schemas';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
 @Controller('api')
 export class BffController {
@@ -67,6 +68,7 @@ export class BffController {
   /**
    * Get sell-ticket page config: platform fee % and active promotion (authenticated)
    */
+  @ThrottleAuthenticated()
   @Get('sell-ticket/config')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(GetSellTicketConfigResponseSchema)
@@ -82,6 +84,7 @@ export class BffController {
    * Validate whether the seller can create a listing from a risk perspective (Tier 0 limits).
    * Same checks as createListing; used by the sell wizard before advancing from the price step.
    */
+  @ThrottleAuthenticated()
   @Post('sell/validate')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(ValidateSellListingResponseSchema)
@@ -107,6 +110,7 @@ export class BffController {
   /**
    * Get current user's tickets: bought, sold, and listed (authenticated)
    */
+  @ThrottleAuthenticated()
   @Get('my-tickets')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(GetMyTicketsResponseSchema)
@@ -121,6 +125,7 @@ export class BffController {
   /**
    * Paginated history: terminal transactions + closed offers (buyer or seller).
    */
+  @ThrottleAuthenticated()
   @Get('activity-history')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(GetActivityHistoryResponseSchema)
@@ -166,6 +171,7 @@ export class BffController {
    * Re-evaluate checkout risk for the buy page (quantity + payment method).
    * Authenticated only. Use when user changes quantity or payment method to refresh requireV2/requireV3 and missing flags.
    */
+  @ThrottleAuthenticated()
   @Get('buy/:ticketId/checkout-risk')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(GetCheckoutRiskResponseSchema)
@@ -207,6 +213,7 @@ export class BffController {
    * Get transaction details (BFF aggregation)
    * Combines transaction, payment confirmation, and reviews data.
    */
+  @ThrottleAuthenticated()
   @Get('transaction-details/:id')
   @UseGuards(JwtAuthGuard)
   @ValidateResponse(GetTransactionDetailsResponseSchema)
