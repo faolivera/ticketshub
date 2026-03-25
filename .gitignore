@@ -35,3 +35,4 @@ backend/dumps/
 infra/
 
 .superpowers/
+.worktrees/
