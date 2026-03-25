@@ -44,6 +44,10 @@ import { GatewaysModule } from './modules/gateways/gateways.module';
   imports: [
     // Scheduling support for cron jobs
     ScheduleModule.forRoot(),
+    // Single-profile throttler: only 'default' is registered. Custom decorators (ThrottleAuthenticated,
+    // ThrottleSensitivePublic, ThrottleContact) override this profile's ttl/limit per endpoint.
+    // Adding extra profiles here would cause ALL registered profiles to apply to EVERY endpoint
+    // simultaneously, breaking per-endpoint overrides. Keep exactly one profile.
     ThrottlerModule.forRoot([
       { name: 'default', ttl: 60_000, limit: 20 },
     ]),

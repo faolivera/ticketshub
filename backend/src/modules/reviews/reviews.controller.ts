@@ -23,7 +23,6 @@ import type {
 } from './reviews.api';
 import { ThrottleAuthenticated } from '../../common/throttler';
 
-@ThrottleAuthenticated()
 @Controller('api/reviews')
 export class ReviewsController {
   constructor(
@@ -36,6 +35,7 @@ export class ReviewsController {
    */
   @Post()
   @UseGuards(JwtAuthGuard)
+  @ThrottleAuthenticated()
   async createReview(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
@@ -76,6 +76,7 @@ export class ReviewsController {
    */
   @Get('transaction/:transactionId')
   @UseGuards(JwtAuthGuard)
+  @ThrottleAuthenticated()
   async getTransactionReviews(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,

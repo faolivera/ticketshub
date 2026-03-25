@@ -29,7 +29,6 @@ import type {
 import { TicketType } from './tickets.domain';
 import { ThrottleAuthenticated } from '../../common/throttler';
 
-@ThrottleAuthenticated()
 @Controller('api/tickets')
 export class TicketsController {
   constructor(
@@ -42,6 +41,7 @@ export class TicketsController {
    */
   @Post()
   @UseGuards(JwtAuthGuard)
+  @ThrottleAuthenticated()
   async createListing(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
@@ -96,6 +96,7 @@ export class TicketsController {
    */
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
+  @ThrottleAuthenticated()
   async updateListing(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
@@ -116,6 +117,7 @@ export class TicketsController {
    */
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ThrottleAuthenticated()
   async cancelListing(
     @Context() ctx: Ctx,
     @User() user: AuthenticatedUserPublicInfo,
