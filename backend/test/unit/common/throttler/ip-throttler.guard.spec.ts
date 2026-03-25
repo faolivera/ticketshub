@@ -52,5 +52,21 @@ describe('IpThrottlerGuard', () => {
       expect(superSpy).not.toHaveBeenCalled();
       superSpy.mockRestore();
     });
+
+    it('calls super.canActivate for non-metrics paths', async () => {
+      const guard = makeGuard();
+      const superSpy = jest
+        .spyOn(ThrottlerGuard.prototype, 'canActivate')
+        .mockResolvedValue(true);
+
+      const ctx = {
+        switchToHttp: () => ({ getRequest: () => makeReq({ path: '/api/support/contact' }) }),
+      } as unknown as ExecutionContext;
+
+      const result = await guard.canActivate(ctx);
+      expect(superSpy).toHaveBeenCalled();
+      expect(result).toBe(true);
+      superSpy.mockRestore();
+    });
   });
 });
