@@ -269,7 +269,18 @@ export interface PublicListEventItem {
   sections: PublicListEventSection[];
 }
 
-export type ListEventsPublicResponse = PublicListEventItem[];
+/**
+ * Available filter options derived from approved events.
+ */
+export interface EventFilters {
+  cities: string[];
+  categories: EventCategory[];
+}
+
+export interface ListEventsPublicResponse {
+  events: PublicListEventItem[];
+  filters: EventFilters;
+}
 
 /**
  * Query params for listing events (public API always returns approved events only).

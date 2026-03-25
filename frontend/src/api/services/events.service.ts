@@ -5,6 +5,7 @@ import type {
   GetEventResponse,
   ListEventsPublicResponse,
   ListEventsQuery,
+  PublicListEventItem,
   AddEventDateRequest,
   AddEventDateResponse,
   ApproveEventRequest,
@@ -34,8 +35,8 @@ export const eventsService = {
    * Get highlighted/featured events for the landing hero.
    * Backed by GET /events/highlights (server-side 24 h cache).
    */
-  async getHighlightedEvents(): Promise<ListEventsPublicResponse> {
-    const response = await apiClient.get<ListEventsPublicResponse>('/events/highlights');
+  async getHighlightedEvents(): Promise<PublicListEventItem[]> {
+    const response = await apiClient.get<PublicListEventItem[]>('/events/highlights');
     return response.data;
   },
 
