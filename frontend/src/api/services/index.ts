@@ -16,3 +16,4 @@ export { adminService } from './admin.service';
 export { identityVerificationService } from './identity-verification.service';
 export { notificationsService } from './notifications.service';
 export { configService } from './config.service';
+export { subscriptionsService } from './subscriptions.service';

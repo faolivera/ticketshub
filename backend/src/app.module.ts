@@ -39,6 +39,7 @@ import { SocketModule } from './common/socket/socket.module';
 import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
 import { EventScoringModule } from './modules/event-scoring/event-scoring.module';
 import { GatewaysModule } from './modules/gateways/gateways.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { GatewaysModule } from './modules/gateways/gateways.module';
     SocketModule,
     BffModule,
     SsrModule,
+    SubscriptionsModule,
   ],
   providers: [
     {

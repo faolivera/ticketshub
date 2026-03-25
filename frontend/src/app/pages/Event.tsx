@@ -7,6 +7,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { ticketsService } from "@/api/services/tickets.service";
+import { subscriptionsService } from "@/api/services/subscriptions.service";
 import { formatDate, formatTime } from "@/lib/format-date";
 import { getInitials } from "@/lib/string-utils";
 import { EventTicketCard } from "@/app/components/EventTicketCard";
@@ -169,7 +170,7 @@ export default function EventDetail() {
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const waitingCount = 0; // TODO: proveer desde el backend
+  const [waitingCount, setWaitingCount] = useState<number>(0);
   const heroRef = useRef<HTMLDivElement>(null);
   const ticketsRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
@@ -193,10 +194,15 @@ export default function EventDetail() {
         if (!cancelled) {
           setApiEvent(eventData);
           setListings(listingsData || []);
+          if (eventData?.id) {
+            subscriptionsService
+              .getCount(eventData.id, 'NOTIFY_TICKET_AVAILABLE')
+              .then((res) => { if (!cancelled) setWaitingCount(res.count); })
+              .catch(() => { /* non-critical, leave waitingCount at 0 */ });
+          }
         }
       } catch (err) {
         if (!cancelled) setError(t("eventTickets.errorLoading"));
-        console.error("Failed to fetch event page:", err);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -627,7 +633,7 @@ export default function EventDetail() {
 
         {/* ── Ticket grid / empty state ── */}
         {sorted.length === 0 ? (
-          <EmptyEventState waitingCount={waitingCount} />
+          <EmptyEventState waitingCount={waitingCount} eventId={apiEvent!.id} />
         ) : (
           <div className="tk-grid">
             {sorted.map((tkt, idx) => (

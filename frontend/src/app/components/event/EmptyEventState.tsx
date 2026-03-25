@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell, Plus, CheckCircle, Lock, Users, ArrowRight } from "lucide-react";
+import { useUser } from "@/app/contexts/UserContext";
+import { subscriptionsService } from "@/api/services/subscriptions.service";
 
 const V = "#6d28d9";
 const V_MID = "#7c3aed";
@@ -19,17 +21,43 @@ const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 interface Props {
   waitingCount?: number;
+  eventId: string;
 }
 
-export default function EmptyEventState({ waitingCount = 0 }: Props) {
-  const [alertValue, setAlertValue] = useState("");
+export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
+  const { user } = useUser();
+  const [alertValue, setAlertValue] = useState(user?.email ?? "");
   const [alertError, setAlertError] = useState(false);
+  const [alertErrorMsg, setAlertErrorMsg] = useState("");
   const [alertSent, setAlertSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
 
-  const handleAlert = () => {
-    if (!isValidEmail(alertValue)) { setAlertError(true); return; }
-    setAlertSent(true); // TODO: wire to API
+  const isLoggedIn = user !== null && user !== undefined;
+
+  const handleAlert = async () => {
+    const emailToSubmit = isLoggedIn ? (user?.email ?? "") : alertValue;
+
+    if (!isLoggedIn && !isValidEmail(emailToSubmit)) {
+      setAlertError(true);
+      setAlertErrorMsg("Ingresá un email válido");
+      return;
+    }
+
+    setLoading(true);
+    setAlertError(false);
+    try {
+      await subscriptionsService.subscribe(
+        eventId,
+        isLoggedIn ? undefined : emailToSubmit,
+      );
+      setAlertSent(true);
+    } catch {
+      setAlertError(true);
+      setAlertErrorMsg("Ocurrió un error. Intentá de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,6 +81,7 @@ export default function EmptyEventState({ waitingCount = 0 }: Props) {
           .ees-divider-h { display: flex !important; }
         }
         .ees-input:focus { border-color: #6d28d9 !important; }
+        .ees-input:disabled { opacity: 0.65; cursor: not-allowed; }
       `}</style>
 
       <div className="ees-root">
@@ -101,6 +130,7 @@ export default function EmptyEventState({ waitingCount = 0 }: Props) {
                   type="email"
                   placeholder="tu@email.com"
                   value={alertValue}
+                  disabled={isLoggedIn || loading}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setAlertValue(e.target.value);
                     setAlertError(false);
@@ -117,24 +147,25 @@ export default function EmptyEventState({ waitingCount = 0 }: Props) {
                 />
                 <button
                   onClick={handleAlert}
+                  disabled={loading}
                   style={{
                     ...S, fontSize: 13, fontWeight: 700,
-                    background: V, color: "white", border: "none",
-                    borderRadius: 9, padding: "9px 16px", cursor: "pointer",
+                    background: loading ? V_MID : V, color: "white", border: "none",
+                    borderRadius: 9, padding: "9px 16px", cursor: loading ? "not-allowed" : "pointer",
                     display: "inline-flex", alignItems: "center", gap: 5,
                     whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(109,40,217,0.28)",
-                    flexShrink: 0,
+                    flexShrink: 0, opacity: loading ? 0.8 : 1,
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = V_MID)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = V)}
+                  onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = V_MID; }}
+                  onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = V; }}
                 >
-                  <Bell size={12} /> Avisarme
+                  <Bell size={12} /> {loading ? "..." : "Avisarme"}
                 </button>
               </div>
 
               {alertError && (
                 <p style={{ ...S, fontSize: 11.5, color: "#e11d48", margin: "0 0 4px" }}>
-                  Ingresá un email válido
+                  {alertErrorMsg}
                 </p>
               )}
 

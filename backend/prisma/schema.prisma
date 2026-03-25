@@ -336,6 +336,7 @@ model User {
   notifications         Notification[]
   promotions            Promotion[]
   offers                Offer[]
+  subscriptions         EventSubscription[]
 
   @@map("users")
 }
@@ -392,6 +393,7 @@ model Event {
   sections        EventSection[]
   listings        TicketListing[]
   requireScoringQueueEntry EventRequireScoring?
+  subscriptions            EventSubscription[]
 
   @@index([status, rankingScore(sort: Desc)])
   @@map("events")
@@ -1078,6 +1080,23 @@ model GatewayOrder {
   @@index([status])
   @@index([transactionId, status])
   @@map("gateway_orders")
+}
+
+model EventSubscription {
+  id               String   @id @default(uuid())
+  eventId          String
+  subscriptionType String
+  userId           String?
+  email            String
+  createdAt        DateTime @default(now())
+
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, subscriptionType, email])
+  @@index([eventId, subscriptionType])
+  @@index([email])
+  @@map("event_subscriptions")
 }
 
 model GatewayRefund {
