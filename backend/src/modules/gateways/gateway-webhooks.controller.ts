@@ -1,9 +1,11 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Context } from '../../common/decorators/ctx.decorator';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import { GatewayPaymentsService } from './gateway-payments.service';
 
+@SkipThrottle()
 @Controller('api/payments/webhook')
 export class GatewayWebhooksController {
   private readonly logger = new ContextLogger(GatewayWebhooksController.name);
