@@ -172,6 +172,9 @@ export const ALLOWED_BANNER_MIME_TYPES: EventBannerMimeType[] = [
 /** Cache key for the highlighted/featured events list (TTL: 24 h). */
 export const HIGHLIGHTS_CACHE_KEY = 'events:highlights';
 
+/** Cache key for the available event filters (cities + categories). TTL: 24 h. */
+export const FILTERS_CACHE_KEY = 'events:filters';
+
 /**
  * Banner constraints
  */

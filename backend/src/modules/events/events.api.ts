@@ -128,7 +128,19 @@ export interface PublicListEventItem {
   sections: PublicListEventSection[];
 }
 
-export type ListEventsPublicResponse = PublicListEventItem[];
+/**
+ * Available filter options derived from approved events.
+ * Cities and categories are distinct values, sorted alphabetically.
+ */
+export interface EventFilters {
+  cities: string[];
+  categories: EventCategory[];
+}
+
+export interface ListEventsPublicResponse {
+  events: PublicListEventItem[];
+  filters: EventFilters;
+}
 
 /**
  * Banner URLs for API responses
