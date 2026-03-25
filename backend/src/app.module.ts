@@ -45,10 +45,7 @@ import { GatewaysModule } from './modules/gateways/gateways.module';
     // Scheduling support for cron jobs
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-      { name: 'default',          ttl: 60_000,  limit: 20  },
-      { name: 'authenticated',    ttl: 60_000,  limit: 200 },
-      { name: 'sensitive-public', ttl: 60_000,  limit: 5   },
-      { name: 'contact',          ttl: 600_000, limit: 3   },
+      { name: 'default', ttl: 60_000, limit: 20 },
     ]),
 
     // Global modules (must be first). ConfigModule before PrometheusModule so ConfigService is available for defaultLabels.

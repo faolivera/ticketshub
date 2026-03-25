@@ -1,11 +1,9 @@
-// In @nestjs/throttler v6, metadata is stored with composite keys:
-//   @Throttle({ name: { ttl, limit } }) → Reflect.defineMetadata(THROTTLER_TTL + name, ttl, target)
-//   @SkipThrottle({ name: true })       → Reflect.defineMetadata(THROTTLER_SKIP + name, true, target)
+// @nestjs/throttler v6 stores per-profile metadata with composite keys:
+//   Throttle({ default: { ttl, limit } }) → Reflect.defineMetadata('THROTTLER:TTL' + 'default', ttl, target)
 // So assertions must use the composite key directly.
 // @nestjs/throttler v6 metadata keys (stable string values of the library's constants)
 const THROTTLER_TTL = 'THROTTLER:TTL';
 const THROTTLER_LIMIT = 'THROTTLER:LIMIT';
-const THROTTLER_SKIP = 'THROTTLER:SKIP';
 import { ThrottleAuthenticated } from '@/common/throttler/throttle-authenticated.decorator';
 import { ThrottleSensitivePublic } from '@/common/throttler/throttle-sensitive-public.decorator';
 import { ThrottleContact } from '@/common/throttler/throttle-contact.decorator';
@@ -17,42 +15,25 @@ function applyToClass(decorator: ClassDecorator) {
 }
 
 describe('ThrottleAuthenticated', () => {
-  it('sets authenticated throttle metadata', () => {
+  it('overrides default profile to 200 req/min', () => {
     const target = applyToClass(ThrottleAuthenticated() as ClassDecorator);
-    expect(Reflect.getMetadata(THROTTLER_TTL + 'authenticated', target)).toBe(60_000);
-    expect(Reflect.getMetadata(THROTTLER_LIMIT + 'authenticated', target)).toBe(200);
-  });
-
-  it('marks default profile as skipped', () => {
-    const target = applyToClass(ThrottleAuthenticated() as ClassDecorator);
-    expect(Reflect.getMetadata(THROTTLER_SKIP + 'default', target)).toBe(true);
+    expect(Reflect.getMetadata(THROTTLER_TTL + 'default', target)).toBe(60_000);
+    expect(Reflect.getMetadata(THROTTLER_LIMIT + 'default', target)).toBe(200);
   });
 });
 
 describe('ThrottleSensitivePublic', () => {
-  it('sets sensitive-public throttle metadata', () => {
+  it('overrides default profile to 5 req/min', () => {
     const target = applyToClass(ThrottleSensitivePublic() as ClassDecorator);
-    expect(Reflect.getMetadata(THROTTLER_TTL + 'sensitive-public', target)).toBe(60_000);
-    expect(Reflect.getMetadata(THROTTLER_LIMIT + 'sensitive-public', target)).toBe(5);
-  });
-
-  it('marks default profile as skipped', () => {
-    const target = applyToClass(ThrottleSensitivePublic() as ClassDecorator);
-    expect(Reflect.getMetadata(THROTTLER_SKIP + 'default', target)).toBe(true);
+    expect(Reflect.getMetadata(THROTTLER_TTL + 'default', target)).toBe(60_000);
+    expect(Reflect.getMetadata(THROTTLER_LIMIT + 'default', target)).toBe(5);
   });
 });
 
 describe('ThrottleContact', () => {
-  it('sets contact throttle metadata', () => {
+  it('overrides default profile to 3 req/10min', () => {
     const target = applyToClass(ThrottleContact() as ClassDecorator);
-    expect(Reflect.getMetadata(THROTTLER_TTL + 'contact', target)).toBe(600_000);
-    expect(Reflect.getMetadata(THROTTLER_LIMIT + 'contact', target)).toBe(3);
-  });
-
-  it('marks default, authenticated, and sensitive-public as skipped', () => {
-    const target = applyToClass(ThrottleContact() as ClassDecorator);
-    expect(Reflect.getMetadata(THROTTLER_SKIP + 'default', target)).toBe(true);
-    expect(Reflect.getMetadata(THROTTLER_SKIP + 'authenticated', target)).toBe(true);
-    expect(Reflect.getMetadata(THROTTLER_SKIP + 'sensitive-public', target)).toBe(true);
+    expect(Reflect.getMetadata(THROTTLER_TTL + 'default', target)).toBe(600_000);
+    expect(Reflect.getMetadata(THROTTLER_LIMIT + 'default', target)).toBe(3);
   });
 });

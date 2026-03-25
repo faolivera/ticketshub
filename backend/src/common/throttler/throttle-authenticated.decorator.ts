@@ -1,8 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
-import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 
 export const ThrottleAuthenticated = (): MethodDecorator & ClassDecorator =>
-  applyDecorators(
-    SkipThrottle({ default: true }),
-    Throttle({ authenticated: { ttl: 60_000, limit: 200 } }),
-  );
+  Throttle({ default: { ttl: 60_000, limit: 200 } }) as MethodDecorator & ClassDecorator;
