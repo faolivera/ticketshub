@@ -278,7 +278,7 @@ export function HighlightedEventsHero({
                 position: "absolute",
                 bottom: 0, right: 0,
                 width: 800, height: 340,
-                clipPath: "path('M 800,0 L 110,0 L 0,340 L 800,340 Z')",
+                clipPath: "path('M 800,0 L 66,0 L 0,340 L 800,340 Z')",
                 opacity: 0.14,
               }}
             />
@@ -444,41 +444,20 @@ export function HighlightedEventsHero({
           {/* 1 — Brand headline */}
           <div style={{ marginBottom: 16 }}>
             <span style={{ ...S, fontSize: 24, fontWeight: 700, color: "#fff", display: "block", lineHeight: 1.2 }}>
-              Las mejores experiencias no se agotan.
+              Las experiencias no se agotan,
             </span>
             <span style={{ ...E, fontSize: 25, fontStyle: "italic", fontWeight: 400, color: V_SOFT, display: "block", lineHeight: 1.2 }}>
               Solo cambian de manos.
             </span>
           </div>
 
-          {/* 2 — Event context: name + venue + price compact */}
-          <div
-            style={{
-              padding: "12px 14px",
-              borderRadius: 12,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.09)",
-              marginBottom: 14,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ ...S, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 2, lineHeight: 1.2 }}>
-                  {event.name}
-                </div>
-                <div style={{ ...S, fontSize: 11, color: "rgba(255,255,255,0.48)" }}>
-                  {venueStr}{dateStr ? ` · ${dateStr}` : null}
-                </div>
-              </div>
-              {event.lowestListingPrice && (
-                <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <div style={{ ...S, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Desde</div>
-                  <div style={{ ...S, fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
-                    ${formatPrice(event.lowestListingPrice.amount)}
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontWeight: 400, marginLeft: 2 }}>ARS</span>
-                  </div>
-                </div>
-              )}
+          {/* 2 — Event name + venue */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ ...S, fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 3 }}>
+              {event.name}
+            </div>
+            <div style={{ ...S, fontSize: 11, color: "rgba(255,255,255,0.42)", lineHeight: 1.5 }}>
+              {venueStr}{dateStr ? ` · ${dateStr}` : null}
             </div>
           </div>
 
@@ -559,7 +538,7 @@ export function HighlightedEventsHero({
   //   M 508,0 L 114,0 Q 91,0 84,22 L 0,292 L 508,292 Z
 
   const PARA_CLIP =
-    "path('M 800,0 L 110,0 L 0,340 L 800,340 Z')";
+    "path('M 800,0 L 66,0 L 0,340 L 800,340 Z')";
 
   return (
     <div
@@ -624,6 +603,20 @@ export function HighlightedEventsHero({
       {/* ── LAYER 3: Stock badge ─────────────────────────────────────────── */}
       {StockBadge}
 
+      {/* ── Dot nav — absolute bottom-right of the panel ────────────────── */}
+      {DotNav && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 26,
+            right: 32,
+            zIndex: 3,
+          }}
+        >
+          {DotNav}
+        </div>
+      )}
+
       {/* ── LAYER 4: Left panel — 3 zones ───────────────────────────────── */}
       <div
         style={{
@@ -644,19 +637,19 @@ export function HighlightedEventsHero({
           <span
             style={{
               ...S,
-              fontSize: "clamp(20px, 1.9vw, 25px)",
+              fontSize: "clamp(19px, 1.8vw, 24px)",
               fontWeight: 700,
               color: "#fff",
               lineHeight: 1.2,
               display: "block",
             }}
           >
-            Las mejores experiencias no se agotan.
+            Las experiencias no se agotan,
           </span>
           <span
             style={{
               ...E,
-              fontSize: "clamp(21px, 2vw, 26px)",
+              fontSize: "clamp(20px, 1.9vw, 25px)",
               fontStyle: "italic",
               fontWeight: 400,
               color: V_SOFT,
@@ -668,8 +661,12 @@ export function HighlightedEventsHero({
           </span>
         </div>
 
-        {/* Zone 2 — Event content + dot navigation (middle) */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Zone 2 — spacer */}
+        <div />
+
+        {/* Zone 3 — Event content + action + trust (bottom) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+          {/* Event name + venue */}
           <div>
             <div
               style={{
@@ -696,12 +693,7 @@ export function HighlightedEventsHero({
               {dateStr ? ` · ${dateStr}` : null}
             </div>
           </div>
-          {/* Dot nav lives here — navigates the event, not the page */}
-          {DotNav}
-        </div>
 
-        {/* Zone 3 — Action + trust (bottom) */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
           {/* CTAs */}
           <div style={{ display: "flex", gap: 8 }}>
             <Link
