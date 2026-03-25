@@ -95,7 +95,7 @@ export class EventsController {
   @Get('highlights')
   async getHighlightedEvents(
     @Context() ctx: Ctx,
-  ): Promise<ApiResponse<ListEventsPublicResponse>> {
+  ): Promise<ApiResponse<PublicListEventItem[]>> {
     const data = await this.cache.getOrCalculate(
       HIGHLIGHTS_CACHE_KEY,
       HIGHLIGHTS_TTL_SECONDS,
@@ -134,14 +134,15 @@ export class EventsController {
       offset: offset ? parseInt(offset, 10) : undefined,
       highlighted: highlighted === 'true' ? true : undefined,
     };
-    const [events, cutoffDate] = await Promise.all([
+    const [rawEvents, cutoffDate, filters] = await Promise.all([
       this.eventsService.listEvents(ctx, query, false),
       this.eventsService.getTicketCutoffDate(ctx),
+      this.eventsService.getEventFilters(ctx),
     ]);
-    const data: ListEventsPublicResponse = events.map((e) =>
+    const events = rawEvents.map((e) =>
       this.eventsService.toPublicEventItem(e, { includeStatus: false, cutoffDate }),
     );
-    return { success: true, data };
+    return { success: true, data: { events, filters } };
   }
 
   /**
