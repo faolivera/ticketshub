@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { eventsService } from "@/api/services/events.service";
-import type { PublicListEventItem } from "@/api/types/events";
+import type { PublicListEventItem, EventFilters } from "@/api/types/events";
 import { formatDate } from "@/lib/format-date";
 import {
   V,
@@ -109,7 +109,6 @@ function eventToCardShape(apiEvent: PublicListEventItem): CardShape {
   };
 }
 
-const CATS   = ["Todos","Recital","Festival","Teatro","Deportes","Electrónica"];
 /** Maps landing pill label to API EventCategory */
 const CAT_TO_API: Record<string, string> = {
   Recital: "Concert",
@@ -117,8 +116,19 @@ const CAT_TO_API: Record<string, string> = {
   Teatro: "Theater",
   Deportes: "Sports",
   Electrónica: "Other",
+  Conferencia: "Conference",
+  Comedia: "Comedy",
 };
-const CITIES = ["Todas las ciudades","Buenos Aires","Córdoba","Rosario","Mendoza","La Plata","Tucumán"];
+/** Maps API EventCategory to landing pill label */
+const API_TO_CAT: Record<string, string> = {
+  Concert:    "Recital",
+  Festival:   "Festival",
+  Theater:    "Teatro",
+  Sports:     "Deportes",
+  Other:      "Electrónica",
+  Conference: "Conferencia",
+  Comedy:     "Comedia",
+};
 const TRUST = [
   {
     Icon: Lock,
@@ -146,6 +156,7 @@ const TRUST = [
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function TicketsHub() {
   const { t } = useTranslation();
+  const [filters,     setFilters]    = useState<EventFilters | null>(null);
   const [activeCat,   setActiveCat]  = useState<string>("Todos");
   const [activeCity,  setActiveCity] = useState<string>("Todas las ciudades");
   const [cityOpen,    setCityOpen]   = useState<boolean>(false);
@@ -168,6 +179,9 @@ export default function TicketsHub() {
 
   const PAGE_SIZE = 12;
 
+  const cats   = ["Todos",              ...(filters?.categories.map((c) => API_TO_CAT[c] ?? c) ?? [])];
+  const cities = ["Todas las ciudades", ...(filters?.cities ?? [])];
+
   useEffect(() => {
     let cancelled = false;
     ignoreInitialPage2PrefetchRef.current = false;
@@ -177,12 +191,13 @@ export default function TicketsHub() {
       setError(null);
       let page1: PublicListEventItem[] = [];
       try {
-        const data = await eventsService.listEvents({
+        const response = await eventsService.listEvents({
           limit: PAGE_SIZE,
           offset: 0,
         });
-        page1 = Array.isArray(data) ? data : [];
+        page1 = response.events;
         if (cancelled) return;
+        setFilters(response.filters);
         setEvents(page1);
         setPrefetchedPage([]);
         setHasMore(page1.length === PAGE_SIZE);
@@ -198,9 +213,8 @@ export default function TicketsHub() {
 
       void eventsService
         .listEvents({ limit: PAGE_SIZE, offset: PAGE_SIZE })
-        .then((data) => {
+        .then(({ events: page2 }) => {
           if (cancelled || ignoreInitialPage2PrefetchRef.current) return;
-          const page2 = Array.isArray(data) ? data : [];
           setPrefetchedPage(page2);
           setHasMore(page2.length > 0);
         })
@@ -238,11 +252,11 @@ export default function TicketsHub() {
         offsetAfterAppend = prevLen + shownBatch.length;
         setEvents((prev) => [...prev, ...shownBatch]);
       } else {
-        const data = await eventsService.listEvents({
+        const { events: fetchedBatch } = await eventsService.listEvents({
           limit: PAGE_SIZE,
           offset: prevLen,
         });
-        shownBatch = Array.isArray(data) ? data : [];
+        shownBatch = fetchedBatch;
         offsetAfterAppend = prevLen + shownBatch.length;
         if (shownBatch.length === 0) {
           setHasMore(false);
@@ -252,11 +266,10 @@ export default function TicketsHub() {
         setEvents((prev) => [...prev, ...shownBatch]);
       }
 
-      const nextData = await eventsService.listEvents({
+      const { events: nextPage } = await eventsService.listEvents({
         limit: PAGE_SIZE,
         offset: offsetAfterAppend,
       });
-      const nextPage = Array.isArray(nextData) ? nextData : [];
       setPrefetchedPage(nextPage);
       setHasMore(nextPage.length > 0);
     } catch (err) {
@@ -292,7 +305,7 @@ export default function TicketsHub() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const filteredCities = CITIES.filter((c: string) => c.toLowerCase().includes(citySearch.toLowerCase()));
+  const filteredCities = cities.filter((c: string) => c.toLowerCase().includes(citySearch.toLowerCase()));
 
   const filtered = useMemo(() => {
     const searchLower = (query || "").trim().toLowerCase();
@@ -414,7 +427,7 @@ export default function TicketsHub() {
             </div>
             <div style={{ width:1, height:28, background:BORD2, flexShrink:0 }} />
             <div className="th-frow" style={{ display:"flex", alignItems:"center", gap:6, overflowX:"auto", flex:"0 1 auto" }}>
-              {CATS.map((c) => (
+              {cats.map((c) => (
                 <button key={c} type="button" onClick={() => setActiveCat(c)} style={catPill(activeCat===c)}>{c}</button>
               ))}
             </div>
@@ -528,7 +541,7 @@ export default function TicketsHub() {
                     {t("landing.eventTypeLabel")}
                   </span>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-                    {CATS.map((c) => (
+                    {cats.map((c) => (
                       <button
                         key={c}
                         type="button"
