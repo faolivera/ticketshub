@@ -136,7 +136,10 @@ export class EventsService {
     return this.cache.getOrCalculate(
       FILTERS_CACHE_KEY,
       24 * 60 * 60,
-      () => this.eventsRepository.getDistinctFilters(ctx),
+      async () => {
+        const cutoffDate = await this.getTicketCutoffDate(ctx);
+        return this.eventsRepository.getDistinctFilters(ctx, cutoffDate);
+      },
     );
   }
 

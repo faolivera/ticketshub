@@ -141,11 +141,14 @@ export class EventsRepository implements IEventsRepository {
     return events.map((e) => this.mapToEvent(e));
   }
 
-  async getDistinctFilters(ctx: Ctx): Promise<{ cities: string[]; categories: EventCategory[] }> {
-    this.logger.debug(ctx, 'getDistinctFilters');
+  async getDistinctFilters(ctx: Ctx, cutoffDate: Date): Promise<{ cities: string[]; categories: EventCategory[] }> {
+    this.logger.debug(ctx, 'getDistinctFilters', { cutoffDate });
     const [categoryRows, cityRows] = await Promise.all([
       this.prisma.event.findMany({
-        where: { status: 'approved' },
+        where: {
+          status: 'approved',
+          dates: { some: { status: 'approved', date: { gte: cutoffDate } } },
+        },
         select: { category: true },
         distinct: ['category'],
         orderBy: { category: 'asc' },
@@ -156,6 +159,12 @@ export class EventsRepository implements IEventsRepository {
         WHERE  status = 'approved'
           AND  location->>'city' IS NOT NULL
           AND  location->>'city' != ''
+          AND  EXISTS (
+            SELECT 1 FROM event_dates ed
+            WHERE  ed."eventId" = events.id
+              AND  ed.status = 'approved'
+              AND  ed.date >= ${cutoffDate}
+          )
         ORDER BY location->>'city'
       `,
     ]);

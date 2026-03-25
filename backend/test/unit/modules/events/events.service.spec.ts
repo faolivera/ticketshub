@@ -1617,7 +1617,7 @@ describe('EventsService', () => {
         24 * 60 * 60,
         expect.any(Function),
       );
-      expect(eventsRepository.getDistinctFilters).toHaveBeenCalledWith(mockCtx);
+      expect(eventsRepository.getDistinctFilters).toHaveBeenCalledWith(mockCtx, expect.any(Date));
     });
 
     it('returns cached value without calling the repository on cache hit', async () => {

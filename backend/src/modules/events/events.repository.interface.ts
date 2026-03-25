@@ -60,11 +60,10 @@ export interface IEventsRepository {
   getApprovedEvents(ctx: Ctx): Promise<Event[]>;
 
   /**
-   * Get distinct cities and categories from approved events.
-   * Cities are extracted from the JSON `location` field.
-   * Both lists are sorted alphabetically.
+   * Get distinct cities and categories from approved events that have at least
+   * one upcoming approved date (>= cutoffDate). Both lists are sorted alphabetically.
    */
-  getDistinctFilters(ctx: Ctx): Promise<{ cities: string[]; categories: EventCategory[] }>;
+  getDistinctFilters(ctx: Ctx, cutoffDate: Date): Promise<{ cities: string[]; categories: EventCategory[] }>;
 
   /**
    * List events with optional filters and pagination (DB-level).
