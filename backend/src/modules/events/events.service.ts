@@ -7,6 +7,7 @@ import {
   ConflictException,
   forwardRef,
 } from '@nestjs/common';
+import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
 import { randomBytes } from 'crypto';
 import * as sharp from 'sharp';
 import type { IEventsRepository } from './events.repository.interface';
@@ -36,6 +37,7 @@ import {
   EventCategory,
   BANNER_CONSTRAINTS,
   ALLOWED_BANNER_MIME_TYPES,
+  FILTERS_CACHE_KEY,
   generateEventSlug,
 } from './events.domain';
 import type {
@@ -45,6 +47,7 @@ import type {
   ListEventsQuery,
   EventWithDatesResponse,
   PublicListEventItem,
+  EventFilters,
   UploadEventBannerResponse,
   GetEventBannersResponse,
   DeleteEventBannerResponse,
@@ -92,6 +95,8 @@ export class EventsService {
     private readonly platformConfigService: PlatformConfigService,
     @Inject(AddressService)
     private readonly addressService: AddressService,
+    @Inject(CACHE_SERVICE)
+    private readonly cache: ICacheService,
   ) {}
 
   /**
@@ -120,6 +125,19 @@ export class EventsService {
     const config = await this.platformConfigService.getPlatformConfig(ctx);
     const offsetMs = config.minimumHoursToBuyTickets * 60 * 60 * 1000;
     return new Date(Date.now() + offsetMs);
+  }
+
+  /**
+   * Returns distinct cities and categories from approved events.
+   * Result is cached for 24 hours.
+   */
+  async getEventFilters(ctx: Ctx): Promise<EventFilters> {
+    this.logger.debug(ctx, 'getEventFilters');
+    return this.cache.getOrCalculate(
+      FILTERS_CACHE_KEY,
+      24 * 60 * 60,
+      () => this.eventsRepository.getDistinctFilters(ctx),
+    );
   }
 
   /**
