@@ -79,7 +79,7 @@ export function ReceivedOfferCard({ offer, onAccept, onReject, isProcessing }: R
         background: CARD, borderRadius: R_CARD,
         border: `1px solid ${isPending ? '#ddd6fe' : BORDER}`,
         overflow: 'hidden',
-        boxShadow: hov && isPending ? '0 4px 16px rgba(109,40,217,0.08)' : 'none',
+        boxShadow: hov && isPending ? '0 4px 16px rgba(105,45,212,0.08)' : 'none',
         transition: 'box-shadow 0.15s',
       }}
       onMouseEnter={() => setHov(true)}

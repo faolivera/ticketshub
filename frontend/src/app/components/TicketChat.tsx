@@ -209,7 +209,7 @@ export function TicketChat({
       {/* Header */}
       <div
         className="text-white p-3 flex items-center justify-between shrink-0"
-        style={{ background: '#6d28d9', cursor: isMobile ? 'default' : 'pointer' }}
+        style={{ background: '#692dd4', cursor: isMobile ? 'default' : 'pointer' }}
         onClick={() => { if (!isMobile) setIsMinimized(!isMinimized); }}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -259,13 +259,13 @@ export function TicketChat({
 
       {!isMinimized && (
         <>
-          <div className="border-b shrink-0 px-3 py-2" style={{ background: '#f3f3f0', borderColor: '#e5e7eb' }}>
+          <div className="border-b shrink-0 px-3 py-2" style={{ background: '#f2f2f2', borderColor: '#e5e7eb' }}>
             <p className="text-xs truncate" style={{ color: '#6b7280' }}>
               {ticketTitle}
             </p>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ background: '#f3f3f0' }}>
+          <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ background: '#f2f2f2' }}>
             {loading && messages.length === 0 ? (
               <div className="flex items-center justify-center py-8 text-gray-500">
                 {t('common.loading')}
@@ -312,8 +312,8 @@ export function TicketChat({
                             isDelivery
                               ? { background: SUCCESS_LIGHT, borderColor: SUCCESS_BORDER, color: SUCCESS }
                               : isCurrentUser
-                                ? { background: '#6d28d9', color: 'white' }
-                                : { background: 'white', borderColor: '#e5e7eb', color: '#0f0f1a' }
+                                ? { background: '#692dd4', color: 'white' }
+                                : { background: 'white', borderColor: '#e5e7eb', color: '#262626' }
                           }
                         >
                           {isDelivery ? (
@@ -373,7 +373,7 @@ export function TicketChat({
                   disabled={inputMessage.trim() === '' || sending || atLimit}
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
                   style={{
-                    background: inputMessage.trim() === '' || sending || atLimit ? '#d1d5db' : '#6d28d9',
+                    background: inputMessage.trim() === '' || sending || atLimit ? '#d1d5db' : '#692dd4',
                     color: inputMessage.trim() === '' || sending || atLimit ? '#6b7280' : 'white',
                     cursor: inputMessage.trim() === '' || sending || atLimit ? 'not-allowed' : 'pointer',
                   }}

@@ -760,7 +760,7 @@ export function SellListingWizard() {
 
       {/* ── Create date modal ──────────────────────────────────────────── */}
       {showCreateDateModal && event && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,15,26,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(38,38,38,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
           <div style={{ background: CARD, borderRadius: R_HERO, width: '100%', maxWidth: 440, padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -807,7 +807,7 @@ export function SellListingWizard() {
 
       {/* ── Create section modal ───────────────────────────────────────── */}
       {showCreateSectionModal && event && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,15,26,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(38,38,38,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
           <div style={{ background: CARD, borderRadius: R_HERO, width: '100%', maxWidth: 440, padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

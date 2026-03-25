@@ -112,7 +112,7 @@ function InputField({
           borderRadius: R_INPUT, fontSize: 14, color: DARK,
           background: disabled ? BG : CARD,
           outline: 'none', transition: 'border-color 0.14s, box-shadow 0.14s',
-          boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
+          boxShadow: focused ? `0 0 0 3px rgba(105,45,212,0.1)` : 'none',
           ...S,
         }}
       />
@@ -150,10 +150,10 @@ function SubmitBtn({ label, disabled }: { label: string; disabled: boolean }) {
       style={{
         width: '100%', padding: '13px',
         borderRadius: R_BUTTON, border: 'none',
-        background: disabled ? BORD2 : hovered ? '#5b21b6' : V,
+        background: disabled ? BORD2 : hovered ? '#5824b8' : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        boxShadow: disabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+        boxShadow: disabled ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
         transition: 'all 0.15s', ...S,
       }}
     >
@@ -416,7 +416,7 @@ export function Register() {
                       border: `2px solid ${digit ? V : BORD2}`,
                       borderRadius: R_INPUT, background: digit ? VLIGHT : CARD,
                       outline: 'none', transition: 'all 0.14s',
-                      boxShadow: digit ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
+                      boxShadow: digit ? `0 0 0 3px rgba(105,45,212,0.1)` : 'none',
                       ...S,
                     }}
                     onFocus={e => { (e.target as HTMLInputElement).style.borderColor = V; }}

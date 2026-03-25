@@ -50,7 +50,7 @@ function PrimaryBtn({ label, loading, disabled }: { label: string; loading?: boo
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
-        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
         transition: 'all 0.15s',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
       }}>
@@ -110,7 +110,7 @@ export function StepTerms({ onComplete }: StepTermsProps) {
         </div>
         <div style={{ padding: '16px 20px' }}>
           <button type="button" onClick={onComplete}
-            style={{ width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none', background: V, color: 'white', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(109,40,217,0.28)', ...S }}>
+            style={{ width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none', background: V, color: 'white', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(105,45,212,0.28)', ...S }}>
             {t('becomeSeller.step2.continue')}
           </button>
         </div>

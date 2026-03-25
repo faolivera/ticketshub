@@ -88,7 +88,7 @@ function TextInput({ value, onChange, placeholder, type = 'text', inputMode, pat
           border: `1.5px solid ${focused ? V : BORD2}`,
           borderRadius: R_INPUT, fontSize: 14, color: DARK,
           background: CARD, outline: 'none',
-          boxShadow: focused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
+          boxShadow: focused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
           transition: 'border-color 0.14s, box-shadow 0.14s', ...S,
         }}
       />
@@ -164,7 +164,7 @@ function PrimaryBtn({ label, loading, loadingLabel, disabled, onClick, icon }: {
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
-        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
         transition: 'all 0.15s',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
       }}

@@ -23,7 +23,7 @@ import { PublicListEventItem } from "@/api/types/events";
 
 /**
  * Deep brand violet for the left identity panel.
- * Intentionally darker than V (#6d28d9) so the panel reads as a solid surface,
+ * Intentionally darker than V (#692dd4) so the panel reads as a solid surface,
  * not as a large purple button.
  */
 const PANEL_BG = "#0f0825";

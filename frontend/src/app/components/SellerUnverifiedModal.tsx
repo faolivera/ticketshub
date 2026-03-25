@@ -115,7 +115,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         {/* Violet accent strip */}
-        <div style={{ height: 4, background: '#6d28d9', width: '100%' }} />
+        <div style={{ height: 4, background: '#692dd4', width: '100%' }} />
 
         <div style={{ padding: '24px 24px 20px', ...S }}>
 
@@ -125,12 +125,12 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
             background: '#f0ebff', display: 'flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 16,
           }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d28d9" strokeWidth="2.2" strokeLinecap="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#692dd4" strokeWidth="2.2" strokeLinecap="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
 
-          <DialogTitle style={{ fontSize: 18, fontWeight: 800, color: '#0f0f1a', marginBottom: 10, lineHeight: 1.3 }}>
+          <DialogTitle style={{ fontSize: 18, fontWeight: 800, color: '#262626', marginBottom: 10, lineHeight: 1.3 }}>
             {t('sellerUnverifiedModal.title')}
           </DialogTitle>
 
@@ -139,16 +139,16 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
               <p>{t('sellerUnverifiedModal.message')}</p>
 
               {hasStatus && (needsDni || needsBank) && (
-                <div style={{ background: '#f3f3f0', borderRadius: R_INPUT, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ background: '#f2f2f2', borderRadius: R_INPUT, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {needsDni && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0f0f1a', fontWeight: 600 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6d28d9', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#262626', fontWeight: 600 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#692dd4', flexShrink: 0 }} />
                       {t('sellerUnverifiedModal.itemDni')}
                     </div>
                   )}
                   {needsBank && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0f0f1a', fontWeight: 600 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6d28d9', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#262626', fontWeight: 600 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#692dd4', flexShrink: 0 }} />
                       {t('sellerUnverifiedModal.itemBank')}
                     </div>
                   )}
@@ -160,7 +160,7 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
                 <button
                   type="button"
                   onClick={handleGoToProfile}
-                  style={{ color: '#6d28d9', fontWeight: 700, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', padding: 0 }}
+                  style={{ color: '#692dd4', fontWeight: 700, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', padding: 0 }}
                 >
                   {t('sellerUnverifiedModal.linkProfile')}
                 </button>{' '}
@@ -176,10 +176,10 @@ export function SellerUnverifiedModal({ open, onClose, user }: SellerUnverifiedM
             style={{
               width: '100%', marginTop: 20, padding: '12px 0',
               borderRadius: R_BUTTON, border: 'none',
-              background: '#6d28d9', color: 'white',
+              background: '#692dd4', color: 'white',
               fontSize: 14, fontWeight: 700, cursor: 'pointer',
               ...S,
-              boxShadow: '0 2px 12px rgba(109,40,217,0.22)',
+              boxShadow: '0 2px 12px rgba(105,45,212,0.22)',
             }}
           >
             {t('sellerUnverifiedModal.verifyAccount')}

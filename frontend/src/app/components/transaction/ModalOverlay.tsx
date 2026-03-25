@@ -6,7 +6,7 @@ export function ModalOverlay({ title, onClose, children }: ModalOverlayProps) {
   return (
     <div
       className="fixed inset-0 z-[500] flex items-center justify-center p-4 sm:p-6"
-      style={{ background: 'rgba(15,15,26,0.55)' }}
+      style={{ background: 'rgba(38,38,38,0.55)' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="tx-modal-title"

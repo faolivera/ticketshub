@@ -9,7 +9,7 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>TicketsHub</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f3f3f0;font-family:'Outfit',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background-color:#f2f2f2;font-family:'Outfit',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;">
   <style>
     a { color: inherit; }
     p { margin: 0; }
@@ -17,13 +17,13 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
     /* th-wrap: font/color only — white card is provided by the outer table */
     .th-wrap {
       font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-      color: #0f0f1a;
+      color: #262626;
     }
 
     /* Header */
     .th-header { padding: 24px 32px 20px; border-bottom: 1px solid #e5e7eb; }
-    .th-logo-text { font-size: 17px; font-weight: 600; color: #0f0f1a; letter-spacing: -0.02em; }
-    .th-logo-text span { color: #6d28d9; }
+    .th-logo-text { font-size: 17px; font-weight: 600; color: #262626; letter-spacing: -0.02em; }
+    .th-logo-text span { color: #692dd4; }
 
     /* Body */
     .th-body { padding: 32px 32px 24px; }
@@ -42,16 +42,16 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
     .th-icon--warning { background-color: #fef3c7; color: #78350f; }
     .th-icon--danger  { background-color: #fef2f2; color: #b91c1c; }
     .th-icon--info    { background-color: #eff6ff; color: #2563eb; }
-    .th-icon--neutral { background-color: #f9f9f7; color: #5c5c58; }
+    .th-icon--neutral { background-color: #f8f8f8; color: #5c5c58; }
 
     /* Typography */
-    .th-title { font-size: 21px; font-weight: 600; color: #0f0f1a; line-height: 1.3; margin: 0 0 10px; letter-spacing: -0.02em; }
+    .th-title { font-size: 21px; font-weight: 600; color: #262626; line-height: 1.3; margin: 0 0 10px; letter-spacing: -0.02em; }
     .th-text  { font-size: 15px; color: #5c5c58; line-height: 1.7; margin: 0 0 14px; }
     .th-text:last-of-type { margin-bottom: 0; }
 
     /* Info box — CSS table layout for Gmail compatibility (no flexbox, no overflow:hidden clearfix) */
     .th-info-box {
-      background-color: #f9f9f7;
+      background-color: #f8f8f8;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
       padding: 4px 20px;
@@ -60,12 +60,12 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
     .th-row { display: table; width: 100%; box-sizing: border-box; padding: 11px 0; border-bottom: 1px solid #e5e7eb; }
     .th-row:last-child { border-bottom: none; }
     .th-label { display: table-cell; font-size: 13px; color: #9ca3af; white-space: nowrap; padding-right: 16px; vertical-align: top; padding-top: 1px; }
-    .th-value { display: table-cell; font-size: 13px; font-weight: 500; color: #0f0f1a; text-align: right; word-break: break-word; width: 100%; }
-    .th-value--highlight { color: #6d28d9; font-size: 14px; }
+    .th-value { display: table-cell; font-size: 13px; font-weight: 500; color: #262626; text-align: right; word-break: break-word; width: 100%; }
+    .th-value--highlight { color: #692dd4; font-size: 14px; }
 
     /* OTP */
-    .th-code-block { background-color: #f9f9f7; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; text-align: center; margin: 24px 0; }
-    .th-code { font-size: 38px; font-weight: 700; letter-spacing: 0.22em; color: #0f0f1a; font-family: 'Courier New', monospace; }
+    .th-code-block { background-color: #f8f8f8; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; text-align: center; margin: 24px 0; }
+    .th-code { font-size: 38px; font-weight: 700; letter-spacing: 0.22em; color: #262626; font-family: 'Courier New', monospace; }
     .th-code-hint { display: block; font-size: 12px; color: #9ca3af; margin-top: 10px; }
 
     /* Alerts */
@@ -81,7 +81,7 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
     .th-btn-group { margin: 26px 0 8px; text-align: center; }
     .th-btn {
       display: inline-block;
-      background-color: #6d28d9;
+      background-color: #692dd4;
       color: #ffffff !important;
       font-family: 'Outfit', system-ui, -apple-system, sans-serif;
       font-size: 14px;
@@ -92,7 +92,7 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
       letter-spacing: 0.01em;
       margin: 4px;
     }
-    .th-btn--secondary { background-color: transparent; color: #0f0f1a !important; border: 1px solid #e5e7eb; }
+    .th-btn--secondary { background-color: transparent; color: #262626 !important; border: 1px solid #e5e7eb; }
 
     /* Tag */
     .th-tag { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 4px; margin-bottom: 16px; }
@@ -100,18 +100,18 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
     .th-tag--success { background-color: #dcfce7; color: #16a34a; }
     .th-tag--warning { background-color: #fef3c7; color: #78350f; }
     .th-tag--danger  { background-color: #fef2f2; color: #b91c1c; }
-    .th-tag--neutral { background-color: #f9f9f7; color: #5c5c58; }
+    .th-tag--neutral { background-color: #f8f8f8; color: #5c5c58; }
 
     /* Footer */
-    .th-footer { padding: 20px 32px 28px; border-top: 1px solid #e5e7eb; text-align: center; background-color: #f9f9f7; }
+    .th-footer { padding: 20px 32px 28px; border-top: 1px solid #e5e7eb; text-align: center; background-color: #f8f8f8; }
     .th-footer p { font-size: 12px; color: #9ca3af; margin: 0 0 6px; line-height: 1.6; }
     .th-footer p:last-child { margin-bottom: 0; }
     .th-footer a { color: #9ca3af; text-decoration: underline; }
     .th-footer-brand { font-size: 13px !important; font-weight: 600; color: #5c5c58 !important; margin-bottom: 8px !important; }
   </style>
 
-  <!--[if mso]><table width="100%" bgcolor="#f3f3f0"><tr><td align="center" style="padding:24px 16px;"><table width="560" bgcolor="#ffffff"><tr><td><![endif]-->
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f3f0;">
+  <!--[if mso]><table width="100%" bgcolor="#f2f2f2"><tr><td align="center" style="padding:24px 16px;"><table width="560" bgcolor="#ffffff"><tr><td><![endif]-->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2f2f2;">
     <tr>
       <td align="center" style="padding:24px 16px;">
         <table width="560" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;max-width:560px;width:100%;border-radius:12px;">

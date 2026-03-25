@@ -130,12 +130,12 @@ function ActionButton({ action, onClick }: { action: PageHeaderAction; onClick?:
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
-        boxShadow: '0 2px 10px rgba(109,40,217,0.2)',
+        boxShadow: '0 2px 10px rgba(105,45,212,0.2)',
         transition: 'background 0.14s',
         minHeight: 40,
         ...S,
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#5b21b6')}
+      onMouseEnter={e => (e.currentTarget.style.background = '#5824b8')}
       onMouseLeave={e => (e.currentTarget.style.background = V)}
     >
       {action.icon}

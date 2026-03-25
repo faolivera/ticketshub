@@ -414,10 +414,10 @@ export function UserProfile() {
                       ...S,
                       cursor: 'pointer', display: 'flex',
                       alignItems: 'center', justifyContent: 'center', gap: 8,
-                      boxShadow: '0 4px 18px rgba(109,40,217,0.28)',
+                      boxShadow: '0 4px 18px rgba(105,45,212,0.28)',
                       transition: 'background 0.14s',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#5b21b6')}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#5824b8')}
                     onMouseLeave={e => (e.currentTarget.style.background = V)}
                   >
                     {becomeSellerCtaLabel}

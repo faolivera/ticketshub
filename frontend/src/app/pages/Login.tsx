@@ -101,7 +101,7 @@ function InputField({ label, icon, name, type, value, placeholder, autoComplete,
           borderRadius: R_INPUT, fontSize: 14, color: DARK,
           background: disabled ? BG : CARD,
           outline: 'none', transition: 'border-color 0.14s',
-          boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
+          boxShadow: focused ? `0 0 0 3px rgba(105,45,212,0.1)` : 'none',
           ...S,
         }}
       />
@@ -317,11 +317,11 @@ export function Login() {
                 background: isBusy ? BORD2 : V,
                 color: 'white', fontSize: 14.5, fontWeight: 700,
                 cursor: isBusy ? 'not-allowed' : 'pointer',
-                boxShadow: isBusy ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+                boxShadow: isBusy ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
                 transition: 'all 0.15s', ...S,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
-              onMouseEnter={e => { if (!isBusy) (e.currentTarget as HTMLButtonElement).style.background = '#5b21b6'; }}
+              onMouseEnter={e => { if (!isBusy) (e.currentTarget as HTMLButtonElement).style.background = '#5824b8'; }}
               onMouseLeave={e => { if (!isBusy) (e.currentTarget as HTMLButtonElement).style.background = V; }}
             >
               {isSubmitting

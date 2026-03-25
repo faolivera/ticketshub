@@ -44,7 +44,7 @@ export function NotFound() {
             background: V, color: 'white', border: 'none',
             fontSize: 14, fontWeight: 700, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 2px 12px rgba(109,40,217,0.22)',
+            boxShadow: '0 2px 12px rgba(105,45,212,0.22)',
             ...S,
           }}>
             <Ticket size={16} />

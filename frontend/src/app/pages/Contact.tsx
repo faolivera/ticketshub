@@ -343,7 +343,7 @@ export function Contact() {
                       border: 'none', fontSize: 14, fontWeight: 700,
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', gap: 8,
-                      boxShadow: isSubmitting ? 'none' : '0 2px 12px rgba(109,40,217,0.22)',
+                      boxShadow: isSubmitting ? 'none' : '0 2px 12px rgba(105,45,212,0.22)',
                       transition: 'background 0.14s', ...S,
                     }}
                   >

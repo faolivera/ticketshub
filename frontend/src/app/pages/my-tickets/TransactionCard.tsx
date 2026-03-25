@@ -76,7 +76,7 @@ function ActionCard({ transaction: tx, userId, role, fromUrl }: Omit<Transaction
       <div style={{
         display: 'flex', background: CARD, borderRadius: R_CARD,
         border: `1.5px solid ${V}`, overflow: 'hidden',
-        boxShadow: hov ? '0 4px 16px rgba(109,40,217,0.12)' : 'none',
+        boxShadow: hov ? '0 4px 16px rgba(105,45,212,0.12)' : 'none',
         transition: 'box-shadow 0.15s',
       }}>
         <Thumb size={88} tx={tx} />

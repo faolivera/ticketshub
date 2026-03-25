@@ -73,7 +73,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
         borderRadius: R_CARD,
         padding: "20px 20px 16px",
         boxShadow: hovered
-          ? "0 10px 28px rgba(109,40,217,0.12), 0 2px 6px rgba(0,0,0,0.06)"
+          ? "0 10px 28px rgba(105,45,212,0.12), 0 2px 6px rgba(0,0,0,0.06)"
           : "0 2px 8px rgba(0,0,0,0.08)",
         display: "flex", flexDirection: "column",
         height: "100%",
@@ -175,7 +175,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
           width: "100%", padding: "13px 20px", borderRadius: R_BUTTON,
           fontSize: 14, fontWeight: 700,
           background: V, color: "#ffffff",
-          boxShadow: "0 4px 18px rgba(109,40,217,0.28)",
+          boxShadow: "0 4px 18px rgba(105,45,212,0.28)",
           cursor: "pointer",
         }}>
           {seated && <MapPin size={14} color="#ffffff" />}

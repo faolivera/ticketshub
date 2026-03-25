@@ -270,7 +270,7 @@ export function DateOfBirthPicker({
   const borderColor = hasError ? '#fca5a5' : focused ? V : BORD2;
   const boxShadow   = hasError
     ? '0 0 0 3px rgba(220,38,38,0.1)'
-    : focused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none';
+    : focused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none';
 
   // Panel width for positioning
   const PANEL_WIDTHS: Record<NonNullable<Panel>, number> = {

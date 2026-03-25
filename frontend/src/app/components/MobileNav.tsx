@@ -129,7 +129,7 @@ function FAB({ onPress }: { onPress: () => void }) {
         onMouseDown={() => setPressed(true)} onMouseUp={() => setPressed(false)}
         onMouseLeave={() => setPressed(false)} onTouchStart={() => setPressed(true)} onTouchEnd={() => setPressed(false)}
         aria-label="Vender entrada"
-        style={{ width: 48, height: 48, borderRadius: "50%", background: V, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(109,40,217,0.38)", transform: pressed ? "scale(0.93)" : "translateY(-10px)", transition: "transform 0.15s" }}>
+        style={{ width: 48, height: 48, borderRadius: "50%", background: V, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(105,45,212,0.38)", transform: pressed ? "scale(0.93)" : "translateY(-10px)", transition: "transform 0.15s" }}>
         <IconPlus />
       </button>
       <span style={{ fontSize: 10.5, fontWeight: 600, color: MUTED, marginTop: -6, ...S }}>Vender</span>

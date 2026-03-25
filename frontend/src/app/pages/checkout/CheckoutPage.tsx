@@ -557,7 +557,7 @@ export default function CheckoutPage() {
 
         .offer-panel {
           border: 1.5px solid ${VL_BORDER}; border-radius: 12px;
-          padding: 14px 16px; background: rgba(109,40,217,0.025); margin-top: 10px;
+          padding: 14px 16px; background: rgba(105,45,212,0.025); margin-top: 10px;
         }
 
         .pending-box { border: 1px solid ${BORDER}; border-radius: 12px; padding: 14px; margin-top: 10px; }

@@ -278,7 +278,7 @@ export function BecomeSellerWizard() {
                 <button style={{
                   width: '100%', padding: '13px', borderRadius: R_BUTTON, border: 'none',
                   background: V, color: 'white', fontSize: 14.5, fontWeight: 700,
-                  cursor: 'pointer', boxShadow: '0 4px 18px rgba(109,40,217,0.28)',
+                  cursor: 'pointer', boxShadow: '0 4px 18px rgba(105,45,212,0.28)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
                 }}>
                   {t('becomeSeller.completed.goToSell')} <ArrowRight size={16} />

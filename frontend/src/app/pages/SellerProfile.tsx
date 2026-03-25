@@ -207,7 +207,7 @@ export function SellerProfile() {
                   padding: '4px 10px',
                   borderRadius: R_PILL,
                   background: VLIGHT,
-                  color: '#5b21b6',
+                  color: '#5824b8',
                   border: `1px solid ${VL_BORDER}`,
                 }}
               >
@@ -542,7 +542,7 @@ export function SellerProfile() {
                         fontSize: 11,
                         fontWeight: 500,
                         color: MUTED,
-                        background: '#f3f3f0',
+                        background: '#f2f2f2',
                         borderRadius: 6,
                         padding: '4px 8px',
                       }}
@@ -558,7 +558,7 @@ export function SellerProfile() {
                         fontSize: 11,
                         fontWeight: 500,
                         color: MUTED,
-                        background: '#f3f3f0',
+                        background: '#f2f2f2',
                         borderRadius: 6,
                         padding: '4px 8px',
                       }}
@@ -576,7 +576,7 @@ export function SellerProfile() {
                         fontSize: 11,
                         fontWeight: 500,
                         color: MUTED,
-                        background: '#f3f3f0',
+                        background: '#f2f2f2',
                         borderRadius: 6,
                         padding: '4px 8px',
                       }}

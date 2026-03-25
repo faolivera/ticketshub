@@ -206,7 +206,7 @@ function StepCard({ step, index, isLast }: { step: typeof BUYER_STEPS[0]; index:
         flex: 1, background: CARD, borderRadius: R_CARD,
         border: `1px solid ${step.highlight ? '#ddd6fe' : BORDER}`,
         padding: '16px 18px', marginBottom: 20,
-        boxShadow: step.highlight ? '0 4px 20px rgba(109,40,217,0.08)' : 'none',
+        boxShadow: step.highlight ? '0 4px 20px rgba(105,45,212,0.08)' : 'none',
       }}>
         {/* Icon + title */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
@@ -264,7 +264,7 @@ function DesktopStepRow({ buyerStep, sellerStep, index }: {
       <div style={{
         background: CARD, borderRadius: R_CARD, padding: '16px 18px',
         border: `1px solid ${isHighlight ? '#ddd6fe' : BORDER}`,
-        boxShadow: isHighlight ? '0 4px 20px rgba(109,40,217,0.08)' : 'none',
+        boxShadow: isHighlight ? '0 4px 20px rgba(105,45,212,0.08)' : 'none',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <div style={{ width: 38, height: 38, borderRadius: R_INPUT, flexShrink: 0, background: buyerStep.accent, border: `1px solid ${buyerStep.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -302,7 +302,7 @@ function DesktopStepRow({ buyerStep, sellerStep, index }: {
       <div style={{
         background: CARD, borderRadius: R_CARD, padding: '16px 18px',
         border: `1px solid ${isHighlight ? '#ddd6fe' : BORDER}`,
-        boxShadow: isHighlight ? '0 4px 20px rgba(109,40,217,0.08)' : 'none',
+        boxShadow: isHighlight ? '0 4px 20px rgba(105,45,212,0.08)' : 'none',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <div style={{ width: 38, height: 38, borderRadius: R_INPUT, flexShrink: 0, background: sellerStep.accent, border: `1px solid ${sellerStep.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -524,7 +524,7 @@ export function HowItWorks() {
                   background: V, color: 'white',
                   fontSize: 15, fontWeight: 700, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 7,
-                  boxShadow: '0 4px 18px rgba(109,40,217,0.28)',
+                  boxShadow: '0 4px 18px rgba(105,45,212,0.28)',
                   ...S,
                 }}>
                   Ver entradas disponibles <ArrowRight size={16} />

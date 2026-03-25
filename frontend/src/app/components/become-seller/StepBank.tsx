@@ -76,7 +76,7 @@ function TextInput({ value, onChange, placeholder, inputMode, mono }: {
         borderRadius: R_INPUT, fontSize: 14, color: DARK,
         background: CARD, outline: 'none',
         fontFamily: mono ? 'monospace' : S.fontFamily,
-        boxShadow: focused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
+        boxShadow: focused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
         transition: 'border-color 0.14s, box-shadow 0.14s',
         letterSpacing: mono ? '0.04em' : 'normal',
       }}
@@ -99,7 +99,7 @@ function PrimaryBtn({ label, loading, disabled, type = 'submit', onClick }: {
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
-        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
         transition: 'all 0.15s',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
       }}>

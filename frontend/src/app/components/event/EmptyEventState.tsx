@@ -4,7 +4,7 @@ import { Bell, Plus, CheckCircle, Lock, Users, ArrowRight } from "lucide-react";
 import { useUser } from "@/app/contexts/UserContext";
 import { subscriptionsService } from "@/api/services/subscriptions.service";
 
-const V = "#6d28d9";
+const V = "#692dd4";
 const V_MID = "#7c3aed";
 const VLIGHT = "#f5f3ff";
 const DARK = "#111827";
@@ -80,7 +80,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
           .ees-divider-v { display: none !important; }
           .ees-divider-h { display: flex !important; }
         }
-        .ees-input:focus { border-color: #6d28d9 !important; }
+        .ees-input:focus { border-color: #692dd4 !important; }
         .ees-input:disabled { opacity: 0.65; cursor: not-allowed; }
       `}</style>
 
@@ -153,7 +153,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
                     background: loading ? V_MID : V, color: "white", border: "none",
                     borderRadius: 9, padding: "9px 16px", cursor: loading ? "not-allowed" : "pointer",
                     display: "inline-flex", alignItems: "center", gap: 5,
-                    whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(109,40,217,0.28)",
+                    whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(105,45,212,0.28)",
                     flexShrink: 0, opacity: loading ? 0.8 : 1,
                   }}
                   onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = V_MID; }}
@@ -212,7 +212,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
               ...S, fontSize: 13, fontWeight: 700,
               color: "white", background: V,
               borderRadius: 9, padding: "10px 20px",
-              textDecoration: "none", boxShadow: "0 4px 12px rgba(109,40,217,0.22)",
+              textDecoration: "none", boxShadow: "0 4px 12px rgba(105,45,212,0.22)",
             }}
             onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = V_MID; }}
             onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = V; }}

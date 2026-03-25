@@ -76,7 +76,7 @@ export const EventCard: FC<EventCardProps> = ({
             backgroundPosition: "center",
             filter: "blur(12px) brightness(0.6) saturate(1.2)",
             transform: "scale(1.1)",
-            backgroundColor: "#0f0f1a",
+            backgroundColor: "#262626",
           }}
         />
         <div
@@ -85,7 +85,7 @@ export const EventCard: FC<EventCardProps> = ({
             inset: 0,
             zIndex: 1,
             background:
-              "linear-gradient(to right, rgba(15,15,26,0.65) 0%, rgba(15,15,26,0.38) 45%, rgba(15,15,26,0.05) 100%)",
+              "linear-gradient(to right, rgba(38,38,38,0.65) 0%, rgba(38,38,38,0.38) 45%, rgba(38,38,38,0.05) 100%)",
           }}
         />
         <div

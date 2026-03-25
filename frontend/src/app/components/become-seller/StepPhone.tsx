@@ -40,7 +40,7 @@ function OtpInput({ id, value, onChange, onKeyDown, disabled }: {
         borderRadius: R_INPUT,
         background: value ? VLIGHT : CARD,
         outline: 'none',
-        boxShadow: focused ? `0 0 0 3px rgba(109,40,217,0.1)` : 'none',
+        boxShadow: focused ? `0 0 0 3px rgba(105,45,212,0.1)` : 'none',
         transition: 'all 0.14s', ...S,
       }}
     />
@@ -64,7 +64,7 @@ function PrimaryBtn({ label, loading, loadingLabel, disabled }: {
         background: isDisabled ? BORD2 : hovered ? V_HOVER : V,
         color: 'white', fontSize: 14.5, fontWeight: 700,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
-        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(109,40,217,0.28)',
+        boxShadow: isDisabled ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
         transition: 'all 0.15s',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...S,
       }}
@@ -209,7 +209,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
                 <div style={{
                   display: 'flex', borderRadius: R_INPUT, overflow: 'hidden',
                   border: `1.5px solid ${phoneFocused ? V : BORD2}`,
-                  boxShadow: phoneFocused ? '0 0 0 3px rgba(109,40,217,0.1)' : 'none',
+                  boxShadow: phoneFocused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
                   transition: 'border-color 0.14s, box-shadow 0.14s', background: CARD,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', padding: '0 14px', background: BG, borderRight: `1.5px solid ${phoneFocused ? V : BORD2}`, fontSize: 14, fontWeight: 600, color: DARK, flexShrink: 0, transition: 'border-color 0.14s', ...S }}>

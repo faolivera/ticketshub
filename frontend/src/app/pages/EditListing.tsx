@@ -363,7 +363,7 @@ export function EditListing() {
                       border: 'none', fontSize: 14, fontWeight: 700,
                       cursor: canSave ? 'pointer' : 'not-allowed',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                      boxShadow: canSave ? '0 2px 12px rgba(109,40,217,0.22)' : 'none',
+                      boxShadow: canSave ? '0 2px 12px rgba(105,45,212,0.22)' : 'none',
                       transition: 'background 0.14s',
                       ...S,
                     }}

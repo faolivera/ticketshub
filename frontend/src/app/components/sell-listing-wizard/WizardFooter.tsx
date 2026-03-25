@@ -91,7 +91,7 @@ export const WizardFooter: FC<WizardFooterProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           gap: 7,
-          boxShadow: isNextDisabled ? 'none' : '0 2px 12px rgba(109,40,217,0.22)',
+          boxShadow: isNextDisabled ? 'none' : '0 2px 12px rgba(105,45,212,0.22)',
           transition: 'background 0.14s, box-shadow 0.14s',
           ...S,
         }}

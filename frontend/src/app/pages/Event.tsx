@@ -395,17 +395,17 @@ export default function EventDetail() {
           font-family: 'Plus Jakarta Sans', sans-serif;
           display: inline-flex; align-items: center; gap: 5px;
         }
-        .sec-pill.active { background: #6d28d9; border-color: #6d28d9; color: white; }
-        .sec-pill:hover:not(.active) { border-color: #9ca3af; color: #0f0f1a; }
+        .sec-pill.active { background: #692dd4; border-color: #692dd4; color: white; }
+        .sec-pill:hover:not(.active) { border-color: #9ca3af; color: #262626; }
 
         /* Sort select */
         .sort-sel {
           border: 1px solid #e5e7eb; border-radius: 10px;
           padding: 6px 10px; font-size: 13px; font-weight: 500;
           font-family: 'Plus Jakarta Sans', sans-serif;
-          color: #0f0f1a; background: white; cursor: pointer; outline: none;
+          color: #262626; background: white; cursor: pointer; outline: none;
         }
-        .sort-sel:focus { border-color: #6d28d9; box-shadow: 0 0 0 2px rgba(109,40,217,0.1); }
+        .sort-sel:focus { border-color: #692dd4; box-shadow: 0 0 0 2px rgba(105,45,212,0.1); }
 
         /* Sticky bar */
         .sticky-bar {
@@ -502,7 +502,7 @@ export default function EventDetail() {
           {/* Dark overlay — left-heavy per spec */}
           <div style={{
             position: "absolute", inset: 0, zIndex: 1,
-            background: "linear-gradient(to right, rgba(15,15,26,0.65) 0%, rgba(15,15,26,0.38) 45%, rgba(15,15,26,0.05) 100%)",
+            background: "linear-gradient(to right, rgba(38,38,38,0.65) 0%, rgba(38,38,38,0.38) 45%, rgba(38,38,38,0.05) 100%)",
           }} />
 
           {/* Hero content */}
@@ -513,7 +513,7 @@ export default function EventDetail() {
               <span style={{
                 display: "inline-flex", alignItems: "center",
                 padding: "4px 12px", borderRadius: 100,
-                background: "rgba(109,40,217,0.75)",
+                background: "rgba(105,45,212,0.75)",
                 backdropFilter: "blur(8px)",
                 color: "white",
                 fontSize: 11, fontWeight: 700,
@@ -561,8 +561,8 @@ export default function EventDetail() {
                       fontSize: 12.5, fontWeight: 600,
                       cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
                       ...S,
-                      border: dateIdx === i ? "1.5px solid #6d28d9" : "1.5px solid rgba(255,255,255,0.2)",
-                      background: dateIdx === i ? "#6d28d9" : "transparent",
+                      border: dateIdx === i ? "1.5px solid #692dd4" : "1.5px solid rgba(255,255,255,0.2)",
+                      background: dateIdx === i ? "#692dd4" : "transparent",
                       color: dateIdx === i ? "white" : "rgba(255,255,255,0.65)",
                     }}
                   >
@@ -671,7 +671,7 @@ export default function EventDetail() {
               display: "inline-block",
               ...S,
               fontSize: 13, fontWeight: 700, color: V,
-              border: "1.5px solid #6d28d9",
+              border: "1.5px solid #692dd4",
               borderRadius: R_BUTTON,
               padding: "10px 20px",
               background: "transparent",

@@ -5,11 +5,11 @@
  */
 
 // Primary violet (brand)
-export const V = "#6d28d9";
+export const V = "#692dd4";
 /** Admin CTA / alternate purple vs V */
 export const V_c1 = "#7c3aed";
 export const VLIGHT = "#f0ebff";
-export const V_HOVER = "#5b21b6";
+export const V_HOVER = "#5824b8";
 export const VL_BORDER = "#ddd6fe";
 export const V_SOFT = "#a78bfa";
 export const V_MUTED_LIGHT = "#c4b5fd";
@@ -19,12 +19,12 @@ export const BLIGHT = "#e4edf7";
 export const BLUE_HOVER = "#162d4a";
 export const BLUE_BORDER_LIGHT = "#bfd3ea";
 
-export const DARK = "#0f0f1a";
+export const DARK = "#262626";
 export const MUTED = "#6b7280";
 export const HINT = "#9ca3af";
-export const BG = "#f3f3f0";
+export const BG = "#f2f2f2";
 export const CARD = "#ffffff";
-export const SURFACE = "#f9f9f7";
+export const SURFACE = "#f8f8f8";
 export const BORDER = "#e5e7eb";
 export const BORD2 = "#d1d5db";
 
@@ -58,6 +58,11 @@ export const BADGE_DEMAND_BORDER = "#fca5a5";
 export const WARN_SOLID = "#f59e0b";
 
 // Neutral gray — expired-offer "no-response" state, secondary surfaces
+// Accent orange (non-semantic, use for highlights/badges only — never replace PENDING/URGENT)
+export const ACCENT_ORANGE       = "#ff8710";
+export const ACCENT_ORANGE_LIGHT = "#fff3e6";
+export const ACCENT_ORANGE_HOVER = "#e6780e";
+
 export const GRAY_BG = "#f5f4ef";
 export const GRAY_BORDER = "#d5d3ca";
 export const GRAY_TEXT = "#5c5c58";
@@ -65,15 +70,15 @@ export const GRAY_TEXT = "#5c5c58";
 export const WHITE = "#ffffff";
 
 // Overlays & sticky surfaces
-export const BG_STICKY_HEADER = "rgba(243,243,240,0.97)";
-export const SURFACE_STICKY = "rgba(249,249,247,0.97)";
+export const BG_STICKY_HEADER = "rgba(242,242,242,0.97)";
+export const SURFACE_STICKY = "rgba(248,248,248,0.97)";
 export const OVERLAY_DARK_45 = "rgba(0,0,0,0.45)";
 export const OVERLAY_DARK_55 = "rgba(0,0,0,0.55)";
-export const OVERLAY_V_STRONG = "rgba(109,40,217,0.82)";
-export const OVERLAY_V_70 = "rgba(109,40,217,0.7)";
-export const GRADIENT_CARD_TOP = "linear-gradient(to top, rgba(15,15,26,0.55) 0%, transparent 52%)";
+export const OVERLAY_V_STRONG = "rgba(105,45,212,0.82)";
+export const OVERLAY_V_70 = "rgba(105,45,212,0.7)";
+export const GRADIENT_CARD_TOP = "linear-gradient(to top, rgba(38,38,38,0.55) 0%, transparent 52%)";
 export const GRADIENT_HERO_OVERLAY =
-  "linear-gradient(105deg, rgba(15,15,26,0.88) 0%, rgba(15,15,26,0.72) 40%, rgba(15,15,26,0.25) 75%, rgba(15,15,26,0.1) 100%)";
+  "linear-gradient(105deg, rgba(38,38,38,0.88) 0%, rgba(38,38,38,0.72) 40%, rgba(38,38,38,0.25) 75%, rgba(38,38,38,0.1) 100%)";
 
 export const FOOTER_MUTED = "rgba(255,255,255,0.5)";
 export const FOOTER_LINK = "rgba(255,255,255,0.7)";
@@ -88,13 +93,13 @@ export const SHADOW_CARD_SM = "0 1px 4px rgba(0,0,0,0.05)";
 export const SHADOW_CARD_MD = "0 2px 10px rgba(0,0,0,0.05)";
 export const SHADOW_HERO = "0 2px 20px rgba(0,0,0,0.14)";
 export const SHADOW_CARD_HOVER =
-  "0 10px 28px rgba(109,40,217,0.12), 0 2px 6px rgba(0,0,0,0.06)";
-export const SHADOW_TICKET_HOVER = "0 8px 24px rgba(109,40,217,0.11)";
-export const SHADOW_V_SOFT = "0 4px 18px rgba(109,40,217,0.28)";
-export const SHADOW_V_STRONG = "0 4px 20px rgba(109,40,217,0.5)";
-export const SHADOW_HERO_CTA = "0 4px 18px rgba(109,40,217,0.4)";
-export const SHADOW_LANG_PILL = "0 1px 3px rgba(109,40,217,0.35)";
-export const V_FOCUS_RING = "0 0 0 3px rgba(109,40,217,0.1)";
+  "0 10px 28px rgba(105,45,212,0.12), 0 2px 6px rgba(0,0,0,0.06)";
+export const SHADOW_TICKET_HOVER = "0 8px 24px rgba(105,45,212,0.11)";
+export const SHADOW_V_SOFT = "0 4px 18px rgba(105,45,212,0.28)";
+export const SHADOW_V_STRONG = "0 4px 20px rgba(105,45,212,0.5)";
+export const SHADOW_HERO_CTA = "0 4px 18px rgba(105,45,212,0.4)";
+export const SHADOW_LANG_PILL = "0 1px 3px rgba(105,45,212,0.35)";
+export const V_FOCUS_RING = "0 0 0 3px rgba(105,45,212,0.1)";
 
 // Semantic state tokens (design system v2)
 // These are the ONLY allowed green / amber / pink values in the app.
