@@ -60,6 +60,13 @@ export interface IEventsRepository {
   getApprovedEvents(ctx: Ctx): Promise<Event[]>;
 
   /**
+   * Get distinct cities and categories from approved events.
+   * Cities are extracted from the JSON `location` field.
+   * Both lists are sorted alphabetically.
+   */
+  getDistinctFilters(ctx: Ctx): Promise<{ cities: string[]; categories: EventCategory[] }>;
+
+  /**
    * List events with optional filters and pagination (DB-level).
    * When approvedOnly is true, only approved events; otherwise all.
    * orderBy: 'rankingScore' for public listing (e.g. landing); default 'createdAt'.

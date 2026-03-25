@@ -141,6 +141,30 @@ export class EventsRepository implements IEventsRepository {
     return events.map((e) => this.mapToEvent(e));
   }
 
+  async getDistinctFilters(ctx: Ctx): Promise<{ cities: string[]; categories: EventCategory[] }> {
+    this.logger.debug(ctx, 'getDistinctFilters');
+    const [categoryRows, cityRows] = await Promise.all([
+      this.prisma.event.findMany({
+        where: { status: 'approved' },
+        select: { category: true },
+        distinct: ['category'],
+        orderBy: { category: 'asc' },
+      }),
+      this.prisma.$queryRaw<Array<{ city: string }>>`
+        SELECT DISTINCT "location"->>'city' AS city
+        FROM   "Event"
+        WHERE  status = 'approved'
+          AND  "location"->>'city' IS NOT NULL
+          AND  "location"->>'city' != ''
+        ORDER BY "location"->>'city'
+      `,
+    ]);
+    return {
+      categories: categoryRows.map((r) => r.category as EventCategory),
+      cities: cityRows.map((r) => r.city),
+    };
+  }
+
   async listEventsPaginated(
     _ctx: Ctx,
     opts: {
