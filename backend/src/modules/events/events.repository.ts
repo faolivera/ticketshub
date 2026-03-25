@@ -151,12 +151,12 @@ export class EventsRepository implements IEventsRepository {
         orderBy: { category: 'asc' },
       }),
       this.prisma.$queryRaw<Array<{ city: string }>>`
-        SELECT DISTINCT "location"->>'city' AS city
-        FROM   "Event"
+        SELECT DISTINCT location->>'city' AS city
+        FROM   events
         WHERE  status = 'approved'
-          AND  "location"->>'city' IS NOT NULL
-          AND  "location"->>'city' != ''
-        ORDER BY "location"->>'city'
+          AND  location->>'city' IS NOT NULL
+          AND  location->>'city' != ''
+        ORDER BY location->>'city'
       `,
     ]);
     return {
