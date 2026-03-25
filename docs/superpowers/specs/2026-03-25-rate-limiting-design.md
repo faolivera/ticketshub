@@ -73,23 +73,65 @@ backend/src/common/throttler/
   ip-throttler.guard.ts                  # Custom guard — overrides getTracker() to use client IP
   throttle-authenticated.decorator.ts    # @ThrottleAuthenticated()
   throttle-sensitive-public.decorator.ts # @ThrottleSensitivePublic()
+  throttle-contact.decorator.ts          # @ThrottleContact()
   index.ts                               # Barrel export
 ```
 
-### Modified files
+### Decorator assignment rules
+
+Every endpoint falls into exactly one category:
+
+| Category | Decorator | Effective limit |
+|---|---|---|
+| Authenticated endpoint | `@ThrottleAuthenticated()` | 200 req/min |
+| Public sensitive (login, register, OTP) | `@ThrottleSensitivePublic()` | 5 req/min |
+| Public contact form | `@ThrottleContact()` | 3 req/10 min |
+| Public non-sensitive (event browse, terms, BFF reads) | *(none — default applies)* | 20 req/min |
+| Must never be throttled (webhooks, health, metrics) | `@SkipThrottle()` | none |
+
+For exclusively-authenticated controllers: apply `@ThrottleAuthenticated()` at **class level**.
+For mixed controllers: apply decorators at **method level** per the table above.
+
+### Modified files — explicit list
+
+**Exclusively authenticated controllers** (`@ThrottleAuthenticated()` at class level):
+
+- `tickets.controller.ts`
+- `transactions.controller.ts`
+- `offers.controller.ts`
+- `wallet.controller.ts`
+- `reviews.controller.ts`
+- `identity-verification.controller.ts`
+- `transaction-chat.controller.ts`
+- `admin.controller.ts`
+- `otp.controller.ts`
+
+**Mixed controllers** (method-level decorators):
+
+| File | Method | Decorator |
+|---|---|---|
+| `users.controller.ts` | `POST /login`, `POST /register`, `POST /auth/google` | `@ThrottleSensitivePublic()` |
+| `users.controller.ts` | All other methods (`GET /me`, `PUT /bank-account`, etc.) | `@ThrottleAuthenticated()` |
+| `support.controller.ts` | `POST /contact` | `@ThrottleContact()` |
+| `support.controller.ts` | All other methods | `@ThrottleAuthenticated()` |
+| `payments.controller.ts` | `POST /webhook` | `@SkipThrottle()` |
+| `payments.controller.ts` | `GET /:id`, `POST /:id/confirm` | `@ThrottleAuthenticated()` |
+| `bff.controller.ts` | Authenticated routes | `@ThrottleAuthenticated()` |
+| `bff.controller.ts` | Public routes (`GET /event-page/:slug`, `GET /buy/:ticketId`, `GET /sellers/:id`) | *(none — default applies)* |
+
+**Always skip**:
+
+| File | Change |
+|---|---|
+| `health.controller.ts` | `@SkipThrottle()` at class level |
+| `gateway-webhooks.controller.ts` | `@SkipThrottle()` at class level |
+
+**Infrastructure**:
 
 | File | Change |
 |---|---|
 | `backend/package.json` | Add `@nestjs/throttler` |
 | `backend/src/app.module.ts` | Register `ThrottlerModule.forRoot()`, add `IpThrottlerGuard` as `APP_GUARD` |
-| `backend/src/modules/support/support.controller.ts` | `@Throttle({ contact: { ttl: 600_000, limit: 3 } })` on `POST /api/support/contact` |
-| `backend/src/modules/users/users.controller.ts` | `@ThrottleSensitivePublic()` on `POST /login`, `POST /register`, `POST /auth/google` |
-| `backend/src/modules/otp/otp.controller.ts` | `@ThrottleAuthenticated()` at class level (class is already `@UseGuards(JwtAuthGuard)`) |
-| `backend/src/modules/health/health.controller.ts` | `@SkipThrottle()` at class level |
-| `backend/src/modules/gateways/gateway-webhooks.controller.ts` | `@SkipThrottle()` at class level — covers `POST /api/payments/webhook/uala-bis` and `POST /api/payments/webhook/mercadopago` |
-| `backend/src/modules/payments/payments.controller.ts` | `@SkipThrottle()` on `POST /api/payments/webhook` |
-| All controllers with exclusively authenticated endpoints | `@ThrottleAuthenticated()` at class level |
-| Controllers with mixed public/authenticated routes | `@ThrottleAuthenticated()` at method level on authenticated methods |
 
 ### `@SkipThrottle()` required
 
@@ -191,14 +233,16 @@ export const ThrottleSensitivePublic = (): MethodDecorator & ClassDecorator =>
   );
 ```
 
-### `contact` inline throttle
+### `ThrottleContact` decorator
 
-The contact endpoint skips `default` and applies `contact`. Because `@Throttle()` implicitly activates all registered profiles, we must explicitly skip the others:
+Same pattern — skips all other profiles, applies `contact` only.
 
 ```ts
-@SkipThrottle({ default: true, authenticated: true, 'sensitive-public': true })
-@Throttle({ contact: { ttl: 600_000, limit: 3 } })
-@Post('contact')
+export const ThrottleContact = (): MethodDecorator & ClassDecorator =>
+  applyDecorators(
+    SkipThrottle({ default: true, authenticated: true, 'sensitive-public': true }),
+    Throttle({ contact: { ttl: 600_000, limit: 3 } }),
+  );
 ```
 
 ---
@@ -226,8 +270,9 @@ No custom error handling is needed.
 
 ### Decorator tests
 
-- `ThrottleAuthenticated()` emits the correct throttler metadata (`authenticated` profile, 200 limit, 60 000 ms ttl).
-- `ThrottleSensitivePublic()` emits the correct throttler metadata (`sensitive-public` profile, 5 limit, 60 000 ms ttl).
+- `ThrottleAuthenticated()` emits the correct throttler metadata (`authenticated` profile, 200 limit, 60 000 ms ttl) and skip metadata for `default`.
+- `ThrottleSensitivePublic()` emits the correct throttler metadata (`sensitive-public` profile, 5 limit, 60 000 ms ttl) and skip metadata for `default`.
+- `ThrottleContact()` emits the correct throttler metadata (`contact` profile, 3 limit, 600 000 ms ttl) and skip metadata for `default`, `authenticated`, `sensitive-public`.
 
 ### Manual verification
 
