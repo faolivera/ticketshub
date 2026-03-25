@@ -1,4 +1,5 @@
 import { ContextLogger } from '../logger/context-logger';
+import type { OutboundMetricsService } from '../metrics/outbound-metrics.service';
 import type { Ctx } from '../types/context';
 import type { ISmsOtpProvider } from './sms-otp-provider.interface';
 
@@ -11,11 +12,14 @@ export const MOCK_SMS_OTP_CODE = '222222';
 export class MockSmsOtpProvider implements ISmsOtpProvider {
   private readonly logger = new ContextLogger(MockSmsOtpProvider.name);
 
+  constructor(private readonly metrics?: OutboundMetricsService) {}
+
   async startVerification(ctx: Ctx, phone: string): Promise<void> {
     this.logger.log(
       ctx,
       `[MOCK_SMS] Would send SMS OTP to ${phone} (accepted code: ${MOCK_SMS_OTP_CODE})`,
     );
+    this.metrics?.recordSmsSend('start_verification', true);
   }
 
   async checkVerification(
@@ -23,6 +27,8 @@ export class MockSmsOtpProvider implements ISmsOtpProvider {
     _phone: string,
     code: string,
   ): Promise<boolean> {
-    return code === MOCK_SMS_OTP_CODE;
+    const approved = code === MOCK_SMS_OTP_CODE;
+    this.metrics?.recordSmsSend('check_verification', approved);
+    return approved;
   }
 }

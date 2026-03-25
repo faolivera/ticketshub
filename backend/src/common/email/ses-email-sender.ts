@@ -4,6 +4,7 @@ import {
   type SendEmailCommandInput,
 } from '@aws-sdk/client-ses';
 import { ContextLogger } from '../logger/context-logger';
+import type { OutboundMetricsService } from '../metrics/outbound-metrics.service';
 import type { Ctx } from '../types/context';
 import type { IEmailSender, SendEmailInput, SendEmailResult } from './email-sender.interface';
 
@@ -22,7 +23,10 @@ export class SesEmailSender implements IEmailSender {
   private readonly client: SESClient;
   private readonly fromEmail: string;
 
-  constructor(config: SesEmailSenderConfig) {
+  constructor(
+    config: SesEmailSenderConfig,
+    private readonly metrics?: OutboundMetricsService,
+  ) {
     this.fromEmail = config.fromEmail;
     this.client = new SESClient({
       region: config.region,
@@ -57,12 +61,13 @@ export class SesEmailSender implements IEmailSender {
       const messageId = response.MessageId;
 
       this.logger.debug(ctx, 'send success', { messageId, to: input.to });
-
+      this.metrics?.recordEmailSend(true);
       return { success: true, messageId };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(ctx, 'SES send failed', error);
+      this.metrics?.recordEmailSend(false);
       return { success: false, error: errorMessage };
     }
   }

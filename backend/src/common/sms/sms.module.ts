@@ -1,5 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { MetricsModule } from '../metrics/metrics.module';
+import { OutboundMetricsService } from '../metrics/outbound-metrics.service';
 import type { ISmsOtpProvider } from './sms-otp-provider.interface';
 import { SMS_OTP_PROVIDER } from './sms-otp-provider.interface';
 import { TwilioVerifyProvider } from './twilio-verify-provider';
@@ -13,10 +15,11 @@ const PROVIDER_MOCK = 'MOCK_SMS';
  */
 @Global()
 @Module({
+  imports: [MetricsModule],
   providers: [
     {
       provide: SMS_OTP_PROVIDER,
-      useFactory: (configService: ConfigService): ISmsOtpProvider => {
+      useFactory: (configService: ConfigService, metrics: OutboundMetricsService): ISmsOtpProvider => {
         const provider =
           configService.get<string>('otp.smsProvider') ?? PROVIDER_MOCK;
 
@@ -33,16 +36,12 @@ const PROVIDER_MOCK = 'MOCK_SMS';
             );
           }
 
-          return new TwilioVerifyProvider({
-            accountSid,
-            authToken,
-            verifyServiceSid,
-          });
+          return new TwilioVerifyProvider({ accountSid, authToken, verifyServiceSid }, metrics);
         }
 
-        return new MockSmsOtpProvider();
+        return new MockSmsOtpProvider(metrics);
       },
-      inject: [ConfigService],
+      inject: [ConfigService, OutboundMetricsService],
     },
   ],
   exports: [SMS_OTP_PROVIDER],

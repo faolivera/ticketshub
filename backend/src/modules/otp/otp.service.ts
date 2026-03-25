@@ -17,6 +17,7 @@ import type { ISmsOtpProvider } from '../../common/sms/sms-otp-provider.interfac
 import { SMS_OTP_PROVIDER } from '../../common/sms/sms-otp-provider.interface';
 import { MOCK_SMS_OTP_CODE } from '../../common/sms/mock-sms-otp-provider';
 import { ContextLogger } from '../../common/logger/context-logger';
+import { OutboundMetricsService } from '../../common/metrics/outbound-metrics.service';
 
 /** Hardcoded code for mock email OTP (non-production). */
 const MOCK_EMAIL_OTP_CODE = '111111';
@@ -38,6 +39,7 @@ export class OTPService {
     private readonly emailSender: IEmailSender,
     @Inject(SMS_OTP_PROVIDER)
     private readonly smsOtpProvider: ISmsOtpProvider,
+    private readonly metrics: OutboundMetricsService,
   ) {}
 
   private isMockSms(): boolean {
@@ -141,14 +143,22 @@ export class OTPService {
           ctx,
           `Failed to send OTP email to ${destination}: ${result.error}`,
         );
+        this.metrics.recordOtpSend(type, false);
         throw new BadRequestException(
           'Failed to send verification email. Please try again.',
         );
       }
+      this.metrics.recordOtpSend(type, true);
     }
 
     if (type === OTPType.PhoneVerification && destination) {
-      await this.smsOtpProvider.startVerification(ctx, destination);
+      try {
+        await this.smsOtpProvider.startVerification(ctx, destination);
+        this.metrics.recordOtpSend(type, true);
+      } catch (error) {
+        this.metrics.recordOtpSend(type, false);
+        throw error;
+      }
     }
 
     return otp;
@@ -171,6 +181,7 @@ export class OTPService {
     );
 
     if (!otp) {
+      this.metrics.recordOtpVerification(type, 'no_pending');
       throw new BadRequestException(
         'No pending OTP found. Please request a new one.',
       );
@@ -178,6 +189,7 @@ export class OTPService {
 
     if (new Date(otp.expiresAt) < new Date()) {
       await this.otpRepository.updateStatus(ctx, otp.id, OTPStatus.Expired);
+      this.metrics.recordOtpVerification(type, 'expired');
       throw new BadRequestException(
         'OTP has expired. Please request a new one.',
       );
@@ -196,13 +208,16 @@ export class OTPService {
         code,
       );
       if (!valid) {
+        this.metrics.recordOtpVerification(type, 'invalid_code');
         throw new BadRequestException('Invalid OTP code.');
       }
     } else if (otp.code !== code) {
+      this.metrics.recordOtpVerification(type, 'invalid_code');
       throw new BadRequestException('Invalid OTP code.');
     }
 
     await this.otpRepository.updateStatus(ctx, otp.id, OTPStatus.Verified);
+    this.metrics.recordOtpVerification(type, 'success');
     return true;
   }
 

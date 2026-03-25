@@ -1,5 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { MetricsModule } from '../metrics/metrics.module';
+import { OutboundMetricsService } from '../metrics/outbound-metrics.service';
 import type { IEmailSender } from './email-sender.interface';
 import { EMAIL_SENDER } from './email-sender.interface';
 import { ResendEmailSender } from './resend-email-sender';
@@ -17,10 +19,11 @@ const PROVIDER_MOCK = 'MOCK_EMAIL';
  */
 @Global()
 @Module({
+  imports: [MetricsModule],
   providers: [
     {
       provide: EMAIL_SENDER,
-      useFactory: (configService: ConfigService): IEmailSender => {
+      useFactory: (configService: ConfigService, metrics: OutboundMetricsService): IEmailSender => {
         const provider =
           configService.get<string>('otp.emailProvider') ??
           configService.get<string>('notifications.emailProvider') ??
@@ -39,12 +42,7 @@ const PROVIDER_MOCK = 'MOCK_EMAIL';
             );
           }
 
-          return new SesEmailSender({
-            region,
-            accessKeyId,
-            secretAccessKey,
-            fromEmail,
-          });
+          return new SesEmailSender({ region, accessKeyId, secretAccessKey, fromEmail }, metrics);
         }
 
         if (provider === PROVIDER_RESEND) {
@@ -57,12 +55,12 @@ const PROVIDER_MOCK = 'MOCK_EMAIL';
             );
           }
 
-          return new ResendEmailSender({ apiKey, fromEmail });
+          return new ResendEmailSender({ apiKey, fromEmail }, metrics);
         }
 
-        return new MockEmailSender();
+        return new MockEmailSender(metrics);
       },
-      inject: [ConfigService],
+      inject: [ConfigService, OutboundMetricsService],
     },
   ],
   exports: [EMAIL_SENDER],

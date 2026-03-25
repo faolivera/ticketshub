@@ -6,6 +6,7 @@ const twilio = (twilioLib.default ?? twilioLib) as (
 ) => import('twilio').Twilio;
 
 import { ContextLogger } from '../logger/context-logger';
+import type { OutboundMetricsService } from '../metrics/outbound-metrics.service';
 import type { Ctx } from '../types/context';
 import type { ISmsOtpProvider } from './sms-otp-provider.interface';
 
@@ -23,7 +24,10 @@ export class TwilioVerifyProvider implements ISmsOtpProvider {
   private readonly client: ReturnType<typeof twilio>;
   private readonly verifyServiceSid: string;
 
-  constructor(config: TwilioVerifyProviderConfig) {
+  constructor(
+    config: TwilioVerifyProviderConfig,
+    private readonly metrics?: OutboundMetricsService,
+  ) {
     this.client = twilio(config.accountSid, config.authToken);
     this.verifyServiceSid = config.verifyServiceSid;
   }
@@ -40,8 +44,10 @@ export class TwilioVerifyProvider implements ISmsOtpProvider {
           locale: 'es',
         });
       this.logger.debug(ctx, 'startVerification sent', { phone });
+      this.metrics?.recordSmsSend('start_verification', true);
     } catch (error) {
       this.logger.error(ctx, 'Twilio startVerification failed', error);
+      this.metrics?.recordSmsSend('start_verification', false);
       throw error;
     }
   }
@@ -65,9 +71,11 @@ export class TwilioVerifyProvider implements ISmsOtpProvider {
         status: check.status,
         approved,
       });
+      this.metrics?.recordSmsSend('check_verification', true);
       return approved;
     } catch (error) {
       this.logger.error(ctx, 'Twilio checkVerification failed', error);
+      this.metrics?.recordSmsSend('check_verification', false);
       return false;
     }
   }

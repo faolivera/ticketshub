@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { NotificationBell } from "@/app/components/NotificationBell";
-import { HubSVG } from "./SiteBrandIcons";
 import {
   V,
   VLIGHT,
@@ -12,7 +11,6 @@ import {
   MUTED,
   BORDER,
   S,
-  E,
   BG_STICKY_HEADER,
   SHADOW_DROP,
   SHADOW_DROP_LG,
@@ -81,21 +79,8 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
             gap: 20,
           }}
         >
-          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", flexShrink: 0 }}>
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 7,
-                background: V,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <HubSVG size={15} />
-            </div>
-            <span style={{ ...E, fontSize: 20, color: DARK, letterSpacing: "-0.4px" }}>TicketsHub</span>
+          <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0 }}>
+            <img src="/brand_main.png" alt="TicketsHub" style={{ height: 41, width: "auto" }} />
           </Link>
 
           <div

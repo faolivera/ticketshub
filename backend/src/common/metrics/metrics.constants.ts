@@ -11,3 +11,7 @@ export const METRIC_DB_QUERY_DURATION = 'db_query_duration_milliseconds';
 export const METRIC_PG_POOL_CONNECTIONS_TOTAL = 'pg_pool_connections_total';
 export const METRIC_PG_POOL_CONNECTIONS_IDLE = 'pg_pool_connections_idle';
 export const METRIC_PG_POOL_CONNECTIONS_WAITING = 'pg_pool_connections_waiting';
+export const METRIC_EMAIL_SENDS_TOTAL = 'email_sends_total';
+export const METRIC_SMS_SENDS_TOTAL = 'sms_sends_total';
+export const METRIC_OTP_SENDS_TOTAL = 'otp_sends_total';
+export const METRIC_OTP_VERIFICATIONS_TOTAL = 'otp_verifications_total';

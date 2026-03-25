@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { ContextLogger } from '../logger/context-logger';
+import type { OutboundMetricsService } from '../metrics/outbound-metrics.service';
 import type { Ctx } from '../types/context';
 import type {
   IEmailSender,
@@ -20,7 +21,10 @@ export class ResendEmailSender implements IEmailSender {
   private readonly resend: Resend;
   private readonly fromEmail: string;
 
-  constructor(config: ResendEmailSenderConfig) {
+  constructor(
+    config: ResendEmailSenderConfig,
+    private readonly metrics?: OutboundMetricsService,
+  ) {
     this.fromEmail = config.fromEmail;
     this.resend = new Resend(config.apiKey);
   }
@@ -41,16 +45,19 @@ export class ResendEmailSender implements IEmailSender {
         const errorMessage =
           error?.message ?? (typeof error === 'string' ? error : String(error));
         this.logger.error(ctx, 'Resend send failed', error);
+        this.metrics?.recordEmailSend(false);
         return { success: false, error: errorMessage };
       }
 
       const messageId = data?.id;
       this.logger.debug(ctx, 'send success', { messageId, to: input.to });
+      this.metrics?.recordEmailSend(true);
       return { success: true, messageId };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(ctx, 'Resend send failed', error);
+      this.metrics?.recordEmailSend(false);
       return { success: false, error: errorMessage };
     }
   }
