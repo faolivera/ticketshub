@@ -383,7 +383,7 @@ export default function TicketsHub() {
         }}>
           {/* Desktop: unchanged layout (hidden ≤768px) */}
           <div className="th-desk-only" style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", width:"100%" }}>
-            <div style={{ position:"relative", flex:"0 1 600px", minWidth:220 }}>
+            <div style={{ position:"relative", flex:"0 1 400px", minWidth:220 }}>
               <Search size={15} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:MUTED, pointerEvents:"none" }} />
               <input
                 value={query}
