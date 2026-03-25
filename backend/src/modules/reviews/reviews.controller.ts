@@ -21,7 +21,9 @@ import type {
   GetUserReviewMetricsResponse,
   GetTransactionReviewsResponse,
 } from './reviews.api';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
+@ThrottleAuthenticated()
 @Controller('api/reviews')
 export class ReviewsController {
   constructor(

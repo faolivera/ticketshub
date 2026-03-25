@@ -38,7 +38,9 @@ import type {
   UpdateVerificationStatusRequest,
   UpdateVerificationStatusResponse,
 } from './identity-verification.api';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
+@ThrottleAuthenticated()
 @Controller('api')
 export class IdentityVerificationController {
   constructor(

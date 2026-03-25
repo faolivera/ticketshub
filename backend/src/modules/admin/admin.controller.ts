@@ -127,7 +127,9 @@ import type {
   UploadEventBannerResponse,
   DeleteEventBannerResponse,
 } from '../events/events.api';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
+@ThrottleAuthenticated()
 @Controller('api/admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)

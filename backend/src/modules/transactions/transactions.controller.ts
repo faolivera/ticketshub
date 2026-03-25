@@ -46,7 +46,9 @@ import type {
   ApprovePaymentRequest,
   ApprovePaymentResponse,
 } from './transactions.api';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
+@ThrottleAuthenticated()
 @Controller('api/transactions')
 export class TransactionsController {
   constructor(

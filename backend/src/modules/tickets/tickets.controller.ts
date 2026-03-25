@@ -27,7 +27,9 @@ import type {
   ListListingsQuery,
 } from './tickets.api';
 import { TicketType } from './tickets.domain';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
+@ThrottleAuthenticated()
 @Controller('api/tickets')
 export class TicketsController {
   constructor(

@@ -25,9 +25,11 @@ import { TransactionChatService } from './transaction-chat.service';
 import type { IRealtimeBroadcaster } from '../../common/realtime';
 import { REALTIME_BROADCASTER } from '../realtime/realtime.module';
 import { CHAT_MESSAGE } from '../../common/socket/socket.events';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
 const TRANSACTION_ROOM_PREFIX = 'transaction:';
 
+@ThrottleAuthenticated()
 @Controller('api/transactions/:transactionId/chat')
 @UseGuards(JwtAuthGuard)
 export class TransactionChatController {

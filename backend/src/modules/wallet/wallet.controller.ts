@@ -12,7 +12,9 @@ import type {
   WithdrawRequest,
   WithdrawResponse,
 } from './wallet.api';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
+@ThrottleAuthenticated()
 @Controller('api/wallet')
 export class WalletController {
   constructor(

@@ -25,7 +25,9 @@ import type {
   RejectOfferResponse,
 } from './offers.api';
 import { CreateOfferRequestSchema } from './schemas/api.schemas';
+import { ThrottleAuthenticated } from '../../common/throttler';
 
+@ThrottleAuthenticated()
 @Controller('api/offers')
 export class OffersController {
   constructor(
