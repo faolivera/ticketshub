@@ -17,6 +17,8 @@ import { UsersService } from '../../../../src/modules/users/users.service';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
 import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
 import { PlatformConfigService } from '../../../../src/modules/config/config.service';
+import { CACHE_SERVICE } from '../../../../src/common/cache';
+import { AddressService } from '../../../../src/modules/address/address.service';
 import {
   EventStatus,
   EventDateStatus,
@@ -48,6 +50,7 @@ describe('EventsService', () => {
   let transactionsService: jest.Mocked<TransactionsService>;
   let bannerStorage: jest.Mocked<EventBannerStorageService>;
   let platformConfigService: jest.Mocked<PlatformConfigService>;
+  let cacheService: jest.Mocked<{ getOrCalculate: jest.Mock; invalidate: jest.Mock; clear: jest.Mock }>;
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-request-id' };
 
@@ -105,6 +108,7 @@ describe('EventsService', () => {
       getDatesByEventIds: jest.fn(),
       getSectionsByEventIds: jest.fn(),
       listEventsPaginated: jest.fn(),
+      getDistinctFilters: jest.fn(),
     };
 
     const mockImagesRepository = {
@@ -161,6 +165,16 @@ describe('EventsService', () => {
       getPlatformConfig: jest.fn().mockResolvedValue({ minimumHoursToBuyTickets: 0 }),
     };
 
+    const mockAddressService = {
+      normalizeCity: jest.fn().mockImplementation((location: unknown) => location),
+    };
+
+    const mockCacheService = {
+      getOrCalculate: jest.fn(),
+      invalidate: jest.fn(),
+      clear: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventsService,
@@ -173,6 +187,8 @@ describe('EventsService', () => {
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: EventScoringService, useValue: mockEventScoringService },
         { provide: PlatformConfigService, useValue: mockPlatformConfigService },
+        { provide: AddressService, useValue: mockAddressService },
+        { provide: CACHE_SERVICE, useValue: mockCacheService },
       ],
     }).compile();
 
@@ -183,6 +199,7 @@ describe('EventsService', () => {
     transactionsService = module.get(TransactionsService);
     bannerStorage = module.get(EventBannerStorageService);
     platformConfigService = module.get(PlatformConfigService);
+    cacheService = module.get(CACHE_SERVICE);
   });
 
   describe('listEvents', () => {
@@ -1577,6 +1594,39 @@ describe('EventsService', () => {
         mockCtx,
         expect.objectContaining({ isPopular: false }),
       );
+    });
+  });
+
+  describe('getEventFilters', () => {
+    const mockFilters = {
+      cities: ['Buenos Aires', 'Córdoba'],
+      categories: [EventCategory.Concert, EventCategory.Festival],
+    };
+
+    it('calls repository via cache.getOrCalculate and returns filters', async () => {
+      cacheService.getOrCalculate.mockImplementation(
+        async (_key: string, _ttl: number, fn: () => Promise<unknown>) => fn(),
+      );
+      eventsRepository.getDistinctFilters.mockResolvedValue(mockFilters);
+
+      const result = await service.getEventFilters(mockCtx);
+
+      expect(result).toEqual(mockFilters);
+      expect(cacheService.getOrCalculate).toHaveBeenCalledWith(
+        'events:filters',
+        24 * 60 * 60,
+        expect.any(Function),
+      );
+      expect(eventsRepository.getDistinctFilters).toHaveBeenCalledWith(mockCtx);
+    });
+
+    it('returns cached value without calling the repository on cache hit', async () => {
+      cacheService.getOrCalculate.mockResolvedValue(mockFilters);
+
+      const result = await service.getEventFilters(mockCtx);
+
+      expect(result).toEqual(mockFilters);
+      expect(eventsRepository.getDistinctFilters).not.toHaveBeenCalled();
     });
   });
 });
