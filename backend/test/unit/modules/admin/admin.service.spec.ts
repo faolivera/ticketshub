@@ -80,6 +80,7 @@ describe('AdminService', () => {
     updatedAt: new Date(),
     paymentExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     version: 1,
+    buyerDeliveryEmail: null,
   };
 
   const mockConfirmationWithTransaction: PaymentConfirmationWithTransaction = {

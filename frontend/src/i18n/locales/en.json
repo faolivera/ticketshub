@@ -858,7 +858,7 @@
     "transferDisclaimerBuyerEmail": "You are sending the ticket to the buyer: {{email}}",
     "buyerDisclaimerTitle": "Buyer details",
     "buyerDisclaimerName": "Name: {{name}}",
-    "buyerDisclaimerEmail": "Email: {{email}}",
+    "buyerDisclaimerEmail": "Delivery email: {{email}}",
     "payloadType_ticketera": "Via ticketing platform (Quentro, Venti, etc.)",
     "payloadType_pdf_or_image": "PDF or image (sent by email)",
     "payloadType_other": "Other",
@@ -1042,6 +1042,7 @@
       "buyerVerifyingSubtitle": "We received your proof. This usually takes up to one business hour.",
       "buyerPaymentReceivedTitle": "Payment confirmed",
       "buyerPaymentReceivedSubtitle": "Waiting for the seller to transfer your ticket.",
+      "buyerPaymentReceivedNoEmailSubtitle": "Tell us what email to send your tickets to before the seller transfers.",
       "buyerTicketArrivedTitle": "Your ticket arrived",
       "buyerTicketArrivedSubtitle": "{{name}} transferred your ticket. Confirm receipt when you have it.",
       "buyerConfirmReceiptTitle": "Confirm you received the ticket",
@@ -1083,6 +1084,14 @@
       "PaymentTimeout": "Payment time expired",
       "AdminRejected": "Payment confirmation was rejected",
       "AdminReviewTimeout": "Payment review timed out"
+    },
+    "deliveryEmail": {
+      "cardTitle": "What email should we send your tickets to?",
+      "hint": "You can use a different email if you want.",
+      "confirmButton": "Confirm email",
+      "lockedHint": "Cannot be changed",
+      "saving": "Saving...",
+      "saveError": "Error saving email"
     }
   },
   "sellerIntro": {

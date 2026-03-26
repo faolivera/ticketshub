@@ -126,6 +126,9 @@ export function SellerActionBlock(props: SellerActionBlockProps) {
               {t('myTicket.buyerDisclaimerTitle')}
             </p>
             <p style={{ color: DARK }}>{t('myTicket.buyerDisclaimerName', { name: transaction.buyerName })}</p>
+            {transaction.buyerDeliveryEmail && (
+              <p style={{ color: DARK }}>{t('myTicket.buyerDisclaimerEmail', { email: transaction.buyerDeliveryEmail })}</p>
+            )}
           </div>
           <TransferTimeline
             role="seller"

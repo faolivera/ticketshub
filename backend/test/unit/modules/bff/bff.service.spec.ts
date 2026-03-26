@@ -90,6 +90,7 @@ describe('BffService', () => {
     buyerPic: null,
     sellerPic: null,
     version: 1,
+    buyerDeliveryEmail: null,
   };
 
   const mockPaymentConfirmation: PaymentConfirmation = {

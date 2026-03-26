@@ -180,6 +180,7 @@ export interface TransactionWithDetails extends Transaction {
   sellerName: string;
   buyerPic: string | null;
   sellerPic: string | null;
+  buyerDeliveryEmail: string | null;
   bannerUrls?: BannerUrls;
 }
 

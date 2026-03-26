@@ -27,6 +27,7 @@ import { formatCurrency } from '@/lib/format-currency';
 import { TransactionStatus } from '@/api/types';
 import { ActionHero } from './ActionHero';
 import { BankDetailsBlock } from './BankDetailsBlock';
+import { BuyerDeliveryEmailCard } from './BuyerDeliveryEmailCard';
 import { EscrowTimeline } from './EscrowTimeline';
 import { TransferTimeline } from './TransferTimeline';
 import {
@@ -65,6 +66,9 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
     onCopyCbu,
     disputeId,
     onPaymentExpired,
+    deliveryEmail,
+    currentUserEmail,
+    onConfirmDeliveryEmail,
   } = props;
 
   const isBankTransferPendingUpload = Boolean(
@@ -273,24 +277,35 @@ export function BuyerActionBlock(props: BuyerActionBlockProps) {
       )}
 
       {effectiveStatus === TransactionStatus.PaymentReceived && (
-        <ActionHero
-          variant="blue"
-          icon={<SendHorizontal className="h-5 w-5" />}
-          title={t('transaction.hero.buyerPaymentReceivedTitle')}
-          subtitle={t('transaction.hero.buyerPaymentReceivedSubtitle')}
-        >
-          <TransferTimeline role="buyer" effectiveStatus={effectiveStatus} />
-          {canOpenDispute && (
-            <button
-              type="button"
-              onClick={onOpenDispute}
-              className="mt-4 w-full text-center text-xs font-semibold underline"
-              style={{ color: MUTED }}
-            >
-              {t('myTicket.reportProblem')}
-            </button>
-          )}
-        </ActionHero>
+        <>
+          <BuyerDeliveryEmailCard
+            deliveryEmail={deliveryEmail}
+            currentUserEmail={currentUserEmail}
+            onConfirm={onConfirmDeliveryEmail}
+          />
+          <ActionHero
+            variant="blue"
+            icon={<SendHorizontal className="h-5 w-5" />}
+            title={t('transaction.hero.buyerPaymentReceivedTitle')}
+            subtitle={
+              deliveryEmail === null
+                ? t('transaction.hero.buyerPaymentReceivedNoEmailSubtitle')
+                : t('transaction.hero.buyerPaymentReceivedSubtitle')
+            }
+          >
+            <TransferTimeline role="buyer" effectiveStatus={effectiveStatus} />
+            {canOpenDispute && (
+              <button
+                type="button"
+                onClick={onOpenDispute}
+                className="mt-4 w-full text-center text-xs font-semibold underline"
+                style={{ color: MUTED }}
+              >
+                {t('myTicket.reportProblem')}
+              </button>
+            )}
+          </ActionHero>
+        </>
       )}
 
       {effectiveStatus === TransactionStatus.TicketTransferred && (

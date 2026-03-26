@@ -857,7 +857,7 @@
     "transferDisclaimerBuyerEmail": "Estás enviando la entrada al comprador: {{email}}",
     "buyerDisclaimerTitle": "Datos del comprador",
     "buyerDisclaimerName": "Nombre: {{name}}",
-    "buyerDisclaimerEmail": "Email: {{email}}",
+    "buyerDisclaimerEmail": "Email de entrega: {{email}}",
     "payloadType_ticketera": "Mediante Ticketera (Quentro, Venti, otra...)",
     "payloadType_pdf_or_image": "PDF o Imagen (enviada por mail)",
     "payloadType_other": "Otra",
@@ -1041,6 +1041,7 @@
       "buyerVerifyingSubtitle": "Recibimos tu comprobante. Suele tardar hasta una hora hábil.",
       "buyerPaymentReceivedTitle": "Pago confirmado",
       "buyerPaymentReceivedSubtitle": "Esperando que el vendedor transfiera tu entrada.",
+      "buyerPaymentReceivedNoEmailSubtitle": "Indicanos a qué email enviarte las entradas antes de que el vendedor transfiera.",
       "buyerTicketArrivedTitle": "Tu entrada llegó",
       "buyerTicketArrivedSubtitle": "{{name}} te transfirió la entrada. Confirmá cuando la tengas.",
       "buyerConfirmReceiptTitle": "Confirmá que recibiste la entrada",
@@ -1082,6 +1083,14 @@
       "PaymentTimeout": "El tiempo de pago expiró",
       "AdminRejected": "La confirmación de pago fue rechazada",
       "AdminReviewTimeout": "La revisión de pago expiró"
+    },
+    "deliveryEmail": {
+      "cardTitle": "¿A qué email te enviamos las entradas?",
+      "hint": "Podés usar otro email si querés.",
+      "confirmButton": "Confirmar email",
+      "lockedHint": "No puede modificarse",
+      "saving": "Guardando...",
+      "saveError": "Error al guardar el email"
     }
   },
   "sellerIntro": {

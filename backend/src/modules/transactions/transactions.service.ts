@@ -5,6 +5,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import type { ITransactionsRepository } from './transactions.repository.interface';
@@ -392,6 +393,7 @@ export class TransactionsService {
             pickupAddress: listing.pickupAddress,
             paymentMethodId,
             version: 1,
+            buyerDeliveryEmail: null,
           };
 
           const createdTransaction = await this.transactionsRepository.create(
@@ -1165,6 +1167,43 @@ export class TransactionsService {
     }
 
     return await this.enrichTransaction(ctx, transaction);
+  }
+
+  /**
+   * Set buyer delivery email (buyer only, PaymentReceived status, locked after first set).
+   */
+  async setBuyerDeliveryEmail(
+    ctx: Ctx,
+    transactionId: string,
+    buyerId: string,
+    email: string,
+  ): Promise<TransactionWithDetails> {
+    this.logger.debug(ctx, 'setBuyerDeliveryEmail', { transactionId, buyerId });
+
+    const transaction = await this.transactionsRepository.findById(ctx, transactionId);
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+    if (transaction.buyerId !== buyerId) {
+      throw new ForbiddenException('Only the buyer can set the delivery email');
+    }
+    if (transaction.status !== TransactionStatus.PaymentReceived) {
+      throw new BadRequestException(
+        'Delivery email can only be set when status is PaymentReceived',
+      );
+    }
+    if (transaction.buyerDeliveryEmail !== null) {
+      throw new ConflictException('Delivery email has already been set');
+    }
+
+    const updated = await this.transactionsRepository.update(ctx, transactionId, {
+      buyerDeliveryEmail: email,
+    });
+    if (!updated) {
+      throw new NotFoundException('Transaction not found after update');
+    }
+
+    return this.enrichTransaction(ctx, updated);
   }
 
   /**

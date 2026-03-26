@@ -8,6 +8,7 @@ import type {
   ConfirmReceiptResponse,
   GetTransactionChatMessagesResponse,
   TransactionChatMessage,
+  TransactionWithDetails,
 } from '../types';
 
 /**
@@ -114,6 +115,17 @@ export const transactionsService = {
    */
   async markTransactionChatAsRead(transactionId: string): Promise<void> {
     await apiClient.patch(`/transactions/${transactionId}/chat/read`);
+  },
+
+  /**
+   * Set buyer delivery email for a transaction.
+   */
+  async setBuyerDeliveryEmail(transactionId: string, email: string): Promise<TransactionWithDetails> {
+    const response = await apiClient.patch<TransactionWithDetails>(
+      `/transactions/${transactionId}/buyer-delivery-email`,
+      { email },
+    );
+    return response.data;
   },
 
   /**

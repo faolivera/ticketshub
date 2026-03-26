@@ -2,6 +2,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionsService } from '../../../../src/modules/transactions/transactions.service';
@@ -71,6 +72,7 @@ describe('TransactionsService', () => {
     paymentExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     updatedAt: new Date(),
     version: 1,
+    buyerDeliveryEmail: null,
     ...overrides,
   });
 
@@ -1589,6 +1591,102 @@ describe('TransactionsService', () => {
       expect(txManager.executeInTransaction).toHaveBeenCalled();
       expect(ticketsService.restoreTickets).toHaveBeenCalled();
       expect(transactionsRepository.updateWithVersion).toHaveBeenCalled();
+    });
+  });
+
+  describe('setBuyerDeliveryEmail', () => {
+    const mockTxPaymentReceived = createMockTransaction({
+      status: TransactionStatus.PaymentReceived,
+      buyerDeliveryEmail: null,
+    });
+
+    it('sets email when buyer calls in PaymentReceived', async () => {
+      transactionsRepository.findById.mockResolvedValue(mockTxPaymentReceived);
+      transactionsRepository.update.mockResolvedValue({
+        ...mockTxPaymentReceived,
+        buyerDeliveryEmail: 'buyer@example.com',
+      });
+      jest.spyOn(service as any, 'enrichTransaction').mockResolvedValue({
+        ...mockTxPaymentReceived,
+        buyerDeliveryEmail: 'buyer@example.com',
+        eventName: 'Event',
+        eventDate: new Date(),
+        venue: 'Venue',
+        sectionName: 'General',
+        buyerName: 'Buyer',
+        sellerName: 'Seller',
+        buyerPic: null,
+        sellerPic: null,
+      });
+
+      const result = await service.setBuyerDeliveryEmail(
+        mockCtx,
+        mockTxPaymentReceived.id,
+        mockTxPaymentReceived.buyerId,
+        'buyer@example.com',
+      );
+
+      expect(transactionsRepository.update).toHaveBeenCalledWith(
+        mockCtx,
+        mockTxPaymentReceived.id,
+        { buyerDeliveryEmail: 'buyer@example.com' },
+      );
+      expect(result.buyerDeliveryEmail).toBe('buyer@example.com');
+    });
+
+    it('throws ForbiddenException when caller is not the buyer', async () => {
+      transactionsRepository.findById.mockResolvedValue(mockTxPaymentReceived);
+
+      await expect(
+        service.setBuyerDeliveryEmail(
+          mockCtx,
+          mockTxPaymentReceived.id,
+          'other_user',
+          'buyer@example.com',
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('throws BadRequestException when status is not PaymentReceived', async () => {
+      const txWrongStatus = createMockTransaction({
+        status: TransactionStatus.PendingPayment,
+        buyerDeliveryEmail: null,
+      });
+      transactionsRepository.findById.mockResolvedValue(txWrongStatus);
+
+      await expect(
+        service.setBuyerDeliveryEmail(
+          mockCtx,
+          txWrongStatus.id,
+          txWrongStatus.buyerId,
+          'buyer@example.com',
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws ConflictException when email already set', async () => {
+      const txAlreadySet = createMockTransaction({
+        status: TransactionStatus.PaymentReceived,
+        buyerDeliveryEmail: 'existing@example.com',
+      });
+      transactionsRepository.findById.mockResolvedValue(txAlreadySet);
+
+      await expect(
+        service.setBuyerDeliveryEmail(
+          mockCtx,
+          txAlreadySet.id,
+          txAlreadySet.buyerId,
+          'new@example.com',
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('throws NotFoundException when transaction not found', async () => {
+      transactionsRepository.findById.mockResolvedValue(undefined);
+
+      await expect(
+        service.setBuyerDeliveryEmail(mockCtx, 'nonexistent', 'buyer_123', 'buyer@example.com'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

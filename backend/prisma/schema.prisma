@@ -573,6 +573,7 @@ model Transaction {
   completedAt               DateTime?
   cancelledAt               DateTime?
   refundedAt                DateTime?
+  buyerDeliveryEmail        String?           @map("buyer_delivery_email")
   transferProofStorageKey       String?   @map("transfer_proof_storage_key")
   transferProofOriginalFilename String?   @map("transfer_proof_original_filename")
   receiptProofStorageKey        String?   @map("receipt_proof_storage_key")
