@@ -36,7 +36,7 @@ export class PrismaService
         'database.url is required. Set DATABASE_URL or configure in HOCON.',
       );
     }
-    const pool = new Pool({ connectionString });
+    const pool = new Pool({ connectionString, min: 2 });
     const adapter = new PrismaPg(pool);
     super({ adapter, log: [{ emit: 'event', level: 'query' }] });
     this.pool = pool;
@@ -55,6 +55,8 @@ export class PrismaService
       this.queryDuration.observe(e.duration);
     });
     await this.$connect();
+    await this.$queryRaw`SELECT 1`;
+    this.logger.debug(ON_APP_INIT_CTX, 'onModuleInit', { message: 'db pool warmed up' });
   }
 
   async onModuleDestroy(): Promise<void> {

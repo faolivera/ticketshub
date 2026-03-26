@@ -10,6 +10,8 @@ export interface StorageConfig {
   endpoint?: string;
   /** When set, signed URLs use this host so the client (e.g. browser) can reach S3/LocalStack (e.g. http://localhost:4567). */
   signedUrlEndpoint?: string;
+  /** When set, public asset URLs use this CloudFront base URL instead of the default S3 URL (e.g. https://d1234abcd.cloudfront.net). */
+  cloudfrontBaseUrl?: string;
   privateBucket: string;
   publicBucket: string;
 }

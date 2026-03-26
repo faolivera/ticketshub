@@ -178,6 +178,9 @@ export class S3FileStorageProvider implements FileStorageProvider {
     if (this.config.endpoint) {
       return `${this.config.endpoint}/${this.bucket}/${key}`;
     }
+    if (this.config.cloudfrontBaseUrl) {
+      return `${this.config.cloudfrontBaseUrl}/${key}`;
+    }
     return `https://${this.bucket}.s3.${this.config.region}.amazonaws.com/${key}`;
   }
 

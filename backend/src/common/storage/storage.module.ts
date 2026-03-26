@@ -17,6 +17,9 @@ function getStorageConfigFrom(configService: ConfigService): StorageConfig {
   const signedUrlEndpoint = configService.get<string>(
     'storage.signedUrlEndpoint',
   );
+  const cloudfrontBaseUrl = configService.get<string>(
+    'storage.cloudfrontBaseUrl',
+  );
   if (
     !region ||
     !accessKeyId ||
@@ -34,6 +37,7 @@ function getStorageConfigFrom(configService: ConfigService): StorageConfig {
     secretAccessKey,
     endpoint: endpoint || undefined,
     signedUrlEndpoint: signedUrlEndpoint || undefined,
+    cloudfrontBaseUrl: cloudfrontBaseUrl || undefined,
     privateBucket,
     publicBucket,
   };
