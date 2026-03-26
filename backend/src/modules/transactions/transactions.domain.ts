@@ -215,6 +215,9 @@ export interface Transaction {
 
   refundedAt?: Date;
 
+  /** Email the buyer wants to use for ticket delivery. Null until buyer confirms it. Locked after set. */
+  buyerDeliveryEmail: string | null;
+
   /** When escrow can transition to TransferringFund (event + 24h) */
   depositReleaseAt?: Date;
 
