@@ -307,7 +307,7 @@ export class TransactionsController {
     @Body() body: unknown,
   ): Promise<ApiResponse<SetBuyerDeliveryEmailResponse>> {
     const { email } = SetBuyerDeliveryEmailSchema.parse(body);
-    const transaction = await this.transactionsService.setBuyerDeliveryEmail(
+    const { buyerPlatformFee: _bpf, paymentMethodCommission: _pmc, ...transaction } = await this.transactionsService.setBuyerDeliveryEmail(
       ctx,
       id,
       user.id,

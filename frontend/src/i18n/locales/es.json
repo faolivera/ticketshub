@@ -1089,7 +1089,8 @@
       "hint": "Podés usar otro email si querés.",
       "confirmButton": "Confirmar email",
       "lockedHint": "No puede modificarse",
-      "saving": "Guardando..."
+      "saving": "Guardando...",
+      "saveError": "Error al guardar el email"
     }
   },
   "sellerIntro": {

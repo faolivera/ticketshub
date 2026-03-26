@@ -192,6 +192,7 @@ describe('TransactionsRepository (Integration)', () => {
       createdAt: now,
       updatedAt: now,
       version: 1,
+      buyerDeliveryEmail: null,
       ...overrides,
     };
   };

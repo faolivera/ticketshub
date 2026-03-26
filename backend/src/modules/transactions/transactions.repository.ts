@@ -859,7 +859,7 @@ export class TransactionsRepository
         prismaTransaction.receiptProofOriginalFilename ?? undefined,
       updatedAt: prismaTransaction.updatedAt,
       version: prismaTransaction.version,
-      buyerDeliveryEmail: (prismaTransaction as { buyerDeliveryEmail?: string | null }).buyerDeliveryEmail ?? null,
+      buyerDeliveryEmail: prismaTransaction.buyerDeliveryEmail ?? null,
     };
   }
 

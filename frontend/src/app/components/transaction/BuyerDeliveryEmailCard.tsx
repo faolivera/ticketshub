@@ -42,7 +42,7 @@ export function BuyerDeliveryEmailCard({
       const message =
         err && typeof err === 'object' && 'message' in err
           ? String((err as { message: unknown }).message)
-          : 'Error al guardar el email';
+          : t('transaction.deliveryEmail.saveError');
       setError(message);
     } finally {
       setSaving(false);

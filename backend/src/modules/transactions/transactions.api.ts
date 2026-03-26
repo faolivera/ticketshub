@@ -132,4 +132,4 @@ export const SetBuyerDeliveryEmailSchema = z.object({
 
 export type SetBuyerDeliveryEmailRequest = z.infer<typeof SetBuyerDeliveryEmailSchema>;
 
-export type SetBuyerDeliveryEmailResponse = TransactionWithDetails;
+export type SetBuyerDeliveryEmailResponse = Omit<TransactionWithDetails, 'buyerPlatformFee' | 'paymentMethodCommission'>;
