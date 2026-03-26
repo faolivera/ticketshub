@@ -6,13 +6,13 @@ export interface PageMetaProps {
   description?: string;
   /** Optional canonical URL (absolute). If not set, uses baseUrl + current pathname. */
   canonicalUrl?: string;
-  /** OG/Twitter image URL (absolute). If not set, uses default /og-default.png. */
+  /** OG/Twitter image URL (absolute). If not set, uses default /og-default.jpg. */
   image?: string;
   /** OG type, default "website". */
   ogType?: string;
 }
 
-const DEFAULT_OG_IMAGE_PATH = '/assets/og-default.png';
+const DEFAULT_OG_IMAGE_PATH = '/assets/og-default.jpg';
 
 /**
  * Sets document title, meta description, canonical, Open Graph and Twitter Card tags.
