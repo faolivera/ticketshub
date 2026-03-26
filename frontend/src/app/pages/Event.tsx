@@ -5,7 +5,6 @@ import {
   Lock, RefreshCw,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useUser } from "@/app/contexts/UserContext";
 import { ticketsService } from "@/api/services/tickets.service";
 import { subscriptionsService } from "@/api/services/subscriptions.service";
 import { formatDate, formatTime } from "@/lib/format-date";
@@ -82,11 +81,10 @@ interface BuildResult {
 function buildEventAndTickets(
   apiEvent: PublicListEventItem | null,
   listings: ListingWithSeller[],
-  currentUserId: string | undefined,
 ): BuildResult {
   if (!apiEvent) return { event: null, tickets: [] };
   const approvedDates = (apiEvent.dates || []).filter((d) => d.status === "approved");
-  const filteredListings = (listings || []).filter((l) => l.sellerId !== currentUserId);
+  const filteredListings = listings || [];
 
   const eventImg =
     apiEvent.bannerUrls?.rectangle ||
@@ -162,7 +160,6 @@ function buildEventAndTickets(
 export default function EventDetail() {
   const { t } = useTranslation();
   const { eventSlug } = useParams<{ eventSlug: string }>();
-  const { user } = useUser();
   const [dateIdx, setDateIdx] = useState<number>(0);
   const [sector, setSector] = useState<string>("Todos");
   const [sortIdx, setSortIdx] = useState<number>(0);
@@ -228,8 +225,8 @@ export default function EventDetail() {
   }, []);
 
   const { event: EVENT, tickets: allTickets } = useMemo(
-    () => buildEventAndTickets(apiEvent, listings, user?.id),
-    [apiEvent, listings, user?.id]
+    () => buildEventAndTickets(apiEvent, listings),
+    [apiEvent, listings]
   );
 
   const activeDate = EVENT?.dates?.[dateIdx];
@@ -258,6 +255,10 @@ export default function EventDetail() {
       return 0;
     });
   }, [filteredBySector, sortIdx]);
+
+  const totalTickets = useMemo(() => {
+    return ticketsForDate.reduce((sum, t) => sum + t.qty, 0);
+  }, [ticketsForDate]);
 
   const minPriceWithFees = useMemo(() => {
     if (!sorted.length) return 0;
@@ -581,7 +582,7 @@ export default function EventDetail() {
             {/* Stock summary — replaces "Ver entradas" CTA */}
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 20 }}>
               {activeDate?.count > 0
-                ? `${activeDate.count} entradas disponibles · desde ${fmt(minPriceWithFees)} ARS (precio final c/comisión)`
+                ? `${totalTickets} entradas disponibles en ${activeDate.count} publicaciones · desde ${fmt(minPriceWithFees)} ARS (precio final c/comisión)`
                 : "Sin entradas disponibles por ahora"}
             </p>
 

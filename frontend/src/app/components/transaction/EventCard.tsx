@@ -1,6 +1,4 @@
-import { Calendar, MapPin } from 'lucide-react';
-import { EventBanner } from '@/app/components/EventBanner';
-import { CARD, BORDER, E, S } from '@/lib/design-tokens';
+import { CARD, BORDER, V, S, R_CARD, R_BUTTON } from '@/lib/design-tokens';
 import type { EventCardProps } from './types';
 
 export function EventCard({
@@ -13,55 +11,142 @@ export function EventCard({
   rectangleUrl,
   quantity,
 }: EventCardProps) {
+  const bgImage = rectangleUrl || squareUrl;
+
   return (
     <div
-      className="overflow-hidden rounded-card border shadow-sm"
-      style={{ ...S, background: CARD, borderColor: BORDER }}
+      style={{
+        ...S,
+        background: CARD,
+        border: `1px solid ${BORDER}`,
+        borderRadius: R_CARD,
+        overflow: 'hidden',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+      }}
     >
-      <div className="relative">
-        <EventBanner
-          variant="rectangle"
-          squareUrl={squareUrl ?? undefined}
-          rectangleUrl={rectangleUrl ?? undefined}
-          alt={eventName}
-          className="h-44 sm:h-52 md:h-56"
+      {/* Hero banner */}
+      <div className="h-44 sm:h-52 md:h-56" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Blurred background */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 0,
+            backgroundImage: bgImage ? `url(${bgImage})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'blur(12px) brightness(0.6) saturate(1.2)',
+            transform: 'scale(1.1)',
+            backgroundColor: '#262626',
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white sm:p-5">
-          <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-            <h1
-              className="max-w-[90%] text-xl font-normal leading-tight drop-shadow-md sm:text-2xl"
-              style={E}
+        {/* Gradient overlay */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            background:
+              'linear-gradient(to right, rgba(38,38,38,0.65) 0%, rgba(38,38,38,0.38) 45%, rgba(38,38,38,0.05) 100%)',
+          }}
+        />
+        {/* Content row */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            height: '100%',
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 14,
+            padding: '0 20px 18px',
+          }}
+        >
+          {/* Square image */}
+          <div
+            style={{
+              height: 'calc(100% - 28px)',
+              aspectRatio: '1 / 1',
+              borderRadius: R_BUTTON,
+              background: V,
+              flexShrink: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 22,
+            }}
+          >
+            {squareUrl ? (
+              <img src={squareUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              '🎫'
+            )}
+          </div>
+          {/* Text details */}
+          <div style={{ minWidth: 0 }}>
+            <p
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: '#fff',
+                lineHeight: 1.3,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
             >
               {eventName}
-            </h1>
-            <div className="flex flex-wrap gap-2">
+            </p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>
+              {eventDateLabel}
+            </p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+              {venue}
+            </p>
+            <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
               <span
-                className="rounded-pill px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
-                style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)',
+                  background: 'rgba(255,255,255,0.18)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: 100,
+                  padding: '2px 8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
               >
                 {ticketTypeLabel}
               </span>
               {sectorLabel && (
                 <span
-                  className="rounded-pill px-2.5 py-1 text-[11px] font-bold"
-                  style={{ background: 'rgba(255,255,255,0.15)' }}
+                  style={{
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.85)',
+                    background: 'rgba(255,255,255,0.13)',
+                    borderRadius: 100,
+                    padding: '2px 8px',
+                  }}
                 >
                   {sectorLabel}
                 </span>
               )}
+              <span
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.85)',
+                  background: 'rgba(255,255,255,0.13)',
+                  borderRadius: 100,
+                  padding: '2px 8px',
+                }}
+              >
+                ×{quantity}
+              </span>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-white/90">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 shrink-0 opacity-90" />
-              {eventDateLabel}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 shrink-0 opacity-90" />
-              {venue}
-            </span>
-            <span className="font-semibold">×{quantity}</span>
           </div>
         </div>
       </div>

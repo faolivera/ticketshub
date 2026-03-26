@@ -22,7 +22,7 @@ import { Star, Upload, ImageIcon, Crop } from 'lucide-react';
 import { adminService } from '@/api/services/admin.service';
 import { getToken } from '@/api/client';
 import type { AdminAllEventItem } from '@/api/types/admin';
-import { HighlightedEventsHero } from '@/app/components/home/HighlightedEventsHero';
+import { HighlightedEventsHero } from '@/app/components/home/HighlightedEventsHero4';
 import AvatarCropModal from '@/app/components/Avatarcropmodal';
 import { cn } from '@/app/components/ui/utils';
 

@@ -10,7 +10,7 @@ export function TrustSignals() {
             icon: <Lock size={10} />,
             iconColor: GREEN,
             iconBg: GLIGHT,
-            text: "Tu pago queda en escrow hasta que recibís las entradas",
+            text: "Tu pago queda protegido hasta que entras al evento",
           },
           {
             icon: <Shield size={10} />,

@@ -26,7 +26,6 @@ import { PublicListEventItem } from "@/api/types/events";
 const PANEL_BG = "#0f0825";
 
 const ROTATE_INTERVAL_MS = 6000;
-const DEFAULT_IMAGE = "https://picsum.photos/seed/event/1400/400";
 const MOBILE_MAX_WIDTH = "(max-width: 767px)";
 
 // ─── Trust items ─────────────────────────────────────────────────────────────
@@ -62,19 +61,9 @@ interface HeroEvent extends PublicListEventItem {
 
 function resolveBannerSrc(ev: HeroEvent, preferSquare: boolean): string {
   if (preferSquare) {
-    return (
-      ev.bannerUrls?.square ||
-      ev.bannerUrls?.rectangle ||
-      ev.images?.[0]?.src ||
-      DEFAULT_IMAGE
-    );
+    return ev.bannerUrls?.square || ev.bannerUrls?.rectangle || ev.images?.[0]?.src || "";
   }
-  return (
-    ev.bannerUrls?.rectangle ||
-    ev.bannerUrls?.square ||
-    ev.images?.[0]?.src ||
-    DEFAULT_IMAGE
-  );
+  return ev.bannerUrls?.rectangle || ev.bannerUrls?.square || ev.images?.[0]?.src || "";
 }
 
 function formatPrice(cents: number): string {
@@ -168,6 +157,14 @@ export function HighlightedEventsHero({
   // ── Loading skeleton ───────────────────────────────────────────────────────
 
   if (loading) {
+    // Shimmer base and highlight as inline styles to avoid <style> tag injection issues
+    const SK_BASE = "linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.06) 75%)";
+    const skStyle = {
+      background: SK_BASE,
+      backgroundSize: "200% 100%",
+      animation: "hh-shimmer 1.4s ease-in-out infinite",
+    } as const;
+
     return (
       <div
         style={{
@@ -183,17 +180,12 @@ export function HighlightedEventsHero({
             0%   { background-position: -200% 0; }
             100% { background-position:  200% 0; }
           }
-          .hh-sk {
-            background: linear-gradient(90deg, #1a0d35 25%, #241244 50%, #1a0d35 75%);
-            background-size: 200% 100%;
-            animation: hh-shimmer 1.4s ease-in-out infinite;
-          }
         `}</style>
 
         {preferSquareLayout ? (
-          // Mobile skeleton — matches: image / headline / event block / CTAs / trust
+          // Mobile skeleton
           <div>
-            <div className="hh-sk" style={{ height: 200 }} />
+            <div style={{ height: 200, ...skStyle }} />
             <div
               style={{
                 background: PANEL_BG,
@@ -205,30 +197,27 @@ export function HighlightedEventsHero({
             >
               {/* Headline 2 lines */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <div className="hh-sk" style={{ height: 26, width: "88%", borderRadius: 6, opacity: 0.35 }} />
-                <div className="hh-sk" style={{ height: 26, width: "70%", borderRadius: 6, opacity: 0.35 }} />
+                <div style={{ height: 26, width: "88%", borderRadius: 6, ...skStyle }} />
+                <div style={{ height: 26, width: "70%", borderRadius: 6, ...skStyle }} />
               </div>
               {/* Event context block */}
-              <div className="hh-sk" style={{ height: 60, borderRadius: 12, opacity: 0.22 }} />
+              <div style={{ height: 60, borderRadius: 12, ...skStyle }} />
               {/* Primary CTA */}
-              <div className="hh-sk" style={{ height: 44, borderRadius: 12, opacity: 0.35 }} />
-              {/* Secondary CTAs */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <div className="hh-sk" style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.25 }} />
-                <div className="hh-sk" style={{ height: 38, flex: 1, borderRadius: 12, opacity: 0.25 }} />
-              </div>
+              <div style={{ height: 44, borderRadius: 12, ...skStyle }} />
+              {/* Secondary CTA */}
+              <div style={{ height: 38, borderRadius: 12, opacity: 0.6, ...skStyle }} />
               {/* Trust signals */}
               <div style={{ display: "flex", gap: 12 }}>
-                <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
-                <div className="hh-sk" style={{ height: 10, width: 90, borderRadius: 100, opacity: 0.18 }} />
-                <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
+                <div style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.5, ...skStyle }} />
+                <div style={{ height: 10, width: 90, borderRadius: 100, opacity: 0.5, ...skStyle }} />
+                <div style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.5, ...skStyle }} />
               </div>
             </div>
           </div>
         ) : (
-          // Desktop skeleton — 3-zone left panel + parallelogram image area
+          // Desktop skeleton — left panel + parallelogram image area
           <div style={{ position: "relative", height: 340, background: PANEL_BG, borderRadius: 20, overflow: "hidden" }}>
-            {/* Left panel — 3 zones: headline · event+dots · ctas+trust */}
+            {/* Left panel — 3 zones */}
             <div
               style={{
                 position: "absolute",
@@ -243,43 +232,43 @@ export function HighlightedEventsHero({
             >
               {/* Zone 1 — Headline */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div className="hh-sk" style={{ height: 26, width: "92%", borderRadius: 6, opacity: 0.28 }} />
-                <div className="hh-sk" style={{ height: 26, width: "74%", borderRadius: 6, opacity: 0.28 }} />
+                <div style={{ height: 26, width: "92%", borderRadius: 6, ...skStyle }} />
+                <div style={{ height: 26, width: "74%", borderRadius: 6, ...skStyle }} />
               </div>
               {/* Zone 2 — Event + dots */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div className="hh-sk" style={{ height: 24, width: "65%", borderRadius: 5, opacity: 0.26 }} />
-                  <div className="hh-sk" style={{ height: 13, width: "80%", borderRadius: 4, opacity: 0.18 }} />
+                  <div style={{ height: 24, width: "65%", borderRadius: 5, ...skStyle }} />
+                  <div style={{ height: 13, width: "80%", borderRadius: 4, opacity: 0.6, ...skStyle }} />
                 </div>
                 <div style={{ display: "flex", gap: 5 }}>
-                  <div className="hh-sk" style={{ height: 5, width: 20, borderRadius: 3, opacity: 0.30 }} />
-                  <div className="hh-sk" style={{ height: 5, width: 5,  borderRadius: 3, opacity: 0.18 }} />
-                  <div className="hh-sk" style={{ height: 5, width: 5,  borderRadius: 3, opacity: 0.18 }} />
+                  <div style={{ height: 6, width: 22, borderRadius: 3, ...skStyle }} />
+                  <div style={{ height: 6, width: 6, borderRadius: 3, opacity: 0.5, ...skStyle }} />
+                  <div style={{ height: 6, width: 6, borderRadius: 3, opacity: 0.5, ...skStyle }} />
                 </div>
               </div>
               {/* Zone 3 — CTAs + trust */}
               <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <div className="hh-sk" style={{ height: 42, width: 148, borderRadius: 12, opacity: 0.32 }} />
-                  <div className="hh-sk" style={{ height: 42, width: 118, borderRadius: 12, opacity: 0.20 }} />
+                  <div style={{ height: 42, width: 148, borderRadius: 12, ...skStyle }} />
+                  <div style={{ height: 42, width: 118, borderRadius: 12, opacity: 0.6, ...skStyle }} />
                 </div>
                 <div style={{ display: "flex", gap: 14 }}>
-                  <div className="hh-sk" style={{ height: 10, width: 88, borderRadius: 100, opacity: 0.18 }} />
-                  <div className="hh-sk" style={{ height: 10, width: 96, borderRadius: 100, opacity: 0.18 }} />
-                  <div className="hh-sk" style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.18 }} />
+                  <div style={{ height: 10, width: 88, borderRadius: 100, opacity: 0.5, ...skStyle }} />
+                  <div style={{ height: 10, width: 96, borderRadius: 100, opacity: 0.5, ...skStyle }} />
+                  <div style={{ height: 10, width: 80, borderRadius: 100, opacity: 0.5, ...skStyle }} />
                 </div>
               </div>
             </div>
             {/* Parallelogram image area shimmer */}
             <div
-              className="hh-sk"
               style={{
                 position: "absolute",
                 bottom: 0, right: 0,
                 width: 800, height: 340,
                 clipPath: "path('M 800,0 L 66,0 L 0,340 L 800,340 Z')",
-                opacity: 0.14,
+                opacity: 0.5,
+                ...skStyle,
               }}
             />
           </div>
