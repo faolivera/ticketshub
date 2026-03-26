@@ -45,7 +45,9 @@ import type {
   GetPendingPaymentsResponse,
   ApprovePaymentRequest,
   ApprovePaymentResponse,
+  SetBuyerDeliveryEmailResponse,
 } from './transactions.api';
+import { SetBuyerDeliveryEmailSchema } from './transactions.api';
 import { ThrottleAuthenticated } from '../../common/throttler';
 
 @ThrottleAuthenticated()
@@ -289,6 +291,27 @@ export class TransactionsController {
       user.id,
       body.approved,
       body.rejectionReason,
+    );
+    return { success: true, data: transaction };
+  }
+
+  /**
+   * Set buyer delivery email (buyer only, PaymentReceived, locked after first set).
+   */
+  @Patch(':id/buyer-delivery-email')
+  @UseGuards(JwtAuthGuard)
+  async setBuyerDeliveryEmail(
+    @Context() ctx: Ctx,
+    @User() user: AuthenticatedUserPublicInfo,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ): Promise<ApiResponse<SetBuyerDeliveryEmailResponse>> {
+    const { email } = SetBuyerDeliveryEmailSchema.parse(body);
+    const transaction = await this.transactionsService.setBuyerDeliveryEmail(
+      ctx,
+      id,
+      user.id,
+      email,
     );
     return { success: true, data: transaction };
   }
