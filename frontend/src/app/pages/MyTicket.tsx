@@ -695,6 +695,12 @@ export function MyTicket() {
                   onCopyCbu={handleCopyCbu}
                   disputeId={transaction.disputeId}
                   onPaymentExpired={() => setIsPaymentExpiredLocally(true)}
+                  deliveryEmail={transaction.buyerDeliveryEmail}
+                  currentUserEmail={user?.email ?? ''}
+                  onConfirmDeliveryEmail={async (email: string) => {
+                    const updated = await transactionsService.setBuyerDeliveryEmail(transaction.id, email);
+                    setTransaction(updated);
+                  }}
                 />
               )}
               {isSeller && (

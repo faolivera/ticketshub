@@ -226,6 +226,9 @@ export interface BuyerActionBlockProps {
   onCopyCbu: (cbu: string) => void;
   disputeId: string | null | undefined;
   onPaymentExpired: () => void;
+  deliveryEmail: string | null;
+  currentUserEmail: string;
+  onConfirmDeliveryEmail: (email: string) => Promise<void>;
 }
 
 export interface SellerActionBlockProps {
