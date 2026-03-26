@@ -30,7 +30,7 @@ export class SsrController {
   ) {
     const baseUrl =
       this.configService.get<string>('app.publicUrl') || 'http://localhost:5173';
-    this.defaultOgImage = `${baseUrl.replace(/\/$/, '')}/assets/og-default.png`;
+    this.defaultOgImage = `${baseUrl.replace(/\/$/, '')}/assets/og-default.jpg`;
   }
 
   private baseUrl(): string {
