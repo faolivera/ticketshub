@@ -423,6 +423,9 @@ export class TransactionsRepository
     if (updates.cancelledAt !== undefined) {
       data.cancelledAt = updates.cancelledAt;
     }
+    if (updates.buyerDeliveryEmail !== undefined) {
+      data.buyerDeliveryEmail = updates.buyerDeliveryEmail;
+    }
     if (updates.refundedAt !== undefined) {
       data.refundedAt = updates.refundedAt;
     }
@@ -856,6 +859,7 @@ export class TransactionsRepository
         prismaTransaction.receiptProofOriginalFilename ?? undefined,
       updatedAt: prismaTransaction.updatedAt,
       version: prismaTransaction.version,
+      buyerDeliveryEmail: (prismaTransaction as { buyerDeliveryEmail?: string | null }).buyerDeliveryEmail ?? null,
     };
   }
 
