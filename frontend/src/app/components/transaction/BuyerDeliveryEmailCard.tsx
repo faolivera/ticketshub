@@ -56,14 +56,9 @@ export function BuyerDeliveryEmailCard({
         style={{ background: SUCCESS_LIGHT, borderColor: SUCCESS_BORDER, ...S }}
       >
         <Check className="mt-0.5 h-4 w-4 flex-shrink-0" style={{ color: SUCCESS }} />
-        <div>
-          <p className="text-sm font-semibold" style={{ color: SUCCESS }}>
-            {deliveryEmail}
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: MUTED }}>
-            {t('transaction.deliveryEmail.lockedHint')}
-          </p>
-        </div>
+        <p className="text-sm font-semibold" style={{ color: SUCCESS }}>
+          {deliveryEmail}
+        </p>
       </div>
     );
   }

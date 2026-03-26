@@ -85,7 +85,7 @@ function AppLayout() {
               <Route path="/bought-tickets" element={<Navigate to="/my-tickets" replace />} />
               <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboardPage /></ProtectedRoute>} />
               <Route path="/transaction/:transactionId" element={<ProtectedRoute><MyTicket /></ProtectedRoute>} />
-              <Route path="/edit-listing/:listingId" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
+              <Route path="/edit-listing/:listingId" element={<ProtectedRoute requiredLevel="Seller"><EditListing /></ProtectedRoute>} />
               <Route path="/sell-ticket" element={<ProtectedRoute><SellListingWizard /></ProtectedRoute>} />
               <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/verify-user" element={<ProtectedRoute><VerifyUserWizard /></ProtectedRoute>} />

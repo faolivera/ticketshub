@@ -1,4 +1,4 @@
-import { CARD, BORDER, V, S, R_CARD, R_BUTTON } from '@/lib/design-tokens';
+import { CARD, BORDER, V, S, E, R_CARD, R_BUTTON } from '@/lib/design-tokens';
 import type { EventCardProps } from './types';
 
 export function EventCard({
@@ -85,24 +85,14 @@ export function EventCard({
           </div>
           {/* Text details */}
           <div style={{ minWidth: 0 }}>
-            <p
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: '#fff',
-                lineHeight: 1.3,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
+            <p style={{ ...E, fontSize: 22, fontWeight: 400, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.2, marginBottom: 4 }}>
               {eventName}
             </p>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>
-              {eventDateLabel}
-            </p>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
               {venue}
+            </p>
+            <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.65)', marginBottom: 6 }}>
+              {eventDateLabel}
             </p>
             <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
               <span

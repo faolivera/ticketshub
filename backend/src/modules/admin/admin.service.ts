@@ -74,6 +74,7 @@ import type {
   ImportEventsResultResponse,
   ImportEventResultItem,
   ImportEventItem,
+  AdminTransactionChatMessagesResponse,
 } from './admin.api';
 import {
   EventDateStatus,
@@ -102,6 +103,7 @@ import {
   SupportTicketStatus,
   DisputeResolution,
 } from '../support/support.domain';
+import { TransactionChatService } from '../transaction-chat/transaction-chat.service';
 import type { SupportTicket, SupportMessage } from '../support/support.domain';
 import { CACHE_SERVICE, type ICacheService } from '../../common/cache';
 
@@ -133,6 +135,8 @@ export class AdminService {
     private readonly eventScoringService: EventScoringService,
     @Inject(CACHE_SERVICE)
     private readonly cache: ICacheService,
+    @Inject(TransactionChatService)
+    private readonly transactionChatService: TransactionChatService,
   ) {}
 
   async clearCache(ctx: Ctx): Promise<void> {
@@ -931,6 +935,13 @@ export class AdminService {
       transactionId,
       sortOrder,
     );
+  }
+
+  async getTransactionChatMessages(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<AdminTransactionChatMessagesResponse> {
+    return this.transactionChatService.getMessagesForAdmin(ctx, transactionId);
   }
 
   /**

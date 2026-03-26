@@ -9,11 +9,11 @@ import {
   E,
   SHADOW_CARD,
   SHADOW_HERO_CTA,
-  TRUST_ESCROW,
-  TRUST_VERIFIED,
-  AMBER_c1,
+  TRUST_ESCROW_LIGHT,
+  TRUST_VERIFIED_LIGHT,
+  TRUST_SUPPORT_LIGHT,
 } from "@/lib/design-tokens";
-import { Lock, CheckCircle, RefreshCw, LucideIcon } from "lucide-react";
+import { Lock, CheckCircle, MessageCircle, LucideIcon } from "lucide-react";
 import { PublicListEventItem } from "@/api/types/events";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -37,9 +37,9 @@ interface TrustItem {
 }
 
 const TRUST: TrustItem[] = [
-  { Icon: Lock,        label: "Fondos protegidos",      color: TRUST_ESCROW  },
-  { Icon: CheckCircle, label: "Vendedores verificados",  color: TRUST_VERIFIED },
-  { Icon: RefreshCw,   label: "Garantía de reembolso",   color: AMBER_c1      },
+  { Icon: CheckCircle,   label: "Vendedores verificados", color: TRUST_VERIFIED_LIGHT },
+  { Icon: Lock,          label: "Fondos protegidos",      color: TRUST_ESCROW_LIGHT   },
+  { Icon: MessageCircle, label: "Soporte por WhatsApp",   color: TRUST_SUPPORT_LIGHT  },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -499,7 +499,7 @@ export function HighlightedEventsHero({
           {/* 5 — Trust signals */}
           <div style={{ display: "flex", gap: 14, flexWrap: "nowrap", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
             {TRUST.map(({ Icon, label, color }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0, ...S, fontSize: 10, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0, ...S, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
                 <Icon size={11} color={color} strokeWidth={2.2} />
                 {label}
               </div>
@@ -743,7 +743,8 @@ export function HighlightedEventsHero({
                 <span
                   style={{
                     ...S,
-                    fontSize: 10,
+                    fontSize: 11,
+                    fontWeight: 600,
                     color: "rgba(255,255,255,0.55)",
                     whiteSpace: "nowrap",
                   }}

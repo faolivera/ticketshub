@@ -113,7 +113,7 @@ export class OTPService {
     if (type === OTPType.EmailVerification && destination) {
       const otpBodyHtml = `<div class="th-wrap">
   <div class="th-header">
-    <span class="th-logo-text">Tickets<span>Hub</span></span>
+    <img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" />
   </div>
   <div class="th-body">
     <div class="th-icon th-icon--neutral">&#128274;</div>

@@ -569,7 +569,7 @@ export default function TicketsHub() {
       {/* ══════ EVENTS GRID ══════ */}
       <div id="eventos" style={{ width:"100%", maxWidth:1280, margin:"0 auto", paddingLeft:24, paddingRight:24, paddingBottom:56, boxSizing:"border-box" }}>
         <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:10 }}>
-          <h2 style={{ ...E, fontSize:24, color:DARK, letterSpacing:"-0.3px" }}>{t("landing.eventsSectionTitle")}</h2>
+          <h2 style={{ ...S, fontSize:18, fontWeight:700, color:DARK }}>{t("landing.eventsSectionTitle")}</h2>
           {!isLoading && !error && <span style={{ color:MUTED, fontSize:13 }}>{filtered.length} evento{filtered.length !== 1 ? "s" : ""}</span>}
         </div>
 

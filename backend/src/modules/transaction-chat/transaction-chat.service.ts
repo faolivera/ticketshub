@@ -239,6 +239,23 @@ export class TransactionChatService {
     );
   }
 
+  /**
+   * Returns all messages for a transaction without user permission checks.
+   * For admin use only — caller must enforce authorization at the controller level.
+   */
+  async getMessagesForAdmin(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<GetTransactionChatMessagesResponse> {
+    const transaction = await this.transactionsService.findById(ctx, transactionId);
+    const entities = await this.chatRepository.findByTransaction(ctx, transactionId);
+    const buyerId = transaction?.buyerId ?? '';
+    const messages: TransactionChatMessageItem[] = entities.map((e) =>
+      this.toMessageItem(e, buyerId, ''),
+    );
+    return { messages };
+  }
+
   private toMessageItem(
     entity: TransactionChatMessageEntity,
     buyerId: string,

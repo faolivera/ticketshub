@@ -329,7 +329,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.ADMIN,
         titleTemplate: '{{buyerName}} envió un comprobante de pago para "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <span class="th-tag th-tag--info">Admin</span>
     <h1 class="th-title">Nuevo pago recibido</h1>
@@ -368,7 +368,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Tu pago para "{{eventName}}" fue confirmado',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#10003;</div>
     <h1 class="th-title">Tu pago fue confirmado</h1>
@@ -406,11 +406,11 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Pago recibido para "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#10003;</div>
     <h1 class="th-title">Pago recibido por {{eventName}}</h1>
-    <p class="th-text">Confirmamos el pago de {{ticketCount}} entrada(s) para <strong>{{eventName}}</strong>. Enviá las entradas lo antes posible para liberar los fondos.</p>
+    <p class="th-text">Confirmamos el pago de {{ticketCount}} entrada(s) para <strong>{{eventName}}</strong>. Enviá las entradas lo antes posible para continuar con la venta.</p>
     <div class="th-info-box">
       <div class="th-row"><span class="th-label">Monto a recibir</span><span class="th-value th-value--highlight">{{amountFormatted}}</span></div>
       <div class="th-row"><span class="th-label">ID de transacción</span><span class="th-value">{{transactionId}}</span></div>
@@ -443,7 +443,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Tu pago para "{{eventName}}" fue rechazado',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--danger">&#10005;</div>
     <h1 class="th-title">Hubo un problema con tu pago</h1>
@@ -482,7 +482,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: '¡Tu entrada para "{{eventName}}" está en camino!',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#127903;</div>
     <h1 class="th-title">Tus entradas están en camino</h1>
@@ -525,7 +525,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'El comprador confirmó recibir las entradas de "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#10003;</div>
     <h1 class="th-title">La entrega fue registrada</h1>
@@ -563,7 +563,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Venta completada - Fondos liberados',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#128248;</div>
     <h1 class="th-title">Tu pago fue acreditado</h1>
@@ -600,7 +600,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Transacción cancelada - "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--warning">&#33;</div>
     <h1 class="th-title">Tu transacción fue cancelada</h1>
@@ -639,7 +639,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Transacción cancelada - "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--warning">&#33;</div>
     <h1 class="th-title">Una de tus ventas fue cancelada</h1>
@@ -678,7 +678,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Disputa abierta - "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--warning">&#9888;</div>
     <h1 class="th-title">Se abrió una disputa en tu transacción</h1>
@@ -718,7 +718,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Disputa abierta - "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--warning">&#9888;</div>
     <h1 class="th-title">Se abrió una disputa en tu transacción</h1>
@@ -758,7 +758,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Disputa resuelta - "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--info">&#9878;</div>
     <h1 class="th-title">La disputa fue resuelta</h1>
@@ -798,7 +798,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Disputa resuelta - "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--info">&#9878;</div>
     <h1 class="th-title">La disputa fue resuelta</h1>
@@ -838,7 +838,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: '¡Tu identidad ha sido verificada!',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#10003;</div>
     <h1 class="th-title">Tu identidad fue verificada</h1>
@@ -871,7 +871,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Verificación de identidad rechazada',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--danger">&#10005;</div>
     <h1 class="th-title">No pudimos verificar tu identidad</h1>
@@ -911,7 +911,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.ADMIN,
         titleTemplate: 'Nueva solicitud de verificación de identidad',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <span class="th-tag th-tag--info">Admin</span>
     <h1 class="th-title">Nueva verificación de identidad</h1>
@@ -947,7 +947,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.ADMIN,
         titleTemplate: 'Nuevos datos bancarios para validar',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <span class="th-tag th-tag--info">Admin</span>
     <h1 class="th-title">Nueva cuenta bancaria para revisar</h1>
@@ -983,7 +983,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: '¡Verificación de vendedor completa!',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#9733;</div>
     <h1 class="th-title">Ya sos vendedor verificado</h1>
@@ -1017,7 +1017,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Tu evento "{{eventName}}" ha sido aprobado',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#10003;</div>
     <h1 class="th-title">Tu evento fue aprobado</h1>
@@ -1053,7 +1053,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Tu evento "{{eventName}}" fue rechazado',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--danger">&#10005;</div>
     <h1 class="th-title">Tu evento necesita cambios</h1>
@@ -1116,7 +1116,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'Nueva oferta en "{{eventName}}"',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--info">&#128172;</div>
     <h1 class="th-title">Recibiste una oferta</h1>
@@ -1158,7 +1158,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Tu oferta para "{{eventName}}" fue aceptada',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--success">&#10003;</div>
     <h1 class="th-title">Tu oferta fue aceptada</h1>
@@ -1197,7 +1197,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Tu oferta para "{{eventName}}" fue rechazada',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--neutral">&#8212;</div>
     <h1 class="th-title">Tu oferta no fue aceptada</h1>
@@ -1235,7 +1235,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Tu oferta para "{{eventName}}" ya no está disponible',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--neutral">&#8212;</div>
     <h1 class="th-title">La oferta fue cancelada</h1>
@@ -1273,7 +1273,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.BUYER,
         titleTemplate: 'Tu oferta para "{{eventName}}" expiró',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--neutral">&#9201;</div>
     <h1 class="th-title">Tu oferta venció</h1>
@@ -1311,7 +1311,7 @@ export class NotificationsSeeder implements OnModuleInit {
         recipientRole: NotificationRecipientRole.SELLER,
         titleTemplate: 'La oferta para "{{eventName}}" expiró sin concretarse',
         bodyTemplate: `<div class="th-wrap">
-  <div class="th-header"><span class="th-logo-text">Tickets<span>Hub</span></span></div>
+  <div class="th-header"><img class="logo-light" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_light.png" width="160" height="38" alt="TicketsHub" style="display:block;" /><img class="logo-dark" src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png" width="160" height="38" alt="TicketsHub" style="display:none;" /></div>
   <div class="th-body">
     <div class="th-icon th-icon--neutral">&#9201;</div>
     <h1 class="th-title">Una oferta venció sin completarse</h1>

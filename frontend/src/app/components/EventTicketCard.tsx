@@ -117,7 +117,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
           <span style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>ARS</span>
         </div>
         <p style={{ fontSize: 11.5, color: MUTED, marginTop: 6 }}>
-          Precio base ${price} · +{maxTotalCommissionPercent ?? 10}% comisión incluida
+          Precio ${price} · +{maxTotalCommissionPercent ?? 10}% comisión incluida
         </p>
       </div>
 

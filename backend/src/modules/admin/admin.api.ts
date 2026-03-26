@@ -153,6 +153,9 @@ export interface AdminUpdateEventRequest {
   isPopular?: boolean;
   /** Set as featured (shown in landing hero). */
   highlight?: boolean;
+  ticketApp?: string;
+  transferable?: boolean;
+  artists?: string[];
   dates?: AdminEventDateUpdate[];
   datesToDelete?: string[]; // IDs of dates to remove
 }
@@ -450,6 +453,23 @@ export interface AdminTransactionAuditLogsResponse {
   transactionId: string;
   total: number;
   items: AdminTransactionAuditLogEntry[];
+}
+
+export type AdminChatSenderRole = 'buyer' | 'seller';
+export type AdminChatMessageType = 'text' | 'delivery';
+
+export interface AdminTransactionChatMessageItem {
+  id: string;
+  senderId: string;
+  senderRole: AdminChatSenderRole;
+  content: string;
+  messageType: AdminChatMessageType;
+  payloadType?: string | null;
+  createdAt: Date;
+}
+
+export interface AdminTransactionChatMessagesResponse {
+  messages: AdminTransactionChatMessageItem[];
 }
 
 /**

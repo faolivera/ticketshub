@@ -22,8 +22,7 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
 
     /* Header */
     .th-header { padding: 24px 32px 20px; border-bottom: 1px solid #e5e7eb; }
-    .th-logo-text { font-size: 17px; font-weight: 600; color: #262626; letter-spacing: -0.02em; }
-    .th-logo-text span { color: #692dd4; }
+
 
     /* Body */
     .th-body { padding: 32px 32px 24px; }
@@ -83,6 +82,7 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
       display: inline-block;
       background-color: #692dd4;
       color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff;
       font-family: 'Outfit', system-ui, -apple-system, sans-serif;
       font-size: 14px;
       font-weight: 600;
@@ -92,7 +92,7 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
       letter-spacing: 0.01em;
       margin: 4px;
     }
-    .th-btn--secondary { background-color: transparent; color: #262626 !important; border: 1px solid #e5e7eb; }
+    .th-btn--secondary { background-color: transparent; color: #262626 !important; -webkit-text-fill-color: #262626; border: 1px solid #e5e7eb; }
 
     /* Tag */
     .th-tag { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 4px; margin-bottom: 16px; }
@@ -108,6 +108,11 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
     .th-footer p:last-child { margin-bottom: 0; }
     .th-footer a { color: #9ca3af; text-decoration: underline; }
     .th-footer-brand { font-size: 13px !important; font-weight: 600; color: #5c5c58 !important; margin-bottom: 8px !important; }
+
+    @media (prefers-color-scheme: dark) {
+      .logo-light { display: none !important; }
+      .logo-dark  { display: block !important; }
+    }
   </style>
 
   <!--[if mso]><table width="100%" bgcolor="#f2f2f2"><tr><td align="center" style="padding:24px 16px;"><table width="560" bgcolor="#ffffff"><tr><td><![endif]-->
@@ -135,7 +140,10 @@ const WRAPPER_TEMPLATE = `<!DOCTYPE html>
 export function wrapEmail(bodyHtml: string): {html: string, text: string} {
   const html = WRAPPER_TEMPLATE.replace('__CONTENT__', bodyHtml);
   return {
-    html: juice(html),
+    html: juice(html, {
+      preserveMediaQueries: true, // ← esto es clave
+      removeStyleTags: false,
+    }),
     text: htmlToPlainText(html)
   }
 }

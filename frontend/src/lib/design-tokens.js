@@ -43,10 +43,15 @@ export const AMBER_TEXT_DARK = "#78350f";
 
 export const TRUST_ESCROW = "#4f46e5";
 export const TRUST_ESCROW_BG = "#eef2ff";
+export const TRUST_ESCROW_LIGHT = "#818cf8";   // for use on dark backgrounds
 export const TRUST_VERIFIED = "#0f766e";
 export const TRUST_VERIFIED_BG = "#f0fdfa";
+export const TRUST_VERIFIED_LIGHT = "#2dd4bf"; // for use on dark backgrounds
 /** Teal accent border for verified trust chips */
 export const TRUST_VERIFIED_BORDER = "#99f6e4";
+export const TRUST_SUPPORT = "#2563eb";
+export const TRUST_SUPPORT_BG = "#eff6ff";
+export const TRUST_SUPPORT_LIGHT = "#60a5fa";  // for use on dark backgrounds
 
 export const ERROR = "#b91c1c";
 export const ERROR_DARK = "#991b1b";

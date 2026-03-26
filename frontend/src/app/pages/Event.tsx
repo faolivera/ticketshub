@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   MapPin, CheckCircle, ChevronDown, ArrowLeft, ArrowRight,
-  Lock, RefreshCw,
+  Lock, MessageCircle,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ticketsService } from "@/api/services/tickets.service";
@@ -17,6 +17,7 @@ import {
   SURFACE_STICKY, SHADOW_DROP, BG,
   SUCCESS, SUCCESS_LIGHT, SUCCESS_BORDER,
   R_HERO, R_CARD, R_BUTTON, R_INPUT,
+  TRUST_ESCROW_LIGHT, TRUST_VERIFIED_LIGHT, TRUST_SUPPORT_LIGHT,
 } from "@/lib/design-tokens";
 import type { PublicListEventItem } from "@/api/types/events";
 import type { ListingWithSeller } from "@/api/types/tickets";
@@ -524,7 +525,7 @@ export default function EventDetail() {
                 fontSize: 11, fontWeight: 700,
                 letterSpacing: "0.07em", textTransform: "uppercase",
               }}>
-                {EVENT.category}
+                {t(`eventCategories.${EVENT.category}`)}
               </span>
             </div>
 
@@ -589,11 +590,11 @@ export default function EventDetail() {
             {/* Trust micro-signals */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
               {[
-                { icon: <Lock size={12} style={{ color: "#a78bfa" }} />, text: "Fondos protegidos" },
-                { icon: <CheckCircle size={12} style={{ color: "#a78bfa" }} />, text: "Vendedores verificados" },
-                { icon: <RefreshCw size={12} style={{ color: "#a78bfa" }} />, text: "Reembolso garantizado" },
+                { icon: <Lock          size={11} color={TRUST_ESCROW_LIGHT}   strokeWidth={2.2} />, text: "Fondos protegidos"      },
+                { icon: <CheckCircle   size={11} color={TRUST_VERIFIED_LIGHT} strokeWidth={2.2} />, text: "Vendedores verificados" },
+                { icon: <MessageCircle size={11} color={TRUST_SUPPORT_LIGHT}  strokeWidth={2.2} />, text: "Soporte por WhatsApp"   },
               ].map(({ icon, text }) => (
-                <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+                <div key={text} style={{ ...S, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)" }}>
                   {icon} {text}
                 </div>
               ))}
@@ -604,7 +605,7 @@ export default function EventDetail() {
         {/* ── Listing header ── */}
         <div ref={ticketsRef} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
           <div>
-            <h2 style={{ ...E, fontSize: 24, fontWeight: 400, color: DARK, letterSpacing: "-0.3px" }}>
+            <h2 style={{ ...S, fontSize: 18, fontWeight: 700, color: DARK }}>
               Entradas disponibles
             </h2>
             <p style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>

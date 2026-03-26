@@ -17,6 +17,7 @@ import type {
   AdminTransactionsQuery,
   AdminTransactionsResponse,
   AdminTransactionAuditLogsResponse,
+  AdminTransactionChatMessagesResponse,
   AdminTransactionDetailResponse,
   AdminUpdateTransactionRequest,
   AdminTransactionsPendingSummaryResponse,
@@ -317,6 +318,18 @@ export const adminService = {
     const response = await apiClient.get<AdminTransactionAuditLogsResponse>(
       `/admin/transactions/${transactionId}/audit-logs`,
       { params: { order } },
+    );
+    return response.data;
+  },
+
+  /**
+   * Get chat messages for a transaction (admin bypass).
+   */
+  async getTransactionChatMessages(
+    transactionId: string,
+  ): Promise<AdminTransactionChatMessagesResponse> {
+    const response = await apiClient.get<AdminTransactionChatMessagesResponse>(
+      `/admin/transactions/${transactionId}/chat-messages`,
     );
     return response.data;
   },

@@ -351,13 +351,25 @@ describe('BffService', () => {
     it('should include payment confirmation for bank transfer transactions', async () => {
       const bankTransferTransaction: TransactionWithDetails = {
         ...mockTransactionWithDetails,
-        paymentMethodId: 'bank_transfer',
+        paymentMethodId: 'pm_bank_transfer_123',
         status: TransactionStatus.PendingPayment,
       };
 
       transactionsService.getTransactionById.mockResolvedValue(
         bankTransferTransaction,
       );
+      paymentMethodsService.findById.mockResolvedValue({
+        id: 'pm_bank_transfer_123',
+        name: 'Bank Transfer',
+        publicName: 'Bank Transfer',
+        type: 'manual_approval',
+        status: 'enabled',
+        visible: true,
+        buyerCommissionPercent: null,
+        bankTransferConfig: { cbu: '123', accountHolderName: 'Test', bankName: 'Test Bank', cuitCuil: '20-1234-5' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
       paymentConfirmationsService.getConfirmationByTransaction.mockResolvedValue(
         mockPaymentConfirmation,
       );
@@ -378,13 +390,25 @@ describe('BffService', () => {
     it('should return null paymentConfirmation when none exists', async () => {
       const bankTransferTransaction: TransactionWithDetails = {
         ...mockTransactionWithDetails,
-        paymentMethodId: 'bank_transfer',
+        paymentMethodId: 'pm_bank_transfer_123',
         status: TransactionStatus.PendingPayment,
       };
 
       transactionsService.getTransactionById.mockResolvedValue(
         bankTransferTransaction,
       );
+      paymentMethodsService.findById.mockResolvedValue({
+        id: 'pm_bank_transfer_123',
+        name: 'Bank Transfer',
+        publicName: 'Bank Transfer',
+        type: 'manual_approval',
+        status: 'enabled',
+        visible: true,
+        buyerCommissionPercent: null,
+        bankTransferConfig: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
       paymentConfirmationsService.getConfirmationByTransaction.mockRejectedValue(
         new NotFoundException('Not found'),
       );

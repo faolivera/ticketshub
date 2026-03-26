@@ -4,7 +4,7 @@
     "defaultDescription": "Buy and sell event tickets with buyer protection. Find tickets for concerts, sports, and more.",
     "landing": {
       "title": "TicketsHub – Buy and Sell Tickets Securely",
-      "description": "Find tickets for concerts, sports, and events with buyer protection. Secure escrow keeps both buyers and sellers safe."
+      "description": "Find tickets for concerts, sports, and events with buyer protection. Our payment protection keeps both buyers and sellers safe."
     },
     "login": {
       "title": "Sign In | TicketsHub",
@@ -16,7 +16,7 @@
     },
     "howItWorks": {
       "title": "How It Works | TicketsHub",
-      "description": "Learn how our secure escrow system protects both buyers and sellers throughout the entire ticket transaction."
+      "description": "Learn how our payment protection system keeps buyers and sellers safe throughout every transaction."
     },
     "contact": {
       "title": "Contact Us | TicketsHub",
@@ -78,6 +78,15 @@
     "goHome": "Go to home",
     "browseEvents": "Browse events",
     "hint": "Check the URL or use the links above to get back on track."
+  },
+  "eventCategories": {
+    "Concert": "Concert",
+    "Sports": "Sports",
+    "Theater": "Theater",
+    "Festival": "Festival",
+    "Conference": "Conference",
+    "Comedy": "Comedy",
+    "Other": "Other"
   },
   "landing": {
     "title": "Buy and Sell Tickets",
@@ -456,7 +465,10 @@
     "inactiveWarning": "This listing will be hidden from buyers. Activate it to make it available for purchase.",
     "errorLoading": "Failed to load listing. Please try again.",
     "cancelListing": "Cancel Listing",
-    "cancelListingConfirm": "Are you sure you want to cancel this listing? This action cannot be undone."
+    "cancelListingConfirm": "Are you sure you want to cancel this listing? This action cannot be undone.",
+    "saveFailed": "Failed to save. Please try again.",
+    "versionConflict": "This listing was updated from another session. Reload to see the latest version before saving.",
+    "reloadListing": "Reload"
   },
   "chat": {
     "online": "Online",
@@ -505,7 +517,7 @@
     "errorLoading": "Failed to load wallet. Please try again.",
     "availableBalance": "Available Balance",
     "readyToWithdraw": "Ready to withdraw",
-    "inEscrow": "In escrow",
+    "inEscrow": "Protected payment",
     "availablePlusPending": "Available + Pending",
     "pendingBalance": "Pending Balance",
     "totalBalance": "Total Balance",
@@ -609,17 +621,17 @@
   },
   "howItWorks": {
     "title": "How It Works",
-    "subtitle": "Our secure escrow system protects both buyers and sellers throughout the entire transaction",
+    "subtitle": "Our payment protection system keeps both buyers and sellers safe throughout the entire transaction",
     "trustMessage": "Buy and Sell with Complete Peace of Mind",
     "trustDesc": "Your payment is securely held until the ticket is confirmed and the event takes place. Both parties are protected every step of the way.",
     "step1Title": "Buyer Pays",
-    "step1Desc": "You securely pay for the ticket. Your payment is held safely in escrow.",
-    "step1Note": "Money is protected in our secure escrow system",
+    "step1Desc": "You securely pay for the ticket. Your payment is held securely until you receive the ticket.",
+    "step1Note": "Money is held securely until ticket is confirmed",
     "step2Title": "Seller Transfers Ticket",
     "step2Desc": "Seller transfers the ticket to you and confirms the transfer in the system.",
     "step2Note": "Seller must confirm transfer before payment is released",
     "step3Title": "Buyer Confirms Receipt",
-    "step3Desc": "You confirm receiving the ticket. Funds remain in escrow until event day.",
+    "step3Desc": "You confirm receiving the ticket. Funds remain protected until event day.",
     "step3Note": "Payment held securely until event completion",
     "step4Title": "Payment Released",
     "step4Desc": "After the event, you have 3 days to dispute. If no issues, seller gets paid.",
@@ -630,7 +642,7 @@
     "timelineConfirmation": "Confirmation",
     "timelineEvent": "Event + 3 Days",
     "timelineCompletion": "Completion",
-    "timelineEscrow": "Payment in escrow",
+    "timelineEscrow": "Protected payment",
     "timelineDelivered": "Ticket delivered",
     "timelineAwaiting": "Awaiting event date",
     "timelineDispute": "Dispute window",
@@ -1047,7 +1059,7 @@
       "buyerTicketArrivedSubtitle": "{{name}} transferred your ticket. Confirm receipt when you have it.",
       "buyerConfirmReceiptTitle": "Confirm you received the ticket",
       "buyerConfirmReceiptSubtitle": "{{name}} already sent it. Review and confirm receipt to release the payment.",
-      "buyerEscrowTitle": "Receipt confirmed — protected funds",
+      "buyerEscrowTitle": "Receipt confirmed — payment protected",
       "buyerEscrowSubtitle": "Funds are released to the seller after the event. You can still report a problem if needed.",
       "buyerReleasingTitle": "Releasing funds",
       "buyerReleasingSubtitle": "The payout to the seller is being processed.",
@@ -1063,7 +1075,7 @@
       "sellerTransferTitle": "Payment confirmed — transfer the ticket",
       "sellerTransferSubtitle": "{{name}} paid. Send the ticket using the buyer's contact details.",
       "sellerAwaitConfirmTitle": "Waiting for buyer confirmation",
-      "sellerEscrowHoldTitle": "Protected funds — release pending",
+      "sellerEscrowHoldTitle": "Payment protected — release pending",
       "sellerAwaitConfirmSubtitle": "{{name}} must confirm receipt. Your funds are protected.",
       "sellerReleasingTitle": "Releasing your payout",
       "sellerReleasingSubtitle": "Your payout is being processed.",
@@ -1076,7 +1088,7 @@
       "sentAsLabel": "You sent as:"
     },
     "confirmReceiptWarning": "By confirming, you acknowledge you received the ticket. This cannot be undone.",
-    "confirmReceiptEscrowNote": "Funds stay protected until {{date}} — they are not released to the seller yet.",
+    "confirmReceiptEscrowNote": "Payment stays protected until {{date}} — it is not released to the seller yet.",
     "paymentInfoBuyerFeeDetail": "Percentage of subtotal",
     "cancelled": {
       "BuyerCancelled": "You cancelled this transaction",
@@ -2231,7 +2243,6 @@
         "name": "Event Name",
         "slug": "URL slug",
         "slugHint": "Used in /event/{{slug}}. Lowercase letters, numbers and hyphens only. Only admins can change it.",
-        "description": "Description",
         "category": "Category",
         "venue": "Venue",
         "isPopular": "Popular event",
@@ -2260,7 +2271,13 @@
         "saveSection": "Save Section",
         "sectionAddError": "Failed to add section",
         "sectionUpdateError": "Failed to update section",
-        "sectionDeleteError": "Failed to delete section (section may have listings)"
+        "sectionDeleteError": "Failed to delete section (section may have listings)",
+        "ticketApp": "Ticket App",
+        "ticketAppPlaceholder": "entradas, movistararena...",
+        "transferable": "Transferable",
+        "artists": "Artists",
+        "addArtist": "Add",
+        "artistPlaceholder": "Artist name..."
       },
       "allEvents": {
         "title": "All Events",
@@ -2425,13 +2442,19 @@
       "copied": "Copied!",
       "edit": "Edit",
       "logs": "Logs",
-      "auditLogsTitle": "Audit logs",
+      "auditLogsTitle": "Transaction history",
       "auditLogsEmpty": "No audit logs for this transaction",
       "auditActionCreated": "Created",
       "auditActionUpdated": "Updated",
       "auditBy": "Changed by",
       "auditViewPayload": "View full payload (JSON)",
       "auditPayloadNoDetails": "No payload details",
+      "auditPayloadTitle": "Changes",
+      "tabAuditLogs": "Audit logs",
+      "tabChat": "Chat",
+      "chatEmpty": "No messages in this transaction",
+      "chatBuyer": "Buyer",
+      "chatSeller": "Seller",
       "editTransaction": "Edit Transaction",
       "actions": "Actions",
       "save": "Save",

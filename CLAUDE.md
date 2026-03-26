@@ -98,6 +98,25 @@ this.logger.error(ON_APP_INIT_CTX, 'message', error);
 - Every `try/catch` that handles an error MUST log it. Never silently swallow errors.
 - Exception: `console.log`/`console.error` is acceptable in scripts (`scripts/`) before `process.exit`.
 
+### Prisma migrations (critical)
+
+**Always use `prisma migrate dev` to create and apply migrations.** Never create migration files manually and never use `prisma generate` alone — it only regenerates the TypeScript client from the schema, it does NOT apply SQL to the database.
+
+```bash
+# ✅ Correct: creates the SQL file AND applies it to the DB AND regenerates the client
+npx prisma migrate dev --name describe_the_change
+
+# ❌ Wrong: only regenerates the TypeScript client, DB is untouched
+npx prisma generate
+
+# ❌ Wrong: tells Prisma "I already applied this" but the SQL was never run
+npx prisma migrate resolve --applied <migration_name>
+```
+
+**`prisma migrate resolve --applied` is only for when the SQL was already run manually on the DB first.** Using it before running the SQL will cause runtime errors (`The column "(not available)" does not exist`) that unit tests won't catch because they mock the repository.
+
+**If `prisma migrate dev` fails due to a shadow database error**, fix the underlying shadow DB issue — do not work around it with `resolve --applied`. The shadow DB validates migrations; bypassing it hides real problems.
+
 ### Raw SQL with Prisma (critical)
 
 Column names in `$queryRaw`/`$executeRaw` must match **actual DB column names**, not Prisma field names.

@@ -1120,6 +1120,9 @@ export class EventsService {
     if (data.highlight !== undefined) {
       eventUpdates.highlight = data.highlight;
     }
+    if (data.ticketApp !== undefined) eventUpdates.ticketApp = data.ticketApp;
+    if (data.transferable !== undefined) eventUpdates.transferable = data.transferable;
+    if (data.artists !== undefined) eventUpdates.artists = data.artists;
 
     if (Object.keys(eventUpdates).length > 0) {
       const result = await this.eventsRepository.updateEvent(

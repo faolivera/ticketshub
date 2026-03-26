@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build landing image (amd64 for Lightsail), then tag and push to ghcr.io.
-# Run from repo root: npm run landing:publish
+# Run from repo root: pnpm run landing:publish
 # Requires: docker login ghcr.io
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

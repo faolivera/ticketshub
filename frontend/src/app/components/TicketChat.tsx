@@ -193,7 +193,7 @@ export function TicketChat({
   // Desktop: floating panel bottom-right.
   const containerClass =
     'fixed overflow-hidden flex flex-col bg-white ' +
-    'inset-0 md:inset-auto md:bottom-4 md:right-4 md:w-[380px] md:max-h-[90vh] md:rounded-2xl md:shadow-2xl ' +
+    'bottom-0 left-0 right-0 h-[50dvh] rounded-t-2xl md:h-auto md:inset-auto md:bottom-4 md:right-4 md:w-[380px] md:max-h-[90vh] md:rounded-2xl md:shadow-2xl ' +
     'z-[9999]';
   const containerStyle: React.CSSProperties = {};
 
@@ -247,12 +247,13 @@ export function TicketChat({
               e.stopPropagation();
               onClose();
             }}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded transition-colors flex items-center gap-1.5"
-          >
-            {isMobile
-              ? <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span className="text-sm font-semibold">Cerrar</span></>
-              : <X className="w-4 h-4" />
+            className={
+              isMobile
+                ? 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors bg-white text-purple-700 hover:bg-gray-100'
+                : 'p-1.5 hover:bg-white hover:bg-opacity-20 rounded transition-colors flex items-center gap-1.5'
             }
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>

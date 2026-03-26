@@ -47,6 +47,7 @@ import type {
   AdminTransactionsResponse,
   AdminTransactionsPendingSummaryResponse,
   AdminTransactionAuditLogsResponse,
+  AdminTransactionChatMessagesResponse,
   AdminTransactionDetailResponse,
   AdminUpdateTransactionRequest,
   AdminUserSearchResponse,
@@ -89,6 +90,7 @@ import {
   AdminTransactionsResponseSchema,
   AdminTransactionsPendingSummaryResponseSchema,
   AdminTransactionAuditLogsResponseSchema,
+  AdminTransactionChatMessagesResponseSchema,
   AdminTransactionDetailResponseSchema,
   AdminUserSearchResponseSchema,
   AdminSellerPayoutsResponseSchema,
@@ -288,6 +290,16 @@ export class AdminController {
     @Query('order') order?: string,
   ): Promise<ApiResponse<AdminTransactionAuditLogsResponse>> {
     const data = await this.adminService.getTransactionAuditLogs(ctx, id, order);
+    return { success: true, data };
+  }
+
+  @Get('transactions/:id/chat-messages')
+  @ValidateResponse(AdminTransactionChatMessagesResponseSchema)
+  async getTransactionChatMessages(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+  ): Promise<ApiResponse<AdminTransactionChatMessagesResponse>> {
+    const data = await this.adminService.getTransactionChatMessages(ctx, id);
     return { success: true, data };
   }
 

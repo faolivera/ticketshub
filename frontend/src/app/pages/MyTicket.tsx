@@ -581,9 +581,7 @@ export function MyTicket() {
   );
   const paymentMethodDisplay =
     paymentMethodPublicName ??
-    (transaction.paymentMethodId?.includes('bank_transfer')
-      ? t('myTicket.bankTransfer')
-      : transaction.paymentMethodId ?? null);
+    (bankTransferConfig ? t('myTicket.bankTransfer') : transaction.paymentMethodId ?? null);
 
   return (
     <>
@@ -698,8 +696,8 @@ export function MyTicket() {
                   deliveryEmail={transaction.buyerDeliveryEmail}
                   currentUserEmail={user?.email ?? ''}
                   onConfirmDeliveryEmail={async (email: string) => {
-                    const updated = await transactionsService.setBuyerDeliveryEmail(transaction.id, email);
-                    setTransaction(updated);
+                    await transactionsService.setBuyerDeliveryEmail(transaction.id, email);
+                    setTransaction((prev) => prev ? { ...prev, buyerDeliveryEmail: email } : prev);
                   }}
                 />
               )}
@@ -1400,7 +1398,7 @@ export function MyTicket() {
           transactionId={transaction.id}
           currentUserRole={isBuyer ? 'buyer' : 'seller'}
           counterpartName={isBuyer ? transaction.sellerName : transaction.buyerName}
-          counterpartImage=""
+          counterpartImage={(isBuyer ? transaction.sellerPic : transaction.buyerPic) ?? ''}
           counterpartRating={0}
           counterpartLevel={1}
           ticketTitle={`${transaction.eventName} - ${transaction.ticketType}`}

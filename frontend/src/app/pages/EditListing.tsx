@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, Ticket, Save, Eye, EyeOff, Loader2, Trash2, MapPin, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ticketsService } from '../../api/services/tickets.service';
+import type { ApiError } from '../../api/client';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import type { TicketListingWithEvent } from '../../api/types';
@@ -48,13 +49,13 @@ export function EditListing() {
   const [bestOfferMinPrice,  setBestOfferMinPrice]  = useState('');
   const [isSaving,           setIsSaving]           = useState(false);
   const [isCancelling,       setIsCancelling]       = useState(false);
+  const [isVersionConflict,  setIsVersionConflict]  = useState(false);
   // Inline cancel confirmation — replaces browser confirm()
   const [showCancelConfirm,  setShowCancelConfirm]  = useState(false);
 
-  useEffect(() => {
-    if (!listingId) return;
-    setIsLoading(true); setError(null);
-    ticketsService.getListing(listingId)
+  const loadListing = (id: string) => {
+    setIsLoading(true); setError(null); setIsVersionConflict(false);
+    ticketsService.getListing(id)
       .then(data => {
         setListing(data);
         setPrice(Math.floor(data.pricePerTicket.amount / 100).toString());
@@ -67,6 +68,12 @@ export function EditListing() {
       })
       .catch(() => setError(t('editListing.errorLoading')))
       .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    if (!listingId) return;
+    loadListing(listingId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listingId, t]);
 
   const handleSave = async () => {
@@ -91,7 +98,13 @@ export function EditListing() {
       });
       navigate('/seller-dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('editListing.saveFailed'));
+      const apiErr = err as ApiError;
+      if (apiErr?.statusCode === 409 && apiErr?.code === 'OPTIMISTIC_LOCK_CONFLICT') {
+        setIsVersionConflict(true);
+        setError(t('editListing.versionConflict'));
+      } else {
+        setError(apiErr?.message ?? t('editListing.saveFailed'));
+      }
     } finally { setIsSaving(false); }
   };
 
@@ -147,7 +160,19 @@ export function EditListing() {
         {error && (
           <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: R_INPUT, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
             <AlertTriangle size={15} style={{ color: '#dc2626', flexShrink: 0 }} />
-            <p style={{ fontSize: 13.5, color: '#dc2626', ...S }}>{error}</p>
+            <p style={{ flex: 1, fontSize: 13.5, color: '#dc2626', ...S }}>{error}</p>
+            {isVersionConflict && listingId && (
+              <button
+                onClick={() => loadListing(listingId)}
+                style={{
+                  flexShrink: 0, fontSize: 13, fontWeight: 700, color: '#dc2626',
+                  background: 'transparent', border: '1.5px solid #fca5a5',
+                  borderRadius: R_BUTTON, padding: '5px 12px', cursor: 'pointer', ...S,
+                }}
+              >
+                {t('editListing.reloadListing')}
+              </button>
+            )}
           </div>
         )}
 

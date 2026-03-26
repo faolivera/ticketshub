@@ -8,7 +8,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TAG="${1:-ticketshub-lightsail:latest}"
 cd "$REPO_ROOT"
 echo "Building backend (required for image)..."
-(cd backend && npm run build)
+(cd backend && pnpm run build)
 # Set BUILD_PLATFORM=linux/amd64 for Lightsail (x86). Use linux/arm64 for ARM instances.
 # Set REGISTRY_CACHE_REF (e.g. ghcr.io/owner/ticketshub-lightsail:buildcache) to use registry cache in CI.
 if [[ -n "${BUILD_PLATFORM}" ]] && docker buildx version &>/dev/null; then

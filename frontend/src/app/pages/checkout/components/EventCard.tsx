@@ -3,7 +3,7 @@ import { Check, Minus, Plus, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { BuyPageData, TicketUnit } from "@/api/types";
 import {
-  V, VLIGHT, DARK, MUTED, HINT, CARD, BORDER, BORD2, GREEN, GLIGHT, S, R_CARD, R_BUTTON,
+  V, VLIGHT, DARK, MUTED, HINT, CARD, BORDER, BORD2, GREEN, GLIGHT, S, E, R_CARD, R_BUTTON,
 } from "@/lib/design-tokens";
 
 interface EventCardProps {
@@ -63,7 +63,7 @@ export const EventCard: FC<EventCardProps> = ({
   return (
     <div style={card}>
       {/* Hero banner section */}
-      <div style={{ position: "relative", height: 120, overflow: "hidden" }}>
+      <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
         <div
           style={{
             position: "absolute",
@@ -94,15 +94,15 @@ export const EventCard: FC<EventCardProps> = ({
             zIndex: 2,
             height: "100%",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-end",
             gap: 14,
-            padding: "0 20px",
+            padding: "0 20px 18px",
           }}
         >
           <div
             style={{
-              width: 100,
-              height: 100,
+              height: "calc(100% - 28px)",
+              aspectRatio: "1 / 1",
               borderRadius: R_BUTTON,
               background: V,
               display: "flex",
@@ -123,26 +123,14 @@ export const EventCard: FC<EventCardProps> = ({
               "🎫"
             )}
           </div>
-          <div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ ...E, fontSize: 22, fontWeight: 400, color: "#fff", letterSpacing: "-0.3px", lineHeight: 1.2, marginBottom: 4 }}>
               {listing.eventName}
             </p>
-            <p
-              style={{
-                fontSize: 12,
-                color: "rgba(255,255,255,0.55)",
-                marginTop: 2,
-              }}
-            >
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 2 }}>
               {listing.venue}
             </p>
-            <p
-              style={{
-                fontSize: 12,
-                color: "rgba(255,255,255,0.55)",
-                marginTop: 2,
-              }}
-            >
+            <p style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)" }}>
               {eventDateFormatted}
             </p>
           </div>

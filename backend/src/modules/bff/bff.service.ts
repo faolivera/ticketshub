@@ -571,10 +571,32 @@ export class BffService {
       throw new ForbiddenException('Access denied');
     }
 
+    let bankTransferConfig = null;
+    let paymentMethodPublicName: string | null = null;
+    let isManualPaymentMethod = false;
+    if (transaction.paymentMethodId) {
+      try {
+        const paymentMethod = await this.paymentMethodsService.findById(
+          ctx,
+          transaction.paymentMethodId,
+        );
+        paymentMethodPublicName = paymentMethod?.publicName ?? null;
+        isManualPaymentMethod = paymentMethod?.type === 'manual_approval';
+        if (isBuyer && isManualPaymentMethod) {
+          bankTransferConfig = paymentMethod.bankTransferConfig ?? null;
+        }
+      } catch (error) {
+        this.logger.warn(
+          ctx,
+          'getTransactionDetails: failed to load payment method',
+          error,
+        );
+      }
+    }
+
     let paymentConfirmation = null;
     const shouldShowPaymentConfirmation =
-      transaction.paymentMethodId?.includes('bank_transfer') &&
-      (isBuyer || isAdmin);
+      isManualPaymentMethod && (isBuyer || isAdmin);
     if (shouldShowPaymentConfirmation) {
       try {
         paymentConfirmation =
@@ -608,27 +630,6 @@ export class BffService {
         this.logger.warn(
           ctx,
           'getTransactionDetails: failed to load reviews',
-          error,
-        );
-      }
-    }
-
-    let bankTransferConfig = null;
-    let paymentMethodPublicName: string | null = null;
-    if (transaction.paymentMethodId) {
-      try {
-        const paymentMethod = await this.paymentMethodsService.findById(
-          ctx,
-          transaction.paymentMethodId,
-        );
-        paymentMethodPublicName = paymentMethod?.publicName ?? null;
-        if (isBuyer && paymentMethod?.type === 'manual_approval') {
-          bankTransferConfig = paymentMethod.bankTransferConfig ?? null;
-        }
-      } catch (error) {
-        this.logger.warn(
-          ctx,
-          'getTransactionDetails: failed to load payment method',
           error,
         );
       }

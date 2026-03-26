@@ -6,24 +6,24 @@
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS frontend
 WORKDIR /app/frontend
-
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci 2>/dev/null || npm install
+RUN corepack enable
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY frontend/ ./
-RUN npm run build
+RUN pnpm run build
 
 # -----------------------------------------------------------------------------
 # Stage 2: Backend (production deps only; dist is built on host)
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS backend
 WORKDIR /app/backend
-
-COPY backend/package.json backend/package-lock.json* ./
-RUN npm ci --omit=dev 2>/dev/null || npm install --omit=dev
+RUN corepack enable
+COPY backend/package.json backend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 
 COPY backend/ ./
-RUN npx prisma generate
+RUN pnpm exec prisma generate
 # Backend dist is included via COPY backend/ (build.sh runs `npm run build` in backend first to avoid OOM in Docker)
 
 # -----------------------------------------------------------------------------

@@ -131,7 +131,6 @@ export interface AdminEventDateUpdate {
  */
 export interface AdminUpdateEventRequest {
   name?: string;
-  description?: string;
   category?: EventCategory;
   venue?: string;
   location?: Address;
@@ -139,6 +138,9 @@ export interface AdminUpdateEventRequest {
   isPopular?: boolean;
   /** Set as featured (shown in landing hero). */
   highlight?: boolean;
+  ticketApp?: string;
+  transferable?: boolean;
+  artists?: string[];
   dates?: AdminEventDateUpdate[];
   datesToDelete?: string[];
 }
@@ -392,6 +394,23 @@ export interface AdminTransactionAuditLogsResponse {
   transactionId: string;
   total: number;
   items: AdminTransactionAuditLogEntry[];
+}
+
+export type AdminChatSenderRole = 'buyer' | 'seller';
+export type AdminChatMessageType = 'text' | 'delivery';
+
+export interface AdminTransactionChatMessageItem {
+  id: string;
+  senderId: string;
+  senderRole: AdminChatSenderRole;
+  content: string;
+  messageType: AdminChatMessageType;
+  payloadType?: string | null;
+  createdAt: string;
+}
+
+export interface AdminTransactionChatMessagesResponse {
+  messages: AdminTransactionChatMessageItem[];
 }
 
 /**

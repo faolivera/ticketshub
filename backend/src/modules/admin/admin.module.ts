@@ -12,6 +12,7 @@ import { SupportModule } from '../support/support.module';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 import { EventScoringModule } from '../event-scoring/event-scoring.module';
 import { CacheModule } from '../../common/cache';
+import { TransactionChatModule } from '../transaction-chat/transaction-chat.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CacheModule } from '../../common/cache';
     IdentityVerificationModule,
     SupportModule,
     CacheModule,
+    TransactionChatModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

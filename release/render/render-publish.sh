@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Interactive wrapper: prompt for version/tag, then run publish.sh.
-# Run from repo root: npm run render:publish
+# Run from repo root: pnpm run render:publish
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"

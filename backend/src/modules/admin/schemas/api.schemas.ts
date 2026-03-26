@@ -120,7 +120,6 @@ export const AdminUpdateEventRequestSchema = z.object({
       'Slug must be lowercase letters, numbers, and hyphens only',
     )
     .optional(),
-  description: z.string().min(10).max(5000).optional(),
   category: z
     .enum([
       'Concert',
@@ -136,6 +135,9 @@ export const AdminUpdateEventRequestSchema = z.object({
   location: AdminEventAddressSchema.optional(),
   imageIds: z.array(z.string()).optional(),
   isPopular: z.boolean().optional(),
+  ticketApp: z.string().optional(),
+  transferable: z.boolean().optional(),
+  artists: z.array(z.string()).optional(),
   dates: z.array(AdminEventDateUpdateSchema).optional(),
   datesToDelete: z.array(z.string()).optional(),
 });
@@ -372,6 +374,20 @@ export const AdminTransactionAuditLogsResponseSchema = z.object({
   transactionId: z.string(),
   total: z.number(),
   items: z.array(AdminTransactionAuditLogEntrySchema),
+});
+
+export const AdminTransactionChatMessageItemSchema = z.object({
+  id: z.string(),
+  senderId: z.string(),
+  senderRole: z.enum(['buyer', 'seller']),
+  content: z.string(),
+  messageType: z.enum(['text', 'delivery']),
+  payloadType: z.string().nullable().optional(),
+  createdAt: z.coerce.date(),
+});
+
+export const AdminTransactionChatMessagesResponseSchema = z.object({
+  messages: z.array(AdminTransactionChatMessageItemSchema),
 });
 
 const AdminSellerPayoutTicketLineSchema = z.object({

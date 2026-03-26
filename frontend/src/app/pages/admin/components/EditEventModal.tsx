@@ -11,7 +11,6 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Textarea } from '@/app/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -34,6 +33,7 @@ import {
   Pencil,
   Image as ImageIcon,
   Upload,
+  X,
 } from 'lucide-react';
 import { adminService } from '@/api/services/admin.service';
 import { EventBanner } from '@/app/components/EventBanner';
@@ -101,7 +101,6 @@ export function EditEventModal({
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  const [description, setDescription] = useState('');
   const [category, setCategory] = useState<EventCategory>(EventCategory.Other);
   const [venue, setVenue] = useState('');
   const [location, setLocation] = useState<Address>({
@@ -112,6 +111,10 @@ export function EditEventModal({
   const [dates, setDates] = useState<DateFormState[]>([]);
   const [sections, setSections] = useState<SectionFormState[]>([]);
   const [isPopular, setIsPopular] = useState(false);
+  const [ticketApp, setTicketApp] = useState('');
+  const [transferable, setTransferable] = useState<boolean | undefined>(undefined);
+  const [artists, setArtists] = useState<string[]>([]);
+  const [newArtist, setNewArtist] = useState('');
   const [saving, setSaving] = useState(false);
   const [sectionActionLoading, setSectionActionLoading] = useState<string | null>(null);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -138,7 +141,6 @@ export function EditEventModal({
     if (event && open) {
       setName(event.name);
       setSlug(event.slug ?? '');
-      setDescription(event.description);
       setCategory(event.category);
       setVenue(event.venue);
       setLocation(event.location || { line1: '', city: '', countryCode: '' });
@@ -163,6 +165,10 @@ export function EditEventModal({
         }))
       );
       setIsPopular(event.isPopular ?? false);
+      setTicketApp(event.ticketApp ?? '');
+      setTransferable(event.transferable ?? undefined);
+      setArtists(event.artists ?? []);
+      setNewArtist('');
       setBannerUrls(event.bannerUrls || {});
       setError(null);
       setWarnings([]);
@@ -382,11 +388,13 @@ export function EditEventModal({
       const request: AdminUpdateEventRequest = {
         name,
         ...(slug.trim() && { slug: slug.trim() }),
-        description,
         category,
         venue,
         location,
         isPopular,
+        ...(ticketApp.trim() && { ticketApp: ticketApp.trim() }),
+        ...(transferable !== undefined && { transferable }),
+        artists,
         dates: datesToUpdate,
         datesToDelete: datesToDelete.length > 0 ? datesToDelete : undefined,
       };
@@ -426,7 +434,7 @@ export function EditEventModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 gap-0 max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="!max-w-[90vw] p-0 gap-0 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle>{t('admin.events.edit.title')}</DialogTitle>
           <DialogDescription>
@@ -435,9 +443,9 @@ export function EditEventModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 min-h-0">
-          <div className="space-y-6 pb-4">
+          <div className="pb-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mb-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>{t('common.error')}</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
@@ -445,7 +453,7 @@ export function EditEventModal({
             )}
 
             {warnings.length > 0 && (
-              <Alert>
+              <Alert className="mb-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>{t('admin.events.edit.warnings')}</AlertTitle>
                 <AlertDescription>
@@ -458,6 +466,8 @@ export function EditEventModal({
               </Alert>
             )}
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -502,31 +512,20 @@ export function EditEventModal({
                       <SelectContent>
                         {Object.values(EventCategory).map((cat) => (
                           <SelectItem key={cat} value={cat}>
-                            {cat}
+                            {t(`eventCategories.${cat}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">{t('admin.events.edit.description')}</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="venue">{t('admin.events.edit.venue')}</Label>
-                  <Input
-                    id="venue"
-                    value={venue}
-                    onChange={(e) => setVenue(e.target.value)}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="venue">{t('admin.events.edit.venue')}</Label>
+                    <Input
+                      id="venue"
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -542,6 +541,7 @@ export function EditEventModal({
 
                 <div className="space-y-3">
                   <Label>{t('admin.events.edit.location')}</Label>
+
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="street" className="text-xs text-muted-foreground">
@@ -605,9 +605,227 @@ export function EditEventModal({
                     </div>
                   </div>
                 </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="ticketApp">{t('admin.events.edit.ticketApp')}</Label>
+                    <Input
+                      id="ticketApp"
+                      value={ticketApp}
+                      onChange={(e) => setTicketApp(e.target.value)}
+                      placeholder={t('admin.events.edit.ticketAppPlaceholder')}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Checkbox
+                      id="transferable"
+                      checked={transferable === true}
+                      onCheckedChange={(checked) =>
+                        setTransferable(checked === true ? true : undefined)
+                      }
+                    />
+                    <Label htmlFor="transferable" className="cursor-pointer font-normal">
+                      {t('admin.events.edit.transferable')}
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t('admin.events.edit.artists')}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newArtist}
+                      onChange={(e) => setNewArtist(e.target.value)}
+                      placeholder={t('admin.events.edit.artistPlaceholder')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const trimmed = newArtist.trim();
+                          if (trimmed && !artists.includes(trimmed)) {
+                            setArtists([...artists, trimmed]);
+                            setNewArtist('');
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const trimmed = newArtist.trim();
+                        if (trimmed && !artists.includes(trimmed)) {
+                          setArtists([...artists, trimmed]);
+                          setNewArtist('');
+                        }
+                      }}
+                    >
+                      {t('admin.events.edit.addArtist')}
+                    </Button>
+                  </div>
+                  {artists.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {artists.map((artist) => (
+                        <span
+                          key={artist}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-sm"
+                        >
+                          {artist}
+                          <button
+                            type="button"
+                            onClick={() => setArtists(artists.filter((a) => a !== artist))}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {t('admin.events.edit.eventDates')}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={handleAddDate}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    {t('admin.events.edit.addDate')}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {visibleDates.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {t('admin.events.noEvents')}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {dates.map((dateItem, index) => {
+                      if (dateItem.isDeleted) return null;
+
+                      return (
+                        <div
+                          key={dateItem.id || `new-${index}`}
+                          className="border rounded-lg p-4 space-y-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {dateItem.isNew ? (
+                                <Badge variant="secondary">New</Badge>
+                              ) : (
+                                <Badge variant={getStatusBadgeVariant(dateItem.status)}>
+                                  {dateItem.status}
+                                </Badge>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleRemoveDate(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('admin.events.edit.date')}
+                              </Label>
+                              <Input
+                                type="date"
+                                value={dateItem.date}
+                                onChange={(e) =>
+                                  handleDateChange(index, 'date', e.target.value)
+                                }
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('admin.events.edit.time')}
+                              </Label>
+                              <Input
+                                type="time"
+                                value={dateItem.time}
+                                onChange={(e) =>
+                                  handleDateChange(index, 'time', e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+
+                          {!dateItem.isNew && (
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('admin.events.edit.status')}
+                              </Label>
+                              <Select
+                                value={dateItem.status}
+                                onValueChange={(value) =>
+                                  handleDateChange(index, 'status', value)
+                                }
+                              >
+                                <SelectTrigger className="w-full sm:w-48">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.values(EventDateStatus).map((status) => (
+                                    <SelectItem key={status} value={status}>
+                                      {status}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {deletedDates.length > 0 && (
+                  <div className="border-t pt-4 mt-4">
+                    <p className="text-sm font-medium text-muted-foreground mb-2">
+                      {t('admin.events.edit.confirmDeleteDate')}
+                    </p>
+                    <div className="space-y-2">
+                      {dates.map((dateItem, index) => {
+                        if (!dateItem.isDeleted) return null;
+
+                        return (
+                          <div
+                            key={dateItem.id}
+                            className="flex items-center justify-between p-2 bg-muted/50 rounded"
+                          >
+                            <span className="text-sm line-through text-muted-foreground">
+                              {dateItem.date}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRestoreDate(index)}
+                            >
+                              {t('common.cancel')}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            </div>
+
+            <div className="space-y-6">
             {/* Event Banners Card */}
             <Card>
               <CardHeader>
@@ -863,144 +1081,6 @@ export function EditEventModal({
               <CardHeader>
                 <CardTitle className="text-base flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {t('admin.events.edit.eventDates')}
-                  </span>
-                  <Button size="sm" variant="outline" onClick={handleAddDate}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    {t('admin.events.edit.addDate')}
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {visibleDates.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('admin.events.noEvents')}
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {dates.map((dateItem, index) => {
-                      if (dateItem.isDeleted) return null;
-
-                      return (
-                        <div
-                          key={dateItem.id || `new-${index}`}
-                          className="border rounded-lg p-4 space-y-3"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {dateItem.isNew ? (
-                                <Badge variant="secondary">New</Badge>
-                              ) : (
-                                <Badge variant={getStatusBadgeVariant(dateItem.status)}>
-                                  {dateItem.status}
-                                </Badge>
-                              )}
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleRemoveDate(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">
-                                {t('admin.events.edit.date')}
-                              </Label>
-                              <Input
-                                type="date"
-                                value={dateItem.date}
-                                onChange={(e) =>
-                                  handleDateChange(index, 'date', e.target.value)
-                                }
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">
-                                {t('admin.events.edit.time')}
-                              </Label>
-                              <Input
-                                type="time"
-                                value={dateItem.time}
-                                onChange={(e) =>
-                                  handleDateChange(index, 'time', e.target.value)
-                                }
-                              />
-                            </div>
-                          </div>
-
-                          {!dateItem.isNew && (
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">
-                                {t('admin.events.edit.status')}
-                              </Label>
-                              <Select
-                                value={dateItem.status}
-                                onValueChange={(value) =>
-                                  handleDateChange(index, 'status', value)
-                                }
-                              >
-                                <SelectTrigger className="w-full sm:w-48">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Object.values(EventDateStatus).map((status) => (
-                                    <SelectItem key={status} value={status}>
-                                      {status}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {deletedDates.length > 0 && (
-                  <div className="border-t pt-4 mt-4">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">
-                      {t('admin.events.edit.confirmDeleteDate')}
-                    </p>
-                    <div className="space-y-2">
-                      {dates.map((dateItem, index) => {
-                        if (!dateItem.isDeleted) return null;
-
-                        return (
-                          <div
-                            key={dateItem.id}
-                            className="flex items-center justify-between p-2 bg-muted/50 rounded"
-                          >
-                            <span className="text-sm line-through text-muted-foreground">
-                              {dateItem.date}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleRestoreDate(index)}
-                            >
-                              {t('common.cancel')}
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center justify-between">
-                  <span className="flex items-center gap-2">
                     <Layers className="h-4 w-4" />
                     {t('admin.events.edit.eventSections')}
                   </span>
@@ -1198,6 +1278,8 @@ export function EditEventModal({
                 )}
               </CardContent>
             </Card>
+            </div>
+            </div>
           </div>
         </div>
 
