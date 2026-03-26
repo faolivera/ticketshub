@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type {
   Transaction,
   TransactionWithDetails,
@@ -124,3 +125,11 @@ export interface ApprovePaymentRequest {
  * Response after payment approval action
  */
 export type ApprovePaymentResponse = Transaction;
+
+export const SetBuyerDeliveryEmailSchema = z.object({
+  email: z.string().email().max(254),
+});
+
+export type SetBuyerDeliveryEmailRequest = z.infer<typeof SetBuyerDeliveryEmailSchema>;
+
+export type SetBuyerDeliveryEmailResponse = TransactionWithDetails;
