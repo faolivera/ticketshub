@@ -39,7 +39,7 @@ interface TrustItem {
 const TRUST: TrustItem[] = [
   { Icon: CheckCircle,   label: "Vendedores verificados", color: TRUST_VERIFIED_LIGHT },
   { Icon: Lock,          label: "Fondos protegidos",      color: TRUST_ESCROW_LIGHT   },
-  { Icon: MessageCircle, label: "Soporte por WhatsApp",   color: TRUST_SUPPORT_LIGHT  },
+  { Icon: MessageCircle, label: "Soporte por WhatsApp",       color: TRUST_SUPPORT_LIGHT  },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────

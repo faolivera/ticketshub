@@ -570,7 +570,7 @@ export default function TicketsHub() {
       <div id="eventos" style={{ width:"100%", maxWidth:1280, margin:"0 auto", paddingLeft:24, paddingRight:24, paddingBottom:56, boxSizing:"border-box" }}>
         <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:10 }}>
           <h2 style={{ ...S, fontSize:18, fontWeight:700, color:DARK }}>{t("landing.eventsSectionTitle")}</h2>
-          {!isLoading && !error && <span style={{ color:MUTED, fontSize:13 }}>{filtered.length} evento{filtered.length !== 1 ? "s" : ""}</span>}
+          {!isLoading && !error && <span style={{ color:MUTED, fontSize:13 }}>{t("landing.eventsCount", { count: filtered.length })}</span>}
         </div>
 
         {error ? (
@@ -584,7 +584,7 @@ export default function TicketsHub() {
         ) : filtered.length === 0 ? (
           <div style={{ textAlign:"center", padding:"56px 0", color:MUTED }}>
             <Search size={32} style={{ margin:"0 auto 12px", opacity:0.3, display:"block" }} />
-            <p style={{ fontSize:14 }}>{query.trim() ? "No encontramos eventos con esa búsqueda." : "No hay eventos disponibles."}</p>
+            <p style={{ fontSize:14 }}>{query.trim() ? t("landing.noEventsSearch") : t("landing.noEventsAvailable")}</p>
           </div>
         ) : (
           <>
@@ -691,6 +691,7 @@ interface EventCardProps {
 }
 
 function EventCard({ event, index, hovered, onHover }: EventCardProps) {
+  const { t } = useTranslation();
   const dates = event.dates || [];
   const multi = dates.length > 1;
   const S2: CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
@@ -742,13 +743,13 @@ function EventCard({ event, index, hovered, onHover }: EventCardProps) {
 
           {multi && (
             <div style={{ position: "absolute", top: 9, right: 9, background: OVERLAY_V_STRONG, backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 700, color: "white", ...S2 }}>
-              {dates.length} fechas
+              {t("landing.cardDatesCount", { count: dates.length })}
             </div>
           )}
 
           {!event.badge && event.available != null && (
             <div style={{ position: "absolute", bottom: 8, right: 9, background: OVERLAY_DARK_45, backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 600, color: "white", ...S2 }}>
-              {event.available} disponibles
+              {t("landing.cardAvailable", { count: event.available })}
             </div>
           )}
         </div>
@@ -764,7 +765,7 @@ function EventCard({ event, index, hovered, onHover }: EventCardProps) {
           <div style={{ marginBottom: 11, display: "flex", alignItems: "center", gap: 6, minHeight: 20 }}>
             <Calendar size={13} style={{ color: MUTED, flexShrink: 0 }} strokeWidth={2} />
             <span style={{ fontSize: 12, color: MUTED, lineHeight: 1.4, ...S2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={datesLabel}>
-              {dates.length === 0 ? "Fecha por confirmar" : datesLabel}
+              {dates.length === 0 ? t("landing.dateTBD") : datesLabel}
             </span>
           </div>
 
@@ -787,7 +788,7 @@ function EventCard({ event, index, hovered, onHover }: EventCardProps) {
                     letterSpacing: "0.04em",
                   }}
                 >
-                  Precio final desde
+                  {t("landing.cardPriceFrom")}
                 </div>
                 <div style={{ fontSize: 17, fontWeight: 800, color: V, lineHeight: 1, ...S2 }}>
                   ${event.price}
@@ -812,7 +813,7 @@ function EventCard({ event, index, hovered, onHover }: EventCardProps) {
                 ...S2,
               }}
             >
-              Ver →
+              {t("landing.cardView")} →
             </span>
           </div>
         </div>

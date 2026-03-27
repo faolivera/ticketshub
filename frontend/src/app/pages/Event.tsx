@@ -22,7 +22,7 @@ import {
 import type { PublicListEventItem } from "@/api/types/events";
 import type { ListingWithSeller } from "@/api/types/tickets";
 
-const SORTS: string[] = ["Precio: menor a mayor", "Precio: mayor a menor", "Solo verificados"];
+// Sort labels are derived inside the component via t() — see SORTS useMemo
 const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
 
 function formatPrice(amountCents: number): string {
@@ -82,6 +82,8 @@ interface BuildResult {
 function buildEventAndTickets(
   apiEvent: PublicListEventItem | null,
   listings: ListingWithSeller[],
+  defaultSectionName: string,
+  defaultSellerName: string,
 ): BuildResult {
   if (!apiEvent) return { event: null, tickets: [] };
   const approvedDates = (apiEvent.dates || []).filter((d) => d.status === "approved");
@@ -122,7 +124,7 @@ function buildEventAndTickets(
     const available = listing.ticketUnits?.filter((u) => u.status === "available").length ?? 0;
     const priceCents = listing.pricePerTicket?.amount ?? 0;
     const priceNum = priceCents / 100;
-    const sectionName = listing.sectionName || listing.type || "Entrada";
+    const sectionName = listing.sectionName || listing.type || defaultSectionName;
     const badges = listing.sellerReputation?.badges || [];
     const verified = badges.some((b) => String(b).toLowerCase().includes("verif") || String(b).toLowerCase() === "verified");
     const seated = listing.seatingType === "numbered";
@@ -141,7 +143,7 @@ function buildEventAndTickets(
       priceNum,
       maxTotalCommissionPercent: listing.maxTotalCommissionPercent ?? 10,
       currency: listing.pricePerTicket?.currency || "ARS",
-      seller: listing.sellerPublicName || "Vendedor",
+      seller: listing.sellerPublicName || defaultSellerName,
       sellerId: listing.sellerId,
       sellerAvatarUrl: listing.sellerPic?.src ?? null,
       sellerTotalSales: listing.sellerReputation?.totalSales ?? 0,
@@ -161,8 +163,15 @@ function buildEventAndTickets(
 export default function EventDetail() {
   const { t } = useTranslation();
   const { eventSlug } = useParams<{ eventSlug: string }>();
+
+  const SORTS: string[] = useMemo(() => [
+    t("event.sortPriceLowHigh"),
+    t("event.sortPriceHighLow"),
+    t("event.sortVerifiedOnly"),
+  ], [t]);
+
   const [dateIdx, setDateIdx] = useState<number>(0);
-  const [sector, setSector] = useState<string>("Todos");
+  const [sector, setSector] = useState<string>("");
   const [sortIdx, setSortIdx] = useState<number>(0);
   const [dateOpen, setDateOpen] = useState<boolean>(false);
   const [sticky, setSticky] = useState<boolean>(false);
@@ -226,8 +235,8 @@ export default function EventDetail() {
   }, []);
 
   const { event: EVENT, tickets: allTickets } = useMemo(
-    () => buildEventAndTickets(apiEvent, listings),
-    [apiEvent, listings]
+    () => buildEventAndTickets(apiEvent, listings, t("event.defaultSectionName"), t("event.defaultSellerName")),
+    [apiEvent, listings, t]
   );
 
   const activeDate = EVENT?.dates?.[dateIdx];
@@ -240,11 +249,11 @@ export default function EventDetail() {
 
   const sectorsList = useMemo(() => {
     const sectors = [...new Set(ticketsForDate.map((t) => t.sector))].filter(Boolean).sort();
-    return ["Todos", ...sectors];
+    return ["", ...sectors];
   }, [ticketsForDate]);
 
   const filteredBySector = useMemo(() => {
-    if (sector === "Todos") return ticketsForDate;
+    if (sector === "") return ticketsForDate;
     return ticketsForDate.filter((t) => t.sector === sector);
   }, [ticketsForDate, sector]);
 
@@ -267,7 +276,7 @@ export default function EventDetail() {
   }, [sorted]);
 
   const sectorMin = (s: string): number | null => {
-    const list = s === "Todos" ? sorted : sorted.filter((t) => t.sector === s);
+    const list = s === "" ? sorted : sorted.filter((t) => t.sector === s);
     if (!list.length) return null;
     return Math.min(...list.map((t) => Math.round(t.priceNum * (1 + t.maxTotalCommissionPercent / 100))));
   };
@@ -374,7 +383,7 @@ export default function EventDetail() {
         <div style={{ maxWidth: 1280, margin: "0 auto", textAlign: "center", padding: "48px 24px" }}>
           <p style={{ color: "#b91c1c", fontSize: 16 }}>{error || t("eventTickets.eventNotFound")}</p>
           <Link to="/" style={{ display: "inline-block", marginTop: 12, color: V, fontWeight: 600, ...S }}>
-            ← Volver
+            ← {t("event.goBack")}
           </Link>
         </div>
       </div>
@@ -464,7 +473,7 @@ export default function EventDetail() {
                     <button key={d.id} type="button" onClick={() => { setDateIdx(i); setDateOpen(false); }}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "10px 14px", background: dateIdx === i ? VLIGHT : "white", border: "none", cursor: "pointer", fontSize: 13, fontWeight: dateIdx === i ? 600 : 400, color: dateIdx === i ? V : DARK, ...S }}
                     >
-                      {d.label} <span style={{ fontSize: 11.5, color: MUTED }}>{d.count} entradas</span>
+                      {d.label} <span style={{ fontSize: 11.5, color: MUTED }}>{t("event.ticketsCount", { count: d.count })}</span>
                       {dateIdx === i && <CheckCircle size={13} style={{ color: V }} />}
                     </button>
                   ))}
@@ -473,10 +482,10 @@ export default function EventDetail() {
             </div>
           </div>
           <div className="sticky-price-cta" style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-            <span style={{ fontSize: 13, color: MUTED }}>Desde (c/comisión)</span>
+            <span style={{ fontSize: 13, color: MUTED }}>{t("event.fromWithCommission")}</span>
             <span style={{ fontSize: 17, fontWeight: 800, color: V }}>{fmt(minPriceWithFees)}</span>
             <button type="button" onClick={scrollToTickets} style={{ padding: "7px 16px", borderRadius: R_BUTTON, background: V, border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, ...S }}>
-              Ver entradas <ArrowRight size={13} />
+              {t("event.viewTickets")} <ArrowRight size={13} />
             </button>
           </div>
         </div>
@@ -555,7 +564,7 @@ export default function EventDetail() {
               ) : (
               <>
               <p style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, color: "rgba(255,255,255,0.45)", marginBottom: 9, ...S }}>
-                Seleccioná una fecha
+                {t("event.selectADate")}
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                 {EVENT.dates.map((d, i) => (
@@ -583,16 +592,16 @@ export default function EventDetail() {
             {/* Stock summary — replaces "Ver entradas" CTA */}
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 20 }}>
               {activeDate?.count > 0
-                ? `${totalTickets} entradas disponibles en ${activeDate.count} publicaciones · desde ${fmt(minPriceWithFees)} ARS (precio final c/comisión)`
-                : "Sin entradas disponibles por ahora"}
+                ? t("event.stockSummary", { tickets: totalTickets, listings: activeDate.count, price: fmt(minPriceWithFees) })
+                : t("event.noTicketsNow")}
             </p>
 
             {/* Trust micro-signals */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
               {[
-                { icon: <Lock          size={11} color={TRUST_ESCROW_LIGHT}   strokeWidth={2.2} />, text: "Fondos protegidos"      },
-                { icon: <CheckCircle   size={11} color={TRUST_VERIFIED_LIGHT} strokeWidth={2.2} />, text: "Vendedores verificados" },
-                { icon: <MessageCircle size={11} color={TRUST_SUPPORT_LIGHT}  strokeWidth={2.2} />, text: "Soporte por WhatsApp"   },
+                { icon: <Lock          size={11} color={TRUST_ESCROW_LIGHT}   strokeWidth={2.2} />, text: t("event.trustFundsProtected")      },
+                { icon: <CheckCircle   size={11} color={TRUST_VERIFIED_LIGHT} strokeWidth={2.2} />, text: t("event.trustVerifiedSellers") },
+                { icon: <MessageCircle size={11} color={TRUST_SUPPORT_LIGHT}  strokeWidth={2.2} />, text: t("event.trustWhatsAppSupport")       },
               ].map(({ icon, text }) => (
                 <div key={text} style={{ ...S, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)" }}>
                   {icon} {text}
@@ -606,14 +615,16 @@ export default function EventDetail() {
         <div ref={ticketsRef} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
           <div>
             <h2 style={{ ...S, fontSize: 18, fontWeight: 700, color: DARK }}>
-              Entradas disponibles
+              {t("event.availableTickets")}
             </h2>
             <p style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>
-              {activeDate ? `${activeDate.full} · ${sorted.length} opciones` : `${sorted.length} entradas`}
+              {activeDate
+                ? t("event.dateAndOptions", { date: activeDate.full, count: sorted.length })
+                : t("event.ticketCount", { count: sorted.length })}
             </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 13, color: MUTED, fontWeight: 500, whiteSpace: "nowrap" }}>Ordenar</span>
+            <span style={{ fontSize: 13, color: MUTED, fontWeight: 500, whiteSpace: "nowrap" }}>{t("event.sortLabel")}</span>
             <select className="sort-sel" value={sortIdx} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortIdx(Number(e.target.value))}>
               {SORTS.map((s, i) => <option key={i} value={i}>{s}</option>)}
             </select>
@@ -626,9 +637,9 @@ export default function EventDetail() {
             {sectorsList.map((s) => {
               const min = sectorMin(s);
               return (
-                <button key={s} type="button" className={`sec-pill${sector === s ? " active" : ""}`} onClick={() => setSector(s)}>
-                  {s}
-                  {min != null && s !== "Todos" && (
+                <button key={s || "__all__"} type="button" className={`sec-pill${sector === s ? " active" : ""}`} onClick={() => setSector(s)}>
+                  {s === "" ? t("event.allSectors") : s}
+                  {min != null && s !== "" && (
                     <span style={{ fontSize: 11, fontWeight: 600, opacity: sector === s ? 0.85 : 0.65 }}>{fmt(min)}</span>
                   )}
                 </button>
@@ -665,10 +676,10 @@ export default function EventDetail() {
         }}>
           <div>
             <p style={{ ...E, fontSize: 18, letterSpacing: "-0.3px", color: DARK, marginBottom: 4 }}>
-              ¿Tenés entradas para este evento?
+              {t("event.sellBannerTitle")}
             </p>
             <p style={{ fontSize: 13, color: MUTED }}>
-              Publicá en minutos y llegá a miles de compradores.
+              {t("event.sellBannerSubtitle")}
             </p>
           </div>
           <Link
@@ -688,7 +699,7 @@ export default function EventDetail() {
             onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.background = "#f0ebff")}
             onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.background = "transparent")}
           >
-            Publicar mi entrada →
+            {t("event.sellBannerCta")} →
           </Link>
         </div>}
       </div>

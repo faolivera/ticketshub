@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { HubSVG, ShieldSVG } from "./SiteBrandIcons";
 import {
   V,
@@ -17,6 +18,7 @@ import {
 
 /** Global site footer (non-admin routes). */
 export function AppFooter(): JSX.Element {
+  const { t } = useTranslation();
   return (
     <footer style={{ background: DARK, color: FOOTER_MUTED, padding: "40px 24px 26px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
@@ -46,61 +48,61 @@ export function AppFooter(): JSX.Element {
               <span style={{ ...E, fontSize: 16, color: "white" }}>TicketsHub</span>
             </div>
             <p style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 180 }}>
-              El marketplace de reventa de entradas más confiable de Argentina.
+              {t("footer.tagline")}
             </p>
           </div>
           <div>
-            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>Plataforma</div>
+            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>{t("footer.platform")}</div>
             <Link
               to="/"
               style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
-              Explorar eventos
+              {t("footer.exploreEvents")}
             </Link>
             <Link
               to="/sell-ticket"
               style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
-              Vender entradas
+              {t("footer.sellTickets")}
             </Link>
             <Link
               to="/how-it-works"
               style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
-              Cómo funciona
+              {t("footer.howItWorks")}
             </Link>
           </div>
           <div>
-            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>Soporte</div>
+            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>{t("footer.support")}</div>
             <Link
               to="/support"
               style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
-              Centro de ayuda
+              {t("footer.helpCenter")}
             </Link>
             <Link
               to="/contact"
               style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
-              Contacto
+              {t("footer.contact")}
             </Link>
             <Link
               to="/how-it-works"
               style={{ display: "block", fontSize: 13, marginBottom: 7, color: FOOTER_LINK, textDecoration: "none" }}
             >
-              Garantías
+              {t("footer.guarantees")}
             </Link>
           </div>
           <div>
-            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>Legal</div>
-            <span style={{ display: "block", fontSize: 13, marginBottom: 7, cursor: "pointer" }}>Términos de uso</span>
-            <span style={{ display: "block", fontSize: 13, marginBottom: 7, cursor: "pointer" }}>Privacidad</span>
-            <span style={{ display: "block", fontSize: 13, marginBottom: 7, cursor: "pointer" }}>Cookies</span>
+            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 11 }}>{t("footer.legal")}</div>
+            <span style={{ display: "block", fontSize: 13, marginBottom: 7, cursor: "pointer" }}>{t("footer.termsOfUse")}</span>
+            <span style={{ display: "block", fontSize: 13, marginBottom: 7, cursor: "pointer" }}>{t("footer.privacy")}</span>
+            <span style={{ display: "block", fontSize: 13, marginBottom: 7, cursor: "pointer" }}>{t("footer.cookies")}</span>
           </div>
           <div>
-            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 9 }}>¿Tenés entradas?</div>
+            <div style={{ color: "white", fontWeight: 600, fontSize: 12.5, marginBottom: 9 }}>{t("footer.ctaHeading")}</div>
             <p style={{ fontSize: 13, marginBottom: 13, lineHeight: 1.55 }}>
-              Publicá y llegá a miles de compradores activos.
+              {t("footer.ctaDescription")}
             </p>
             <Link
               to="/sell-ticket"
@@ -120,7 +122,7 @@ export function AppFooter(): JSX.Element {
                 ...S,
               }}
             >
-              Publicá tus entradas <ArrowRight size={13} />
+              {t("footer.ctaButton")} <ArrowRight size={13} />
             </Link>
           </div>
         </div>
@@ -135,10 +137,10 @@ export function AppFooter(): JSX.Element {
             justifyContent: "space-between",
           }}
         >
-          <p style={{ fontSize: 12 }}>© {new Date().getFullYear()} TicketsHub · Buenos Aires, Argentina</p>
+          <p style={{ fontSize: 12 }}>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
           <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12 }}>
             <ShieldSVG size={11} color={V_SOFT} />
-            <span style={{ color: FOOTER_CAPTION }}>Transacciones con fondos protegidos</span>
+            <span style={{ color: FOOTER_CAPTION }}>{t("footer.escrowBadge")}</span>
           </div>
         </div>
       </div>

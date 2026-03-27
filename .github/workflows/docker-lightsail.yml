@@ -1,10 +1,18 @@
-# Build TicketsHub Docker image for AWS Lightsail (linux/amd64) and push to GHCR.
+# Build TicketsHub Docker image for AWS Lightsail (linux/amd64), push to GHCR, and deploy.
 # TLS/SSL for ticketshub.shop, ticketshub.com.ar, ticketshub.ar via Caddy in the image.
 # Trigger: manual only (workflow_dispatch).
+#
+# Required secrets:
+#   LIGHTSAIL_HOST       Public IP of the Lightsail instance.
+#   LIGHTSAIL_USER       SSH user (e.g. ubuntu).
+#   LIGHTSAIL_SSH_KEY    Private key (PEM) for SSH access.
 #
 # If push fails with "permission_denied: write_package":
 # - Repo in org: Settings → Actions → General → Workflow permissions → "Read and write permissions".
 # - Or add a PAT with write:packages as repo secret GHCR_TOKEN (used below when set).
+#
+# The deploy script (release/lightsail/deploy-on-server.sh) must exist on the server at
+# ~/ticketshub/release/lightsail/ and ~/ticketshub.env must contain the app secrets.
 name: Docker image – Lightsail (linux/amd64)
 
 on:
@@ -69,3 +77,20 @@ jobs:
           docker push "${IMAGE}:latest"
           docker tag "${IMAGE}:latest" "${IMAGE}:sha-${{ github.sha }}"
           docker push "${IMAGE}:sha-${{ github.sha }}"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Lightsail via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script_stop: true
+          script: |
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
+            cd ~/ticketshub/release/lightsail
+            ENV_FILE=~/ticketshub.env ./deploy-on-server.sh "${{ github.repository_owner }}"

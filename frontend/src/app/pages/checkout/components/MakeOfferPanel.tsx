@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { RotateCcw, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   V, DARK, MUTED, HINT, BORDER,
   AMBER_BG_LIGHT, AMBER_TEXT_DARK,
@@ -66,6 +67,7 @@ export function MakeOfferPanel({
   listingCurrency,
 }: MakeOfferPanelProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div style={{ padding: "14px 22px" }}>
@@ -102,7 +104,7 @@ export function MakeOfferPanel({
                   display: "inline-block",
                 }}
               />
-              Oferta enviada
+              {t("makeOfferPanel.offerSent")}
             </div>
             {pendingOffer.expiresAt && (
               <span
@@ -115,7 +117,7 @@ export function MakeOfferPanel({
                   borderRadius: R_HERO,
                 }}
               >
-                Expira en <Countdown targetDate={pendingOffer.expiresAt} />
+                {t("makeOfferPanel.expiresIn")} <Countdown targetDate={pendingOffer.expiresAt} />
               </span>
             )}
           </div>
@@ -126,11 +128,11 @@ export function MakeOfferPanel({
             )}
           </p>
           <p style={{ fontSize: 12, color: HINT }}>
-            El vendedor tiene hasta que expire el tiempo para responder.
+            {t("makeOfferPanel.sellerHasUntilExpiry")}
           </p>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button type="button" className="ghost-btn" onClick={onCancelOffer}>
-              Cancelar oferta
+              {t("makeOfferPanel.cancelOffer")}
             </button>
             <button
               type="button"
@@ -141,7 +143,9 @@ export function MakeOfferPanel({
               {isPurchasing ? (
                 <Loader2 size={13} className="animate-spin" />
               ) : (
-                `Comprar directo${formattedTotal ? ` · ${formattedTotal}` : ""}`
+                formattedTotal
+                  ? t("makeOfferPanel.buyDirectWithTotal", { total: formattedTotal })
+                  : t("makeOfferPanel.buyDirect")
               )}
             </button>
           </div>
@@ -189,10 +193,10 @@ export function MakeOfferPanel({
               >
                 <RotateCcw size={13} />
                 {offerOpen
-                  ? "Cancelar oferta"
+                  ? t("makeOfferPanel.cancelOffer")
                   : expiredOffer
-                    ? "Hacer una nueva oferta"
-                    : "Hacer una oferta"}
+                    ? t("makeOfferPanel.makeNewOffer")
+                    : t("makeOfferPanel.makeAnOffer")}
               </button>
 
               {!offerOpen && (
@@ -204,14 +208,14 @@ export function MakeOfferPanel({
                     marginTop: 6,
                   }}
                 >
-                  Si el vendedor acepta, vos decidís si pagar.
+                  {t("makeOfferPanel.ifSellerAcceptsYouDecide")}
                 </p>
               )}
 
               {offerOpen && (
                 <div className="offer-panel">
                   <p style={{ fontSize: 13, fontWeight: 600, color: V, marginBottom: 4 }}>
-                    Proponer un precio al vendedor
+                    {t("makeOfferPanel.proposePrice")}
                   </p>
                   <p
                     style={{
@@ -221,15 +225,15 @@ export function MakeOfferPanel({
                       lineHeight: 1.5,
                     }}
                   >
-                    Si el vendedor acepta, te avisamos y{" "}
-                    <strong style={{ color: DARK }}>vos decidís si confirmar el pago</strong>
-                    . No se te cobra nada hasta entonces.
+                    {t("makeOfferPanel.offerPanelDescriptionBefore")}{" "}
+                    <strong style={{ color: DARK }}>{t("makeOfferPanel.offerPanelDescriptionBold")}</strong>
+                    {t("makeOfferPanel.offerPanelDescriptionAfter")}
                   </p>
                   <div style={{ display: "flex", gap: 8 }}>
                     <input
                       type="number"
                       className={`offer-input${offerError ? " error" : ""}`}
-                      placeholder="Tu oferta en ARS..."
+                      placeholder={t("makeOfferPanel.offerInputPlaceholder")}
                       value={offerPriceCents ? Math.floor(offerPriceCents / 100) : ""}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         setOfferPriceCents(Math.max(0, Number(e.target.value) * 100));
@@ -259,7 +263,7 @@ export function MakeOfferPanel({
                       }}
                     >
                       {isSubmittingOffer ? <Loader2 size={13} className="animate-spin" /> : null}
-                      Enviar
+                      {t("makeOfferPanel.submit")}
                     </button>
                   </div>
 
@@ -315,7 +319,7 @@ export function MakeOfferPanel({
                             ...S,
                           }}
                         >
-                          Intentar con otro monto
+                          {t("makeOfferPanel.tryAnotherAmount")}
                         </button>
                       </div>
                     </div>

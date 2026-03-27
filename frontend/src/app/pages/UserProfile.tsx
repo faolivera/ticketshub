@@ -54,26 +54,27 @@ interface VerifRowProps {
 
 // ─── Verification status badge ────────────────────────────────────────────────
 function StatusBadge({ status }: { status: VerifStatus }) {
+  const { t } = useTranslation();
   const cfg: Record<VerifStatus, { bg: string; color: string; border: string; icon: React.ReactNode; text: string }> = {
     verified: {
       bg: SUCCESS_LIGHT, color: SUCCESS, border: `1px solid ${SUCCESS_BORDER}`,
       icon: <CheckCircle size={11} />,
-      text: 'Verificado',
+      text: t('userProfile.badgeVerified'),
     },
     pending: {
       bg: PENDING_LIGHT, color: PENDING, border: `1px solid ${PENDING_BORDER}`,
       icon: <Clock size={11} />,
-      text: 'Verificando',
+      text: t('userProfile.badgeVerifying'),
     },
     rejected: {
       bg: BADGE_DEMAND_BG, color: DESTRUCTIVE, border: `1px solid ${BADGE_DEMAND_BORDER}`,
       icon: <AlertCircle size={11} />,
-      text: 'Rechazado',
+      text: t('userProfile.statusRejected'),
     },
     none: {
       bg: SURFACE, color: MUTED, border: `1px solid ${BORD2}`,
       icon: <AlertCircle size={11} />,
-      text: 'Sin verificar',
+      text: t('userProfile.statusNotVerified'),
     },
   };
   const c = cfg[status];
@@ -143,6 +144,7 @@ function VerifRow({ icon, label, value, status, verifyLabel, verifyTo, verifySta
 
 // ─── Completion progress bar ──────────────────────────────────────────────────
 function ProfileCompletion({ steps }: { steps: Array<{ label: string; done: boolean }> }) {
+  const { t } = useTranslation();
   const done = steps.filter(s => s.done).length;
   const pct  = Math.round((done / steps.length) * 100);
   if (pct === 100) return null;
@@ -153,7 +155,7 @@ function ProfileCompletion({ steps }: { steps: Array<{ label: string; done: bool
       background: VLIGHT, border: '1px solid #ddd6fe', marginBottom: 20,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: V }}>Completá tu perfil</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: V }}>{t('userProfile.completeYourProfile')}</p>
         <p style={{ fontSize: 13, fontWeight: 700, color: V }}>{done}/{steps.length}</p>
       </div>
       <div style={{ height: 5, background: '#ddd6fe', borderRadius: 100, marginBottom: 10, overflow: 'hidden' }}>
@@ -215,10 +217,10 @@ export function UserProfile() {
 
   // ── Profile completion steps ───────────────────────────────────────────────
   const completionSteps = [
-    { label: 'Email',     done: user.emailVerified   },
-    { label: 'Teléfono',  done: user.phoneVerified   },
-    { label: 'Identidad', done: idStatus === 'approved' },
-    ...(isSeller ? [{ label: 'Cuenta bancaria', done: bankStatus === 'approved' }] : []),
+    { label: t('userProfile.labelEmail'),       done: user.emailVerified   },
+    { label: t('userProfile.labelPhone'),       done: user.phoneVerified   },
+    { label: t('userProfile.labelIdentity'),    done: idStatus === 'approved' },
+    ...(isSeller ? [{ label: t('userProfile.labelBankAccount'), done: bankStatus === 'approved' }] : []),
   ];
 
   return (
@@ -354,10 +356,10 @@ export function UserProfile() {
               icon={<Shield size={15} />}
               label={t('userProfile.labelIdentity')}
               value={
-                idStatus === 'approved' ? 'Verificada'    :
-                idStatus === 'pending'  ? 'En revisión'   :
-                idStatus === 'rejected' ? 'Rechazada'     :
-                'No verificada'
+                idStatus === 'approved' ? t('userProfile.identityVerified')    :
+                idStatus === 'pending'  ? t('userProfile.identityInReview')    :
+                idStatus === 'rejected' ? t('userProfile.identityRejected')    :
+                t('userProfile.identityNotVerified')
               }
               status={idVerifStatus}
               verifyLabel={t('userProfile.verifyLink')}
@@ -396,12 +398,12 @@ export function UserProfile() {
                   marginBottom: 12,
                 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: isSeller ? V : DARK, marginBottom: 3 }}>
-                    {isSeller ? 'Completá tu perfil de vendedor' : 'Empezá a vender en TicketsHub'}
+                    {isSeller ? t('userProfile.completeSellerProfile') : t('userProfile.startSellingTitle')}
                   </p>
                   <p style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>
                     {isSeller
-                      ? 'Verificá tu identidad y cuenta bancaria para recibir pagos.'
-                      : 'Vendé tus entradas de forma segura. El proceso tarda menos de 5 minutos.'}
+                      ? t('userProfile.completeSellerProfileDesc')
+                      : t('userProfile.startSellingDesc')}
                   </p>
                 </div>
                 <Link to="/become-seller" style={{ textDecoration: 'none' }}>

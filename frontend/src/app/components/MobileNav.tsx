@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { V, DARK, MUTED, BORDER, S } from "@/lib/design-tokens";
 
@@ -144,17 +145,18 @@ function FABShimmer() {
 
 // ─── FAB ─────────────────────────────────────────────────────────────────────
 function FAB({ onPress }: { onPress: () => void }) {
+  const { t } = useTranslation();
   const [pressed, setPressed] = useState(false);
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
       <button onClick={onPress}
         onMouseDown={() => setPressed(true)} onMouseUp={() => setPressed(false)}
         onMouseLeave={() => setPressed(false)} onTouchStart={() => setPressed(true)} onTouchEnd={() => setPressed(false)}
-        aria-label="Vender entrada"
+        aria-label={t("header.mobileSellAriaLabel")}
         style={{ width: 48, height: 48, borderRadius: "50%", background: V, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(105,45,212,0.38)", transform: pressed ? "scale(0.93)" : "translateY(-10px)", transition: "transform 0.15s" }}>
         <IconPlus />
       </button>
-      <span style={{ fontSize: 10.5, fontWeight: 600, color: MUTED, marginTop: -6, ...S }}>Vender</span>
+      <span style={{ fontSize: 10.5, fontWeight: 600, color: MUTED, marginTop: -6, ...S }}>{t("header.mobileSell")}</span>
     </div>
   );
 }
@@ -165,25 +167,26 @@ function MobileNav({
   pendingBuyerCount = 0, pendingSellerCount = 0,
   onFabPress, onLoginRequired,
 }: MobileNavProps) {
+  const { t } = useTranslation();
 
   // ── Slot 4: Cómo funciona (guest + buyer) or Mis ventas (seller) ──────────
   const slot4 = isSeller ? (
-    <NavItem label="Mis ventas" icon={c => <IconSales c={c} />}
+    <NavItem label={t("header.mobileMySales")} icon={c => <IconSales c={c} />}
       active={activeTab === "sales"} badge={pendingSellerCount}
       onClick={() => onTabChange("sales")} />
   ) : (
-    <NavItem label="Cómo funciona" icon={c => <IconHowItWorks c={c} />}
+    <NavItem label={t("header.mobileHowItWorks")} icon={c => <IconHowItWorks c={c} />}
       active={activeTab === "how-it-works"}
       onClick={() => onTabChange("how-it-works")} />
   );
 
   // ── Slot 5: perfil / ingresar (resolved) ────────────────────────────────
   const slot5 = isAuthenticated ? (
-    <NavItem label="Perfil" icon={c => <IconProfile c={c} />}
+    <NavItem label={t("header.mobileProfile")} icon={c => <IconProfile c={c} />}
       active={activeTab === "profile"}
       onClick={() => onTabChange("profile")} />
   ) : (
-    <NavItem label="Ingresar" icon={c => <IconLogin c={c} />}
+    <NavItem label={t("header.enter")} icon={c => <IconLogin c={c} />}
       active={activeTab === "login"}
       onClick={() => onTabChange("login")} />
   );
@@ -198,7 +201,7 @@ function MobileNav({
         .th-shimmer{background:linear-gradient(90deg,#ebebeb 25%,#f5f5f5 50%,#ebebeb 75%);background-size:200% 100%;animation:th-shimmer 1.4s ease-in-out infinite;}
       `}</style>
 
-      <nav className="th-bottom-nav" aria-label="Navegación principal">
+      <nav className="th-bottom-nav" aria-label={t("header.mobileNavAriaLabel")}>
         <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "6px 0 10px", maxWidth: 480, margin: "0 auto" }}>
           {isAuthLoading ? (
             <>
@@ -211,12 +214,12 @@ function MobileNav({
           ) : (
             <>
               {/* Slot 1 — Explorar */}
-              <NavItem label="Explorar" icon={c => <IconHome c={c} />}
+              <NavItem label={t("header.mobileExplore")} icon={c => <IconHome c={c} />}
                 active={activeTab === "home"}
                 onClick={() => onTabChange("home")} />
 
               {/* Slot 2 — Mis entradas (dimmed for guests) */}
-              <NavItem label="Mis entradas" icon={c => <IconTicket c={c} />}
+              <NavItem label={t("header.mobileMyTickets")} icon={c => <IconTicket c={c} />}
                 active={activeTab === "tickets"} badge={pendingBuyerCount}
                 dimmed={!isAuthenticated}
                 onClick={() => {

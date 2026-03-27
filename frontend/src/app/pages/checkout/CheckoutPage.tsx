@@ -433,7 +433,7 @@ export default function CheckoutPage() {
     (!acceptedOffer && (data.availableCount === 0 || qty === 0 || !pricingSnapshot));
 
   const primaryBtnLabel = acceptedOffer
-    ? "Confirmar pago"
+    ? t("buyTicket.confirmPayment")
     : !canProceed
       ? data.isNumberedListing
         ? t("buyTicket.selectSeats")
@@ -443,8 +443,8 @@ export default function CheckoutPage() {
         : terms.needsTerms && !terms.termsAccepted
           ? t("buyTicket.acceptTermsRequired")
           : pendingOffer
-            ? "Comprar directo"
-            : "Comprar con garantía";
+            ? t("buyTicket.buyDirect")
+            : t("buyTicket.buyWithGuarantee");
 
   const primaryBtnVariant: "primary" | "warn" | "disabled" = canBuy
     ? "primary"
@@ -714,7 +714,7 @@ export default function CheckoutPage() {
                       lineHeight: 1.2,
                     }}
                   >
-                    Resumen de Pago
+                    {t("buyTicket.paymentSummary")}
                   </p>
                   <p style={{ ...S, fontSize: 13, color: MUTED, lineHeight: 1.4 }}>
                     {listing.eventName}
@@ -830,10 +830,10 @@ export default function CheckoutPage() {
               <Shield size={15} />
             )}
             {acceptedOffer
-              ? `Confirmar pago${formattedTotal ? ` · ${formattedTotal}` : ""}`
+              ? `${t("buyTicket.confirmPayment")}${formattedTotal ? ` · ${formattedTotal}` : ""}`
               : pendingOffer
-                ? `Comprar directo${formattedTotal ? ` · ${formattedTotal}` : ""}`
-                : `Comprar con garantía${formattedTotal ? ` · ${formattedTotal}` : ""}`}
+                ? `${t("buyTicket.buyDirect")}${formattedTotal ? ` · ${formattedTotal}` : ""}`
+                : `${t("buyTicket.buyWithGuarantee")}${formattedTotal ? ` · ${formattedTotal}` : ""}`}
           </button>
         )}
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell, Plus, CheckCircle, Lock, Users, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/contexts/UserContext";
 import { subscriptionsService } from "@/api/services/subscriptions.service";
 
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
+  const { t } = useTranslation();
   const { user } = useUser();
   const [alertValue, setAlertValue] = useState(user?.email ?? "");
   const [alertError, setAlertError] = useState(false);
@@ -40,7 +42,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
 
     if (!isLoggedIn && !isValidEmail(emailToSubmit)) {
       setAlertError(true);
-      setAlertErrorMsg("Ingresá un email válido");
+      setAlertErrorMsg(t("emptyEventState.invalidEmail"));
       return;
     }
 
@@ -54,7 +56,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
       setAlertSent(true);
     } catch {
       setAlertError(true);
-      setAlertErrorMsg("Ocurrió un error. Intentá de nuevo.");
+      setAlertErrorMsg(t("emptyEventState.subscribeError"));
     } finally {
       setLoading(false);
     }
@@ -97,15 +99,17 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
               padding: "3px 10px", marginBottom: 14, ...S,
             }}>
               <Users size={10} />
-              {waitingCount === 1 ? "1 persona esperando" : `${waitingCount} personas esperando`}
+              {waitingCount === 1
+                ? t("emptyEventState.waitingCountSingular", { count: waitingCount })
+                : t("emptyEventState.waitingCountPlural", { count: waitingCount })}
             </div>
           )}
 
           <p style={{ ...E, fontSize: 19, color: DARK, margin: "0 0 6px", letterSpacing: "-0.3px" }}>
-            Sin entradas disponibles
+            {t("emptyEventState.noTicketsAvailable")}
           </p>
           <p style={{ ...S, fontSize: 13, color: MUTED, lineHeight: 1.6, margin: "0 0 20px" }}>
-            Avisanos y te notificamos en cuanto aparezca una entrada para este evento.
+            {t("emptyEventState.notifySubtitle")}
           </p>
 
           {alertSent ? (
@@ -116,9 +120,9 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
             }}>
               <CheckCircle size={15} style={{ color: SUCCESS, flexShrink: 0, marginTop: 1 }} />
               <div>
-                <p style={{ ...S, fontSize: 13, fontWeight: 700, color: SUCCESS, margin: "0 0 1px" }}>¡Alerta activada!</p>
+                <p style={{ ...S, fontSize: 13, fontWeight: 700, color: SUCCESS, margin: "0 0 1px" }}>{t("emptyEventState.alertActivated")}</p>
                 <p style={{ ...S, fontSize: 12, color: SUCCESS, lineHeight: 1.5, margin: 0 }}>
-                  Te avisamos cuando haya entradas.
+                  {t("emptyEventState.alertActivatedBody")}
                 </p>
               </div>
             </div>
@@ -159,7 +163,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
                   onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = V_MID; }}
                   onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = V; }}
                 >
-                  <Bell size={12} /> {loading ? "..." : "Avisarme"}
+                  <Bell size={12} /> {loading ? "..." : t("emptyEventState.notifyMeButton")}
                 </button>
               </div>
 
@@ -170,7 +174,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
               )}
 
               <p style={{ ...S, fontSize: 11.5, color: "#9ca3af", display: "flex", alignItems: "center", gap: 4, margin: 0 }}>
-                <Lock size={10} /> Sin spam. Solo te escribimos si hay entradas.
+                <Lock size={10} /> {t("emptyEventState.noSpam")}
               </p>
             </>
           )}
@@ -180,7 +184,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
         <div className="ees-divider-v" style={{ display: "none", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 0" }}>
           <div style={{ width: 1, flex: 1, background: "#f3f4f6" }} />
           <span style={{ ...S, fontSize: 10, color: "#c4b5fd", fontWeight: 700, letterSpacing: "0.08em", writingMode: "vertical-rl", padding: "12px 0" }}>
-            ¿TENÉS ENTRADAS?
+            {t("emptyEventState.doYouHaveTickets")}
           </span>
           <div style={{ width: 1, flex: 1, background: "#f3f4f6" }} />
         </div>
@@ -189,7 +193,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
         <div className="ees-divider-h" style={{ display: "none", alignItems: "center", gap: 12, padding: "0 28px" }}>
           <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
           <span style={{ ...S, fontSize: 10.5, color: "#c4b5fd", fontWeight: 700, letterSpacing: "0.06em" }}>
-            ¿TENÉS ENTRADAS?
+            {t("emptyEventState.doYouHaveTickets")}
           </span>
           <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
         </div>
@@ -197,12 +201,14 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
         {/* ── RIGHT: Seller ──────────────────────────────────────── */}
         <div style={{ background: VLIGHT, padding: "32px 28px", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center" }}>
           <p style={{ ...E, fontSize: 19, color: V, margin: "0 0 6px", letterSpacing: "-0.3px" }}>
-            {waitingCount >= 1 ? "Hay compradores esperando" : "Sé el primero en publicar"}
+            {waitingCount >= 1 ? t("emptyEventState.sellerHeadingWaiting") : t("emptyEventState.sellerHeadingEmpty")}
           </p>
           <p style={{ ...S, fontSize: 13, color: "#7c3aed", lineHeight: 1.6, margin: "0 0 20px" }}>
             {waitingCount >= 1
-              ? `Publicá tu entrada y llegás directo a las ${waitingCount} ${waitingCount === 1 ? "persona" : "personas"} que están buscando.`
-              : "Publicá tu entrada y llegá a los primeros compradores de este evento."}
+              ? (waitingCount === 1
+                ? t("emptyEventState.sellerBodyWaitingSingular", { count: waitingCount })
+                : t("emptyEventState.sellerBodyWaitingPlural", { count: waitingCount }))
+              : t("emptyEventState.sellerBodyEmpty")}
           </p>
 
           <Link
@@ -217,13 +223,15 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
             onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = V_MID; }}
             onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = V; }}
           >
-            <Plus size={13} /> Publicar mi entrada <ArrowRight size={13} />
+            <Plus size={13} /> {t("emptyEventState.publishTicketCta")} <ArrowRight size={13} />
           </Link>
 
           {waitingCount >= 1 && (
             <p style={{ ...S, fontSize: 11.5, color: "#7c3aed", marginTop: 10, display: "flex", alignItems: "center", gap: 4 }}>
               <Users size={10} />
-              {waitingCount} {waitingCount === 1 ? "persona esperando" : "personas esperando"}
+              {waitingCount === 1
+                ? t("emptyEventState.waitingCountSingular", { count: waitingCount })
+                : t("emptyEventState.waitingCountPlural", { count: waitingCount })}
             </p>
           )}
         </div>

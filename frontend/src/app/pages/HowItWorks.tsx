@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { PageMeta } from '@/app/components/PageMeta';
 import {
   V,
@@ -24,160 +25,21 @@ import {
 
 const DS = { ...E, fontWeight: 400 };
 
-// ─── Step data ────────────────────────────────────────────────────────────────
-const BUYER_STEPS = [
-  {
-    n: '01',
-    title: 'Encontrás la entrada',
-    body: 'Explorá eventos disponibles, elegí el sector y el precio que te conviene. Ves el perfil y las reseñas del vendedor antes de decidir.',
-    detail: 'Siempre sabés con quién estás comprando.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
-    ),
-    accent: VLIGHT,
-    accentBorder: '#ddd6fe',
-  },
-  {
-    n: '02',
-    title: 'Pagás — el pago queda retenido',
-    body: 'Tu pago queda retenido por TicketsHub. El vendedor todavía no recibe nada — solo se libera cuando vos confirmás que recibiste la entrada. Si algo falla, se te devuelve.',
-    detail: 'El vendedor no puede acceder al pago hasta que vos lo confirmés.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-      </svg>
-    ),
-    accent: VLIGHT,
-    accentBorder: '#ddd6fe',
-    highlight: true,
-  },
-  {
-    n: '03',
-    title: 'Recibís la entrada',
-    body: 'Confirmado el pago, el vendedor tiene un plazo para transferirte la entrada digital. Si no la transfiere en tiempo, tu dinero se devuelve automáticamente.',
-    detail: 'Sin entrada → sin cobro. Siempre.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 9a3 3 0 010 6v2a2 2 0 002 2h16a2 2 0 002-2v-2a3 3 0 010-6V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2z"/>
-      </svg>
-    ),
-    accent: VLIGHT,
-    accentBorder: '#ddd6fe',
-  },
-  {
-    n: '04',
-    title: 'Confirmás — el vendedor cobra',
-    body: 'Verificás que la entrada es válida y la confirmás en la app. Recién en ese momento los fondos se liberan al vendedor. Si algo no está bien, abrís una disputa.',
-    detail: 'Tenés hasta 24 hs post-evento para reportar un problema.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    ),
-    accent: GLIGHT,
-    accentBorder: GBORD,
-  },
-];
-
-const SELLER_STEPS = [
-  {
-    n: '01',
-    title: 'Publicás tu entrada',
-    body: 'Precio libre, tipo de entrada, cantidad. Tu publicación queda visible para compradores de toda la Argentina. Sin comisión anticipada.',
-    detail: 'Solo pagás comisión cuando vendés.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-    ),
-    accent: VLIGHT,
-    accentBorder: '#ddd6fe',
-  },
-  {
-    n: '02',
-    title: 'Alguien compra — el pago queda retenido',
-    body: 'El comprador paga pero vos todavía no cobrás. TicketsHub retiene el pago hasta confirmar que la entrada fue recibida. Así el comprador tiene garantía — y vos también: el dinero ya existe.',
-    detail: 'Si el comprador no paga, la venta no se activa.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-      </svg>
-    ),
-    accent: VLIGHT,
-    accentBorder: '#ddd6fe',
-    highlight: true,
-  },
-  {
-    n: '03',
-    title: 'Transferís la entrada',
-    body: 'Confirmado el pago, tenés un plazo para enviar la entrada digital al comprador. La plataforma te guía paso a paso y registra la transferencia.',
-    detail: 'Todo queda registrado como evidencia.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    ),
-    accent: VLIGHT,
-    accentBorder: '#ddd6fe',
-  },
-  {
-    n: '04',
-    title: 'El comprador confirma — vos cobrás',
-    body: 'Cuando el comprador verifica que recibió la entrada, los fondos se liberan a tu cuenta bancaria. Sin esperas innecesarias.',
-    detail: 'Necesitás tener la identidad verificada para cobrar.',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-      </svg>
-    ),
-    accent: GLIGHT,
-    accentBorder: GBORD,
-  },
-];
-
-const GUARANTEES = [
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-      </svg>
-    ),
-    title: 'Pago retenido hasta confirmar',
-    body: 'TicketsHub retiene el pago del comprador hasta que se confirme la entrega. Ni el vendedor ni nadie más puede acceder antes de esa confirmación.',
-  },
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-    ),
-    title: 'Verificación anti-fraude',
-    body: 'Todo vendedor debe verificar su identidad antes de cobrar. Sin identidad real, sin cobro.',
-  },
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-      </svg>
-    ),
-    title: 'Sistema de disputas',
-    body: 'Si algo no está bien, abrís una disputa. Un equipo humano revisa y resuelve con evidencia.',
-  },
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
-      </svg>
-    ),
-    title: 'Reembolso garantizado',
-    body: 'Si el vendedor no entrega, si la entrada es inválida, o si el evento se cancela: reembolso completo.',
-  },
-];
-
 // ─── Step card ────────────────────────────────────────────────────────────────
-function StepCard({ step, index, isLast }: { step: typeof BUYER_STEPS[0]; index: number; isLast: boolean }) {
+function StepCard({ step, index, isLast, stepLabel }: {
+  step: {
+    title: string;
+    body: string;
+    detail: string;
+    icon: React.ReactNode;
+    accent: string;
+    accentBorder: string;
+    highlight?: boolean;
+  };
+  index: number;
+  isLast: boolean;
+  stepLabel: string;
+}) {
   return (
     <div style={{ display: 'flex', gap: 16, position: 'relative' }}>
       {/* Connector line */}
@@ -219,7 +81,7 @@ function StepCard({ step, index, isLast }: { step: typeof BUYER_STEPS[0]; index:
           </div>
           <div>
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: HINT, marginBottom: 3, ...S }}>
-              Paso {index + 1}
+              {stepLabel}
             </p>
             <p style={{ fontSize: 15, fontWeight: 800, color: DARK, lineHeight: 1.3, ...S }}>
               {step.title}
@@ -251,10 +113,27 @@ function StepCard({ step, index, isLast }: { step: typeof BUYER_STEPS[0]; index:
 }
 
 // ─── Desktop step row ─────────────────────────────────────────────────────────
-function DesktopStepRow({ buyerStep, sellerStep, index }: {
-  buyerStep: typeof BUYER_STEPS[0];
-  sellerStep: typeof SELLER_STEPS[0];
+function DesktopStepRow({ buyerStep, sellerStep, index, guaranteeLabel }: {
+  buyerStep: {
+    title: string;
+    body: string;
+    detail: string;
+    icon: React.ReactNode;
+    accent: string;
+    accentBorder: string;
+    highlight?: boolean;
+  };
+  sellerStep: {
+    title: string;
+    body: string;
+    detail: string;
+    icon: React.ReactNode;
+    accent: string;
+    accentBorder: string;
+    highlight?: boolean;
+  };
   index: number;
+  guaranteeLabel: string;
 }) {
   const isHighlight = buyerStep.highlight;
 
@@ -293,7 +172,7 @@ function DesktopStepRow({ buyerStep, sellerStep, index }: {
             fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
             color: V, textAlign: 'center', lineHeight: 1.3, ...S,
           }}>
-            Garantía
+            {guaranteeLabel}
           </div>
         )}
       </div>
@@ -319,14 +198,167 @@ function DesktopStepRow({ buyerStep, sellerStep, index }: {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export function HowItWorks() {
+  const { t } = useTranslation();
   const [view, setView] = useState<'buyer' | 'seller'>('buyer');
+
+  const BUYER_STEPS = [
+    {
+      n: '01',
+      title: t('howItWorks.step1BuyerTitle'),
+      body: t('howItWorks.step1BuyerBody'),
+      detail: t('howItWorks.step1BuyerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      ),
+      accent: VLIGHT,
+      accentBorder: '#ddd6fe',
+    },
+    {
+      n: '02',
+      title: t('howItWorks.step2BuyerTitle'),
+      body: t('howItWorks.step2BuyerBody'),
+      detail: t('howItWorks.step2BuyerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      ),
+      accent: VLIGHT,
+      accentBorder: '#ddd6fe',
+      highlight: true,
+    },
+    {
+      n: '03',
+      title: t('howItWorks.step3BuyerTitle'),
+      body: t('howItWorks.step3BuyerBody'),
+      detail: t('howItWorks.step3BuyerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 9a3 3 0 010 6v2a2 2 0 002 2h16a2 2 0 002-2v-2a3 3 0 010-6V7a2 2 0 00-2-2H4a2 2 0 00-2 2v2z"/>
+        </svg>
+      ),
+      accent: VLIGHT,
+      accentBorder: '#ddd6fe',
+    },
+    {
+      n: '04',
+      title: t('howItWorks.step4BuyerTitle'),
+      body: t('howItWorks.step4BuyerBody'),
+      detail: t('howItWorks.step4BuyerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ),
+      accent: GLIGHT,
+      accentBorder: GBORD,
+    },
+  ];
+
+  const SELLER_STEPS = [
+    {
+      n: '01',
+      title: t('howItWorks.step1SellerTitle'),
+      body: t('howItWorks.step1SellerBody'),
+      detail: t('howItWorks.step1SellerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      ),
+      accent: VLIGHT,
+      accentBorder: '#ddd6fe',
+    },
+    {
+      n: '02',
+      title: t('howItWorks.step2SellerTitle'),
+      body: t('howItWorks.step2SellerBody'),
+      detail: t('howItWorks.step2SellerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      ),
+      accent: VLIGHT,
+      accentBorder: '#ddd6fe',
+      highlight: true,
+    },
+    {
+      n: '03',
+      title: t('howItWorks.step3SellerTitle'),
+      body: t('howItWorks.step3SellerBody'),
+      detail: t('howItWorks.step3SellerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      ),
+      accent: VLIGHT,
+      accentBorder: '#ddd6fe',
+    },
+    {
+      n: '04',
+      title: t('howItWorks.step4SellerTitle'),
+      body: t('howItWorks.step4SellerBody'),
+      detail: t('howItWorks.step4SellerDetail'),
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+      ),
+      accent: GLIGHT,
+      accentBorder: GBORD,
+    },
+  ];
+
+  const GUARANTEES = [
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      ),
+      title: t('howItWorks.guarantee1Title'),
+      body: t('howItWorks.guarantee1Body'),
+    },
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      ),
+      title: t('howItWorks.guarantee2Title'),
+      body: t('howItWorks.guarantee2Body'),
+    },
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      ),
+      title: t('howItWorks.guarantee3Title'),
+      body: t('howItWorks.guarantee3Body'),
+    },
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={V} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+        </svg>
+      ),
+      title: t('howItWorks.guarantee4Title'),
+      body: t('howItWorks.guarantee4Body'),
+    },
+  ];
+
   const steps = view === 'buyer' ? BUYER_STEPS : SELLER_STEPS;
 
   return (
     <>
       <PageMeta
-        title="Cómo funciona — TicketsHub"
-        description="Comprar y vender entradas de forma segura. Tus fondos y entradas protegidos en cada transacción."
+        title={t('howItWorks.metaTitle')}
+        description={t('howItWorks.metaDescription')}
       />
       <style>{`
         .hiw-mobile  { display: block; }
@@ -351,15 +383,14 @@ export function HowItWorks() {
               letterSpacing: '-0.5px', lineHeight: 1.15,
               marginBottom: 16, color: 'white',
             }}>
-              Tu plata y tus entradas,<br />
-              <em style={{ color: '#c4b5fd' }}>siempre protegidas</em>
+              {t('howItWorks.heroTitle')}<br />
+              <em style={{ color: '#c4b5fd' }}>{t('howItWorks.heroTitleEm')}</em>
             </h1>
             <p style={{
               fontSize: 'clamp(14px,2vw,17px)', color: '#94a3b8',
               lineHeight: 1.65, maxWidth: 480, margin: '0 auto 28px', ...S,
             }}>
-              TicketsHub actúa como intermediario entre compradores y vendedores.
-              El pago queda retenido hasta que ambas partes cumplan su parte — sin entrada confirmada, no hay cobro.
+              {t('howItWorks.heroSubtitle')}
             </p>
           </div>
         </div>
@@ -381,7 +412,7 @@ export function HowItWorks() {
                   fontSize: 14, fontWeight: 700, cursor: 'pointer',
                   transition: 'all 0.18s', ...S,
                 }}>
-                  {v === 'buyer' ? 'Quiero Comprar' : 'Quiero Vender'}
+                  {v === 'buyer' ? t('howItWorks.toggleBuyer') : t('howItWorks.toggleSeller')}
                 </button>
               ))}
             </div>
@@ -389,18 +420,24 @@ export function HowItWorks() {
             {/* Role headline */}
             <div style={{ marginBottom: 24 }}>
               <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: V, marginBottom: 6, ...S }}>
-                {view === 'buyer' ? 'Comprás con garantía' : 'Vendés con seguridad'}
+                {view === 'buyer' ? t('howItWorks.roleEyebrowBuyer') : t('howItWorks.roleEyebrowSeller')}
               </p>
               <h2 style={{ ...DS, fontSize: 22, fontWeight: 400, color: DARK, lineHeight: 1.3, marginBottom: 4 }}>
                 {view === 'buyer'
-                  ? 'Sabés exactamente qué pasa con tu plata'
-                  : 'Cobrás solo cuando entregás la entrada'}
+                  ? t('howItWorks.roleHeadingBuyer')
+                  : t('howItWorks.roleHeadingSeller')}
               </h2>
             </div>
 
             {/* Steps */}
             {steps.map((step, i) => (
-              <StepCard key={i} step={step} index={i} isLast={i === steps.length - 1} />
+              <StepCard
+                key={i}
+                step={step}
+                index={i}
+                isLast={i === steps.length - 1}
+                stepLabel={t('howItWorks.stepLabel', { number: i + 1 })}
+              />
             ))}
           </div>
         </div>
@@ -413,10 +450,10 @@ export function HowItWorks() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 52px 1fr', gap: 24, marginBottom: 20, alignItems: 'end' }}>
               <div style={{ textAlign: 'right', paddingRight: 8 }}>
                 <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: V, marginBottom: 4, ...S }}>
-                  Compradores
+                  {t('howItWorks.desktopBuyersLabel')}
                 </p>
                 <h2 style={{ ...DS, fontSize: 22, fontWeight: 400, color: DARK }}>
-                  Sabés exactamente<br />qué pasa con tu plata
+                  {t('howItWorks.roleHeadingBuyer')}
                 </h2>
               </div>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -424,10 +461,10 @@ export function HowItWorks() {
               </div>
               <div style={{ paddingLeft: 8 }}>
                 <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: V, marginBottom: 4, ...S }}>
-                  Vendedores
+                  {t('howItWorks.desktopSellersLabel')}
                 </p>
                 <h2 style={{ ...DS, fontSize: 22, fontWeight: 400, color: DARK }}>
-                  Cobrás solo cuando<br />entregás la entrada
+                  {t('howItWorks.roleHeadingSeller')}
                 </h2>
               </div>
             </div>
@@ -454,7 +491,12 @@ export function HowItWorks() {
                     <div />
                   </div>
                 )}
-                <DesktopStepRow buyerStep={buyerStep} sellerStep={SELLER_STEPS[i]} index={i} />
+                <DesktopStepRow
+                  buyerStep={buyerStep}
+                  sellerStep={SELLER_STEPS[i]}
+                  index={i}
+                  guaranteeLabel={t('howItWorks.guaranteeLabel')}
+                />
               </div>
             ))}
 
@@ -474,10 +516,10 @@ export function HowItWorks() {
           <div style={{ maxWidth: 960, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
               <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: V, marginBottom: 8, ...S }}>
-                Garantías del sistema
+                {t('howItWorks.guaranteesSectionEyebrow')}
               </p>
               <h2 style={{ ...DS, fontSize: 'clamp(22px,3vw,30px)', fontWeight: 400, color: 'white', marginBottom: 0 }}>
-                Cuatro razones para confiar
+                {t('howItWorks.guaranteesSectionTitle')}
               </h2>
             </div>
 
@@ -511,10 +553,10 @@ export function HowItWorks() {
         <div style={{ background: BG, padding: 'clamp(48px,7vw,72px) 24px', textAlign: 'center' }}>
           <div style={{ maxWidth: 480, margin: '0 auto' }}>
             <h2 style={{ ...DS, fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 400, color: DARK, marginBottom: 12, lineHeight: 1.2 }}>
-              Empezá hoy
+              {t('howItWorks.ctaTitle')}
             </h2>
             <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.6, marginBottom: 28, ...S }}>
-              Comprá tu próxima entrada o vendé las que no vas a usar. Sin complicaciones, con garantía real.
+              {t('howItWorks.ctaSubtitle')}
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to="/" style={{ textDecoration: 'none' }}>
@@ -526,7 +568,7 @@ export function HowItWorks() {
                   boxShadow: '0 4px 18px rgba(105,45,212,0.28)',
                   ...S,
                 }}>
-                  Ver entradas disponibles <ArrowRight size={16} />
+                  {t('howItWorks.ctaBrowseButton')} <ArrowRight size={16} />
                 </button>
               </Link>
               <Link to="/sell-ticket" style={{ textDecoration: 'none' }}>
@@ -535,7 +577,7 @@ export function HowItWorks() {
                   border: `1.5px solid ${BORD2}`, background: CARD,
                   color: DARK, fontSize: 15, fontWeight: 700, cursor: 'pointer', ...S,
                 }}>
-                  Publicar una entrada
+                  {t('howItWorks.ctaSellButton')}
                 </button>
               </Link>
             </div>
@@ -543,10 +585,10 @@ export function HowItWorks() {
             {/* Links to T&C */}
             <div style={{ marginTop: 28, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to="/terms/buyer" style={{ fontSize: 12.5, color: HINT, textDecoration: 'none', ...S }}>
-                T&C Compradores →
+                {t('howItWorks.termsBuyerLink')}
               </Link>
               <Link to="/terms/seller" style={{ fontSize: 12.5, color: HINT, textDecoration: 'none', ...S }}>
-                T&C Vendedores →
+                {t('howItWorks.termsSellerLink')}
               </Link>
             </div>
           </div>

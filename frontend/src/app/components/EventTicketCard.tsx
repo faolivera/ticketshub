@@ -8,10 +8,10 @@ import { getInitials } from "@/lib/string-utils";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getBuyPill(qty: number): string | null {
+function getBuyPill(qty: number, t: (key: string, opts?: Record<string, unknown>) => string): string | null {
   if (qty <= 1) return null;
-  if (qty === 2) return "Comprá 1 o 2";
-  return `Comprá 1 a ${qty}`;
+  if (qty === 2) return t("eventTickets.buyOneOrTwo");
+  return t("eventTickets.buyOneToN", { n: qty });
 }
 
 function fmtWithFee(priceNum: number | undefined, commissionPercent: number): string | null {
@@ -54,13 +54,13 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
 
   const [hovered, setHovered] = useState(false);
 
-  const ctaLabel = seated ? (t("eventTickets.selectSeats") || "Elegir asientos") : "Comprar";
+  const ctaLabel = seated ? t("eventTickets.selectSeats") : t("eventTickets.buy");
   const hasReviews =
     sellerTotalReviews > 0 &&
     sellerPositivePercent !== null &&
     Number.isFinite(sellerPositivePercent);
   const sellerPositivePercentRounded = hasReviews ? Math.round(sellerPositivePercent) : null;
-  const buyPillText = getBuyPill(qty);
+  const buyPillText = getBuyPill(qty, t);
   const totalWithFee = fmtWithFee(priceNum, maxTotalCommissionPercent ?? 10);
 
   return (
@@ -90,7 +90,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <span style={{ ...PILL, background: BG, color: MUTED, border: "1.5px solid #d1d5db" }}>
-            {qty} entrada{qty !== 1 ? "s" : ""}
+            {t("eventTickets.ticketsCount", { count: qty })}
           </span>
           {buyPillText && (
             <span style={{ ...PILL, background: VLIGHT, color: V, border: "1.5px solid #c4b5fd" }}>
@@ -99,7 +99,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
           )}
           {urgency === "últimas" && (
             <span style={{ ...PILL, fontSize: 11, fontWeight: 700, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
-              Última{qty > 1 ? "s" : ""}
+              {t("eventTickets.lastTicket", { count: qty })}
             </span>
           )}
         </div>
@@ -108,7 +108,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
       {/* B) Price block */}
       <div style={{ marginBottom: 4 }}>
         <p style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>
-          Total a pagar
+          {t("eventTickets.totalToPay")}
         </p>
         <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
           <span style={{ fontSize: 26, fontWeight: 800, color: DARK, letterSpacing: "-0.6px", lineHeight: 1 }}>
@@ -117,7 +117,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
           <span style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>ARS</span>
         </div>
         <p style={{ fontSize: 11.5, color: MUTED, marginTop: 6 }}>
-          Precio ${price} · +{maxTotalCommissionPercent ?? 10}% comisión incluida
+          {t("eventTickets.priceWithCommission", { price, commission: maxTotalCommissionPercent ?? 10 })}
         </p>
       </div>
 
@@ -125,7 +125,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
       {acceptsOffers && (
         <span style={{ ...PILL, marginTop: 10, alignSelf: "flex-start", background: VLIGHT, color: V, border: "1.5px solid #c4b5fd", gap: 6 }}>
           <MessageCircle size={10} />
-          {t("eventTickets.acceptsOffers") || "Acepta ofertas"}
+          {t("eventTickets.acceptsOffers")}
         </span>
       )}
 
@@ -146,18 +146,18 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
             </p>
             {verified && (
               <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: SUCCESS, flexShrink: 0 }}>
-                <CheckCircle size={10} /> Verificado
+                <CheckCircle size={10} /> {t("eventTickets.verified")}
               </span>
             )}
           </div>
           {/* Reputación: ventas · reseñas · o "Vendedor nuevo" si no hay historial */}
           {sellerTotalSales === 0 && !hasReviews ? (
-            <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>Vendedor nuevo</p>
+            <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{t("eventTickets.newSeller")}</p>
           ) : sellerTotalSales > 0 && !hasReviews ? (
-            <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{sellerTotalSales} ventas</p>
+            <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{t("eventTickets.sellerSales", { count: sellerTotalSales })}</p>
           ) : hasReviews ? (
             <p style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>
-              {sellerTotalSales} ventas · {sellerPositivePercentRounded}% positivas
+              {t("eventTickets.sellerSalesAndReviews", { count: sellerTotalSales, percent: sellerPositivePercentRounded })}
             </p>
           ) : null}
         </div>
@@ -187,9 +187,9 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
       {/* G) Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: MUTED }}>
         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <Shield size={10} /> Compra protegida
+          <Shield size={10} /> {t("eventTickets.protectedPurchase")}
         </span>
-        <span>Comisión incluida</span>
+        <span>{t("eventTickets.commissionIncluded")}</span>
       </div>
       </div>
     </div>

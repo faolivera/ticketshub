@@ -25,8 +25,8 @@ const ITEMS = [
     icon: <MessageCircle size={10} />,
     iconColor: TRUST_SUPPORT,
     iconBg: TRUST_SUPPORT_BG,
-    title: "Soporte por WhatsApp",
-    desc: "Si algo no está bien, escribinos. Respondemos a la brevedad.",
+    title: "Soporte por WhatsApp y app",
+    desc: "Si algo no está bien, escribinos por WhatsApp o desde la app. Respondemos a la brevedad.",
   },
 ];
 

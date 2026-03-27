@@ -78,7 +78,7 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
                     fontWeight: 600,
                   }}
                 >
-                  <CheckCircle size={9} /> Verificado
+                  <CheckCircle size={9} /> {t("sellerCard.verified")}
                 </span>
               ) : (
                 <span
@@ -91,7 +91,7 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
                     fontWeight: 600,
                   }}
                 >
-                  Nuevo
+                  {t("sellerCard.new")}
                 </span>
               )}
             </div>
@@ -104,7 +104,7 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
               <p style={{ fontSize: 12, color: MUTED, marginTop: 1 }}>
                 {t("buyTicket.sellerTotalSales", { count: seller.totalSales })}
                 {seller.totalReviews > 0 &&
-                  ` · ${Math.round(seller.percentPositiveReviews!)}% positivas`}
+                  ` · ${t("sellerCard.positiveReviews", { percent: Math.round(seller.percentPositiveReviews!) })}`}
               </p>
             )}
           </div>
@@ -140,9 +140,9 @@ export function SellerCard({ seller, isVerifiedSeller, isNewSeller }: SellerCard
             </div>
             <div style={{ fontSize: 12, color: INFO, lineHeight: 1.5 }}>
               <strong style={{ display: "block", marginBottom: 2 }}>
-                Vendedor nuevo. Igual, tu compra está protegida.
+                {t("sellerCard.newSellerProtectedTitle")}
               </strong>
-              Tu pago queda protegido hasta que entrás al evento.
+              {t("sellerCard.newSellerProtectedBody")}
             </div>
           </div>
         )}

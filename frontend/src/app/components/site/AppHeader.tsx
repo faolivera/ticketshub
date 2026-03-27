@@ -118,7 +118,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
             {isAuthenticated && (
               <NotificationBell />
             )}
-            {!isAuthenticated && (
+            {!isAuthenticated && false && (
               <div ref={langRef} style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -203,7 +203,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
             )}
             {isAuthenticated && (
               <>
-                <div ref={langRef} className="app-header-desk-only" style={{ position: "relative" }}>
+                {false && <div ref={langRef} className="app-header-desk-only" style={{ position: "relative" }}>
                   <button
                     type="button"
                     onClick={() => setLangOpen(!langOpen)}
@@ -283,7 +283,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
                       </button>
                     </div>
                   )}
-                </div>
+                </div>}
                 <Link
                   to="/sell-ticket"
                   state={{ from: location.pathname }}
@@ -438,7 +438,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
                     >
                       <User size={16} /> {t("header.myProfile")}
                     </Link>
-                    <div className="app-header-mob-only">
+                    {false && <div className="app-header-mob-only">
                       <div style={{ padding: "6px 12px 10px" }}>
                         <div
                           style={{
@@ -514,7 +514,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
                           </button>
                         </div>
                       </div>
-                    </div>
+                    </div>}
                     <div style={{ borderTop: `1px solid ${BORDER}`, margin: "6px 0" }} />
                     <button
                       type="button"
