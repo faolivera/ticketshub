@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { HubSVG, ShieldSVG } from "./SiteBrandIcons";
+import { ShieldSVG } from "./SiteBrandIcons";
 import {
   V,
   DARK,
-  BORDER,
   S,
-  E,
   FOOTER_MUTED,
   FOOTER_LINK,
   FOOTER_BORDER_TOP,
@@ -31,21 +29,12 @@ export function AppFooter(): JSX.Element {
           }}
         >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 6,
-                  background: V,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <HubSVG size={12} />
-              </div>
-              <span style={{ ...E, fontSize: 16, color: "white" }}>TicketsHub</span>
+            <div style={{ marginBottom: 9 }}>
+              <img
+                src="https://d21bc5hcztswk.cloudfront.net/brand/brand_email_dark.png"
+                alt="TicketsHub"
+                style={{ height: 36, width: "auto" }}
+              />
             </div>
             <p style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 180 }}>
               {t("footer.tagline")}

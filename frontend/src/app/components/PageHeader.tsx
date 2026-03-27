@@ -5,7 +5,7 @@
  * Always sits OUTSIDE any card — it's a page element, not content.
  *
  * Props:
- *   title      — required, always DM Serif Display
+ *   title      — required, Plus Jakarta Sans 700
  *   subtitle   — optional, muted line below the title
  *   action     — optional CTA button: { label, to?, onClick?, icon? }
  *   backTo     — optional back link: { href, label }
@@ -21,9 +21,9 @@
 
 import { Link } from 'react-router-dom';
 import { BackButton } from '@/app/components/BackButton';
-import { V, VLIGHT, DARK, MUTED, S, E, R_BUTTON } from '@/lib/design-tokens';
+import { V, DARK, MUTED, S, R_BUTTON } from '@/lib/design-tokens';
 
-const DS = { ...E, fontWeight: 400 } as const;
+const DS = { ...S, fontWeight: 700 } as const;
 
 interface PageHeaderAction {
   label: string;

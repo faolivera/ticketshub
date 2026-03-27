@@ -723,9 +723,10 @@ export function SellerDashboardPage() {
             {showPast && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8, opacity: 0.75 }}>
                 {pastListings.map(l => {
-                  const url    = l.bannerUrls?.rectangle ?? l.bannerUrls?.square;
-                  const sector = l.sectionName || l.type || 'General';
-                  const price  = formatCurrencyDisplay(l.pricePerTicket.amount, l.pricePerTicket.currency);
+                  const url         = l.bannerUrls?.rectangle ?? l.bannerUrls?.square;
+                  const sector      = l.sectionName || l.type || t('boughtTickets.generalAdmission', { defaultValue: 'General' });
+                  const price       = formatCurrencyDisplay(l.pricePerTicket.amount, l.pricePerTicket.currency);
+                  const statusLabel = ({ Active: t('boughtTickets.activeListing'), Sold: t('boughtTickets.sold'), Cancelled: t('boughtTickets.cancelled'), Expired: t('boughtTickets.expired') } as Record<string, string>)[l.status] ?? l.status;
                   return (
                     <div key={l.id} style={{ background: BG, borderRadius: R_CARD, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                       <div style={{ height: 64, background: VLIGHT, position: 'relative', overflow: 'hidden' }}>
@@ -736,7 +737,7 @@ export function SellerDashboardPage() {
                         <p style={{ fontSize: 11.5, color: MUTED, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...S }}>{l.eventName}</p>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontSize: 12.5, fontWeight: 700, color: DARK, ...S }}>{price}</span>
-                          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 6px', borderRadius: 100, background: BG, color: MUTED, border: `1px solid ${BORD2}`, ...S }}>{l.status}</span>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 6px', borderRadius: 100, background: BG, color: MUTED, border: `1px solid ${BORD2}`, ...S }}>{statusLabel}</span>
                         </div>
                       </div>
                     </div>

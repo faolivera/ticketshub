@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('User', 'Admin');
 
@@ -35,7 +32,10 @@ CREATE TYPE "DeliveryMethod" AS ENUM ('Pickup', 'ArrangeWithSeller');
 CREATE TYPE "ListingStatus" AS ENUM ('Pending', 'Active', 'Sold', 'Cancelled', 'Expired');
 
 -- CreateEnum
-CREATE TYPE "OfferStatus" AS ENUM ('pending', 'accepted', 'rejected', 'converted', 'cancelled');
+CREATE TYPE "OfferStatus" AS ENUM ('pending', 'accepted', 'rejected', 'converted', 'cancelled', 'expired');
+
+-- CreateEnum
+CREATE TYPE "OfferExpiredReason" AS ENUM ('seller_no_response', 'buyer_no_purchase');
 
 -- CreateEnum
 CREATE TYPE "TicketUnitStatus" AS ENUM ('available', 'reserved', 'sold');
@@ -98,7 +98,7 @@ CREATE TYPE "PromotionStatus" AS ENUM ('active', 'inactive');
 CREATE TYPE "PromotionConfigTarget" AS ENUM ('seller', 'verified_seller', 'buyer', 'verified_buyer');
 
 -- CreateEnum
-CREATE TYPE "NotificationEventType" AS ENUM ('PAYMENT_REQUIRED', 'BUYER_PAYMENT_SUBMITTED', 'BUYER_PAYMENT_APPROVED', 'BUYER_PAYMENT_REJECTED', 'SELLER_PAYMENT_RECEIVED', 'TICKET_TRANSFERRED', 'TRANSACTION_COMPLETED', 'TRANSACTION_CANCELLED', 'TRANSACTION_EXPIRED', 'DISPUTE_OPENED', 'DISPUTE_RESOLVED', 'IDENTITY_VERIFIED', 'IDENTITY_REJECTED', 'IDENTITY_SUBMITTED', 'BANK_ACCOUNT_SUBMITTED', 'SELLER_VERIFICATION_COMPLETE', 'EVENT_APPROVED', 'EVENT_REJECTED', 'REVIEW_RECEIVED', 'OFFER_RECEIVED', 'OFFER_ACCEPTED', 'OFFER_REJECTED', 'OFFER_CANCELLED');
+CREATE TYPE "NotificationEventType" AS ENUM ('BUYER_PAYMENT_SUBMITTED', 'PAYMENT_RECEIVED', 'BUYER_PAYMENT_REJECTED', 'TICKET_SENT', 'TICKET_RECEIVED', 'TRANSACTION_COMPLETED', 'TRANSACTION_CANCELLED', 'DISPUTE_OPENED', 'DISPUTE_RESOLVED', 'IDENTITY_VERIFIED', 'IDENTITY_REJECTED', 'IDENTITY_SUBMITTED', 'BANK_ACCOUNT_SUBMITTED', 'SELLER_VERIFICATION_COMPLETE', 'EVENT_APPROVED', 'EVENT_REJECTED', 'REVIEW_RECEIVED', 'OFFER_RECEIVED', 'OFFER_ACCEPTED', 'OFFER_REJECTED', 'OFFER_CANCELLED', 'OFFER_EXPIRED');
 
 -- CreateEnum
 CREATE TYPE "NotificationChannel" AS ENUM ('IN_APP', 'EMAIL');
@@ -111,6 +111,9 @@ CREATE TYPE "NotificationStatus" AS ENUM ('PENDING', 'QUEUED', 'SENT', 'DELIVERE
 
 -- CreateEnum
 CREATE TYPE "NotificationPriority" AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
+
+-- CreateEnum
+CREATE TYPE "NotificationRecipientRole" AS ENUM ('BUYER', 'SELLER', 'ADMIN');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -176,6 +179,10 @@ CREATE TABLE "events" (
     "rankingScore" DOUBLE PRECISION,
     "rankingUpdatedAt" TIMESTAMP(3),
     "isPopular" BOOLEAN NOT NULL DEFAULT false,
+    "highlight" BOOLEAN NOT NULL DEFAULT false,
+    "ticketApp" TEXT,
+    "transferable" BOOLEAN,
+    "artists" TEXT[] DEFAULT ARRAY[]::TEXT[],
 
     CONSTRAINT "events_pkey" PRIMARY KEY ("id")
 );
@@ -322,6 +329,7 @@ CREATE TABLE "transactions" (
     "completedAt" TIMESTAMP(3),
     "cancelledAt" TIMESTAMP(3),
     "refundedAt" TIMESTAMP(3),
+    "buyer_delivery_email" TEXT,
     "transfer_proof_storage_key" TEXT,
     "transfer_proof_original_filename" TEXT,
     "receipt_proof_storage_key" TEXT,
@@ -373,6 +381,8 @@ CREATE TABLE "offers" (
     "rejectedAt" TIMESTAMP(3),
     "convertedTransactionId" TEXT,
     "cancelledAt" TIMESTAMP(3),
+    "expired_at" TIMESTAMP(3),
+    "expired_reason" "OfferExpiredReason",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -400,6 +410,7 @@ CREATE TABLE "payment_methods" (
     "name" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'enabled',
+    "visible" BOOLEAN NOT NULL DEFAULT true,
     "commissionPercent" DOUBLE PRECISION NOT NULL,
     "commissionFixed" INTEGER NOT NULL DEFAULT 0,
     "instructions" JSONB,
@@ -629,6 +640,7 @@ CREATE TABLE "notifications" (
     "eventType" "NotificationEventType" NOT NULL,
     "recipientId" TEXT NOT NULL,
     "channel" "NotificationChannel" NOT NULL,
+    "recipientRole" "NotificationRecipientRole" NOT NULL,
     "title" TEXT NOT NULL,
     "body" TEXT NOT NULL,
     "actionUrl" TEXT,
@@ -653,6 +665,7 @@ CREATE TABLE "notification_templates" (
     "eventType" "NotificationEventType" NOT NULL,
     "channel" "NotificationChannel" NOT NULL,
     "locale" TEXT NOT NULL,
+    "recipientRole" "NotificationRecipientRole" NOT NULL,
     "titleTemplate" TEXT NOT NULL,
     "bodyTemplate" TEXT NOT NULL,
     "actionUrlTemplate" TEXT,
@@ -718,10 +731,56 @@ CREATE TABLE "platform_config" (
     "offer_accepted_expiration_minutes" INTEGER NOT NULL,
     "transaction_chat_poll_interval_seconds" INTEGER NOT NULL,
     "transaction_chat_max_messages" INTEGER NOT NULL,
+    "minimum_hours_to_buy_tickets" INTEGER NOT NULL DEFAULT 0,
     "risk_engine" JSONB,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "platform_config_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "gateway_orders" (
+    "id" TEXT NOT NULL,
+    "transactionId" TEXT NOT NULL,
+    "paymentMethodId" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "providerOrderId" TEXT NOT NULL,
+    "checkoutUrl" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "gateway_orders_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "event_subscriptions" (
+    "id" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "subscriptionType" TEXT NOT NULL,
+    "userId" TEXT,
+    "email" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "event_subscriptions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "gateway_refunds" (
+    "id" TEXT NOT NULL,
+    "transactionId" TEXT NOT NULL,
+    "gatewayOrderId" TEXT NOT NULL,
+    "providerOrderId" TEXT NOT NULL,
+    "paymentMethodId" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "currency" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "apiCallLog" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "gateway_refunds_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -899,13 +958,37 @@ CREATE INDEX "notifications_channel_status_idx" ON "notifications"("channel", "s
 CREATE INDEX "notifications_eventId_idx" ON "notifications"("eventId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "notification_templates_eventType_channel_locale_key" ON "notification_templates"("eventType", "channel", "locale");
+CREATE UNIQUE INDEX "notification_templates_eventType_channel_locale_recipientRo_key" ON "notification_templates"("eventType", "channel", "locale", "recipientRole");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "notification_channel_configs_eventType_key" ON "notification_channel_configs"("eventType");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "event_require_scoring_eventId_key" ON "event_require_scoring"("eventId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "gateway_orders_transactionId_key" ON "gateway_orders"("transactionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "gateway_orders_providerOrderId_key" ON "gateway_orders"("providerOrderId");
+
+-- CreateIndex
+CREATE INDEX "gateway_orders_status_idx" ON "gateway_orders"("status");
+
+-- CreateIndex
+CREATE INDEX "gateway_orders_transactionId_status_idx" ON "gateway_orders"("transactionId", "status");
+
+-- CreateIndex
+CREATE INDEX "event_subscriptions_eventId_subscriptionType_idx" ON "event_subscriptions"("eventId", "subscriptionType");
+
+-- CreateIndex
+CREATE INDEX "event_subscriptions_email_idx" ON "event_subscriptions"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "event_subscriptions_eventId_subscriptionType_email_key" ON "event_subscriptions"("eventId", "subscriptionType", "email");
+
+-- CreateIndex
+CREATE INDEX "gateway_refunds_status_idx" ON "gateway_refunds"("status");
 
 -- AddForeignKey
 ALTER TABLE "events" ADD CONSTRAINT "events_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1015,3 +1098,17 @@ ALTER TABLE "notifications" ADD CONSTRAINT "notifications_recipientId_fkey" FORE
 -- AddForeignKey
 ALTER TABLE "event_require_scoring" ADD CONSTRAINT "event_require_scoring_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "events"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- AddForeignKey
+ALTER TABLE "gateway_orders" ADD CONSTRAINT "gateway_orders_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "transactions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "event_subscriptions" ADD CONSTRAINT "event_subscriptions_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "events"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "event_subscriptions" ADD CONSTRAINT "event_subscriptions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "gateway_refunds" ADD CONSTRAINT "gateway_refunds_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "transactions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "gateway_refunds" ADD CONSTRAINT "gateway_refunds_gatewayOrderId_fkey" FOREIGN KEY ("gatewayOrderId") REFERENCES "gateway_orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

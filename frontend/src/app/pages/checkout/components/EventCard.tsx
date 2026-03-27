@@ -3,7 +3,7 @@ import { Check, Minus, Plus, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { BuyPageData, TicketUnit } from "@/api/types";
 import {
-  V, VLIGHT, DARK, MUTED, HINT, CARD, BORDER, BORD2, GREEN, GLIGHT, S, E, R_CARD, R_BUTTON,
+  V, VLIGHT, DARK, MUTED, HINT, CARD, BORDER, BORD2, GREEN, GLIGHT, INFO, INFO_LIGHT, INFO_BORDER, S, E, R_CARD, R_BUTTON,
 } from "@/lib/design-tokens";
 
 interface EventCardProps {
@@ -198,6 +198,11 @@ export const EventCard: FC<EventCardProps> = ({
                 );
               })}
             </div>
+            {listing.sellTogether && (
+              <p style={{ fontSize: 11.5, color: INFO, fontWeight: 600, marginTop: 8 }}>
+                {t("eventTickets.soldAsBundle")}
+              </p>
+            )}
             {selectedUnitIds.length > 0 && (
               <div
                 style={{
@@ -242,54 +247,61 @@ export const EventCard: FC<EventCardProps> = ({
             )}
           </div>
         ) : (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div>
-              <p style={lbl}>{t("buyTicket.quantity")}</p>
-              <p style={{ fontSize: 11.5, color: HINT }}>
-                {availableCount} {t("buyTicket.available")}
+          <div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <p style={lbl}>{t("buyTicket.quantity")}</p>
+                <p style={{ fontSize: 11.5, color: HINT }}>
+                  {availableCount} {t("buyTicket.available")}
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="qty-btn"
+                  disabled={
+                    quantity <= 1 || hasAcceptedOffer || listing.sellTogether
+                  }
+                  onClick={onQuantityDecrease}
+                >
+                  <Minus size={13} />
+                </button>
+                <span
+                  style={{
+                    fontSize: 17,
+                    fontWeight: 700,
+                    color: DARK,
+                    minWidth: 36,
+                    textAlign: "center",
+                  }}
+                >
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  className="qty-btn"
+                  disabled={
+                    quantity >= availableCount ||
+                    hasAcceptedOffer ||
+                    listing.sellTogether
+                  }
+                  onClick={onQuantityIncrease}
+                >
+                  <Plus size={13} />
+                </button>
+              </div>
+            </div>
+            {listing.sellTogether && (
+              <p style={{ fontSize: 11.5, color: INFO, fontWeight: 600, marginTop: 8 }}>
+                {t("eventTickets.soldAsBundle")}
               </p>
-            </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <button
-                type="button"
-                className="qty-btn"
-                disabled={
-                  quantity <= 1 || hasAcceptedOffer || listing.sellTogether
-                }
-                onClick={onQuantityDecrease}
-              >
-                <Minus size={13} />
-              </button>
-              <span
-                style={{
-                  fontSize: 17,
-                  fontWeight: 700,
-                  color: DARK,
-                  minWidth: 36,
-                  textAlign: "center",
-                }}
-              >
-                {quantity}
-              </span>
-              <button
-                type="button"
-                className="qty-btn"
-                disabled={
-                  quantity >= availableCount ||
-                  hasAcceptedOffer ||
-                  listing.sellTogether
-                }
-                onClick={onQuantityIncrease}
-              >
-                <Plus size={13} />
-              </button>
-            </div>
+            )}
           </div>
         )}
 

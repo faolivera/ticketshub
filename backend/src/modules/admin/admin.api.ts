@@ -343,6 +343,7 @@ export interface AdminEventListingItem {
   eventSection: AdminListingEventSection;
   totalTickets: number;
   ticketsByStatus: AdminTicketStatusCounts;
+  sellTogether: boolean;
   status: string;
   pricePerTicket: Money;
   createdAt: Date;

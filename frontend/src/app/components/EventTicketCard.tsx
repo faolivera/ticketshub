@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Shield, CheckCircle, MessageCircle, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { V, VLIGHT, DARK, MUTED, BG, S, SUCCESS, R_CARD, R_BUTTON } from "@/lib/design-tokens";
+import { V, VLIGHT, DARK, MUTED, BG, S, SUCCESS, INFO, R_CARD, R_BUTTON } from "@/lib/design-tokens";
 import { UserAvatar } from "@/app/components/UserAvatar";
 import { getInitials } from "@/lib/string-utils";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getBuyPill(qty: number, t: (key: string, opts?: Record<string, unknown>) => string): string | null {
+function getBuyPill(qty: number, sellTogether: boolean, t: (key: string, opts?: Record<string, unknown>) => string): string | null {
   if (qty <= 1) return null;
+  if (sellTogether) return t("eventTickets.soldAsBundle");
   if (qty === 2) return t("eventTickets.buyOneOrTwo");
   return t("eventTickets.buyOneToN", { n: qty });
 }
@@ -20,6 +21,18 @@ function fmtWithFee(priceNum: number | undefined, commissionPercent: number): st
   return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(total);
 }
 
+function useMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < breakpoint
+  );
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 // ─── Shared style constants ────────────────────────────────────────────────────
 
 const PILL: React.CSSProperties = {
@@ -28,10 +41,18 @@ const PILL: React.CSSProperties = {
   fontSize: 11.5, fontWeight: 600, whiteSpace: "nowrap",
 };
 
+// Mobile pills: mismos colores y lógica, padding más compacto
+const PILL_SM: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center",
+  padding: "2px 7px", borderRadius: 100,
+  fontSize: 10, fontWeight: 600, whiteSpace: "nowrap",
+};
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug: string }) {
   const { t } = useTranslation();
+  const isMobile = useMobile();
   const {
     sector,
     seated,
@@ -50,6 +71,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
     newSeller,
     urgency,
     listingId,
+    sellTogether,
   } = ticket;
 
   const [hovered, setHovered] = useState(false);
@@ -60,10 +82,243 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
     sellerPositivePercent !== null &&
     Number.isFinite(sellerPositivePercent);
   const sellerPositivePercentRounded = hasReviews ? Math.round(sellerPositivePercent) : null;
-  const buyPillText = getBuyPill(qty, t);
+  const buyPillText = getBuyPill(qty, sellTogether, t);
   const totalWithFee = fmtWithFee(priceNum, maxTotalCommissionPercent ?? 10);
 
-  return (
+  // ─── MOBILE CARD ────────────────────────────────────────────────────────────
+  //
+  // Tres bandas separadas por border-bottom:
+  //   [1] Sector + pills (qty, buyPill, urgency)
+  //   [2] Precio (label + número + desglose) + botón CTA
+  //   [3] Vendedor (avatar + nombre + verificado + reputación) + acepta ofertas
+  //
+  // Diferencias vs desktop:
+  //   - Sin height: 100% — es lista, no grilla
+  //   - Sin hovered state — no hay cursor en touch
+  //   - Footer ("Compra protegida" / "Comisión incluida") eliminado:
+  //       · "Compra protegida" vive en el header de la sección (opción 2)
+  //       · "Comisión incluida" ya está expresado en el desglose de precio
+  //   - "Acepta ofertas" se mueve al slot derecho de la banda del vendedor,
+  //     fuera del Link del perfil del vendedor
+  //
+  const mobileCard = (
+    <div
+      style={{
+        ...S,
+        background: "#ffffff",
+        border: "1px solid #e5e7eb",
+        borderRadius: R_CARD,
+        overflow: "hidden",
+      }}
+    >
+      {/* ── Banda 1: sector + pills ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "9px 12px",
+          borderBottom: "1px solid #f0f0ee",
+          gap: 8,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: MUTED,
+            textTransform: "uppercase",
+            letterSpacing: "0.07em",
+            flexShrink: 0,
+          }}
+        >
+          {sector}
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <span style={{ ...PILL_SM, background: BG, color: MUTED, border: "1px solid #d1d5db" }}>
+            {t("eventTickets.ticketsCount", { count: qty })}
+          </span>
+          {buyPillText && (
+            <span style={{ ...PILL_SM, background: sellTogether ? "#eff6ff" : VLIGHT, color: sellTogether ? INFO : V, border: `1px solid ${sellTogether ? "#bfdbfe" : "#c4b5fd"}` }}>
+              {buyPillText}
+            </span>
+          )}
+          {urgency === "últimas" && (
+            <span style={{ ...PILL_SM, fontWeight: 700, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
+              {t("eventTickets.lastTicket", { count: qty })}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Banda 2: precio + botón CTA ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 12px",
+          borderBottom: "1px solid #f0f0ee",
+          gap: 12,
+        }}
+      >
+        {/* Bloque de precio */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
+          <span
+            style={{
+              fontSize: 8.5,
+              fontWeight: 700,
+              color: MUTED,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+            }}
+          >
+            {t("eventTickets.totalToPay")}
+          </span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+            <span
+              style={{
+                fontSize: 21,
+                fontWeight: 800,
+                color: DARK,
+                letterSpacing: "-0.5px",
+                lineHeight: 1,
+              }}
+            >
+              ${totalWithFee}
+            </span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: MUTED }}>ARS</span>
+          </div>
+          <span style={{ fontSize: 10, color: MUTED, marginTop: 1 }}>
+            {t("eventTickets.priceWithCommission", { price, commission: maxTotalCommissionPercent ?? 10 })}
+          </span>
+        </div>
+
+        {/* Botón CTA */}
+        <Link
+          to={`/buy/${eventSlug}/${listingId}`}
+          style={{ textDecoration: "none", flexShrink: 0 }}
+        >
+          <span
+            style={{
+              ...S,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              padding: "10px 14px",
+              borderRadius: R_BUTTON,
+              fontSize: 13,
+              fontWeight: 700,
+              background: V,
+              color: "#ffffff",
+              boxShadow: "0 4px 14px rgba(105,45,212,0.28)",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {seated && <MapPin size={13} color="#ffffff" />}
+            {ctaLabel} →
+          </span>
+        </Link>
+      </div>
+
+      {/* ── Banda 3: vendedor + acepta ofertas ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "8px 12px",
+          gap: 8,
+        }}
+      >
+        {/* Seller: Link ocupa el espacio disponible */}
+        <Link
+          to={`/seller/${sellerId}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            flex: 1,
+            minWidth: 0,
+            textDecoration: "none",
+          }}
+        >
+          <UserAvatar
+            name={seller}
+            src={sellerAvatarUrl ?? undefined}
+            className="h-7 w-7 shrink-0"
+          />
+          <div style={{ minWidth: 0 }}>
+            {/* Nombre + verificado */}
+            <div style={{ display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: DARK,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  minWidth: 0,
+                  margin: 0,
+                }}
+              >
+                {seller}
+              </p>
+              {verified && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 2,
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: SUCCESS,
+                    flexShrink: 0,
+                  }}
+                >
+                  <CheckCircle size={9} /> {t("eventTickets.verified")}
+                </span>
+              )}
+            </div>
+            {/* Reputación — misma lógica condicional que desktop */}
+            {sellerTotalSales === 0 && !hasReviews ? (
+              <p style={{ fontSize: 10, color: MUTED, margin: 0 }}>{t("eventTickets.newSeller")}</p>
+            ) : sellerTotalSales > 0 && !hasReviews ? (
+              <p style={{ fontSize: 10, color: MUTED, margin: 0 }}>{t("eventTickets.sellerSales", { count: sellerTotalSales })}</p>
+            ) : hasReviews ? (
+              <p style={{ fontSize: 10, color: MUTED, margin: 0 }}>
+                {t("eventTickets.sellerSalesAndReviews", { count: sellerTotalSales, percent: sellerPositivePercentRounded })}
+              </p>
+            ) : null}
+          </div>
+        </Link>
+
+        {/* Acepta ofertas — fuera del Link, slot derecho */}
+        {acceptsOffers && (
+          <span
+            style={{
+              ...PILL_SM,
+              gap: 4,
+              background: "#e1f5ee",
+              color: "#0F6E56",
+              border: "1px solid #9FE1CB",
+              flexShrink: 0,
+            }}
+          >
+            <MessageCircle size={9} />
+            {t("eventTickets.acceptsOffers")}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  // ─── DESKTOP CARD ──────────────────────────────────────────────────────────
+  // Idéntico al componente original — no se modifica ningún estilo ni lógica.
+  //
+  const desktopCard = (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -93,7 +348,7 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
             {t("eventTickets.ticketsCount", { count: qty })}
           </span>
           {buyPillText && (
-            <span style={{ ...PILL, background: VLIGHT, color: V, border: "1.5px solid #c4b5fd" }}>
+            <span style={{ ...PILL, background: sellTogether ? "#eff6ff" : VLIGHT, color: sellTogether ? INFO : V, border: `1.5px solid ${sellTogether ? "#bfdbfe" : "#c4b5fd"}` }}>
               {buyPillText}
             </span>
           )}
@@ -194,4 +449,6 @@ export function EventTicketCard({ ticket, eventSlug }: { ticket: any; eventSlug:
       </div>
     </div>
   );
+
+  return isMobile ? mobileCard : desktopCard;
 }

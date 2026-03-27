@@ -707,8 +707,9 @@ export default function CheckoutPage() {
                 >
                   <p
                     style={{
-                      ...E,
+                      ...S,
                       fontSize: 18,
+                      fontWeight: 700,
                       color: DARK,
                       marginBottom: 4,
                       lineHeight: 1.2,

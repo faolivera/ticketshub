@@ -459,7 +459,19 @@
       "disputed": "Hay una disputa abierta",
       "viewDetails": "Revisá la transacción"
     },
-    "openFullHistory": "Abrir historial completo"
+    "openFullHistory": "Abrir historial completo",
+    "activityPanel": "Actividad",
+    "requiresAttention": "Requiere atención",
+    "noAttentionItems": "Todo al día. Sin ofertas ni ventas pendientes.",
+    "history": "Historial",
+    "viewFullHistory": "Ver historial",
+    "noHistory": "Sin historial todavía",
+    "noHistorySubtitle": "Tus ventas completadas y ofertas cerradas aparecerán acá.",
+    "listingsPanel": "Mis publicaciones",
+    "newListing": "Publicar",
+    "active": "activas",
+    "offer": "oferta",
+    "offers": "ofertas"
   },
   "ditListing": {
     "description": "Descripción"
@@ -2422,6 +2434,7 @@
           "date": "Fecha",
           "section": "Sección",
           "totalTickets": "Total de Tickets",
+          "sellTogether": "Bundle",
           "ticketStatus": "Disponibles / Reservados / Vendidos",
           "listingStatus": "Estado",
           "price": "Precio"

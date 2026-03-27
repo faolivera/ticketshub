@@ -1,14 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { eventsService } from "@/api/services/events.service";
 import type { PublicListEventItem, EventFilters } from "@/api/types/events";
-import { formatDate } from "@/lib/format-date";
 import {
   V,
   VLIGHT,
   BLUE,
-  BLIGHT,
   DARK,
   MUTED,
   BG,
@@ -16,145 +13,23 @@ import {
   BORDER,
   BORD2,
   S,
-  E,
-  TRUST_ESCROW,
-  TRUST_ESCROW_BG,
-  TRUST_VERIFIED,
-  TRUST_VERIFIED_BG,
-  AMBER_c1,
-  ABG,
-  AMBER,
-  ABORD,
-  AMBER_BG_LIGHT,
-  ERROR,
-  BADGE_DEMAND_BG,
-  ERROR_DARK,
-  BADGE_DEMAND_BORDER,
-  SHADOW_CARD_HOVER,
-  SHADOW_CARD_SM,
   SHADOW_DROP_LG,
   SHADOW_CARD_MD,
-  GRADIENT_CARD_TOP,
-  OVERLAY_V_STRONG,
-  OVERLAY_DARK_45,
-  V_SOFT,
   V_FOCUS_RING,
   R_BUTTON,
   R_INPUT,
   R_CARD,
+  ERROR,
 } from "@/lib/design-tokens";
 import { HighlightedEventsHero } from "@/app/components/home/HighlightedEventsHero4";
 import { MapSVG } from "@/app/components/site/SiteBrandIcons";
-import { Search, Zap, TrendingUp, ChevronDown, Check, Lock, CheckCircle, RefreshCw, Calendar, SlidersHorizontal } from "lucide-react";
+import { Search, ChevronDown, Check, RefreshCw, SlidersHorizontal } from "lucide-react";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
+import { EventCard } from "./components/EventCard";
+import { SkeletonSearchBar, SkeletonCard } from "./components/Skeletons";
+import { eventToCardShape, CAT_TO_API, API_TO_CAT } from "./utils";
 
-const DEFAULT_IMAGE = "https://picsum.photos/seed/event/600/600";
-
-interface CardShape {
-  id: string;
-  slug: string;
-  name: string;
-  venue: string;
-  city: string;
-  dates: string[];
-  img: string;
-  price: string | null;
-  priceCurrency: string;
-  available: number | null;
-  badge: string | null;
-  category: string | undefined;
-}
-
-/**
- * Transform API event to card shape. Only approved future dates are included, formatted as "DD Mon · HH:mm".
- */
-function eventToCardShape(apiEvent: PublicListEventItem): CardShape {
-  const now = new Date();
-  const approvedDates = (apiEvent.dates || []).filter(
-    (d) => d.status === "approved" && new Date(d.date) >= now,
-  );
-  const datesFormatted = approvedDates.map((d) => {
-    const dateStr = typeof d.date === "string" ? d.date : d.date;
-    return formatDate(dateStr, { month: "short", day: "numeric" });
-  });
-  const img =
-    apiEvent.bannerUrls?.rectangle ||
-    apiEvent.bannerUrls?.square ||
-    apiEvent.images?.[0]?.src ||
-    DEFAULT_IMAGE;
-  const lp = apiEvent.lowestListingPriceWithFees;
-  const priceMinor = lp?.amount;
-  const priceDisplay =
-    priceMinor != null && !Number.isNaN(priceMinor)
-      ? (priceMinor / 100).toLocaleString("es-AR", {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        })
-      : null;
-  const priceCurrency = lp?.currency || "ARS";
-
-  return {
-    id: apiEvent.id,
-    slug: apiEvent.slug,
-    name: apiEvent.name || "",
-    venue: apiEvent.venue || "",
-    city: apiEvent.location?.city || "",
-    dates: datesFormatted,
-    img,
-    price: priceDisplay,
-    priceCurrency,
-    available: null,
-    badge: null,
-    category: apiEvent.category,
-  };
-}
-
-/** Maps landing pill label to API EventCategory */
-const CAT_TO_API: Record<string, string> = {
-  Recital: "Concert",
-  Festival: "Festival",
-  Teatro: "Theater",
-  Deportes: "Sports",
-  Electrónica: "Other",
-  Conferencia: "Conference",
-  Comedia: "Comedy",
-};
-/** Maps API EventCategory to landing pill label */
-const API_TO_CAT: Record<string, string> = {
-  Concert:    "Recital",
-  Festival:   "Festival",
-  Theater:    "Teatro",
-  Sports:     "Deportes",
-  Other:      "Electrónica",
-  Conference: "Conferencia",
-  Comedy:     "Comedia",
-};
-const TRUST = [
-  {
-    Icon: Lock,
-    title: "Fondos protegidos",
-    desc: "Tu plata está protegida hasta que tenés tu entrada en mano. No antes.",
-    color: TRUST_ESCROW,
-    bg: TRUST_ESCROW_BG,
-  },
-  {
-    Icon: CheckCircle,
-    title: "Vendedores verificados",
-    desc: "Cada entrada pasa por nuestro proceso de validación antes de publicarse.",
-    color: TRUST_VERIFIED,
-    bg: TRUST_VERIFIED_BG,
-  },
-  {
-    Icon: RefreshCw,
-    title: "Garantía total",
-    desc: "Si el evento no ocurre o la entrada es inválida, devolvemos el 100% de tu dinero.",
-    color: AMBER_c1,
-    bg: ABG,
-  },
-];
-
-// ═══════════════════════════════════════════════════════════════════════════════
-export default function TicketsHub() {
+export default function LandingPage() {
   const { t } = useTranslation();
   const [filters,     setFilters]    = useState<EventFilters | null>(null);
   const [activeCat,   setActiveCat]  = useState<string>("Todos");
@@ -380,7 +255,7 @@ export default function TicketsHub() {
           border:`1px solid ${BORDER}`,
           boxShadow: SHADOW_CARD_MD,
           padding:"14px 18px",
-          marginBottom:28,
+          marginBottom:18,
         }}>
           {/* Desktop: unchanged layout (hidden ≤768px) */}
           <div className="th-desk-only" style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", width:"100%" }}>
@@ -630,242 +505,5 @@ export default function TicketsHub() {
         )}
       </div>
     </div>
-  );
-}
-
-// ─── SKELETON SEARCH BAR ──────────────────────────────────────────────────────
-function SkeletonSearchBar() {
-  const pillWidths = [52, 44, 60, 72, 68];
-  return (
-    <div style={{ background: CARD, borderRadius: R_CARD, border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_MD, padding: "14px 18px", marginBottom: 28 }}>
-      {/* Desktop skeleton (hidden on mobile via inline media — same class as real bar) */}
-      <div className="th-desk-only" style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        {/* Search input */}
-        <div className="sk" style={{ flex: "1 1 220px", height: 38, borderRadius: R_INPUT }} />
-        <div style={{ width: 1, height: 28, background: BORD2, flexShrink: 0 }} />
-        {/* City picker */}
-        <div className="sk" style={{ width: 140, height: 38, borderRadius: R_BUTTON, flexShrink: 0 }} />
-        <div style={{ width: 1, height: 28, background: BORD2, flexShrink: 0 }} />
-        {/* Category pills */}
-        <div style={{ display: "flex", gap: 6 }}>
-          {pillWidths.map((w, i) => (
-            <div key={i} className="sk" style={{ width: w, height: 30, borderRadius: 100 }} />
-          ))}
-        </div>
-      </div>
-      {/* Mobile skeleton */}
-      <div className="th-mob-only" style={{ display: "flex", gap: 10 }}>
-        <div className="sk" style={{ flex: 1, height: 44, borderRadius: R_INPUT }} />
-        <div className="sk" style={{ width: 44, height: 44, borderRadius: R_BUTTON, flexShrink: 0 }} />
-      </div>
-    </div>
-  );
-}
-
-// ─── SKELETON CARD ────────────────────────────────────────────────────────────
-function SkeletonCard() {
-  return (
-    <div style={{ background: CARD, borderRadius: R_CARD, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW_CARD_SM }}>
-      {/* Image placeholder */}
-      <div className="sk" style={{ width: "100%", aspectRatio: "4/3" }} />
-      {/* Content */}
-      <div style={{ padding: "12px 13px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-        <div className="sk" style={{ height: 14, width: "72%", borderRadius: 5 }} />
-        <div className="sk" style={{ height: 12, width: "48%", borderRadius: 5 }} />
-        <div className="sk" style={{ height: 12, width: "38%", borderRadius: 5, marginTop: 2 }} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-          <div className="sk" style={{ height: 12, width: "32%", borderRadius: 5 }} />
-          <div className="sk" style={{ height: 28, width: "38%", borderRadius: R_BUTTON }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── EVENT CARD ───────────────────────────────────────────────────────────────
-interface EventCardProps {
-  event: CardShape;
-  index: number;
-  hovered: boolean;
-  onHover: (id: string | null) => void;
-}
-
-function EventCard({ event, index, hovered, onHover }: EventCardProps) {
-  const { t } = useTranslation();
-  const dates = event.dates || [];
-  const multi = dates.length > 1;
-  const S2: CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-  const datesLabel = dates.length === 0 ? "" : dates.join(", ");
-
-  const urgBadge = (type: string): { bg?: string; color?: string; border?: string } => {
-    if (type === "últimas")
-      return { bg: AMBER_BG_LIGHT, color: AMBER, border: `1px solid ${ABORD}` };
-    if (type === "demanda")
-      return {
-        bg: BADGE_DEMAND_BG,
-        color: ERROR_DARK,
-        border: `1px solid ${BADGE_DEMAND_BORDER}`,
-      };
-    return {};
-  };
-
-  const cardContent = (
-    <>
-      <div
-        onMouseEnter={() => onHover(event.id)}
-        onMouseLeave={() => onHover(null)}
-        style={{
-          background: CARD,
-          borderRadius: R_CARD,
-          overflow: "hidden",
-          border: `1px solid ${BORDER}`,
-          boxShadow: hovered ? SHADOW_CARD_HOVER : SHADOW_CARD_SM,
-          transform: hovered ? "translateY(-3px)" : "translateY(0)",
-          transition: "all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
-          cursor: "pointer",
-        }}
-      >
-        <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", overflow: "hidden" }}>
-          <img
-            src={event.img}
-            alt={event.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block", transform: hovered ? "scale(1.05)" : "scale(1)", transition: "transform 0.38s ease" }}
-          />
-          <div style={{ position: "absolute", inset: 0, background: GRADIENT_CARD_TOP }} />
-
-          {event.badge && (
-            <div style={{ position: "absolute", top: 9, left: 9 }}>
-              <span style={{ ...urgBadge(event.badge), padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", gap: 4, ...S2, background: urgBadge(event.badge).bg, border: urgBadge(event.badge).border, color: urgBadge(event.badge).color }}>
-                {event.badge === "últimas" ? <><Zap size={9} /> Últimas {event.available}</> : <><TrendingUp size={9} /> Alta demanda</>}
-              </span>
-            </div>
-          )}
-
-          {multi && (
-            <div style={{ position: "absolute", top: 9, right: 9, background: OVERLAY_V_STRONG, backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 700, color: "white", ...S2 }}>
-              {t("landing.cardDatesCount", { count: dates.length })}
-            </div>
-          )}
-
-          {!event.badge && event.available != null && (
-            <div style={{ position: "absolute", bottom: 8, right: 9, background: OVERLAY_DARK_45, backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 100, fontSize: 11, fontWeight: 600, color: "white", ...S2 }}>
-              {t("landing.cardAvailable", { count: event.available })}
-            </div>
-          )}
-        </div>
-
-        <div style={{ padding: "12px 13px 13px" }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: DARK, marginBottom: 1, lineHeight: 1.25, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {event.name}
-          </h3>
-          <p style={{ color: MUTED, fontSize: 12, marginBottom: 9, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {event.venue}
-          </p>
-
-          <div style={{ marginBottom: 11, display: "flex", alignItems: "center", gap: 6, minHeight: 20 }}>
-            <Calendar size={13} style={{ color: MUTED, flexShrink: 0 }} strokeWidth={2} />
-            <span style={{ fontSize: 12, color: MUTED, lineHeight: 1.4, ...S2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={datesLabel}>
-              {dates.length === 0 ? t("landing.dateTBD") : datesLabel}
-            </span>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: event.price != null ? "space-between" : "flex-end",
-            }}
-          >
-            {event.price != null && (
-              <div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: MUTED,
-                    fontWeight: 500,
-                    marginBottom: 1,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {t("landing.cardPriceFrom")}
-                </div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: V, lineHeight: 1, ...S2 }}>
-                  ${event.price}
-                  <span style={{ fontSize: 10, fontWeight: 500, color: MUTED, marginLeft: 3 }}>
-                    {" "}
-                    {event.priceCurrency || "ARS"}
-                  </span>
-                </div>
-              </div>
-            )}
-            <span
-              className="th-card-btn"
-              style={{
-                padding: "7px 12px",
-                borderRadius: R_BUTTON,
-                background: "white",
-                border: `1.5px solid ${BORD2}`,
-                color: DARK,
-                fontSize: 12,
-                fontWeight: 600,
-                transition: "all 0.16s",
-                ...S2,
-              }}
-            >
-              {t("landing.cardView")} →
-            </span>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-
-  if (!event.slug) return cardContent;
-  return (
-    <Link to={`/event/${event.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      {cardContent}
-    </Link>
-  );
-}
-
-// ─── HERO-ONLY SVG ICONS ─────────────────────────────────────────────────────
-interface SVGIconProps {
-  size?: number;
-}
-
-function CheckSVG({ size = 13 }: SVGIconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={V_SOFT}
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-function UsersSVG({ size = 13 }: SVGIconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={V_SOFT}
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 00-3-3.87" />
-      <path d="M16 3.13a4 4 0 010 7.75" />
-    </svg>
   );
 }

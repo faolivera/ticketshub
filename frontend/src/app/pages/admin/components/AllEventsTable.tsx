@@ -348,6 +348,11 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
                                           </TableHead>
                                           <TableHead className="text-center">
                                             {t(
+                                              'admin.events.allEvents.listingsTable.sellTogether'
+                                            )}
+                                          </TableHead>
+                                          <TableHead className="text-center">
+                                            {t(
                                               'admin.events.allEvents.listingsTable.ticketStatus'
                                             )}
                                           </TableHead>
@@ -390,6 +395,13 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                               {listing.totalTickets}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                              {listing.sellTogether && (
+                                                <Badge variant="outline" className="text-purple-600 border-purple-600">
+                                                  ✓
+                                                </Badge>
+                                              )}
                                             </TableCell>
                                             <TableCell className="text-center">
                                               <span className="inline-flex items-center gap-1">

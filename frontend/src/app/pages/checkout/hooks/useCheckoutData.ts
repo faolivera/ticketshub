@@ -112,6 +112,7 @@ export function useCheckoutData(listingId: string | undefined): UseCheckoutDataR
     const ids = availableUnits.map((u) => u.id);
     if (listing.sellTogether) {
       setSelectedUnitIds(ids);
+      if (!isNumberedListing) setQuantity(availableCount);
       return;
     }
     if (!isNumberedListing) {

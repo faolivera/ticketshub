@@ -220,7 +220,7 @@ export function SellerProfile() {
           <Separator style={{ marginBottom: 20 }} />
 
           {/* Metrics row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr' }}>
             {/* Satisfaction */}
             <div style={{ paddingRight: 20 }}>
               <p
@@ -237,8 +237,8 @@ export function SellerProfile() {
               </p>
               <p
                 style={{
-                  ...E,
-                  fontWeight: 400,
+                  ...S,
+                  fontWeight: 800,
                   fontSize: 30,
                   color: positivePercentage !== null ? DARK : MUTED,
                   lineHeight: 1,
@@ -276,8 +276,8 @@ export function SellerProfile() {
               </p>
               <p
                 style={{
-                  ...E,
-                  fontWeight: 400,
+                  ...S,
+                  fontWeight: 800,
                   fontSize: 30,
                   color: DARK,
                   lineHeight: 1,
@@ -307,8 +307,8 @@ export function SellerProfile() {
               </p>
               <p
                 style={{
-                  ...E,
-                  fontWeight: 400,
+                  ...S,
+                  fontWeight: 800,
                   fontSize: 30,
                   color: DARK,
                   lineHeight: 1,
@@ -439,8 +439,8 @@ export function SellerProfile() {
         {/* ── Customer reviews ── */}
         <h2
           style={{
-            ...E,
-            fontWeight: 400,
+            ...S,
+            fontWeight: 700,
             fontSize: 20,
             color: DARK,
             margin: '0 0 14px',
@@ -491,6 +491,7 @@ export function SellerProfile() {
                     <div>
                       <p
                         style={{
+                          ...S,
                           fontSize: 14,
                           fontWeight: 700,
                           color: DARK,
@@ -499,10 +500,11 @@ export function SellerProfile() {
                       >
                         {review.buyerName}
                       </p>
-                      <span style={{ fontSize: 11, color: MUTED }}>{formatReviewDate(review.reviewDate)}</span>
+                      <span style={{ ...S, fontSize: 11, color: MUTED }}>{formatReviewDate(review.reviewDate)}</span>
                     </div>
                     <span
                       style={{
+                        ...S,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 5,
@@ -523,6 +525,7 @@ export function SellerProfile() {
                   {/* Comment */}
                   <p
                     style={{
+                      ...S,
                       fontSize: 14,
                       lineHeight: 1.6,
                       color: DARK,
@@ -536,6 +539,7 @@ export function SellerProfile() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     <span
                       style={{
+                        ...S,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 5,
@@ -552,6 +556,7 @@ export function SellerProfile() {
                     </span>
                     <span
                       style={{
+                        ...S,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 5,
@@ -570,6 +575,7 @@ export function SellerProfile() {
                     </span>
                     <span
                       style={{
+                        ...S,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 5,

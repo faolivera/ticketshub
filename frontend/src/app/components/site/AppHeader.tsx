@@ -80,7 +80,7 @@ export function AppHeader({ homeHref: _homeHref = "#eventos" }: AppHeaderProps) 
           }}
         >
           <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0 }}>
-            <img src="/assets/brand_main.png" alt="TicketsHub" style={{ height: 43, width: "auto" }} />
+            <img src="https://d21bc5hcztswk.cloudfront.net/brand/brand_main.png" alt="TicketsHub" style={{ height: 43, width: "auto" }} />
           </Link>
 
           <div

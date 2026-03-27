@@ -303,6 +303,7 @@ export interface AdminEventListingItem {
   eventSection: AdminListingEventSection;
   totalTickets: number;
   ticketsByStatus: AdminTicketStatusCounts;
+  sellTogether: boolean;
   eventSlug: string;
   status: string;
   pricePerTicket: {

@@ -460,7 +460,19 @@
       "disputed": "There is an open dispute",
       "viewDetails": "Review the transaction"
     },
-    "openFullHistory": "Open full history"
+    "openFullHistory": "Open full history",
+    "activityPanel": "Activity",
+    "requiresAttention": "Requires attention",
+    "noAttentionItems": "All caught up. No pending offers or sales.",
+    "history": "History",
+    "viewFullHistory": "View history",
+    "noHistory": "No history yet",
+    "noHistorySubtitle": "Your completed sales and closed offers will appear here.",
+    "listingsPanel": "My listings",
+    "newListing": "Publish",
+    "active": "active",
+    "offer": "offer",
+    "offers": "offers"
   },
   "ditListing": {
     "description": "Description"
@@ -2423,6 +2435,7 @@
           "date": "Date",
           "section": "Section",
           "totalTickets": "Total Tickets",
+          "sellTogether": "Bundle",
           "ticketStatus": "Available / Reserved / Sold",
           "listingStatus": "Status",
           "price": "Price"

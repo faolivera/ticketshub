@@ -10,7 +10,7 @@ import { MobileNavWithRouting } from '@/app/components/MobileNav';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { AdminProtectedRoute } from '@/app/components/admin/AdminProtectedRoute';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import LandingNew from '@/app/pages/LandingNew';
+import LandingPage from '@/app/pages/landing/LandingPage';
 import EventDetail from '@/app/pages/Event';
 import { UserProfile } from '@/app/pages/UserProfile';
 import { SellerProfile } from '@/app/pages/SellerProfile';
@@ -68,7 +68,7 @@ function AppLayout() {
       >
         <Routes>
               {/* Public routes */}
-              <Route path="/" element={<LandingNew />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/event/:eventSlug" element={<EventDetail />} />

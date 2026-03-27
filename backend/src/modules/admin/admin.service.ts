@@ -830,6 +830,7 @@ export class AdminService {
           },
           totalTickets: listing.ticketUnits.length,
           ticketsByStatus,
+          sellTogether: listing.sellTogether,
           status: listing.status,
           pricePerTicket: {
             amount: listing.pricePerTicket.amount,
