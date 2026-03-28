@@ -120,6 +120,11 @@ jobs:
           chmod 600 /tmp/deploy_key
           ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" \
             "set -e
+             if ! docker compose version &>/dev/null; then
+               sudo mkdir -p /usr/local/lib/docker/cli-plugins
+               sudo curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+               sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+             fi
              chmod +x ~/ticketshub/release/lightsail/deploy-on-server.sh
              echo '$GHCR_TOKEN' | docker login ghcr.io -u '$REPO_OWNER' --password-stdin
              cd ~/ticketshub/release/lightsail
