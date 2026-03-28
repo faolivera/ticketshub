@@ -104,6 +104,7 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          port: 22
           source: release/lightsail/
           target: ~/ticketshub/
           strip_components: 0
@@ -114,6 +115,7 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          port: 22
           script_stop: true
           script: |
             chmod +x ~/ticketshub/release/lightsail/deploy-on-server.sh
