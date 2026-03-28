@@ -43,6 +43,11 @@ export interface IOTPRepository {
   ): Promise<OTP | undefined>;
 
   /**
+   * Increment the failed attempts counter for an OTP
+   */
+  incrementAttempts(ctx: Ctx, id: string): Promise<void>;
+
+  /**
    * Delete OTP by ID
    */
   delete(ctx: Ctx, id: string): Promise<void>;

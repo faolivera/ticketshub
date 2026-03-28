@@ -34,6 +34,8 @@ export interface OTP {
   verifiedAt?: Date;
   /** Email or phone where the OTP was sent (for sending and for Twilio verify). */
   destination?: string;
+  /** Number of failed verification attempts. */
+  attempts: number;
 }
 
 /**

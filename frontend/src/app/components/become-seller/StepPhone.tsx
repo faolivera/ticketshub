@@ -1,138 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Phone, Loader2, ChevronDown, Search } from 'lucide-react';
+import { Phone, Loader2 } from 'lucide-react';
 import { useUser } from '@/app/contexts/UserContext';
 import { otpService } from '@/api/services/otp.service';
 import { OTPType } from '@/api/types/otp';
-import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, VL_BORDER, ERROR_BG, BADGE_DEMAND_BORDER, DESTRUCTIVE, V_HOVER, S, R_HERO, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
-import { type CountryCallingCode, COUNTRY_CODES, ARGENTINA, countryFromPhone } from '@/lib/country-calling-codes';
-
-/** Basic E.164 sanity check: + followed by 7–15 digits, non-zero first digit. */
-function isPlausiblePhone(countryCode: string, localNumber: string): boolean {
-  const full = '+' + countryCode.trim() + localNumber.trim();
-  return /^\+[1-9]\d{6,14}$/.test(full.replace(/[\s\-]/g, ''));
-}
+import { V, VLIGHT, DARK, MUTED, HINT, CARD, BG, BORDER, BORD2, VL_BORDER, ERROR_BG, BADGE_DEMAND_BORDER, DESTRUCTIVE, V_HOVER, S, R_HERO, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
+import { PhoneInput, PHONE_DEFAULT, isPhoneEntered } from '@/app/components/PhoneInput';
 
 export interface StepPhoneProps {
   onComplete: () => void;
   hideBackToProfile?: boolean;
-}
-
-// ─── Country dropdown ─────────────────────────────────────────────────────────
-function CountryDropdown({ selected, onSelect, disabled, borderColor, roundLeft = false }: {
-  selected: CountryCallingCode;
-  onSelect: (c: CountryCallingCode) => void;
-  disabled?: boolean;
-  borderColor: string;
-  roundLeft?: boolean;
-}) {
-  const { t } = useTranslation();
-  const [open, setOpen]       = useState(false);
-  const [search, setSearch]   = useState('');
-  const [hovered, setHovered] = useState<string | null>(null);
-  const containerRef          = useRef<HTMLDivElement>(null);
-  const searchRef             = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  useEffect(() => {
-    if (open) {
-      setSearch('');
-      setTimeout(() => searchRef.current?.focus(), 0);
-    }
-  }, [open]);
-
-  const filtered = COUNTRY_CODES.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.code.startsWith(search.replace(/\D/g, ''))
-  );
-
-  return (
-    <div ref={containerRef} style={{ position: 'relative', flexShrink: 0 }}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen(o => !o)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '12px 10px 12px 12px',
-          border: 'none', borderRight: `1.5px solid ${borderColor}`,
-          background: BG, cursor: disabled ? 'not-allowed' : 'pointer',
-          fontSize: 14, fontWeight: 600, color: DARK,
-          transition: 'border-color 0.14s', whiteSpace: 'nowrap',
-          borderRadius: roundLeft ? `${R_INPUT} 0 0 ${R_INPUT}` : 0,
-          ...S,
-        }}
-      >
-        <span style={{ fontSize: 18, lineHeight: 1 }}>{selected.flag}</span>
-        <span>+{selected.code}</span>
-        <ChevronDown size={13} color={MUTED} style={{ transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none' }} />
-      </button>
-
-      {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 300,
-          width: 280, background: CARD,
-          border: `1.5px solid ${BORDER}`, borderRadius: R_INPUT,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-          overflow: 'hidden',
-        }}>
-          {/* Search */}
-          <div style={{ padding: '10px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Search size={14} color={MUTED} style={{ flexShrink: 0 }} />
-            <input
-              ref={searchRef}
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={t('phoneInput.searchPlaceholder')}
-              style={{
-                flex: 1, border: 'none', outline: 'none', background: 'transparent',
-                fontSize: 13, color: DARK, ...S,
-              }}
-            />
-          </div>
-          {/* List */}
-          <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-            {filtered.length === 0 ? (
-              <div style={{ padding: '12px 14px', fontSize: 13, color: MUTED, ...S }}>{t('phoneInput.noResults')}</div>
-            ) : filtered.map(c => {
-              const key = c.code + c.name;
-              const isSelected = c.code === selected.code && c.name === selected.name;
-              const isHov = hovered === key;
-              return (
-                <div
-                  key={key}
-                  onMouseEnter={() => setHovered(key)}
-                  onMouseLeave={() => setHovered(null)}
-                  onMouseDown={() => { onSelect(c); setOpen(false); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '9px 14px', cursor: 'pointer',
-                    background: isSelected ? VLIGHT : isHov ? BG : 'transparent',
-                    transition: 'background 0.1s',
-                  }}
-                >
-                  <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{c.flag}</span>
-                  <span style={{ flex: 1, fontSize: 13, color: DARK, ...S }}>{c.name}</span>
-                  <span style={{ fontSize: 12, color: MUTED, fontWeight: 600, flexShrink: 0, ...S }}>+{c.code}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 // ─── OTP digit input ─────────────────────────────────────────────────────────
@@ -202,21 +79,17 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
   const { t } = useTranslation();
   const { user, refreshUser } = useUser();
 
-  const [country,     setCountry]     = useState<CountryCallingCode>(ARGENTINA);
-  const [localNumber, setLocalNumber] = useState('');
-  const [phase,       setPhase]       = useState<'input' | 'verify'>('input');
-  const [code,        setCode]        = useState(['', '', '', '', '', '']);
-  const [timer,       setTimer]       = useState(60);
-  const [canResend,   setCanResend]   = useState(false);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState<string | null>(null);
-  const [numFocused,  setNumFocused]  = useState(false);
+  const [phoneValue, setPhoneValue] = useState(PHONE_DEFAULT);
+  const [phase,      setPhase]      = useState<'input' | 'verify'>('input');
+  const [code,       setCode]       = useState(['', '', '', '', '', '']);
+  const [timer,      setTimer]      = useState(60);
+  const [canResend,  setCanResend]  = useState(false);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.phone && !user.phoneVerified) {
-      const { country: c, localNumber: l } = countryFromPhone(user.phone);
-      setCountry(c);
-      setLocalNumber(l);
+      setPhoneValue(user.phone);
     }
   }, [user?.phone, user?.phoneVerified]);
 
@@ -233,15 +106,16 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     if (phase === 'verify' && timer === 0) setCanResend(true);
   }, [phase, timer]);
 
-  const fullPhone = (): string => '+' + country.code + localNumber.trim();
+  const fullPhone = (): string => phoneValue.trim();
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!localNumber.trim()) { setError(t('becomeSeller.step1.pleaseEnterPhone')); return; }
-    if (!isPlausiblePhone(country.code, localNumber)) { setError(t('becomeSeller.step1.invalidPhoneFormat')); return; }
+    const phone = fullPhone();
+    if (!phone || phone === '+') { setError(t('becomeSeller.step1.pleaseEnterPhone')); return; }
+    if (!isPhoneEntered(phone)) { setError(t('becomeSeller.step1.invalidPhoneFormat')); return; }
     setLoading(true); setError(null);
     try {
-      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: fullPhone() });
+      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: phone });
       setPhase('verify'); setTimer(60); setCanResend(false);
     } catch (err: unknown) {
       const apiErr = err as { code?: string; message?: string };
@@ -300,8 +174,6 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     }
   };
 
-  const inputBorderColor = numFocused ? V : BORD2;
-
   return (
     <>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -334,34 +206,11 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, ...S }}>
                   <Phone size={13} /> {t('becomeSeller.step1.phoneLabel')}
                 </label>
-                {/* Country dropdown + number input */}
-                <div style={{
-                  display: 'flex', borderRadius: R_INPUT,
-                  border: `1.5px solid ${inputBorderColor}`,
-                  boxShadow: numFocused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
-                  transition: 'border-color 0.14s, box-shadow 0.14s', background: CARD,
-                  position: 'relative',
-                }}>
-                  <CountryDropdown
-                    selected={country}
-                    onSelect={setCountry}
-                    disabled={loading}
-                    borderColor={inputBorderColor}
-                    roundLeft
-                  />
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={localNumber}
-                    onChange={e => setLocalNumber(e.target.value.replace(/\D/g, ''))}
-                    onFocus={() => setNumFocused(true)}
-                    onBlur={() => setNumFocused(false)}
-                    placeholder={t('becomeSeller.step1.phonePlaceholder')}
-                    disabled={loading}
-                    style={{ flex: 1, minWidth: 0, padding: '12px 14px', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: DARK, borderRadius: `0 ${R_INPUT} ${R_INPUT} 0`, ...S }}
-                  />
-                </div>
+                <PhoneInput
+                  value={phoneValue}
+                  onChange={setPhoneValue}
+                  disabled={loading}
+                />
               </div>
               <PrimaryBtn label={t('becomeSeller.step1.sendCode')} loading={loading} loadingLabel={t('becomeSeller.step1.sending')} />
             </form>

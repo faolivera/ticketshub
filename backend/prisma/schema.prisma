@@ -797,6 +797,7 @@ model Otp {
   verifiedAt  DateTime?
   createdAt   DateTime  @default(now())
   destination String?   // Email or phone where the OTP was sent (for sending and for Twilio verify)
+  attempts    Int       @default(0)
 
   // Relations
   user        User      @relation(fields: [userId], references: [id])

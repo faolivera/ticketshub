@@ -1,5 +1,17 @@
 import type { TermsUserType, AcceptanceMethod } from './terms.domain';
 
+export interface UpdateTermsContentRequest {
+  content: string;
+}
+
+export interface UpdateTermsContentResponse {
+  id: string;
+  userType: TermsUserType;
+  versionLabel: string;
+  updatedAt: Date;
+}
+
+
 export interface GetCurrentTermsResponse {
   id: string;
   userType: TermsUserType;

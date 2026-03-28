@@ -47,3 +47,14 @@ export interface TermsAcceptanceData {
   termsVersionId: string;
   method: AcceptanceMethod;
 }
+
+export interface UpdateTermsContentRequest {
+  content: string;
+}
+
+export interface UpdateTermsContentResponse {
+  id: string;
+  userType: TermsUserType;
+  versionLabel: string;
+  updatedAt: string;
+}

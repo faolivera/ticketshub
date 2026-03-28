@@ -4,6 +4,7 @@ import type {
   AcceptTermsRequest,
   AcceptTermsResponse,
   GetTermsStatusResponse,
+  UpdateTermsContentResponse,
   TermsUserType,
 } from '../types/terms';
 
@@ -35,5 +36,16 @@ export const termsService = {
 
   getTermsContentUrl(versionId: string): string {
     return `/api/terms/${versionId}/content`;
+  },
+
+  async updateTermsContent(
+    userType: TermsUserType,
+    content: string,
+  ): Promise<UpdateTermsContentResponse> {
+    const response = await apiClient.patch<UpdateTermsContentResponse>(
+      `/terms/admin/${userType}/content`,
+      { content },
+    );
+    return response.data;
   },
 };

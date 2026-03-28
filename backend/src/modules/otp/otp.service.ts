@@ -106,6 +106,7 @@ export class OTPService {
       expiresAt,
       createdAt: new Date(),
       destination: destination ?? undefined,
+      attempts: 0,
     };
 
     await this.otpRepository.create(ctx, otp);
@@ -195,6 +196,16 @@ export class OTPService {
       );
     }
 
+    const maxAttempts =
+      this.configService.get<number>('otp.maxAttempts') ?? 5;
+    if (otp.attempts >= maxAttempts) {
+      await this.otpRepository.updateStatus(ctx, otp.id, OTPStatus.Expired);
+      this.metrics.recordOtpVerification(type, 'max_attempts');
+      throw new BadRequestException(
+        'Too many attempts. Please request a new OTP.',
+      );
+    }
+
     if (type === OTPType.PhoneVerification && otp.code === OTP_CODE_TWILIO_PENDING) {
       const verifyPhone = phone ?? otp.destination;
       if (!verifyPhone) {
@@ -208,10 +219,12 @@ export class OTPService {
         code,
       );
       if (!valid) {
+        await this.otpRepository.incrementAttempts(ctx, otp.id);
         this.metrics.recordOtpVerification(type, 'invalid_code');
         throw new BadRequestException('Invalid OTP code.');
       }
     } else if (otp.code !== code) {
+      await this.otpRepository.incrementAttempts(ctx, otp.id);
       this.metrics.recordOtpVerification(type, 'invalid_code');
       throw new BadRequestException('Invalid OTP code.');
     }

@@ -8,7 +8,7 @@ import {
   METRIC_OTP_VERIFICATIONS_TOTAL,
 } from './metrics.constants';
 
-export type OtpVerificationResult = 'success' | 'invalid_code' | 'expired' | 'no_pending';
+export type OtpVerificationResult = 'success' | 'invalid_code' | 'expired' | 'no_pending' | 'max_attempts';
 
 /**
  * Service to record outbound communication metrics (email, SMS, OTP).

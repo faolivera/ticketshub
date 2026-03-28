@@ -16,6 +16,7 @@ import {
   Upload,
   BarChart3,
   Star,
+  FileText,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -144,6 +145,11 @@ const navGroups: NavGroup[] = [
         to: '/admin/platform-config',
         icon: <Settings className="w-4 h-4" />,
         labelKey: 'admin.sidebar.platformConfig',
+      },
+      {
+        to: '/admin/terms',
+        icon: <FileText className="w-4 h-4" />,
+        labelKey: 'admin.sidebar.terms',
       },
     ],
   },

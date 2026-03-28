@@ -128,5 +128,5 @@ jobs:
              chmod +x ~/ticketshub/release/lightsail/deploy-on-server.sh
              echo '$GHCR_TOKEN' | docker login ghcr.io -u '$REPO_OWNER' --password-stdin
              cd ~/ticketshub/release/lightsail
-             ENV_FILE=~/ticketshub.env ./deploy-on-server.sh '$REPO_OWNER'"
+             ENV_FILE=~/ticketshub.env ./deploy-on-server.sh '$REPO_OWNER'"  --with-grafana-agent
           rm /tmp/deploy_key

@@ -62,6 +62,11 @@ export interface ITermsRepository {
    * Upsert user terms state (create or update)
    */
   upsertUserTermsState(ctx: Ctx, data: UserTermsState): Promise<UserTermsState>;
+
+  /**
+   * Overwrite the HTML content of a terms version
+   */
+  updateContent(ctx: Ctx, id: string, content: string): Promise<TermsVersion>;
 }
 
 /**

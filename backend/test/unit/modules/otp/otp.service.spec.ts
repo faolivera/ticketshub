@@ -8,6 +8,7 @@ import { EMAIL_SENDER } from '../../../../src/common/email/email-sender.interfac
 import type { IEmailSender } from '../../../../src/common/email/email-sender.interface';
 import { SMS_OTP_PROVIDER } from '../../../../src/common/sms/sms-otp-provider.interface';
 import type { ISmsOtpProvider } from '../../../../src/common/sms/sms-otp-provider.interface';
+import { OutboundMetricsService } from '../../../../src/common/metrics/outbound-metrics.service';
 import type { Ctx } from '../../../../src/common/types/context';
 import {
   OTPType,
@@ -27,6 +28,7 @@ function createOTP(overrides: Partial<OTP> = {}): OTP {
     status: OTPStatus.Pending,
     expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     createdAt: new Date(),
+    attempts: 0,
     ...overrides,
   };
 }
@@ -37,6 +39,7 @@ describe('OTPService', () => {
   let configService: jest.Mocked<ConfigService>;
   let emailSender: jest.Mocked<IEmailSender>;
   let smsOtpProvider: jest.Mocked<ISmsOtpProvider>;
+  let metrics: jest.Mocked<OutboundMetricsService>;
 
   beforeEach(async () => {
     repository = {
@@ -45,6 +48,7 @@ describe('OTPService', () => {
       findLatestPendingByUserAndType: jest.fn(),
       expireAllPendingByUserAndType: jest.fn(),
       updateStatus: jest.fn(),
+      incrementAttempts: jest.fn().mockResolvedValue(undefined),
       delete: jest.fn(),
     };
 
@@ -52,6 +56,7 @@ describe('OTPService', () => {
       get: jest.fn((key: string) => {
         const map: Record<string, unknown> = {
           'otp.expirationMinutes': 10,
+          'otp.maxAttempts': 5,
           'otp.codeLength': 6,
           'otp.emailProvider': 'MOCK_EMAIL',
           'otp.smsProvider': 'MOCK_SMS',
@@ -69,6 +74,13 @@ describe('OTPService', () => {
       checkVerification: jest.fn().mockResolvedValue(true),
     };
 
+    metrics = {
+      recordEmailSend: jest.fn(),
+      recordSmsSend: jest.fn(),
+      recordOtpSend: jest.fn(),
+      recordOtpVerification: jest.fn(),
+    } as unknown as jest.Mocked<OutboundMetricsService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OTPService,
@@ -76,6 +88,7 @@ describe('OTPService', () => {
         { provide: ConfigService, useValue: configService },
         { provide: EMAIL_SENDER, useValue: emailSender },
         { provide: SMS_OTP_PROVIDER, useValue: smsOtpProvider },
+        { provide: OutboundMetricsService, useValue: metrics },
       ],
     }).compile();
 
@@ -101,11 +114,14 @@ describe('OTPService', () => {
         OTPType.EmailVerification,
       );
       expect(repository.create).toHaveBeenCalled();
-      expect(emailSender.send).toHaveBeenCalledWith(mockCtx, {
-        to: 'u@example.com',
-        subject: 'Your verification code',
-        body: expect.stringContaining('111111'),
-      });
+      expect(emailSender.send).toHaveBeenCalledWith(
+        mockCtx,
+        expect.objectContaining({
+          to: 'u@example.com',
+          subject: 'Tu código de verificación — TicketsHub',
+          body: expect.stringContaining('111111'),
+        }),
+      );
       expect(result.type).toBe(OTPType.EmailVerification);
       expect(result.destination).toBe('u@example.com');
     });
@@ -201,6 +217,34 @@ describe('OTPService', () => {
       ).rejects.toThrow('Invalid OTP code');
     });
 
+    it('should increment attempts on failed email code verification', async () => {
+      const otp = createOTP({ code: '111111', attempts: 0 });
+      repository.findLatestPendingByUserAndType.mockResolvedValue(otp);
+
+      await expect(
+        service.verifyOTP(mockCtx, 'user_1', OTPType.EmailVerification, '999999'),
+      ).rejects.toThrow('Invalid OTP code');
+
+      expect(repository.incrementAttempts).toHaveBeenCalledWith(mockCtx, otp.id);
+    });
+
+    it('should throw and expire OTP when max attempts reached for email', async () => {
+      const otp = createOTP({ code: '111111', attempts: 5 });
+      repository.findLatestPendingByUserAndType.mockResolvedValue(otp);
+      repository.updateStatus.mockResolvedValue(undefined);
+
+      await expect(
+        service.verifyOTP(mockCtx, 'user_1', OTPType.EmailVerification, '111111'),
+      ).rejects.toThrow('Too many attempts');
+
+      expect(repository.updateStatus).toHaveBeenCalledWith(
+        mockCtx,
+        otp.id,
+        OTPStatus.Expired,
+      );
+      expect(repository.incrementAttempts).not.toHaveBeenCalled();
+    });
+
     it('should use SMS provider checkVerification when code is TWILIO sentinel', async () => {
       const otp = createOTP({
         type: OTPType.PhoneVerification,
@@ -252,6 +296,57 @@ describe('OTPService', () => {
           '+5491112345678',
         ),
       ).rejects.toThrow('Invalid OTP code');
+    });
+
+    it('should increment attempts on failed Twilio verification', async () => {
+      const otp = createOTP({
+        type: OTPType.PhoneVerification,
+        code: OTP_CODE_TWILIO_PENDING,
+        destination: '+5491112345678',
+        attempts: 2,
+      });
+      repository.findLatestPendingByUserAndType.mockResolvedValue(otp);
+      smsOtpProvider.checkVerification.mockResolvedValue(false);
+
+      await expect(
+        service.verifyOTP(
+          mockCtx,
+          'user_1',
+          OTPType.PhoneVerification,
+          'wrong',
+          '+5491112345678',
+        ),
+      ).rejects.toThrow('Invalid OTP code');
+
+      expect(repository.incrementAttempts).toHaveBeenCalledWith(mockCtx, otp.id);
+    });
+
+    it('should throw and expire OTP when max attempts reached for Twilio SMS', async () => {
+      const otp = createOTP({
+        type: OTPType.PhoneVerification,
+        code: OTP_CODE_TWILIO_PENDING,
+        destination: '+5491112345678',
+        attempts: 5,
+      });
+      repository.findLatestPendingByUserAndType.mockResolvedValue(otp);
+      repository.updateStatus.mockResolvedValue(undefined);
+
+      await expect(
+        service.verifyOTP(
+          mockCtx,
+          'user_1',
+          OTPType.PhoneVerification,
+          '123456',
+          '+5491112345678',
+        ),
+      ).rejects.toThrow('Too many attempts');
+
+      expect(repository.updateStatus).toHaveBeenCalledWith(
+        mockCtx,
+        otp.id,
+        OTPStatus.Expired,
+      );
+      expect(smsOtpProvider.checkVerification).not.toHaveBeenCalled();
     });
   });
 

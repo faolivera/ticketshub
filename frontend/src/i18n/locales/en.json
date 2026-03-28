@@ -1882,6 +1882,7 @@
       "identityVerifications": "Identity Verification",
       "notifications": "Notifications",
       "platformConfig": "Platform Settings",
+      "terms": "Terms & Conditions",
       "eventsScore": "Events Score",
       "promotions": "Promotions",
       "featuredEvents": "Featured Events",
@@ -2099,6 +2100,17 @@
       "editDescription": "Update the code target, promotion config, and validity.",
       "save": "Save changes",
       "editError": "Failed to update promotion code"
+    },
+    "termsManagement": {
+      "title": "Terms & Conditions",
+      "buyers": "Buyers",
+      "sellers": "Sellers",
+      "save": "Save",
+      "preview": "Preview",
+      "hidePreview": "Hide Preview",
+      "saveSuccess": "Terms updated successfully",
+      "saveError": "Failed to update terms",
+      "loadError": "Failed to load terms"
     },
     "platformConfig": {
       "title": "Platform Settings",

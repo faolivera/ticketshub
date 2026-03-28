@@ -29,6 +29,7 @@ export class OTPRepository implements IOTPRepository {
         expiresAt: otp.expiresAt,
         verifiedAt: otp.verifiedAt,
         destination: otp.destination ?? null,
+        attempts: otp.attempts,
       },
     });
     return this.mapToOTP(created);
@@ -99,6 +100,14 @@ export class OTPRepository implements IOTPRepository {
     }
   }
 
+  async incrementAttempts(_ctx: Ctx, id: string): Promise<void> {
+    this.logger.debug(_ctx, 'incrementAttempts', { id });
+    await this.prisma.otp.update({
+      where: { id },
+      data: { attempts: { increment: 1 } },
+    });
+  }
+
   async delete(_ctx: Ctx, id: string): Promise<void> {
     this.logger.debug(_ctx, 'delete', { id });
     try {
@@ -125,6 +134,7 @@ export class OTPRepository implements IOTPRepository {
       createdAt: prismaOtp.createdAt,
       verifiedAt: prismaOtp.verifiedAt ?? undefined,
       destination: prismaOtp.destination ?? undefined,
+      attempts: prismaOtp.attempts,
     };
   }
 

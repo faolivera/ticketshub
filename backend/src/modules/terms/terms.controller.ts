@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Param,
   Body,
   UseGuards,
@@ -14,6 +15,9 @@ import { ThrottleAuthenticated } from '../../common/throttler';
 import { Response, Request } from 'express';
 import { TermsService } from './terms.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '../users/users.domain';
 import { User } from '../../common/decorators/user.decorator';
 import { Context } from '../../common/decorators/ctx.decorator';
 import type { Ctx } from '../../common/types/context';
@@ -25,6 +29,8 @@ import type {
   AcceptTermsRequest,
   AcceptTermsResponse,
   GetTermsStatusResponse,
+  UpdateTermsContentRequest,
+  UpdateTermsContentResponse,
 } from './terms.api';
 
 @Controller('api/terms')
@@ -115,4 +121,24 @@ export class TermsController {
     };
   }
 
+  @Patch('admin/:userType/content')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  async updateTermsContent(
+    @Context() ctx: Ctx,
+    @Param('userType') userType: string,
+    @Body() body: UpdateTermsContentRequest,
+  ): Promise<ApiResponse<UpdateTermsContentResponse>> {
+    if (!Object.values(TermsUserType).includes(userType as TermsUserType)) {
+      throw new NotFoundException(`Invalid user type: ${userType}`);
+    }
+
+    const result = await this.termsService.updateTermsContent(
+      ctx,
+      userType as TermsUserType,
+      body.content,
+    );
+
+    return { success: true, data: result };
+  }
 }

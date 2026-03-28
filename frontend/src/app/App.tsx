@@ -46,6 +46,7 @@ import { PromotionsManagement } from '@/app/pages/admin/PromotionsManagement';
 import { SellerPayouts } from '@/app/pages/admin/SellerPayouts';
 import SupportTicketsManagement from '@/app/pages/admin/SupportTicketsManagement';
 import SupportTicketDetail from '@/app/pages/admin/SupportTicketDetail';
+import { TermsManagement } from '@/app/pages/admin/TermsManagement';
 import { NotFound } from '@/app/pages/NotFound';
 import { getGoogleClientId } from '@/config/env';
 import { BG } from '@/lib/design-tokens';
@@ -124,6 +125,7 @@ function AppLayout() {
                 <Route path="promotions" element={<PromotionsManagement />} />
                 <Route path="support-tickets" element={<SupportTicketsManagement />} />
                 <Route path="support-tickets/:id" element={<SupportTicketDetail />} />
+                <Route path="terms" element={<TermsManagement />} />
               </Route>
 
               {/* Catch-all: unknown routes */}

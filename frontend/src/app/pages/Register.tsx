@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, User, Lock, Phone, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, User, Lock, Phone, ArrowLeft } from 'lucide-react';
 import { authService } from '@/api/services/auth.service';
 import { otpService } from '@/api/services/otp.service';
 import { termsService } from '@/api/services/terms.service';
@@ -9,6 +9,7 @@ import { useUser } from '@/app/contexts/UserContext';
 import { OTPType } from '@/api/types';
 import { TermsUserType, AcceptanceMethod } from '@/api/types/terms';
 import { ClientTnC } from '@/app/components/ClientTnC';
+import { PhoneInput, PHONE_DEFAULT, isPhoneEntered } from '@/app/components/PhoneInput';
 import { PageMeta } from '@/app/components/PageMeta';
 import {
   V,
@@ -20,9 +21,7 @@ import {
   CARD,
   BORDER,
   BORD2,
-  GREEN,
-  GLIGHT,
-  GBORD,
+
   S,
   R_HERO,
   R_BUTTON,
@@ -206,7 +205,7 @@ export function Register() {
     password:  '',
     firstName: '',
     lastName:  '',
-    phone:     '',
+    phone:     PHONE_DEFAULT,
   });
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [timer,     setTimer]     = useState(60);
@@ -256,7 +255,7 @@ export function Register() {
         password:  formData.password,
         firstName: formData.firstName,
         lastName:  formData.lastName,
-        phone:     formData.phone || undefined,
+        phone:     isPhoneEntered(formData.phone) ? formData.phone : undefined,
         termsAcceptance: {
           termsVersionId: termsVersionId!,
           method: AcceptanceMethod.Checkbox,
@@ -530,22 +529,27 @@ export function Register() {
             minLength={8}
           />
 
-          <InputField
-            label={t('register.phoneOptional')}
-            icon={<Phone size={13} />}
-            type="tel"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={formData.phone}
-            placeholder={t('register.phonePlaceholder')}
-            onChange={e => {
-              const digits = e.target.value.replace(/\D/g, '');
-              setFormData({ ...formData, phone: digits });
-            }}
-            disabled={isSubmitting}
-            optional
-            hint={t('register.phoneOptionalHint')}
-          />
+          <div>
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: '12px', fontWeight: 700, color: MUTED,
+              textTransform: 'uppercase', letterSpacing: '0.05em',
+              marginBottom: 8, ...S,
+            }}>
+              <Phone size={13} /> {t('register.phoneOptional')}
+              <span style={{ fontSize: 11, fontWeight: 500, color: HINT, textTransform: 'none', letterSpacing: 0 }}>
+                (opcional)
+              </span>
+            </label>
+            <PhoneInput
+              value={formData.phone}
+              onChange={phone => setFormData({ ...formData, phone })}
+              disabled={isSubmitting}
+            />
+            <p style={{ fontSize: 12.5, color: HINT, marginTop: 6, lineHeight: 1.4, ...S }}>
+              {t('register.phoneOptionalHint')}
+            </p>
+          </div>
 
           {/* Terms */}
           <div style={{

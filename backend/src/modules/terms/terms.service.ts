@@ -20,6 +20,7 @@ import type {
   GetCurrentTermsResponse,
   GetTermsStatusResponse,
   TermsComplianceStatus,
+  UpdateTermsContentResponse,
 } from './terms.api';
 import type { ITermsRepository } from './terms.repository.interface';
 import { TERMS_REPOSITORY } from './terms.repository.interface';
@@ -211,6 +212,29 @@ export class TermsService {
       requiresAction: !isCompliant,
       actionDeadline: activeTerms.hardDeadlineAt,
       lastAcceptedAt: userState?.lastAcceptedAt || null,
+    };
+  }
+
+  async updateTermsContent(
+    ctx: Ctx,
+    userType: TermsUserType,
+    content: string,
+  ): Promise<UpdateTermsContentResponse> {
+    this.logger.log(ctx, `Updating terms content for userType: ${userType}`);
+
+    const activeTerms = await this.termsRepository.findActiveByUserType(ctx, userType);
+
+    if (!activeTerms) {
+      throw new NotFoundException(`No active terms found for user type: ${userType}`);
+    }
+
+    const updated = await this.termsRepository.updateContent(ctx, activeTerms.id, content);
+
+    return {
+      id: updated.id,
+      userType: updated.userType,
+      versionLabel: updated.versionLabel,
+      updatedAt: updated.createdAt,
     };
   }
 

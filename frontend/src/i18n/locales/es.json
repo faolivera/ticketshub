@@ -1881,6 +1881,7 @@
       "identityVerifications": "Verificación de Identidad",
       "notifications": "Notificaciones",
       "platformConfig": "Configuración de Plataforma",
+      "terms": "Términos y Condiciones",
       "eventsScore": "Puntuación de eventos",
       "promotions": "Promociones",
       "featuredEvents": "Eventos destacados",
@@ -2098,6 +2099,17 @@
       "editDescription": "Actualiza el público objetivo, la configuración de la promoción y la validez.",
       "save": "Guardar cambios",
       "editError": "Error al actualizar el código de promoción"
+    },
+    "termsManagement": {
+      "title": "Términos y Condiciones",
+      "buyers": "Compradores",
+      "sellers": "Vendedores",
+      "save": "Guardar",
+      "preview": "Vista previa",
+      "hidePreview": "Ocultar vista previa",
+      "saveSuccess": "Términos actualizados correctamente",
+      "saveError": "Error al actualizar los términos",
+      "loadError": "Error al cargar los términos"
     },
     "platformConfig": {
       "title": "Configuración de Plataforma",

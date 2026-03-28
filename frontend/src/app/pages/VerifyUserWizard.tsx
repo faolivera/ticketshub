@@ -141,7 +141,7 @@ export function VerifyUserWizard() {
           <ArrowLeft size={15} /> {t('register.back')}
         </button>
 
-        <h1 style={{ ...E, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
+        <h1 style={{ ...S, fontSize: 'clamp(20px,2vw,25px)', fontWeight: 700, color: DARK, letterSpacing: '-0.4px', marginBottom: 20 }}>
           {t('verifyUser.title')}
         </h1>
 

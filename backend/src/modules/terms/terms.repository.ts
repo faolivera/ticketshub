@@ -114,6 +114,19 @@ export class TermsRepository implements ITermsRepository {
     return state ? this.mapToUserTermsState(state) : undefined;
   }
 
+  async updateContent(
+    _ctx: Ctx,
+    id: string,
+    content: string,
+  ): Promise<TermsVersion> {
+    this.logger.debug(_ctx, 'updateContent', { id });
+    const version = await this.prisma.termsVersion.update({
+      where: { id },
+      data: { content },
+    });
+    return this.mapToTermsVersion(version);
+  }
+
   async upsertUserTermsState(
     _ctx: Ctx,
     data: UserTermsState,
