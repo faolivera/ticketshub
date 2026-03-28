@@ -4,7 +4,9 @@
 # ticketshub.ar redirects to ticketshub.com.ar (canonical domain).
 {
 	admin off
-	storage /data/caddy
+	storage file_system {
+		root /data/caddy
+	}
 }
 
 ticketshub.ar, www.ticketshub.ar, www.ticketshub.com.ar, www.ticketshub.shop {

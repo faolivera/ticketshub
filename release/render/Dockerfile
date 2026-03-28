@@ -30,7 +30,7 @@ RUN pnpm exec prisma generate
 # Stage 3: Runtime (Caddy + Node)
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS runtime
-RUN apk add --no-cache caddy
+COPY --from=caddy:2.8.4 /usr/bin/caddy /usr/bin/caddy
 
 WORKDIR /app/backend
 
