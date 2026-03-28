@@ -9,6 +9,7 @@ import { ContextLogger } from '../logger/context-logger';
 import type { OutboundMetricsService } from '../metrics/outbound-metrics.service';
 import type { Ctx } from '../types/context';
 import type { ISmsOtpProvider } from './sms-otp-provider.interface';
+import { InvalidPhoneNumberException } from '../exceptions/invalid-phone-number.exception';
 
 export interface TwilioVerifyProviderConfig {
   accountSid: string;
@@ -48,8 +49,20 @@ export class TwilioVerifyProvider implements ISmsOtpProvider {
     } catch (error) {
       this.logger.error(ctx, 'Twilio startVerification failed', error);
       this.metrics?.recordSmsSend('start_verification', false);
+      if (this.isInvalidPhoneError(error)) {
+        throw new InvalidPhoneNumberException('Phone number is not a valid mobile number.');
+      }
       throw error;
     }
+  }
+
+  private isInvalidPhoneError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const e = error as { code?: number; message?: string };
+    // Twilio error codes for invalid/non-mobile phone numbers
+    if (typeof e.code === 'number' && [21211, 21614, 60200].includes(e.code)) return true;
+    if (typeof e.message === 'string' && /not a valid mobile number/i.test(e.message)) return true;
+    return false;
   }
 
   async checkVerification(

@@ -8,7 +8,7 @@ export class InvalidPhoneNumberException extends HttpException {
   public readonly code = 'INVALID_PHONE_NUMBER' as const;
 
   constructor(
-    message: string = 'Invalid Argentina mobile number. Use +54 9 area number or 15 area number (landline not accepted).',
+    message: string = 'Invalid phone number. Use international format: +[country code][number]',
   ) {
     super(
       {

@@ -28,7 +28,7 @@ import {
   SendOTPResponseSchema,
   VerifyOTPResponseSchema,
 } from './schemas/api.schemas';
-import { isValidArgentinaPhone } from '../../common/utils/phone-validator';
+import { isValidInternationalPhone } from '../../common/utils/phone-validator';
 import { InvalidPhoneNumberException } from '../../common/exceptions/invalid-phone-number.exception';
 import { ThrottleSensitivePublic } from '../../common/throttler';
 
@@ -64,9 +64,9 @@ export class OTPController {
           'Phone number is required for phone verification',
         );
       }
-      if (!isValidArgentinaPhone(phone)) {
+      if (!isValidInternationalPhone(phone)) {
         throw new InvalidPhoneNumberException(
-          'Invalid Argentina mobile number. Use +54 9 area number or 15 area number (landline not accepted).',
+          'Invalid phone number. Use international format: +[country code][number]',
         );
       }
       if (bodyPhone?.trim()) {

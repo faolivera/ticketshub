@@ -6,7 +6,23 @@ import { otpService } from '@/api/services/otp.service';
 import { OTPType } from '@/api/types/otp';
 import { V, VLIGHT, DARK, MUTED, HINT, BG, CARD, BORDER, BORD2, VL_BORDER, ERROR_BG, BADGE_DEMAND_BORDER, DESTRUCTIVE, V_HOVER, S, R_HERO, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
 
-const PHONE_PREFIX = '+549';
+const DEFAULT_COUNTRY_CODE = '549';
+
+/** Split a stored full phone (e.g. "+5491112345678") into country code digits and local number. */
+function splitPhone(full: string): { countryCode: string; localNumber: string } {
+  if (!full) return { countryCode: DEFAULT_COUNTRY_CODE, localNumber: '' };
+  const digits = full.replace(/\D/g, '');
+  // Try known prefix lengths (longest first) against the digits
+  if (digits.startsWith('549')) return { countryCode: '549', localNumber: digits.slice(3) };
+  if (digits.length > 2) return { countryCode: digits.slice(0, 2), localNumber: digits.slice(2) };
+  return { countryCode: DEFAULT_COUNTRY_CODE, localNumber: digits };
+}
+
+/** Basic E.164 sanity check: + followed by 7–15 digits, non-zero first digit. */
+function isPlausiblePhone(countryCode: string, localNumber: string): boolean {
+  const full = '+' + countryCode.trim() + localNumber.trim();
+  return /^\+[1-9]\d{6,14}$/.test(full.replace(/[\s\-]/g, ''));
+}
 
 export interface StepPhoneProps {
   onComplete: () => void;
@@ -80,7 +96,8 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
   const { t } = useTranslation();
   const { user, refreshUser } = useUser();
 
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
+  const [localNumber, setLocalNumber] = useState('');
   const [phase,       setPhase]       = useState<'input' | 'verify'>('input');
   const [code,        setCode]        = useState(['', '', '', '', '', '']);
   const [timer,       setTimer]       = useState(60);
@@ -88,11 +105,13 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState<string | null>(null);
   const [phoneFocused,setPhoneFocused]= useState(false);
+  const [ccFocused,   setCcFocused]   = useState(false);
 
   useEffect(() => {
     if (user?.phone && !user.phoneVerified) {
-      const digits = (user.phone || '').replace(/\D/g, '');
-      setPhoneNumber(digits.startsWith('549') ? digits.slice(3) : digits);
+      const { countryCode: cc, localNumber: l } = splitPhone(user.phone);
+      setCountryCode(cc);
+      setLocalNumber(l);
     }
   }, [user?.phone, user?.phoneVerified]);
 
@@ -109,12 +128,15 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     if (phase === 'verify' && timer === 0) setCanResend(true);
   }, [phase, timer]);
 
+  const fullPhone = (): string => '+' + countryCode.trim() + localNumber.trim();
+
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber.trim()) { setError(t('becomeSeller.step1.pleaseEnterPhone')); return; }
+    if (!localNumber.trim()) { setError(t('becomeSeller.step1.pleaseEnterPhone')); return; }
+    if (!isPlausiblePhone(countryCode, localNumber)) { setError(t('becomeSeller.step1.invalidPhoneFormat')); return; }
     setLoading(true); setError(null);
     try {
-      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: PHONE_PREFIX + phoneNumber.trim() });
+      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: fullPhone() });
       setPhase('verify'); setTimer(60); setCanResend(false);
     } catch (err: unknown) {
       const apiErr = err as { code?: string; message?: string };
@@ -149,7 +171,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     if (fullCode.length !== 6) { setError(t('becomeSeller.step1.pleaseEnterCompleteCode')); return; }
     setLoading(true); setError(null);
     try {
-      await otpService.verifyOTP({ type: OTPType.PhoneVerification, code: fullCode, phoneNumber: PHONE_PREFIX + phoneNumber.trim() });
+      await otpService.verifyOTP({ type: OTPType.PhoneVerification, code: fullCode, phoneNumber: fullPhone() });
       await refreshUser();
       onComplete();
     } catch (err) {
@@ -163,7 +185,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
     if (!canResend) return;
     setLoading(true); setError(null);
     try {
-      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: PHONE_PREFIX + phoneNumber.trim() });
+      await otpService.sendOTP({ type: OTPType.PhoneVerification, phoneNumber: fullPhone() });
       setTimer(60); setCanResend(false); setCode(['', '', '', '', '', '']);
     } catch (err: unknown) {
       const apiErr = err as { code?: string; message?: string };
@@ -172,6 +194,8 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
       setLoading(false);
     }
   };
+
+  const inputBorderColor = phoneFocused || ccFocused ? V : BORD2;
 
   return (
     <>
@@ -208,19 +232,37 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
                 {/* Prefix + number row */}
                 <div style={{
                   display: 'flex', borderRadius: R_INPUT, overflow: 'hidden',
-                  border: `1.5px solid ${phoneFocused ? V : BORD2}`,
-                  boxShadow: phoneFocused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
+                  border: `1.5px solid ${inputBorderColor}`,
+                  boxShadow: (phoneFocused || ccFocused) ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
                   transition: 'border-color 0.14s, box-shadow 0.14s', background: CARD,
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '0 14px', background: BG, borderRight: `1.5px solid ${phoneFocused ? V : BORD2}`, fontSize: 14, fontWeight: 600, color: DARK, flexShrink: 0, transition: 'border-color 0.14s', ...S }}>
-                    {PHONE_PREFIX}
+                  <div style={{
+                    display: 'flex', alignItems: 'center',
+                    borderRight: `1.5px solid ${inputBorderColor}`,
+                    background: BG, flexShrink: 0, transition: 'border-color 0.14s',
+                  }}>
+                    <span style={{ padding: '0 4px 0 12px', fontSize: 14, fontWeight: 600, color: DARK, ...S }}>+</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={countryCode}
+                      onChange={e => { if (/^\d{0,4}$/.test(e.target.value)) setCountryCode(e.target.value); }}
+                      onFocus={() => setCcFocused(true)}
+                      onBlur={() => setCcFocused(false)}
+                      disabled={loading}
+                      style={{
+                        width: 40, padding: '12px 8px 12px 0', border: 'none',
+                        background: 'transparent', fontSize: 14, fontWeight: 600, color: DARK,
+                        outline: 'none', ...S,
+                      }}
+                    />
                   </div>
                   <input
                     type="tel"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                    value={localNumber}
+                    onChange={e => setLocalNumber(e.target.value.replace(/\D/g, ''))}
                     onFocus={() => setPhoneFocused(true)}
                     onBlur={() => setPhoneFocused(false)}
                     placeholder={t('becomeSeller.step1.phonePlaceholder')}
@@ -237,7 +279,7 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
               {/* Code sent info */}
               <div style={{ padding: '12px 14px', borderRadius: R_INPUT, background: BG, border: `1px solid ${BORDER}` }}>
                 <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, ...S }}>
-                  {t('becomeSeller.step1.codeSent', { phone: PHONE_PREFIX + phoneNumber })}
+                  {t('becomeSeller.step1.codeSent', { phone: fullPhone() })}
                 </p>
                 <button
                   type="button"
