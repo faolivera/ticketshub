@@ -44,6 +44,7 @@ describe('OTPRepository (Integration)', () => {
     status: OTPStatus.Pending,
     expiresAt: new Date(Date.now() + 600000),
     createdAt: new Date(),
+    attempts: 0,
     ...overrides,
   });
 
