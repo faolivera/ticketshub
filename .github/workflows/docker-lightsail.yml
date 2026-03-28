@@ -102,12 +102,10 @@ jobs:
         run: |
           echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
-            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} \
-            "mkdir -p ~/ticketshub/release/lightsail"
-          scp -i /tmp/deploy_key -o StrictHostKeyChecking=no -r \
-            release/lightsail/ \
-            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:~/ticketshub/release/lightsail/
+          rsync -az --mkpath \
+            -e "ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no" \
+            release/lightsail \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:~/ticketshub/release/
           rm /tmp/deploy_key
 
       - name: Deploy to Lightsail via SSH
