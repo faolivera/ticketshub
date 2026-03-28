@@ -17,6 +17,16 @@ name: Docker image – Lightsail (linux/amd64)
 
 on:
   workflow_dispatch:
+    inputs:
+      job:
+        description: 'Job to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - build-only
+          - deploy-only
 
 env:
   REGISTRY: ghcr.io
@@ -24,6 +34,7 @@ env:
 
 jobs:
   build:
+    if: inputs.job == 'all' || inputs.job == 'build-only'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -80,6 +91,7 @@ jobs:
 
   deploy:
     needs: build
+    if: always() && (inputs.job == 'all' || inputs.job == 'deploy-only') && (needs.build.result == 'success' || needs.build.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
