@@ -107,7 +107,7 @@ jobs:
             "mkdir -p ~/ticketshub/release/lightsail"
           scp -i /tmp/deploy_key -o StrictHostKeyChecking=no -r \
             release/lightsail/ \
-            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:~/ticketshub/
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:~/ticketshub/release/lightsail/
           rm /tmp/deploy_key
 
       - name: Deploy to Lightsail via SSH
