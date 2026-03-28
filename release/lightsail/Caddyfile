@@ -7,7 +7,7 @@
 	storage /data/caddy
 }
 
-ticketshub.ar {
+ticketshub.ar, www.ticketshub.ar, www.ticketshub.com.ar, www.ticketshub.shop {
 	redir https://ticketshub.com.ar{uri} permanent
 }
 

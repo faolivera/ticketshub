@@ -95,6 +95,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy release files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          source: release/lightsail/
+          target: ~/ticketshub/
+          strip_components: 0
+
       - name: Deploy to Lightsail via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -103,6 +116,7 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script_stop: true
           script: |
+            chmod +x ~/ticketshub/release/lightsail/deploy-on-server.sh
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
             cd ~/ticketshub/release/lightsail
             ENV_FILE=~/ticketshub.env ./deploy-on-server.sh "${{ github.repository_owner }}"

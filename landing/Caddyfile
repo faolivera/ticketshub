@@ -1,7 +1,7 @@
 # Serve static files. localhost for local/debug; production domains for HTTPS (Let's Encrypt).
 # Domains: ticketshub.com.ar, ticketshub.ar, ticketshub.shop — ensure DNS A records point to this host.
 # ticketshub.ar redirects to ticketshub.com.ar (canonical domain).
-ticketshub.ar {
+ticketshub.ar, www.ticketshub.ar, www.ticketshub.com.ar, www.ticketshub.shop {
 	redir https://ticketshub.com.ar{uri} permanent
 }
 localhost ticketshub.com.ar ticketshub.shop {
