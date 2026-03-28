@@ -99,26 +99,31 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Copy release files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.LIGHTSAIL_HOST }}
-          username: ${{ secrets.LIGHTSAIL_USER }}
-          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-          port: 22
-          source: release/lightsail/
-          target: ~/ticketshub/
-          strip_components: 0
+        run: |
+          echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} \
+            "mkdir -p ~/ticketshub/release/lightsail"
+          scp -i /tmp/deploy_key -o StrictHostKeyChecking=no -r \
+            release/lightsail/ \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:~/ticketshub/
+          rm /tmp/deploy_key
 
       - name: Deploy to Lightsail via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.LIGHTSAIL_HOST }}
-          username: ${{ secrets.LIGHTSAIL_USER }}
-          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-          port: 22
-          script_stop: true
-          script: |
-            chmod +x ~/ticketshub/release/lightsail/deploy-on-server.sh
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
-            cd ~/ticketshub/release/lightsail
-            ENV_FILE=~/ticketshub.env ./deploy-on-server.sh "${{ github.repository_owner }}"
+        env:
+          SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          REMOTE_USER: ${{ secrets.LIGHTSAIL_USER }}
+          REMOTE_HOST: ${{ secrets.LIGHTSAIL_HOST }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          echo "$SSH_KEY" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" \
+            "set -e
+             chmod +x ~/ticketshub/release/lightsail/deploy-on-server.sh
+             echo '$GHCR_TOKEN' | docker login ghcr.io -u '$REPO_OWNER' --password-stdin
+             cd ~/ticketshub/release/lightsail
+             ENV_FILE=~/ticketshub.env ./deploy-on-server.sh '$REPO_OWNER'"
+          rm /tmp/deploy_key
