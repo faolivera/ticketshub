@@ -4,8 +4,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
 import { ContextLogger } from '../../common/logger/context-logger';
 import type { Ctx } from '../../common/types/context';
 import type {
@@ -62,41 +60,16 @@ export class TermsService {
     };
   }
 
-  /**
-   * Resolves the file path for a terms version. Throws if version not found or file missing.
-   */
-  private async getTermsFilePathOrThrow(
-    ctx: Ctx,
-    versionId: string,
-  ): Promise<string> {
-    const termsVersion = await this.termsRepository.findVersionById(
-      ctx,
-      versionId,
-    );
+  async getTermsContent(ctx: Ctx, versionId: string): Promise<string> {
+    this.logger.log(ctx, `Getting terms content for versionId: ${versionId}`);
+
+    const termsVersion = await this.termsRepository.findVersionById(ctx, versionId);
 
     if (!termsVersion) {
       throw new NotFoundException(`Terms version not found: ${versionId}`);
     }
 
-    const assetsPath = path.join(process.cwd(), 'assets', 'terms');
-    const filePath = path.join(assetsPath, termsVersion.contentUrl);
-
-    if (!fs.existsSync(filePath)) {
-      this.logger.error(ctx, `Terms file not found at path: ${filePath}`);
-      throw new NotFoundException('Terms document file not found');
-    }
-
-    return filePath;
-  }
-
-  async getTermsContent(ctx: Ctx, versionId: string): Promise<fs.ReadStream> {
-    this.logger.log(ctx, `Getting terms content for versionId: ${versionId}`);
-    const filePath = await this.getTermsFilePathOrThrow(ctx, versionId);
-    return fs.createReadStream(filePath);
-  }
-
-  async getTermsFilePath(ctx: Ctx, versionId: string): Promise<string> {
-    return this.getTermsFilePathOrThrow(ctx, versionId);
+    return termsVersion.contentSummary;
   }
 
   async acceptTerms(

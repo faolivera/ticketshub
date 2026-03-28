@@ -60,16 +60,9 @@ export class TermsController {
     @Param('versionId') versionId: string,
     @Res() res: Response,
   ): Promise<void> {
-    const filePath = await this.termsService.getTermsFilePath(ctx, versionId);
-    const fileStream = await this.termsService.getTermsContent(ctx, versionId);
-
-    const fileName = filePath.split('/').pop() || 'terms.docx';
-    const contentType = this.getContentType(fileName);
-
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
-
-    fileStream.pipe(res);
+    const html = await this.termsService.getTermsContent(ctx, versionId);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
   }
 
   @Post(':versionId/accept')
@@ -122,19 +115,4 @@ export class TermsController {
     };
   }
 
-  private getContentType(fileName: string): string {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    switch (ext) {
-      case 'pdf':
-        return 'application/pdf';
-      case 'docx':
-        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      case 'doc':
-        return 'application/msword';
-      case 'html':
-        return 'text/html';
-      default:
-        return 'application/octet-stream';
-    }
-  }
 }

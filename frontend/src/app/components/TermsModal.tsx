@@ -5,11 +5,10 @@ import { termsService } from '@/api/services/terms.service';
 
 interface TermsModalProps {
   termsVersionId: string;
-  title?: string;
   onClose: () => void;
 }
 
-export function TermsModal({ termsVersionId, title, onClose }: TermsModalProps) {
+export function TermsModal({ termsVersionId, onClose }: TermsModalProps) {
   const { t } = useTranslation();
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,26 +31,21 @@ export function TermsModal({ termsVersionId, title, onClose }: TermsModalProps) 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-hero shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {title || t('terms.termsAndConditions')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-6">
+      <div className="bg-white rounded-hero shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors bg-white rounded-full p-1 shadow-sm"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex-1 overflow-y-auto p-6 pt-10">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : content ? (
-            <div 
+            <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: content }}
             />
@@ -63,7 +57,7 @@ export function TermsModal({ termsVersionId, title, onClose }: TermsModalProps) 
         <div className="p-6 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-button hover:bg-blue-700 transition-colors"
+            style={{ display: 'block', width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#6d28d9', color: 'white', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(109,40,217,0.28)' }}
           >
             {t('common.close')}
           </button>

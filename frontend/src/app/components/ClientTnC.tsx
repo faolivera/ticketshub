@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TermsModal } from '@/app/components/TermsModal';
+import { S } from '@/lib/design-tokens';
 
 export interface ClientTnCProps {
   termsVersionId: string | null;
@@ -32,7 +33,7 @@ export function ClientTnC({
 
   return (
     <>
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3" style={{ ...S }}>
         <input
           type="checkbox"
           id={checkboxId}
@@ -47,7 +48,7 @@ export function ClientTnC({
             type="button"
             onClick={openModal}
             disabled={!termsVersionId || termsLoading || disabled}
-            className="text-blue-600 hover:text-blue-700 font-semibold underline disabled:opacity-50"
+            className="text-sm text-blue-600 hover:text-blue-700 font-semibold underline disabled:opacity-50"
           >
             {t('clientTnC.termsAndConditions')}
           </button>
@@ -56,7 +57,6 @@ export function ClientTnC({
       {showTermsModal && termsVersionId && (
         <TermsModal
           termsVersionId={termsVersionId}
-          title={t('clientTnC.termsAndConditions')}
           onClose={() => setShowTermsModal(false)}
         />
       )}

@@ -24,7 +24,6 @@ import {
   GLIGHT,
   GBORD,
   S,
-  E,
   R_HERO,
   R_BUTTON,
   R_INPUT,
@@ -372,8 +371,8 @@ export function Register() {
               <Mail size={24} style={{ color: V }} />
             </div>
             <h1 style={{
-              ...E,
-              fontSize: 24, fontWeight: 400, color: DARK,
+              ...S,
+              fontSize: 24, fontWeight: 700, color: DARK,
               letterSpacing: '-0.3px', marginBottom: 8,
             }}>
               {t('register.verifyEmail')}
@@ -460,9 +459,9 @@ export function Register() {
       {/* Brand header */}
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <h1 style={{
-          ...E,
-          fontSize: 'clamp(24px, 3vw, 30px)',
-          fontWeight: 400, color: DARK,
+          ...S,
+          fontSize: 'clamp(22px, 3vw, 28px)',
+          fontWeight: 700, color: DARK,
           letterSpacing: '-0.4px', marginBottom: 6,
         }}>
           {t('register.signUp')}
@@ -564,7 +563,11 @@ export function Register() {
 
           <SubmitBtn
             label={isSubmitting ? t('common.loading') : t('register.createAccount')}
-            disabled={isSubmitting || !termsVersionId || !termsAccepted}
+            disabled={
+              isSubmitting || !termsVersionId || !termsAccepted ||
+              !formData.firstName.trim() || !formData.lastName.trim() ||
+              !formData.email.trim() || !formData.password
+            }
           />
 
           <p style={{ textAlign: 'center', fontSize: 13.5, color: MUTED, ...S }}>

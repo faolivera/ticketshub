@@ -6,7 +6,7 @@ import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 import { useUser } from '@/app/contexts/UserContext';
 import { PageMeta } from '@/app/components/PageMeta';
 import { getGoogleClientId } from '@/config/env';
-import { V, VLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, E, R_HERO, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
+import { V, VLIGHT, DARK, MUTED, BG, CARD, BORDER, BORD2, S, R_HERO, R_BUTTON, R_INPUT } from '@/lib/design-tokens';
 
 const googleClientId = getGoogleClientId();
 
@@ -183,6 +183,7 @@ export function Login() {
 
   const displayError = localError || error;
   const isBusy = isSubmitting || isGoogleLoading;
+  const loginReady = !isBusy && !!formData.email.trim() && !!formData.password;
 
   return (
     <div
@@ -214,9 +215,9 @@ export function Login() {
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
 
           <h1 style={{
-            ...E,
-            fontSize: 'clamp(24px, 3vw, 30px)',
-            fontWeight: 400, color: DARK,
+            ...S,
+            fontSize: 'clamp(22px, 3vw, 28px)',
+            fontWeight: 700, color: DARK,
             letterSpacing: '-0.4px', marginBottom: 6,
           }}>
             {t('login.title')}
@@ -309,19 +310,19 @@ export function Login() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isBusy}
+              disabled={!loginReady}
               style={{
                 width: '100%', padding: '13px',
                 borderRadius: R_BUTTON, border: 'none',
-                background: isBusy ? BORD2 : V,
+                background: !loginReady ? BORD2 : V,
                 color: 'white', fontSize: 14.5, fontWeight: 700,
-                cursor: isBusy ? 'not-allowed' : 'pointer',
-                boxShadow: isBusy ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
+                cursor: !loginReady ? 'not-allowed' : 'pointer',
+                boxShadow: !loginReady ? 'none' : '0 4px 18px rgba(105,45,212,0.28)',
                 transition: 'all 0.15s', ...S,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
-              onMouseEnter={e => { if (!isBusy) (e.currentTarget as HTMLButtonElement).style.background = '#5824b8'; }}
-              onMouseLeave={e => { if (!isBusy) (e.currentTarget as HTMLButtonElement).style.background = V; }}
+              onMouseEnter={e => { if (loginReady) (e.currentTarget as HTMLButtonElement).style.background = '#5824b8'; }}
+              onMouseLeave={e => { if (loginReady) (e.currentTarget as HTMLButtonElement).style.background = V; }}
             >
               {isSubmitting
                 ? t('login.signingIn')

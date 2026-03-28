@@ -231,7 +231,6 @@ export function StepTerms({ onComplete }: StepTermsProps) {
       {showTermsModal && termsVersionId && (
         <TermsModal
           termsVersionId={termsVersionId}
-          title={t('becomeSeller.step2.sellerTermsLink')}
           onClose={() => setShowTermsModal(false)}
         />
       )}
