@@ -19,12 +19,14 @@ export interface StepPhoneProps {
 }
 
 // ─── Country dropdown ─────────────────────────────────────────────────────────
-function CountryDropdown({ selected, onSelect, disabled, borderColor }: {
+function CountryDropdown({ selected, onSelect, disabled, borderColor, roundLeft = false }: {
   selected: CountryCallingCode;
   onSelect: (c: CountryCallingCode) => void;
   disabled?: boolean;
   borderColor: string;
+  roundLeft?: boolean;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen]       = useState(false);
   const [search, setSearch]   = useState('');
   const [hovered, setHovered] = useState<string | null>(null);
@@ -66,7 +68,9 @@ function CountryDropdown({ selected, onSelect, disabled, borderColor }: {
           border: 'none', borderRight: `1.5px solid ${borderColor}`,
           background: BG, cursor: disabled ? 'not-allowed' : 'pointer',
           fontSize: 14, fontWeight: 600, color: DARK,
-          transition: 'border-color 0.14s', whiteSpace: 'nowrap', ...S,
+          transition: 'border-color 0.14s', whiteSpace: 'nowrap',
+          borderRadius: roundLeft ? `${R_INPUT} 0 0 ${R_INPUT}` : 0,
+          ...S,
         }}
       >
         <span style={{ fontSize: 18, lineHeight: 1 }}>{selected.flag}</span>
@@ -76,10 +80,10 @@ function CountryDropdown({ selected, onSelect, disabled, borderColor }: {
 
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 200,
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 300,
           width: 280, background: CARD,
           border: `1.5px solid ${BORDER}`, borderRadius: R_INPUT,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
           overflow: 'hidden',
         }}>
           {/* Search */}
@@ -90,7 +94,7 @@ function CountryDropdown({ selected, onSelect, disabled, borderColor }: {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search country or code…"
+              placeholder={t('phoneInput.searchPlaceholder')}
               style={{
                 flex: 1, border: 'none', outline: 'none', background: 'transparent',
                 fontSize: 13, color: DARK, ...S,
@@ -100,11 +104,11 @@ function CountryDropdown({ selected, onSelect, disabled, borderColor }: {
           {/* List */}
           <div style={{ maxHeight: 220, overflowY: 'auto' }}>
             {filtered.length === 0 ? (
-              <div style={{ padding: '12px 14px', fontSize: 13, color: MUTED, ...S }}>No results</div>
+              <div style={{ padding: '12px 14px', fontSize: 13, color: MUTED, ...S }}>{t('phoneInput.noResults')}</div>
             ) : filtered.map(c => {
               const key = c.code + c.name;
               const isSelected = c.code === selected.code && c.name === selected.name;
-              const isHovered = hovered === key;
+              const isHov = hovered === key;
               return (
                 <div
                   key={key}
@@ -114,7 +118,7 @@ function CountryDropdown({ selected, onSelect, disabled, borderColor }: {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '9px 14px', cursor: 'pointer',
-                    background: isSelected ? VLIGHT : isHovered ? BG : 'transparent',
+                    background: isSelected ? VLIGHT : isHov ? BG : 'transparent',
                     transition: 'background 0.1s',
                   }}
                 >
@@ -331,32 +335,32 @@ export function StepPhone({ onComplete, hideBackToProfile }: StepPhoneProps) {
                   <Phone size={13} /> {t('becomeSeller.step1.phoneLabel')}
                 </label>
                 {/* Country dropdown + number input */}
-                <div style={{ position: 'relative' }}>
-                  <div style={{
-                    display: 'flex', borderRadius: R_INPUT, overflow: 'hidden',
-                    border: `1.5px solid ${inputBorderColor}`,
-                    boxShadow: numFocused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
-                    transition: 'border-color 0.14s, box-shadow 0.14s', background: CARD,
-                  }}>
-                    <CountryDropdown
-                      selected={country}
-                      onSelect={setCountry}
-                      disabled={loading}
-                      borderColor={inputBorderColor}
-                    />
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={localNumber}
-                      onChange={e => setLocalNumber(e.target.value.replace(/\D/g, ''))}
-                      onFocus={() => setNumFocused(true)}
-                      onBlur={() => setNumFocused(false)}
-                      placeholder={t('becomeSeller.step1.phonePlaceholder')}
-                      disabled={loading}
-                      style={{ flex: 1, minWidth: 0, padding: '12px 14px', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: DARK, ...S }}
-                    />
-                  </div>
+                <div style={{
+                  display: 'flex', borderRadius: R_INPUT,
+                  border: `1.5px solid ${inputBorderColor}`,
+                  boxShadow: numFocused ? '0 0 0 3px rgba(105,45,212,0.1)' : 'none',
+                  transition: 'border-color 0.14s, box-shadow 0.14s', background: CARD,
+                  position: 'relative',
+                }}>
+                  <CountryDropdown
+                    selected={country}
+                    onSelect={setCountry}
+                    disabled={loading}
+                    borderColor={inputBorderColor}
+                    roundLeft
+                  />
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={localNumber}
+                    onChange={e => setLocalNumber(e.target.value.replace(/\D/g, ''))}
+                    onFocus={() => setNumFocused(true)}
+                    onBlur={() => setNumFocused(false)}
+                    placeholder={t('becomeSeller.step1.phonePlaceholder')}
+                    disabled={loading}
+                    style={{ flex: 1, minWidth: 0, padding: '12px 14px', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: DARK, borderRadius: `0 ${R_INPUT} ${R_INPUT} 0`, ...S }}
+                  />
                 </div>
               </div>
               <PrimaryBtn label={t('becomeSeller.step1.sendCode')} loading={loading} loadingLabel={t('becomeSeller.step1.sending')} />

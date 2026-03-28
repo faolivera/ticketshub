@@ -1401,6 +1401,10 @@
     "backToProfile": "Volver al perfil",
     "invalidPhoneNumber": "El número no es un celular válido de Argentina. Usá formato internacional: +54 9 (área) (número)"
   },
+  "phoneInput": {
+    "searchPlaceholder": "Buscar país o código…",
+    "noResults": "Sin resultados"
+  },
   "verification": {
     "title": "Verificación de Vendedor",
     "subtitle": "Verificá tu identidad para recibir pagos",

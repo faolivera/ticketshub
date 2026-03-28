@@ -1402,6 +1402,10 @@
     "backToProfile": "Back to profile",
     "invalidPhoneNumber": "Not a valid Argentina mobile number. Use international format: +54 9 (area) (number)"
   },
+  "phoneInput": {
+    "searchPlaceholder": "Search country or code…",
+    "noResults": "No results"
+  },
   "verification": {
     "title": "Seller Verification",
     "subtitle": "Verify your identity to receive payouts",
