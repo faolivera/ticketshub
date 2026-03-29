@@ -1,8 +1,11 @@
 // Grafana Alloy config: scrape Prometheus /metrics from the app and remote-write to Grafana Cloud.
+// Also ships Docker container logs to Grafana Cloud Loki.
 // Required env vars (set in ENV_FILE or environment):
 //   GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL  e.g. https://prometheus-prod-XX-XXX.grafana.net/api/prom/push
-//   GRAFANA_CLOUD_USER                          Grafana Cloud instance ID (numeric)
-//   GRAFANA_CLOUD_API_KEY                       Grafana Cloud metrics API token (glc_...)
+//   GRAFANA_CLOUD_USER                          Grafana Cloud Prometheus instance ID (numeric)
+//   GRAFANA_CLOUD_LOKI_URL                      e.g. https://logs-prod-XXX.grafana.net/loki/api/v1/push
+//   GRAFANA_CLOUD_LOKI_USER                     Grafana Cloud Loki instance ID (numeric)
+//   GRAFANA_CLOUD_API_KEY                       Grafana Cloud API token with metrics:write and logs:write (glc_...)
 
 prometheus.scrape "ticketshub" {
   targets = [{
@@ -19,6 +22,28 @@ prometheus.remote_write "default" {
     url = sys.env("GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL")
     basic_auth {
       username = sys.env("GRAFANA_CLOUD_USER")
+      password = sys.env("GRAFANA_CLOUD_API_KEY")
+    }
+  }
+}
+
+// -- Logs: ship Docker container logs to Grafana Cloud Loki --
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.containers.targets
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_LOKI_URL")
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_LOKI_USER")
       password = sys.env("GRAFANA_CLOUD_API_KEY")
     }
   }
