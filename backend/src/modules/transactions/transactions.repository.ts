@@ -976,7 +976,8 @@ export class TransactionsRepository
     | 'PaymentFailed'
     | 'PaymentTimeout'
     | 'AdminRejected'
-    | 'AdminReviewTimeout' {
+    | 'AdminReviewTimeout'
+    | 'AdminCancelled' {
     switch (reason) {
       case CancellationReason.BuyerCancelled:
         return 'BuyerCancelled';
@@ -988,6 +989,8 @@ export class TransactionsRepository
         return 'AdminRejected';
       case CancellationReason.AdminReviewTimeout:
         return 'AdminReviewTimeout';
+      case CancellationReason.AdminCancelled:
+        return 'AdminCancelled';
     }
   }
 
@@ -997,7 +1000,8 @@ export class TransactionsRepository
       | 'PaymentFailed'
       | 'PaymentTimeout'
       | 'AdminRejected'
-      | 'AdminReviewTimeout',
+      | 'AdminReviewTimeout'
+      | 'AdminCancelled',
   ): CancellationReason {
     switch (reason) {
       case 'BuyerCancelled':
@@ -1010,6 +1014,8 @@ export class TransactionsRepository
         return CancellationReason.AdminRejected;
       case 'AdminReviewTimeout':
         return CancellationReason.AdminReviewTimeout;
+      case 'AdminCancelled':
+        return CancellationReason.AdminCancelled;
     }
   }
 
