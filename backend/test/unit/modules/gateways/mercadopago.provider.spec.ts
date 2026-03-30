@@ -88,7 +88,7 @@ describe('MercadoPagoProvider', () => {
 
     it('returns init_point in production', async () => {
       (configService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'app.environment') return 'production';
+        if (key === 'app.environment') return 'prod';
         if (key === 'app.publicUrl') return 'https://ticketshub.com.ar';
         if (key === 'app.backendUrl') return 'https://api.ticketshub.com.ar';
         return undefined;

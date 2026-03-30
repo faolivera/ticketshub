@@ -36,7 +36,6 @@ export function loadHoconConfig(
   parsed.app = {
     ...(parsed.app as object),
     environment: env,
-    isProduction: env === 'prod' || env === 'staging',
   };
 
   return parsed;

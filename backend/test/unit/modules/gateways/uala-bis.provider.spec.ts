@@ -314,7 +314,7 @@ describe('UalaBisProvider', () => {
 
     it('uses production URLs when environment is production', async () => {
       (configService.get as jest.Mock).mockImplementation((key: string) => {
-        if (key === 'app.environment') return 'production';
+        if (key === 'app.environment') return 'prod';
         if (key === 'app.frontendBaseUrl') return 'https://frontend.example.com';
         if (key === 'app.baseUrl') return 'https://api.example.com';
         return undefined;

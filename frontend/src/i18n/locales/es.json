@@ -1221,6 +1221,7 @@
       "PaymentFailed": "El pago falló",
       "PaymentTimeout": "El tiempo de pago expiró",
       "AdminRejected": "La confirmación de pago fue rechazada",
+      "AdminCancelled": "Cancelada por el administrador",
       "AdminReviewTimeout": "La revisión de pago expiró"
     },
     "deliveryEmail": {

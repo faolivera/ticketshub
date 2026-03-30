@@ -41,10 +41,14 @@ async function bootstrap() {
   const logger = new ContextLogger('Bootstrap');
   logger.log(ON_APP_INIT_CTX, `Environment loaded: ${environment}`);
 
-  // CORS: in production allow request origin (e.g. same host when Caddy serves frontend); in dev allow Vite
-  const isProduction = configService.get<boolean>('app.isProduction') ?? false;
+  // CORS: allow origins based on environment
+  const corsOrigins: Record<string, string | string[]> = {
+    prod: ['https://ticketshub.com.ar', 'https://ticketshub.shop', 'https://ticketshub.ar'],
+    staging: 'https://ticketshub-latest.onrender.com',
+    dev: 'http://localhost:5173',
+  };
   app.enableCors({
-    origin: isProduction ? true : 'http://localhost:5173',
+    origin: corsOrigins[environment] ?? 'http://localhost:5173',
     credentials: true,
   });
 

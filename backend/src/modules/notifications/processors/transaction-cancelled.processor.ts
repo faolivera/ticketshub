@@ -18,6 +18,7 @@ const CANCELLATION_REASON_LABELS: Record<CancellationReason, string> = {
   [CancellationReason.PaymentTimeout]: 'Vencimiento del tiempo de pago',
   [CancellationReason.AdminRejected]: 'Rechazo del comprobante de pago',
   [CancellationReason.AdminReviewTimeout]: 'No se pudo validar el pago',
+  [CancellationReason.AdminCancelled]: 'Cancelado por el administrador',
 };
 
 @Injectable()

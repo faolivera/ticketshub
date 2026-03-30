@@ -63,8 +63,8 @@ export class SupportSeedService {
   ) {}
 
   async seedDemoData(ctx: Ctx): Promise<SeedDemoResult> {
-    const isProduction = this.configService.get<boolean>('app.isProduction');
-    if (isProduction) {
+    const env = this.configService.get<string>('app.environment');
+    if (env === 'prod' || env === 'staging') {
       throw new ForbiddenException(
         'This endpoint is not available in production',
       );

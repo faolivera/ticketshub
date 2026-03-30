@@ -1222,6 +1222,7 @@
       "PaymentFailed": "Payment failed",
       "PaymentTimeout": "Payment time expired",
       "AdminRejected": "Payment confirmation was rejected",
+      "AdminCancelled": "Cancelled by administrator",
       "AdminReviewTimeout": "Payment review timed out"
     },
     "deliveryEmail": {

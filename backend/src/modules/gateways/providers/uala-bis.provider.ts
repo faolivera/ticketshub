@@ -29,7 +29,7 @@ export class UalaBisProvider {
 
   private getBaseUrls(): { auth: string; checkout: string } {
     const isStaging =
-      this.configService.get<string>('app.environment') !== 'production';
+      this.configService.get<string>('app.environment') !== 'prod';
     return isStaging
       ? {
           auth: 'https://auth.stage.developers.ar.ua.la/v2/api/auth/token',

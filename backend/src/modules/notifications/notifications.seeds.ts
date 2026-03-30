@@ -38,8 +38,8 @@ export class NotificationsSeeder implements OnModuleInit {
     await this.seedChannelConfigs(ON_APP_INIT_CTX);
     await this.seedTemplates(ON_APP_INIT_CTX);
 
-    const isProduction = this.configService.get<string>('app.environment') === 'prod';
-    if (isProduction) {
+    const env = this.configService.get<string>('app.environment');
+    if (env === 'prod' || env === 'staging') {
       this.logger.log(ON_APP_INIT_CTX, 'Production environment — skipping template sync to preserve admin edits');
       return;
     }
