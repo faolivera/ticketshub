@@ -376,13 +376,10 @@ export class UsersRepository implements IUsersRepository {
 
   async findUsersWithBankAccount(_ctx: Ctx): Promise<User[]> {
     this.logger.debug(_ctx, 'findUsersWithBankAccount');
-    const rows = await this.prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM users WHERE "bankAccount" IS NOT NULL
-    `;
-    const ids = rows.map((r) => r.id);
-    if (ids.length === 0) return [];
-    const users = await this.findByIds(_ctx, ids);
-    return users.filter((u) => u.bankAccount != null);
+    const users = await this.prisma.user.findMany({
+      where: { bankAccount: { not: null } },
+    });
+    return users.map((u) => this.mapToUser(u)).filter((u) => u.bankAccount != null);
   }
 
   async setBuyerDisputed(_ctx: Ctx, userId: string): Promise<User | undefined> {
