@@ -153,7 +153,7 @@ export function EditListing() {
           >
             <ArrowLeft size={14} /> {t('editListing.backToSellerDashboard')}
           </Link>
-          <h1 style={{ ...DS, fontSize: 'clamp(22px,3vw,28px)', color: DARK }}>{t('editListing.title')}</h1>
+          <h1 style={{ ...S, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 700, color: DARK }}>{t('editListing.title')}</h1>
         </div>
 
         {/* Error */}
