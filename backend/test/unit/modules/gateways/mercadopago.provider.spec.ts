@@ -312,4 +312,38 @@ describe('MercadoPagoProvider', () => {
       ).rejects.toThrow('MP fetch payment failed: 404');
     });
   });
+
+  // ── fetchMerchantOrderPreferenceId ────────────────────────────────────────
+
+  describe('fetchMerchantOrderPreferenceId', () => {
+    it('returns preference_id from merchant order', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          preference_id: 'pref_abc',
+          payments: [{ id: 1, status: 'approved' }],
+        }),
+      }) as jest.Mock;
+
+      const result = await provider.fetchMerchantOrderPreferenceId(mockCtx, '39519903870', mockPaymentMethod);
+
+      expect(result).toBe('pref_abc');
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/merchant_orders/39519903870'),
+        expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer test-token' }) }),
+      );
+    });
+
+    it('throws when MP API returns non-2xx', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({}),
+      }) as jest.Mock;
+
+      await expect(
+        provider.fetchMerchantOrderPreferenceId(mockCtx, '39519903870', mockPaymentMethod),
+      ).rejects.toThrow('MP fetch merchant order failed: 404');
+    });
+  });
 });

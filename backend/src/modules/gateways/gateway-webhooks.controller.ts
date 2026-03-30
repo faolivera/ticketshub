@@ -55,9 +55,22 @@ export class GatewayWebhooksController {
     const type = body['type'] as string | undefined;
     const dataId = (body['data'] as Record<string, unknown> | undefined)?.['id'] as string | undefined;
 
-    this.logger.log(ctx, "MP webhook " + JSON.stringify(body))
-
     if (type !== 'payment') {
+      const topic = body['topic'] as string | undefined;
+      if (topic === 'merchant_order') {
+        const resource = body['resource'] as string | undefined;
+        const merchantOrderId = resource?.split('/').pop();
+        if (merchantOrderId) {
+          this.logger.log(ctx, `MP merchant_order webhook received for order ${merchantOrderId}`);
+          await this.gatewayPaymentsService.handleMercadoPagoMerchantOrderWebhook(ctx, merchantOrderId).catch((err) => {
+            this.logger.error(ctx, `MP merchant_order webhook processing failed for order ${merchantOrderId}`, err);
+          });
+        } else {
+          this.logger.error(ctx, 'MP merchant_order webhook missing resource', redact(body));
+        }
+        return { received: true };
+      }
+
       this.logger.log(ctx, `MP webhook received with type=${type ?? 'unknown'}, ignoring`, redact(body));
       return { received: true };
     }

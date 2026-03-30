@@ -20,6 +20,7 @@ interface MpPayment {
 }
 
 interface MpMerchantOrder {
+  preference_id: string;
   payments: Array<{ id: number; status: string }>;
 }
 
@@ -210,6 +211,31 @@ export class MercadoPagoProvider implements GatewayProvider {
     }
 
     this.logger.log(ctx, `MP refund initiated for preference ${preferenceId}`);
+  }
+
+  /**
+   * Fetches a merchant order by ID and returns its preference_id.
+   * Used by the merchant_order webhook handler to map merchantOrderId → preferenceId.
+   */
+  async fetchMerchantOrderPreferenceId(
+    ctx: Ctx,
+    merchantOrderId: string,
+    paymentMethod: PaymentMethodOption,
+  ): Promise<string> {
+    const accessToken = this.getAccessToken(ctx, paymentMethod);
+    const response = await fetch(`${MP_API}/merchant_orders/${merchantOrderId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      this.logger.error(ctx, `MP fetch merchant order failed: ${response.status} for order ${merchantOrderId}`, err);
+      throw new Error(`MP fetch merchant order failed: ${response.status}`);
+    }
+
+    const data = (await response.json()) as MpMerchantOrder;
+    this.logger.debug(ctx, 'fetchMerchantOrderPreferenceId', { merchantOrderId, preferenceId: data.preference_id });
+    return data.preference_id;
   }
 
   /**
