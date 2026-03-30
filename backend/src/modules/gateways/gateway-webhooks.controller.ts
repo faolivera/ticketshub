@@ -63,27 +63,27 @@ export class GatewayWebhooksController {
         if (merchantOrderId) {
           this.logger.log(ctx, `MP merchant_order webhook received for order ${merchantOrderId}`);
           await this.gatewayPaymentsService.handleMercadoPagoMerchantOrderWebhook(ctx, merchantOrderId).catch((err) => {
-            this.logger.error(ctx, `MP merchant_order webhook processing failed for order ${merchantOrderId}`, err);
+            this.logger.error(ctx, `MP merchant_order webhook processing failed for order ${merchantOrderId} ` + JSON.stringify(redact(body)), err);
           });
         } else {
-          this.logger.error(ctx, 'MP merchant_order webhook missing resource', redact(body));
+          this.logger.error(ctx, 'MP merchant_order webhook missing resource ' + JSON.stringify(redact(body)));
         }
         return { received: true };
       }
 
-      this.logger.log(ctx, `MP webhook received with type=${type ?? 'unknown'}, ignoring`, redact(body));
+      this.logger.log(ctx, `MP webhook received with type=${type ?? 'unknown'}, ignoring` + JSON.stringify(redact(body)));
       return { received: true };
     }
 
     if (!dataId) {
-      this.logger.error(ctx, 'MP webhook missing data.id', body);
+      this.logger.error(ctx, 'MP webhook missing data.id', JSON.stringify(redact(body)));
       return { received: true };
     }
 
     this.logger.log(ctx, `MP webhook received for payment ${dataId}`);
 
     await this.gatewayPaymentsService.handleMercadoPagoWebhook(ctx, dataId).catch((err) => {
-      this.logger.error(ctx, `MP webhook processing failed for payment ${dataId}`, err);
+      this.logger.error(ctx, `MP webhook processing failed for payment ${dataId}` + JSON.stringify(redact(body)), err);
     });
 
     return { received: true };
