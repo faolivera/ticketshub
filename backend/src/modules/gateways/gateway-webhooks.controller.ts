@@ -55,6 +55,8 @@ export class GatewayWebhooksController {
     const type = body['type'] as string | undefined;
     const dataId = (body['data'] as Record<string, unknown> | undefined)?.['id'] as string | undefined;
 
+    this.logger.log(ctx, "MP webhook " + JSON.stringify(body))
+
     if (type !== 'payment') {
       this.logger.log(ctx, `MP webhook received with type=${type ?? 'unknown'}, ignoring`, redact(body));
       return { received: true };
