@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { Context } from '../../common/decorators/ctx.decorator';
-import { ContextLogger } from '../../common/logger/context-logger';
+import { ContextLogger, redact } from '../../common/logger';
 import type { Ctx } from '../../common/types/context';
 import { GatewayPaymentsService } from './gateway-payments.service';
 
@@ -56,7 +56,7 @@ export class GatewayWebhooksController {
     const dataId = (body['data'] as Record<string, unknown> | undefined)?.['id'] as string | undefined;
 
     if (type !== 'payment') {
-      this.logger.log(ctx, `MP webhook received with type=${type ?? 'unknown'}, ignoring`);
+      this.logger.log(ctx, `MP webhook received with type=${type ?? 'unknown'}, ignoring`, redact(body));
       return { received: true };
     }
 
