@@ -130,6 +130,7 @@ enum CancellationReason {
   PaymentTimeout
   AdminRejected
   AdminReviewTimeout
+  AdminCancelled
 }
 
 enum PaymentIntentStatus {

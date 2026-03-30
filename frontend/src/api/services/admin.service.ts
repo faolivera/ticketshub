@@ -35,6 +35,7 @@ import type {
   AdminUserSearchItem,
   AdminSellerPayoutsResponse,
   AdminCompletePayoutResponse,
+  AdminCancelTransactionResponse,
   AdminSupportTicketsQuery,
   AdminSupportTicketsResponse,
   AdminSupportTicketItem,
@@ -770,6 +771,18 @@ export const adminService = {
     const response = await apiClient.post<AdminAddSupportTicketMessageResponse>(
       `/admin/support-tickets/${ticketId}/messages`,
       data
+    );
+    return response.data;
+  },
+
+  /**
+   * Cancel a transaction (admin only). Releases reserved tickets back to available.
+   */
+  async cancelTransaction(
+    transactionId: string,
+  ): Promise<AdminCancelTransactionResponse> {
+    const response = await apiClient.post<AdminCancelTransactionResponse>(
+      `/admin/transactions/${transactionId}/cancel`,
     );
     return response.data;
   },

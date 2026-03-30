@@ -75,6 +75,7 @@ import type {
   ImportEventResultItem,
   ImportEventItem,
   AdminTransactionChatMessagesResponse,
+  AdminCancelTransactionResponse,
 } from './admin.api';
 import {
   EventDateStatus,
@@ -948,6 +949,20 @@ export class AdminService {
   /**
    * Get transaction detail by ID.
    */
+  async adminCancelTransaction(
+    ctx: Ctx,
+    transactionId: string,
+  ): Promise<AdminCancelTransactionResponse> {
+    this.logger.debug(ctx, 'adminCancelTransaction', { transactionId });
+    const transaction = await this.transactionsService.cancelTransaction(
+      ctx,
+      transactionId,
+      RequiredActor.Platform,
+      CancellationReason.AdminCancelled,
+    );
+    return { id: transaction.id, status: transaction.status };
+  }
+
   async getTransactionById(
     ctx: Ctx,
     id: string,

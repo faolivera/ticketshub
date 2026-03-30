@@ -147,6 +147,9 @@ export default function TransactionManagement() {
   const [auditLogsDialogOpen, setAuditLogsDialogOpen] = useState(false);
   const [auditLogsTransactionId, setAuditLogsTransactionId] = useState<string | null>(null);
 
+  const [cancelConfirmTransactionId, setCancelConfirmTransactionId] = useState<string | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery.trim());
@@ -433,6 +436,22 @@ export default function TransactionManagement() {
   const closeAuditLogsDialog = (): void => {
     setAuditLogsDialogOpen(false);
     setAuditLogsTransactionId(null);
+  };
+
+  const handleCancelTransaction = async (): Promise<void> => {
+    if (!cancelConfirmTransactionId) return;
+    try {
+      setCancelLoading(true);
+      await adminService.cancelTransaction(cancelConfirmTransactionId);
+      setDetailCache((prev) => {
+        const { [cancelConfirmTransactionId]: _, ...rest } = prev;
+        return rest;
+      });
+      await fetchTransactions();
+      setCancelConfirmTransactionId(null);
+    } finally {
+      setCancelLoading(false);
+    }
   };
 
   const getStatusLabel = (status: string): string => {
@@ -1071,6 +1090,17 @@ export default function TransactionManagement() {
                                 <FileText className="w-4 h-4 mr-1" />
                                 {t('admin.transactions.logs')}
                               </Button>
+                              {(transaction.status === 'PendingPayment' || transaction.status === 'PaymentPendingVerification') && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => setCancelConfirmTransactionId(transaction.id)}
+                                >
+                                  <X className="w-4 h-4 mr-1" />
+                                  {t('admin.transactions.cancelTransaction')}
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1661,6 +1691,31 @@ export default function TransactionManagement() {
         transactionId={auditLogsTransactionId}
         onClose={closeAuditLogsDialog}
       />
+
+      <Dialog
+        open={!!cancelConfirmTransactionId}
+        onOpenChange={(open) => { if (!open) setCancelConfirmTransactionId(null); }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.transactions.cancelTransactionConfirmTitle')}</DialogTitle>
+            <DialogDescription>{t('admin.transactions.cancelTransactionConfirmDesc')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelConfirmTransactionId(null)} disabled={cancelLoading}>
+              {t('common.back')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleCancelTransaction()}
+              disabled={cancelLoading}
+            >
+              {cancelLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <X className="w-4 h-4 mr-1" />}
+              {t('admin.transactions.cancelTransaction')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

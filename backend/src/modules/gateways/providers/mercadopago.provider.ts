@@ -43,7 +43,7 @@ export class MercadoPagoProvider implements GatewayProvider {
   }
 
   private isProduction(): boolean {
-    return this.configService.get<string>('app.environment') === 'production';
+    return this.configService.get<string>('app.environment') === 'prod';
   }
 
   private mapStatus(mpStatus: string): GatewayProviderOrderStatus {

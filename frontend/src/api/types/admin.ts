@@ -1040,6 +1040,11 @@ export interface AdminCompletePayoutResponse {
   status: string;
 }
 
+export interface AdminCancelTransactionResponse {
+  id: string;
+  status: string;
+}
+
 // === Admin Support Tickets ===
 
 export interface AdminSupportTicketsQuery {

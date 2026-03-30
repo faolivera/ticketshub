@@ -53,6 +53,7 @@ import type {
   AdminUserSearchResponse,
   AdminSellerPayoutsResponse,
   AdminCompletePayoutResponse,
+  AdminCancelTransactionResponse,
   AdminSupportTicketsResponse,
   AdminSupportTicketDetailResponse,
   AdminUpdateSupportTicketStatusRequest,
@@ -393,6 +394,20 @@ export class AdminController {
     @Body() body: AdminUpdateTransactionRequest,
   ): Promise<ApiResponse<AdminTransactionDetailResponse>> {
     const data = await this.adminService.updateTransaction(ctx, id, body);
+    return { success: true, data };
+  }
+
+  /**
+   * Cancel a transaction (admin only). Releases reserved tickets back to available.
+   */
+  @Post('transactions/:id/cancel')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  async cancelTransaction(
+    @Context() ctx: Ctx,
+    @Param('id') id: string,
+  ): Promise<ApiResponse<AdminCancelTransactionResponse>> {
+    const data = await this.adminService.adminCancelTransaction(ctx, id);
     return { success: true, data };
   }
 

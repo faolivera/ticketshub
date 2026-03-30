@@ -94,6 +94,8 @@ export enum CancellationReason {
   AdminRejected = 'AdminRejected',
   /** Admin did not review within 24 hours */
   AdminReviewTimeout = 'AdminReviewTimeout',
+  /** Admin manually cancelled the transaction */
+  AdminCancelled = 'AdminCancelled',
 }
 
 /**

@@ -637,6 +637,11 @@ export interface AdminCompletePayoutResponse {
   status: string;
 }
 
+export interface AdminCancelTransactionResponse {
+  id: string;
+  status: string;
+}
+
 /**
  * User search result for admin autocomplete (e.g. promotions).
  */
