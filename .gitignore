@@ -36,3 +36,6 @@ infra/
 
 .superpowers/
 .worktrees/
+
+# Screenshot output (showcase tool)
+screenshots/

@@ -24,10 +24,17 @@
     "render:build": "./release/render/render-build.sh",
     "render:publish": "./release/render/render-publish.sh",
     "landing:build": "./release/landing/build.sh",
-    "landing:publish": "./release/landing/landing-publish.sh"
+    "landing:publish": "./release/landing/landing-publish.sh",
+    "screenshot-server": "tsx scripts/screenshot-server.ts",
+    "showcase": "concurrently \"cd showcase && pnpm dev\" \"pnpm screenshot-server\""
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "playwright"]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "playwright": "^1.49.1",
+    "tsx": "^4.19.2"
   },
   "dependencies": {
     "html-to-text": "^9.0.5",
