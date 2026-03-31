@@ -41,7 +41,6 @@ jobs:
         run: |
           cd backend
           pnpm install --frozen-lockfile
-          pnpm exec prisma generate
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

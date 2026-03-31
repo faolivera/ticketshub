@@ -22,8 +22,11 @@ RUN corepack enable
 COPY backend/package.json backend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 
-COPY backend/ ./
+COPY backend/prisma ./prisma
+COPY backend/prisma.config.ts ./
 RUN pnpm exec prisma generate
+
+COPY backend/ ./
 # Backend dist is included via COPY backend/ (build.sh runs `npm run build` in backend first to avoid OOM in Docker)
 
 # -----------------------------------------------------------------------------

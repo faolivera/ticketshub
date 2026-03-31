@@ -23,8 +23,11 @@ RUN corepack enable
 COPY backend/package.json backend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 
-COPY backend/ ./
+COPY backend/prisma ./prisma
+COPY backend/prisma.config.ts ./
 RUN pnpm exec prisma generate
+
+COPY backend/ ./
 
 # -----------------------------------------------------------------------------
 # Stage 3: Runtime (Caddy + Node)

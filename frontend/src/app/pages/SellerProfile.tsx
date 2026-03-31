@@ -101,8 +101,9 @@ export function SellerProfile() {
 
   const totalReviews =
     seller.reviewStats.positive + seller.reviewStats.neutral + seller.reviewStats.negative;
+  const nonNeutralReviews = seller.reviewStats.positive + seller.reviewStats.negative;
   const positivePercentage =
-    totalReviews > 0 ? Math.round((seller.reviewStats.positive / totalReviews) * 100) : null;
+    nonNeutralReviews > 0 ? Math.round((seller.reviewStats.positive / nonNeutralReviews) * 100) : null;
   const memberSinceDate = new Date(seller.memberSince);
   const memberSinceLabel = Number.isNaN(memberSinceDate.getTime())
     ? seller.memberSince
