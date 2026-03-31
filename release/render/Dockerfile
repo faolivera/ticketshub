@@ -30,7 +30,9 @@ RUN pnpm exec prisma generate
 # Stage 3: Runtime (Caddy + Node)
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS runtime
+RUN apk add --no-cache libcap
 COPY --from=caddy:2.8.4 /usr/bin/caddy /usr/bin/caddy
+RUN setcap -r /usr/bin/caddy 2>/dev/null || true
 
 WORKDIR /app/backend
 
