@@ -49,6 +49,7 @@ export class ContextLogger {
   private ctxFields(ctx: Ctx): Record<string, unknown> {
     const fields: Record<string, unknown> = { source: ctx.source };
     if (ctx.requestId) fields.requestId = ctx.requestId;
+    if (ctx.externalRequestId) fields.externalRequestId = ctx.externalRequestId;
     if (ctx.userId) fields.userId = ctx.userId;
     if (ctx.method) fields.method = ctx.method;
     if (ctx.path) fields.path = ctx.path;

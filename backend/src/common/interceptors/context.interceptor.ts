@@ -17,15 +17,14 @@ export class ContextInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest<Request>();
 
-    // Generate or use existing request ID
-    const requestId =
-      (request.headers['x-request-id'] as string) ||
-      `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const externalRequestId = request.headers['x-request-id'] as string | undefined;
+    const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     // Build context object
     const ctx: Ctx = {
       source: 'HTTP',
       requestId,
+      ...(externalRequestId && { externalRequestId }),
       timestamp: new Date(),
       method: request.method,
       path: request.path || request.url,

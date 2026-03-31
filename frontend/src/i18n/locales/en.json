@@ -2404,6 +2404,7 @@
         "date": "Date",
         "time": "Time",
         "status": "Status",
+        "timezoneDisclaimer": "Buenos Aires time (UTC−3). Users see dates in their local timezone.",
         "addDate": "Add Date",
         "removeDate": "Remove",
         "save": "Save Changes",

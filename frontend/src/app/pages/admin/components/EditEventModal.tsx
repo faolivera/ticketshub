@@ -78,16 +78,23 @@ interface SectionFormState {
   isDeleted?: boolean;
 }
 
+// Buenos Aires is always UTC-3, no DST.
+function toBuenosAiresParts(d: Date): { date: string; time: string } {
+  const baDate = new Date(d.getTime() - 3 * 60 * 60 * 1000);
+  const iso = baDate.toISOString();
+  return { date: iso.split('T')[0], time: iso.split('T')[1].slice(0, 5) };
+}
+
 function formatDateForInput(date: Date | string | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toISOString().split('T')[0];
+  return toBuenosAiresParts(d).date;
 }
 
 function formatTimeForInput(date: Date | string | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toTimeString().slice(0, 5);
+  return toBuenosAiresParts(d).time;
 }
 
 export function EditEventModal({
@@ -359,10 +366,10 @@ export function EditEventModal({
     }
   };
 
+  // Input is in Buenos Aires time (UTC-3); store as UTC ISO string.
   const buildDateISO = (dateStr: string, timeStr: string): string => {
     if (!dateStr) return '';
-    if (!timeStr) return new Date(dateStr).toISOString();
-    return new Date(`${dateStr}T${timeStr}`).toISOString();
+    return new Date(`${dateStr}T${timeStr || '00:00'}:00-03:00`).toISOString();
   };
 
   const handleSave = async () => {
@@ -700,6 +707,9 @@ export function EditEventModal({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  {t('admin.events.edit.timezoneDisclaimer')}
+                </p>
                 {visibleDates.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     {t('admin.events.noEvents')}

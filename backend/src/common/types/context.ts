@@ -18,6 +18,12 @@ export interface Ctx {
   requestId?: string;
 
   /**
+   * Request ID provided by an external caller via X-Request-Id header.
+   * Preserved for correlation (e.g. MercadoPago sends the same ID across related webhooks).
+   */
+  externalRequestId?: string;
+
+  /**
    * Authenticated user ID (if available)
    */
   userId?: string;
