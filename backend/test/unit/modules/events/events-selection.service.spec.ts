@@ -8,6 +8,11 @@ import { TransactionsService } from '../../../../src/modules/transactions/transa
 import { EventBannerStorageService } from '../../../../src/modules/events/event-banner-storage.service';
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { NotificationsService } from '../../../../src/modules/notifications/notifications.service';
+import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
+import { PlatformConfigService } from '../../../../src/modules/config/config.service';
+import { PaymentMethodsService } from '../../../../src/modules/payments/payment-methods.service';
+import { AddressService } from '../../../../src/modules/address/address.service';
+import { CACHE_SERVICE } from '../../../../src/common/cache';
 import {
   EventStatus,
   EventCategory,
@@ -112,6 +117,30 @@ describe('EventsService - getEventsForSelection', () => {
       emit: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockEventScoringService = {
+      requestScoring: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const mockPlatformConfigService = {
+      getPlatformConfig: jest.fn().mockResolvedValue({ minimumHoursToBuyTickets: 0 }),
+    };
+
+    const mockPaymentMethodsService = {
+      getPublicPaymentMethods: jest.fn().mockResolvedValue([]),
+    };
+
+    const mockAddressService = {
+      getProvinces: jest.fn().mockResolvedValue([]),
+      getCities: jest.fn().mockResolvedValue([]),
+    };
+
+    const mockCacheService = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      del: jest.fn().mockResolvedValue(undefined),
+      getOrCalculate: jest.fn().mockImplementation((_key: string, _ttl: number, fn: () => Promise<unknown>) => fn()),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventsService,
@@ -122,6 +151,11 @@ describe('EventsService - getEventsForSelection', () => {
         { provide: EventBannerStorageService, useValue: mockBannerStorage },
         { provide: UsersService, useValue: mockUsersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: EventScoringService, useValue: mockEventScoringService },
+        { provide: PlatformConfigService, useValue: mockPlatformConfigService },
+        { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
+        { provide: AddressService, useValue: mockAddressService },
+        { provide: CACHE_SERVICE, useValue: mockCacheService },
       ],
     }).compile();
 

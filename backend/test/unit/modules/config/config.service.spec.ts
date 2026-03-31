@@ -4,6 +4,7 @@ import { PlatformConfigService } from '../../../../src/modules/config/config.ser
 import { CONFIG_REPOSITORY } from '../../../../src/modules/config/config.repository.interface';
 import type { IConfigRepository } from '../../../../src/modules/config/config.repository.interface';
 import { ConfigService as NestConfigService } from '@nestjs/config';
+import { CACHE_SERVICE } from '../../../../src/common/cache';
 import type { Ctx } from '../../../../src/common/types/context';
 
 describe('PlatformConfigService', () => {
@@ -87,11 +88,20 @@ describe('PlatformConfigService', () => {
       get: jest.fn((key: string) => hoconMap[key]),
     };
 
+    const mockCacheService = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      del: jest.fn().mockResolvedValue(undefined),
+      invalidate: jest.fn(),
+      getOrCalculate: jest.fn().mockImplementation((_key: string, _ttl: number, fn: () => Promise<unknown>) => fn()),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PlatformConfigService,
         { provide: CONFIG_REPOSITORY, useValue: mockRepository },
         { provide: NestConfigService, useValue: mockNestConfig },
+        { provide: CACHE_SERVICE, useValue: mockCacheService },
       ],
     }).compile();
 

@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Ctx } from '../../common/types/context';
 import { ContextLogger } from '../../common/logger/context-logger';
@@ -70,6 +70,9 @@ export class EventScoringService {
    */
   async getConfig(ctx: Ctx): Promise<GetEventsRankingConfigResponse> {
     const row = await this.eventScoringRepository.getConfig(ctx);
+    if (!row) {
+      throw new NotFoundException('Events ranking config not found');
+    }
     return {
       weightActiveListings: row.weightActiveListings,
       weightTransactions: row.weightTransactions,
@@ -113,6 +116,10 @@ export class EventScoringService {
   async runScoringJob(ctx: Ctx): Promise<{ processed: number }> {
     this.logger.log(ctx, 'runScoringJob: starting');
     const config = await this.eventScoringRepository.getConfig(ctx);
+    if (!config) {
+      this.logger.warn(ctx, 'runScoringJob: no config found, skipping');
+      return { processed: 0 };
+    }
     const eventIds = await this.eventScoringRepository.getPendingEventIds(ctx);
     if (eventIds.length === 0) {
       await this.eventScoringRepository.updateConfig(ctx, { lastRunAt: new Date() });

@@ -1286,7 +1286,7 @@ export class EventsService {
    */
   async getAllEventsPaginated(
     ctx: Ctx,
-    options: { page: number; limit: number; search?: string; highlighted?: boolean },
+    options: { page: number; limit: number; search?: string; highlighted?: boolean; hasActiveListings?: boolean },
   ): Promise<{ events: Event[]; total: number }> {
     return await this.eventsRepository.getAllEventsPaginated(ctx, options);
   }

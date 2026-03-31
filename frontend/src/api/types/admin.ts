@@ -216,6 +216,7 @@ export interface AdminAllEventsQuery {
   limit?: number;
   search?: string;
   highlighted?: boolean;
+  hasActiveListings?: boolean;
 }
 
 /**

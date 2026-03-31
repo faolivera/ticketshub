@@ -240,12 +240,14 @@ export class AdminController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('highlighted') highlighted?: string,
+    @Query('hasActiveListings') hasActiveListings?: string,
   ): Promise<ApiResponse<AdminAllEventsResponse>> {
     const data = await this.adminService.getAllEvents(ctx, {
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
       search,
       highlighted: highlighted === 'true' ? true : undefined,
+      hasActiveListings: hasActiveListings === 'true' ? true : undefined,
     });
     return { success: true, data };
   }

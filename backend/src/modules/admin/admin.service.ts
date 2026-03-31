@@ -679,7 +679,7 @@ export class AdminService {
 
     const { events, total } = await this.eventsService.getAllEventsPaginated(
       ctx,
-      { page, limit, search: query.search, highlighted: query.highlighted },
+      { page, limit, search: query.search, highlighted: query.highlighted, hasActiveListings: query.hasActiveListings },
     );
 
     if (events.length === 0) {

@@ -100,7 +100,11 @@ describe('TransactionsService', () => {
     };
 
     const mockTicketsService = {
-      getListingById: jest.fn(),
+      getListingById: jest.fn().mockResolvedValue({
+        id: 'listing_123',
+        eventId: 'event_123',
+        eventName: 'Test Event',
+      }),
       reserveTickets: jest.fn(),
       restoreTickets: jest.fn(),
     };
@@ -413,7 +417,7 @@ describe('TransactionsService', () => {
       expect(ticketsService.restoreTickets).toHaveBeenCalledTimes(2);
       expect(
         transactionsRepository.findExpiredPendingPayments,
-      ).toHaveBeenCalledWith(mockCtx);
+      ).toHaveBeenCalledWith(mockCtx, undefined);
     });
 
     it('should return 0 when no expired transactions exist', async () => {
@@ -488,7 +492,7 @@ describe('TransactionsService', () => {
       expect(result).toBe(1);
       expect(
         transactionsRepository.findExpiredAdminReviews,
-      ).toHaveBeenCalledWith(mockCtx);
+      ).toHaveBeenCalledWith(mockCtx, undefined);
     });
 
     it('should return 0 when no expired admin reviews exist', async () => {
@@ -1168,7 +1172,7 @@ describe('TransactionsService', () => {
       expect(count).toBe(1);
       expect(
         transactionsRepository.getPendingDepositRelease,
-      ).toHaveBeenCalledWith(mockCtx);
+      ).toHaveBeenCalledWith(mockCtx, undefined);
       expect(transactionsRepository.updateWithVersion).toHaveBeenCalledWith(
         expect.anything(),
         transaction.id,

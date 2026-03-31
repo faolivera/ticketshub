@@ -252,6 +252,7 @@ export const adminService = {
     if (query.limit !== undefined) params.append('limit', String(query.limit));
     if (query.search) params.append('search', query.search);
     if (query.highlighted) params.append('highlighted', 'true');
+    if (query.hasActiveListings) params.append('hasActiveListings', 'true');
 
     const queryString = params.toString();
     const url = `/admin/events/all${queryString ? `?${queryString}` : ''}`;

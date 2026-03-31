@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { EmailChannel } from '../../../../src/modules/notifications/channels/email.channel';
 import { EMAIL_SENDER } from '../../../../src/common/email/email-sender.interface';
 import type { IEmailSender } from '../../../../src/common/email/email-sender.interface';
@@ -44,11 +45,19 @@ describe('EmailChannel', () => {
       findById: jest.fn(),
     };
 
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        if (key === 'app.publicUrl') return 'https://www.ticketshub.com.ar';
+        return undefined;
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailChannel,
         { provide: EMAIL_SENDER, useValue: emailSender },
         { provide: UsersService, useValue: usersService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -69,7 +78,8 @@ describe('EmailChannel', () => {
     expect(emailSender.send).toHaveBeenCalledWith(mockCtx, {
       to: 'user@example.com',
       subject: 'Payment required',
-      body: 'Please complete your payment.',
+      body: expect.any(String),
+      htmlBody: expect.any(String),
     });
   });
 

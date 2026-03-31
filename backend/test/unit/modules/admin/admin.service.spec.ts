@@ -13,6 +13,8 @@ import { TicketsService } from '../../../../src/modules/tickets/tickets.service'
 import { UsersService } from '../../../../src/modules/users/users.service';
 import { SupportService } from '../../../../src/modules/support/support.service';
 import { EventScoringService } from '../../../../src/modules/event-scoring/event-scoring.service';
+import { TransactionChatService } from '../../../../src/modules/transaction-chat/transaction-chat.service';
+import { CACHE_SERVICE } from '../../../../src/common/cache';
 import { PaymentConfirmationStatus } from '../../../../src/modules/payment-confirmations/payment-confirmations.domain';
 import {
   TransactionStatus,
@@ -183,6 +185,18 @@ describe('AdminService', () => {
       requestScoring: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockCacheService = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      del: jest.fn().mockResolvedValue(undefined),
+      getOrCalculate: jest.fn().mockImplementation((_key: string, _ttl: number, fn: () => Promise<unknown>) => fn()),
+    };
+
+    const mockTransactionChatService = {
+      getMessages: jest.fn().mockResolvedValue([]),
+      hasUnreadMessages: jest.fn().mockResolvedValue(false),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -200,6 +214,8 @@ describe('AdminService', () => {
         { provide: PrismaService, useValue: mockPrisma! },
         { provide: SupportService, useValue: mockSupportService },
         { provide: EventScoringService, useValue: mockEventScoringService },
+        { provide: CACHE_SERVICE, useValue: mockCacheService },
+        { provide: TransactionChatService, useValue: mockTransactionChatService },
       ],
     }).compile();
 
@@ -1988,7 +2004,7 @@ describe('AdminService', () => {
             city: 'Cordoba',
             countryCode: 'AR',
           },
-          dates: ['2025-08-01T18:00:00.000Z', '2025-08-02T18:00:00.000Z'],
+          dates: ['2030-08-01T18:00:00.000Z', '2030-08-02T18:00:00.000Z'],
           sections: [{ name: 'General', seatingType: 'unnumbered' as const }],
           sourceCode: 'test',
           sourceId: 'summer-1',

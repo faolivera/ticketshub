@@ -54,6 +54,9 @@ describe('IpThrottlerGuard', () => {
     });
 
     it('calls super.canActivate for non-metrics paths', async () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
       const guard = makeGuard();
       const superSpy = jest
         .spyOn(ThrottlerGuard.prototype, 'canActivate')
@@ -67,6 +70,7 @@ describe('IpThrottlerGuard', () => {
       expect(superSpy).toHaveBeenCalled();
       expect(result).toBe(true);
       superSpy.mockRestore();
+      process.env.NODE_ENV = originalNodeEnv;
     });
   });
 });

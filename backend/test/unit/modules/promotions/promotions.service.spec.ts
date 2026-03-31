@@ -81,6 +81,9 @@ describe('PromotionsService', () => {
       findByEmail: jest
         .fn()
         .mockResolvedValue({ id: 'user_1', email: 'a@test.com' }),
+      findByEmails: jest
+        .fn()
+        .mockResolvedValue([{ id: 'user_1', email: 'a@test.com' }]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -143,13 +146,13 @@ describe('PromotionsService', () => {
         'admin_1',
       );
 
-      expect(usersService.findByEmail).toHaveBeenCalledWith(
+      expect(usersService.findByEmails).toHaveBeenCalledWith(
         mockCtx,
-        'a@test.com',
+        ['a@test.com'],
       );
-      expect(repository.deactivateByUserIdAndType).toHaveBeenCalledWith(
+      expect(repository.deactivateByUserIdsAndType).toHaveBeenCalledWith(
         mockCtx,
-        'user_1',
+        ['user_1'],
         PromotionType.SELLER_DISCOUNTED_FEE,
       );
       expect(repository.create).toHaveBeenCalledTimes(1);
@@ -159,7 +162,7 @@ describe('PromotionsService', () => {
     });
 
     it('should throw when no valid users (empty emails)', async () => {
-      usersService.findByEmail.mockResolvedValue(undefined);
+      usersService.findByEmails.mockResolvedValue([]);
 
       await expect(
         service.create(

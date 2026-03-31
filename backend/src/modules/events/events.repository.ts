@@ -21,7 +21,7 @@ import {
 } from './events.domain';
 import type { IEventsRepository } from './events.repository.interface';
 import type { Address } from '../shared/address.domain';
-import { SeatingType } from '../tickets/tickets.domain';
+import { SeatingType, ListingStatus } from '../tickets/tickets.domain';
 
 @Injectable()
 export class EventsRepository implements IEventsRepository {
@@ -415,14 +415,15 @@ export class EventsRepository implements IEventsRepository {
 
   async getAllEventsPaginated(
     _ctx: Ctx,
-    options: { page: number; limit: number; search?: string; highlighted?: boolean },
+    options: { page: number; limit: number; search?: string; highlighted?: boolean; hasActiveListings?: boolean },
   ): Promise<{ events: Event[]; total: number }> {
-    this.logger.debug(_ctx, 'getAllEventsPaginated', { page: options.page, limit: options.limit, highlighted: options.highlighted });
+    this.logger.debug(_ctx, 'getAllEventsPaginated', { page: options.page, limit: options.limit, highlighted: options.highlighted, hasActiveListings: options.hasActiveListings });
     const where = {
       ...(options.search
         ? { name: { contains: options.search, mode: 'insensitive' as const } }
         : {}),
       ...(options.highlighted === true ? { highlight: true } : {}),
+      ...(options.hasActiveListings === true ? { listings: { some: { status: ListingStatus.Active } } } : {}),
     };
 
     const [events, total] = await Promise.all([

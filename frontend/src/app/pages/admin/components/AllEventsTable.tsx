@@ -62,6 +62,8 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
   const [editingEventDates, setEditingEventDates] = useState<EventDate[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  const [hasActiveListingsFilter, setHasActiveListingsFilter] = useState(false);
+
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [eventListings, setEventListings] = useState<
     Record<string, AdminEventListingsResponse>
@@ -84,6 +86,7 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
         page,
         limit: ITEMS_PER_PAGE,
         search: debouncedSearch || undefined,
+        hasActiveListings: hasActiveListingsFilter || undefined,
       });
       setEvents(data.events);
       setTotalPages(data.totalPages);
@@ -93,7 +96,7 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, hasActiveListingsFilter]);
 
   useEffect(() => {
     fetchEvents();
@@ -204,8 +207,8 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <div className="relative max-w-sm">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="relative max-w-sm flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={t('admin.events.allEvents.searchPlaceholder')}
@@ -214,6 +217,16 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
                 className="pl-10"
               />
             </div>
+            <Button
+              variant={hasActiveListingsFilter ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setHasActiveListingsFilter((v) => !v);
+                setPage(1);
+              }}
+            >
+              {t('admin.events.allEvents.filterActiveListings')}
+            </Button>
           </div>
 
           {loading ? (
@@ -232,6 +245,7 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('admin.events.allEvents.eventName')}</TableHead>
+                    <TableHead>{t('admin.events.allEvents.venueCity')}</TableHead>
                     <TableHead>{t('admin.events.allEvents.createdBy')}</TableHead>
                     <TableHead className="text-right">{t('admin.events.allEvents.listings')}</TableHead>
                     <TableHead className="text-right">{t('admin.events.allEvents.availableTickets')}</TableHead>
@@ -263,6 +277,19 @@ export function AllEventsTable({ onEventUpdated }: AllEventsTableProps) {
                                 {event.name}
                               </span>
                             </button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {event.venue && (
+                                <div className="font-medium">{event.venue}</div>
+                              )}
+                              {event.city && (
+                                <div className="text-muted-foreground">{event.city}</div>
+                              )}
+                              {!event.venue && !event.city && (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Link

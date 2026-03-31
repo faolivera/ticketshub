@@ -866,7 +866,7 @@ describe('BffService', () => {
     const mockEvent = {
       id: 'event_123',
       name: 'Test Event',
-      dates: [],
+      dates: [{ id: 'date_123', status: 'approved' }],
       sections: [],
       images: [],
     };

@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { EventDateExpiredException } from '../../../../src/common/exceptions/event-date-expired.exception';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from '../../../../src/modules/events/events.service';
 import { EVENTS_REPOSITORY } from '../../../../src/modules/events/events.repository.interface';
@@ -1476,15 +1477,15 @@ describe('EventsService', () => {
 
       await expect(
         service.assertEventDateNotExpired(mockCtx, 'edt_past'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(EventDateExpiredException);
     });
 
-    it('should throw BadRequestException when event date is not found', async () => {
+    it('should throw EventDateExpiredException when event date is not found', async () => {
       eventsRepository.findEventDateById.mockResolvedValue(null);
 
       await expect(
         service.assertEventDateNotExpired(mockCtx, 'edt_nonexistent'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(EventDateExpiredException);
     });
 
     it('should throw when date is within minimumHoursToBuyTickets buffer', async () => {
@@ -1505,7 +1506,7 @@ describe('EventsService', () => {
 
       await expect(
         service.assertEventDateNotExpired(mockCtx, 'edt_soon'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(EventDateExpiredException);
     });
 
     it('should not throw when date is beyond the minimumHoursToBuyTickets buffer', async () => {

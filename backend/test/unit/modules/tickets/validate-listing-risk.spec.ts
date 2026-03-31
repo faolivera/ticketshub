@@ -22,7 +22,7 @@ describe('TicketsService.validateListingRisk', () => {
   let usersService: jest.Mocked<Pick<UsersService, 'findById'>>;
   let configService: jest.Mocked<Pick<PlatformConfigService, 'getPlatformConfig'>>;
   let conversionService: jest.Mocked<Pick<ConversionService, 'sumInCurrency'>>;
-  let ticketsRepository: { getBySellerId: jest.Mock };
+  let ticketsRepository: { getBySellerId: jest.Mock; getActiveListingsSummaryBySellerId: jest.Mock };
 
   const mockCtx: Ctx = { source: 'HTTP', requestId: 'test-req' };
 
@@ -64,6 +64,7 @@ describe('TicketsService.validateListingRisk', () => {
   beforeEach(async () => {
     ticketsRepository = {
       getBySellerId: jest.fn().mockResolvedValue([]),
+      getActiveListingsSummaryBySellerId: jest.fn().mockResolvedValue([]),
     };
 
     const mockUsersService = {
@@ -273,14 +274,12 @@ describe('TicketsService.validateListingRisk', () => {
     });
 
     it('returns listing_limits_restriction when seller already has max active listings', async () => {
-      // Return enough active listings to exceed count cap (max is 5 per config)
-      const activeListings = Array.from({ length: 5 }, (_, i) => ({
-        id: `listing_${i}`,
-        status: ListingStatus.Active,
-        pricePerTicket: { amount: 100, currency: 'USD' },
-        ticketUnits: [{ id: `unit_${i}` }],
+      // Return enough active listing prices to exceed count cap (max is 5 per config)
+      const activePrices = Array.from({ length: 5 }, () => ({
+        amount: 100,
+        currency: 'USD',
       }));
-      ticketsRepository.getBySellerId.mockResolvedValue(activeListings);
+      ticketsRepository.getActiveListingsSummaryBySellerId.mockResolvedValue(activePrices);
 
       // Even though the sum is fine, count (5 existing + 1 new = 6 > 5) triggers the limit
       (conversionService.sumInCurrency as jest.Mock).mockResolvedValue({

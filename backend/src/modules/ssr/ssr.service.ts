@@ -66,7 +66,8 @@ export class SsrService {
     const canonicalUrl = escapeAttr(meta.canonicalUrl);
     const ogImage = escapeAttr(meta.ogImage);
     const ogType = escapeAttr(meta.ogType || 'website');
-    const gaScript = this.buildGaScript();
+    const env = this.configService.get<string>('app.environment');
+    const gaScript = env === 'prod' ? this.buildGaScript() : '';
     const configScript = this.buildConfigScript();
     return raw
       .replace(new RegExp(PLACEHOLDERS.PAGE_TITLE, 'g'), title)
