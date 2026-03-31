@@ -84,6 +84,9 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
         }
         .ees-input:focus { border-color: #692dd4 !important; }
         .ees-input:disabled { opacity: 0.65; cursor: not-allowed; }
+        .ees-alert-row { display: flex; gap: 8px; width: 100%; margin-bottom: 6px; flex-wrap: wrap; }
+        .ees-alert-btn { flex-shrink: 0; }
+        @media (max-width: 400px) { .ees-alert-btn { width: 100%; justify-content: center; } }
       `}</style>
 
       <div className="ees-root">
@@ -128,7 +131,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
             </div>
           ) : (
             <>
-              <div style={{ display: "flex", gap: 8, width: "100%", marginBottom: 6 }}>
+              <div className="ees-alert-row">
                 <input
                   className="ees-input"
                   type="email"
@@ -150,6 +153,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
                   }}
                 />
                 <button
+                  className="ees-alert-btn"
                   onClick={handleAlert}
                   disabled={loading}
                   style={{
@@ -158,7 +162,7 @@ export default function EmptyEventState({ waitingCount = 0, eventId }: Props) {
                     borderRadius: 9, padding: "9px 16px", cursor: loading ? "not-allowed" : "pointer",
                     display: "inline-flex", alignItems: "center", gap: 5,
                     whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(105,45,212,0.28)",
-                    flexShrink: 0, opacity: loading ? 0.8 : 1,
+                    opacity: loading ? 0.8 : 1,
                   }}
                   onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = V_MID; }}
                   onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = V; }}

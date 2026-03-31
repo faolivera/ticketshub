@@ -74,7 +74,7 @@ export function BuyerDeliveryEmailCard({
           {t('transaction.deliveryEmail.cardTitle')}
         </h3>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <input
           type="email"
           value={inputEmail}
@@ -83,7 +83,7 @@ export function BuyerDeliveryEmailCard({
             if (e.key === 'Enter') void handleConfirm();
           }}
           disabled={saving}
-          className="flex-1 px-3 py-2 text-sm border focus:outline-none focus:ring-2 disabled:opacity-50"
+          className="flex-1 min-w-0 px-3 py-2 text-sm border focus:outline-none focus:ring-2 disabled:opacity-50"
           style={{
             borderRadius: R_INPUT,
             borderColor: BORDER,
@@ -94,7 +94,7 @@ export function BuyerDeliveryEmailCard({
           type="button"
           onClick={() => void handleConfirm()}
           disabled={!isValidEmail || saving}
-          className="px-4 py-2 rounded-button text-sm font-bold text-white flex-shrink-0 disabled:opacity-50"
+          className="w-full sm:w-auto px-4 py-2 rounded-button text-sm font-bold text-white disabled:opacity-50"
           style={{ background: V }}
         >
           {saving ? t('transaction.deliveryEmail.saving') : t('transaction.deliveryEmail.confirmButton')}
