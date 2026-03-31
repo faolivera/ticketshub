@@ -1,0 +1,5 @@
+"id","transactionId","reviewerId","revieweeId","reviewerRole","revieweeRole","rating","comment","createdAt"
+"e0000000-0000-0000-0000-000000000016","b0000000-0000-0000-0000-000000000021","f04afb31-7a50-4ed5-a2b7-56fa00c7ef8c","ce2672fc-b684-4b56-8253-be63ba9908f5","buyer","seller",5,"Vendedora muy confiable, recomendable.","2025-09-02 16:00:00"
+"e0000000-0000-0000-0000-000000000017","b0000000-0000-0000-0000-000000000023","f04afb31-7a50-4ed5-a2b7-56fa00c7ef8c","ce2672fc-b684-4b56-8253-be63ba9908f5","buyer","seller",4,"Buena transaccion, entrego rapido.","2025-11-03 17:00:00"
+"e0000000-0000-0000-0000-000000000018","b0000000-0000-0000-0000-000000000025","f04afb31-7a50-4ed5-a2b7-56fa00c7ef8c","ce2672fc-b684-4b56-8253-be63ba9908f5","buyer","seller",5,"Excelente experiencia.","2026-01-04 16:00:00"
+"e0000000-0000-0000-0000-000000000019","b0000000-0000-0000-0000-000000000027","f04afb31-7a50-4ed5-a2b7-56fa00c7ef8c","ce2672fc-b684-4b56-8253-be63ba9908f5","buyer","seller",5,"Todo perfecto, muy responsable.","2026-02-19 17:00:00"

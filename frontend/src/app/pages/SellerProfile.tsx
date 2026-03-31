@@ -134,6 +134,11 @@ export function SellerProfile() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG }}>
+      <style>{`
+        .sel-stat-label { min-height: 46px; }
+        @media (min-width: 420px) { .sel-stat-label { min-height: 30px; } }
+        @media (min-width: 560px) { .sel-stat-label { min-height: 0; } }
+      `}</style>
       <PageMeta
         title={t('seo.sellerProfile.title', { sellerName: seller.publicName })}
         description={t('seo.sellerProfile.description', { sellerName: seller.publicName })}
@@ -225,6 +230,7 @@ export function SellerProfile() {
             {/* Satisfaction */}
             <div style={{ paddingRight: 20 }}>
               <p
+                className="sel-stat-label"
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
@@ -264,6 +270,7 @@ export function SellerProfile() {
               }}
             >
               <p
+                className="sel-stat-label"
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
@@ -295,6 +302,7 @@ export function SellerProfile() {
             {/* Total reviews */}
             <div style={{ paddingLeft: 20, borderLeft: `1px solid ${BORDER}` }}>
               <p
+                className="sel-stat-label"
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
